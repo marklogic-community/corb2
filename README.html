@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--
+/*
+ * Copyright (c)2007 Mark Logic Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * The use of the Apache License does not indicate that this project is
+ * affiliated with the Apache Software Foundation.
+ */
+-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-15">
+<title>Corb - Content-Reprocessing in Bulk</title>
+</head>
+
+<body>
+<h1>Corb - Content-Reprocessing in Bulk</h1>
+
+<p>
+Corb is a Java tool designed for bulk content-reprocessing.
+Essentially, it lists all the documents in a collection
+(or all the documents in the database),
+and then uses a pool of worker threads
+to apply an XQuery module to each document.
+</p>
+
+<h2>Required JVM: Sun 1.5 or later</h2>
+
+<h2>Required libraries:</h2>
+<ul>
+  <li>Corb <a href="../releases/corb.jar">corb.jar</a></li>
+  <li>MarkLogic <a href="http://developer.marklogic.com/">XCC</a></li>
+</ul>
+
+<h2>Required configuration:</h2>
+<ul>
+  <li>MarkLogic 3.2-1 or later</li>
+  <li>The target database must be configured with a URI lexicon</li>
+  <li>The target XDBC server must set its modules location to <code>Modules</code></li>
+  <li>The target XDBC server must set its library location to <code>/</code></li>
+</ul>
+
+<h2>Running Corb</h2>
+<p>The entry point is the main method in the
+ com.marklogic.developer.corb.Manager class.
+Corb requires 3 command-line arguments.
+The number of worker threads can be specified as an optional fourth argument.
+The default is to run only one worker thread.
+</p>
+
+<pre>
+com.marklogic.developer.corb.Manager \
+  XCC-CONNECTION-URI COLLECTION-NAME XQUERY-MODULE [ THREAD-COUNT ]
+</pre>
+
+<p>The following sample invocation
+uses a sample medline-reprocessing XQuery module,
+which is included in <code>corb.jar</code>.
+
+<pre>
+java -cp $HOME/lib/java/xcc.jar:$HOME/lib/java/corb.jar \
+  com.marklogic.developer.corb.Manager \
+  xcc://admin:admin@localhost:9002/ "" \
+  medline-iso8601.xqy
+</pre>
+
+<p>
+As Corb processes the documents, various progress messages will be logged.
+</p>
+
+</body>
+</html>
