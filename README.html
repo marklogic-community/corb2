@@ -48,21 +48,45 @@ to apply an XQuery module to each document.
 <ul>
   <li>MarkLogic 3.2-1 or later</li>
   <li>The target database must be configured with a URI lexicon</li>
-  <li>The target XDBC server must set its modules location to <code>Modules</code></li>
-  <li>The target XDBC server must set its library location to <code>/</code></li>
+</ul>
+
+<h2>Additional configuration notes</h2>
+  <li>If the target XDBC server is configured with a library location on the filesystem:
+    <ul>
+      <li>Both content processing and uri selection modules must be installed manually.</li>
+      <li>The MODULE-ROOT parameter must be set to match the root-relative path to the installed modules
+      (e.g. if the root is /opt/MarkLogic/myapp/src and the modules are installed in /opt/MarkLogic/myapp/src/reprocessing, then the
+      MODULE-ROOT should be set to /reprocessing/.</li>
+    </ul>
+  </li>
+  <li>If the target XDBC server is configured with a library location pointing to a database:
+  <ul>
+      <li>If the XDBC database is not the 'Modules' database (default), set Corb MODULES-DATABASE configuration to match.</li>
+      <li>Unless specified using the MODULE-ROOT parameter, modules will be installed with a root derived from the package name.</li>
+  </ul>
+  </li>
 </ul>
 
 <h2>Running Corb</h2>
 <p>The entry point is the main method in the
  com.marklogic.developer.corb.Manager class.
-Corb requires 3 command-line arguments.
-The number of worker threads can be specified as an optional fourth argument.
-The default is to run only one worker thread.
+Corb requires 3 command-line arguments:
+<ul><li>XCC-CONNECTION-URI</li>
+ <li>COLLECTION-NAME</li>
+ <li>XQUERY-MODULE (provide filesystem path if not contained in the corb package)</li>
+</ul>
+There are 5 additional optional command-line arguments:
+ <ul><li>THREAD-COUNT (number of worker threads; default = 1)</li>
+ <li>URIS-MODULE (alternate URI selection module, replacing provided Corb default).</li>
+ <li>MODULE-ROOT (assumes '/' if not provided)</li>
+<li>MODULES-DATABASE (assumes 'Modules' if not provided; will reset to 0 for filesystem)</li>
+<li>INSTALL (default is true; set to 'false' or '0' if installation should be skipped)</li>
+</ul>
 </p>
 
 <pre>
 com.marklogic.developer.corb.Manager \
-  XCC-CONNECTION-URI COLLECTION-NAME XQUERY-MODULE [ THREAD-COUNT ]
+  XCC-CONNECTION-URI COLLECTION-NAME XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT [ MODULES-DATABASE [ INSTALL ] ] ] ] ]
 </pre>
 
 <p>The following sample invocation
@@ -75,6 +99,34 @@ java -cp $HOME/lib/java/xcc.jar:$HOME/lib/java/corb.jar \
   xcc://admin:admin@localhost:9002/ "" \
   medline-iso8601.xqy
 </pre>
+</p>
+
+<p>Another sample invocation, using a processing module loaded from the filesystem, an
+alternate URI selection module, and 2 threads.
+
+<pre>
+java -cp $HOME/lib/java/xcc.jar:$HOME/lib/java/corb.jar \
+  com.marklogic.developer.corb.Manager \
+  xcc://admin:admin@localhost:9002/ "" \
+  /home/myproject/src/custom-transform.xqy 2 \
+  /home/myproject/src/custom-uri-selection.xqy
+</pre>
+
+</p>
+<p>A third sample invocation. Using 4 threads, custom modules
+pre-installed in the 'mydb' database using URIs /preprocessing/custom-transform.xqy and
+/preprocessing/custom-uri-selection.xqy.
+<pre>
+java -cp $HOME/lib/java/xcc.jar:$HOME/lib/java/corb.jar \
+  com.marklogic.developer.corb.Manager \
+  xcc://admin:admin@localhost:9002/ "" \
+  custom-transform.xqy 4 \
+  custom-uri-selection.xqy \
+  /preprocessing/ \
+  mydb
+  false
+</pre>
+</p>
 
 <p>
 As Corb processes the documents, various progress messages will be logged.

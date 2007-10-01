@@ -31,6 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import com.marklogic.developer.SimpleLogger;
+import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentCreateOptions;
 import com.marklogic.xcc.ContentFactory;
@@ -38,31 +39,32 @@ import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ContentSourceFactory;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
+import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.exceptions.XccException;
 import com.marklogic.xcc.types.XSInteger;
+import com.marklogic.xcc.types.XdmItem;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
- * 
+ * @author Colleen Whitney, colleen.whitney@marklogic.com
+ *
  */
 public class Manager implements Runnable {
 
     /**
-     * 
+     *
      */
     private static final String NAME = Manager.class.getName();
 
-    public static String VERSION = "2007-05-07.1";
+    public static String VERSION = "2007-10-01.1";
 
     private URI connectionUri;
 
     private String collection;
-
-    private String modulePath;
 
     private TransformOptions options = new TransformOptions();
 
@@ -82,11 +84,11 @@ public class Manager implements Runnable {
      * @param connectionUri
      * @param collection
      * @param modulePath
+     * @param uriListPath
      */
-    public Manager(URI connectionUri, String collection, String modulePath) {
+    public Manager(URI connectionUri, String collection) {
         this.connectionUri = connectionUri;
         this.collection = collection;
-        this.modulePath = modulePath;
     }
 
     /**
@@ -102,13 +104,27 @@ public class Manager implements Runnable {
         // gather inputs
         URI connectionUri = new URI(args[0]);
         String collection = args[1];
-        String moduleUri = args[2];
 
-        Manager tm = new Manager(connectionUri, collection, moduleUri);
-        if (args.length > 3) {
-            // options
-            TransformOptions options = tm.getOptions();
+        Manager tm = new Manager(connectionUri, collection);
+        // options
+        TransformOptions options = tm.getOptions();
+
+        options.setProcessModule(args[2]);
+
+        if (args.length > 3 && !args[3].equals("")) {
             options.setThreadCount(Integer.parseInt(args[3]));
+        }
+        if (args.length > 4 && !args[4].equals("")) {
+            options.setUrisModule(args[4]);
+        }
+        if (args.length > 5 && !args[5].equals("")) {
+          options.setModuleRoot(args[5]);
+        }
+        if (args.length > 6 && !args[6].equals("")) {
+          options.setModulesDatabase(args[6]);
+        }
+        if (args.length > 7 && !args[7].equals("")) {
+          if (args[7].equals("false") || args[7].equals("0")) options.setDoInstall(false);
         }
         tm.run();
     }
@@ -121,20 +137,21 @@ public class Manager implements Runnable {
     }
 
     /**
-     * 
+     *
      */
     private static void usage() {
         PrintStream err = System.err;
         err.println("\nusage:");
         err.println("\t" + NAME
                 + " xcc://user:password@host:port/[ database ]"
-                + " input-collection" + " module-name.xqy"
-                + " [ thread-count ]");
+                + " input-selector module-name.xqy"
+                + " [ thread-count [ uris-module [ module-root"
+                + " [ modules-database [ install ] ] ] ] ]");
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Runnable#run()
      */
     public void run() {
@@ -142,6 +159,7 @@ public class Manager implements Runnable {
         logger.info(NAME + " starting: version = " + VERSION);
 
         prepareContentSource();
+        registerStatusInfo();
         prepareModules();
         Thread monitorThread = preparePool();
 
@@ -180,67 +198,75 @@ public class Manager implements Runnable {
     /**
      * @throws IOException
      * @throws RequestException
-     * 
+     *
      */
     private void prepareModules() {
-        // bootstrap xqy modules from package's getResourceAsInputStream()
-        String modulesDatabase = options.getModulesDatabase();
-        logger
-                .info("preparing modules using database "
-                        + modulesDatabase);
-        Session session = contentSource.newSession(modulesDatabase);
-        InputStream is = null;
-        Content c = null;
-        ContentCreateOptions opts = ContentCreateOptions
-                .newTextInstance();
-        String[] resourceModules = new String[] { TransformOptions.URIS_MODULE };
-        try {
-            for (String uri : resourceModules) {
-                logger.info("inserting module " + uri);
-                // use a relative path
-                is = this.getClass().getResourceAsStream(
-                        new File(uri).getName());
-                if (null == is) {
-                    throw new NullPointerException(uri
-                            + " could not be found in package resources");
-                }
-                // use an absolute path
-                c = ContentFactory.newContent(
-                        TransformOptions.MODULE_ROOT + uri, is, opts);
-                session.insertContent(c);
-            }
-
-            // now the workload module: check files first, then resources
-            File f = new File(modulePath);
+      String[] resourceModules = new String[] { options.getUrisModule(),options.getProcessModule() };
+      String modulesDatabase = options.getModulesDatabase();
+      logger.info("checking modules, database: "
+          + modulesDatabase);
+      Session session = contentSource.newSession(modulesDatabase);
+      InputStream is = null;
+      Content c = null;
+      ContentCreateOptions opts = ContentCreateOptions
+      .newTextInstance();
+      try {
+      for (int i = 0; i < resourceModules.length; i++) {
+        //Start by checking install flag.
+        if (!options.isDoInstall()){
+          logger.info("Skipping module installation: " + resourceModules[i]);
+          String moduleuri = options.getModuleRoot()+resourceModules[i];
+          /*Check that the file is installed
+        if (!isInstalled(moduleuri)) {
+          logger.warning("Module not installed at " + moduleuri);
+          System.exit(0);
+          }
+          }*/
+          continue;
+        }
+        //Next check: if XCC is configured for the filesystem, print
+        //message and exit.
+        else if (options.getModulesDatabase().equals("")) {
+          logger.info("XCC configured for the filesystem: please install modules manually");
+          System.exit(0);
+        }
+        //Finally, if it's configured for a database, install.
+        else {
+            File f = new File(resourceModules[i]);
+            //If not installed, are the specified files on the filesystem?
             if (f.exists()) {
-                moduleUri = TransformOptions.MODULE_ROOT + f.getName();
-                c = ContentFactory.newContent(moduleUri, f, opts);
-            } else {
-                logger.warning("looking for " + modulePath
-                        + " as resource");
-                moduleUri = TransformOptions.MODULE_ROOT + modulePath;
-                is = this.getClass().getResourceAsStream(modulePath);
-                if (null == is) {
-                    throw new NullPointerException(modulePath
-                            + " could not be found on the filesystem,"
-                            + " or in package resources");
-                }
-                c = ContentFactory.newContent(moduleUri, is, opts);
+              moduleUri = options.getModuleRoot() + f.getName();
+              c = ContentFactory.newContent(moduleUri, f, opts);
+            }
+            //finally, check package
+            else {
+              logger.warning("looking for " + resourceModules[i]
+                                                              + " as resource");
+              moduleUri = options.getModuleRoot() + resourceModules[i];
+              is = this.getClass().getResourceAsStream(resourceModules[i]);
+              if (null == is) {
+                throw new NullPointerException(resourceModules[i]
+                                                               + " could not be found on the filesystem,"
+                                                               + " or in package resources");
+              }
+              c = ContentFactory.newContent(moduleUri, is, opts);
             }
             session.insertContent(c);
-        } catch (IOException e) {
-            logger.logException("fatal error", e);
-            throw new RuntimeException(e);
-        } catch (RequestException e) {
-            logger.logException("fatal error", e);
-            throw new RuntimeException(e);
-        } finally {
-            session.close();
+          }
         }
+      } catch (IOException e) {
+      logger.logException("fatal error", e);
+      throw new RuntimeException(e);
+    } catch (RequestException e) {
+      logger.logException("fatal error", e);
+      throw new RuntimeException(e);
+    } finally {
+      session.close();
+    }
     }
 
     /**
-     * 
+     *
      */
     private void prepareContentSource() {
         logger.info("using content source " + connectionUri);
@@ -253,14 +279,81 @@ public class Manager implements Runnable {
         }
     }
 
+    private void registerStatusInfo() {
+      Session session = contentSource.newSession();
+      AdhocQuery q = session.newAdhocQuery(
+        ("declare namespace ml = 'http://marklogic.com/xdmp/status/server' "+
+        "let $status := xdmp:server-status(xdmp:host(),xdmp:server()) ") +
+        "let $modules := $status/ml:modules " +
+        "let $root := $status/ml:root " +
+        "return (data($modules),data($root))" );
+      ResultSequence rs = null;
+      try {
+      rs = session.submitRequest(q);
+    } catch (RequestException e) {
+      e.printStackTrace();
+    }
+    finally {
+      session.close();
+    }
+    while (rs.hasNext()) {
+        ResultItem rsItem = rs.next();
+        XdmItem item = rsItem.getItem();
+        if (rsItem.getIndex() == 0 && item.asString().equals("0")) {
+        options.setModulesDatabase("");
+        }
+        if (rsItem.getIndex() == 1) {
+        options.setXDBC_ROOT(item.asString());
+        }
+    }
+    logger.info("Configured modules DB: " + options.getModulesDatabase());
+    logger.info("Configured XDBC Root: " + options.getXDBC_ROOT());
+    }
+
+    /**
+     * Needs modification so that filesystem path can be checked
+     * whether config directory is absolute or relative.
+     * @param moduleuri
+     * @return
+     */
+    private boolean isInstalled(String moduleuri) {
+      boolean b = false;
+      if (options.getModulesDatabase().equals("")) {
+        String filepath = options.getXDBC_ROOT()+moduleuri;
+        File f = new File(filepath);
+        logger.info("Checking path: " + filepath);
+        if (f.exists()) {
+          b = true;
+        }
+      }
+      else {
+        Session session = contentSource.newSession(options.getModulesDatabase());
+        AdhocQuery q = session.newAdhocQuery(
+          "doc('"+ moduleuri +"')");
+
+        ResultSequence rs = null;
+        try {
+        rs = session.submitRequest(q);
+        if (!rs.isEmpty()) {
+          b = true;
+        }
+      } catch (RequestException e) {
+        e.printStackTrace();
+      }
+      }
+      return b;
+    }
+    /**
+     * @throws XccException
+     */
     private void populateQueue() throws XccException {
         logger.info("populating queue");
 
         // configure the task factory
         TaskFactory.setContentSource(contentSource);
-        // trim off the leading slash for the XDBC library path
-        TaskFactory.setModuleUri(moduleUri
-                .substring(TransformOptions.XDBC_ROOT.length()));
+
+        TaskFactory.setModuleUri(options.getModuleRoot() +
+            options.getProcessModule());
 
         // must run uncached, or we'll quickly run out of memory
         RequestOptions requestOptions = new RequestOptions();
@@ -270,12 +363,11 @@ public class Manager implements Runnable {
         int count = 0;
         int total = -1;
 
+
         try {
             session = contentSource.newSession();
-            // trim off the leading slash for the XDBC library path
-            String urisModule = TransformOptions.MODULE_ROOT
-                    .substring(TransformOptions.XDBC_ROOT.length())
-                    + TransformOptions.URIS_MODULE;
+            String urisModule = options.getModuleRoot()
+                    + options.getUrisModule();
             logger.info("invoking module " + urisModule);
             Request req = session.newModuleInvoke(urisModule);
             // NOTE: collection will be treated as a CWSV

@@ -20,7 +20,8 @@ package com.marklogic.developer.corb;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
- * 
+ * @author Colleen Whitney, colleen.whitney@marklogic.com
+ *
  */
 public class TransformOptions {
 
@@ -34,22 +35,38 @@ public class TransformOptions {
 
     private static final char SLASHCHAR = SLASH.toCharArray()[0];
 
-    // TODO make the XDBC library path configurable
-    public static final String XDBC_ROOT = SLASH;
-
     public static final String COLLECTION_TYPE = "COLLECTION";
     public static final String DIRECTORY_TYPE = "DIRECTORY";
     public static final String QUERY_TYPE = "QUERY";
+    private String processModule = null;
 
-    static String MODULE_ROOT = SLASH
-            + TransformOptions.class.getPackage().getName().replace('.',
+    //Defaults for optional arguments
+    private String moduleRoot = SLASH + TransformOptions.class.getPackage().getName().replace('.',
                     SLASHCHAR) + SLASH;
-
-    static String URIS_MODULE = "get-uris.xqy";
-
+    private String urisModule = "get-uris.xqy";
     private int threadCount = 1;
+    private boolean doInstall = true;
+
+    //We could get rid of this now that we check status...
+    private String modulesDatabase = "Modules";
+
+    //Set on status check
+    private String XDBC_ROOT = SLASH;
 
     /**
+     * @return
+     */
+    public String getXDBC_ROOT() {
+    return XDBC_ROOT;
+  }
+    /**
+     * @param xdbc_root
+     */
+  public void setXDBC_ROOT(String xdbc_root) {
+    XDBC_ROOT = xdbc_root;
+  }
+
+  /**
      * @return
      */
     public int getThreadCount() {
@@ -83,8 +100,70 @@ public class TransformOptions {
      * @return
      */
     public String getModulesDatabase() {
-        // TODO make ModulesDatabase configurable
-        return "Modules";
+        return this.modulesDatabase;
     }
+
+    /**
+     * @param modulesDatabase
+     */
+    public void setModulesDatabase(String modulesDatabase) {
+    this.modulesDatabase = modulesDatabase;
+  }
+
+    /**
+     * @return
+     */
+  public String getUrisModule() {
+    return urisModule;
+  }
+
+   /**
+     * @param urisModule
+     */
+  public void setUrisModule(String urisModule) {
+    this.urisModule = urisModule;
+  }
+
+   /**
+     * @return
+     */
+  public String getProcessModule() {
+    return processModule;
+  }
+
+   /**
+     * @param processModule
+     */
+  public void setProcessModule(String processModule) {
+    this.processModule = processModule;
+  }
+
+   /**
+     * @return
+     */
+  public String getModuleRoot() {
+    return moduleRoot;
+  }
+
+   /**
+     * @param moduleRoot
+     */
+  public void setModuleRoot(String moduleRoot) {
+    this.moduleRoot = moduleRoot;
+  }
+   /**
+     * @return
+     */
+  public boolean isDoInstall() {
+    return doInstall;
+  }
+   /**
+     * @param doInstall
+     */
+  public void setDoInstall(boolean doInstall) {
+    this.doInstall = doInstall;
+  }
+
+
 
 }
