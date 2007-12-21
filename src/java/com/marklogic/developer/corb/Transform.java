@@ -27,7 +27,7 @@ import com.marklogic.xcc.Session;
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * 
  */
-public class Transform implements Callable {
+public class Transform implements Callable<String> {
 
     private Session session;
 
@@ -63,7 +63,7 @@ public class Transform implements Callable {
      * 
      * @see java.util.concurrent.Callable#call()
      */
-    public Object call() throws Exception {
+    public String call() throws Exception {
         Request request = session.newModuleInvoke(moduleUri);
         request.setNewStringVariable("URI", inputUri);
         return session.submitRequest(request).asString();

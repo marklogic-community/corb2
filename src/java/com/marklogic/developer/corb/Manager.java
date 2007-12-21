@@ -51,16 +51,16 @@ import com.marklogic.xcc.types.XdmItem;
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * @author Colleen Whitney, colleen.whitney@marklogic.com
- *
+ * 
  */
 public class Manager implements Runnable {
 
     /**
-     *
+     * 
      */
     private static final String NAME = Manager.class.getName();
 
-    public static String VERSION = "2007-10-01.1";
+    public static String VERSION = "2007-10-29.1";
 
     private URI connectionUri;
 
@@ -137,7 +137,7 @@ public class Manager implements Runnable {
     }
 
     /**
-     *
+     * 
      */
     private static void usage() {
         PrintStream err = System.err;
@@ -151,7 +151,7 @@ public class Manager implements Runnable {
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see java.lang.Runnable#run()
      */
     public void run() {
@@ -198,7 +198,7 @@ public class Manager implements Runnable {
     /**
      * @throws IOException
      * @throws RequestException
-     *
+     * 
      */
     private void prepareModules() {
       String[] resourceModules = new String[] { options.getUrisModule(),options.getProcessModule() };
@@ -212,33 +212,32 @@ public class Manager implements Runnable {
       .newTextInstance();
       try {
       for (int i = 0; i < resourceModules.length; i++) {
-        //Start by checking install flag.
+        // Start by checking install flag.
         if (!options.isDoInstall()){
           logger.info("Skipping module installation: " + resourceModules[i]);
           String moduleuri = options.getModuleRoot()+resourceModules[i];
-          /*Check that the file is installed
-        if (!isInstalled(moduleuri)) {
-          logger.warning("Module not installed at " + moduleuri);
-          System.exit(0);
-          }
-          }*/
+          /*
+             * Check that the file is installed if (!isInstalled(moduleuri)) {
+             * logger.warning("Module not installed at " + moduleuri);
+             * System.exit(0); } }
+             */
           continue;
         }
-        //Next check: if XCC is configured for the filesystem, print
-        //message and exit.
+        // Next check: if XCC is configured for the filesystem, print
+        // message and exit.
         else if (options.getModulesDatabase().equals("")) {
           logger.info("XCC configured for the filesystem: please install modules manually");
           System.exit(0);
         }
-        //Finally, if it's configured for a database, install.
+        // Finally, if it's configured for a database, install.
         else {
             File f = new File(resourceModules[i]);
-            //If not installed, are the specified files on the filesystem?
+            // If not installed, are the specified files on the filesystem?
             if (f.exists()) {
               moduleUri = options.getModuleRoot() + f.getName();
               c = ContentFactory.newContent(moduleUri, f, opts);
             }
-            //finally, check package
+            // finally, check package
             else {
               logger.warning("looking for " + resourceModules[i]
                                                               + " as resource");
@@ -266,7 +265,7 @@ public class Manager implements Runnable {
     }
 
     /**
-     *
+     * 
      */
     private void prepareContentSource() {
         logger.info("using content source " + connectionUri);
@@ -300,19 +299,20 @@ public class Manager implements Runnable {
         ResultItem rsItem = rs.next();
         XdmItem item = rsItem.getItem();
         if (rsItem.getIndex() == 0 && item.asString().equals("0")) {
-        options.setModulesDatabase("");
+            options.setModulesDatabase("");
         }
         if (rsItem.getIndex() == 1) {
-        options.setXDBC_ROOT(item.asString());
+            options.setXDBC_ROOT(item.asString());
         }
     }
-    logger.info("Configured modules DB: " + options.getModulesDatabase());
-    logger.info("Configured XDBC Root: " + options.getXDBC_ROOT());
+    logger.info("Configured modules db: " + options.getModulesDatabase());
+    logger.info("Configured modules root: " + options.getXDBC_ROOT());
     }
 
     /**
-     * Needs modification so that filesystem path can be checked
-     * whether config directory is absolute or relative.
+     * TODO Needs modification so that filesystem path can be checked whether
+     * config directory is absolute or relative.
+     * 
      * @param moduleuri
      * @return
      */
@@ -437,7 +437,7 @@ public class Manager implements Runnable {
      */
     public void stop() {
         if (pool != null) {
-            List remaining = pool.shutdownNow();
+            List<Runnable> remaining = pool.shutdownNow();
             if (remaining.size() > 0) {
                 logger.warning("thread pool was shut down with "
                         + remaining.size() + " pending tasks");

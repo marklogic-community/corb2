@@ -190,13 +190,13 @@ public class SimpleLogger extends Logger {
                 } else {
                     // try to load the string as a classname
                     try {
-                        Class lhc = Class.forName(logHandler[i], true,
-                                ClassLoader.getSystemClassLoader());
+                        Class<? extends Handler> lhc = Class.forName(logHandler[i], true,
+                                ClassLoader.getSystemClassLoader()).asSubclass(Handler.class);
                         System.err.println("logging to class "
                                 + logHandler[i]);
-                        Constructor con = lhc
+                        Constructor<? extends Handler> con = lhc
                                 .getConstructor(new Class[] {});
-                        h = (Handler) con.newInstance(new Object[] {});
+                        h = con.newInstance(new Object[] {});
                     } catch (Exception e) {
                         System.err.println("unrecognized LOG_HANDLER: "
                                 + logHandler[i]);

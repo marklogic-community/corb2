@@ -32,10 +32,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author mike.blakeley@marklogic.com
@@ -83,204 +80,7 @@ public class Utilities {
         return _path.replaceFirst(".*\\.([^\\.]+)$", "$1");
     }
 
-    public static String listToXml(List _list, String _root, String _element) {
-        return listToXml(_list, _root, _element, null, false);
-    }
-
-    public static String listToXml(List _list, String _root, String _namespace,
-            String _element) {
-        return listToXml(_list, _root, _element, _namespace, false);
-    }
-
-    public static String listToXml(List _list, String _root, String _element,
-            String _namespace, boolean _preserveSpace) {
-        // preserve xml whitespace everywhere,
-        // or strings will be whitespace-normalized
-        String rootName = escapeXml(_root);
-        String rv = "<" + rootName;
-        if (_namespace != null)
-            rv = rv + " xmlns=\"" + _namespace + "\"";
-        rv = rv + ">";
-
-        String elementName = escapeXml(_element);
-        Iterator i = _list.iterator();
-        Object v = null;
-        String attrs = "";
-        if (_preserveSpace)
-            attrs = " xml:space=\"preserve\"";
-
-        while (i.hasNext()) {
-            v = i.next();
-            if (v instanceof Map) {
-                // assume it's a Map and try to descend
-                rv += mapToXml((Map) v, elementName, null, _preserveSpace);
-            } else {
-                // escape illegal characters in values
-                rv += "<" + elementName + attrs + ">" + escapeXml(v.toString())
-                        + "</" + elementName + ">";
-            }
-        }
-
-        rv += "</" + rootName + ">";
-        return rv;
-    }
-
-    public static String arrayToXml(Object[] _list, String _root,
-            String _element) {
-        return arrayToXml(_list, _root, _element, null, null, false);
-    }
-
-    public static String arrayToXml(Object[] _list, String _root,
-            String _namespace, String _element) {
-        return arrayToXml(_list, _root, _element, _namespace, null, false);
-    }
-
-    public static String arrayToXml(Object[] _list, String _root,
-            String _element, String _namespace, String _rootAttributes) {
-        return arrayToXml(_list, _root, _element, _namespace, _rootAttributes,
-                false);
-    }
-
-    public static String arrayToXml(Object[] _list, String _root,
-            String _element, String _namespace, String _rootAttributes,
-            boolean _preserveSpace) {
-
-        // preserve xml whitespace everywhere,
-        // or strings will be whitespace-normalized
-        String rootName = _root;
-        if (_root != null)
-            rootName = escapeXml(_root);
-        StringBuffer rv = new StringBuffer();
-        if (rootName != null) {
-            rv.append("<");
-            rv.append(rootName);
-            if (_namespace != null) {
-                rv.append(" xmlns=\"");
-                rv.append(_namespace);
-                rv.append("\"");
-            }
-            if (_rootAttributes != null) {
-                rv.append(" ");
-                rv.append(_rootAttributes);
-            }
-            rv.append(">");
-        }
-
-        if (_list != null) {
-            String elementName = escapeXml(_element);
-            String attrs = "";
-            if (_preserveSpace)
-                attrs = " xml:space=\"preserve\"";
-
-            for (int i = 0; i < _list.length; i++) {
-                if (_list[i] instanceof Map) {
-                    // assume it's a Map and try to descend
-                    rv.append(mapToXml((Map) _list[i], elementName, null,
-                            _preserveSpace));
-                } else {
-                    // escape illegal characters in values
-                    rv.append("<");
-                    rv.append(elementName);
-                    rv.append(attrs);
-                    rv.append(">");
-                    rv.append(escapeXml(_list[i].toString()));
-                    rv.append("</");
-                    rv.append(elementName);
-                    rv.append(">");
-                }
-            }
-        }
-
-        if (rootName != null) {
-            rv.append("</");
-            rv.append(rootName);
-            rv.append(">");
-        }
-        return rv.toString();
-    }
-
-    /**
-     * turn a hashmap into xml
-     * 
-     * @param _h
-     * @return
-     */
-    public static String mapToXml(Map _h) {
-        return mapToXml(_h, "params", false);
-    }
-
-    public static String mapToXml(Map _h, String _root) {
-        return mapToXml(_h, _root, false);
-    }
-
-    public static String mapToXml(Map _h, boolean _preserveSpace) {
-        return mapToXml(_h, "params", _preserveSpace);
-    }
-
-    /**
-     * @param
-     * @param
-     * @param
-     * @return
-     */
-    public static String mapToXml(Map _h, String _root, String _nameSpace) {
-        return mapToXml(_h, _root, _nameSpace, false);
-    }
-
-    public static String mapToXml(Map _h, String _root, boolean _preserveSpace) {
-        return mapToXml(_h, _root, null, _preserveSpace);
-    }
-
-    /**
-     * @param
-     * @param
-     * @param
-     * @param
-     * @return
-     */
-    public static String mapToXml(Map _h, String _root, String _nameSpace,
-            boolean _preserveSpace) {
-        // preserve xml whitespace everywhere,
-        // or strings will be whitespace-normalized
-        String topElementName = escapeXml(_root);
-        String rv = "<" + topElementName;
-        if (_nameSpace != null)
-            rv = rv + " xmlns=\"" + _nameSpace + "\"";
-        rv = rv + ">";
-        Set keys = _h.keySet();
-        Iterator i = keys.iterator();
-        String k = null;
-        Object v = null;
-        String attrs = "";
-        if (_preserveSpace)
-            attrs = " xml:space=\"preserve\"";
-
-        while (i.hasNext()) {
-            k = (String) i.next();
-            v = _h.get(k);
-            if (v instanceof Map) {
-                // assume it's a Map and try to recurse
-                rv += mapToXml((Map) v, k, null, _preserveSpace);
-            } else if (v instanceof List) {
-                // try to handle the list
-                String elementName = null;
-                if (k.endsWith("s"))
-                    elementName = k.substring(0, k.length() - 1);
-                else
-                    elementName = k + "-item";
-                listToXml((List) v, k, null, elementName, _preserveSpace);
-            } else {
-                // escape illegal characters in values
-                rv += "<" + k + attrs + ">" + escapeXml(v.toString()) + "</"
-                        + k + ">";
-            }
-        }
-
-        rv += "</" + topElementName + ">";
-        return rv;
-    }
-
-    public static String join(List _items, String _delim) {
+    public static String join(List<Object> _items, String _delim) {
         if (null == _items) {
             return null;
         }
@@ -462,7 +262,7 @@ public class Utilities {
         deleteFile(new File(_path));
     }
 
-    public static String buildModulePath(Class _class) {
+    public static String buildModulePath(Class<?> _class) {
         return "/" + _class.getName().replace('.', '/') + ".xqy";
     }
 

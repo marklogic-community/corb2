@@ -103,6 +103,30 @@ com.marklogic.developer.corb.Manager \
   XCC-CONNECTION-URI COLLECTION-NAME XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT [ MODULES-DATABASE [ INSTALL ] ] ] ] ]
 </pre>
 
+<h2>Writing a Custom URI Module</h2>
+
+<p>The <code>URIS-MODULE</code> must be an XQuery main module,
+and must return a sequence of <code>(xs:unsignedLong, xs:string*)</code>.
+The first item must be the size of the subsequence sequence of URIs.
+</p>
+
+<p>For example, this simple <code>URIS-MODULE</code>
+would return all available URIs from the URI Lexicon,
+behaving just as Corb normally would with <code>COLLECTION-NAME=""</code>
+and no <code>URIS-MODULE</code>.
+</p>
+
+<pre>
+(: simple URIS-MODULE example :)
+let $uris := cts:uris('', 'document')
+return (count($uris), $uris)
+</pre>
+
+<p>This example may be extended to intersect a <code>cts:query</code>, etc.
+</p>
+
+<h2>Sample Invocations</h2>
+
 <p>The following sample invocation
 uses a sample medline-reprocessing XQuery module,
 which is included in <code>corb.jar</code>.
@@ -115,7 +139,8 @@ java -cp $HOME/lib/java/xcc.jar:$HOME/lib/java/corb.jar \
   medline-iso8601.xqy
 </pre>
 
-<p>Another sample invocation, using a processing module loaded from the filesystem, an
+<p>Another sample invocation,
+using a processing module loaded from the filesystem, an
 alternate URI selection module, and 2 threads.
 </p>
 
@@ -128,8 +153,9 @@ java -cp $HOME/lib/java/xcc.jar:$HOME/lib/java/corb.jar \
 </pre>
 
 <p>A third sample invocation. Using 4 threads, custom modules
-pre-installed in the 'mydb' database using URIs /preprocessing/custom-transform.xqy and
-/preprocessing/custom-uri-selection.xqy.
+pre-installed in the 'mydb' database
+processing with /preprocessing/custom-transform.xqy and
+using URIs returned by /preprocessing/custom-uri-selection.xqy:
 </p>
 <pre>
 java -cp $HOME/lib/java/xcc.jar:$HOME/lib/java/corb.jar \

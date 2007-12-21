@@ -87,7 +87,7 @@ public class Monitor implements Runnable {
                 // check the results
                 try {
                     currentTask = tasks[i];
-                    uri = (String) currentTask.get();
+                    uri = currentTask.get();
                     logger.fine("output uri: " + uri);
                 } catch (InterruptedException e) {
                     logger.logException("interrupted " + i, e);

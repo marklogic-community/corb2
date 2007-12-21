@@ -24,7 +24,7 @@ import java.util.concurrent.FutureTask;
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  *
  */
-public class Task extends FutureTask {
+public class Task extends FutureTask<String> {
 
     private Transform transform;
 
