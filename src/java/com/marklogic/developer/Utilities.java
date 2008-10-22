@@ -1,5 +1,5 @@
 /*
- * Copyright (c)2005-2007 Mark Logic Corporation
+ * Copyright (c)2005-2008 Mark Logic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import java.util.List;
 
 /**
  * @author mike.blakeley@marklogic.com
- * 
+ *
  */
 public class Utilities {
 
@@ -67,7 +67,7 @@ public class Utilities {
         synchronized (m_ISO8601Local) {
             dateStr = m_ISO8601Local.format(date);
         }
-        
+
         // remap the timezone from 0000 to 00:00 (starts at char 22)
         return dateStr.substring(0, 22) + ":" + dateStr.substring(22);
     }
@@ -277,7 +277,7 @@ public class Utilities {
      * @throws IOException
      */
     public static String cat(Reader r) throws IOException {
-        StringBuffer rv = new StringBuffer();
+        StringBuilder rv = new StringBuilder();
 
         int size;
         char[] buf = new char[BUFFER_SIZE];
@@ -344,7 +344,7 @@ public class Utilities {
      */
     public static String dumpHex(String _string, String _encoding)
             throws UnsupportedEncodingException {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         byte[] bytes = _string.getBytes(_encoding);
         for (int i = 0; i < bytes.length; i++) {
             // bytes are signed: we want unsigned values

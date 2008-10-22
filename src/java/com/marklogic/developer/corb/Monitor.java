@@ -1,5 +1,5 @@
 /*
- * Copyright (c)2005-2007 Mark Logic Corporation
+ * Copyright (c)2005-2008 Mark Logic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,9 +63,13 @@ public class Monitor implements Runnable {
         try {
             // block until at least one task has been queued
             // this will support faster fast-fail
-            while (tasks == null || tasks[0] == null) {
-                logger.finest("no transforms yet - napping");
-                Thread.sleep(TransformOptions.SLEEP_TIME_MS);
+            if (tasks == null || tasks.length < 1 || tasks[0] == null) {
+                logger.info("waiting for tasks");
+                while (tasks == null || tasks.length < 1
+                        || tasks[0] == null) {
+                    logger.finest("no transforms yet - napping");
+                    Thread.sleep(TransformOptions.SLEEP_TIME_MS);
+                }
             }
 
             monitorResults();

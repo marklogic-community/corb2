@@ -1,5 +1,5 @@
 /*
- * Copyright (c)2005-2007 Mark Logic Corporation
+ * Copyright (c)2005-2008 Mark Logic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,12 +55,22 @@ import com.marklogic.xcc.types.XdmItem;
  */
 public class Manager implements Runnable {
 
+    public static String VERSION = "2008-09-03.1";
+
+    /**
+     * 
+     */
+    private static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server'\n";
+
+    /**
+     * 
+     */
+    private static final String XQUERY_VERSION_0_9_ML = "xquery version \"0.9-ml\"\n";
+
     /**
      * 
      */
     private static final String NAME = Manager.class.getName();
-
-    public static String VERSION = "2007-10-29.1";
 
     private URI connectionUri;
 
@@ -118,13 +128,14 @@ public class Manager implements Runnable {
             options.setUrisModule(args[4]);
         }
         if (args.length > 5 && !args[5].equals("")) {
-          options.setModuleRoot(args[5]);
+            options.setModuleRoot(args[5]);
         }
         if (args.length > 6 && !args[6].equals("")) {
-          options.setModulesDatabase(args[6]);
+            options.setModulesDatabase(args[6]);
         }
         if (args.length > 7 && !args[7].equals("")) {
-          if (args[7].equals("false") || args[7].equals("0")) options.setDoInstall(false);
+            if (args[7].equals("false") || args[7].equals("0"))
+                options.setDoInstall(false);
         }
         tm.run();
     }
@@ -201,67 +212,68 @@ public class Manager implements Runnable {
      * 
      */
     private void prepareModules() {
-      String[] resourceModules = new String[] { options.getUrisModule(),options.getProcessModule() };
-      String modulesDatabase = options.getModulesDatabase();
-      logger.info("checking modules, database: "
-          + modulesDatabase);
-      Session session = contentSource.newSession(modulesDatabase);
-      InputStream is = null;
-      Content c = null;
-      ContentCreateOptions opts = ContentCreateOptions
-      .newTextInstance();
-      try {
-      for (int i = 0; i < resourceModules.length; i++) {
-        // Start by checking install flag.
-        if (!options.isDoInstall()){
-          logger.info("Skipping module installation: " + resourceModules[i]);
-          String moduleuri = options.getModuleRoot()+resourceModules[i];
-          /*
-             * Check that the file is installed if (!isInstalled(moduleuri)) {
-             * logger.warning("Module not installed at " + moduleuri);
-             * System.exit(0); } }
-             */
-          continue;
-        }
-        // Next check: if XCC is configured for the filesystem, print
-        // message and exit.
-        else if (options.getModulesDatabase().equals("")) {
-          logger.info("XCC configured for the filesystem: please install modules manually");
-          System.exit(0);
-        }
-        // Finally, if it's configured for a database, install.
-        else {
-            File f = new File(resourceModules[i]);
-            // If not installed, are the specified files on the filesystem?
-            if (f.exists()) {
-              moduleUri = options.getModuleRoot() + f.getName();
-              c = ContentFactory.newContent(moduleUri, f, opts);
+        String[] resourceModules = new String[] {
+                options.getUrisModule(), options.getProcessModule() };
+        String modulesDatabase = options.getModulesDatabase();
+        logger.info("checking modules, database: " + modulesDatabase);
+        Session session = contentSource.newSession(modulesDatabase);
+        InputStream is = null;
+        Content c = null;
+        ContentCreateOptions opts = ContentCreateOptions
+                .newTextInstance();
+        try {
+            for (int i = 0; i < resourceModules.length; i++) {
+                // Start by checking install flag.
+                if (!options.isDoInstall()) {
+                    logger.info("Skipping module installation: "
+                            + resourceModules[i]);
+                    continue;
+                }
+                // Next check: if XCC is configured for the filesystem, warn
+                // user
+                else if (options.getModulesDatabase().equals("")) {
+                    logger
+                            .warning("XCC configured for the filesystem: please install modules manually");
+                    return;
+                }
+                // Finally, if it's configured for a database, install.
+                else {
+                    File f = new File(resourceModules[i]);
+                    // If not installed, are the specified files on the
+                    // filesystem?
+                    if (f.exists()) {
+                        moduleUri = options.getModuleRoot() + f.getName();
+                        c = ContentFactory.newContent(moduleUri, f, opts);
+                    }
+                    // finally, check package
+                    else {
+                        logger.warning("looking for "
+                                + resourceModules[i] + " as resource");
+                        moduleUri = options.getModuleRoot()
+                                + resourceModules[i];
+                        is = this.getClass().getResourceAsStream(
+                                resourceModules[i]);
+                        if (null == is) {
+                            throw new NullPointerException(
+                                    resourceModules[i]
+                                            + " could not be found on the filesystem,"
+                                            + " or in package resources");
+                        }
+                        c = ContentFactory
+                                .newContent(moduleUri, is, opts);
+                    }
+                    session.insertContent(c);
+                }
             }
-            // finally, check package
-            else {
-              logger.warning("looking for " + resourceModules[i]
-                                                              + " as resource");
-              moduleUri = options.getModuleRoot() + resourceModules[i];
-              is = this.getClass().getResourceAsStream(resourceModules[i]);
-              if (null == is) {
-                throw new NullPointerException(resourceModules[i]
-                                                               + " could not be found on the filesystem,"
-                                                               + " or in package resources");
-              }
-              c = ContentFactory.newContent(moduleUri, is, opts);
-            }
-            session.insertContent(c);
-          }
+        } catch (IOException e) {
+            logger.logException("fatal error", e);
+            throw new RuntimeException(e);
+        } catch (RequestException e) {
+            logger.logException("fatal error", e);
+            throw new RuntimeException(e);
+        } finally {
+            session.close();
         }
-      } catch (IOException e) {
-      logger.logException("fatal error", e);
-      throw new RuntimeException(e);
-    } catch (RequestException e) {
-      logger.logException("fatal error", e);
-      throw new RuntimeException(e);
-    } finally {
-      session.close();
-    }
     }
 
     /**
@@ -279,70 +291,37 @@ public class Manager implements Runnable {
     }
 
     private void registerStatusInfo() {
-      Session session = contentSource.newSession();
-      AdhocQuery q = session.newAdhocQuery(
-        ("declare namespace ml = 'http://marklogic.com/xdmp/status/server' "+
-        "let $status := xdmp:server-status(xdmp:host(),xdmp:server()) ") +
-        "let $modules := $status/ml:modules " +
-        "let $root := $status/ml:root " +
-        "return (data($modules),data($root))" );
-      ResultSequence rs = null;
-      try {
-      rs = session.submitRequest(q);
-    } catch (RequestException e) {
-      e.printStackTrace();
-    }
-    finally {
-      session.close();
-    }
-    while (rs.hasNext()) {
-        ResultItem rsItem = rs.next();
-        XdmItem item = rsItem.getItem();
-        if (rsItem.getIndex() == 0 && item.asString().equals("0")) {
-            options.setModulesDatabase("");
-        }
-        if (rsItem.getIndex() == 1) {
-            options.setXDBC_ROOT(item.asString());
-        }
-    }
-    logger.info("Configured modules db: " + options.getModulesDatabase());
-    logger.info("Configured modules root: " + options.getXDBC_ROOT());
-    }
-
-    /**
-     * TODO Needs modification so that filesystem path can be checked whether
-     * config directory is absolute or relative.
-     * 
-     * @param moduleuri
-     * @return
-     */
-    private boolean isInstalled(String moduleuri) {
-      boolean b = false;
-      if (options.getModulesDatabase().equals("")) {
-        String filepath = options.getXDBC_ROOT()+moduleuri;
-        File f = new File(filepath);
-        logger.info("Checking path: " + filepath);
-        if (f.exists()) {
-          b = true;
-        }
-      }
-      else {
-        Session session = contentSource.newSession(options.getModulesDatabase());
-        AdhocQuery q = session.newAdhocQuery(
-          "doc('"+ moduleuri +"')");
-
+        Session session = contentSource.newSession();
+        AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_0_9_ML
+                + DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
+                + "let $status := \n"
+                + " xdmp:server-status(xdmp:host(), xdmp:server())\n"
+                + "let $modules := $status/mlss:modules\n"
+                + "let $root := $status/mlss:root\n"
+                + "return (data($modules), data($root))");
         ResultSequence rs = null;
         try {
-        rs = session.submitRequest(q);
-        if (!rs.isEmpty()) {
-          b = true;
+            rs = session.submitRequest(q);
+        } catch (RequestException e) {
+            e.printStackTrace();
+        } finally {
+            session.close();
         }
-      } catch (RequestException e) {
-        e.printStackTrace();
-      }
-      }
-      return b;
+        while (rs.hasNext()) {
+            ResultItem rsItem = rs.next();
+            XdmItem item = rsItem.getItem();
+            if (rsItem.getIndex() == 0 && item.asString().equals("0")) {
+                options.setModulesDatabase("");
+            }
+            if (rsItem.getIndex() == 1) {
+                options.setXDBC_ROOT(item.asString());
+            }
+        }
+        logger.info("Configured modules db: "
+                + options.getModulesDatabase());
+        logger.info("Configured modules root: " + options.getXDBC_ROOT());
     }
+
     /**
      * @throws XccException
      */
@@ -352,8 +331,8 @@ public class Manager implements Runnable {
         // configure the task factory
         TaskFactory.setContentSource(contentSource);
 
-        TaskFactory.setModuleUri(options.getModuleRoot() +
-            options.getProcessModule());
+        TaskFactory.setModuleUri(options.getModuleRoot()
+                + options.getProcessModule());
 
         // must run uncached, or we'll quickly run out of memory
         RequestOptions requestOptions = new RequestOptions();
@@ -363,7 +342,6 @@ public class Manager implements Runnable {
         int count = 0;
         int total = -1;
 
-
         try {
             session = contentSource.newSession();
             String urisModule = options.getModuleRoot()
@@ -372,8 +350,9 @@ public class Manager implements Runnable {
             Request req = session.newModuleInvoke(urisModule);
             // NOTE: collection will be treated as a CWSV
             req.setNewStringVariable("URIS", collection);
-            // TODO support DIRECTORY, QUERY as types
-            req.setNewStringVariable("TYPE", TransformOptions.COLLECTION_TYPE);
+            // TODO support DIRECTORY as type
+            req.setNewStringVariable("TYPE",
+                    TransformOptions.COLLECTION_TYPE);
             req.setNewStringVariable("PATTERN", "[,\\s]+");
             req.setOptions(requestOptions);
 
@@ -402,8 +381,12 @@ public class Manager implements Runnable {
                 }
                 pool.submit(transform);
                 count++;
-                logger.finest("adding " + count + " of " + total + ": "
-                        + uri);
+                String msg = "queued " + count + "/" + total + ": " + uri;
+                if (0 == count % 10000) {
+                    logger.info(msg);
+                } else {
+                    logger.finest(msg);
+                }
             }
         } finally {
             if (null != session) {
