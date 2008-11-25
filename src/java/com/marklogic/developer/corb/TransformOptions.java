@@ -174,4 +174,11 @@ public class TransformOptions {
         this.doInstall = doInstall;
     }
 
+    /**
+     * @return
+     */
+    public int getQueueSize() {
+        return 100 * 1000;
+    }
+
 }

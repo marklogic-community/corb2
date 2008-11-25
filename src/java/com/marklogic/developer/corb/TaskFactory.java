@@ -43,7 +43,7 @@ public class TaskFactory {
      * @param _uri
      * @return
      */
-    public Task newTask(String _uri) {
+    public Transform newTask(String _uri) {
         if (null == contentSource) {
             throw new NullPointerException("null content source");
         }
@@ -55,7 +55,7 @@ public class TaskFactory {
         }
 
         // pass a reference to this factory, for later
-        return new Task(new Transform(this, _uri));
+        return new Transform(this, _uri);
     }
 
     /**

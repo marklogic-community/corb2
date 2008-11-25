@@ -26,9 +26,15 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import com.marklogic.developer.SimpleLogger;
 import com.marklogic.xcc.AdhocQuery;
@@ -51,28 +57,66 @@ import com.marklogic.xcc.types.XdmItem;
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * @author Colleen Whitney, colleen.whitney@marklogic.com
- * 
+ *
  */
 public class Manager implements Runnable {
 
-    public static String VERSION = "2008-11-24.1";
+    /**
+     * @author Michael Blakeley, michael.blakeley@marklogic.com
+     *
+     */
+    public class CallerBlocksPolicy implements RejectedExecutionHandler {
+
+        private BlockingQueue<Runnable> queue;
+
+        private boolean warning = false;
+
+        /*
+         * (non-Javadoc)
+         *
+         * @see
+         * java.util.concurrent.RejectedExecutionHandler#rejectedExecution(java
+         * .lang.Runnable, java.util.concurrent.ThreadPoolExecutor)
+         */
+        public void rejectedExecution(Runnable r,
+                ThreadPoolExecutor executor) {
+            if (null == queue) {
+                queue = executor.getQueue();
+            }
+            try {
+                // block until space becomes available
+                if (!warning) {
+                    logger.fine("queue is full: size = " + queue.size()
+                            + " (will only appear once!)");
+                    warning = true;
+                }
+                queue.put(r);
+            } catch (InterruptedException e) {
+                // someone is trying to interrupt us
+                throw new RejectedExecutionException(e);
+            }
+        }
+
+    }
+
+    public static String VERSION = "2008-11-25.1";
 
     private static String versionMessage = "version " + VERSION + " on "
             + System.getProperty("java.version") + " ("
             + System.getProperty("java.runtime.name") + ")";
 
     /**
-     * 
+     *
      */
     private static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server'\n";
 
     /**
-     * 
+     *
      */
     private static final String XQUERY_VERSION_0_9_ML = "xquery version \"0.9-ml\"\n";
 
     /**
-     * 
+     *
      */
     private static final String NAME = Manager.class.getName();
 
@@ -86,8 +130,6 @@ public class Manager implements Runnable {
 
     private ContentSource contentSource;
 
-    private Task[] transforms;
-
     private Monitor monitor;
 
     private SimpleLogger logger;
@@ -95,6 +137,10 @@ public class Manager implements Runnable {
     private String moduleUri;
 
     private Thread monitorThread;
+
+    private UriQueue completionServiceQueue;
+
+    private ExecutorCompletionService<String> completionService;
 
     /**
      * @param connectionUri
@@ -154,7 +200,7 @@ public class Manager implements Runnable {
     }
 
     /**
-     * 
+     *
      */
     private static void usage() {
         PrintStream err = System.err;
@@ -168,14 +214,14 @@ public class Manager implements Runnable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Runnable#run()
      */
     public void run() {
         configureLogger();
         logger.info(NAME + " starting: " + versionMessage);
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
-        logger.info("heap size = " + maxMemory + " MiB");
+        logger.info("maximum heap size = " + maxMemory + " MiB");
 
         prepareContentSource();
         registerStatusInfo();
@@ -206,9 +252,15 @@ public class Manager implements Runnable {
      * @return
      */
     private Thread preparePool() {
-        pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(options
-                .getThreadCount());
-        monitor = new Monitor(pool, this, logger);
+        RejectedExecutionHandler policy = new CallerBlocksPolicy();
+        int threads = options.getThreadCount();
+        // an array queue should be somewhat lighter-weight
+        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(
+                options.getQueueSize());
+        pool = new ThreadPoolExecutor(threads, threads, 16,
+                TimeUnit.SECONDS, workQueue, policy);
+        completionService = new ExecutorCompletionService<String>(pool);
+        monitor = new Monitor(pool, completionService, this, logger);
         Thread monitorThread = new Thread(monitor);
         return monitorThread;
     }
@@ -216,7 +268,7 @@ public class Manager implements Runnable {
     /**
      * @throws IOException
      * @throws RequestException
-     * 
+     *
      */
     private void prepareModules() {
         String[] resourceModules = new String[] {
@@ -284,7 +336,7 @@ public class Manager implements Runnable {
     }
 
     /**
-     * 
+     *
      */
     private void prepareContentSource() {
         logger.info("using content source " + connectionUri);
@@ -334,9 +386,12 @@ public class Manager implements Runnable {
      */
     private void populateQueue() throws XccException {
         logger.info("populating queue");
-        
-        TaskFactory tf = new TaskFactory(contentSource, options.getModuleRoot()
+
+        TaskFactory tf = new TaskFactory(contentSource, options
+                .getModuleRoot()
                 + options.getProcessModule());
+        completionServiceQueue = new UriQueue(completionService, pool,
+                tf, monitor, new LinkedBlockingQueue<String>(), logger);
 
         // must run uncached, or we'll quickly run out of memory
         RequestOptions requestOptions = new RequestOptions();
@@ -370,26 +425,23 @@ public class Manager implements Runnable {
                 stop();
                 return;
             }
-            monitorThread.start();
-            transforms = new Task[total];
 
-            // the monitor needs access to this structure too
-            monitor.setTasks(transforms);
+            completionServiceQueue.start();
+
+            monitor.setTaskCount(total);
+            monitorThread.start();
 
             // this may return millions of items:
             // try to be memory-efficient
             count = 0;
-            Task transform;
             String uri;
             // check pool occasionally, for fast-fail
             while (res.hasNext() && null != pool) {
                 uri = res.next().asString();
-                transform = tf.newTask(uri);
-                transforms[count] = transform;
+                completionServiceQueue.add(uri);
                 if (null == pool) {
                     break;
                 }
-                pool.submit(transform);
                 count++;
                 String msg = "queued " + count + "/" + total + ": " + uri;
                 if (0 == count % 10000) {
@@ -408,19 +460,18 @@ public class Manager implements Runnable {
             if (null != session) {
                 session.close();
             }
-            if (null != pool) {
-                pool.shutdown();
+            // there won't be any more tasks
+            if (null != completionServiceQueue) {
+                completionServiceQueue.shutdown();
             }
         }
         // if the pool went away, the monitor stopped it: bail out.
         if (null == pool) {
             return;
         }
-        assert total == count;
 
-        // there won't be any more tasks
-        pool.shutdown();
-        logger.info("queue is fully populated with " + total + " tasks");
+        assert total == count;
+        logger.fine("queue is populated with " + total + " tasks");
     }
 
     private void configureLogger() {
@@ -451,16 +502,16 @@ public class Manager implements Runnable {
         if (null != monitorThread) {
             monitorThread.interrupt();
         }
+        if (null != completionServiceQueue) {
+            completionServiceQueue.halt();
+        }
     }
 
     /**
      * @param e
-     * @param transform
      */
-    public void stop(ExecutionException e, Transform transform) {
-        // fatal error
-        logger.logException("fatal error at result for input document "
-                + transform.getUri(), e.getCause());
+    public void stop(ExecutionException e) {
+        logger.logException("fatal error", e.getCause());
         logger.warning("exiting due to fatal error");
         stop();
     }

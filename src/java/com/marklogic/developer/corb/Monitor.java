@@ -18,7 +18,9 @@
  */
 package com.marklogic.developer.corb;
 
+import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -30,11 +32,11 @@ import com.marklogic.developer.SimpleLogger;
  */
 public class Monitor implements Runnable {
 
+    protected static final int SLEEP_MILLIS = 500;
+
     private SimpleLogger logger;
 
-    private ThreadPoolExecutor pool;
-
-    private Task[] tasks;
+    private CompletionService<String> cs;
 
     private long lastProgress = 0;
 
@@ -42,16 +44,25 @@ public class Monitor implements Runnable {
 
     private Manager manager;
 
+    private String lastUri;
+
+    private long taskCount;
+
+    private ThreadPoolExecutor pool;
+
     /**
-     * @param pool
-     * @param manager
-     * @param logger
+     * @param _pool
+     * @param _cs
+     * @param _manager
+     * @param _logger
      */
-    public Monitor(ThreadPoolExecutor pool, Manager manager,
-            SimpleLogger logger) {
-        this.pool = pool;
-        this.manager = manager;
-        this.logger = logger;
+    public Monitor(ThreadPoolExecutor _pool,
+            CompletionService<String> _cs, Manager _manager,
+            SimpleLogger _logger) {
+        pool = _pool;
+        cs = _cs;
+        manager = _manager;
+        logger = _logger;
     }
 
     /*
@@ -63,93 +74,73 @@ public class Monitor implements Runnable {
         startMillis = System.currentTimeMillis();
 
         try {
-            // block until at least one task has been queued
-            // this will support faster fast-fail
-            if (tasks == null || tasks.length < 1 || tasks[0] == null) {
-                logger.info("waiting for tasks");
-                while (tasks == null || tasks.length < 1
-                        || tasks[0] == null) {
-                    logger.finest("no transforms yet - napping");
-                    Thread.sleep(TransformOptions.SLEEP_TIME_MS);
-                }
-            }
-
             monitorResults();
+        } catch (ExecutionException e) {
+            // tell the main thread to quit
+            manager.stop(e);
         } catch (InterruptedException e) {
             logger.logException("interrupted: exiting", e);
-            return;
         }
     }
 
-    private void monitorResults() throws InterruptedException {
-        String uri;
-        Task currentTask = null;
+    private void monitorResults() throws InterruptedException,
+            ExecutionException {
         // fast-fail as soon as we see any exceptions
-        logger.info("monitoring " + tasks.length + " tasks");
-        try {
-            for (int i = 0; i < tasks.length; i++) {
-                // try to avoid thread starvation
-                Thread.yield();
+        logger.info("monitoring " + taskCount + " tasks");
+        Future<String> future = null;
+        while (null != pool) {
+            // try to avoid thread starvation
+            Thread.yield();
 
+            future = cs.poll(TransformOptions.PROGRESS_INTERVAL_MS,
+                    TimeUnit.MILLISECONDS);
+            if (null != future) {
+                // record result, or throw exception
+                lastUri = future.get();
+                logger.fine("uri: " + lastUri);
                 showProgress();
-
-                // check the results
-                try {
-                    currentTask = tasks[i];
-                    uri = currentTask.get();
-                    logger.fine("output uri: " + uri);
-                } catch (InterruptedException e) {
-                    logger.logException("interrupted " + i, e);
-                }
             }
-            logger.info("waiting for pool to terminate");
-            pool.awaitTermination(1, TimeUnit.SECONDS);
-            logger
-                    .info("completed all tasks "
-                            + " status: "
-                            + getProgressMessage(startMillis, pool,
-                                    tasks.length));
-        } catch (ExecutionException e) {
-            // tell the main thread to quit
-            manager.stop(e, currentTask.getTransform());
-            return;
+
+            if (pool.getCompletedTaskCount() == taskCount) {
+                break;
+            }
         }
+        logger.info("waiting for pool to terminate");
+        pool.awaitTermination(1, TimeUnit.SECONDS);
+        logger.info("completed all tasks "
+                + getProgressMessage());
     }
 
     private long showProgress() {
         long current = System.currentTimeMillis();
         if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
-            logger
-                    .info("status: "
-                            + getProgressMessage(startMillis, pool,
-                                    tasks.length));
+            logger.info("completed " + getProgressMessage());
             lastProgress = current;
         }
         return lastProgress;
     }
 
     /**
-     * @param tasks
+     * @param _count
      */
-    public void setTasks(Task[] tasks) {
-        this.tasks = tasks;
+    public void setTaskCount(long _count) {
+        taskCount = _count;
     }
 
-    private String getProgressMessage(long start,
-            ThreadPoolExecutor pool, long total) {
+    private String getProgressMessage() {
         long completed = pool.getCompletedTaskCount();
         int tps = (int) ((double) completed * (double) 1000 / (System
-                .currentTimeMillis() - start));
-        return completed + "/" + total + ", " + tps + " tps, "
+                .currentTimeMillis() - startMillis));
+        return completed + "/" + taskCount + ", " + tps + " tps, "
                 + pool.getActiveCount() + " active threads";
     }
 
     /**
-     * @param pool
+     * @param _pool
      */
-    public void setPool(ThreadPoolExecutor pool) {
+    public void setPool(ThreadPoolExecutor _pool) {
         // used by Manager.stop()
-        this.pool = pool;
+        pool = _pool;
     }
 
 }
