@@ -1,5 +1,5 @@
 /*
- * Copyright (c)2005-2007 Mark Logic Corporation
+ * Copyright (c)2005-2008 Mark Logic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,21 +29,17 @@ import com.marklogic.xcc.Session;
  */
 public class Transform implements Callable<String> {
 
-    private Session session;
+    protected String inputUri;
 
-    private String inputUri;
-
-    private String moduleUri;
+    protected TaskFactory factory;
 
     /**
-     * @param session
-     * @param inputUri
-     * @param moduleUri
+     * @param _tf
+     * @param _uri
      */
-    public Transform(Session session, String inputUri, String moduleUri) {
-        this.session = session;
-        this.inputUri = inputUri;
-        this.moduleUri = moduleUri;
+    public Transform(TaskFactory _tf, String _uri) {
+        factory = _tf;
+        this.inputUri = _uri;
     }
 
     /*
@@ -52,9 +48,6 @@ public class Transform implements Callable<String> {
      * @see java.lang.Object#finalize()
      */
     protected void finalize() throws Throwable {
-        if (session != null) {
-            session.close();
-        }
         super.finalize();
     }
 
@@ -64,9 +57,20 @@ public class Transform implements Callable<String> {
      * @see java.util.concurrent.Callable#call()
      */
     public String call() throws Exception {
-        Request request = session.newModuleInvoke(moduleUri);
-        request.setNewStringVariable("URI", inputUri);
-        return session.submitRequest(request).asString();
+        // try to avoid thread starvation
+        Thread.yield();
+        Session session = null;
+        try {
+            String moduleUri = factory.getModuleUri();
+            session = factory.newSession();
+            Request request = session.newModuleInvoke(moduleUri);
+            request.setNewStringVariable("URI", inputUri);
+            return session.submitRequest(request).asString();
+        } finally {
+            if (null != session) {
+                session.close();
+            }
+        }
     }
 
     /**

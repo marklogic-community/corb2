@@ -1,5 +1,5 @@
 /*
- * Copyright (c)2005-2007 Mark Logic Corporation
+ * Copyright (c)2005-2008 Mark Logic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,47 +19,56 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.xcc.ContentSource;
+import com.marklogic.xcc.Session;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * 
  */
 public class TaskFactory {
-    private static ContentSource contentSource = null;
+    protected ContentSource contentSource = null;
 
-    private static String moduleUri = null;
+    protected String moduleUri = null;
 
     /**
-     * @param uri
+     * @param _cs
+     * @param _uri
+     */
+    public TaskFactory(ContentSource _cs, String _uri) {
+        contentSource = _cs;
+        moduleUri = _uri;
+    }
+
+    /**
+     * @param _uri
      * @return
      */
-    public static Task newTask(String uri) {
+    public Task newTask(String _uri) {
         if (null == contentSource) {
             throw new NullPointerException("null content source");
         }
         if (null == moduleUri) {
             throw new NullPointerException("null module uri");
         }
-        if (null == uri) {
+        if (null == _uri) {
             throw new NullPointerException("null uri");
         }
 
-        // Session isn't threadsafe, so we create one per task
-        return new Task(new Transform(contentSource.newSession(), uri,
-                moduleUri));
+        // pass a reference to this factory, for later
+        return new Task(new Transform(this, _uri));
     }
 
     /**
-     * @param _uri
+     * @return
      */
-    public static void setModuleUri(String _uri) {
-        moduleUri = _uri;
+    public String getModuleUri() {
+        return moduleUri;
     }
 
     /**
-     * @param _cs
+     * @return
      */
-    public static void setContentSource(ContentSource _cs) {
-        contentSource = _cs;
+    public Session newSession() {
+        return contentSource.newSession();
     }
 }

@@ -1,5 +1,6 @@
+xquery version "0.9-ml"
 (:
- : Copyright (c)2005-2007 Mark Logic Corporation
+ : Copyright (c)2005-2008 Mark Logic Corporation
  :
  : Licensed under the Apache License, Version 2.0 (the "License");
  : you may not use this file except in compliance with the License.
@@ -38,7 +39,7 @@ let $uris := cts:uris(
   else if ('QUERY' eq $TYPE)
   then xdmp:eval($URIS)
   else error(
-    'BCR-UNEXPECTED', text { "Unexpected type:", $TYPE }) )
+    'CORB-UNEXPECTED', text { "Unexpected type:", $TYPE }) )
 return (count($uris), $uris)
 
 (: get-uris.xqy :)

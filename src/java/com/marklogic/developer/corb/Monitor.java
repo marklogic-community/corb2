@@ -30,7 +30,7 @@ import com.marklogic.developer.SimpleLogger;
  */
 public class Monitor implements Runnable {
 
-    private static SimpleLogger logger;
+    private SimpleLogger logger;
 
     private ThreadPoolExecutor pool;
 
@@ -43,13 +43,15 @@ public class Monitor implements Runnable {
     private Manager manager;
 
     /**
-     * @param batchId
      * @param pool
      * @param manager
+     * @param logger
      */
-    public Monitor(ThreadPoolExecutor pool, Manager manager) {
+    public Monitor(ThreadPoolExecutor pool, Manager manager,
+            SimpleLogger logger) {
         this.pool = pool;
         this.manager = manager;
+        this.logger = logger;
     }
 
     /*
@@ -86,6 +88,9 @@ public class Monitor implements Runnable {
         logger.info("monitoring " + tasks.length + " tasks");
         try {
             for (int i = 0; i < tasks.length; i++) {
+                // try to avoid thread starvation
+                Thread.yield();
+
                 showProgress();
 
                 // check the results
@@ -143,14 +148,8 @@ public class Monitor implements Runnable {
      * @param pool
      */
     public void setPool(ThreadPoolExecutor pool) {
+        // used by Manager.stop()
         this.pool = pool;
-    }
-
-    /**
-     * @param _logger
-     */
-    public static void setLogger(SimpleLogger _logger) {
-        logger = _logger;
     }
 
 }

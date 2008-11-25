@@ -55,7 +55,11 @@ import com.marklogic.xcc.types.XdmItem;
  */
 public class Manager implements Runnable {
 
-    public static String VERSION = "2008-09-03.1";
+    public static String VERSION = "2008-11-24.1";
+
+    private static String versionMessage = "version " + VERSION + " on "
+            + System.getProperty("java.version") + " ("
+            + System.getProperty("java.runtime.name") + ")";
 
     /**
      * 
@@ -89,6 +93,8 @@ public class Manager implements Runnable {
     private SimpleLogger logger;
 
     private String moduleUri;
+
+    private Thread monitorThread;
 
     /**
      * @param connectionUri
@@ -167,12 +173,14 @@ public class Manager implements Runnable {
      */
     public void run() {
         configureLogger();
-        logger.info(NAME + " starting: version = " + VERSION);
+        logger.info(NAME + " starting: " + versionMessage);
+        long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
+        logger.info("heap size = " + maxMemory + " MiB");
 
         prepareContentSource();
         registerStatusInfo();
         prepareModules();
-        Thread monitorThread = preparePool();
+        monitorThread = preparePool();
 
         try {
             populateQueue();
@@ -200,9 +208,8 @@ public class Manager implements Runnable {
     private Thread preparePool() {
         pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(options
                 .getThreadCount());
-        monitor = new Monitor(pool, this);
+        monitor = new Monitor(pool, this, logger);
         Thread monitorThread = new Thread(monitor);
-        monitorThread.start();
         return monitorThread;
     }
 
@@ -327,11 +334,8 @@ public class Manager implements Runnable {
      */
     private void populateQueue() throws XccException {
         logger.info("populating queue");
-
-        // configure the task factory
-        TaskFactory.setContentSource(contentSource);
-
-        TaskFactory.setModuleUri(options.getModuleRoot()
+        
+        TaskFactory tf = new TaskFactory(contentSource, options.getModuleRoot()
                 + options.getProcessModule());
 
         // must run uncached, or we'll quickly run out of memory
@@ -361,6 +365,12 @@ public class Manager implements Runnable {
             // like a pascal string, the first item will be the count
             total = ((XSInteger) res.next().getItem()).asPrimitiveInt();
             logger.info("expecting total " + total);
+            if (0 == total) {
+                logger.info("nothing to process");
+                stop();
+                return;
+            }
+            monitorThread.start();
             transforms = new Task[total];
 
             // the monitor needs access to this structure too
@@ -374,7 +384,7 @@ public class Manager implements Runnable {
             // check pool occasionally, for fast-fail
             while (res.hasNext() && null != pool) {
                 uri = res.next().asString();
-                transform = TaskFactory.newTask(uri);
+                transform = tf.newTask(uri);
                 transforms[count] = transform;
                 if (null == pool) {
                     break;
@@ -388,9 +398,18 @@ public class Manager implements Runnable {
                     logger.finest(msg);
                 }
             }
+        } catch (XccException e) {
+            if (null != pool) {
+                pool.shutdownNow();
+            }
+            stop();
+            throw e;
         } finally {
             if (null != session) {
                 session.close();
+            }
+            if (null != pool) {
+                pool.shutdown();
             }
         }
         // if the pool went away, the monitor stopped it: bail out.
@@ -412,7 +431,6 @@ public class Manager implements Runnable {
         props.setProperty("LOG_LEVEL", options.getLogLevel());
         props.setProperty("LOG_HANDLER", options.getLogHandler());
         logger.configureLogger(props);
-        Monitor.setLogger(logger);
     }
 
     /**
@@ -425,8 +443,13 @@ public class Manager implements Runnable {
                 logger.warning("thread pool was shut down with "
                         + remaining.size() + " pending tasks");
             }
-            monitor.setPool(null);
             pool = null;
+        }
+        if (null != monitor) {
+            monitor.setPool(null);
+        }
+        if (null != monitorThread) {
+            monitorThread.interrupt();
         }
     }
 
