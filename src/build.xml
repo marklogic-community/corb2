@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
 /*
- * Copyright (c)2007 Mark Logic Corporation
+ * Copyright (c)2007-2009 Mark Logic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,11 +40,11 @@
 	<target name="build" 
 			description="Compile main source tree java files">
 	  <mkdir dir="${build.dir}"/>
-	  <javac destdir="${build.dir}">
-                <compilerarg value="-Xlint"/>
-		<src path="${src.dir}"/>
-		<classpath refid="master-classpath"/>
-	  </javac>
+	  <javac destdir="${build.dir}" target="1.5">
+      <compilerarg value="-Xlint"/>
+      <src path="${src.dir}"/>
+      <classpath refid="master-classpath"/>
+    </javac>
     </target>
 
 	<target name="jar" depends="build"
