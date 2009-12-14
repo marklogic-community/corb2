@@ -105,10 +105,21 @@ public class Monitor implements Runnable {
                 break;
             }
         }
+        if (null == pool) {
+            logger.info("worker thread pool no longer available");
+            logger.info("exiting with " + getProgressMessage());
+            return;
+        }
+        if (pool.getCompletedTaskCount() > taskCount) {
+            logger.warning("expected " + taskCount + " tasks, got "
+                    + pool.getCompletedTaskCount());
+            logger.warning("check your uri module!");
+            manager.stop();
+            return;
+        }
         logger.info("waiting for pool to terminate");
         pool.awaitTermination(1, TimeUnit.SECONDS);
-        logger.info("completed all tasks "
-                + getProgressMessage());
+        logger.info("completed all tasks " + getProgressMessage());
     }
 
     private long showProgress() {

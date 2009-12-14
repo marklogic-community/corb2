@@ -1,5 +1,5 @@
 /*
- * Copyright (c)2005-2008 Mark Logic Corporation
+ * Copyright (c)2005-2009 Mark Logic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,10 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -36,6 +40,10 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
 import com.marklogic.developer.SimpleLogger;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.Content;
@@ -47,6 +55,7 @@ import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
 import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
+import com.marklogic.xcc.SecurityOptions;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
@@ -57,13 +66,15 @@ import com.marklogic.xcc.types.XdmItem;
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * @author Colleen Whitney, colleen.whitney@marklogic.com
- *
+ * 
  */
 public class Manager implements Runnable {
 
+    public static String VERSION = "2009-10-09.1";
+
     /**
      * @author Michael Blakeley, michael.blakeley@marklogic.com
-     *
+     * 
      */
     public class CallerBlocksPolicy implements RejectedExecutionHandler {
 
@@ -73,7 +84,7 @@ public class Manager implements Runnable {
 
         /*
          * (non-Javadoc)
-         *
+         * 
          * @see
          * java.util.concurrent.RejectedExecutionHandler#rejectedExecution(java
          * .lang.Runnable, java.util.concurrent.ThreadPoolExecutor)
@@ -98,8 +109,6 @@ public class Manager implements Runnable {
         }
 
     }
-
-    public static String VERSION = "2008-11-25.1";
 
     private static String versionMessage = "version " + VERSION + " on "
             + System.getProperty("java.version") + " ("
@@ -214,7 +223,7 @@ public class Manager implements Runnable {
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see java.lang.Runnable#run()
      */
     public void run() {
@@ -268,7 +277,7 @@ public class Manager implements Runnable {
     /**
      * @throws IOException
      * @throws RequestException
-     *
+     * 
      */
     private void prepareModules() {
         String[] resourceModules = new String[] {
@@ -341,11 +350,21 @@ public class Manager implements Runnable {
     private void prepareContentSource() {
         logger.info("using content source " + connectionUri);
         try {
-            contentSource = ContentSourceFactory
-                    .newContentSource(connectionUri);
-        } catch (XccConfigException e1) {
-            logger.logException(connectionUri.toString(), e1);
-            throw new RuntimeException(e1);
+            // support SSL
+            boolean ssl = connectionUri.getScheme().equals("xccs");
+            contentSource = ssl ? ContentSourceFactory.newContentSource(
+                    connectionUri, newTrustAnyoneOptions())
+                    : ContentSourceFactory
+                            .newContentSource(connectionUri);
+        } catch (XccConfigException e) {
+            logger.logException(connectionUri.toString(), e);
+            throw new RuntimeException(e);
+        } catch (KeyManagementException e) {
+            logger.logException(connectionUri.toString(), e);
+            throw new RuntimeException(e);
+        } catch (NoSuchAlgorithmException e) {
+            logger.logException(connectionUri.toString(), e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -393,7 +412,7 @@ public class Manager implements Runnable {
         completionServiceQueue = new UriQueue(completionService, pool,
                 tf, monitor, new LinkedBlockingQueue<String>(), logger);
 
-        // must run uncached, or we'll quickly run out of memory
+        // must not cache the results, or we quickly run out of memory
         RequestOptions requestOptions = new RequestOptions();
         requestOptions.setCacheResult(false);
 
@@ -417,7 +436,7 @@ public class Manager implements Runnable {
 
             ResultSequence res = session.submitRequest(req);
 
-            // like a pascal string, the first item will be the count
+            // like a Pascal string, the first item will be the count
             total = ((XSInteger) res.next().getItem()).asPrimitiveInt();
             logger.info("expecting total " + total);
             if (0 == total) {
@@ -426,6 +445,7 @@ public class Manager implements Runnable {
                 return;
             }
 
+            completionServiceQueue.setExpected(total);
             completionServiceQueue.start();
 
             monitor.setTaskCount(total);
@@ -488,7 +508,7 @@ public class Manager implements Runnable {
      * @param e
      */
     public void stop() {
-        if (pool != null) {
+        if (null != pool) {
             List<Runnable> remaining = pool.shutdownNow();
             if (remaining.size() > 0) {
                 logger.warning("thread pool was shut down with "
@@ -514,5 +534,34 @@ public class Manager implements Runnable {
         logger.logException("fatal error", e.getCause());
         logger.warning("exiting due to fatal error");
         stop();
+    }
+
+    protected static SecurityOptions newTrustAnyoneOptions()
+            throws KeyManagementException, NoSuchAlgorithmException {
+        TrustManager[] trust = new TrustManager[] { new X509TrustManager() {
+            public X509Certificate[] getAcceptedIssuers() {
+                return new X509Certificate[0];
+            }
+
+            /**
+             * @throws CertificateException
+             */
+            public void checkClientTrusted(X509Certificate[] certs,
+                    String authType) throws CertificateException {
+                // no exception means it's okay
+            }
+
+            /**
+             * @throws CertificateException
+             */
+            public void checkServerTrusted(X509Certificate[] certs,
+                    String authType) throws CertificateException {
+                // no exception means it's okay
+            }
+        } };
+
+        SSLContext sslContext = SSLContext.getInstance("SSLv3");
+        sslContext.init(null, trust, null);
+        return new SecurityOptions(sslContext);
     }
 }

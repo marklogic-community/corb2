@@ -38,6 +38,8 @@ public class UriQueue extends Thread {
 
     protected Monitor monitor;
 
+    protected long expectedCount;
+
     /**
      * @param _cs
      * @param _pool
@@ -104,6 +106,13 @@ public class UriQueue extends Thread {
         pool.shutdown();
 
         logger.fine("finished queuing " + count + " uris");
+
+        if (expectedCount != count) {
+            logger.warning("expected " + expectedCount + ", got "
+                    + "count");
+            logger.warning("check your uri module!");
+            return;
+        }
     }
 
     public void shutdown() {
@@ -142,6 +151,13 @@ public class UriQueue extends Thread {
             Thread.sleep(SLEEP_MILLIS);
         }
         factory = _factory;
+    }
+
+    /**
+     * @param _count
+     */
+    public void setExpected(long _count) {
+        expectedCount = _count;
     }
 
 }
