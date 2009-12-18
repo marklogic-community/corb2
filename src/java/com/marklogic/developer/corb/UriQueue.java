@@ -1,5 +1,20 @@
-/**
- * Copyright (c) 2008 Mark Logic Corporation. All rights reserved.
+/*
+ * Copyright (c) 2008-2009 Mark Logic Corporation. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * The use of the Apache License does not indicate that this project is
+ * affiliated with the Apache Software Foundation.
  */
 package com.marklogic.developer.corb;
 
@@ -30,7 +45,9 @@ public class UriQueue extends Thread {
 
     protected CompletionService<String> completionService;
 
-    protected boolean active;
+    protected boolean shutdown = false;
+
+    protected boolean halt = false;
 
     protected ThreadPoolExecutor pool;
 
@@ -39,6 +56,8 @@ public class UriQueue extends Thread {
     protected Monitor monitor;
 
     protected long expectedCount;
+
+    private long count;
 
     /**
      * @param _cs
@@ -66,9 +85,7 @@ public class UriQueue extends Thread {
      * @see java.lang.Thread#run()
      */
     public void run() {
-        long count = 0;
-
-        active = true;
+        count = 0;
 
         if (null == factory) {
             throw new NullPointerException("null factory");
@@ -76,8 +93,8 @@ public class UriQueue extends Thread {
         if (null == completionService) {
             throw new NullPointerException("null completion service");
         }
-
-        while (null != queue) {
+        
+        while (!halt) {
             String uri = null;
             try {
                 uri = queue.poll(SLEEP_MILLIS, TimeUnit.MILLISECONDS);
@@ -88,7 +105,7 @@ public class UriQueue extends Thread {
                 }
             }
             if (null == uri) {
-                if (active) {
+                if (!halt) {
                     continue;
                 }
                 // queue is empty
@@ -101,6 +118,10 @@ public class UriQueue extends Thread {
 
             completionService.submit(factory.newTask(uri));
             count++;
+
+            if (count >= expectedCount) {
+                break;
+            }
         }
 
         pool.shutdown();
@@ -108,8 +129,9 @@ public class UriQueue extends Thread {
         logger.fine("finished queuing " + count + " uris");
 
         if (expectedCount != count) {
-            logger.warning("expected " + expectedCount + ", got "
-                    + "count");
+            logger
+                    .warning("expected " + expectedCount + ", got "
+                            + count);
             logger.warning("check your uri module!");
             return;
         }
@@ -117,9 +139,8 @@ public class UriQueue extends Thread {
 
     public void shutdown() {
         // graceful shutdown, draining the queue
-        logger.info("closing queue");
-        active = false;
-        pool.shutdown();
+        logger.fine("closing queue " + count + "/" + expectedCount);
+        shutdown = true;
     }
 
     /**
@@ -127,9 +148,9 @@ public class UriQueue extends Thread {
      */
     public void halt() {
         // something bad happened - make sure we exit the loop
-        logger.info("halting queue");
+        logger.warning("halting queue");
         queue = null;
-        active = false;
+        halt = true;
         pool.shutdownNow();
         interrupt();
     }
@@ -138,6 +159,10 @@ public class UriQueue extends Thread {
      * @param _uri
      */
     public void add(String _uri) {
+        if (shutdown || halt) {
+            throw new UnsupportedOperationException(
+                    "queue has been halted or shut down");
+        }
         queue.add(_uri);
     }
 

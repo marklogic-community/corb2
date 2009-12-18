@@ -1,5 +1,5 @@
 /*
- * Copyright (c)2005-2008 Mark Logic Corporation
+ * Copyright (c)2005-2009 Mark Logic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,8 @@ public class Monitor implements Runnable {
 
     private ThreadPoolExecutor pool;
 
+    private boolean shutdownNow = false;
+
     /**
      * @param _pool
      * @param _cs
@@ -74,6 +76,7 @@ public class Monitor implements Runnable {
         startMillis = System.currentTimeMillis();
 
         try {
+            Thread.yield();
             monitorResults();
         } catch (ExecutionException e) {
             // tell the main thread to quit
@@ -88,7 +91,7 @@ public class Monitor implements Runnable {
         // fast-fail as soon as we see any exceptions
         logger.info("monitoring " + taskCount + " tasks");
         Future<String> future = null;
-        while (null != pool) {
+        while (!shutdownNow) {
             // try to avoid thread starvation
             Thread.yield();
 
@@ -104,18 +107,13 @@ public class Monitor implements Runnable {
             if (pool.getCompletedTaskCount() == taskCount) {
                 break;
             }
-        }
-        if (null == pool) {
-            logger.info("worker thread pool no longer available");
-            logger.info("exiting with " + getProgressMessage());
-            return;
-        }
-        if (pool.getCompletedTaskCount() > taskCount) {
-            logger.warning("expected " + taskCount + " tasks, got "
-                    + pool.getCompletedTaskCount());
-            logger.warning("check your uri module!");
-            manager.stop();
-            return;
+            if (pool.getCompletedTaskCount() > taskCount) {
+                logger.warning("expected " + taskCount + " tasks, got "
+                        + pool.getCompletedTaskCount());
+                logger.warning("check your uri module!");
+                manager.stop();
+                return;
+            }
         }
         logger.info("waiting for pool to terminate");
         pool.awaitTermination(1, TimeUnit.SECONDS);
@@ -147,11 +145,10 @@ public class Monitor implements Runnable {
     }
 
     /**
-     * @param _pool
+     * 
      */
-    public void setPool(ThreadPoolExecutor _pool) {
-        // used by Manager.stop()
-        pool = _pool;
+    public void shutdownNow() {
+        shutdownNow = true;
     }
 
 }

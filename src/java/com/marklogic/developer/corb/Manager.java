@@ -70,7 +70,7 @@ import com.marklogic.xcc.types.XdmItem;
  */
 public class Manager implements Runnable {
 
-    public static String VERSION = "2009-10-09.1";
+    public static String VERSION = "2009-12-18.1";
 
     /**
      * @author Michael Blakeley, michael.blakeley@marklogic.com
@@ -147,7 +147,7 @@ public class Manager implements Runnable {
 
     private Thread monitorThread;
 
-    private UriQueue completionServiceQueue;
+    private UriQueue uriQueue;
 
     private ExecutorCompletionService<String> completionService;
 
@@ -250,10 +250,9 @@ public class Manager implements Runnable {
             }
         } catch (XccException e) {
             logger.logException(connectionUri.toString(), e);
+            stop();
             // fatal
             throw new RuntimeException(e);
-        } finally {
-            stop();
         }
     }
 
@@ -268,6 +267,7 @@ public class Manager implements Runnable {
                 options.getQueueSize());
         pool = new ThreadPoolExecutor(threads, threads, 16,
                 TimeUnit.SECONDS, workQueue, policy);
+        pool.prestartAllCoreThreads();
         completionService = new ExecutorCompletionService<String>(pool);
         monitor = new Monitor(pool, completionService, this, logger);
         Thread monitorThread = new Thread(monitor);
@@ -409,8 +409,8 @@ public class Manager implements Runnable {
         TaskFactory tf = new TaskFactory(contentSource, options
                 .getModuleRoot()
                 + options.getProcessModule());
-        completionServiceQueue = new UriQueue(completionService, pool,
-                tf, monitor, new LinkedBlockingQueue<String>(), logger);
+        uriQueue = new UriQueue(completionService, pool, tf, monitor,
+                new LinkedBlockingQueue<String>(), logger);
 
         // must not cache the results, or we quickly run out of memory
         RequestOptions requestOptions = new RequestOptions();
@@ -445,8 +445,8 @@ public class Manager implements Runnable {
                 return;
             }
 
-            completionServiceQueue.setExpected(total);
-            completionServiceQueue.start();
+            uriQueue.setExpected(total);
+            uriQueue.start();
 
             monitor.setTaskCount(total);
             monitorThread.start();
@@ -458,7 +458,7 @@ public class Manager implements Runnable {
             // check pool occasionally, for fast-fail
             while (res.hasNext() && null != pool) {
                 uri = res.next().asString();
-                completionServiceQueue.add(uri);
+                uriQueue.add(uri);
                 if (null == pool) {
                     break;
                 }
@@ -469,11 +469,15 @@ public class Manager implements Runnable {
                 } else {
                     logger.finest(msg);
                 }
+                if (count > total) {
+                    logger
+                            .warning("expected " + total + ", got "
+                                    + count);
+                    logger.warning("check your uri module!");
+                }
             }
+            logger.info("queued " + count + "/" + total);
         } catch (XccException e) {
-            if (null != pool) {
-                pool.shutdownNow();
-            }
             stop();
             throw e;
         } finally {
@@ -481,8 +485,8 @@ public class Manager implements Runnable {
                 session.close();
             }
             // there won't be any more tasks
-            if (null != completionServiceQueue) {
-                completionServiceQueue.shutdown();
+            if (null != uriQueue) {
+                uriQueue.shutdown();
             }
         }
         // if the pool went away, the monitor stopped it: bail out.
@@ -508,6 +512,7 @@ public class Manager implements Runnable {
      * @param e
      */
     public void stop() {
+        logger.info("cleaning up");
         if (null != pool) {
             List<Runnable> remaining = pool.shutdownNow();
             if (remaining.size() > 0) {
@@ -517,13 +522,13 @@ public class Manager implements Runnable {
             pool = null;
         }
         if (null != monitor) {
-            monitor.setPool(null);
+            monitor.shutdownNow();
         }
         if (null != monitorThread) {
             monitorThread.interrupt();
         }
-        if (null != completionServiceQueue) {
-            completionServiceQueue.halt();
+        if (null != uriQueue) {
+            uriQueue.halt();
         }
     }
 
