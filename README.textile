@@ -1,1 +1,1 @@
-For more information see "http://marklogic.github.com/corb/README.html":http://marklogic.github.com/corb/README.html
+For more information see "http://marklogic.github.com/corb/":http://marklogic.github.com/corb/
