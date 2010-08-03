@@ -1,5 +1,5 @@
 /*
- * Copyright (c)2005-2009 Mark Logic Corporation
+ * Copyright (c)2005-2010 Mark Logic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ import com.marklogic.xcc.types.XdmItem;
  */
 public class Manager implements Runnable {
 
-    public static String VERSION = "2009-12-18.1";
+    public static String VERSION = "2010-04-29.1";
 
     /**
      * @author Michael Blakeley, michael.blakeley@marklogic.com
@@ -398,6 +398,9 @@ public class Manager implements Runnable {
         logger.info("Configured modules db: "
                 + options.getModulesDatabase());
         logger.info("Configured modules root: " + options.getXDBC_ROOT());
+        logger.info("Configured uri module: " + options.getUrisModule());
+        logger.info("Configured process module: "
+                + options.getProcessModule());
     }
 
     /**

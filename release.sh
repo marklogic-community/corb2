@@ -8,6 +8,9 @@ cd $BASE
 pwd
 BASE=`basename $PWD`
 PAGES=$BASE-gh-pages
+
+git status
+
 echo releasing $BASE
 (cd src && ant jar) \
     && cp lib/$BASE.jar ../$PAGES/ \
