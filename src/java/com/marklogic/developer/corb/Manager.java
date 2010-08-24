@@ -64,18 +64,13 @@ import com.marklogic.xcc.types.XSInteger;
 import com.marklogic.xcc.types.XdmItem;
 
 /**
- * @author Michael Blakeley, michael.blakeley@marklogic.com
- * @author Colleen Whitney, colleen.whitney@marklogic.com
- * 
+ * @author Michael Blakeley, MarkLogic Corporation
+ * @author Colleen Whitney, MarkLogic Corporation
  */
 public class Manager implements Runnable {
 
-    public static String VERSION = "2010-04-29.1";
+    public static String VERSION = "2010-08-24.1";
 
-    /**
-     * @author Michael Blakeley, michael.blakeley@marklogic.com
-     * 
-     */
     public class CallerBlocksPolicy implements RejectedExecutionHandler {
 
         private BlockingQueue<Runnable> queue;
@@ -103,6 +98,8 @@ public class Manager implements Runnable {
                 }
                 queue.put(r);
             } catch (InterruptedException e) {
+                // reset interrupt status and exit
+                Thread.interrupted();
                 // someone is trying to interrupt us
                 throw new RejectedExecutionException(e);
             }
@@ -244,6 +241,8 @@ public class Manager implements Runnable {
                 try {
                     monitorThread.join();
                 } catch (InterruptedException e) {
+                    // reset interrupt status and continue
+                    Thread.interrupted();
                     logger.logException(
                             "interrupted while waiting for monitor", e);
                 }

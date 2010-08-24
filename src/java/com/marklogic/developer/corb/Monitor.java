@@ -82,6 +82,8 @@ public class Monitor implements Runnable {
             // tell the main thread to quit
             manager.stop(e);
         } catch (InterruptedException e) {
+            // reset interrupt status and exit
+            Thread.interrupted();
             logger.logException("interrupted: exiting", e);
         }
     }
