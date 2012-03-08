@@ -1,5 +1,5 @@
 /*
- * Copyright (c)2005-2010 Mark Logic Corporation
+ * Copyright (c)2005-2012 Mark Logic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import com.marklogic.xcc.Session;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
- * 
+ *
  */
 public class Transform implements Callable<String> {
 
@@ -44,7 +44,7 @@ public class Transform implements Callable<String> {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Object#finalize()
      */
     protected void finalize() throws Throwable {
@@ -53,7 +53,7 @@ public class Transform implements Callable<String> {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.util.concurrent.Callable#call()
      */
     public String call() throws Exception {
@@ -65,11 +65,19 @@ public class Transform implements Callable<String> {
             session = factory.newSession();
             Request request = session.newModuleInvoke(moduleUri);
             request.setNewStringVariable("URI", inputUri);
-            return session.submitRequest(request).asString();
+            // try to avoid thread starvation
+            Thread.yield();
+            String response = session.submitRequest(request).asString();
+            session.close();
+            session = null;
+            return response;
         } finally {
             if (null != session) {
                 session.close();
+                session = null;
             }
+            // try to avoid thread starvation
+            Thread.yield();
         }
     }
 

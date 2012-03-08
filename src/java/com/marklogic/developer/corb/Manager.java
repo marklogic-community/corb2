@@ -1,5 +1,5 @@
 /*
- * Copyright (c)2005-2010 Mark Logic Corporation
+ * Copyright (c)2005-2012 Mark Logic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@ import com.marklogic.xcc.types.XdmItem;
  */
 public class Manager implements Runnable {
 
-    public static String VERSION = "2010-08-24.1";
+    public static String VERSION = "2012-03-08.1";
 
     public class CallerBlocksPolicy implements RejectedExecutionHandler {
 
@@ -79,7 +79,7 @@ public class Manager implements Runnable {
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see
          * java.util.concurrent.RejectedExecutionHandler#rejectedExecution(java
          * .lang.Runnable, java.util.concurrent.ThreadPoolExecutor)
@@ -220,7 +220,7 @@ public class Manager implements Runnable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Runnable#run()
      */
     public void run() {
@@ -276,7 +276,7 @@ public class Manager implements Runnable {
     /**
      * @throws IOException
      * @throws RequestException
-     * 
+     *
      */
     private void prepareModules() {
         String[] resourceModules = new String[] {
@@ -472,9 +472,8 @@ public class Manager implements Runnable {
                     logger.finest(msg);
                 }
                 if (count > total) {
-                    logger
-                            .warning("expected " + total + ", got "
-                                    + count);
+                    logger.warning("expected " + total + ", got "
+                                   + count);
                     logger.warning("check your uri module!");
                 }
             }

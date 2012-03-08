@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009 Mark Logic Corporation. All rights reserved.
+ * Copyright (c) 2008-2012 Mark Logic Corporation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import com.marklogic.developer.SimpleLogger;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
- * 
+ *
  */
 public class UriQueue extends Thread {
 
@@ -81,7 +81,7 @@ public class UriQueue extends Thread {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Thread#run()
      */
     public void run() {
@@ -93,8 +93,11 @@ public class UriQueue extends Thread {
         if (null == completionService) {
             throw new NullPointerException("null completion service");
         }
-        
+
         while (!halt) {
+            // try to avoid thread starvation
+            Thread.yield();
+
             String uri = null;
             try {
                 uri = queue.poll(SLEEP_MILLIS, TimeUnit.MILLISECONDS);
@@ -120,6 +123,8 @@ public class UriQueue extends Thread {
 
             completionService.submit(factory.newTask(uri));
             count++;
+            // try to avoid thread starvation
+            Thread.yield();
 
             if (count >= expectedCount) {
                 break;
@@ -127,16 +132,7 @@ public class UriQueue extends Thread {
         }
 
         pool.shutdown();
-
         logger.fine("finished queuing " + count + " uris");
-
-        if (expectedCount != count) {
-            logger
-                    .warning("expected " + expectedCount + ", got "
-                            + count);
-            logger.warning("check your uri module!");
-            return;
-        }
     }
 
     public void shutdown() {
@@ -146,7 +142,7 @@ public class UriQueue extends Thread {
     }
 
     /**
-     * 
+     *
      */
     public void halt() {
         // something bad happened - make sure we exit the loop
