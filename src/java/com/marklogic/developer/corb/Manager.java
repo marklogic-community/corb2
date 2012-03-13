@@ -73,7 +73,7 @@ import com.marklogic.xcc.types.XdmItem;
  */
 public class Manager implements Runnable {
 
-    public static String VERSION = "2012-03-13.5";
+    public static String VERSION = "2012-03-13.6";
 
     public class CallerBlocksPolicy implements RejectedExecutionHandler {
 
@@ -467,7 +467,9 @@ public class Manager implements Runnable {
             long lastMessageMillis = System.currentTimeMillis();
             long freeMemory;
             boolean isFirst = true;
-            String[] urisArray = new String[total];
+            // char primitives use less memory than strings
+            // arrays use less memory than lists or queues
+            char[][] urisArray = new char[total][];
 
             count = 0;
             while (res.hasNext() && null != pool) {
@@ -489,7 +491,7 @@ public class Manager implements Runnable {
                     urisArray[count] = null;
                     logger.info("received first uri: " + uri);
                 } else {
-                    urisArray[count] = uri;
+                    urisArray[count] = uri.toCharArray();
                 }
                 count++;
 
@@ -523,7 +525,7 @@ public class Manager implements Runnable {
                 if (null == pool) {
                     break;
                 }
-                uri = urisArray[i];
+                uri = new String(urisArray[i]);
                 completionService.submit(tf.newTask(uri));
                 urisArray[i] = null;
 
