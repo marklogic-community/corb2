@@ -47,6 +47,8 @@ public class UriQueue extends Thread {
 
     protected boolean shutdown = false;
 
+    protected boolean active = false;
+
     protected boolean halt = false;
 
     protected ThreadPoolExecutor pool;
@@ -85,6 +87,7 @@ public class UriQueue extends Thread {
      * @see java.lang.Thread#run()
      */
     public void run() {
+        active = true;
         count = 0;
 
         if (null == factory) {
@@ -125,6 +128,11 @@ public class UriQueue extends Thread {
             count++;
             // try to avoid thread starvation
             Thread.yield();
+
+            // exit when complete - or if we overflow
+            if (count >= expectedCount) {
+                break;
+            }
         }
 
         pool.shutdown();
@@ -144,6 +152,7 @@ public class UriQueue extends Thread {
         // something bad happened - make sure we exit the loop
         logger.warning("halting queue");
         queue = null;
+        active = false;
         halt = true;
         pool.shutdownNow();
         interrupt();
@@ -158,6 +167,13 @@ public class UriQueue extends Thread {
                     "queue has been halted or shut down");
         }
         queue.add(_uri);
+    }
+
+    /**
+     * @return
+     */
+    public boolean isActive() {
+        return active;
     }
 
     /**
