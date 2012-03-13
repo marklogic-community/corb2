@@ -73,7 +73,7 @@ import com.marklogic.xcc.types.XdmItem;
  */
 public class Manager implements Runnable {
 
-    public static String VERSION = "2012-03-13.4";
+    public static String VERSION = "2012-03-13.5";
 
     public class CallerBlocksPolicy implements RejectedExecutionHandler {
 
@@ -96,8 +96,8 @@ public class Manager implements Runnable {
             try {
                 // block until space becomes available
                 if (!warning) {
-                    logger.fine("queue is full: size = " + queue.size()
-                            + " (will only appear once!)");
+                    logger.info("queue is full: size = " + queue.size()
+                            + " (will only appear once)");
                     warning = true;
                 }
                 queue.put(r);
@@ -147,8 +147,6 @@ public class Manager implements Runnable {
     private String moduleUri;
 
     private Thread monitorThread;
-
-    private UriQueue uriQueue;
 
     private ExecutorCompletionService<String> completionService;
 
@@ -419,8 +417,6 @@ public class Manager implements Runnable {
         TaskFactory tf = new TaskFactory(contentSource, options
                 .getModuleRoot()
                 + options.getProcessModule());
-        uriQueue = new UriQueue(completionService, pool, tf, monitor,
-                new LinkedBlockingQueue<String>(), logger);
 
         // must not cache the results, or we quickly run out of memory
         RequestOptions opts = new RequestOptions();
@@ -461,12 +457,6 @@ public class Manager implements Runnable {
                 return;
             }
 
-            uriQueue.setExpected(total);
-            uriQueue.start();
-            // do not proceed until the uriQueue is running - fixes race
-            while (!uriQueue.isActive()) {
-                Thread.yield();
-            }
 
             monitor.setTaskCount(total);
             monitorThread.start();
@@ -495,7 +485,7 @@ public class Manager implements Runnable {
                 // all uris queue as quickly as possible
                 if (isFirst) {
                     isFirst = false;
-                    uriQueue.add(uri);
+                    completionService.submit(tf.newTask(uri));
                     urisArray[count] = null;
                     logger.info("received first uri: " + uri);
                 } else {
@@ -534,21 +524,17 @@ public class Manager implements Runnable {
                     break;
                 }
                 uri = urisArray[i];
-                uriQueue.add(uri);
+                completionService.submit(tf.newTask(uri));
                 urisArray[i] = null;
 
                 String msg = "queued " + i + "/" + total + ": " + uri;
                 if (0 == i % 50000) {
                     logger.info(msg);
-                    if (System.currentTimeMillis() - lastMessageMillis
-                        > (1000 * 4)) {
-                        logger.warning("Slow queuing!"
-                                       + " Consider increasing max heap size"
-                                       + " and using -XX:+UseConcMarkSweepGC");
-                        freeMemory = Runtime.getRuntime().freeMemory();
-                        logger.info("free memory: "
-                                    + (freeMemory / (1024 * 1024))
-                                    + " MiB");
+                    freeMemory = Runtime.getRuntime().freeMemory();
+                    if (freeMemory < (16 * 1024 * 1024)) {
+                        logger.warning("free memory: "
+                                       + (freeMemory / (1024 * 1024))
+                                       + " MiB");
                     }
                     lastMessageMillis = System.currentTimeMillis();
                 } else {
@@ -561,6 +547,7 @@ public class Manager implements Runnable {
             }
             logger.info("queued " + urisArray.length + "/" + total);
             urisArray = null;
+            pool.shutdown();
 
         } catch (XccException e) {
             stop();
@@ -568,10 +555,6 @@ public class Manager implements Runnable {
         } finally {
             if (null != session) {
                 session.close();
-            }
-            // there won't be any more tasks
-            if (null != uriQueue) {
-                uriQueue.shutdown();
             }
         }
         // if the pool went away, the monitor stopped it: bail out.
@@ -607,13 +590,11 @@ public class Manager implements Runnable {
             pool = null;
         }
         if (null != monitor) {
+            pool.shutdownNow();
             monitor.shutdownNow();
         }
         if (null != monitorThread) {
             monitorThread.interrupt();
-        }
-        if (null != uriQueue) {
-            uriQueue.halt();
         }
     }
 
