@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
@@ -44,7 +46,9 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import com.marklogic.developer.Utilities;
 import com.marklogic.developer.SimpleLogger;
+
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentCreateOptions;
@@ -69,7 +73,7 @@ import com.marklogic.xcc.types.XdmItem;
  */
 public class Manager implements Runnable {
 
-    public static String VERSION = "2012-03-13.1";
+    public static String VERSION = "2012-03-13.4";
 
     public class CallerBlocksPolicy implements RejectedExecutionHandler {
 
@@ -228,6 +232,10 @@ public class Manager implements Runnable {
         logger.info(NAME + " starting: " + versionMessage);
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
         logger.info("maximum heap size = " + maxMemory + " MiB");
+
+        RuntimeMXBean RuntimemxBean = ManagementFactory.getRuntimeMXBean();
+        List<String> arguments = RuntimemxBean.getInputArguments();
+        logger.info("runtime arguments = " + Utilities.join(arguments, " "));
 
         prepareContentSource();
         registerStatusInfo();
@@ -455,35 +463,105 @@ public class Manager implements Runnable {
 
             uriQueue.setExpected(total);
             uriQueue.start();
+            // do not proceed until the uriQueue is running - fixes race
+            while (!uriQueue.isActive()) {
+                Thread.yield();
+            }
 
             monitor.setTaskCount(total);
             monitorThread.start();
 
             // this may return millions of items:
             // try to be memory-efficient
-            count = 0;
             String uri;
-            // check pool occasionally, for fast-fail
+            long lastMessageMillis = System.currentTimeMillis();
+            long freeMemory;
+            boolean isFirst = true;
+            String[] urisArray = new String[total];
+
+            count = 0;
             while (res.hasNext() && null != pool) {
                 uri = res.next().asString();
-                uriQueue.add(uri);
+
+                if (count >= urisArray.length) {
+                    throw new
+                        ArrayIndexOutOfBoundsException("received more than "
+                                                       + total
+                                                       + " results: " + uri);
+                }
+
+                // we want to test the work module immediately,
+                // but we also want to ensure that
+                // all uris queue as quickly as possible
+                if (isFirst) {
+                    isFirst = false;
+                    uriQueue.add(uri);
+                    urisArray[count] = null;
+                    logger.info("received first uri: " + uri);
+                } else {
+                    urisArray[count] = uri;
+                }
+                count++;
+
+                if (0 == count % 25000) {
+                    logger.info("received " + count + "/" + total + ": " + uri);
+
+                    if (System.currentTimeMillis() - lastMessageMillis
+                        > (1000 * 4)) {
+                        logger.warning("Slow receive!"
+                                       + " Consider increasing max heap size"
+                                       + " and using -XX:+UseConcMarkSweepGC");
+                        freeMemory = Runtime.getRuntime().freeMemory();
+                        logger.info("free memory: "
+                                    + (freeMemory / (1024 * 1024))
+                                    + " MiB");
+                    }
+                    lastMessageMillis = System.currentTimeMillis();
+                }
+
+            }
+
+            logger.info("received " + count + "/" + total);
+            // done with result set - close session to close everything
+            if (null != session) {
+                session.close();
+            }
+
+            // start with 1 not 0 because we already queued result 0
+            for (int i=1; i<urisArray.length; i++) {
+                // check pool occasionally, for fast-fail
                 if (null == pool) {
                     break;
                 }
-                count++;
-                String msg = "queued " + count + "/" + total + ": " + uri;
-                if (0 == count % 10000) {
+                uri = urisArray[i];
+                uriQueue.add(uri);
+                urisArray[i] = null;
+
+                String msg = "queued " + i + "/" + total + ": " + uri;
+                if (0 == i % 50000) {
                     logger.info(msg);
+                    if (System.currentTimeMillis() - lastMessageMillis
+                        > (1000 * 4)) {
+                        logger.warning("Slow queuing!"
+                                       + " Consider increasing max heap size"
+                                       + " and using -XX:+UseConcMarkSweepGC");
+                        freeMemory = Runtime.getRuntime().freeMemory();
+                        logger.info("free memory: "
+                                    + (freeMemory / (1024 * 1024))
+                                    + " MiB");
+                    }
+                    lastMessageMillis = System.currentTimeMillis();
                 } else {
                     logger.finest(msg);
                 }
-                if (count > total) {
-                    logger.warning("expected " + total + ", got "
-                                   + count);
+                if (i > total) {
+                    logger.warning("expected " + total + ", got " + i);
                     logger.warning("check your uri module!");
                 }
             }
-            logger.info("queued " + count + "/" + total);
+            logger.info("queued " + urisArray.length + "/" + total);
+            urisArray = null;
+
         } catch (XccException e) {
             stop();
             throw e;

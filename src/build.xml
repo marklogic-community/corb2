@@ -41,6 +41,7 @@
           description="Compile main source tree java files">
     <mkdir dir="${build.dir}"/>
     <javac destdir="${build.dir}" target="1.5"
+           debug="true" debuglevel="lines, vars, source"
            includeantruntime="false">
       <compilerarg value="-Xlint"/>
       <src path="${src.dir}"/>

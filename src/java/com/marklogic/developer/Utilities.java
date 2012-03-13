@@ -80,7 +80,7 @@ public class Utilities {
         return _path.replaceFirst(".*\\.([^\\.]+)$", "$1");
     }
 
-    public static String join(List<Object> _items, String _delim) {
+    public static String join(List<?> _items, String _delim) {
         if (null == _items) {
             return null;
         }
