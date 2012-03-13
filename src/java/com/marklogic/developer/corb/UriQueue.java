@@ -125,10 +125,6 @@ public class UriQueue extends Thread {
             count++;
             // try to avoid thread starvation
             Thread.yield();
-
-            if (count >= expectedCount) {
-                break;
-            }
         }
 
         pool.shutdown();

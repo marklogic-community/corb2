@@ -69,7 +69,7 @@ import com.marklogic.xcc.types.XdmItem;
  */
 public class Manager implements Runnable {
 
-    public static String VERSION = "2012-03-08.1";
+    public static String VERSION = "2012-03-13.1";
 
     public class CallerBlocksPolicy implements RejectedExecutionHandler {
 
@@ -415,8 +415,14 @@ public class Manager implements Runnable {
                 new LinkedBlockingQueue<String>(), logger);
 
         // must not cache the results, or we quickly run out of memory
-        RequestOptions requestOptions = new RequestOptions();
-        requestOptions.setCacheResult(false);
+        RequestOptions opts = new RequestOptions();
+        logger.fine("buffer size = " + opts.getResultBufferSize()
+                + ", caching = " + opts.getCacheResult());
+        opts.setCacheResult(false);
+        // this should be a noop, but xqsync does it
+        opts.setResultBufferSize(0);
+        logger.info("buffer size = " + opts.getResultBufferSize()
+                + ", caching = " + opts.getCacheResult());
 
         Session session = null;
         int count = 0;
@@ -434,7 +440,7 @@ public class Manager implements Runnable {
             req.setNewStringVariable("TYPE",
                     TransformOptions.COLLECTION_TYPE);
             req.setNewStringVariable("PATTERN", "[,\\s]+");
-            req.setOptions(requestOptions);
+            req.setOptions(opts);
 
             ResultSequence res = session.submitRequest(req);
 
