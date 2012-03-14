@@ -28,7 +28,7 @@ import com.marklogic.developer.SimpleLogger;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
- * 
+ *
  */
 public class Monitor implements Runnable {
 
@@ -69,7 +69,7 @@ public class Monitor implements Runnable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Runnable#run()
      */
     public void run() {
@@ -127,6 +127,14 @@ public class Monitor implements Runnable {
         if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
             logger.info("completed " + getProgressMessage());
             lastProgress = current;
+
+            // check for low memory
+            long freeMemory = Runtime.getRuntime().freeMemory();
+            if (freeMemory < (16 * 1024 * 1024)) {
+                logger.warning("free memory: "
+                               + (freeMemory / (1024 * 1024))
+                               + " MiB");
+            }
         }
         return lastProgress;
     }
@@ -147,7 +155,7 @@ public class Monitor implements Runnable {
     }
 
     /**
-     * 
+     *
      */
     public void shutdownNow() {
         shutdownNow = true;

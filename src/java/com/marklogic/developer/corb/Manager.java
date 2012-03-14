@@ -73,7 +73,7 @@ import com.marklogic.xcc.types.XdmItem;
  */
 public class Manager implements Runnable {
 
-    public static String VERSION = "2012-03-13.6";
+    public static String VERSION = "2012-03-14.1";
 
     public class CallerBlocksPolicy implements RejectedExecutionHandler {
 
