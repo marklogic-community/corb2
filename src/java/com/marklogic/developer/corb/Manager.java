@@ -36,7 +36,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -48,7 +47,6 @@ import javax.net.ssl.X509TrustManager;
 
 import com.marklogic.developer.Utilities;
 import com.marklogic.developer.SimpleLogger;
-
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentCreateOptions;
@@ -70,10 +68,11 @@ import com.marklogic.xcc.types.XdmItem;
 /**
  * @author Michael Blakeley, MarkLogic Corporation
  * @author Colleen Whitney, MarkLogic Corporation
+ * @author Bhagat Bandlamudi, MarkLogic Corporation
  */
 public class Manager implements Runnable {
 
-    public static String VERSION = "2012-03-14.1";
+    public static String VERSION = "2014-06-25.1";
 
     public class CallerBlocksPolicy implements RejectedExecutionHandler {
 
@@ -110,6 +109,8 @@ public class Manager implements Runnable {
         }
 
     }
+    
+    public static String URIS_BATCH_REF = "URIS_BATCH_REF";
 
     private static String versionMessage = "version " + VERSION + " on "
             + System.getProperty("java.version") + " ("
@@ -133,6 +134,8 @@ public class Manager implements Runnable {
     private URI connectionUri;
 
     private String collection;
+    
+    private Properties properties = new Properties();
 
     private TransformOptions options = new TransformOptions();
 
@@ -144,7 +147,7 @@ public class Manager implements Runnable {
 
     private SimpleLogger logger;
 
-    private String moduleUri;
+    //private String moduleUri;
 
     private Thread monitorThread;
 
@@ -164,47 +167,122 @@ public class Manager implements Runnable {
     /**
      * @param args
      * @throws URISyntaxException
+     * @throws IOException 
+     * @throws ClassNotFoundException 
+     * @throws IllegalAccessException 
+     * @throws InstantiationException 
      */
-    public static void main(String[] args) throws URISyntaxException {
-        if (args.length < 3) {
-            usage();
+    public static void main(String[] args) throws URISyntaxException, IOException, 
+    			ClassNotFoundException, InstantiationException, IllegalAccessException {    	
+        Properties props = new Properties();
+        InputStream is = Manager.class.getResourceAsStream("/corb.properties");
+        if(is != null){
+        	props.load(is);
+        }
+        // gather inputs
+        String connectionUri = getOption(args.length > 0 ? args[0] : null,"XCC-CONNECTION-URI",props);
+        String collection = getOption(args.length > 1 ? args[1] : null,"COLLECTION-NAME",props);
+        String processModule = getOption(args.length > 2 ? args[2] : null,"XQUERY-MODULE",props);       
+        String threadCount = getOption(args.length > 3 ? args[3] : null,"THREAD-COUNT",props);
+        String urisModule = getOption(args.length > 4 ? args[4] : null,"URIS-MODULE",props);
+        String moduleRoot = getOption(args.length > 5 ? args[5] : null,"MODULE-ROOT",props);
+        String modulesDatabase = getOption(args.length > 6 ? args[6] : null,"MODULES-DATABASE",props);
+        String install = getOption(args.length > 7 ? args[7] : null,"INSTALL",props);
+        String processTask = getOption(args.length > 8 ? args[8] : null,"PROCESS-TASK",props);
+        String postBatchModule = getOption(args.length > 9 ? args[9] : null,"POST-BATCH-XQUERY-MODULE",props);
+        String postBatchTask = getOption(args.length > 10 ? args[10] : null,"POST-BATCH-TASK",props);
+        String exportFileDir = getOption(args.length > 11 ? args[11]: null, "EXPORT-FILE-DIR",props);
+        
+        if(connectionUri == null){
+        	usage(); //TODO: Update the usage 
             return;
         }
 
-        // gather inputs
-        URI connectionUri = new URI(args[0]);
-        String collection = args[1];
-
-        Manager tm = new Manager(connectionUri, collection);
-        // options
+        Manager tm = new Manager(new URI(connectionUri), collection != null ? collection : "");
+        tm.setProperties(props); // Keep the properties around for the custom tasks 
+        //options
         TransformOptions options = tm.getOptions();
-
-        options.setProcessModule(args[2]);
-
-        if (args.length > 3 && !args[3].equals("")) {
-            options.setThreadCount(Integer.parseInt(args[3]));
+        if(processModule != null) options.setProcessModule(processModule);      
+        if(threadCount != null) options.setThreadCount(Integer.parseInt(threadCount));
+        if(urisModule != null) options.setUrisModule(urisModule);
+        if(moduleRoot != null) options.setModuleRoot(moduleRoot);
+        if(modulesDatabase != null) options.setModulesDatabase(modulesDatabase);
+        if(install != null && (install.equals("false") || install.equals("0"))) options.setDoInstall(false);
+        
+        //java class for processing individual tasks. 
+        //If specified, it is used instead of xquery module, but xquery module is still required. 
+        if(processTask != null){
+	        Class<?> processCls = Class.forName(processTask);
+	        if(Task.class.isAssignableFrom(processCls)){
+	        	processCls.newInstance(); //sanity check
+	        	options.setProcessTaskClass((Class<? extends Task>)processCls.asSubclass(Task.class));
+	        }else{
+	        	throw new IllegalArgumentException("PROCESS-TASK must be of type com.marklogic.developer.Task");
+	        }
         }
-        if (args.length > 4 && !args[4].equals("")) {
-            options.setUrisModule(args[4]);
+        
+        if(postBatchModule != null) options.setPostBatchModule(postBatchModule);
+        if(postBatchTask != null){
+	        Class<?> postBatchCls = Class.forName(postBatchTask);
+	        if(Task.class.isAssignableFrom(postBatchCls)){
+	        	postBatchCls.newInstance(); //sanity check
+	        	options.setPostBatchTaskClass((Class<? extends Task>)postBatchCls.asSubclass(Task.class));
+	        }else{
+	        	throw new IllegalArgumentException("POST-BATCH-TASK must be of type com.marklogic.developer.Task");
+	        }
         }
-        if (args.length > 5 && !args[5].equals("")) {
-            options.setModuleRoot(args[5]);
+        
+        if(exportFileDir != null){
+        	try{
+	        	//create a sample file and check for access exceptions
+	        	File dirFile = new File(exportFileDir);
+	        	//create the current direct if it doesn't exist. Don't create parent directories. 
+	        	dirFile.mkdir(); 
+	        	File sample = new File(dirFile,"sample.txt");
+	        	sample.createNewFile();
+	            sample.delete();       	
+	        	options.setExportFileDir(exportFileDir);
+        	}catch(IOException exc){
+        		throw new IOException("While accing "+exportFileDir+": "+exc.getMessage(),exc);
+        	}
         }
-        if (args.length > 6 && !args[6].equals("")) {
-            options.setModulesDatabase(args[6]);
-        }
-        if (args.length > 7 && !args[7].equals("")) {
-            if (args[7].equals("false") || args[7].equals("0"))
-                options.setDoInstall(false);
-        }
+        
+        if(null == options.getProcessTaskClass() && null == options.getProcessModule()){
+    		throw new NullPointerException("PROCESS-TASK or XQUERY-MODULE must be specified");
+    	}
+        
+        //now its time to start processing
         tm.run();
     }
-
-    /**
-     * @return
-     */
-    private TransformOptions getOptions() {
+    
+    private static String getOption(String argVal, String propName, Properties props){
+    	if(argVal != null && argVal.trim().length() > 0){
+    		return argVal.trim();
+    	}else if(System.getProperty(propName) != null && System.getProperty(propName).trim().length() > 0){
+    		return System.getProperty(propName).trim();
+    	}else if(props.containsKey(propName) && props.getProperty(propName).trim().length() > 0){
+    		String val = props.getProperty(propName).trim();
+    		props.remove(propName);
+    		return val;
+    	}
+    	return null;
+    }
+    
+    private void setProperties(Properties props){
+    	this.properties = props;
+    }
+    
+    //package access only
+    Properties getProperties(){
+    	return this.properties;
+    }
+    
+    TransformOptions getOptions() {
         return options;
+    }
+    
+    ContentSource getContentSource(){
+    	return this.contentSource;
     }
 
     /**
@@ -212,12 +290,22 @@ public class Manager implements Runnable {
      */
     private static void usage() {
         PrintStream err = System.err;
-        err.println("\nusage:");
+        err.println("usage 1:");
         err.println("\t" + NAME
                 + " xcc://user:password@host:port/[ database ]"
                 + " input-selector module-name.xqy"
                 + " [ thread-count [ uris-module [ module-root"
                 + " [ modules-database [ install ] ] ] ] ]");
+        err.println("\nusage 2:");
+        err.println("\t"+ "-DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ]"
+        				+ " -DXQUERY-MODULE=module-name.xqy"
+        				+ " -DTHREAD-COUNT=10"
+        				+ " -DURIS-MODULE=get-uris.xqy"
+        				+ " -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy"
+        				+ " -D... "
+        				+ NAME);
+        err.println("\nusage 3:");
+        err.println("\t"+NAME+" (Note: Looks for corb.properties file in the class path)");
     }
 
     /*
@@ -258,6 +346,10 @@ public class Manager implements Runnable {
             stop();
             // fatal
             throw new RuntimeException(e);
+        } catch (Exception e){
+        	logger.logException("unexpected", e);
+        	stop();
+        	throw new RuntimeException(e);
         }
     }
 
@@ -286,27 +378,26 @@ public class Manager implements Runnable {
      */
     private void prepareModules() {
         String[] resourceModules = new String[] {
-                options.getUrisModule(), options.getProcessModule() };
+                options.getUrisModule(), options.getProcessModule(), options.getPostBatchModule()};
         String modulesDatabase = options.getModulesDatabase();
         logger.info("checking modules, database: " + modulesDatabase);
         Session session = contentSource.newSession(modulesDatabase);
         InputStream is = null;
         Content c = null;
-        ContentCreateOptions opts = ContentCreateOptions
-                .newTextInstance();
+        ContentCreateOptions opts = ContentCreateOptions.newTextInstance();
         try {
             for (int i = 0; i < resourceModules.length; i++) {
+            	if(resourceModules[i] == null) continue;
+            	
                 // Start by checking install flag.
                 if (!options.isDoInstall()) {
-                    logger.info("Skipping module installation: "
-                            + resourceModules[i]);
+                    logger.info("Skipping module installation: " + resourceModules[i]);
                     continue;
                 }
                 // Next check: if XCC is configured for the filesystem, warn
                 // user
                 else if (options.getModulesDatabase().equals("")) {
-                    logger
-                            .warning("XCC configured for the filesystem: please install modules manually");
+                    logger.warning("XCC configured for the filesystem: please install modules manually");
                     return;
                 }
                 // Finally, if it's configured for a database, install.
@@ -315,25 +406,21 @@ public class Manager implements Runnable {
                     // If not installed, are the specified files on the
                     // filesystem?
                     if (f.exists()) {
-                        moduleUri = options.getModuleRoot() + f.getName();
+                        String moduleUri = options.getModuleRoot() + f.getName();
                         c = ContentFactory.newContent(moduleUri, f, opts);
                     }
                     // finally, check package
                     else {
-                        logger.warning("looking for "
-                                + resourceModules[i] + " as resource");
-                        moduleUri = options.getModuleRoot()
-                                + resourceModules[i];
-                        is = this.getClass().getResourceAsStream(
-                                resourceModules[i]);
+                        logger.warning("looking for "+ resourceModules[i] + " as resource");
+                        String moduleUri = options.getModuleRoot() + resourceModules[i];
+                        is = this.getClass().getResourceAsStream(resourceModules[i]);
                         if (null == is) {
                             throw new NullPointerException(
                                     resourceModules[i]
                                             + " could not be found on the filesystem,"
                                             + " or in package resources");
                         }
-                        c = ContentFactory
-                                .newContent(moduleUri, is, opts);
+                        c = ContentFactory.newContent(moduleUri, is, opts);
                     }
                     session.insertContent(c);
                 }
@@ -359,8 +446,7 @@ public class Manager implements Runnable {
             boolean ssl = connectionUri.getScheme().equals("xccs");
             contentSource = ssl ? ContentSourceFactory.newContentSource(
                     connectionUri, newTrustAnyoneOptions())
-                    : ContentSourceFactory
-                            .newContentSource(connectionUri);
+                    : ContentSourceFactory.newContentSource(connectionUri);
         } catch (XccConfigException e) {
             logger.logException(connectionUri.toString(), e);
             throw new RuntimeException(e);
@@ -372,7 +458,7 @@ public class Manager implements Runnable {
             throw new RuntimeException(e);
         }
     }
-
+    
     private void registerStatusInfo() {
         Session session = contentSource.newSession();
         AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_0_9_ML
@@ -400,12 +486,13 @@ public class Manager implements Runnable {
                 options.setXDBC_ROOT(item.asString());
             }
         }
-        logger.info("Configured modules db: "
-                + options.getModulesDatabase());
+        logger.info("Configured modules db: " + options.getModulesDatabase());
         logger.info("Configured modules root: " + options.getXDBC_ROOT());
         logger.info("Configured uri module: " + options.getUrisModule());
-        logger.info("Configured process module: "
-                + options.getProcessModule());
+        logger.info("Configured process module: " + options.getProcessModule());
+        logger.info("Configured process task: " + options.getProcessTaskClass());
+        logger.info("Configured post batch module: " + options.getPostBatchModule());
+        logger.info("Configured post batch task: " + options.getPostBatchTaskClass());
     }
 
     /**
@@ -414,9 +501,7 @@ public class Manager implements Runnable {
     private void populateQueue() throws XccException {
         logger.info("populating queue");
 
-        TaskFactory tf = new TaskFactory(contentSource, options
-                .getModuleRoot()
-                + options.getProcessModule());
+        TaskFactory tf = new TaskFactory(this);
 
         // must not cache the results, or we quickly run out of memory
         RequestOptions opts = new RequestOptions();
@@ -434,22 +519,25 @@ public class Manager implements Runnable {
 
         try {
             session = contentSource.newSession();
-            String urisModule = options.getModuleRoot()
-                    + options.getUrisModule();
+            String urisModule = options.getModuleRoot() + options.getUrisModule();
             logger.info("invoking module " + urisModule);
             Request req = session.newModuleInvoke(urisModule);
             // NOTE: collection will be treated as a CWSV
             req.setNewStringVariable("URIS", collection);
             // TODO support DIRECTORY as type
-            req.setNewStringVariable("TYPE",
-                    TransformOptions.COLLECTION_TYPE);
+            req.setNewStringVariable("TYPE", TransformOptions.COLLECTION_TYPE);
             req.setNewStringVariable("PATTERN", "[,\\s]+");
             req.setOptions(opts);
 
             ResultSequence res = session.submitRequest(req);
+            ResultItem next = res.next();
+            if(!(next.getItem() instanceof XSInteger)){
+            	properties.put(URIS_BATCH_REF, next.asString());
+            	next = res.next();
+            }
 
             // like a Pascal string, the first item will be the count
-            total = ((XSInteger) res.next().getItem()).asPrimitiveInt();
+            total = ((XSInteger) next.getItem()).asPrimitiveInt();
             logger.info("expecting total " + total);
             if (0 == total) {
                 logger.info("nothing to process");
@@ -476,18 +564,15 @@ public class Manager implements Runnable {
                 uri = res.next().asString();
 
                 if (count >= urisArray.length) {
-                    throw new
-                        ArrayIndexOutOfBoundsException("received more than "
-                                                       + total
-                                                       + " results: " + uri);
+                    throw new ArrayIndexOutOfBoundsException("received more than " + total + " results: " + uri);
                 }
 
                 // we want to test the work module immediately,
                 // but we also want to ensure that
-                // all uris queue as quickly as possible
+                // all uris in queue as quickly as possible
                 if (isFirst) {
                     isFirst = false;
-                    completionService.submit(tf.newTask(uri));
+                    completionService.submit(tf.newProcessTask(uri));
                     urisArray[count] = null;
                     logger.info("received first uri: " + uri);
                 } else {
@@ -526,7 +611,7 @@ public class Manager implements Runnable {
                     break;
                 }
                 uri = new String(urisArray[i]);
-                completionService.submit(tf.newTask(uri));
+                completionService.submit(tf.newProcessTask(uri));
                 urisArray[i] = null;
 
                 String msg = "queued " + i + "/" + total + ": " + uri;
@@ -592,7 +677,6 @@ public class Manager implements Runnable {
             pool = null;
         }
         if (null != monitor) {
-            pool.shutdownNow();
             monitor.shutdownNow();
         }
         if (null != monitorThread) {

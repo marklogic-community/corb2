@@ -20,7 +20,7 @@
 */
 -->
 <project name="corb" basedir="." default="jar">
-  <property name="name" value="corb"/>
+  <property name="name" value="corb2"/>
   <property file="build.properties"/>
 
   <property name="src.dir" value="java"/>
@@ -36,12 +36,19 @@
     </fileset>
     <pathelement path="${build.dir}"/>
   </path>
+	
+  <target name="clean">
+	<delete dir="${dist.dir}"/>
+  	<delete>
+  		<fileset dir="${build.dir}" includes="**/*.class"/>
+  	</delete>
+  </target>
 
   <target name="build"
           description="Compile main source tree java files">
     <mkdir dir="${build.dir}"/>
-    <javac destdir="${build.dir}" target="1.5"
-           debug="true" debuglevel="lines, vars, source"
+    <javac destdir="${build.dir}" target="1.5" source="1.5"
+           debug="true"
            includeantruntime="false">
       <compilerarg value="-Xlint"/>
       <src path="${src.dir}"/>

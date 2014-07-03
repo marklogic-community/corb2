@@ -18,74 +18,18 @@
  */
 package com.marklogic.developer.corb;
 
-import java.util.concurrent.Callable;
-
-import com.marklogic.xcc.Request;
-import com.marklogic.xcc.Session;
-
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
+ * @author Bhagat Bandlamudi, MarkLogic Corporation
  *
  */
-public class Transform implements Callable<String> {
-
-    protected String inputUri;
-
-    protected TaskFactory factory;
-
-    /**
-     * @param _tf
-     * @param _uri
-     */
-    public Transform(TaskFactory _tf, String _uri) {
-        factory = _tf;
-        this.inputUri = _uri;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see java.lang.Object#finalize()
-     */
-    protected void finalize() throws Throwable {
-        super.finalize();
-    }
-
+public class Transform extends AbstractTask {
     /*
      * (non-Javadoc)
      *
      * @see java.util.concurrent.Callable#call()
      */
     public String call() throws Exception {
-        // try to avoid thread starvation
-        Thread.yield();
-        Session session = null;
-        try {
-            String moduleUri = factory.getModuleUri();
-            session = factory.newSession();
-            Request request = session.newModuleInvoke(moduleUri);
-            request.setNewStringVariable("URI", inputUri);
-            // try to avoid thread starvation
-            Thread.yield();
-            String response = session.submitRequest(request).asString();
-            session.close();
-            session = null;
-            return response;
-        } finally {
-            if (null != session) {
-                session.close();
-                session = null;
-            }
-            // try to avoid thread starvation
-            Thread.yield();
-        }
+    	return invoke().asString();
     }
-
-    /**
-     * @return
-     */
-    public String getUri() {
-        return inputUri;
-    }
-
 }

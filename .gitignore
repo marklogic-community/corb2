@@ -1,7 +1,10 @@
 *~
+.project
+.classpath
 *.class
 lib/
 publish.sh
 src/*.sh
 src/simplelogger*
 src/test*
+/bin

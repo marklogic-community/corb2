@@ -21,6 +21,7 @@ package com.marklogic.developer.corb;
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * @author Colleen Whitney, colleen.whitney@marklogic.com
+ * @author Bhagat Bandlamudi, MarkLogic Corporation
  * 
  */
 public class TransformOptions {
@@ -41,12 +42,17 @@ public class TransformOptions {
 
     public static final String QUERY_TYPE = "QUERY";
 
-    private String processModule = null;
+    private String processModule = null;  
+    private Class<? extends Task> processTaskCls = null;
+    
+    private String postBatchModule = null;
+    private Class<? extends Task> postBatchTaskCls = null;
+    
+    private String exportFileDir = null;
 
     // Defaults for optional arguments
     private String moduleRoot = SLASH
-            + TransformOptions.class.getPackage().getName().replace('.',
-                    SLASHCHAR) + SLASH;
+            + TransformOptions.class.getPackage().getName().replace('.',SLASHCHAR) + SLASH;
 
     private String urisModule = "get-uris.xqy";
 
@@ -145,6 +151,21 @@ public class TransformOptions {
     public void setProcessModule(String processModule) {
         this.processModule = processModule;
     }
+    
+    /**
+     * Java class
+     */
+    public void setProcessTaskClass(Class<? extends Task> processTaskCls){
+    	this.processTaskCls = processTaskCls;
+    }
+    
+    /**
+     * Java Class
+     * @return
+     */
+    public Class<? extends Task> getProcessTaskClass(){
+    	return this.processTaskCls;
+    }
 
     /**
      * @return
@@ -172,6 +193,36 @@ public class TransformOptions {
      */
     public void setDoInstall(boolean doInstall) {
         this.doInstall = doInstall;
+    }
+    
+    public void setPostBatchModule(String postBatchModule){
+    	this.postBatchModule = postBatchModule;
+    }
+    
+    public String getPostBatchModule(){
+    	return this.postBatchModule;
+    }
+    
+    /**
+     * Java Class
+     */
+    public void setPostBatchTaskClass(Class<? extends Task> postBatchTaskCls){
+    	this.postBatchTaskCls = postBatchTaskCls;
+    }
+    
+    /**
+     * Java Class
+     */
+    public Class<? extends Task> getPostBatchTaskClass(){
+    	return this.postBatchTaskCls;
+    }
+    
+    public String getExportFileDir(){
+    	return this.exportFileDir;
+    }
+    
+    public void setExportFileDir(String exportFileDir){
+    	this.exportFileDir = exportFileDir;
     }
 
     /**
