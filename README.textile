@@ -26,7 +26,7 @@ EXPORT-FILE-DIR (export directory for com.marklogic.developer.corb.ExportToFileT
 Optional properties only supported via corb.proeprties file
 ------
 EXPORT_FILE_NAME (shared file to export output of com.marklogic.developer.corb.ExportBatchToFileTask - Not full path)
-EXPORT-FILE-TOP-CONTENT (used by PostBatchUpdateFileTask to insert content at the top to EXPORT_FILE_NAME after batch process is complete, if it finds the text @URIS-BATCH-REF it replaces it by batch reference sent by URIS_MODULE)
+EXPORT-FILE-TOP-CONTENT (used by PostBatchUpdateFileTask to insert content at the top to EXPORT_FILE_NAME after batch process is complete, if it finds the text @URIS_BATCH_REF it replaces it by batch reference sent by URIS_MODULE)
 EXPORT-FILE-BOTTOM-CONTENT (used by PostBatchUpdateFileTask to append content to EXPORT_FILE_NAME after batch process is complete)
 
 Internal properties
