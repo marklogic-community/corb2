@@ -210,7 +210,7 @@ public class Manager implements Runnable {
         if(modulesDatabase != null) options.setModulesDatabase(modulesDatabase);
         if(install != null && (install.equals("false") || install.equals("0"))) options.setDoInstall(false);
         
-        if(!props.containsKey("EXPORT-FILE-NAME")){
+        if(!props.containsKey("EXPORT-FILE-NAME") && exportFileName !=null){
         	props.put("EXPORT-FILE-NAME", exportFileName);
         }
         
