@@ -192,6 +192,7 @@ public class Manager implements Runnable {
         String postBatchModule = getOption(args.length > 9 ? args[9] : null,"POST-BATCH-XQUERY-MODULE",props);
         String postBatchTask = getOption(args.length > 10 ? args[10] : null,"POST-BATCH-TASK",props);
         String exportFileDir = getOption(args.length > 11 ? args[11]: null, "EXPORT-FILE-DIR",props);
+        String exportFileName = getOption(args.length > 12 ? args[12]: null, "EXPORT-FILE-NAME",props);
         
         if(connectionUri == null){
         	usage(); //TODO: Update the usage 
@@ -208,6 +209,10 @@ public class Manager implements Runnable {
         if(moduleRoot != null) options.setModuleRoot(moduleRoot);
         if(modulesDatabase != null) options.setModulesDatabase(modulesDatabase);
         if(install != null && (install.equals("false") || install.equals("0"))) options.setDoInstall(false);
+        
+        if(!props.containsKey("EXPORT-FILE-NAME")){
+        	props.put("EXPORT-FILE-NAME", exportFileName);
+        }
         
         //java class for processing individual tasks. 
         //If specified, it is used instead of xquery module, but xquery module is still required. 

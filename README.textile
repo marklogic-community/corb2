@@ -22,10 +22,10 @@ PROCESS-TASK (Java Class that implements com.marklogic.developer.Task or extends
 POST-BATCH-XQUERY-MODULE (XQuery module, if specified, will be run after batch processing is completed)
 POST-BATCH-TASK (Java Class that implements com.marklogic.developer.Task or extends com.marklogic.developer.AbstractTask- can be used in place or in addition to POST-BATCH-XQUERY-MODULE. Ex: PostBatchUpdateFileTask (included) which adds additional content to the export file created by ExportToFileTask)
 EXPORT-FILE-DIR (export directory for com.marklogic.developer.corb.ExportToFileTask or similar tasks. If not specified, it defaults to user.dir)
+EXPORT-FILE-NAME (shared file to export output of com.marklogic.developer.corb.ExportBatchToFileTask - Not full path)
 
 Optional properties only supported via corb.proeprties file
 ------
-EXPORT_FILE_NAME (shared file to export output of com.marklogic.developer.corb.ExportBatchToFileTask - Not full path)
 EXPORT-FILE-TOP-CONTENT (used by PostBatchUpdateFileTask to insert content at the top to EXPORT_FILE_NAME after batch process is complete, if it finds the text @URIS_BATCH_REF it replaces it by batch reference sent by URIS_MODULE)
 EXPORT-FILE-BOTTOM-CONTENT (used by PostBatchUpdateFileTask to append content to EXPORT_FILE_NAME after batch process is complete)
 
@@ -35,7 +35,7 @@ URIS_BATCH_REF (This is not a user specified property. URIS-MODULE can optionall
 
 Running from command line:
 Usage 1:
-com.marklogic.developer.corb.Manager XCC-CONNECTION-URI [COLLECTION-NAME [XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT [ MODULES-DATABASE [ INSTALL [ PROCESS-TASK  [ POST-BATCH-XQUERY-MODULE  [ POST-BATCH-TASK [ EXPORT-FILE-DIR ] ] ] ] ] ] ] ] ] ] ]
+com.marklogic.developer.corb.Manager XCC-CONNECTION-URI [COLLECTION-NAME [XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT [ MODULES-DATABASE [ INSTALL [ PROCESS-TASK  [ POST-BATCH-XQUERY-MODULE  [ POST-BATCH-TASK [ EXPORT-FILE-DIR [ EXPORT-FILE-NAME ] ] ] ] ] ] ] ] ] ] ] ]
 
 Usage 2:
 -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] -DXQUERY-MODULE=module-name.xqy -DTHREAD-COUNT=10 -DURIS-MODULE=get-uris.xqy -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy -D... com.marklogic.developer.corb.Manager
