@@ -538,6 +538,7 @@ public class Manager implements Runnable {
             ResultItem next = res.next();
             if(!(next.getItem() instanceof XSInteger)){
             	properties.put(URIS_BATCH_REF, next.asString());
+            	logger.info("URIS_BATCH_REF: " + next.asString());
             	next = res.next();
             }
 
