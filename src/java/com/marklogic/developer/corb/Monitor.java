@@ -168,7 +168,7 @@ public class Monitor implements Runnable {
     		logger.info("Running post batch Task");
     		TaskFactory tf = new TaskFactory(manager);
     		try{
-        		Task postTask = tf.newPostBatchTask("");
+        		Task postTask = tf.newPostBatchTask();
     			String response = postTask.call();
     			logger.info("Post batch task complete. Response: "+response);
     		}catch(Exception exc){

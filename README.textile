@@ -8,7 +8,7 @@ The entry point is the main method in the com.marklogic.developer.corb.Manager c
 Corb needs one or more of the following parameters as (If specified in more then one place command line argument takes precedence over VM argument which take precedence over corb.properties)
 1) command-line arguments 
 2) VM arguments ex: -DXCC-CONNECTION-URI=xcc://user:password@localhost:8202 or 
-3) corb.properties in class path
+3) corb.properties in class path. Alternate properties file can be specified using -DOPTIONS-FILE=foo.properties
 
 XCC-CONNECTION-URI
 COLLECTION-NAME (can be empty string)
@@ -19,6 +19,8 @@ MODULE-ROOT (assumes '/' if not provided)
 MODULES-DATABASE (uses the XCC-CONNECTION-URI if not provided; use 0 for filesystem)
 INSTALL (default is true; set to 'false' or '0' to skip installation)
 PROCESS-TASK (Java Class that implements com.marklogic.developer.Task or extends com.marklogic.developer.AbstractTask. It can talk to XQUERY-MODULE and do additional processing locally. Ex: ExportToFileTask (included) will save the document to local file system)
+PRE-BATCH-XQUERY-MODULE (XQuery module, if specified, will be run before batch processing starts)
+PRE-BATCH-TASK (Java Class that implements com.marklogic.developer.Task or extends com.marklogic.developer.AbstractTask- can be used in place or in addition to PRE-BATCH-XQUERY-MODULE. Ex: PreBatchUpdateFileTask (included) which adds additional content to the export file)
 POST-BATCH-XQUERY-MODULE (XQuery module, if specified, will be run after batch processing is completed)
 POST-BATCH-TASK (Java Class that implements com.marklogic.developer.Task or extends com.marklogic.developer.AbstractTask- can be used in place or in addition to POST-BATCH-XQUERY-MODULE. Ex: PostBatchUpdateFileTask (included) which adds additional content to the export file created by ExportToFileTask)
 EXPORT-FILE-DIR (export directory for com.marklogic.developer.corb.ExportToFileTask or similar tasks. If not specified, it defaults to user.dir)
@@ -26,7 +28,7 @@ EXPORT-FILE-NAME (shared file to export output of com.marklogic.developer.corb.E
 
 Optional properties only supported via corb.proeprties file
 ------
-EXPORT-FILE-TOP-CONTENT (used by PostBatchUpdateFileTask to insert content at the top to EXPORT_FILE_NAME after batch process is complete, if it finds the text @URIS_BATCH_REF it replaces it by batch reference sent by URIS_MODULE)
+EXPORT-FILE-TOP-CONTENT (used by PreBatchUpdateFileTask to insert content at the top to EXPORT_FILE_NAME before batch process starts, if it finds the text @URIS_BATCH_REF it replaces it by batch reference sent by URIS_MODULE)
 EXPORT-FILE-BOTTOM-CONTENT (used by PostBatchUpdateFileTask to append content to EXPORT_FILE_NAME after batch process is complete)
 
 Internal properties
@@ -35,7 +37,7 @@ URIS_BATCH_REF (This is not a user specified property. URIS-MODULE can optionall
 
 Running from command line:
 Usage 1:
-com.marklogic.developer.corb.Manager XCC-CONNECTION-URI [COLLECTION-NAME [XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT [ MODULES-DATABASE [ INSTALL [ PROCESS-TASK  [ POST-BATCH-XQUERY-MODULE  [ POST-BATCH-TASK [ EXPORT-FILE-DIR [ EXPORT-FILE-NAME ] ] ] ] ] ] ] ] ] ] ] ]
+com.marklogic.developer.corb.Manager XCC-CONNECTION-URI [COLLECTION-NAME [XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT [ MODULES-DATABASE [ INSTALL [ PROCESS-TASK [ PRE-BATCH-XQUERY-MODULE  [ PRE-BATCH-TASK [ POST-BATCH-XQUERY-MODULE  [ POST-BATCH-TASK [ EXPORT-FILE-DIR [ EXPORT-FILE-NAME ] ] ] ] ] ] ] ] ] ] ] ] ] ]
 
 Usage 2:
 -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] -DXQUERY-MODULE=module-name.xqy -DTHREAD-COUNT=10 -DURIS-MODULE=get-uris.xqy -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy -D... com.marklogic.developer.corb.Manager

@@ -175,7 +175,11 @@ public class Manager implements Runnable {
     public static void main(String[] args) throws URISyntaxException, IOException, 
     			ClassNotFoundException, InstantiationException, IllegalAccessException {    	
         Properties props = new Properties();
-        InputStream is = Manager.class.getResourceAsStream("/corb.properties");
+        String propsFileName = System.getProperty("OPTIONS-FILE");
+        if(propsFileName == null || propsFileName.trim().length() == 0){
+        	propsFileName = "corb.properties";
+        }
+        InputStream is = Manager.class.getResourceAsStream("/"+propsFileName);
         if(is != null){
         	props.load(is);
         }
@@ -189,10 +193,12 @@ public class Manager implements Runnable {
         String modulesDatabase = getOption(args.length > 6 ? args[6] : null,"MODULES-DATABASE",props);
         String install = getOption(args.length > 7 ? args[7] : null,"INSTALL",props);
         String processTask = getOption(args.length > 8 ? args[8] : null,"PROCESS-TASK",props);
-        String postBatchModule = getOption(args.length > 9 ? args[9] : null,"POST-BATCH-XQUERY-MODULE",props);
-        String postBatchTask = getOption(args.length > 10 ? args[10] : null,"POST-BATCH-TASK",props);
-        String exportFileDir = getOption(args.length > 11 ? args[11]: null, "EXPORT-FILE-DIR",props);
-        String exportFileName = getOption(args.length > 12 ? args[12]: null, "EXPORT-FILE-NAME",props);
+        String preBatchModule = getOption(args.length > 9 ? args[9] : null,"PRE-BATCH-XQUERY-MODULE",props);
+        String preBatchTask = getOption(args.length > 10 ? args[10] : null,"PRE-BATCH-TASK",props);
+        String postBatchModule = getOption(args.length > 11 ? args[11] : null,"POST-BATCH-XQUERY-MODULE",props);
+        String postBatchTask = getOption(args.length > 12 ? args[12] : null,"POST-BATCH-TASK",props);
+        String exportFileDir = getOption(args.length > 13 ? args[13]: null, "EXPORT-FILE-DIR",props);
+        String exportFileName = getOption(args.length > 14 ? args[14]: null, "EXPORT-FILE-NAME",props);
         
         if(connectionUri == null){
         	usage(); //TODO: Update the usage 
@@ -210,6 +216,9 @@ public class Manager implements Runnable {
         if(modulesDatabase != null) options.setModulesDatabase(modulesDatabase);
         if(install != null && (install.equals("false") || install.equals("0"))) options.setDoInstall(false);
         
+        if(!props.containsKey("EXPORT-FILE-DIR") && exportFileDir !=null){
+        	props.put("EXPORT-FILE-DIR", exportFileDir);
+        }
         if(!props.containsKey("EXPORT-FILE-NAME") && exportFileName !=null){
         	props.put("EXPORT-FILE-NAME", exportFileName);
         }
@@ -223,6 +232,17 @@ public class Manager implements Runnable {
 	        	options.setProcessTaskClass((Class<? extends Task>)processCls.asSubclass(Task.class));
 	        }else{
 	        	throw new IllegalArgumentException("PROCESS-TASK must be of type com.marklogic.developer.Task");
+	        }
+        }
+        
+        if(preBatchModule != null) options.setPreBatchModule(preBatchModule);
+        if(preBatchTask != null){
+	        Class<?> preBatchCls = Class.forName(preBatchTask);
+	        if(Task.class.isAssignableFrom(preBatchCls)){
+	        	preBatchCls.newInstance(); //sanity check
+	        	options.setPreBatchTaskClass((Class<? extends Task>)preBatchCls.asSubclass(Task.class));
+	        }else{
+	        	throw new IllegalArgumentException("PRE-BATCH-TASK must be of type com.marklogic.developer.Task");
 	        }
         }
         
@@ -496,8 +516,24 @@ public class Manager implements Runnable {
         logger.info("Configured uri module: " + options.getUrisModule());
         logger.info("Configured process module: " + options.getProcessModule());
         logger.info("Configured process task: " + options.getProcessTaskClass());
+        logger.info("Configured pre batch module: " + options.getPreBatchModule());
+        logger.info("Configured pre batch task: " + options.getPreBatchTaskClass());
         logger.info("Configured post batch module: " + options.getPostBatchModule());
         logger.info("Configured post batch task: " + options.getPostBatchTaskClass());
+    }
+    
+    private void runPreBatchTaskIfExists(){
+    	if(null != options.getPreBatchTaskClass() || null != options.getPreBatchModule()){
+    		logger.info("Running pre batch Task");
+    		TaskFactory tf = new TaskFactory(this);
+    		try{
+        		Task preTask = tf.newPreBatchTask();
+    			String response = preTask.call();
+    			logger.info("Pre batch task complete. Response: "+response);
+    		}catch(Exception exc){
+    			logger.logException("Error invoking pre batch task", exc);
+    		}
+    	}
     }
 
     /**
@@ -550,8 +586,11 @@ public class Manager implements Runnable {
                 stop();
                 return;
             }
-
-
+            
+            //run pre-batch task, if present. 
+            runPreBatchTaskIfExists();
+            
+            //now start process tasks
             monitor.setTaskCount(total);
             monitorThread.start();
 

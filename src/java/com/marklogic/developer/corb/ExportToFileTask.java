@@ -25,15 +25,14 @@ public class ExportToFileTask extends AbstractTask {
 		return inputUri.substring(inputUri.lastIndexOf('/')+1);
 	}
 	
-	protected void writeToFile(String fileName, ResultSequence seq) throws IOException{
+	protected void writeToFile(ResultSequence seq) throws IOException{
 		if(seq == null || !seq.hasNext()) return;
 		BufferedOutputStream writer = null;
 		try{
 			writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir,getFileName())));
-			writer.write(getValueAsBytes(seq.next().getItem()));
-			while(seq.hasNext()){
-				writer.write(NEWLINE);
+			while(seq.hasNext()){				
 				writer.write(getValueAsBytes(seq.next().getItem()));
+				writer.write(NEWLINE);
 			}
 		}finally{
 			if(writer != null){
@@ -48,7 +47,7 @@ public class ExportToFileTask extends AbstractTask {
 		Thread.yield(); // try to avoid thread starvation
 		ResultSequence seq = invoke();
 		Thread.yield(); // try to avoid thread starvation
-		writeToFile(getFileName(),seq);
+		writeToFile(seq);
 		Thread.yield(); // try to avoid thread starvation
 		return TRUE;
 	}

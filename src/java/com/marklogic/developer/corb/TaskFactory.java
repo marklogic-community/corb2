@@ -49,20 +49,31 @@ public class TaskFactory {
         try{
         	Task task = manager.getOptions().getProcessTaskClass() == null ? 
         				new Transform() : manager.getOptions().getProcessTaskClass().newInstance();
-        	if(manager.getOptions().getProcessModule() != null){
-        		String root = manager.getOptions().getModuleRoot();
-        		String module = manager.getOptions().getProcessModule();
-        		module = module.substring(module.lastIndexOf("/")+1);
-        		task.setModuleURI(root + module);
-        	}
-        	setupTask(task,_uri);
+        	setupTask(task,manager.getOptions().getProcessModule(),_uri);
         	return task;
         }catch(Exception exc){
         	throw new IllegalArgumentException(exc.getMessage(),exc);
         }
     }
     
-    public Task newPostBatchTask(String _uri){
+    public Task newPreBatchTask(){
+    	if(null == manager.getOptions().getPreBatchTaskClass() && null == manager.getOptions().getPreBatchModule()){
+    		throw new NullPointerException("null pre batch task and module");
+    	}
+    	if(null != manager.getOptions().getPreBatchModule() && null == manager.getContentSource()){
+    		throw new NullPointerException("null content source");
+    	}
+        try{
+        	Task task = manager.getOptions().getPreBatchTaskClass() == null ? 
+        				new Transform() : manager.getOptions().getPreBatchTaskClass().newInstance();
+        	setupTask(task,manager.getOptions().getPreBatchModule(),"");
+        	return task;
+        }catch(Exception exc){
+        	throw new IllegalArgumentException(exc.getMessage(),exc);
+        }
+    }
+    
+    public Task newPostBatchTask(){
     	if(null == manager.getOptions().getPostBatchTaskClass() && null == manager.getOptions().getPostBatchModule()){
     		throw new NullPointerException("null post batch task and module");
     	}
@@ -72,25 +83,30 @@ public class TaskFactory {
         try{
         	Task task = manager.getOptions().getPostBatchTaskClass() == null ? 
         				new Transform() : manager.getOptions().getPostBatchTaskClass().newInstance();
-        	if(manager.getOptions().getPostBatchModule() != null){
-        		String root = manager.getOptions().getModuleRoot();
-        		String module = manager.getOptions().getPostBatchModule();
-        		module = module.substring(module.lastIndexOf("/")+1);
-        		task.setModuleURI(root + module);
-        	}
-        	setupTask(task,_uri);
+        	setupTask(task,manager.getOptions().getPostBatchModule(),"");
         	return task;
         }catch(Exception exc){
         	throw new IllegalArgumentException(exc.getMessage(),exc);
         }
     }
     
-    private void setupTask(Task task, String _uri){
+    private void setupTask(Task task, String module, String _uri){
+    	if(module != null){
+    		String root = manager.getOptions().getModuleRoot();
+    		module = module.substring(module.lastIndexOf("/")+1);
+    		task.setModuleURI(root + module);
+    	}
     	task.setContentSource(manager.getContentSource());
     	task.setProperties(manager.getProperties());
     	task.setInputURI(_uri);
     	if(task instanceof ExportToFileTask){
     		((ExportToFileTask)task).setExportDir(manager.getOptions().getExportFileDir());
+    	}
+    	if(task instanceof ExportBatchToFileTask){
+    		String fileName = ((ExportBatchToFileTask)task).getFileName();
+    		if(fileName == null || fileName.trim().length() == 0){
+    			throw new IllegalArgumentException("No file name for ExportBatchToFileTask");
+    		}
     	}
     }
 }

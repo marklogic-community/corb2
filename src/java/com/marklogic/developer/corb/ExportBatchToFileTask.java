@@ -18,13 +18,10 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 				fileName = batchRef.substring(batchRef.lastIndexOf('/')+1); 
 			}
 		}
-		if(fileName == null){
-			fileName = inputUri.substring(inputUri.lastIndexOf('/')+1);
-		}
 		return fileName;
 	}
 	
-	protected void writeToFile(String fileName, ResultSequence seq) throws IOException{
+	protected void writeToFile(ResultSequence seq) throws IOException{
 		if(seq == null || !seq.hasNext()) return;
 		synchronized(sync){
 			BufferedOutputStream writer = null;

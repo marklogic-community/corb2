@@ -45,6 +45,9 @@ public class TransformOptions {
     private String processModule = null;  
     private Class<? extends Task> processTaskCls = null;
     
+    private String preBatchModule = null;
+    private Class<? extends Task> preBatchTaskCls = null;
+    
     private String postBatchModule = null;
     private Class<? extends Task> postBatchTaskCls = null;
     
@@ -193,6 +196,28 @@ public class TransformOptions {
      */
     public void setDoInstall(boolean doInstall) {
         this.doInstall = doInstall;
+    }
+    
+    public void setPreBatchModule(String preBatchModule){
+    	this.preBatchModule = preBatchModule;
+    }
+    
+    public String getPreBatchModule(){
+    	return this.preBatchModule;
+    }
+    
+    /**
+     * Java Class
+     */
+    public void setPreBatchTaskClass(Class<? extends Task> preBatchTaskCls){
+    	this.preBatchTaskCls = preBatchTaskCls;
+    }
+    
+    /**
+     * Java Class
+     */
+    public Class<? extends Task> getPreBatchTaskClass(){
+    	return this.preBatchTaskCls;
     }
     
     public void setPostBatchModule(String postBatchModule){

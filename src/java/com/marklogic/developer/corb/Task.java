@@ -10,6 +10,9 @@ import java.util.concurrent.Callable;
 
 import com.marklogic.xcc.ContentSource;
 
+/**
+ * @author Bhagat Bandlamudi, MarkLogic Corporation
+ */
 public interface Task extends Callable<String> {
 	
 	public void setContentSource(ContentSource cs);
