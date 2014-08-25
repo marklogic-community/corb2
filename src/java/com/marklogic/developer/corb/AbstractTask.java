@@ -76,7 +76,7 @@ public abstract class AbstractTask implements Task{
 		if(val == null || val.trim().length() == 0){
 			val = properties.getProperty(key);
 		}
-		return val;
+		return val != null ? val.trim() : val;
 	}
 	
 	protected byte[] getValueAsBytes(XdmItem item){

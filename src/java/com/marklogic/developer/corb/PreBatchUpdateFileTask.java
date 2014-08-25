@@ -26,9 +26,12 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 		
 		if(topContent.length() == 0 && (seq == null || !seq.hasNext())) return;
 		
+		File batchFile = new File(exportDir,getPartFileName());
+		if(batchFile.exists()) batchFile.delete();
+		
 		BufferedOutputStream writer = null;
 		try{
-			writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir,getFileName())));
+			writer = new BufferedOutputStream(new FileOutputStream(batchFile));
 			//write top content
 			if(topContent.length() > 0){
 				writer.write(topContent.getBytes());

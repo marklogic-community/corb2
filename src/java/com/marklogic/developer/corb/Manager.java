@@ -31,6 +31,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -268,8 +269,14 @@ public class Manager implements Runnable {
 	            sample.delete();       	
 	        	options.setExportFileDir(exportFileDir);
         	}catch(IOException exc){
-        		throw new IOException("While accing "+exportFileDir+": "+exc.getMessage(),exc);
+        		throw new IOException("While accessing "+exportFileDir+": "+exc.getMessage(),exc);
         	}
+        }
+        
+        //delete the export file if it exists
+        if(exportFileName != null){
+        	File exportFile = new File(exportFileDir,exportFileName);
+        	if(exportFile.exists()) exportFile.delete();
         }
         
         if(null == options.getProcessTaskClass() && null == options.getProcessModule()){
@@ -512,7 +519,8 @@ public class Manager implements Runnable {
             }
         }
         logger.info("Configured modules db: " + options.getModulesDatabase());
-        logger.info("Configured modules root: " + options.getXDBC_ROOT());
+        logger.info("Configured modules xdbc root: " + options.getXDBC_ROOT());
+        logger.info("Configured modules root: " + options.getModuleRoot());
         logger.info("Configured uri module: " + options.getUrisModule());
         logger.info("Configured process module: " + options.getProcessModule());
         logger.info("Configured process task: " + options.getProcessTaskClass());
@@ -520,6 +528,10 @@ public class Manager implements Runnable {
         logger.info("Configured pre batch task: " + options.getPreBatchTaskClass());
         logger.info("Configured post batch module: " + options.getPostBatchModule());
         logger.info("Configured post batch task: " + options.getPostBatchTaskClass());
+        
+        for(Entry<Object, Object> e : properties.entrySet()) {
+            logger.info("Loaded property "+e.getKey()+": "+e.getValue());
+        }
     }
     
     private void runPreBatchTaskIfExists(){
