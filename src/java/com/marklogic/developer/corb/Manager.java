@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -183,7 +184,13 @@ public class Manager implements Runnable {
         InputStream is = Manager.class.getResourceAsStream("/"+propsFileName);
         if(is != null){
         	props.load(is);
+        }else{
+        	File f = new File(propsFileName);
+        	if(f.exists() && !f.isDirectory()){
+        		props.load(new FileInputStream(f));
+        	}
         }
+        
         // gather inputs
         String connectionUri = getOption(args.length > 0 ? args[0] : null,"XCC-CONNECTION-URI",props);
         String collection = getOption(args.length > 1 ? args[1] : null,"COLLECTION-NAME",props);
