@@ -34,6 +34,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 					writer.write(bottomContent.getBytes());
 					writer.write(NEWLINE);	
 				}
+				writer.flush();
 			}finally{
 				if(writer != null){
 					writer.close();

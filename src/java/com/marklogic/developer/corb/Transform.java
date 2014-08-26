@@ -30,6 +30,6 @@ public class Transform extends AbstractTask {
      * @see java.util.concurrent.Callable#call()
      */
     public String call() throws Exception {
-    	return invoke().asString();
+    	return invoke();
     }
 }

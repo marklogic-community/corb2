@@ -41,6 +41,7 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 				writer.write(getValueAsBytes(seq.next().getItem()));
 				writer.write(NEWLINE);
 			}
+			writer.flush();
 		}finally{
 			if(writer != null){
 				writer.close();

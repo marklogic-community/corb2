@@ -43,6 +43,7 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 					writer.write(getValueAsBytes(seq.next().getItem()));
 					writer.write(NEWLINE);
 				}
+				writer.flush();
 			}finally{
 				if(writer != null){
 					writer.close();

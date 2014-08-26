@@ -34,22 +34,24 @@ public class ExportToFileTask extends AbstractTask {
 				writer.write(getValueAsBytes(seq.next().getItem()));
 				writer.write(NEWLINE);
 			}
+			writer.flush();
 		}finally{
 			if(writer != null){
 				writer.close();
 			}
 		}
 	}
-		
 	
-	@Override
-	public String call() throws Exception {
-		Thread.yield(); // try to avoid thread starvation
-		ResultSequence seq = invoke();
-		Thread.yield(); // try to avoid thread starvation
-		writeToFile(seq);
-		Thread.yield(); // try to avoid thread starvation
-		return TRUE;
+	protected String processResult(ResultSequence seq) throws CorbException{
+		try{
+			writeToFile(seq);
+			return TRUE;
+		}catch(IOException exc){
+			throw new CorbException(exc.getMessage(),exc);
+		}
 	}
-
+	
+    public String call() throws Exception {
+    	return invoke();
+    }
 }

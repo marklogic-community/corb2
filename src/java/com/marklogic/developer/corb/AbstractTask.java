@@ -6,7 +6,6 @@ import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
-import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
 /**
@@ -45,11 +44,12 @@ public abstract class AbstractTask implements Task{
         return cs.newSession();
     }
 	
-	protected ResultSequence invoke() throws RequestException{
+	protected String invoke() throws CorbException{
 		if(moduleUri == null) return null;
 		
-        Session session = null;// try to avoid thread starvation
-		Thread.yield();
+        Session session = null;
+        ResultSequence seq = null;
+		Thread.yield();// try to avoid thread starvation
         try {
             session = newSession();
             Request request = session.newModuleInvoke(moduleUri);
@@ -58,17 +58,26 @@ public abstract class AbstractTask implements Task{
             	request.setNewStringVariable(Manager.URIS_BATCH_REF, properties.getProperty(Manager.URIS_BATCH_REF));
             }
             Thread.yield();// try to avoid thread starvation
-            ResultSequence result = session.submitRequest(request);
+            seq = session.submitRequest(request);
+            Thread.yield();// try to avoid thread starvation
+            String result = processResult(seq);
+            Thread.yield();// try to avoid thread starvation
+            seq.close();
             session.close();
-            session = null;
             return result;
-        } finally {
-            if (null != session) {
+        }catch(Exception exc){
+        	throw new CorbException(exc.getMessage(),exc);
+        }finally {       	
+        	if (null != session) {
                 session.close();
                 session = null;
             }
             Thread.yield();// try to avoid thread starvation
         }
+	}
+	
+	protected String processResult(ResultSequence seq) throws CorbException{
+		return seq.asString();
 	}
 	
 	public String getProperty(String key){
