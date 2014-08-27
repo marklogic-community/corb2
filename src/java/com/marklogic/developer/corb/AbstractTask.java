@@ -44,7 +44,7 @@ public abstract class AbstractTask implements Task{
         return cs.newSession();
     }
 	
-	protected String invoke() throws CorbException{
+	protected String invokeModule() throws CorbException{
 		if(moduleUri == null) return null;
 		
         Session session = null;

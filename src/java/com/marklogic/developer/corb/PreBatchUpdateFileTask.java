@@ -20,32 +20,35 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 		return topContent;
 	}
 	
-	protected void writeToFile(ResultSequence seq) throws IOException{
-		String topContent = getTopContent();
-		topContent = topContent != null ? topContent.trim() : "";
-		
-		if(topContent.length() == 0 && (seq == null || !seq.hasNext())) return;
-		
+	private void deleteFileIfExists() throws IOException{
 		File batchFile = new File(exportDir,getPartFileName());
 		if(batchFile.exists()) batchFile.delete();
-		
-		BufferedOutputStream writer = null;
-		try{
-			writer = new BufferedOutputStream(new FileOutputStream(batchFile));
-			//write top content
-			if(topContent.length() > 0){
-				writer.write(topContent.getBytes());
-				writer.write(NEWLINE);	
-			}
-			while(seq != null && seq.hasNext()){
-				writer.write(getValueAsBytes(seq.next().getItem()));
-				writer.write(NEWLINE);
-			}
-			writer.flush();
-		}finally{
-			if(writer != null){
-				writer.close();
+	}
+	
+	protected void writeTopContent() throws IOException{
+		String topContent = getTopContent();
+		topContent = topContent != null ? topContent.trim() : "";
+		if(topContent.length() > 0){
+			BufferedOutputStream writer = null;
+			try{
+				writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir,getPartFileName())));
+				if(topContent.length() > 0){
+					writer.write(topContent.getBytes());
+					writer.write(NEWLINE);	
+				}
+				writer.flush();
+			}finally{
+				if(writer != null){
+					writer.close();
+				}
 			}
 		}
 	}
+	
+	public String call() throws Exception {
+		deleteFileIfExists();
+		writeTopContent();
+    	invokeModule();
+    	return TRUE;
+    }
 }

@@ -16,20 +16,13 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 		return getProperty("EXPORT-FILE-BOTTOM-CONTENT");
 	}
 	
-	protected void writeToFile(ResultSequence seq) throws IOException{
+	protected void writeBottomContent() throws IOException{
 		String bottomContent = getBottomContent();
 		bottomContent = bottomContent != null ? bottomContent.trim() : "";
-				
-		File batchFile = new File(exportDir,getPartFileName());
-		if(bottomContent.length() > 0 || (seq != null && seq.hasNext())){
+		if(bottomContent.length() > 0){
 			BufferedOutputStream writer = null;
 			try{
-				writer = new BufferedOutputStream(new FileOutputStream(batchFile,true));
-				while(seq != null && seq.hasNext()){
-					writer.write(getValueAsBytes(seq.next().getItem()));
-					writer.write(NEWLINE);
-				}
-				//write bottom content
+				writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir,getPartFileName()),true));
 				if(bottomContent.length() > 0){
 					writer.write(bottomContent.getBytes());
 					writer.write(NEWLINE);	
@@ -41,12 +34,27 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 				}
 			}
 		}
-		
+	}
+	
+	protected void moveFile() throws IOException{
+		String partFileName = getPartFileName();
 		String finalFileName = getFileName();
-		if(batchFile.exists() && !getPartFileName().equals(finalFileName)){
-			File finalFile = new File(exportDir,finalFileName);
-			if(finalFile.exists()) finalFile.delete();
-			batchFile.renameTo(finalFile);
+		if(!partFileName.equals(finalFileName)){
+			File partFile = new File(exportDir,partFileName);
+			if(partFile.exists()){
+				File finalFile = new File(exportDir,finalFileName);
+				if(finalFile.exists()){
+					finalFile.delete();				
+				}
+				partFile.renameTo(finalFile);
+			}
 		}
 	}
+	
+	public String call() throws Exception {
+    	invokeModule();
+		writeBottomContent();
+		moveFile();
+    	return TRUE;
+    }
 }
