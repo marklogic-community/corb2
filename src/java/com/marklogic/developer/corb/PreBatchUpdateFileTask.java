@@ -32,10 +32,8 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 			BufferedOutputStream writer = null;
 			try{
 				writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir,getPartFileName())));
-				if(topContent.length() > 0){
-					writer.write(topContent.getBytes());
-					writer.write(NEWLINE);	
-				}
+				writer.write(topContent.getBytes());
+				writer.write(NEWLINE);
 				writer.flush();
 			}finally{
 				if(writer != null){

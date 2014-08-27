@@ -23,10 +23,8 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 			BufferedOutputStream writer = null;
 			try{
 				writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir,getPartFileName()),true));
-				if(bottomContent.length() > 0){
-					writer.write(bottomContent.getBytes());
-					writer.write(NEWLINE);	
-				}
+				writer.write(bottomContent.getBytes());
+				writer.write(NEWLINE);
 				writer.flush();
 			}finally{
 				if(writer != null){
