@@ -18,17 +18,19 @@
  */
 package com.marklogic.developer.corb;
 
+import com.marklogic.xcc.ResultSequence;
+
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  *
  */
 public class Transform extends AbstractTask {
-    /*
-     * (non-Javadoc)
-     *
-     * @see java.util.concurrent.Callable#call()
-     */
+    
+	protected String processResult(ResultSequence seq) throws CorbException{
+		return seq.asString();
+	}
+	
     public String call() throws Exception {
     	return invoke();
     }

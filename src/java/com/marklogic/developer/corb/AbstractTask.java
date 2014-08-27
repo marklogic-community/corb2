@@ -76,10 +76,8 @@ public abstract class AbstractTask implements Task{
         }
 	}
 	
-	protected String processResult(ResultSequence seq) throws CorbException{
-		return seq.asString();
-	}
-	
+	protected abstract String processResult(ResultSequence seq) throws CorbException;
+		
 	public String getProperty(String key){
 		String val = System.getProperty(key);
 		if(val == null || val.trim().length() == 0){
