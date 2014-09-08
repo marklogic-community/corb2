@@ -93,7 +93,6 @@ public class TaskFactory {
     private void setupTask(Task task, String module, String _uri){
     	if(module != null){
     		String root = manager.getOptions().getModuleRoot();
-    		module = module.substring(module.lastIndexOf("/")+1);
     		task.setModuleURI(root + module);
     	}
     	task.setContentSource(manager.getContentSource());
