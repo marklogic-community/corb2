@@ -51,6 +51,9 @@ public class TransformOptions {
     private String postBatchModule = null;
     private Class<? extends Task> postBatchTaskCls = null;
     
+    private String initModule = null;
+    private Class<? extends Task> initTaskCls = null;
+    
     private String exportFileDir = null;
 
     // Defaults for optional arguments
@@ -248,6 +251,28 @@ public class TransformOptions {
     
     public void setExportFileDir(String exportFileDir){
     	this.exportFileDir = exportFileDir;
+    }
+    
+    public void setInitModule(String initModule){
+    	this.initModule = initModule;
+    }
+    
+    public String getInitModule(){
+    	return this.initModule;
+    }
+    
+    /**
+     * Java Class
+     */
+    public void setInitTaskClass(Class<? extends Task> initTaskCls){
+    	this.initTaskCls = initTaskCls;
+    }
+    
+    /**
+     * Java Class
+     */
+    public Class<? extends Task> getInitTaskClass(){
+    	return this.initTaskCls;
     }
 
     /**

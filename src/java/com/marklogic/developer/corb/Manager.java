@@ -201,12 +201,18 @@ public class Manager implements Runnable {
         String modulesDatabase = getOption(args.length > 6 ? args[6] : null,"MODULES-DATABASE",props);
         String install = getOption(args.length > 7 ? args[7] : null,"INSTALL",props);
         String processTask = getOption(args.length > 8 ? args[8] : null,"PROCESS-TASK",props);
-        String preBatchModule = getOption(args.length > 9 ? args[9] : null,"PRE-BATCH-XQUERY-MODULE",props);
+        String preBatchModule = getOption(args.length > 9 ? args[9] : null,"PRE-BATCH-MODULE",props);
         String preBatchTask = getOption(args.length > 10 ? args[10] : null,"PRE-BATCH-TASK",props);
-        String postBatchModule = getOption(args.length > 11 ? args[11] : null,"POST-BATCH-XQUERY-MODULE",props);
+        String postBatchModule = getOption(args.length > 11 ? args[11] : null,"POST-BATCH-MODULE",props);
         String postBatchTask = getOption(args.length > 12 ? args[12] : null,"POST-BATCH-TASK",props);
         String exportFileDir = getOption(args.length > 13 ? args[13]: null, "EXPORT-FILE-DIR",props);
         String exportFileName = getOption(args.length > 14 ? args[14]: null, "EXPORT-FILE-NAME",props);
+        
+        if(preBatchModule == null) preBatchModule = getOption(null,"PRE-BATCH-XQUERY-MODULE",props);
+        if(postBatchModule == null) postBatchModule = getOption(null,"POST-BATCH-XQUERY-MODULE",props);
+        
+        String initModule = getOption(null, "INIT-MODULE",props);
+        String initTask = getOption(null, "INIT-TASK",props);
         
         if(connectionUri == null){
         	usage(); //TODO: Update the usage 
@@ -284,6 +290,17 @@ public class Manager implements Runnable {
         if(exportFileName != null){
         	File exportFile = new File(exportFileDir,exportFileName);
         	if(exportFile.exists()) exportFile.delete();
+        }
+        
+        if(initModule != null) options.setInitModule(initModule);
+        if(initTask != null){
+	        Class<?> initCls = Class.forName(initTask);
+	        if(Task.class.isAssignableFrom(initCls)){
+	        	initCls.newInstance(); //sanity check
+	        	options.setInitTaskClass((Class<? extends Task>)initCls.asSubclass(Task.class));
+	        }else{
+	        	throw new IllegalArgumentException("INIT-TASK must be of type com.marklogic.developer.Task");
+	        }
         }
         
         if(null == options.getProcessTaskClass() && null == options.getProcessModule()){
@@ -541,18 +558,28 @@ public class Manager implements Runnable {
         }
     }
     
-    private void runPreBatchTaskIfExists(){
-    	if(null != options.getPreBatchTaskClass() || null != options.getPreBatchModule()){
-    		logger.info("Running pre batch Task");
-    		TaskFactory tf = new TaskFactory(this);
-    		try{
-        		Task preTask = tf.newPreBatchTask();
-    			String response = preTask.call();
-    			logger.info("Pre batch task complete. Response: "+response);
-    		}catch(Exception exc){
-    			logger.logException("Error invoking pre batch task", exc);
+    private void runInitTaskIfExists(TaskFactory tf){    	
+		try{
+    		Task initTask = tf.newInitTask();
+    		if(initTask != null){
+    			logger.info("Running init Task");
+    			initTask.call();   			
     		}
-    	}
+		}catch(Exception exc){
+			logger.logException("Error invoking init task", exc);
+		}
+    }
+    
+    private void runPreBatchTaskIfExists(TaskFactory tf){    	
+		try{
+    		Task preTask = tf.newPreBatchTask();
+    		if(preTask != null){
+    			logger.info("Running pre batch Task");
+    			preTask.call();   			
+    		}
+		}catch(Exception exc){
+			logger.logException("Error invoking pre batch task", exc);
+		}
     }
 
     /**
@@ -579,6 +606,10 @@ public class Manager implements Runnable {
 
         try {
             session = contentSource.newSession();
+            
+            //run init task
+            runInitTaskIfExists(tf);
+            
             String urisModule = options.getModuleRoot() + options.getUrisModule();
             logger.info("invoking module " + urisModule);
             Request req = session.newModuleInvoke(urisModule);
@@ -587,6 +618,16 @@ public class Manager implements Runnable {
             // TODO support DIRECTORY as type
             req.setNewStringVariable("TYPE", TransformOptions.COLLECTION_TYPE);
             req.setNewStringVariable("PATTERN", "[,\\s]+");
+            
+            //custom inputs
+            for(String propName:properties.stringPropertyNames()){
+            	if(propName.startsWith("URIS-MODULE.")){
+            		String varName = propName.substring("URIS-MODULE.".length());
+            		String value = properties.getProperty(propName);
+            		req.setNewStringVariable(varName, value);
+            	}
+            }
+            
             req.setOptions(opts);
 
             ResultSequence res = session.submitRequest(req);
@@ -607,7 +648,7 @@ public class Manager implements Runnable {
             }
             
             //run pre-batch task, if present. 
-            runPreBatchTaskIfExists();
+            runPreBatchTaskIfExists(tf);
             
             //now start process tasks
             monitor.setTaskCount(total);

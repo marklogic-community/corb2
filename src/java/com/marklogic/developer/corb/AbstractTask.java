@@ -20,12 +20,17 @@ public abstract class AbstractTask implements Task{
 	private static byte[] EMPTY_BYTE_ARRAY = new byte[0];
 	
 	protected ContentSource cs;
+	protected String moduleType;
 	protected String moduleUri;
 	protected Properties properties;
 	protected String inputUri;
 	
     public void setContentSource(ContentSource cs){
     	this.cs = cs;
+    }
+    
+    public void setModuleType(String moduleType){
+    	this.moduleType=moduleType;
     }
     
     public void setModuleURI(String moduleUri){
@@ -57,6 +62,13 @@ public abstract class AbstractTask implements Task{
             if(properties.containsKey(Manager.URIS_BATCH_REF)){
             	request.setNewStringVariable(Manager.URIS_BATCH_REF, properties.getProperty(Manager.URIS_BATCH_REF));
             }
+            for(String propName:properties.stringPropertyNames()){
+            	if(moduleType != null && propName.startsWith(moduleType+".")){
+            		String varName = propName.substring(moduleType.length()+1);
+            		String value = properties.getProperty(propName);
+            		request.setNewStringVariable(varName, value);
+            	}
+            }            
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);
             Thread.yield();// try to avoid thread starvation

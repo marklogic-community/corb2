@@ -17,11 +17,17 @@ public interface Task extends Callable<String> {
 	
 	public void setContentSource(ContentSource cs);
 	
+	/**
+	 * XQUERY-MODULE,PRE-BATCH-MODULE,POST-BATCH-MODULE,INIT-MODULE
+	 * @param moduleType
+	 */
+	public void setModuleType(String moduleType);
+		
 	public void setModuleURI(String moduleURI);
-	
+		
 	/**
 	 * If additional data is sent from CUSTOM URI module, it is available in properties
-	 * with key URIS_MODULE_METADATA 
+	 * with key URIS_BATCH_REF 
 	 * @param props
 	 */
 	public void setProperties(Properties props);
