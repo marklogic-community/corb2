@@ -176,20 +176,35 @@ public class Manager implements Runnable {
      */
     public static void main(String[] args) throws URISyntaxException, IOException, 
     			ClassNotFoundException, InstantiationException, IllegalAccessException {    	
-        Properties props = new Properties();
-        String propsFileName = System.getProperty("OPTIONS-FILE");
-        if(propsFileName == null || propsFileName.trim().length() == 0){
-        	propsFileName = "corb.properties";
-        }
-        InputStream is = Manager.class.getResourceAsStream("/"+propsFileName);
-        if(is != null){
-        	props.load(is);
-        }else{
-        	File f = new File(propsFileName);
-        	if(f.exists() && !f.isDirectory()){
-        		props.load(new FileInputStream(f));
-        	}
-        }
+		Properties props = new Properties();
+		String propsFileName = System.getProperty("OPTIONS-FILE");
+		if (propsFileName == null || propsFileName.trim().length() == 0) {
+			propsFileName = "corb.properties";
+		}
+		InputStream is = null;
+		try {
+			is = Manager.class.getResourceAsStream("/" + propsFileName);
+			if (is != null) {
+				props.load(is);
+			} else {
+				File f = new File(propsFileName);
+				if (f.exists() && !f.isDirectory()) {
+					FileInputStream fis = null;
+					try {
+						fis = new FileInputStream(f);
+						props.load(fis);
+					} finally {
+						if (null != fis) {
+							fis.close();
+						}
+					}
+				}
+			}
+		} finally {
+			if (null != is) {
+				is.close();
+			}
+		}
         
         // gather inputs
         String connectionUri = getOption(args.length > 0 ? args[0] : null,"XCC-CONNECTION-URI",props);
@@ -489,6 +504,13 @@ public class Manager implements Runnable {
             throw new RuntimeException(e);
         } finally {
             session.close();
+            if (null != is) {
+            	try {
+            		is.close();
+            	} catch (IOException ioe) {
+            		logger.logException("Couldn't close the stream", ioe);
+            	}
+            }
         }
     }
 
@@ -532,7 +554,7 @@ public class Manager implements Runnable {
         } finally {
             session.close();
         }
-        while (rs.hasNext()) {
+        while ((null != rs) && rs.hasNext()) {
             ResultItem rsItem = rs.next();
             XdmItem item = rsItem.getItem();
             if (rsItem.getIndex() == 0 && item.asString().equals("0")) {
