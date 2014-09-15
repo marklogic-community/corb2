@@ -71,19 +71,24 @@ public abstract class AbstractTask implements Task{
             }            
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);
+            // no need to hold on to the session as results will be cached.
+            session.close(); 
             Thread.yield();// try to avoid thread starvation
+            
             String result = processResult(seq);
-            Thread.yield();// try to avoid thread starvation
             seq.close();
-            session.close();
+            Thread.yield();// try to avoid thread starvation
+              
             return result;
         }catch(Exception exc){
         	throw new CorbException(exc.getMessage(),exc);
-        }finally {       	
-        	if (null != session) {
+        }finally {
+        	if(null != session && !session.isClosed()) {
                 session.close();
-                session = null;
             }
+        	if(null != seq && !seq.isClosed()){
+        		seq.close();
+        	}
             Thread.yield();// try to avoid thread starvation
         }
 	}
