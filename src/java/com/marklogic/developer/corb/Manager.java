@@ -175,8 +175,15 @@ public class Manager implements Runnable {
      * @throws InstantiationException 
      */
     public static void main(String[] args) throws URISyntaxException, IOException, 
-    			ClassNotFoundException, InstantiationException, IllegalAccessException {    	
-		Properties props = new Properties();
+    			ClassNotFoundException, InstantiationException, IllegalAccessException {    			
+    	Manager tm = createManager(args);
+        //now its time to start processing
+        tm.run();
+    }
+    
+    public static Manager createManager(String[] args) throws URISyntaxException, IOException, 
+			ClassNotFoundException, InstantiationException, IllegalAccessException {
+    	Properties props = new Properties();
 		String propsFileName = System.getProperty("OPTIONS-FILE");
 		if (propsFileName == null || propsFileName.trim().length() == 0) {
 			propsFileName = "corb.properties";
@@ -231,7 +238,7 @@ public class Manager implements Runnable {
         
         if(connectionUri == null){
         	usage(); //TODO: Update the usage 
-            return;
+            return null;
         }
 
         Manager tm = new Manager(new URI(connectionUri), collection != null ? collection : "");
@@ -321,12 +328,10 @@ public class Manager implements Runnable {
         if(null == options.getProcessTaskClass() && null == options.getProcessModule()){
     		throw new NullPointerException("PROCESS-TASK or XQUERY-MODULE must be specified");
     	}
-        
-        //now its time to start processing
-        tm.run();
+        return tm;
     }
     
-    private static String getOption(String argVal, String propName, Properties props){
+    protected static String getOption(String argVal, String propName, Properties props){
     	if(argVal != null && argVal.trim().length() > 0){
     		return argVal.trim();
     	}else if(System.getProperty(propName) != null && System.getProperty(propName).trim().length() > 0){
@@ -339,20 +344,20 @@ public class Manager implements Runnable {
     	return null;
     }
     
-    private void setProperties(Properties props){
+    protected void setProperties(Properties props){
     	this.properties = props;
     }
     
     //package access only
-    Properties getProperties(){
+    protected Properties getProperties(){
     	return this.properties;
     }
     
-    TransformOptions getOptions() {
+    protected TransformOptions getOptions() {
         return options;
     }
     
-    ContentSource getContentSource(){
+    protected ContentSource getContentSource(){
     	return this.contentSource;
     }
 
