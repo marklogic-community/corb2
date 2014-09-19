@@ -348,16 +348,15 @@ public class Manager implements Runnable {
     	this.properties = props;
     }
     
-    //package access only
-    protected Properties getProperties(){
+    public Properties getProperties(){
     	return this.properties;
     }
     
-    protected TransformOptions getOptions() {
+    public TransformOptions getOptions() {
         return options;
     }
     
-    protected ContentSource getContentSource(){
+    public ContentSource getContentSource(){
     	return this.contentSource;
     }
 
