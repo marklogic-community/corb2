@@ -522,7 +522,7 @@ public class Manager implements Runnable {
      *
      */
     private void prepareContentSource() {
-        logger.info("using content source " + connectionUri);
+        //logger.info("using content source " + connectionUri);
         try {
             // support SSL
             boolean ssl = connectionUri.getScheme().equals("xccs");
@@ -580,7 +580,9 @@ public class Manager implements Runnable {
         logger.info("Configured post batch task: " + options.getPostBatchTaskClass());
         
         for(Entry<Object, Object> e : properties.entrySet()) {
-            logger.info("Loaded property "+e.getKey()+": "+e.getValue());
+        	if(!"XCC-CONNECTION-URI".equals(e.getKey())){
+        		logger.info("Loaded property "+e.getKey()+": "+e.getValue());
+        	}
         }
     }
     
