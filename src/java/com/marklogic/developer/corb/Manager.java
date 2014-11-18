@@ -31,6 +31,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -405,6 +406,7 @@ public class Manager implements Runnable {
         	}
         }
         if(uIdx > -1){
+        	arguments = new ArrayList<String>(arguments);
         	arguments.remove(uIdx);
         }
         logger.info("runtime arguments = " + Utilities.join(arguments, " "));
