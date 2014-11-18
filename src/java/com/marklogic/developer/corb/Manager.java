@@ -715,10 +715,6 @@ public class Manager implements Runnable {
             
             if(count < total && urisLoader instanceof FileUrisLoader){
             	logger.warning("Resetting total uri count to "+count+". Ignore if file contains blank lines.");
-            	char[][] newUrisArray = new char[count][];
-            	System.arraycopy(urisArray, 0, newUrisArray, 0, count);
-            	urisArray=newUrisArray;
-            	newUrisArray=null;
             	monitor.setTaskCount(total=count);
             }
             
@@ -728,6 +724,7 @@ public class Manager implements Runnable {
                 if (null == pool) {
                     break;
                 }
+                if(urisArray[i] == null || urisArray[i].length == 0) continue;
                 
                 uri = new String(urisArray[i]);
                 completionService.submit(tf.newProcessTask(uri));
