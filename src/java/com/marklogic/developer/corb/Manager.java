@@ -56,8 +56,6 @@ import com.marklogic.xcc.ContentCreateOptions;
 import com.marklogic.xcc.ContentFactory;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ContentSourceFactory;
-import com.marklogic.xcc.Request;
-import com.marklogic.xcc.RequestOptions;
 import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.SecurityOptions;
@@ -65,7 +63,6 @@ import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.exceptions.XccException;
-import com.marklogic.xcc.types.XSInteger;
 import com.marklogic.xcc.types.XdmItem;
 
 /**
@@ -300,6 +297,10 @@ public class Manager implements Runnable {
 	        }else{
 	        	throw new IllegalArgumentException("POST-BATCH-TASK must be of type com.marklogic.developer.Task");
 	        }
+        }
+        
+        if(props.containsKey("EXPORT-FILE-PART-EXT") && options.getPostBatchTaskClass() == null){
+        	props.remove("EXPORT-FILE-PART-EXT");
         }
         
         if(exportFileDir != null){	        	
