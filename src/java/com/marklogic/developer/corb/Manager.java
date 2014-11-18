@@ -154,7 +154,7 @@ public class Manager implements Runnable {
     private Thread monitorThread;
 
     private ExecutorCompletionService<String> completionService;
-
+    
     /**
      * @param connectionUri
      * @param collection
@@ -229,9 +229,11 @@ public class Manager implements Runnable {
         String postBatchTask = getOption(args.length > 12 ? args[12] : null,"POST-BATCH-TASK",props);
         String exportFileDir = getOption(args.length > 13 ? args[13]: null, "EXPORT-FILE-DIR",props);
         String exportFileName = getOption(args.length > 14 ? args[14]: null, "EXPORT-FILE-NAME",props);
+        String urisFile = getOption(args.length > 14 ? args[14]: null, "URIS-FILE",props);
         
         if(preBatchModule == null) preBatchModule = getOption(null,"PRE-BATCH-XQUERY-MODULE",props);
         if(postBatchModule == null) postBatchModule = getOption(null,"POST-BATCH-XQUERY-MODULE",props);
+        
         
         String initModule = getOption(null, "INIT-MODULE",props);
         String initTask = getOption(null, "INIT-TASK",props);
@@ -251,12 +253,18 @@ public class Manager implements Runnable {
         if(moduleRoot != null) options.setModuleRoot(moduleRoot);
         if(modulesDatabase != null) options.setModulesDatabase(modulesDatabase);
         if(install != null && (install.equals("false") || install.equals("0"))) options.setDoInstall(false);
+        if(urisFile != null) options.setUrisFile(urisFile);
         
         if(!props.containsKey("EXPORT-FILE-DIR") && exportFileDir !=null){
         	props.put("EXPORT-FILE-DIR", exportFileDir);
         }
         if(!props.containsKey("EXPORT-FILE-NAME") && exportFileName !=null){
         	props.put("EXPORT-FILE-NAME", exportFileName);
+        }
+        
+        if(urisFile != null && urisFile.trim().length() > 0){
+        	File f = new File(options.getUrisFile());
+        	if(!f.exists()) throw new IllegalArgumentException("Uris file "+urisFile+" not found");
         }
         
         //java class for processing individual tasks. 
@@ -293,18 +301,12 @@ public class Manager implements Runnable {
 	        }
         }
         
-        if(exportFileDir != null){
-        	try{
-	        	//create a sample file and check for access exceptions
-	        	File dirFile = new File(exportFileDir);
-	        	//create the current direct if it doesn't exist. Don't create parent directories. 
-	        	dirFile.mkdir(); 
-	        	File sample = new File(dirFile,"sample.txt");
-	        	sample.createNewFile();
-	            sample.delete();       	
-	        	options.setExportFileDir(exportFileDir);
-        	}catch(IOException exc){
-        		throw new IOException("While accessing "+exportFileDir+": "+exc.getMessage(),exc);
+        if(exportFileDir != null){	        	
+        	File dirFile = new File(exportFileDir);
+        	if(dirFile.exists() && dirFile.canWrite()){
+        		options.setExportFileDir(exportFileDir);
+        	}else{
+        		throw new IllegalArgumentException("Cannot write to export folder "+exportFileDir);
         	}
         }
         
@@ -396,6 +398,15 @@ public class Manager implements Runnable {
 
         RuntimeMXBean RuntimemxBean = ManagementFactory.getRuntimeMXBean();
         List<String> arguments = RuntimemxBean.getInputArguments();
+        int uIdx = -1;
+        for(int i=0; uIdx == -1 && i<arguments.size();i++){
+        	if(arguments.get(i).startsWith("-DXCC-CONNECTION-URI")){
+        		uIdx = i;
+        	}
+        }
+        if(uIdx > -1){
+        	arguments.remove(uIdx);
+        }
         logger.info("runtime arguments = " + Utilities.join(arguments, " "));
 
         prepareContentSource();
@@ -586,91 +597,59 @@ public class Manager implements Runnable {
         }
     }
     
-    private void runInitTaskIfExists(TaskFactory tf){    	
-		try{
-    		Task initTask = tf.newInitTask();
-    		if(initTask != null){
-    			logger.info("Running init Task");
-    			initTask.call();   			
-    		}
-		}catch(Exception exc){
-			logger.logException("Error invoking init task", exc);
+    private void runInitTaskIfExists(TaskFactory tf) throws Exception{    	
+    	Task initTask = tf.newInitTask();
+		if(initTask != null){
+			logger.info("Running init Task");
+			initTask.call();   			
 		}
     }
     
-    private void runPreBatchTaskIfExists(TaskFactory tf){    	
-		try{
-    		Task preTask = tf.newPreBatchTask();
-    		if(preTask != null){
-    			logger.info("Running pre batch Task");
-    			preTask.call();   			
-    		}
-		}catch(Exception exc){
-			logger.logException("Error invoking pre batch task", exc);
+    private void runPreBatchTaskIfExists(TaskFactory tf) throws Exception{    	
+    	Task preTask = tf.newPreBatchTask();
+		if(preTask != null){
+			logger.info("Running pre batch Task");
+			preTask.call();   			
 		}
     }
-
-    /**
-     * @throws XccException
-     */
-    private void populateQueue() throws XccException {
-        logger.info("populating queue");
-
+    
+    private UrisLoader getUriLoader(){
+    	UrisLoader loader = null;
+    	if(options.getUrisModule() != null && options.getUrisModule().trim().length() > 0){
+    		loader = new XQueryUrisLoader();
+    	}else if(options.getUrisFile() != null && options.getUrisFile().trim().length() > 0){
+    		loader = new FileUrisLoader();
+    	}else{
+    		throw new IllegalArgumentException("Cannot find URIS-MODULE or URIS-FILE");
+    	}
+    	
+    	loader.setOptions(options);
+		loader.setContentSource(contentSource);
+		loader.setCollection(collection);
+		loader.setProperties(properties);    	
+    	return loader;
+    }
+    
+    private void populateQueue() throws Exception {
+    	logger.info("populating queue");
         TaskFactory tf = new TaskFactory(this);
-
-        // must not cache the results, or we quickly run out of memory
-        RequestOptions opts = new RequestOptions();
-        logger.fine("buffer size = " + opts.getResultBufferSize()
-                + ", caching = " + opts.getCacheResult());
-        opts.setCacheResult(false);
-        // this should be a noop, but xqsync does it
-        opts.setResultBufferSize(0);
-        logger.info("buffer size = " + opts.getResultBufferSize()
-                + ", caching = " + opts.getCacheResult());
-
-        Session session = null;
-        int count = 0;
+        UrisLoader urisLoader = getUriLoader();
         int total = -1;
-
+        int count = 0;
         try {
-            session = contentSource.newSession();
-            
-            //run init task
+        	//run init task
             runInitTaskIfExists(tf);
             
-            String urisModule = options.getModuleRoot() + options.getUrisModule();
-            logger.info("invoking module " + urisModule);
-            Request req = session.newModuleInvoke(urisModule);
-            // NOTE: collection will be treated as a CWSV
-            req.setNewStringVariable("URIS", collection);
-            // TODO support DIRECTORY as type
-            req.setNewStringVariable("TYPE", TransformOptions.COLLECTION_TYPE);
-            req.setNewStringVariable("PATTERN", "[,\\s]+");
-            
-            //custom inputs
-            for(String propName:properties.stringPropertyNames()){
-            	if(propName.startsWith("URIS-MODULE.")){
-            		String varName = propName.substring("URIS-MODULE.".length());
-            		String value = properties.getProperty(propName);
-            		req.setNewStringVariable(varName, value);
-            	}
+            urisLoader.open();
+            if(urisLoader.getBatchRef() != null){
+            	properties.put(Manager.URIS_BATCH_REF, urisLoader.getBatchRef());
+	        	logger.info("URIS_BATCH_REF: " + urisLoader.getBatchRef());
             }
             
-            req.setOptions(opts);
-
-            ResultSequence res = session.submitRequest(req);
-            ResultItem next = res.next();
-            if(!(next.getItem() instanceof XSInteger)){
-            	properties.put(URIS_BATCH_REF, next.asString());
-            	logger.info("URIS_BATCH_REF: " + next.asString());
-            	next = res.next();
-            }
-
-            // like a Pascal string, the first item will be the count
-            total = ((XSInteger) next.getItem()).asPrimitiveInt();
+            total = urisLoader.getTotalCount();
             logger.info("expecting total " + total);
-            if (0 == total) {
-                logger.info("nothing to process");
+            if(total <= 0){
+            	logger.info("nothing to process");
                 stop();
                 return;
             }
@@ -693,9 +672,9 @@ public class Manager implements Runnable {
             char[][] urisArray = new char[total][];
 
             count = 0;
-            while (res.hasNext() && null != pool) {
-                uri = res.next().asString();
-
+            while (urisLoader.hasNext() && null != pool) {
+                uri = urisLoader.next();
+                
                 if (count >= urisArray.length) {
                     throw new ArrayIndexOutOfBoundsException("received more than " + total + " results: " + uri);
                 }
@@ -716,15 +695,12 @@ public class Manager implements Runnable {
                 if (0 == count % 25000) {
                     logger.info("received " + count + "/" + total + ": " + uri);
 
-                    if (System.currentTimeMillis() - lastMessageMillis
-                        > (1000 * 4)) {
+                    if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
                         logger.warning("Slow receive!"
                                        + " Consider increasing max heap size"
                                        + " and using -XX:+UseConcMarkSweepGC");
                         freeMemory = Runtime.getRuntime().freeMemory();
-                        logger.info("free memory: "
-                                    + (freeMemory / (1024 * 1024))
-                                    + " MiB");
+                        logger.info("free memory: " + (freeMemory / (1024 * 1024)) + " MiB");
                     }
                     lastMessageMillis = System.currentTimeMillis();
                 }
@@ -733,16 +709,26 @@ public class Manager implements Runnable {
 
             logger.info("received " + count + "/" + total);
             // done with result set - close session to close everything
-            if (null != session) {
-                session.close();
+            if (null != urisLoader) {
+            	urisLoader.close();
             }
-
+            
+            if(count < total && urisLoader instanceof FileUrisLoader){
+            	logger.warning("Resetting total uri count to "+count+". Ignore if file contains blank lines.");
+            	char[][] newUrisArray = new char[count][];
+            	System.arraycopy(urisArray, 0, newUrisArray, 0, count);
+            	urisArray=newUrisArray;
+            	newUrisArray=null;
+            	monitor.setTaskCount(total=count);
+            }
+            
             // start with 1 not 0 because we already queued result 0
             for (int i=1; i<urisArray.length; i++) {
                 // check pool occasionally, for fast-fail
                 if (null == pool) {
                     break;
                 }
+                
                 uri = new String(urisArray[i]);
                 completionService.submit(tf.newProcessTask(uri));
                 urisArray[i] = null;
@@ -752,9 +738,7 @@ public class Manager implements Runnable {
                     logger.info(msg);
                     freeMemory = Runtime.getRuntime().freeMemory();
                     if (freeMemory < (16 * 1024 * 1024)) {
-                        logger.warning("free memory: "
-                                       + (freeMemory / (1024 * 1024))
-                                       + " MiB");
+                        logger.warning("free memory: " + (freeMemory / (1024 * 1024)) + " MiB");
                     }
                     lastMessageMillis = System.currentTimeMillis();
                 } else {
@@ -768,15 +752,16 @@ public class Manager implements Runnable {
             logger.info("queued " + urisArray.length + "/" + total);
             urisArray = null;
             pool.shutdown();
-
-        } catch (XccException e) {
-            stop();
-            throw e;
-        } finally {
-            if (null != session) {
-                session.close();
+            
+        }catch(Exception exc){
+        	stop();
+        	throw exc;
+        }finally{
+        	if (null != urisLoader) {
+            	urisLoader.close();
             }
         }
+        
         // if the pool went away, the monitor stopped it: bail out.
         if (null == pool) {
             return;
@@ -785,7 +770,7 @@ public class Manager implements Runnable {
         assert total == count;
         logger.fine("queue is populated with " + total + " tasks");
     }
-
+    
     private void configureLogger() {
         if (logger == null) {
             logger = SimpleLogger.getSimpleLogger();

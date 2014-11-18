@@ -25,17 +25,19 @@ POST-BATCH-MODULE (XQuery module, if specified, will be run after batch processi
 POST-BATCH-TASK (Java Class that implements com.marklogic.developer.Task or extends com.marklogic.developer.AbstractTask- can be used in place or in addition to POST-BATCH-MODULE. Ex: PostBatchUpdateFileTask (included) which adds additional content to the export file created by ExportToFileTask)
 EXPORT-FILE-DIR (export directory for com.marklogic.developer.corb.ExportToFileTask or similar tasks. If not specified, it defaults to user.dir)
 EXPORT-FILE-NAME (shared file to export output of com.marklogic.developer.corb.ExportBatchToFileTask - Not full path)
+URIS-FILE (If defined instead of URIS-MODULE, URIS will be loaded from the file located on the client)
 
 Optional Tasks
 INIT-MODULE (XQuery Module, if specified, will be invoked prior to URIS-MODULE)
 INIT-TASK (Java Task, if specified, will be called prior to URIS-MODULE, This can be used addition to INIT-MODULE)
 
-Optional properties only supported via corb.proeprties file
+Optional properties only supported via corb.properties file
 ------
 EXPORT-FILE-PART-EXT (if specified, PreBatchUpdateFileTask adds this extension to export file. It is expected that PostBatchUpdateFileTask will be specified, which removes the extension for the final export file)
-EXPORT-FILE-TOP-CONTENT (used by PreBatchUpdateFileTask to insert content at the top to EXPORT_FILE_NAME before batch process starts, if it finds the text @URIS_BATCH_REF it replaces it by batch reference sent by URIS_MODULE)
+EXPORT-FILE-TOP-CONTENT (used by PreBatchUpdateFileTask to insert content at the top to EXPORT_FILE_NAME before batch process starts, if it finds the text @URIS_BATCH_REF it replaces it by batch reference sent by URIS-MODULE)
 EXPORT-FILE-BOTTOM-CONTENT (used by PostBatchUpdateFileTask to append content to EXPORT_FILE_NAME after batch process is complete)
 EXPORT_FILE_AS_ZIP (if true, PreBatchUpdateFileTask compression the output file as a zip file)
+URIS-REPLACE-PATTERN (one or more replace patterns for URIs - typically used to save memory. usage: URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2, ...)
 
 CUSTOM INPUTS TO XQURY MODULE
 --------

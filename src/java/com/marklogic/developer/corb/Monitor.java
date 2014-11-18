@@ -86,11 +86,13 @@ public class Monitor implements Runnable {
             // reset interrupt status and exit
             Thread.interrupted();
             logger.logException("interrupted: exiting", e);
+        } catch (CorbException e){
+			logger.logException("Unexpected error", e);
         }
     }
 
     private void monitorResults() throws InterruptedException,
-            ExecutionException {
+            ExecutionException, CorbException {
         // fast-fail as soon as we see any exceptions
         logger.info("monitoring " + taskCount + " tasks");
         Future<String> future = null;
@@ -164,7 +166,7 @@ public class Monitor implements Runnable {
         shutdownNow = true;
     }
     
-    private void runPostBatchTaskIfExists(){
+    private void runPostBatchTaskIfExists() throws CorbException{
     	TaskFactory tf = new TaskFactory(manager);
 		try{
     		Task postTask = tf.newPostBatchTask();
@@ -173,7 +175,7 @@ public class Monitor implements Runnable {
     			postTask.call();
     		}
 		}catch(Exception exc){
-			logger.logException("Error invoking post batch task", exc);
+			throw new CorbException("Error invoking post batch task",exc);
 		}
     }
 

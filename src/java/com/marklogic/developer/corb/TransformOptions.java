@@ -60,7 +60,8 @@ public class TransformOptions {
     private String moduleRoot = SLASH
             + TransformOptions.class.getPackage().getName().replace('.',SLASHCHAR) + SLASH;
 
-    private String urisModule = "get-uris.xqy";
+    private String urisModule = null;
+    private String urisFile = null;
 
     private int threadCount = 1;
 
@@ -142,6 +143,14 @@ public class TransformOptions {
      */
     public void setUrisModule(String urisModule) {
         this.urisModule = urisModule;
+    }
+    
+    public String getUrisFile(){
+    	return this.urisFile;
+    }
+    
+    public void setUrisFile(String urisFile){
+    	this.urisFile=urisFile;
     }
 
     /**
