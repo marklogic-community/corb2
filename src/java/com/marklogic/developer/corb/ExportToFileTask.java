@@ -18,7 +18,7 @@ public class ExportToFileTask extends AbstractTask {
 	}
 	
 	public String getExportDir(){
-		return this.exportDir == null ? System.getProperty("user.dir") : this.exportDir;
+		return this.exportDir;
 	}
 	
 	protected String getFileName(){
