@@ -1,5 +1,7 @@
 package com.marklogic.developer.corb;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import com.marklogic.developer.SimpleLogger;
@@ -49,8 +51,12 @@ public class XQueryUrisLoader implements UrisLoader {
 	
 	public void open() throws CorbException{
 		configureLogger();
-		if(properties.containsKey("URIS-REPLACE-PATTERN")){
-			String pattern = properties.getProperty("URIS-REPLACE-PATTERN").trim(); 
+		
+        List<String> propertyNames = new ArrayList<String>(properties.stringPropertyNames());
+		propertyNames.addAll(System.getProperties().stringPropertyNames());
+		
+		if(propertyNames.contains("URIS-REPLACE-PATTERN")){
+			String pattern = getProperty("URIS-REPLACE-PATTERN").trim(); 
 			replacements = pattern.split(",",-1);
 			if(replacements.length % 2 != 0) throw new IllegalArgumentException("Invalid replacement pattern " + pattern);
 		}
@@ -73,12 +79,12 @@ public class XQueryUrisLoader implements UrisLoader {
 	        req.setNewStringVariable("TYPE", TransformOptions.COLLECTION_TYPE);
 	        req.setNewStringVariable("PATTERN", "[,\\s]+");
 	        
-	        //custom inputs
-	        for(String propName:properties.stringPropertyNames()){
+	        //custom inputs	        
+			for(String propName:propertyNames){
 	        	if(propName.startsWith("URIS-MODULE.")){
 	        		String varName = propName.substring("URIS-MODULE.".length());
-	        		String value = properties.getProperty(propName);
-	        		req.setNewStringVariable(varName, value);
+	        		String value = getProperty(propName);
+	        		if(value != null) req.setNewStringVariable(varName, value);
 	        	}
 	        }
 	        
@@ -142,5 +148,12 @@ public class XQueryUrisLoader implements UrisLoader {
         props.setProperty("LOG_HANDLER", options.getLogHandler());
         logger.configureLogger(props);
     }
-
+	
+	public String getProperty(String key){
+		String val = System.getProperty(key);
+		if(val == null || val.trim().length() == 0){
+			val = properties.getProperty(key);
+		}
+		return val != null ? val.trim() : val;
+	}
 }

@@ -1,5 +1,7 @@
 package com.marklogic.developer.corb;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import com.marklogic.xcc.ContentSource;
@@ -24,6 +26,9 @@ public abstract class AbstractTask implements Task{
 	protected String moduleUri;
 	protected Properties properties;
 	protected String inputUri;
+	
+	static private Object sync = new Object();
+	static private List<String> propertyNames;
 	
     public void setContentSource(ContentSource cs){
     	this.cs = cs;
@@ -59,16 +64,28 @@ public abstract class AbstractTask implements Task{
             session = newSession();
             Request request = session.newModuleInvoke(moduleUri);
             request.setNewStringVariable("URI", inputUri);
+            
             if(properties.containsKey(Manager.URIS_BATCH_REF)){
             	request.setNewStringVariable(Manager.URIS_BATCH_REF, properties.getProperty(Manager.URIS_BATCH_REF));
             }
-            for(String propName:properties.stringPropertyNames()){
+            
+            if(propertyNames == null){
+            	synchronized(sync){
+            		if(propertyNames == null){
+            			propertyNames = new ArrayList<String>(properties.stringPropertyNames());
+            			propertyNames.addAll(System.getProperties().stringPropertyNames());
+            		}
+            	}
+            }
+                    
+            for(String propName:propertyNames){
             	if(moduleType != null && propName.startsWith(moduleType+".")){
             		String varName = propName.substring(moduleType.length()+1);
-            		String value = properties.getProperty(propName);
-            		request.setNewStringVariable(varName, value);
+            		String value = getProperty(propName);
+            		if(value != null) request.setNewStringVariable(varName, value);
             	}
-            }            
+            } 
+
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);
             // no need to hold on to the session as results will be cached.
