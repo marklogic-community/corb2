@@ -20,12 +20,13 @@
 */
 -->
 <project name="corb" basedir="." default="jar">
-  <property name="name" value="corb2"/>
+  <property name="name" value="marklogic-corb"/>
+	<property name="version" value="2.0.4"/>
   <property file="build.properties"/>
 
-  <property name="src.dir" value="java"/>
-  <property name="dist.dir" value="../lib"/>
-  <property name="build.dir" value="${src.dir}"/>
+  <property name="src.dir" value="src/java"/>
+  <property name="dist.dir" value="lib"/>
+  <property name="build.dir" value="bin"/>
 
   <path id="master-classpath">
     <fileset dir="${java.library.user}">
@@ -38,15 +39,18 @@
   </path>
 	
   <target name="clean">
-	<delete dir="${dist.dir}"/>
-  	<delete>
-  		<fileset dir="${build.dir}" includes="**/*.class"/>
-  	</delete>
+		<delete dir="${dist.dir}"/>
+  	<delete dir="${build.dir}"/>
   </target>
 
   <target name="build"
           description="Compile main source tree java files">
     <mkdir dir="${build.dir}"/>
+  	<copy todir="${build.dir}">
+  			<fileset dir="${src.dir}">
+  				<exclude name="**/*.java"/>
+  		  </fileset>
+  	</copy>
     <javac destdir="${build.dir}" target="1.5" source="1.5"
            debug="true"
            includeantruntime="false">
@@ -59,9 +63,8 @@
   <target name="jar" depends="build"
           description="generate the jarfile">
     <mkdir dir="${dist.dir}"/>
-    <jar jarfile="${dist.dir}/${name}.jar" basedir="${build.dir}"
-         compress="true" index="true"
-         excludes="*.java,*.class,**/.*,**/*~"/>
+    <jar jarfile="${dist.dir}/${name}-${version}.jar" basedir="${build.dir}"
+         compress="true" index="true" includes="**/*.class,**/*.xqy"/>
   </target>
 
 </project>
