@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import com.marklogic.developer.SimpleLogger;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
+import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
 /**
@@ -30,6 +32,20 @@ public abstract class AbstractTask implements Task{
 	static private Object sync = new Object();
 	static private List<String> propertyNames;
 	
+	protected int DEFAULT_RETRY_LIMIT=3;
+	protected int DEFAULT_RETRY_INTERVAL=60;
+	
+	private int connectRetryCount=0;
+		
+	static protected SimpleLogger logger;
+	static{
+		logger = SimpleLogger.getSimpleLogger();
+		Properties props = new Properties();
+        props.setProperty("LOG_LEVEL", "INFO");
+        props.setProperty("LOG_HANDLER", "CONSOLE");
+        logger.configureLogger(props);
+	}
+		
     public void setContentSource(ContentSource cs){
     	this.cs = cs;
     }
@@ -88,6 +104,7 @@ public abstract class AbstractTask implements Task{
 
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);
+            connectRetryCount=0;
             // no need to hold on to the session as results will be cached.
             session.close(); 
             Thread.yield();// try to avoid thread starvation
@@ -98,7 +115,20 @@ public abstract class AbstractTask implements Task{
               
             return result;
         }catch(Exception exc){
-        	throw new CorbException(exc.getMessage(),exc);
+        	if(exc instanceof ServerConnectionException){
+        		int retryLimit = this.getConnectRetryLimit();
+        		int retryInterval = this.getConnectRetryInterval();
+        		if(connectRetryCount < retryLimit){
+        			logger.severe("Connection failed to Marklogic Server. Retrying attempt "+(connectRetryCount+1)+" after "+retryInterval+" seconds..: "+exc.getMessage());
+        			try{Thread.sleep(retryInterval*1000L);}catch(Exception exc2){}
+        			connectRetryCount++;
+        			return invokeModule();
+        		}else{
+        			throw new CorbException(exc.getMessage(),exc);
+        		}
+        	}else{
+        		throw new CorbException(exc.getMessage(),exc);
+        	}
         }finally {
         	if(null != session && !session.isClosed()) {
                 session.close();
@@ -128,6 +158,28 @@ public abstract class AbstractTask implements Task{
 		}else{
 			return EMPTY_BYTE_ARRAY;
 		}
+	}
+	
+	private int getConnectRetryLimit(){
+		int connectRetryLimit = -1;
+		String propStr = getProperty("XCC-CONNECTION-RETRY-LIMIT");	
+		if(propStr != null && propStr.length() > 0){
+			try{
+				connectRetryLimit = Integer.parseInt(propStr);
+			}catch(Exception exc){}
+		}
+		return connectRetryLimit < 0 ? DEFAULT_RETRY_LIMIT : connectRetryLimit;
+	}
+	
+	private int getConnectRetryInterval(){
+		int connectRetryInterval = -1;
+		String propStr = getProperty("XCC-CONNECTION-RETRY-INTERVAL");	
+		if(propStr != null && propStr.length() > 0){
+			try{
+				connectRetryInterval = Integer.parseInt(propStr);
+			}catch(Exception exc){}
+		}
+		return connectRetryInterval < 0 ? DEFAULT_RETRY_INTERVAL : connectRetryInterval;
 	}
 	
     /*
