@@ -124,10 +124,10 @@ public abstract class AbstractTask implements Task{
         			connectRetryCount++;
         			return invokeModule();
         		}else{
-        			throw new CorbException(exc.getMessage(),exc);
+        			throw new CorbException(exc.getMessage()+" at URI: "+inputUri,exc);
         		}
         	}else{
-        		throw new CorbException(exc.getMessage(),exc);
+        		throw new CorbException(exc.getMessage()+" at URI: "+inputUri,exc);
         	}
         }finally {
         	if(null != session && !session.isClosed()) {
