@@ -119,7 +119,7 @@ public abstract class AbstractTask implements Task{
         		int retryLimit = this.getConnectRetryLimit();
         		int retryInterval = this.getConnectRetryInterval();
         		if(connectRetryCount < retryLimit){
-        			logger.severe("Connection failed to Marklogic Server. Retrying attempt "+(connectRetryCount+1)+" after "+retryInterval+" seconds..: "+exc.getMessage());
+        			logger.severe("Connection failed to Marklogic Server. Retrying attempt "+(connectRetryCount+1)+" after "+retryInterval+" seconds..: "+exc.getMessage()+" at URI: "+inputUri);
         			try{Thread.sleep(retryInterval*1000L);}catch(Exception exc2){}
         			connectRetryCount++;
         			return invokeModule();
