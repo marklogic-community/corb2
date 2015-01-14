@@ -227,7 +227,7 @@ public class Manager implements Runnable {
         String postBatchTask = getOption(args.length > 12 ? args[12] : null,"POST-BATCH-TASK",props);
         String exportFileDir = getOption(args.length > 13 ? args[13]: null, "EXPORT-FILE-DIR",props);
         String exportFileName = getOption(args.length > 14 ? args[14]: null, "EXPORT-FILE-NAME",props);
-        String urisFile = getOption(args.length > 14 ? args[14]: null, "URIS-FILE",props);
+        String urisFile = getOption(args.length > 15 ? args[15]: null, "URIS-FILE",props);
         
         if(preBatchModule == null) preBatchModule = getOption(null,"PRE-BATCH-XQUERY-MODULE",props);
         if(postBatchModule == null) postBatchModule = getOption(null,"POST-BATCH-XQUERY-MODULE",props);
@@ -582,10 +582,22 @@ public class Manager implements Runnable {
                 options.setXDBC_ROOT(item.asString());
             }
         }
+        
+        //HACK
+        if(options.getUrisModule() == null && options.getUrisFile() == null){ 
+        	String urisFile = properties.getProperty("URIS-FILE");
+        	if(urisFile != null && (urisFile=urisFile.trim()).length() > 0){
+        		options.setUrisFile(urisFile);
+        		properties.remove("URIS-FILE");
+        	}
+    	}
+        //END HACK
+        
         logger.info("Configured modules db: " + options.getModulesDatabase());
         logger.info("Configured modules xdbc root: " + options.getXDBC_ROOT());
         logger.info("Configured modules root: " + options.getModuleRoot());
         logger.info("Configured uri module: " + options.getUrisModule());
+        logger.info("Configured uri file: " + options.getUrisFile());
         logger.info("Configured process module: " + options.getProcessModule());
         logger.info("Configured process task: " + options.getProcessTaskClass());
         logger.info("Configured pre batch module: " + options.getPreBatchModule());

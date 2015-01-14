@@ -32,7 +32,7 @@ public abstract class AbstractTask implements Task{
 	static private Object sync = new Object();
 	static private List<String> propertyNames;
 	
-	protected int DEFAULT_RETRY_LIMIT=3;
+	protected int DEFAULT_RETRY_LIMIT=0;
 	protected int DEFAULT_RETRY_INTERVAL=60;
 	
 	private int connectRetryCount=0;
