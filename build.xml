@@ -30,10 +30,10 @@
 
   <path id="master-classpath">
     <fileset dir="${java.library.user}">
-      <include name="xcc.jar"/>
+      <include name="marklogic-xcc-6.0.2.jar"/>
     </fileset>
     <fileset dir="${java.library.system}">
-      <include name="xcc.jar"/>
+      <include name="marklogic-xcc-6.0.2.jar"/>
     </fileset>
     <pathelement path="${build.dir}"/>
   </path>

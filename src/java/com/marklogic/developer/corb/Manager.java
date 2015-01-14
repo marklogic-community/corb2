@@ -467,7 +467,7 @@ public class Manager implements Runnable {
      */
     private void prepareModules() {
         String[] resourceModules = new String[] {
-                options.getUrisModule(), options.getProcessModule(), options.getPostBatchModule()};
+                options.getInitModule(),options.getUrisModule(), options.getProcessModule(), options.getPostBatchModule()};
         String modulesDatabase = options.getModulesDatabase();
         logger.info("checking modules, database: " + modulesDatabase);
         Session session = contentSource.newSession(modulesDatabase);
@@ -604,6 +604,8 @@ public class Manager implements Runnable {
         logger.info("Configured pre batch task: " + options.getPreBatchTaskClass());
         logger.info("Configured post batch module: " + options.getPostBatchModule());
         logger.info("Configured post batch task: " + options.getPostBatchTaskClass());
+        logger.info("Configured init module: " + options.getInitModule());
+        logger.info("Configured init task: " + options.getInitTaskClass());
         
         for(Entry<Object, Object> e : properties.entrySet()) {
         	if(!"XCC-CONNECTION-URI".equals(e.getKey())){

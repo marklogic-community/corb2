@@ -39,7 +39,7 @@ EXPORT-FILE-BOTTOM-CONTENT (used by PostBatchUpdateFileTask to append content to
 EXPORT_FILE_AS_ZIP (if true, PreBatchUpdateFileTask compression the output file as a zip file)
 URIS-REPLACE-PATTERN (one or more replace patterns for URIs - typically used to save memory. usage: URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2,...)
 XCC-CONNECTION-RETRY-LIMIT (Number attempts to connect to ML before giving up - default is 0)
-XCC-CONNECTION-RETRY-INTERVAL (in seconds - Time interval in seconds between retry attempts - default is 60)
+XCC-CONNECTION-RETRY-INTERVAL (in seconds - Time interval in seconds between retry attempts - default is 30)
 
 Custom Inputs to XQuery modules
 --------

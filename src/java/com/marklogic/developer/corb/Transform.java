@@ -28,7 +28,7 @@ import com.marklogic.xcc.ResultSequence;
 public class Transform extends AbstractTask {
     
 	protected String processResult(ResultSequence seq) throws CorbException{
-		return seq.asString();
+		return TRUE;
 	}
 	
     public String call() throws Exception {

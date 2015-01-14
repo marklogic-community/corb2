@@ -33,7 +33,7 @@ public abstract class AbstractTask implements Task{
 	static private List<String> propertyNames;
 	
 	protected int DEFAULT_RETRY_LIMIT=0;
-	protected int DEFAULT_RETRY_INTERVAL=60;
+	protected int DEFAULT_RETRY_INTERVAL=30;
 	
 	private int connectRetryCount=0;
 		
@@ -109,19 +109,19 @@ public abstract class AbstractTask implements Task{
             session.close(); 
             Thread.yield();// try to avoid thread starvation
             
-            String result = processResult(seq);
+            processResult(seq);
             seq.close();
             Thread.yield();// try to avoid thread starvation
               
-            return result;
+            return inputUri;
         }catch(Exception exc){
         	if(exc instanceof ServerConnectionException){
         		int retryLimit = this.getConnectRetryLimit();
         		int retryInterval = this.getConnectRetryInterval();
         		if(connectRetryCount < retryLimit){
-        			logger.severe("Connection failed to Marklogic Server. Retrying attempt "+(connectRetryCount+1)+" after "+retryInterval+" seconds..: "+exc.getMessage()+" at URI: "+inputUri);
-        			try{Thread.sleep(retryInterval*1000L);}catch(Exception exc2){}
         			connectRetryCount++;
+        			logger.severe("Connection failed to Marklogic Server. Retrying attempt "+connectRetryCount+" after "+retryInterval+" seconds..: "+exc.getMessage()+" at URI: "+inputUri);
+        			try{Thread.sleep(retryInterval*1000L);}catch(Exception exc2){}        			
         			return invokeModule();
         		}else{
         			throw new CorbException(exc.getMessage()+" at URI: "+inputUri,exc);
