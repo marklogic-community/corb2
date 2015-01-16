@@ -695,6 +695,8 @@ public class Manager implements Runnable {
                 if (count >= urisArray.length) {
                     throw new ArrayIndexOutOfBoundsException("received more than " + total + " results: " + uri);
                 }
+                
+                if(uri == null || uri.trim().length() == 0) continue;
 
                 // we want to test the work module immediately,
                 // but we also want to ensure that
@@ -730,8 +732,8 @@ public class Manager implements Runnable {
             	urisLoader.close();
             }
             
-            if(count < total && urisLoader instanceof FileUrisLoader){
-            	logger.warning("Resetting total uri count to "+count+". Ignore if file contains blank lines.");
+            if(count < total){
+            	logger.severe("Resetting total uri count to "+count+". Ignore if URIs are loaded from a file that contains blank lines.");
             	monitor.setTaskCount(total=count);
             }
             
