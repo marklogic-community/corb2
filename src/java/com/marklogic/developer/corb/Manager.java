@@ -183,31 +183,30 @@ public class Manager implements Runnable {
 			ClassNotFoundException, InstantiationException, IllegalAccessException {
     	Properties props = new Properties();
 		String propsFileName = System.getProperty("OPTIONS-FILE");
-		if (propsFileName == null || propsFileName.trim().length() == 0) {
-			propsFileName = "corb.properties";
-		}
-		InputStream is = null;
-		try {
-			is = Manager.class.getResourceAsStream("/" + propsFileName);
-			if (is != null) {
-				props.load(is);
-			} else {
-				File f = new File(propsFileName);
-				if (f.exists() && !f.isDirectory()) {
-					FileInputStream fis = null;
-					try {
-						fis = new FileInputStream(f);
-						props.load(fis);
-					} finally {
-						if (null != fis) {
-							fis.close();
+		if(propsFileName != null && (propsFileName=propsFileName.trim()).length() > 0){
+			InputStream is = null;
+			try {
+				is = Manager.class.getResourceAsStream("/" + propsFileName);
+				if (is != null) {
+					props.load(is);
+				} else {
+					File f = new File(propsFileName);
+					if (f.exists() && !f.isDirectory()) {
+						FileInputStream fis = null;
+						try {
+							fis = new FileInputStream(f);
+							props.load(fis);
+						} finally {
+							if (null != fis) {
+								fis.close();
+							}
 						}
 					}
 				}
-			}
-		} finally {
-			if (null != is) {
-				is.close();
+			} finally {
+				if (null != is) {
+					is.close();
+				}
 			}
 		}
         
