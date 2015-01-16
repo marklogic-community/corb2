@@ -733,7 +733,7 @@ public class Manager implements Runnable {
             }
             
             if(count < total){
-            	logger.severe("Resetting total uri count to "+count+". Ignore if URIs are loaded from a file that contains blank lines.");
+            	logger.warning("Resetting total uri count to "+count+". Ignore if URIs are loaded from a file that contains blank lines.");
             	monitor.setTaskCount(total=count);
             }
             
