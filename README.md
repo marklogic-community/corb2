@@ -1,4 +1,3 @@
-For more information see "http://marklogic.github.com/corb/":http://marklogic.github.com/corb/  
 Version: 2.0.5
 
 ## Running Corb
