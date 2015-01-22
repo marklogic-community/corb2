@@ -72,7 +72,7 @@ import com.marklogic.xcc.types.XdmItem;
  */
 public class Manager implements Runnable {
 
-    public static String VERSION = "2014-06-25.1";
+    public static String VERSION = "2015-01-21";
 
     public class CallerBlocksPolicy implements RejectedExecutionHandler {
 
@@ -129,7 +129,7 @@ public class Manager implements Runnable {
     /**
      *
      */
-    private static final String NAME = Manager.class.getName();
+    protected static final String NAME = Manager.class.getName();
 
     private URI connectionUri;
 
@@ -176,7 +176,7 @@ public class Manager implements Runnable {
     			ClassNotFoundException, InstantiationException, IllegalAccessException {    			
     	Manager tm = createManager(args);
         //now its time to start processing
-        tm.run();
+        if(tm != null) tm.run();
     }
     
     public static Manager createManager(String[] args) throws URISyntaxException, IOException, 
@@ -236,7 +236,7 @@ public class Manager implements Runnable {
         String initTask = getOption(null, "INIT-TASK",props);
         
         if(connectionUri == null){
-        	usage(); //TODO: Update the usage 
+        	usage();
             return null;
         }
 
@@ -366,14 +366,18 @@ public class Manager implements Runnable {
     /**
      *
      */
-    private static void usage() {
+    protected static void usage() {
         PrintStream err = System.err;
         err.println("usage 1:");
         err.println("\t" + NAME
                 + " xcc://user:password@host:port/[ database ]"
                 + " input-selector module-name.xqy"
                 + " [ thread-count [ uris-module [ module-root"
-                + " [ modules-database [ install ] ] ] ] ]");
+                + " [ modules-database [ install [ process-task"
+                + " [ pre-batch-module [ pre-batch-task"
+                + " [ post-batch-module  [ post-batch-task"
+                + " [ export-file-dir [ export-file-name"
+                + " [ uris-file ] ] ] ] ] ] ] ] ] ] ] ] ]");
         err.println("\nusage 2:");
         err.println("\t"+ "-DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ]"
         				+ " -DXQUERY-MODULE=module-name.xqy"
@@ -383,7 +387,12 @@ public class Manager implements Runnable {
         				+ " -D... "
         				+ NAME);
         err.println("\nusage 3:");
-        err.println("\t"+NAME+" (Note: Looks for corb.properties file in the class path)");
+        err.println("\t"+ "-DOPTIONS-FILE=myjob.properties "+ NAME);
+        err.println("\nusage 4:");
+        err.println("\t"+ "-DOPTIONS-FILE=myjob.properties"
+        				+ " -DTHREAD-COUNT=10 "
+        				+ NAME
+                		+ " xcc://user:password@host:port/[ database ]");       
     }
 
     /*
@@ -534,7 +543,7 @@ public class Manager implements Runnable {
     /**
      *
      */
-    private void prepareContentSource() {
+    protected void prepareContentSource() {
         //logger.info("using content source " + connectionUri);
         try {
             // support SSL
@@ -732,7 +741,7 @@ public class Manager implements Runnable {
             }
             
             if(count < total){
-            	logger.severe("Resetting total uri count to "+count+". Ignore if URIs are loaded from a file that contains blank lines.");
+            	logger.warning("Resetting total uri count to "+count+". Ignore if URIs are loaded from a file that contains blank lines.");
             	monitor.setTaskCount(total=count);
             }
             
@@ -786,7 +795,7 @@ public class Manager implements Runnable {
         logger.fine("queue is populated with " + total + " tasks");
     }
     
-    private void configureLogger() {
+    protected void configureLogger() {
         if (logger == null) {
             logger = SimpleLogger.getSimpleLogger();
         }
