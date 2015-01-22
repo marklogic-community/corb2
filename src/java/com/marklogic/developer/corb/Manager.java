@@ -112,7 +112,7 @@ public class Manager implements Runnable {
     
     public static String URIS_BATCH_REF = "URIS_BATCH_REF";
 
-    private static String versionMessage = "version " + VERSION + " on "
+    protected static String versionMessage = "version " + VERSION + " on "
             + System.getProperty("java.version") + " ("
             + System.getProperty("java.runtime.name") + ")";
 
@@ -131,23 +131,21 @@ public class Manager implements Runnable {
      */
     protected static final String NAME = Manager.class.getName();
 
-    private URI connectionUri;
+    protected URI connectionUri;
 
-    private String collection;
+    protected String collection;
     
-    private Properties properties = new Properties();
+    protected Properties properties = new Properties();
 
-    private TransformOptions options = new TransformOptions();
+    protected TransformOptions options = new TransformOptions();
 
     private ThreadPoolExecutor pool = null;
 
-    private ContentSource contentSource;
+    protected ContentSource contentSource;
 
     private Monitor monitor;
 
-    private SimpleLogger logger;
-
-    //private String moduleUri;
+    protected SimpleLogger logger;
 
     private Thread monitorThread;
 
