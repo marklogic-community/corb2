@@ -51,7 +51,7 @@
   				<exclude name="**/*.java"/>
   		  </fileset>
   	</copy>
-  	<copy file="README.textfile" todir="${build.dir}"/>
+  	<copy file="README.md" todir="${build.dir}"/>
     <javac destdir="${build.dir}" target="1.5" source="1.5"
            debug="true"
            includeantruntime="false">
@@ -65,7 +65,7 @@
           description="generate the jarfile">
     <mkdir dir="${dist.dir}"/>
     <jar jarfile="${dist.dir}/${name}-${version}.jar" basedir="${build.dir}"
-         compress="true" index="true" includes="**/*.class,**/*.xqy,README.textfile"/>
+         compress="true" index="true" includes="**/*.class,**/*.xqy,README.md"/>
   </target>
 
 </project>
