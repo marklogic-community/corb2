@@ -72,7 +72,7 @@ import com.marklogic.xcc.types.XdmItem;
  */
 public class Manager implements Runnable {
 
-    public static String VERSION = "2014-06-25.1";
+    public static String VERSION = "2015-01-21";
 
     public class CallerBlocksPolicy implements RejectedExecutionHandler {
 
@@ -112,7 +112,7 @@ public class Manager implements Runnable {
     
     public static String URIS_BATCH_REF = "URIS_BATCH_REF";
 
-    private static String versionMessage = "version " + VERSION + " on "
+    protected static String versionMessage = "version " + VERSION + " on "
             + System.getProperty("java.version") + " ("
             + System.getProperty("java.runtime.name") + ")";
 
@@ -129,25 +129,23 @@ public class Manager implements Runnable {
     /**
      *
      */
-    private static final String NAME = Manager.class.getName();
+    protected static final String NAME = Manager.class.getName();
 
-    private URI connectionUri;
+    protected URI connectionUri;
 
-    private String collection;
+    protected String collection;
     
-    private Properties properties = new Properties();
+    protected Properties properties = new Properties();
 
-    private TransformOptions options = new TransformOptions();
+    protected TransformOptions options = new TransformOptions();
 
     private ThreadPoolExecutor pool = null;
 
-    private ContentSource contentSource;
+    protected ContentSource contentSource;
 
     private Monitor monitor;
 
-    private SimpleLogger logger;
-
-    //private String moduleUri;
+    protected SimpleLogger logger;
 
     private Thread monitorThread;
 
@@ -176,38 +174,37 @@ public class Manager implements Runnable {
     			ClassNotFoundException, InstantiationException, IllegalAccessException {    			
     	Manager tm = createManager(args);
         //now its time to start processing
-        tm.run();
+        if(tm != null) tm.run();
     }
     
     public static Manager createManager(String[] args) throws URISyntaxException, IOException, 
 			ClassNotFoundException, InstantiationException, IllegalAccessException {
     	Properties props = new Properties();
 		String propsFileName = System.getProperty("OPTIONS-FILE");
-		if (propsFileName == null || propsFileName.trim().length() == 0) {
-			propsFileName = "corb.properties";
-		}
-		InputStream is = null;
-		try {
-			is = Manager.class.getResourceAsStream("/" + propsFileName);
-			if (is != null) {
-				props.load(is);
-			} else {
-				File f = new File(propsFileName);
-				if (f.exists() && !f.isDirectory()) {
-					FileInputStream fis = null;
-					try {
-						fis = new FileInputStream(f);
-						props.load(fis);
-					} finally {
-						if (null != fis) {
-							fis.close();
+		if(propsFileName != null && (propsFileName=propsFileName.trim()).length() > 0){
+			InputStream is = null;
+			try {
+				is = Manager.class.getResourceAsStream("/" + propsFileName);
+				if (is != null) {
+					props.load(is);
+				} else {
+					File f = new File(propsFileName);
+					if (f.exists() && !f.isDirectory()) {
+						FileInputStream fis = null;
+						try {
+							fis = new FileInputStream(f);
+							props.load(fis);
+						} finally {
+							if (null != fis) {
+								fis.close();
+							}
 						}
 					}
 				}
-			}
-		} finally {
-			if (null != is) {
-				is.close();
+			} finally {
+				if (null != is) {
+					is.close();
+				}
 			}
 		}
         
@@ -237,7 +234,7 @@ public class Manager implements Runnable {
         String initTask = getOption(null, "INIT-TASK",props);
         
         if(connectionUri == null){
-        	usage(); //TODO: Update the usage 
+        	usage();
             return null;
         }
 
@@ -367,14 +364,18 @@ public class Manager implements Runnable {
     /**
      *
      */
-    private static void usage() {
+    protected static void usage() {
         PrintStream err = System.err;
         err.println("usage 1:");
         err.println("\t" + NAME
                 + " xcc://user:password@host:port/[ database ]"
                 + " input-selector module-name.xqy"
                 + " [ thread-count [ uris-module [ module-root"
-                + " [ modules-database [ install ] ] ] ] ]");
+                + " [ modules-database [ install [ process-task"
+                + " [ pre-batch-module [ pre-batch-task"
+                + " [ post-batch-module  [ post-batch-task"
+                + " [ export-file-dir [ export-file-name"
+                + " [ uris-file ] ] ] ] ] ] ] ] ] ] ] ] ]");
         err.println("\nusage 2:");
         err.println("\t"+ "-DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ]"
         				+ " -DXQUERY-MODULE=module-name.xqy"
@@ -384,7 +385,12 @@ public class Manager implements Runnable {
         				+ " -D... "
         				+ NAME);
         err.println("\nusage 3:");
-        err.println("\t"+NAME+" (Note: Looks for corb.properties file in the class path)");
+        err.println("\t"+ "-DOPTIONS-FILE=myjob.properties "+ NAME);
+        err.println("\nusage 4:");
+        err.println("\t"+ "-DOPTIONS-FILE=myjob.properties"
+        				+ " -DTHREAD-COUNT=10 "
+        				+ NAME
+                		+ " xcc://user:password@host:port/[ database ]");       
     }
 
     /*
@@ -535,7 +541,7 @@ public class Manager implements Runnable {
     /**
      *
      */
-    private void prepareContentSource() {
+    protected void prepareContentSource() {
         //logger.info("using content source " + connectionUri);
         try {
             // support SSL
@@ -787,7 +793,7 @@ public class Manager implements Runnable {
         logger.fine("queue is populated with " + total + " tasks");
     }
     
-    private void configureLogger() {
+    protected void configureLogger() {
         if (logger == null) {
             logger = SimpleLogger.getSimpleLogger();
         }
