@@ -4,7 +4,7 @@ Version: 2.0.5
 
 The entry point is the main method in the com.marklogic.developer.corb.Manager class. 
 
-Corb needs one or more of the following parameters as (If specified in more then one place command line argument takes precedence over VM argument which take precedence over corb.properties)
+Corb needs one or more of the following parameters as (If specified in more then one place command line argument takes precedence over VM argument which take precedence over myjob.properties)
 
 1. command-line arguments 
 2. VM arguments ex: -DXCC-CONNECTION-URI=xcc://user:password@localhost:8202 or 
@@ -74,6 +74,11 @@ THREAD-COUNT=10
 URIS-MODULE=get-uris.xqy  
 POST-BATCH-MODULE=post-batch.xqy  
 XQUERY-MODULE=get-document.xqy  
-PROCESS-TASK=com.marklogic.developer.corb.ExportToFileTask  
-EXPORT-FILE-DIR=/temp/export  
-POST-BATCH-TASK=com.marklogic.developer.corb.PostBatchUpdateFileTask  
+PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask  
+EXPORT-FILE-DIR=/temp/export 
+EXPORT-FILE-NAME=myfile.csv
+PRE-BATCH-TASK=com.marklogic.developer.corb.PreBatchUpdateFileTask
+EXPORT-FILE-TOP-CONTENT=col1,col2,col3
+POST-BATCH-TASK=com.marklogic.developer.corb.PostBatchUpdateFileTask
+EXPORT-FILE-PART-EXT=.tmp
+  
