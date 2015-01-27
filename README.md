@@ -75,10 +75,10 @@ URIS-MODULE=get-uris.xqy
 POST-BATCH-MODULE=post-batch.xqy  
 XQUERY-MODULE=get-document.xqy  
 PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask  
-EXPORT-FILE-DIR=/temp/export 
-EXPORT-FILE-NAME=myfile.csv 
-PRE-BATCH-TASK=com.marklogic.developer.corb.PreBatchUpdateFileTask 
-EXPORT-FILE-TOP-CONTENT=col1,col2,col3 
-POST-BATCH-TASK=com.marklogic.developer.corb.PostBatchUpdateFileTask 
-EXPORT-FILE-PART-EXT=.tmp 
+EXPORT-FILE-DIR=/temp/export  
+EXPORT-FILE-NAME=myfile.csv  
+PRE-BATCH-TASK=com.marklogic.developer.corb.PreBatchUpdateFileTask  
+EXPORT-FILE-TOP-CONTENT=col1,col2,col3  
+POST-BATCH-TASK=com.marklogic.developer.corb.PostBatchUpdateFileTask  
+EXPORT-FILE-PART-EXT=.tmp  
   
