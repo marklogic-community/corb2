@@ -590,8 +590,8 @@ public class Manager implements Runnable {
         }
         
         //HACK
-        if(options.getUrisModule() == null && options.getUrisFile() == null){ 
-        	String urisFile = properties.getProperty("URIS-FILE");
+        if(options.getUrisModule() == null && options.getUrisFile() == null){
+        	String urisFile = getOption(null, "URIS-FILE", properties);
         	if(urisFile != null && (urisFile=urisFile.trim()).length() > 0){
         		options.setUrisFile(urisFile);
         		properties.remove("URIS-FILE");
