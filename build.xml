@@ -21,7 +21,7 @@
 -->
 <project name="corb" basedir="." default="jar">
   <property name="name" value="marklogic-corb"/>
-	<property name="version" value="2.0.5"/>
+	<property name="version" value="2.0.6"/>
   <property file="build.properties"/>
 
   <property name="src.dir" value="src/java"/>
