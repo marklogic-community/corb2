@@ -233,10 +233,30 @@ public class Manager implements Runnable {
         String initModule = getOption(null, "INIT-MODULE",props);
         String initTask = getOption(null, "INIT-TASK",props);
         
-        if(connectionUri == null){
+        String username = getOption(null,"XCC-USERNAME",props);
+		String password = getOption(null,"XCC-PASSWORD",props);
+		String host = getOption(null,"XCC-HOSTNAME",props);
+		String port = getOption(null,"XCC-PORT",props);
+		
+        if(connectionUri == null && (username == null || password == null || host == null || port == null)){
+        	System.err.println("XCC-CONNECTION-URI or XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME and XCC-PORT must be specified");
         	usage();
             return null;
         }
+        
+        String decrypterClassName = getOption(null,"DECRYPTER",props);
+        if(decrypterClassName != null){
+        	Class<?> decrypterCls = Class.forName(decrypterClassName);
+	        if(AbstractDecrypter.class.isAssignableFrom(decrypterCls)){
+	        	AbstractDecrypter decrypter = (AbstractDecrypter) decrypterCls.newInstance(); 
+	        	decrypter.init(props);
+	        	connectionUri = decrypter.getConnectionURI(connectionUri,username,password,host,port);
+	        }else{
+	        	throw new IllegalArgumentException("DECRYPTER must be of type com.marklogic.developer.corb.AbstractDecrypter");
+	        }
+        }else if(connectionUri == null){
+        	connectionUri = "xcc://"+username+":"+password+"@"+host+":"+port;
+        }       
 
         Manager tm = new Manager(new URI(connectionUri), collection != null ? collection : "");
         tm.setProperties(props); // Keep the properties around for the custom tasks 
@@ -270,7 +290,7 @@ public class Manager implements Runnable {
 	        	processCls.newInstance(); //sanity check
 	        	options.setProcessTaskClass((Class<? extends Task>)processCls.asSubclass(Task.class));
 	        }else{
-	        	throw new IllegalArgumentException("PROCESS-TASK must be of type com.marklogic.developer.Task");
+	        	throw new IllegalArgumentException("PROCESS-TASK must be of type com.marklogic.developer.corb.Task");
 	        }
         }
         
@@ -281,7 +301,7 @@ public class Manager implements Runnable {
 	        	preBatchCls.newInstance(); //sanity check
 	        	options.setPreBatchTaskClass((Class<? extends Task>)preBatchCls.asSubclass(Task.class));
 	        }else{
-	        	throw new IllegalArgumentException("PRE-BATCH-TASK must be of type com.marklogic.developer.Task");
+	        	throw new IllegalArgumentException("PRE-BATCH-TASK must be of type com.marklogic.developer.corb.Task");
 	        }
         }
         
@@ -292,7 +312,7 @@ public class Manager implements Runnable {
 	        	postBatchCls.newInstance(); //sanity check
 	        	options.setPostBatchTaskClass((Class<? extends Task>)postBatchCls.asSubclass(Task.class));
 	        }else{
-	        	throw new IllegalArgumentException("POST-BATCH-TASK must be of type com.marklogic.developer.Task");
+	        	throw new IllegalArgumentException("POST-BATCH-TASK must be of type com.marklogic.developer.corb.Task");
 	        }
         }
         
@@ -322,7 +342,7 @@ public class Manager implements Runnable {
 	        	initCls.newInstance(); //sanity check
 	        	options.setInitTaskClass((Class<? extends Task>)initCls.asSubclass(Task.class));
 	        }else{
-	        	throw new IllegalArgumentException("INIT-TASK must be of type com.marklogic.developer.Task");
+	        	throw new IllegalArgumentException("INIT-TASK must be of type com.marklogic.developer.corb.Task");
 	        }
         }
         
@@ -545,18 +565,18 @@ public class Manager implements Runnable {
         //logger.info("using content source " + connectionUri);
         try {
             // support SSL
-            boolean ssl = connectionUri.getScheme().equals("xccs");
+            boolean ssl = connectionUri != null && connectionUri.getScheme() != null && connectionUri.getScheme().equals("xccs");
             contentSource = ssl ? ContentSourceFactory.newContentSource(
                     connectionUri, newTrustAnyoneOptions())
                     : ContentSourceFactory.newContentSource(connectionUri);
         } catch (XccConfigException e) {
-            logger.logException(connectionUri.toString(), e);
+            logger.logException("Problem creating content source. Check if URI is valid. If encrypted, check options are configured correctly.", e);
             throw new RuntimeException(e);
         } catch (KeyManagementException e) {
-            logger.logException(connectionUri.toString(), e);
+            logger.logException("Problem creating content source with ssl", e);
             throw new RuntimeException(e);
         } catch (NoSuchAlgorithmException e) {
-            logger.logException(connectionUri.toString(), e);
+            logger.logException("Problem creating content source with ssl", e);
             throw new RuntimeException(e);
         }
     }

@@ -1,4 +1,4 @@
-Version: 2.0.5
+Version: 2.1.0
 
 ## Running Corb
 
@@ -31,22 +31,33 @@ Corb needs one or more of the following parameters as (If specified in more then
 * INIT-MODULE (XQuery Module, if specified, will be invoked prior to URIS-MODULE)
 * INIT-TASK (Java Task, if specified, will be called prior to URIS-MODULE, This can be used addition to INIT-MODULE)
 
-## Additional options via properties file
+## Additional options
 
 * EXPORT-FILE-PART-EXT (if specified, PreBatchUpdateFileTask adds this extension to export file. It is expected that PostBatchUpdateFileTask will be specified, which removes the extension for the final export file)
-* EXPORT-FILE-TOP-CONTENT (used by PreBatchUpdateFileTask to insert content at the top to EXPORT_FILE_NAME before batch process starts, if it finds the text @URIS_BATCH_REF it replaces it by batch reference sent by URIS-MODULE)
+* EXPORT-FILE-TOP-CONTENT (used by PreBatchUpdateFileTask to insert content at the top of EXPORT_FILE_NAME before batch process starts, if it finds the text @URIS_BATCH_REF it replaces it by batch reference sent by URIS-MODULE)
 * EXPORT-FILE-BOTTOM-CONTENT (used by PostBatchUpdateFileTask to append content to EXPORT_FILE_NAME after batch process is complete)
 * EXPORT_FILE_AS_ZIP (if true, PreBatchUpdateFileTask compression the output file as a zip file)
 * URIS-REPLACE-PATTERN (one or more replace patterns for URIs - typically used to save memory. usage: URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2,...)
 * XCC-CONNECTION-RETRY-LIMIT (Number attempts to connect to ML before giving up - default is 3)
 * XCC-CONNECTION-RETRY-INTERVAL (in seconds - Time interval in seconds between retry attempts - default is 60)
 
+## Alternate XCC connection configuration
+
+* XCC-USERNAME (Required if XCC-CONNECTION-URI is not specified)
+* XCC-PASSWORD (Required if XCC-CONNECTION-URI is not specified)
+* XCC-HOSTNAME (Required if XCC-CONNECTION-URI is not specified)
+* XCC-PORT (Required if XCC-CONNECTION-URI is not specified)
+
 ## Custom Inputs to XQuery modules
 
 Any property specified with prefix (with '.') URIS-MODULE,XQUERY-MODULE,PRE-BATCH-MODULE,POST-BATCH-MODULE,INIT-MODULE, will be set as external variables to the corresponding xquery module (if defined).  
 ex:  
 URIS-MODULE.filePath  
-XQUERY-MODULE.outputFolder   
+XQUERY-MODULE.outputFolder
+
+## Encryption
+* DECRYPTER (Must extend com.marklogic.developer.corb.AbstractDecrypter. Ex:JasyptDecrypter (included, requires jasypt jar in classpath) or .. Encryptable options XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOST and XCC-PORT)
+* DECRYPTER-PROPERTIES-FILE (Optional, decrypter implementations are expected to use default file name. Ex: jasypt.properties for JasyptDecrypter and .. )
 
 ## Internal Properties
 
