@@ -69,11 +69,11 @@ XQUERY-MODULE.outputFolder
 * openssl genrsa -out private.pem 1024 (generate private key in PEM format)
 * openssl rsa -in private.pem -pubout > public.key  (extract public key)
 * openssl pkcs8 -topk8 -nocrypt -in private.pem -out private.pkcs8.key (create PRIVATE-KEY-FILE in PKCS8 std for java)
-* echo "uri or password" | openssl rsautl -encrypt -pubin -inkey public.key | base64 (encrypt URI or password)
+* echo "uri or password" | openssl rsautl -encrypt -pubin -inkey public.key | base64 (encrypt URI or password. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx))
 
 ### JasyptDecrypter
 
-Encrypt the URI or password as below. It is assumed that jasypt dist is available on your box.  
+Encrypt the URI or password as below. It is assumed that jasypt dist is available on your box. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx)  
 jasypt-1.9.2/bin/encrypt.sh input="uri or password" password="passphrase" algorithm="algorithm" (ex: PBEWithMD5AndTripleDES or PBEWithMD5AndDES)  
 
 **jasypt.properties file**  
