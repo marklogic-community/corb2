@@ -76,7 +76,7 @@ XQUERY-MODULE.outputFolder
 Encrypt the URI or password as below. It is assumed that jasypt dist is available on your box.  
 jasypt-1.9.2/bin/encrypt.sh input="uri or password" password="passphrase" algorithm="algorithm" (ex: PBEWithMD5AndTripleDES or PBEWithMD5AndDES)  
 
-**jasypt.properties file**
+**jasypt.properties file**  
 jasypt.algorithm=PBEWithMD5AndTripleDES  
 jasypt.password=passphrase
 
@@ -104,8 +104,8 @@ XCC-CONNECTION-URI=xcc://user:password@localhost:8202/
 XQUERY-MODULE=SampleCorbJob.xqy  
 THREAD-COUNT=10  
 DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter  
-#DECRYPTER=com.marklogic.developer.corb.RSADecrypter
-#PRIVATE-KEY-FILE=/path/to/rsa/key/private.pkcs8.key  
+DECRYPTER=com.marklogic.developer.corb.RSADecrypter  
+PRIVATE-KEY-FILE=/path/to/rsa/key/private.pkcs8.key  
 URIS-MODULE=get-uris.xqy  
 POST-BATCH-MODULE=post-batch.xqy  
 XQUERY-MODULE=get-document.xqy  
