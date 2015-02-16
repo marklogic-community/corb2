@@ -81,8 +81,8 @@ java -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10 com.marklogic.developer.c
 
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/  
 XQUERY-MODULE=SampleCorbJob.xqy  
-THREAD-COUNT=10
-DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter 
+THREAD-COUNT=10  
+DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter  
 URIS-MODULE=get-uris.xqy  
 POST-BATCH-MODULE=post-batch.xqy  
 XQUERY-MODULE=get-document.xqy  
