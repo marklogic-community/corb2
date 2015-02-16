@@ -18,6 +18,13 @@
  */
 package com.marklogic.developer.corb;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
+
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * @author Bhagat Bandlamudi, MarkLogic Corporation
@@ -107,10 +114,56 @@ public class TaskFactory {
         }
     }
     
+    private String getAdhocQuery(String module){
+    	InputStream is = null;
+    	InputStreamReader reader = null;
+		StringWriter writer =null;
+		try{
+			is = TaskFactory.class.getResourceAsStream("/" + module);
+			if(is == null){
+				File f = new File(module);
+				if (f.exists() && !f.isDirectory()) {
+					is = new FileInputStream(f);
+				}else{
+					throw new IllegalStateException("Unable to find adhoc query module "+module+" in classpath");
+				}
+			}
+			
+			reader = new InputStreamReader(is);
+			writer = new StringWriter();
+			char[] buffer = new char[512];
+			int n = 0;
+			while (-1 != (n = reader.read(buffer))) {
+				writer.write(buffer, 0, n);
+			}
+			writer.close();
+			reader.close();
+			
+			return writer.toString().trim();
+		}catch(IOException exc){
+			throw new IllegalStateException("Prolem reading adhoc query module "+module,exc);
+		}finally{
+			try{if(writer != null) writer.close();}catch(Exception exc){}
+			try{if(reader != null) reader.close();}catch(Exception exc){}
+			try{is.close();}catch(Exception exc){}
+		}
+    }
+    
     private void setupTask(Task task, String moduleType, String module, String _uri){
     	if(module != null){
-    		String root = manager.getOptions().getModuleRoot();
-    		task.setModuleURI(root + module);
+    		if(module.toUpperCase().endsWith("|ADHOC")){
+    			if(moduleType.equals("XQUERY-MODULE")){
+    				throw new IllegalStateException("XQURY-MODULE cannot be adhoc");
+    			}
+    			String adhocQuery = getAdhocQuery(module.substring(0, module.indexOf('|')));
+    			if(adhocQuery == null || (adhocQuery.length() == 0)){
+    				throw new IllegalStateException("Unable to read adhoc query "+module+" from classpath");
+    			}
+    			task.setAdhocQuery(adhocQuery);
+    		}else{
+    			String root = manager.getOptions().getModuleRoot();
+    			task.setModuleURI(root + module);
+    		}
     	}
     	task.setModuleType(moduleType);
     	task.setContentSource(manager.getContentSource());

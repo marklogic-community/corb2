@@ -517,7 +517,7 @@ public class Manager implements Runnable {
         ContentCreateOptions opts = ContentCreateOptions.newTextInstance();
         try {
             for (int i = 0; i < resourceModules.length; i++) {
-            	if(resourceModules[i] == null) continue;
+            	if(resourceModules[i] == null || resourceModules[i].toUpperCase().endsWith("|ADHOC")) continue;
             	
                 // Start by checking install flag.
                 if (!options.isDoInstall()) {

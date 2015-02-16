@@ -55,6 +55,12 @@ ex:
 URIS-MODULE.filePath  
 XQUERY-MODULE.outputFolder
 
+## Adhoc Tasks
+INIT-MODULE, PRE-BATCH-MODULE and POST-BATCH-MODULE can be adhoc where XQuery can be local i.e. not deployed to marklogic. The xquery module should be in its named file available in classpath or filesystem.  
+ex:  
+PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC  
+INIT-MODULE=/path/to/file/adhoc-init-module.xqy|ADHOC
+
 ## Encryption
 
 * DECRYPTER (Must extend com.marklogic.developer.corb.AbstractDecrypter. Encryptable options XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOST and XCC-PORT)  

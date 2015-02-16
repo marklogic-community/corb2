@@ -24,6 +24,8 @@ public interface Task extends Callable<String> {
 	public void setModuleType(String moduleType);
 		
 	public void setModuleURI(String moduleURI);
+	
+	public void setAdhocQuery(String adhocQuery);
 		
 	/**
 	 * If additional data is sent from CUSTOM URI module, it is available in properties

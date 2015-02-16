@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -63,15 +64,17 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 		}
 	}
 	
-	private static byte[] toByteArray(final InputStream input) throws IOException {
-		final ByteArrayOutputStream output = new ByteArrayOutputStream();
-		
+	private static void copy(InputStream input, OutputStream output) throws IOException{
 		byte[] buffer = new byte[1024];
 		int n = 0;
 		while (-1 != (n = input.read(buffer))) {
 			output.write(buffer, 0, n);
 		}
-		
+	}
+	
+	private static byte[] toByteArray(final InputStream input) throws IOException {
+		final ByteArrayOutputStream output = new ByteArrayOutputStream();
+		copy(input,output);
 		return output.toByteArray();
 	}
 

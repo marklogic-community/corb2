@@ -29,6 +29,8 @@ public abstract class AbstractTask implements Task{
 	protected Properties properties;
 	protected String inputUri;
 	
+	protected String adhocQuery;
+	
 	static private Object sync = new Object();
 	static private List<String> propertyNames;
 	
@@ -58,6 +60,10 @@ public abstract class AbstractTask implements Task{
     	this.moduleUri = moduleUri;
     }
     
+    public void setAdhocQuery(String adhocQuery){
+    	this.adhocQuery = adhocQuery;
+    }
+    
     public void setProperties(Properties properties){
     	this.properties = properties;
     }
@@ -71,14 +77,19 @@ public abstract class AbstractTask implements Task{
     }
 	
 	protected String invokeModule() throws CorbException{
-		if(moduleUri == null) return null;
+		if(moduleUri == null && adhocQuery == null) return null;
 		
         Session session = null;
         ResultSequence seq = null;
 		Thread.yield();// try to avoid thread starvation
         try {
             session = newSession();
-            Request request = session.newModuleInvoke(moduleUri);
+            Request request = null;
+            if(moduleUri != null){
+            	request = session.newModuleInvoke(moduleUri);
+            }else{
+            	request = session.newAdhocQuery(adhocQuery);
+            }
             request.setNewStringVariable("URI", inputUri);
             
             if(properties.containsKey(Manager.URIS_BATCH_REF)){
