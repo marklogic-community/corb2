@@ -150,12 +150,20 @@ public class Monitor implements Runnable {
     public void setTaskCount(long _count) {
         taskCount = _count;
     }
-
+    
+    private long prevCompleted=0;
+    private long prevMillis=0;
     private String getProgressMessage() {
         long completed = pool.getCompletedTaskCount();
-        int tps = (int) ((double) completed * (double) 1000 / (System
-                .currentTimeMillis() - startMillis));
-        return completed + "/" + taskCount + ", " + tps + " tps, "
+        long curMillis = System.currentTimeMillis();
+        int tps = (int) ((double) completed * (double) 1000 / (curMillis - startMillis));
+        int curTps = tps;
+        if(prevMillis > 0){
+        	curTps = (int) ((double) (completed-prevCompleted) * (double) 1000 / (curMillis - prevMillis));
+        }
+        prevCompleted=completed;
+        prevMillis = curMillis;
+        return completed + "/" + taskCount + ", " + tps + " tps(avg), "+ curTps + " tps(cur), "
                 + pool.getActiveCount() + " active threads";
     }
 

@@ -145,11 +145,18 @@ public class Manager implements Runnable {
 
     private Monitor monitor;
 
-    protected SimpleLogger logger;
-
     private Thread monitorThread;
 
     private ExecutorCompletionService<String> completionService;
+    
+	static public SimpleLogger logger;
+	static{
+		logger = SimpleLogger.getSimpleLogger();
+		Properties props = new Properties();
+        props.setProperty("LOG_LEVEL", "INFO");
+        props.setProperty("LOG_HANDLER", "CONSOLE");
+        logger.configureLogger(props);
+	}
     
     /**
      * @param connectionUri
@@ -177,19 +184,19 @@ public class Manager implements Runnable {
         if(tm != null) tm.run();
     }
     
-    public static Manager createManager(String[] args) throws URISyntaxException, IOException, 
-			ClassNotFoundException, InstantiationException, IllegalAccessException {
-    	Properties props = new Properties();
-		String propsFileName = System.getProperty("OPTIONS-FILE");
-		if(propsFileName != null && (propsFileName=propsFileName.trim()).length() > 0){
+    public static Properties loadPropertiesFile(String filename) throws IOException{
+		Properties props = new Properties();
+		if(filename != null && (filename=filename.trim()).length() > 0){
 			InputStream is = null;
 			try {
-				is = Manager.class.getResourceAsStream("/" + propsFileName);
+				is = Manager.class.getResourceAsStream("/" + filename);
 				if (is != null) {
+					logger.info("Loading "+filename+" from classpath");
 					props.load(is);
 				} else {
-					File f = new File(propsFileName);
+					File f = new File(filename);
 					if (f.exists() && !f.isDirectory()) {
+						logger.info("Loading "+filename+" from filesystem");
 						FileInputStream fis = null;
 						try {
 							fis = new FileInputStream(f);
@@ -199,6 +206,8 @@ public class Manager implements Runnable {
 								fis.close();
 							}
 						}
+					}else{
+						throw new IllegalStateException("Unable to load properties file "+filename);
 					}
 				}
 			} finally {
@@ -207,7 +216,14 @@ public class Manager implements Runnable {
 				}
 			}
 		}
-        
+		return props;
+	}
+    
+    public static Manager createManager(String[] args) throws URISyntaxException, IOException, 
+			ClassNotFoundException, InstantiationException, IllegalAccessException {
+		String propsFileName = System.getProperty("OPTIONS-FILE");
+    	Properties props = loadPropertiesFile(propsFileName);
+    
         // gather inputs
         String connectionUri = getOption(args.length > 0 ? args[0] : null,"XCC-CONNECTION-URI",props);
         String collection = getOption(args.length > 1 ? args[1] : null,"COLLECTION-NAME",props);
@@ -419,7 +435,6 @@ public class Manager implements Runnable {
      * @see java.lang.Runnable#run()
      */
     public void run() {
-        configureLogger();
         logger.info(NAME + " starting: " + versionMessage);
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
         logger.info("maximum heap size = " + maxMemory + " MiB");
@@ -812,16 +827,6 @@ public class Manager implements Runnable {
         logger.fine("queue is populated with " + total + " tasks");
     }
     
-    protected void configureLogger() {
-        if (logger == null) {
-            logger = SimpleLogger.getSimpleLogger();
-        }
-        Properties props = new Properties();
-        props.setProperty("LOG_LEVEL", options.getLogLevel());
-        props.setProperty("LOG_HANDLER", options.getLogHandler());
-        logger.configureLogger(props);
-    }
-
     /**
      * @param e
      */

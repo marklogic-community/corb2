@@ -56,8 +56,8 @@ URIS-MODULE.filePath
 XQUERY-MODULE.outputFolder
 
 ## Encryption
-* DECRYPTER (Must extend com.marklogic.developer.corb.AbstractDecrypter. Ex:JasyptDecrypter (included, requires jasypt jar in classpath) or .. Encryptable options XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOST and XCC-PORT)
-* DECRYPTER-PROPERTIES-FILE (Optional, decrypter implementations are expected to use default file name. Ex: jasypt.properties for JasyptDecrypter and .. )
+* DECRYPTER (Must extend com.marklogic.developer.corb.AbstractDecrypter. Ex:com.marklogic.developer.corb.JasyptDecrypter (bundled, requires jasypt jar in classpath). Encryptable options XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOST and XCC-PORT)
+* JASYPT-PROPERTIES (Optional property for JasyptDecrypter. If not specified, it uses default jasypt.proeprties file, which should be accessible in classpath or file system.  
 
 ## Internal Properties
 
@@ -81,7 +81,8 @@ java -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10 com.marklogic.developer.c
 
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/  
 XQUERY-MODULE=SampleCorbJob.xqy  
-THREAD-COUNT=10  
+THREAD-COUNT=10
+DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter 
 URIS-MODULE=get-uris.xqy  
 POST-BATCH-MODULE=post-batch.xqy  
 XQUERY-MODULE=get-document.xqy  
