@@ -56,8 +56,29 @@ URIS-MODULE.filePath
 XQUERY-MODULE.outputFolder
 
 ## Encryption
-* DECRYPTER (Must extend com.marklogic.developer.corb.AbstractDecrypter. Ex:com.marklogic.developer.corb.JasyptDecrypter (bundled, requires jasypt jar in classpath). Encryptable options XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOST and XCC-PORT)
-* JASYPT-PROPERTIES (Optional property for JasyptDecrypter. If not specified, it uses default jasypt.proeprties file, which should be accessible in classpath or file system.  
+
+* DECRYPTER (Must extend com.marklogic.developer.corb.AbstractDecrypter. Encryptable options XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOST and XCC-PORT)  
+  Included:  
+  com.marklogic.developer.corb.JasyptDecrypter (Requires jasypt jar in classpath. Default algorithm PBEWithMD5AndTripleDES)  
+  com.marklogic.developer.corb.RSADecrypter (Requires private key file)
+* JASYPT-PROPERTIES-FILE (Optional property for JasyptDecrypter. If not specified, it uses default jasypt.proeprties file, which should be accessible in classpath or file system.)  
+* PRIVATE-KEY-FILE (Required property for RSADecrypter, should be accessible in classpath or file system)
+
+### RSADecrypter
+
+* openssl genrsa -out private.pem 1024 (generate private key in PEM format)
+* openssl rsa -in private.pem -pubout > public.key  (extract public key)
+* openssl pkcs8 -topk8 -nocrypt -in private.pem -out private.pkcs8.key (create PRIVATE-KEY-FILE in PKCS8 std for java)
+* echo "uri or password" | openssl rsautl -encrypt -pubin -inkey public.key | base64 (encrypt URI or password)
+
+### JasyptDecrypter
+
+Encrypt the URI or password as below. It is assumed that jasypt dist is available on your box.  
+jasypt-1.9.2/bin/encrypt.sh input="uri or password" password="passphrase" algorithm="algorithm" (ex: PBEWithMD5AndTripleDES or PBEWithMD5AndDES)  
+
+**jasypt.properties file**
+jasypt.algorithm=PBEWithMD5AndTripleDES  
+jasypt.password=passphrase
 
 ## Internal Properties
 
@@ -83,6 +104,8 @@ XCC-CONNECTION-URI=xcc://user:password@localhost:8202/
 XQUERY-MODULE=SampleCorbJob.xqy  
 THREAD-COUNT=10  
 DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter  
+#DECRYPTER=com.marklogic.developer.corb.RSADecrypter
+#PRIVATE-KEY-FILE=/path/to/rsa/key/private.pkcs8.key  
 URIS-MODULE=get-uris.xqy  
 POST-BATCH-MODULE=post-batch.xqy  
 XQUERY-MODULE=get-document.xqy  

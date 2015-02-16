@@ -9,7 +9,7 @@ public abstract class AbstractDecrypter{
 	protected Properties properties = null;
 	protected static final Pattern regex = Pattern.compile("^ENC\\((.*)\\)$");
 
-	public void init(Properties properties) throws IOException{
+	public void init(Properties properties) throws IOException,ClassNotFoundException{
 		this.properties = (properties == null ? new Properties() : properties);
 				
 		init_decrypter();
@@ -32,7 +32,7 @@ public abstract class AbstractDecrypter{
 		return doDecrypt(property,value);
 	}
 		
-	protected abstract void init_decrypter() throws IOException;
+	protected abstract void init_decrypter() throws IOException,ClassNotFoundException;
 		
 	protected abstract String doDecrypt(String property,String value);
 	

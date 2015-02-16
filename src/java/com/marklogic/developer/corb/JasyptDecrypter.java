@@ -10,8 +10,8 @@ public class JasyptDecrypter extends AbstractDecrypter{
 	Object decrypter = null;
 	
 	@Override
-	protected void init_decrypter() throws IOException{
-		String decryptPropsFile = getProperty("JASYPT-PROPERTIES");
+	protected void init_decrypter() throws IOException,ClassNotFoundException{
+		String decryptPropsFile = getProperty("JASYPT-PROPERTIES-FILE");
 		if(decryptPropsFile == null || decryptPropsFile.trim().length() == 0){
 			decryptPropsFile="jasypt.properties";
 		}
@@ -31,6 +31,8 @@ public class JasyptDecrypter extends AbstractDecrypter{
 				
 				Method setPassword = decrypterCls.getMethod("setPassword", String.class);
 				setPassword.invoke(decrypter, passphrase);
+			}catch(ClassNotFoundException exc){
+				throw exc;
 			}catch(Exception exc){
 				throw new IllegalStateException("Unable to initialize org.jasypt.encryption.pbe.StandardPBEStringEncryptor - check if jasypt libraries are in classpath",exc);
 			}
@@ -50,7 +52,7 @@ public class JasyptDecrypter extends AbstractDecrypter{
 				Manager.logger.info("Cannot decrypt "+property+". Ignore if clear text.");
 			}
 		}
-		return dValue == null ? value : dValue;
+		return dValue == null ? value : dValue.trim();
 	}
 
 }
