@@ -60,12 +60,13 @@ XQUERY-MODULE.outputFolder
 * DECRYPTER (Must extend com.marklogic.developer.corb.AbstractDecrypter. Encryptable options XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOST and XCC-PORT)  
   Included:  
   com.marklogic.developer.corb.JasyptDecrypter (Requires jasypt jar in classpath. Default algorithm PBEWithMD5AndTripleDES)  
-  com.marklogic.developer.corb.RSADecrypter (Requires private key file)
+  com.marklogic.developer.corb.PrivateKeyDecrypter (Requires private key file)
 * JASYPT-PROPERTIES-FILE (Optional property for JasyptDecrypter. If not specified, it uses default jasypt.proeprties file, which should be accessible in classpath or file system.)  
-* PRIVATE-KEY-FILE (Required property for RSADecrypter, should be accessible in classpath or file system)
-
-### RSADecrypter
-
+* PRIVATE-KEY-FILE (Required property for PrivateKeyDecrypter, should be accessible in classpath or file system)
+* PRIVATE-KEY-ALGORITHM (Optional for PrivateKeyDecrypter. Default is RSA)
+ 
+### PrivateKeyDecrypter
+**RSA keys**  
 * openssl genrsa -out private.pem 1024 (generate private key in PEM format)
 * openssl rsa -in private.pem -pubout > public.key  (extract public key)
 * openssl pkcs8 -topk8 -nocrypt -in private.pem -out private.pkcs8.key (create PRIVATE-KEY-FILE in PKCS8 std for java)
@@ -104,7 +105,7 @@ XCC-CONNECTION-URI=xcc://user:password@localhost:8202/
 XQUERY-MODULE=SampleCorbJob.xqy  
 THREAD-COUNT=10  
 DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter  
-DECRYPTER=com.marklogic.developer.corb.RSADecrypter  
+DECRYPTER=com.marklogic.developer.corb.PrivateKeyDecrypter  
 PRIVATE-KEY-FILE=/path/to/rsa/key/private.pkcs8.key  
 URIS-MODULE=get-uris.xqy  
 POST-BATCH-MODULE=post-batch.xqy  

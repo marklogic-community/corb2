@@ -12,7 +12,9 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import javax.crypto.Cipher;
 import javax.xml.bind.DatatypeConverter;
 
-public class RSADecrypter extends AbstractDecrypter {
+public class PrivateKeyDecrypter extends AbstractDecrypter {
+	private String algorithm=null;
+	//rsa
 	//openssl genrsa -out private.pem 1024
 	//openssl rsa -in private.pem -pubout > public.key
 	//openssl pkcs8 -topk8 -nocrypt -in private.pem -out private.pkcs8.key
@@ -21,6 +23,11 @@ public class RSADecrypter extends AbstractDecrypter {
 
 	@Override
 	protected void init_decrypter() throws IOException,ClassNotFoundException {		
+		algorithm = getProperty("PRIVATE-KEY-ALGORITHM");
+		if(algorithm==null || algorithm.trim().length() == 0){
+			algorithm="RSA";
+		}
+		
 		String filename = getProperty("PRIVATE-KEY-FILE");
 		if(filename != null && (filename=filename.trim()).length() > 0){
 			InputStream is = null;
@@ -42,7 +49,7 @@ public class RSADecrypter extends AbstractDecrypter {
 			    //remove the begin and end key lines if present. 
 			    keyAsString=keyAsString.replaceAll("[-]+(BEGIN|END)[A-Z ]*KEY[-]+","");
 			    
-				KeyFactory keyFactory = KeyFactory.getInstance("RSA");				
+				KeyFactory keyFactory = KeyFactory.getInstance(algorithm);				
 				privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(DatatypeConverter.parseBase64Binary(keyAsString)));				
 			}catch(Exception exc){
 				exc.printStackTrace();
@@ -56,7 +63,7 @@ public class RSADecrypter extends AbstractDecrypter {
 		}
 	}
 	
-	public static byte[] toByteArray(final InputStream input) throws IOException {
+	private static byte[] toByteArray(final InputStream input) throws IOException {
 		final ByteArrayOutputStream output = new ByteArrayOutputStream();
 		
 		byte[] buffer = new byte[1024];
@@ -73,7 +80,7 @@ public class RSADecrypter extends AbstractDecrypter {
 		String dValue = null;
 		if(privateKey != null){
 			try{
-				final Cipher cipher = Cipher.getInstance("RSA");
+				final Cipher cipher = Cipher.getInstance(algorithm);
 			    cipher.init(Cipher.DECRYPT_MODE, privateKey);
 			    dValue = new String(cipher.doFinal(DatatypeConverter.parseBase64Binary(value)));
 			}catch(Exception exc){
@@ -82,5 +89,4 @@ public class RSADecrypter extends AbstractDecrypter {
 		}
 		return dValue == null ? value : dValue.trim();
 	}
-
 }
