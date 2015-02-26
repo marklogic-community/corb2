@@ -99,20 +99,24 @@ public abstract class AbstractTask implements Task{
             if(propertyNames == null){
             	synchronized(sync){
             		if(propertyNames == null){
-            			propertyNames = new ArrayList<String>(properties.stringPropertyNames());
-            			propertyNames.addAll(System.getProperties().stringPropertyNames());
+            			ArrayList<String> list = new ArrayList<String>();
+            			list.addAll(properties.stringPropertyNames());
+            			list.addAll(System.getProperties().stringPropertyNames());
+            			propertyNames = list;
             		}
             	}
             }
-                    
-            for(String propName:propertyNames){
-            	if(moduleType != null && propName.startsWith(moduleType+".")){
-            		String varName = propName.substring(moduleType.length()+1);
-            		String value = getProperty(propName);
-            		if(value != null) request.setNewStringVariable(varName, value);
-            	}
-            } 
-
+            
+            if(propertyNames != null && propertyNames.size() > 0){        
+	            for(String propName:propertyNames){
+	            	if(moduleType != null && propName.startsWith(moduleType+".")){
+	            		String varName = propName.substring(moduleType.length()+1);
+	            		String value = getProperty(propName);
+	            		if(value != null) request.setNewStringVariable(varName, value);
+	            	}
+	            } 
+            }
+            
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);
             connectRetryCount=0;

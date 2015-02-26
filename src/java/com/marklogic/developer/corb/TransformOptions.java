@@ -65,7 +65,7 @@ public class TransformOptions {
 
     private int threadCount = 1;
 
-    private boolean doInstall = true;
+    private boolean doInstall = false;
 
     // We could get rid of this now that we check status...
     private String modulesDatabase = "Modules";

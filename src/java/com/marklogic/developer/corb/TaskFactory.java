@@ -152,9 +152,6 @@ public class TaskFactory {
     private void setupTask(Task task, String moduleType, String module, String _uri){
     	if(module != null){
     		if(module.toUpperCase().endsWith("|ADHOC")){
-    			if(moduleType.equals("XQUERY-MODULE")){
-    				throw new IllegalStateException("XQURY-MODULE cannot be adhoc");
-    			}
     			String adhocQuery = getAdhocQuery(module.substring(0, module.indexOf('|')));
     			if(adhocQuery == null || (adhocQuery.length() == 0)){
     				throw new IllegalStateException("Unable to read adhoc query "+module+" from classpath");

@@ -283,7 +283,7 @@ public class Manager implements Runnable {
         if(urisModule != null) options.setUrisModule(urisModule);
         if(moduleRoot != null) options.setModuleRoot(moduleRoot);
         if(modulesDatabase != null) options.setModulesDatabase(modulesDatabase);
-        if(install != null && (install.equals("false") || install.equals("0"))) options.setDoInstall(false);
+        if(install != null && (install.equalsIgnoreCase("true") || install.equals("1"))) options.setDoInstall(true);
         if(urisFile != null) options.setUrisFile(urisFile);
         
         if(!props.containsKey("EXPORT-FILE-DIR") && exportFileDir !=null){
