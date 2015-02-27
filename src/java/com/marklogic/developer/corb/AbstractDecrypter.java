@@ -15,12 +15,12 @@ public abstract class AbstractDecrypter{
 		init_decrypter();
 	}
 	
-	public String getConnectionURI(String uri, String username, String password, String host, String port) {
+	public String getConnectionURI(String uri, String username, String password, String host, String port, String dbname) {
 		if(uri != null){
 			return decrypt("XCC-CONNECTION-URI",uri);
 		}else{
 			return "xcc://"+decrypt("XCC-USERNAME",username)+":"+decrypt("XCC-PASSWORD",password)+"@"+
-					decrypt("XCC-HOST",host)+":"+decrypt("XCC-PORT",port);
+					decrypt("XCC-HOST",host)+":"+decrypt("XCC-PORT",port)+(dbname != null ? "/"+decrypt("XCC-DBNAME",dbname) : "");
 		}
 	}
 	

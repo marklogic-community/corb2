@@ -253,6 +253,7 @@ public class Manager implements Runnable {
 		String password = getOption(null,"XCC-PASSWORD",props);
 		String host = getOption(null,"XCC-HOSTNAME",props);
 		String port = getOption(null,"XCC-PORT",props);
+		String dbname = getOption(null,"XCC-DBNAME",props);
 		
         if(connectionUri == null && (username == null || password == null || host == null || port == null)){
         	System.err.println("XCC-CONNECTION-URI or XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME and XCC-PORT must be specified");
@@ -266,12 +267,12 @@ public class Manager implements Runnable {
 	        if(AbstractDecrypter.class.isAssignableFrom(decrypterCls)){
 	        	AbstractDecrypter decrypter = (AbstractDecrypter) decrypterCls.newInstance(); 
 	        	decrypter.init(props);
-	        	connectionUri = decrypter.getConnectionURI(connectionUri,username,password,host,port);
+	        	connectionUri = decrypter.getConnectionURI(connectionUri,username,password,host,port,dbname);
 	        }else{
 	        	throw new IllegalArgumentException("DECRYPTER must be of type com.marklogic.developer.corb.AbstractDecrypter");
 	        }
         }else if(connectionUri == null){
-        	connectionUri = "xcc://"+username+":"+password+"@"+host+":"+port;
+        	connectionUri = "xcc://"+username+":"+password+"@"+host+":"+port+(dbname != null ? "/"+dbname : "");
         }       
 
         Manager tm = new Manager(new URI(connectionUri), collection != null ? collection : "");
