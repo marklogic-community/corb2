@@ -72,6 +72,11 @@ INIT-MODULE=/path/to/file/adhoc-init-module.xqy|ADHOC
 * PRIVATE-KEY-ALGORITHM (Optional for PrivateKeyDecrypter. Default is RSA)
  
 ### PrivateKeyDecrypter
+
+**Java Crypt**
+* java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024 (Note: default algorithm: RSA, default key-length: 1024)
+* java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA (Note: default algorithm: RSA)
+
 **RSA keys**  
 * openssl genrsa -out private.pem 1024 (generate private key in PEM format)
 * openssl rsa -in private.pem -pubout > public.key  (extract public key)
