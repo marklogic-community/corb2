@@ -47,7 +47,7 @@ Corb needs one or more of the following parameters as (If specified in more then
 * XCC-PASSWORD (Required if XCC-CONNECTION-URI is not specified)
 * XCC-HOSTNAME (Required if XCC-CONNECTION-URI is not specified)
 * XCC-PORT (Required if XCC-CONNECTION-URI is not specified)
-* XCC-DBANAME (Optional)
+* XCC-DBNAME (Optional)
 
 ## Custom Inputs to XQuery modules
 
