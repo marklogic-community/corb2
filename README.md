@@ -19,7 +19,7 @@ Corb needs one or more of the following parameters as (If specified in more then
 * URIS-MODULE (alternate URI selection module, replacing provided Corb default).
 * MODULE-ROOT (assumes '/' if not provided)
 * MODULES-DATABASE (uses the XCC-CONNECTION-URI if not provided; use 0 for filesystem)
-* INSTALL (default is true; set to 'false' or '0' to skip installation)
+* INSTALL (default is false; set to 'true' or '1' for installation)
 * PROCESS-TASK (Java Class that implements com.marklogic.developer.Task or extends com.marklogic.developer.AbstractTask. It can talk to XQUERY-MODULE and do additional processing locally. Ex: ExportToFileTask (included) will save the document to local file system)
 * PRE-BATCH-MODULE (XQuery module, if specified, will be run before batch processing starts)
 * PRE-BATCH-TASK (Java Class that implements com.marklogic.developer.Task or extends com.marklogic.developer.AbstractTask- can be used in place or in addition to PRE-BATCH-MODULE. Ex: PreBatchUpdateFileTask (included) which adds additional content to the export file)
