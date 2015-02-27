@@ -72,6 +72,7 @@ INIT-MODULE=/path/to/file/adhoc-init-module.xqy|ADHOC
 * PRIVATE-KEY-ALGORITHM (Optional for PrivateKeyDecrypter. Default is RSA)
  
 ### PrivateKeyDecrypter
+Generate keys and encrypt the URI or password using one of the options below. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx)
 
 **Java Crypt**
 * java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024 (Note: default algorithm: RSA, default key-length: 1024)
