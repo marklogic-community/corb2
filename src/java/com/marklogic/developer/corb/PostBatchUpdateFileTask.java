@@ -110,10 +110,14 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 	}
 	
 	public String call() throws Exception {
-    	invokeModule();
-		writeBottomContent();
-		moveFile();
-		compressFile();
-    	return TRUE;
+		try{
+	    	invokeModule();
+			writeBottomContent();
+			moveFile();
+			compressFile();
+	    	return TRUE;
+		}finally{
+    		cleanup();
+    	}
     }
 }

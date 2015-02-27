@@ -118,6 +118,18 @@ public class FileUrisLoader implements UrisLoader {
 				logger.logException("while closing uris file reader",exc);
 			}
 		}
+		cleanup();
+	}
+	
+	protected void cleanup(){
+		//release 
+		br=null;
+		options=null;	
+		cs=null;
+		collection=null;
+		properties=null;	
+		logger=null;
+		replacements=null;
 	}
 	
 	private void configureLogger() {

@@ -156,6 +156,16 @@ public abstract class AbstractTask implements Task{
 	}
 	
 	protected abstract String processResult(ResultSequence seq) throws CorbException;
+	
+	protected void cleanup(){
+		//release resources
+        cs=null;
+    	moduleType=null;
+    	moduleUri=null;
+    	properties=null;
+    	inputUri=null;
+    	adhocQuery=null;
+	}
 		
 	public String getProperty(String key){
 		String val = System.getProperty(key);

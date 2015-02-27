@@ -51,7 +51,16 @@ public class ExportToFileTask extends AbstractTask {
 		}
 	}
 	
+	protected void cleanup(){
+		super.cleanup();
+		exportDir=null;
+	}
+	
     public String call() throws Exception {
-    	return invokeModule();
+    	try{
+    		return invokeModule();
+    	}finally{
+    		cleanup();
+    	}
     }
 }

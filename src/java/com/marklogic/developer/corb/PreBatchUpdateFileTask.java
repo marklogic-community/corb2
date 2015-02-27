@@ -44,9 +44,13 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 	}
 	
 	public String call() throws Exception {
-		deleteFileIfExists();
-		writeTopContent();
-    	invokeModule();
-    	return TRUE;
+		try{
+			deleteFileIfExists();
+			writeTopContent();
+	    	invokeModule();
+	    	return TRUE;
+		}finally{
+    		cleanup();
+    	}
     }
 }

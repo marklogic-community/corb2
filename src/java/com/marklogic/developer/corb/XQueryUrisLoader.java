@@ -137,6 +137,18 @@ public class XQueryUrisLoader implements UrisLoader {
 				session = null;
 			}
 		}
+		cleanup();
+	}
+	
+	protected void cleanup(){
+		//release 
+		options=null;	
+		cs=null;
+		collection=null;
+		properties=null;	
+		batchRef=null;
+		logger=null;
+		replacements=null;
 	}
 	
 	private void configureLogger() {

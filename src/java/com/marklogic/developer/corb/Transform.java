@@ -32,6 +32,10 @@ public class Transform extends AbstractTask {
 	}
 	
     public String call() throws Exception {
-    	return invokeModule();
+    	try{
+    		return invokeModule();
+    	}finally{
+    		cleanup();
+    	}
     }
 }
