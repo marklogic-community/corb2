@@ -157,7 +157,7 @@ public abstract class AbstractTask implements Task{
 		
 	public String getProperty(String key){
 		String val = System.getProperty(key);
-		if(val == null || val.trim().length() == 0){
+		if((val == null || val.trim().length() == 0) && properties != null){
 			val = properties.getProperty(key);
 		}
 		return val != null ? val.trim() : val;
