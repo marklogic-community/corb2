@@ -30,10 +30,7 @@ public abstract class AbstractTask implements Task{
 	protected String inputUri;
 	
 	protected String adhocQuery;
-	
-	static private Object sync = new Object();
-	static private List<String> propertyNames;
-	
+		
 	protected int DEFAULT_RETRY_LIMIT=3;
 	protected int DEFAULT_RETRY_INTERVAL=60;
 	
@@ -92,29 +89,20 @@ public abstract class AbstractTask implements Task{
             }
             request.setNewStringVariable("URI", inputUri);
             
-            if(properties.containsKey(Manager.URIS_BATCH_REF)){
+            if(properties != null && properties.containsKey(Manager.URIS_BATCH_REF)){
             	request.setNewStringVariable(Manager.URIS_BATCH_REF, properties.getProperty(Manager.URIS_BATCH_REF));
             }
             
-            if(propertyNames == null){
-            	synchronized(sync){
-            		if(propertyNames == null){
-            			ArrayList<String> list = new ArrayList<String>();
-            			list.addAll(properties.stringPropertyNames());
-            			list.addAll(System.getProperties().stringPropertyNames());
-            			propertyNames = list;
-            		}
+        	List<String> propertyNames = new ArrayList<String>();
+        	if(properties != null) propertyNames.addAll(properties.stringPropertyNames());
+        	propertyNames.addAll(System.getProperties().stringPropertyNames());
+			
+        	for(String propName:propertyNames){
+            	if(moduleType != null && propName.startsWith(moduleType+".")){
+            		String varName = propName.substring(moduleType.length()+1);
+            		String value = getProperty(propName);
+            		if(value != null) request.setNewStringVariable(varName, value);
             	}
-            }
-            
-            if(propertyNames != null && propertyNames.size() > 0){        
-	            for(String propName:propertyNames){
-	            	if(moduleType != null && propName.startsWith(moduleType+".")){
-	            		String varName = propName.substring(moduleType.length()+1);
-	            		String value = getProperty(propName);
-	            		if(value != null) request.setNewStringVariable(varName, value);
-	            	}
-	            } 
             }
             
             Thread.yield();// try to avoid thread starvation
