@@ -1,7 +1,6 @@
 Version: 2.1.0
 
 ### Running Corb
-
 The entry point is the main method in the com.marklogic.developer.corb.Manager class. 
 
 Corb needs one or more of the following parameters as (If specified in more then one place command line argument takes precedence over VM argument which take precedence over myjob.properties)
@@ -13,7 +12,6 @@ Corb needs one or more of the following parameters as (If specified in more then
 Note: Any or all of the properties can be specified as java VM arguments or key value pairs in properties file.
 
 ### Options  
-
 * XCC-CONNECTION-URI
 * COLLECTION-NAME (Set to external variable URIS in the URIS module)
 * XQUERY-MODULE (provide file system path if not contained in the corb package)
@@ -38,10 +36,8 @@ Note: Any or all of the properties can be specified as java VM arguments or key 
 * INIT-TASK (Java Task, if specified, will be called prior to URIS-MODULE, This can be used addition to INIT-MODULE)
 
 ### Additional options
-
 * EXPORT-FILE-PART-EXT (if specified, com.marklogic.developer.PreBatchUpdateFileTask adds this extension to export file. It is expected that PostBatchUpdateFileTask will be specified, which removes the extension for the final export file)
 * EXPORT-FILE-TOP-CONTENT (used by com.marklogic.developer.PreBatchUpdateFileTask to insert content at the top of EXPORT-FILE-NAME before batch process starts, if it finds the text @URIS_BATCH_REF it replaces it by batch reference sent by URIS-MODULE)
-
 * EXPORT-FILE-BOTTOM-CONTENT (used by com.marklogic.developer.PostBatchUpdateFileTask to append content to EXPORT-FILE-NAME after batch process is complete)
 * EXPORT_FILE_AS_ZIP (if true, PreBatchUpdateFileTask compression the output file as a zip file)
 * URIS-REPLACE-PATTERN (one or more replace patterns for URIs - typically used to save memory, but XQUERY-MODULE should reconstruct the URI. usage: URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2,...)
@@ -49,7 +45,6 @@ Note: Any or all of the properties can be specified as java VM arguments or key 
 * XCC-CONNECTION-RETRY-INTERVAL (in seconds - Time interval in seconds between retry attempts - default is 60)
 
 ### Alternate XCC connection configuration
-
 * XCC-USERNAME (Required if XCC-CONNECTION-URI is not specified)
 * XCC-PASSWORD (Required if XCC-CONNECTION-URI is not specified)
 * XCC-HOSTNAME (Required if XCC-CONNECTION-URI is not specified)
@@ -57,7 +52,6 @@ Note: Any or all of the properties can be specified as java VM arguments or key 
 * XCC-DBNAME (Optional)
 
 ### Custom Inputs to XQuery modules
-
 Any property specified with prefix (with '.') URIS-MODULE,XQUERY-MODULE,PRE-BATCH-MODULE,POST-BATCH-MODULE,INIT-MODULE, will be set as external variables to the corresponding xquery module (if defined).  
 ex:  
 URIS-MODULE.filePath  
@@ -70,7 +64,6 @@ PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC
 INIT-MODULE=/path/to/file/adhoc-init-module.xqy|ADHOC
 
 ### Encryption
-
 * DECRYPTER (Must extend com.marklogic.developer.corb.AbstractDecrypter. Encryptable options XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOST and XCC-PORT)  
   Included:  
   com.marklogic.developer.corb.JasyptDecrypter (Requires jasypt jar in classpath. Default algorithm PBEWithMD5AndTripleDES)  
@@ -93,7 +86,6 @@ Generate keys and encrypt the URI or password using one of the options below. Op
 * echo "uri or password" | openssl rsautl -encrypt -pubin -inkey public.key | base64 (encrypt URI or password. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx))
 
 #### JasyptDecrypter
-
 Encrypt the URI or password as below. It is assumed that jasypt dist is available on your box. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx)  
 jasypt-1.9.2/bin/encrypt.sh input="uri or password" password="passphrase" algorithm="algorithm" (ex: PBEWithMD5AndTripleDES or PBEWithMD5AndDES)  
 
@@ -102,11 +94,9 @@ jasypt.algorithm=PBEWithMD5AndTripleDES
 jasypt.password=passphrase
 
 ### Internal Properties
-
 URIS_BATCH_REF (This is not a user specified property. URIS-MODULE can optionally send this a batch reference which can be used by post batch hooks)
 
 ### Usage
-
 #### Usage 1:
 java com.marklogic.developer.corb.Manager XCC-CONNECTION-URI [COLLECTION-NAME [XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT [ MODULES-DATABASE [ INSTALL [ PROCESS-TASK [ PRE-BATCH-MODULE  [ PRE-BATCH-TASK [ POST-XQUERY-MODULE  [ POST-BATCH-TASK [ EXPORT-FILE-DIR [ EXPORT-FILE-NAME [ URIS-FILE ] ] ] ] ] ] ] ] ] ] ] ] ] ] ]
 
