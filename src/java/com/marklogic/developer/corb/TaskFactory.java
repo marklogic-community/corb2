@@ -125,7 +125,7 @@ public class TaskFactory {
 				if (f.exists() && !f.isDirectory()) {
 					is = new FileInputStream(f);
 				}else{
-					throw new IllegalStateException("Unable to find adhoc query module "+module+" in classpath");
+					throw new IllegalStateException("Unable to find adhoc query module "+module+" in classpath or filesystem");
 				}
 			}
 			
