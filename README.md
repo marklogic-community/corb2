@@ -1,6 +1,6 @@
 Version: 2.1.0
 
-## Running Corb
+### Running Corb
 
 The entry point is the main method in the com.marklogic.developer.corb.Manager class. 
 
@@ -12,7 +12,7 @@ Corb needs one or more of the following parameters as (If specified in more then
 
 Note: Any or all of the properties can be specified as java VM arguments or key value pairs in properties file.
 
-## Options  
+### Options  
 
 * XCC-CONNECTION-URI
 * COLLECTION-NAME (Set to external variable URIS in the URIS module)
@@ -37,7 +37,7 @@ Note: Any or all of the properties can be specified as java VM arguments or key 
 * INIT-MODULE (XQuery Module, if specified, will be invoked prior to URIS-MODULE)
 * INIT-TASK (Java Task, if specified, will be called prior to URIS-MODULE, This can be used addition to INIT-MODULE)
 
-## Additional options
+### Additional options
 
 * EXPORT-FILE-PART-EXT (if specified, com.marklogic.developer.PreBatchUpdateFileTask adds this extension to export file. It is expected that PostBatchUpdateFileTask will be specified, which removes the extension for the final export file)
 * EXPORT-FILE-TOP-CONTENT (used by com.marklogic.developer.PreBatchUpdateFileTask to insert content at the top of EXPORT-FILE-NAME before batch process starts, if it finds the text @URIS_BATCH_REF it replaces it by batch reference sent by URIS-MODULE)
@@ -48,7 +48,7 @@ Note: Any or all of the properties can be specified as java VM arguments or key 
 * XCC-CONNECTION-RETRY-LIMIT (Number attempts to connect to ML before giving up - default is 3)
 * XCC-CONNECTION-RETRY-INTERVAL (in seconds - Time interval in seconds between retry attempts - default is 60)
 
-## Alternate XCC connection configuration
+### Alternate XCC connection configuration
 
 * XCC-USERNAME (Required if XCC-CONNECTION-URI is not specified)
 * XCC-PASSWORD (Required if XCC-CONNECTION-URI is not specified)
@@ -56,20 +56,20 @@ Note: Any or all of the properties can be specified as java VM arguments or key 
 * XCC-PORT (Required if XCC-CONNECTION-URI is not specified)
 * XCC-DBNAME (Optional)
 
-## Custom Inputs to XQuery modules
+### Custom Inputs to XQuery modules
 
 Any property specified with prefix (with '.') URIS-MODULE,XQUERY-MODULE,PRE-BATCH-MODULE,POST-BATCH-MODULE,INIT-MODULE, will be set as external variables to the corresponding xquery module (if defined).  
 ex:  
 URIS-MODULE.filePath  
 XQUERY-MODULE.outputFolder
 
-## Adhoc Tasks
+### Adhoc Tasks
 INIT-MODULE, URIS-MODULE, XQUERY-MODULE, PRE-BATCH-MODULE and POST-BATCH-MODULE can be adhoc where XQuery can be local i.e. not deployed to marklogic. The xquery module should be in its named file available in classpath or filesystem.  
 ex:  
 PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC  
 INIT-MODULE=/path/to/file/adhoc-init-module.xqy|ADHOC
 
-## Encryption
+### Encryption
 
 * DECRYPTER (Must extend com.marklogic.developer.corb.AbstractDecrypter. Encryptable options XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOST and XCC-PORT)  
   Included:  
@@ -79,7 +79,7 @@ INIT-MODULE=/path/to/file/adhoc-init-module.xqy|ADHOC
 * PRIVATE-KEY-FILE (Required property for PrivateKeyDecrypter, should be accessible in classpath or file system)
 * PRIVATE-KEY-ALGORITHM (Optional for PrivateKeyDecrypter. Default is RSA)
  
-### PrivateKeyDecrypter
+#### PrivateKeyDecrypter
 Generate keys and encrypt the URI or password using one of the options below. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx)
 
 **Java Crypt**
@@ -92,7 +92,7 @@ Generate keys and encrypt the URI or password using one of the options below. Op
 * openssl pkcs8 -topk8 -nocrypt -in private.pem -out private.pkcs8.key (create PRIVATE-KEY-FILE in PKCS8 std for java)
 * echo "uri or password" | openssl rsautl -encrypt -pubin -inkey public.key | base64 (encrypt URI or password. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx))
 
-### JasyptDecrypter
+#### JasyptDecrypter
 
 Encrypt the URI or password as below. It is assumed that jasypt dist is available on your box. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx)  
 jasypt-1.9.2/bin/encrypt.sh input="uri or password" password="passphrase" algorithm="algorithm" (ex: PBEWithMD5AndTripleDES or PBEWithMD5AndDES)  
@@ -101,25 +101,25 @@ jasypt-1.9.2/bin/encrypt.sh input="uri or password" password="passphrase" algori
 jasypt.algorithm=PBEWithMD5AndTripleDES  
 jasypt.password=passphrase
 
-## Internal Properties
+### Internal Properties
 
 URIS_BATCH_REF (This is not a user specified property. URIS-MODULE can optionally send this a batch reference which can be used by post batch hooks)
 
-## Usage
+### Usage
 
-### Usage 1:
+#### Usage 1:
 java com.marklogic.developer.corb.Manager XCC-CONNECTION-URI [COLLECTION-NAME [XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT [ MODULES-DATABASE [ INSTALL [ PROCESS-TASK [ PRE-BATCH-MODULE  [ PRE-BATCH-TASK [ POST-XQUERY-MODULE  [ POST-BATCH-TASK [ EXPORT-FILE-DIR [ EXPORT-FILE-NAME [ URIS-FILE ] ] ] ] ] ] ] ] ] ] ] ] ] ] ]
 
-### Usage 2:
+#### Usage 2:
 java -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] -DXQUERY-MODULE=module-name.xqy -DTHREAD-COUNT=10 -DURIS-MODULE=get-uris.xqy -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy -D... com.marklogic.developer.corb.Manager
 
-### Usage 3:
+#### Usage 3:
 java -DOPTIONS-FILE=myjob.properties com.marklogic.developer.corb.Manager (looks for myjob.properties file in classpath)
 
-### Usage 4:
+#### Usage 4:
 java -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10 com.marklogic.developer.corb.Manager XCC-CONNECTION-URI
 
-##  Sample myjob.properties (Note: any of the properteis below can be specified as java VM argument i.e. '-D' option)
+###  Sample myjob.properties (Note: any of the properteis below can be specified as java VM argument i.e. '-D' option)
 
 ##### sample 1 - simple batch
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
