@@ -187,19 +187,19 @@ XCC-CONNECTION-URI=encrypted_uri
 ...   
 DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter  
 
-**sample jasypt.properties**
+**sample jasypt.properties**   
 jasypt.password=foo   
 jasypt.algorithm=PBEWithMD5AndTripleDES  
 
 ### sample 10 - private key encryption with java keys (Any XCC-* property can be encrypted ex: XCC-CONNECTION-URI or XCC-PASSWORD)
 XCC-CONNECTION-URI=encrypted_uri  
-...
+...   
 DECRYPTER=com.marklogic.developer.corb.PrivateKeyDecrypter  
 PRIVATE-KEY-FILE=/path/to/key/private.key  
 PRIVATE-KEY-ALGORITHM=RSA  
 
 ### sample 11 - private key encryption with unix keys (Any XCC-* property can be encrypted ex: XCC-CONNECTION-URI or XCC-PASSWORD)
 XCC-CONNECTION-URI=encrypted_uri  
-...
+...   
 DECRYPTER=com.marklogic.developer.corb.PrivateKeyDecrypter  
 PRIVATE-KEY-FILE=/path/to/rsa/key/rivate.pkcs8.key  
