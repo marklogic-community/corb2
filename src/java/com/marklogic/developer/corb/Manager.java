@@ -509,7 +509,7 @@ public class Manager implements Runnable {
      */
     private void prepareModules() {
         String[] resourceModules = new String[] {
-                options.getInitModule(),options.getUrisModule(), options.getProcessModule(), options.getPostBatchModule()};
+                options.getInitModule(), options.getUrisModule(), options.getProcessModule(), options.getPreBatchModule(), options.getPostBatchModule()};
         String modulesDatabase = options.getModulesDatabase();
         logger.info("checking modules, database: " + modulesDatabase);
         Session session = contentSource.newSession(modulesDatabase);
