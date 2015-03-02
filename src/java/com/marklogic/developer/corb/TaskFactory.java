@@ -114,7 +114,7 @@ public class TaskFactory {
         }
     }
     
-    private String getAdhocQuery(String module){
+    static public String getAdhocQuery(String module){
     	InputStream is = null;
     	InputStreamReader reader = null;
 		StringWriter writer =null;
@@ -154,7 +154,7 @@ public class TaskFactory {
     		if(module.toUpperCase().endsWith("|ADHOC")){
     			String adhocQuery = getAdhocQuery(module.substring(0, module.indexOf('|')));
     			if(adhocQuery == null || (adhocQuery.length() == 0)){
-    				throw new IllegalStateException("Unable to read adhoc query "+module+" from classpath");
+    				throw new IllegalStateException("Unable to read adhoc query "+module+" from classpath or filesystem");
     			}
     			task.setAdhocQuery(adhocQuery);
     		}else{

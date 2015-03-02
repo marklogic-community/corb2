@@ -26,7 +26,6 @@ Note: Any or all of the properties can be specified as java VM arguments or key 
 * PROCESS-TASK (Java Class that implements com.marklogic.developer.Task or extends com.marklogic.developer.AbstractTask. It can talk to XQUERY-MODULE and do additional processing locally)    
 	com.marklogic.developer.ExportBatchToFileTask (included - Writes the data returned by the XQUERY-MODULE To file specified by EXPORT-FILE-NAME)   
 	com.marklogic.developer.ExportToFileTask (included - saves the document returned by XQUERY-MODULE to local file system to EXPORT-FILE-DIR where file name will be the base name of the URI)   
-	com.marklogic.developer.ProcessTask (included - needn't be specified. It used by default XQUERY-MODULE is specified with no PROCESS-TASK)
 * PRE-BATCH-MODULE (XQuery module, if specified, will be run before batch processing starts)
 * PRE-BATCH-TASK (Java Class that implements com.marklogic.developer.Task or extends com.marklogic.developer.AbstractTask. Can be specified with in in place of or in addition PRE-BATCH-MODULE)   
 	com.marklogic.developer.PreBatchUpdateFileTask (included - Writes the data returned by the PRE-BATCH-MODULE to EXPORT-FILE-NAME, which can be used to writing dynamic headers. Also, if EXPORT-FILE-TOP-CONTENT is specified, this task will write this value to to the EXPORT-FILE-NAME - this option is especially useful for writing fixed headers to reports. ). 

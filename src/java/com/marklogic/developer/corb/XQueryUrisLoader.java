@@ -69,10 +69,20 @@ public class XQueryUrisLoader implements UrisLoader {
 	        logger.info("buffer size = " + opts.getResultBufferSize()+ ", caching = " + opts.getCacheResult());
 	        
 			session = cs.newSession();
-			
-			String urisModule = options.getModuleRoot() + options.getUrisModule();
-	        logger.info("invoking module " + urisModule);
-	        Request req = session.newModuleInvoke(urisModule);
+			Request req = null;
+			if(options.getUrisModule().toUpperCase().endsWith("|ADHOC")){
+				String queryPath = options.getUrisModule().substring(0, options.getUrisModule().indexOf('|'));
+				String adhocQuery = TaskFactory.getAdhocQuery(queryPath);
+				if(adhocQuery == null || (adhocQuery.length() == 0)){
+    				throw new IllegalStateException("Unable to read adhoc query "+queryPath+" from classpath or filesystem");
+    			}
+				logger.info("invoking adhoc uris module " + queryPath);
+				req = session.newAdhocQuery(adhocQuery);
+			}else{
+				String urisModule = options.getModuleRoot() + options.getUrisModule();
+				logger.info("invoking uris module " + urisModule);
+				req = session.newModuleInvoke(urisModule);
+			}
 	        // NOTE: collection will be treated as a CWSV
 	        req.setNewStringVariable("URIS", collection);
 	        // TODO support DIRECTORY as type
