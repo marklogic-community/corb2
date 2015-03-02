@@ -122,7 +122,7 @@ java -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10 com.marklogic.developer.c
 
 ##  Sample myjob.properties (Note: any of the properteis below can be specified as java VM argument i.e. '-D' option)
 
-### sample 1 - simple batch
+#### sample 1 - simple batch
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
 MODULE-ROOT=/temp/  
@@ -130,7 +130,7 @@ MODULES-DATABASE=MY-Modules-DB
 URIS-MODULE=get-uris.xqy  
 XQUERY-MODULE=SampleCorbJob.xqy  
 
-### sample 2 - Use username, password, host and port instead of connection URI
+#### sample 2 - Use username, password, host and port instead of connection URI
 XCC-USERNAME=username   
 XCC-PASSWORD=password   
 XCC-HOSTNAME=localhost   
@@ -142,7 +142,7 @@ MODULES-DATABASE=MY-Modules-DB
 URIS-MODULE=get-uris.xqy  
 XQUERY-MODULE=SampleCorbJob.xqy 
 
-### sample 3 - simple batch with URIS-FILE
+#### sample 3 - simple batch with URIS-FILE
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
 MODULE-ROOT=/temp/  
@@ -150,14 +150,14 @@ MODULES-DATABASE=MY-Modules-DB
 URIS-FILE=input-uris.csv  
 XQUERY-MODULE=SampleCorbJob.xqy  
 
-### sample 4 - report
+#### sample 4 - report
 ...  
 XQUERY-MODULE=get-data-from-document.xqy   
 PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask  
 EXPORT-FILE-DIR=/temp/export  
 EXPORT-FILE-NAME=myfile.csv   
 
-### sample 5 - report with header
+#### sample 5 - report with header
 ...   
 XQUERY-MODULE=get-data-from-document.xqy   
 PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask  
@@ -166,23 +166,23 @@ EXPORT-FILE-NAME=myfile.csv
 PRE-BATCH-TASK=com.marklogic.developer.corb.PreBatchUpdateFileTask  
 EXPORT-FILE-TOP-CONTENT=col1,col2,col3  
 
-### sample 6 - dynamic headers
+#### sample 6 - dynamic headers
 ...      
 EXPORT-FILE-NAME=/temp/export/myfile.csv   
 PRE-BATCH-MODULE=pre-batch-header.xqy 
 PRE-BATCH-TASK=com.marklogic.developer.corb.PreBatchUpdateFileTask   
 
-### sample 7 - pre and post batch hooks
+#### sample 7 - pre and post batch hooks
 ...   
 PRE-BATCH-MODULE=pre-batch.xqy   
 POST-BATCH-MODULE=post-batch.xqy   
 
-### sample 8 - adhoc tasks (xquery modules live local to filesystem where corb is located. Any xquery module can be adhoc)
+#### sample 8 - adhoc tasks (xquery modules live local to filesystem where corb is located. Any xquery module can be adhoc)
 ...   
 XQUERY-MODULE=SampleCorbJob.xqy   
 PRE-BATCH-MODULE=/local/path/to/adhoc-pre-batch.xqy|ADHOC
 
-### sample 9 - jasypt encryption (Any XCC-* property can be encrypted ex: XCC-CONNECTION-URI or XCC-PASSWORD. If JASYPT-PROPERTIES-FILE is not specified, it assumes default jasypt.properties)
+#### sample 9 - jasypt encryption (Any XCC-* property can be encrypted ex: XCC-CONNECTION-URI or XCC-PASSWORD. If JASYPT-PROPERTIES-FILE is not specified, it assumes default jasypt.properties)
 XCC-CONNECTION-URI=encrypted_uri  
 ...   
 DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter  
@@ -191,14 +191,14 @@ DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter
 jasypt.password=foo   
 jasypt.algorithm=PBEWithMD5AndTripleDES  
 
-### sample 10 - private key encryption with java keys (Any XCC-* property can be encrypted ex: XCC-CONNECTION-URI or XCC-PASSWORD)
+#### sample 10 - private key encryption with java keys (Any XCC-* property can be encrypted ex: XCC-CONNECTION-URI or XCC-PASSWORD)
 XCC-CONNECTION-URI=encrypted_uri  
 ...   
 DECRYPTER=com.marklogic.developer.corb.PrivateKeyDecrypter  
 PRIVATE-KEY-FILE=/path/to/key/private.key  
 PRIVATE-KEY-ALGORITHM=RSA  
 
-### sample 11 - private key encryption with unix keys (Any XCC-* property can be encrypted ex: XCC-CONNECTION-URI or XCC-PASSWORD)
+#### sample 11 - private key encryption with unix keys (Any XCC-* property can be encrypted ex: XCC-CONNECTION-URI or XCC-PASSWORD)
 XCC-CONNECTION-URI=encrypted_uri  
 ...   
 DECRYPTER=com.marklogic.developer.corb.PrivateKeyDecrypter  
