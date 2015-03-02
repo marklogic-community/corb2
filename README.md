@@ -182,7 +182,7 @@ XQUERY-MODULE=SampleCorbJob.xqy
 PRE-BATCH-MODULE=/local/path/to/adhoc-pre-batch.xqy|ADHOC
 
 #### sample 9 - jasypt encryption (Any XCC-* property can be encrypted and optionally enclosed by ENC() ex: XCC-CONNECTION-URI or XCC-PASSWORD. If JASYPT-PROPERTIES-FILE is not specified, it assumes default jasypt.properties)
-XCC-CONNECTION-URI=ENC(encrypted_uri) 
+XCC-CONNECTION-URI=ENC(encrypted_uri)   
 ...   
 DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter  
 
