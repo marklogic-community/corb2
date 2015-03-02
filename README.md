@@ -181,8 +181,8 @@ POST-BATCH-MODULE=post-batch.xqy
 XQUERY-MODULE=SampleCorbJob.xqy   
 PRE-BATCH-MODULE=/local/path/to/adhoc-pre-batch.xqy|ADHOC
 
-#### sample 9 - jasypt encryption (Any XCC-* property can be encrypted ex: XCC-CONNECTION-URI or XCC-PASSWORD. If JASYPT-PROPERTIES-FILE is not specified, it assumes default jasypt.properties)
-XCC-CONNECTION-URI=encrypted_uri  
+#### sample 9 - jasypt encryption (Any XCC-* property can be encrypted and optionally enclosed by ENC() ex: XCC-CONNECTION-URI or XCC-PASSWORD. If JASYPT-PROPERTIES-FILE is not specified, it assumes default jasypt.properties)
+XCC-CONNECTION-URI=ENC(encrypted_uri) 
 ...   
 DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter  
 
@@ -190,14 +190,14 @@ DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter
 jasypt.password=foo   
 jasypt.algorithm=PBEWithMD5AndTripleDES  
 
-#### sample 10 - private key encryption with java keys (Any XCC-* property can be encrypted ex: XCC-CONNECTION-URI or XCC-PASSWORD)
+#### sample 10 - private key encryption with java keys (Any XCC-* property can be encrypted and optionally enclosed by ENC() ex: XCC-CONNECTION-URI or XCC-PASSWORD)
 XCC-CONNECTION-URI=encrypted_uri  
 ...   
 DECRYPTER=com.marklogic.developer.corb.PrivateKeyDecrypter  
 PRIVATE-KEY-FILE=/path/to/key/private.key  
 PRIVATE-KEY-ALGORITHM=RSA  
 
-#### sample 11 - private key encryption with unix keys (Any XCC-* property can be encrypted ex: XCC-CONNECTION-URI or XCC-PASSWORD)
+#### sample 11 - private key encryption with unix keys (Any XCC-* property can be encrypted and optionally enclosed by ENC() ex: XCC-CONNECTION-URI or XCC-PASSWORD)
 XCC-CONNECTION-URI=encrypted_uri  
 ...   
 DECRYPTER=com.marklogic.developer.corb.PrivateKeyDecrypter  
