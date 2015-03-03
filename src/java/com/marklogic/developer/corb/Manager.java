@@ -649,8 +649,8 @@ public class Manager implements Runnable {
         logger.info("Configured init task: " + options.getInitTaskClass());
         
         for(Entry<Object, Object> e : properties.entrySet()) {
-        	if(!"XCC-CONNECTION-URI".equals(e.getKey())){
-        		logger.info("Loaded property "+e.getKey()+": "+e.getValue());
+        	if(e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")){
+        		logger.info("Loaded property "+e.getKey()+"="+e.getValue());
         	}
         }
     }
