@@ -12,14 +12,14 @@ Corb needs one or more of the following parameters as (If specified in more then
 Note: Any or all of the properties can be specified as java VM arguments or key value pairs in properties file.
 
 ### Options  
-* XCC-CONNECTION-URI
-* COLLECTION-NAME (Set to external variable URIS in the URIS module)
-* XQUERY-MODULE (provide file system path if not contained in the corb package)
+* XCC-CONNECTION-URI (Connection string to MarkLogic XDBC Server)
+* COLLECTION-NAME (Set to external variable URIS in the URIS XQuery module)
+* XQUERY-MODULE (XQuery to be executed in a batch for each URI from the URIS-MODULE or URIS-FILE)
 * THREAD-COUNT (number of worker threads; default = 1)
-* MODULE-ROOT (assumes '/' if not provided)
-* MODULES-DATABASE (uses the XCC-CONNECTION-URI if not provided; use 0 for filesystem)
+* MODULE-ROOT (ex: '/' for root)
+* MODULES-DATABASE (uses the XCC-CONNECTION-URI if not provided; use 0 for file system)
 * INSTALL (default is false; set to 'true' or '1' for installation)
-* URIS-MODULE (URI selection module).
+* URIS-MODULE (URI selector module).
 * URIS-FILE (If defined instead of URIS-MODULE, URIS will be loaded from the file located on the client)
 * PROCESS-TASK (Java Class that implements com.marklogic.developer.Task or extends com.marklogic.developer.AbstractTask. It can talk to XQUERY-MODULE and do additional processing locally)    
 	com.marklogic.developer.ExportBatchToFileTask (included - Writes the data returned by the XQUERY-MODULE To file specified by EXPORT-FILE-NAME)   
@@ -58,26 +58,25 @@ URIS-MODULE.filePath
 XQUERY-MODULE.outputFolder
 
 ### Adhoc Tasks
-INIT-MODULE, URIS-MODULE, XQUERY-MODULE, PRE-BATCH-MODULE and POST-BATCH-MODULE can be adhoc where XQuery can be local i.e. not deployed to marklogic. The xquery module should be in its named file available in classpath or filesystem.  
+INIT-MODULE, URIS-MODULE, XQUERY-MODULE, PRE-BATCH-MODULE and POST-BATCH-MODULE can be specified adhoc by adding prefix '|ADHOC' at the end. Adhoc XQuery is local to corb i.e. not deployed to marklogic. The xquery module should be in its named file available in classpath or filesystem.  
 ex:  
-PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC  
-INIT-MODULE=/path/to/file/adhoc-init-module.xqy|ADHOC
+PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC (module as a named file in the classpath or current directory)  
+INIT-MODULE=/path/to/file/adhoc-init-module.xqy|ADHOC (module file with full path in the file system)  
 
 ### Encryption
-* DECRYPTER (Must extend com.marklogic.developer.corb.AbstractDecrypter. Encryptable options XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOST and XCC-PORT)  
-  Included:  
-  com.marklogic.developer.corb.JasyptDecrypter (Requires jasypt jar in classpath. Default algorithm PBEWithMD5AndTripleDES)  
-  com.marklogic.developer.corb.PrivateKeyDecrypter (Requires private key file)
-* JASYPT-PROPERTIES-FILE (Optional property for JasyptDecrypter. If not specified, it uses default jasypt.proeprties file, which should be accessible in classpath or file system.)  
+* DECRYPTER (Must extend com.marklogic.developer.corb.AbstractDecrypter. Encryptable options XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOST, XCC-PORT and XCC-DBNAME)   
+  com.marklogic.developer.corb.PrivateKeyDecrypter (Requires private key file)  
+  com.marklogic.developer.corb.JasyptDecrypter (Requires jasypt jar in classpath. Default algorithm PBEWithMD5AndTripleDES)
 * PRIVATE-KEY-FILE (Required property for PrivateKeyDecrypter, should be accessible in classpath or file system)
 * PRIVATE-KEY-ALGORITHM (Optional for PrivateKeyDecrypter. Default is RSA)
+* JASYPT-PROPERTIES-FILE (Optional property for JasyptDecrypter. If not specified, it uses default jasypt.proeprties file, which should be accessible in classpath or file system.)  
  
 #### PrivateKeyDecrypter
 Generate keys and encrypt the URI or password using one of the options below. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx)
 
 **Java Crypt**
-* java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024 (Note: default algorithm: RSA, default key-length: 1024)
-* java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA (Note: default algorithm: RSA)
+* java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024 (Note: if not specified, default algorithm: RSA, default key-length: 1024)
+* java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA (Note: if not specified, default algorithm: RSA)
 
 **RSA keys**  
 * openssl genrsa -out private.pem 1024 (generate private key in PEM format)
@@ -94,7 +93,7 @@ jasypt.algorithm=PBEWithMD5AndTripleDES
 jasypt.password=passphrase
 
 ### Internal Properties
-URIS_BATCH_REF (This is not a user specified property. URIS-MODULE can optionally send this a batch reference which can be used by post batch hooks)
+URIS_BATCH_REF (This is not a user specified property. URIS-MODULE can optionally send this as batch reference which can be used by pre/post batch hooks)
 
 ### Usage
 #### Usage 1:
@@ -151,14 +150,14 @@ EXPORT-FILE-NAME=myfile.csv
 XQUERY-MODULE=get-data-from-document.xqy   
 PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask  
 EXPORT-FILE-DIR=/temp/export  
-EXPORT-FILE-NAME=myfile.csv
+EXPORT-FILE-NAME=myfile.csv  
 PRE-BATCH-TASK=com.marklogic.developer.corb.PreBatchUpdateFileTask  
 EXPORT-FILE-TOP-CONTENT=col1,col2,col3  
 
 ##### sample 6 - dynamic headers
 ...      
 EXPORT-FILE-NAME=/temp/export/myfile.csv   
-PRE-BATCH-MODULE=pre-batch-header.xqy 
+PRE-BATCH-MODULE=pre-batch-header.xqy  
 PRE-BATCH-TASK=com.marklogic.developer.corb.PreBatchUpdateFileTask   
 
 ##### sample 7 - pre and post batch hooks
@@ -168,7 +167,7 @@ POST-BATCH-MODULE=post-batch.xqy
 
 ##### sample 8 - adhoc tasks (xquery modules live local to filesystem where corb is located. Any xquery module can be adhoc)
 ...   
-XQUERY-MODULE=SampleCorbJob.xqy   
+XQUERY-MODULE=SampleCorbJob.xqy|ADHOC   
 PRE-BATCH-MODULE=/local/path/to/adhoc-pre-batch.xqy|ADHOC
 
 ##### sample 9 - jasypt encryption (XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and/or XCC-DBNAME properties can be encrypted and optionally enclosed by ENC(). If JASYPT-PROPERTIES-FILE is not specified, it assumes default jasypt.properties)

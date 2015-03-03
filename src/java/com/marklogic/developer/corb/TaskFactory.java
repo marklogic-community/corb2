@@ -145,7 +145,7 @@ public class TaskFactory {
 		}finally{
 			try{if(writer != null) writer.close();}catch(Exception exc){}
 			try{if(reader != null) reader.close();}catch(Exception exc){}
-			try{is.close();}catch(Exception exc){}
+			try{if(is != null ) is.close();}catch(Exception exc){}
 		}
     }
     
