@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.util.HashMap;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
@@ -32,6 +33,7 @@ import java.io.StringWriter;
  */
 public class TaskFactory {
     protected Manager manager;
+    private HashMap<String,String> moduleToAdhocQueryMap = new HashMap<String,String>();
 
     /**
      * @param _cs
@@ -152,9 +154,13 @@ public class TaskFactory {
     private void setupTask(Task task, String moduleType, String module, String _uri){
     	if(module != null){
     		if(module.toUpperCase().endsWith("|ADHOC")){
-    			String adhocQuery = getAdhocQuery(module.substring(0, module.indexOf('|')));
-    			if(adhocQuery == null || (adhocQuery.length() == 0)){
-    				throw new IllegalStateException("Unable to read adhoc query "+module+" from classpath or filesystem");
+    			String adhocQuery = moduleToAdhocQueryMap.get(module);
+    			if(adhocQuery == null){
+    				adhocQuery=getAdhocQuery(module.substring(0, module.indexOf('|')));
+        			if(adhocQuery == null || (adhocQuery.length() == 0)){
+        				throw new IllegalStateException("Unable to read adhoc query "+module+" from classpath or filesystem");
+        			}
+    				moduleToAdhocQueryMap.put(module, adhocQuery);
     			}
     			task.setAdhocQuery(adhocQuery);
     		}else{
