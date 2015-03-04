@@ -185,6 +185,10 @@ public class Manager implements Runnable {
     }
     
     public static Properties loadPropertiesFile(String filename) throws IOException{
+    	return loadPropertiesFile(filename,true);
+    }
+    
+    public static Properties loadPropertiesFile(String filename, boolean excIfNotFound) throws IOException{
 		Properties props = new Properties();
 		if(filename != null && (filename=filename.trim()).length() > 0){
 			InputStream is = null;
@@ -206,7 +210,7 @@ public class Manager implements Runnable {
 								fis.close();
 							}
 						}
-					}else{
+					}else if(excIfNotFound){
 						throw new IllegalStateException("Unable to load properties file "+filename);
 					}
 				}

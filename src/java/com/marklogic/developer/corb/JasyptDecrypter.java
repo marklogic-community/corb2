@@ -15,7 +15,7 @@ public class JasyptDecrypter extends AbstractDecrypter{
 		if(decryptPropsFile == null || decryptPropsFile.trim().length() == 0){
 			decryptPropsFile="jasypt.properties";
 		}
-		jaspytProperties = Manager.loadPropertiesFile(decryptPropsFile);
+		jaspytProperties = Manager.loadPropertiesFile(decryptPropsFile,false);
 		
 		String algorithm = jaspytProperties.getProperty("jasypt.algorithm");
 		if(algorithm == null || algorithm.trim().length() == 0){

@@ -68,7 +68,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 					privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(DatatypeConverter.parseBase64Binary(keyAsString)));				
 				}			    
 			}catch(Exception exc){
-				exc.printStackTrace();
+				Manager.logger.logException("Problem initializing PrivateKeyDecrypter", exc);
 			}finally{
 				if(is != null){
 					is.close();
