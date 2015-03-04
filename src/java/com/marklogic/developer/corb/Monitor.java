@@ -100,14 +100,13 @@ public class Monitor implements Runnable {
             // try to avoid thread starvation
             Thread.yield();
 
-            future = cs.poll(TransformOptions.PROGRESS_INTERVAL_MS,
-                    TimeUnit.MILLISECONDS);
+            future = cs.poll(TransformOptions.PROGRESS_INTERVAL_MS,TimeUnit.MILLISECONDS);
             if (null != future) {
                 // record result, or throw exception
                 lastUri = future.get();
                 logger.fine("uri: " + lastUri);
-                showProgress();
             }
+            showProgress();
 
             if (pool.getCompletedTaskCount() == taskCount) {
                 break;
