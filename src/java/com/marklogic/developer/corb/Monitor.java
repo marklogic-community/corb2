@@ -163,8 +163,9 @@ public class Monitor implements Runnable {
         }
         prevCompleted=completed;
         prevMillis = curMillis;
-        return completed + "/" + taskCount + ", " + tps + " tps(avg), "+ curTps + " tps(cur), "
-                + pool.getActiveCount() + " active threads";
+        long ets = (taskCount-completed)/tps;
+        String etc = (ets/3600)+"h"+((ets%3600)/60)+"m"+(ets%60)+"s";
+        return completed + "/" + taskCount + ", " + tps + " tps(avg), "+ curTps + " tps(cur), ETC "+ etc + ", "+ pool.getActiveCount() + " active threads.";
     }
 
     /**
