@@ -80,9 +80,15 @@ Generate keys and encrypt the URI or password using one of the options below. Op
 
 **RSA keys**  
 * openssl genrsa -out private.pem 1024 (generate private key in PEM format)
-* openssl rsa -in private.pem -pubout > public.key  (extract public key)
 * openssl pkcs8 -topk8 -nocrypt -in private.pem -out private.pkcs8.key (create PRIVATE-KEY-FILE in PKCS8 std for java)
+* openssl rsa -in private.pem -pubout > public.key  (extract public key)
 * echo "uri or password" | openssl rsautl -encrypt -pubin -inkey public.key | base64 (encrypt URI or password. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx))
+
+**ssh-keygen**  
+* ssh-keygen (ex:key as id_rsa after selecting a passphrase)
+* openssl pkcs8 -topk8 -nocrypt -in id_rsa -out id_rsa.pkcs8.key (asks for passphrase)
+* openssl rsa -in id_rsa -pubout > public.key (asks for passphrase)
+* echo "password or uri" | openssl rsautl -encrypt -pubin -inkey public.key | base64
 
 #### JasyptDecrypter
 Encrypt the URI or password as below. It is assumed that jasypt dist is available on your box. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx)  

@@ -26,8 +26,14 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 	//
 	//option 2 - generate keys with openssl
 	//openssl genrsa -out private.pem 1024
-	//openssl rsa -in private.pem -pubout > public.key
 	//openssl pkcs8 -topk8 -nocrypt -in private.pem -out private.pkcs8.key
+	//openssl rsa -in private.pem -pubout > public.key
+	//echo "password or uri" | openssl rsautl -encrypt -pubin -inkey public.key | base64
+	//
+	//option 3 - ssh-keygen
+	//ssh-keygen (ex: gen key as id_rsa)
+	//openssl pkcs8 -topk8 -nocrypt -in id_rsa -out id_rsa.pkcs8.key
+	//openssl rsa -in id_rsa -pubout > public.key
 	//echo "password or uri" | openssl rsautl -encrypt -pubin -inkey public.key | base64
 	private PrivateKey privateKey = null;
 
