@@ -16,14 +16,14 @@ Note: Any or all of the properties can be specified as java VM arguments or key 
 * COLLECTION-NAME (Set to external variable URIS in the URIS XQuery module)
 * XQUERY-MODULE (XQuery to be executed in a batch for each URI from the URIS-MODULE or URIS-FILE)
 * THREAD-COUNT (number of worker threads; default = 1)
-* MODULE-ROOT (ex: '/' for root)
+* MODULE-ROOT (default: '/' for root)
 * MODULES-DATABASE (uses the XCC-CONNECTION-URI if not provided; use 0 for file system)
 * INSTALL (default is false; set to 'true' or '1' for installation)
 * URIS-MODULE (URI selector module).
 * URIS-FILE (If defined instead of URIS-MODULE, URIS will be loaded from the file located on the client)
 * PROCESS-TASK (Java Class that implements com.marklogic.developer.Task or extends com.marklogic.developer.AbstractTask. It can talk to XQUERY-MODULE and do additional processing locally)    
-	com.marklogic.developer.ExportBatchToFileTask (included - Writes the data returned by the XQUERY-MODULE To file specified by EXPORT-FILE-NAME)   
-	com.marklogic.developer.ExportToFileTask (included - saves the document returned by XQUERY-MODULE to local file system to EXPORT-FILE-DIR where file name will be the base name of the URI)   
+	com.marklogic.developer.ExportBatchToFileTask (included - Writes the data returned by the XQUERY-MODULE To single file specified by EXPORT-FILE-NAME)   
+	com.marklogic.developer.ExportToFileTask (included - saves the documents returned by XQUERY-MODULE to local file system to EXPORT-FILE-DIR where file name for each document will be the base name of the URI)   
 * PRE-BATCH-MODULE (XQuery module, if specified, will be run before batch processing starts)
 * PRE-BATCH-TASK (Java Class that implements com.marklogic.developer.Task or extends com.marklogic.developer.AbstractTask. Can be specified with in in place of or in addition PRE-BATCH-MODULE)   
 	com.marklogic.developer.PreBatchUpdateFileTask (included - Writes the data returned by the PRE-BATCH-MODULE to EXPORT-FILE-NAME, which can be used to writing dynamic headers. Also, if EXPORT-FILE-TOP-CONTENT is specified, this task will write this value to to the EXPORT-FILE-NAME - this option is especially useful for writing fixed headers to reports. ). 
@@ -136,7 +136,7 @@ MODULES-DATABASE=MY-Modules-DB
 URIS-MODULE=get-uris.xqy  
 XQUERY-MODULE=SampleCorbJob.xqy 
 
-##### sample 3 - simple batch with URIS-FILE
+##### sample 3 - simple batch with URIS-FILE (in place of URIS-MODULE)
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
 MODULE-ROOT=/temp/  
@@ -144,35 +144,41 @@ MODULES-DATABASE=MY-Modules-DB
 URIS-FILE=input-uris.csv  
 XQUERY-MODULE=SampleCorbJob.xqy  
 
-##### sample 4 - report
-...  
+##### sample 4 - report, generates a single file with data from processing each URI
+XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
+THREAD-COUNT=10  
+MODULE-ROOT=/temp/  
+MODULES-DATABASE=MY-Modules-DB 
 XQUERY-MODULE=get-data-from-document.xqy   
-PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask  
-EXPORT-FILE-DIR=/temp/export  
-EXPORT-FILE-NAME=myfile.csv   
+PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask   
+EXPORT-FILE-NAME=/local/path/to/exportmyfile.csv   
 
-##### sample 5 - report with header
-...   
-XQUERY-MODULE=get-data-from-document.xqy   
-PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask  
-EXPORT-FILE-DIR=/temp/export  
-EXPORT-FILE-NAME=myfile.csv  
+##### sample 5 - report with header, add following to sample 4. 
+...    
 PRE-BATCH-TASK=com.marklogic.developer.corb.PreBatchUpdateFileTask  
 EXPORT-FILE-TOP-CONTENT=col1,col2,col3  
 
-##### sample 6 - dynamic headers
-...      
-EXPORT-FILE-NAME=/temp/export/myfile.csv   
+##### sample 6 - dynamic headers, assuming pre-batch-header.xqy module returns the header row, add following to sample 4.
+...        
 PRE-BATCH-MODULE=pre-batch-header.xqy  
 PRE-BATCH-TASK=com.marklogic.developer.corb.PreBatchUpdateFileTask   
 
 ##### sample 7 - pre and post batch hooks
-...   
+XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
+THREAD-COUNT=10  
+MODULE-ROOT=/temp/  
+MODULES-DATABASE=MY-Modules-DB   
+URIS-MODULE=get-uris.xqy  
+XQUERY-MODULE=SampleCorbJob.xqy  
 PRE-BATCH-MODULE=pre-batch.xqy   
 POST-BATCH-MODULE=post-batch.xqy   
 
 ##### sample 8 - adhoc tasks (xquery modules live local to filesystem where corb is located. Any xquery module can be adhoc)
-...   
+XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
+THREAD-COUNT=10  
+MODULE-ROOT=/temp/  
+MODULES-DATABASE=MY-Modules-DB   
+URIS-MODULE=get-uris.xqy|ADHOC   
 XQUERY-MODULE=SampleCorbJob.xqy|ADHOC   
 PRE-BATCH-MODULE=/local/path/to/adhoc-pre-batch.xqy|ADHOC
 

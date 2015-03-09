@@ -57,9 +57,8 @@ public class TransformOptions {
     private String exportFileDir = null;
 
     // Defaults for optional arguments
-    private String moduleRoot = SLASH
-            + TransformOptions.class.getPackage().getName().replace('.',SLASHCHAR) + SLASH;
-
+    private String moduleRoot = SLASH;
+    
     private String urisModule = null;
     private String urisFile = null;
 
