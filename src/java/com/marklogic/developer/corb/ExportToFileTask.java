@@ -22,14 +22,16 @@ public class ExportToFileTask extends AbstractTask {
 	}
 	
 	protected String getFileName(){
-		return inputUri.substring(inputUri.lastIndexOf('/')+1);
+		return inputUri.charAt(0) == '/' ? inputUri.substring(1)  : inputUri;
 	}
 	
 	protected void writeToFile(ResultSequence seq) throws IOException{
 		if(seq == null || !seq.hasNext()) return;
 		BufferedOutputStream writer = null;
 		try{
-			writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir,getFileName())));
+			File f = new File(exportDir,getFileName());
+			f.getParentFile().mkdirs();
+			writer = new BufferedOutputStream(new FileOutputStream(f));
 			while(seq.hasNext()){				
 				writer.write(getValueAsBytes(seq.next().getItem()));
 				writer.write(NEWLINE);
