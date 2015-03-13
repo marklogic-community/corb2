@@ -135,9 +135,11 @@ public abstract class AbstractTask implements Task{
         }finally {
         	if(null != session && !session.isClosed()) {
                 session.close();
+                session = null;
             }
         	if(null != seq && !seq.isClosed()){
         		seq.close();
+        		seq = null;
         	}
             Thread.yield();// try to avoid thread starvation
         }
@@ -194,14 +196,5 @@ public abstract class AbstractTask implements Task{
 		}
 		return connectRetryInterval < 0 ? DEFAULT_RETRY_INTERVAL : connectRetryInterval;
 	}
-	
-    /*
-     * (non-Javadoc)
-     *
-     * @see java.lang.Object#finalize()
-     */
-    protected void finalize() throws Throwable {
-        super.finalize();
-    }
-    
+	    
 }
