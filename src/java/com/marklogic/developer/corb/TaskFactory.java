@@ -34,6 +34,7 @@ import java.util.HashMap;
 public class TaskFactory {
     protected Manager manager;
     private HashMap<String,String> moduleToAdhocQueryMap = new HashMap<String,String>();
+    private HashMap<String,String> moduleToPathMap = new HashMap<String,String>();
 
     /**
      * @param _cs
@@ -164,8 +165,15 @@ public class TaskFactory {
     			}
     			task.setAdhocQuery(adhocQuery);
     		}else{
-    			String root = manager.getOptions().getModuleRoot();
-    			task.setModuleURI(root + module);
+    			String modulePath = moduleToPathMap.get(module);
+    			if(modulePath == null){
+        			String root = manager.getOptions().getModuleRoot();
+        			if(!root.endsWith("/")) root = root + "/";
+        			if(module.startsWith("/") && module.length() > 1) module = module.substring(1);
+    				modulePath = root + module;
+    				moduleToPathMap.put(module, modulePath);
+    			}
+    			task.setModuleURI(modulePath);
     		}
     	}
     	task.setModuleType(moduleType);

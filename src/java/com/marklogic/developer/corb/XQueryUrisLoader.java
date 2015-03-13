@@ -79,9 +79,15 @@ public class XQueryUrisLoader implements UrisLoader {
 				logger.info("invoking adhoc uris module " + queryPath);
 				req = session.newAdhocQuery(adhocQuery);
 			}else{
-				String urisModule = options.getModuleRoot() + options.getUrisModule();
-				logger.info("invoking uris module " + urisModule);
-				req = session.newModuleInvoke(urisModule);
+				String root = options.getModuleRoot();
+				if(!root.endsWith("/")) root = root + "/";
+				
+				String module = options.getUrisModule();
+				if(module.startsWith("/") && module.length() > 1) module = module.substring(1);
+				
+				String modulePath = root + module;
+				logger.info("invoking uris module " + modulePath);
+				req = session.newModuleInvoke(modulePath);
 			}
 	        // NOTE: collection will be treated as a CWSV
 	        req.setNewStringVariable("URIS", collection);

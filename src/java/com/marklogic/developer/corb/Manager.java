@@ -283,10 +283,10 @@ public class Manager implements Runnable {
         tm.setProperties(props); // Keep the properties around for the custom tasks 
         //options
         TransformOptions options = tm.getOptions();
+        if(moduleRoot != null) options.setModuleRoot(moduleRoot);
         if(processModule != null) options.setProcessModule(processModule);      
         if(threadCount != null) options.setThreadCount(Integer.parseInt(threadCount));
         if(urisModule != null) options.setUrisModule(urisModule);
-        if(moduleRoot != null) options.setModuleRoot(moduleRoot);
         if(modulesDatabase != null) options.setModulesDatabase(modulesDatabase);
         if(install != null && (install.equalsIgnoreCase("true") || install.equals("1"))) options.setDoInstall(true);
         if(urisFile != null) options.setUrisFile(urisFile);
