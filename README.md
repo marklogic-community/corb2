@@ -29,7 +29,7 @@ Note: Any or all of the properties can be specified as java VM arguments or key 
 	com.marklogic.developer.corb.PreBatchUpdateFileTask (included - Writes the data returned by the PRE-BATCH-MODULE to EXPORT-FILE-NAME, which can be used to writing dynamic headers. Also, if EXPORT-FILE-TOP-CONTENT is specified, this task will write this value to to the EXPORT-FILE-NAME - this option is especially useful for writing fixed headers to reports. ). 
 * POST-BATCH-MODULE (XQuery module, if specified, will be run after batch processing is completed)
 * POST-BATCH-TASK (Java Class that implements com.marklogic.developer.corb.Task or extends com.marklogic.developer.corb.AbstractTask)   
-	com.marklogic.developer.corb.PostBatchUpdateFileTask (included - Writes the data returned by the PRE-BATCH-MODULE to EXPORT-FILE-NAME. Also, if EXPORT-FILE-BOTTOM-CONTENT is specified, this task will write this value to to the EXPORT-FILE-NAME)
+	com.marklogic.developer.corb.PostBatchUpdateFileTask (included - Writes the data returned by the POST-BATCH-MODULE to EXPORT-FILE-NAME. Also, if EXPORT-FILE-BOTTOM-CONTENT is specified, this task will write this value to to the EXPORT-FILE-NAME)
 * EXPORT-FILE-DIR (export directory for com.marklogic.developer.corb.ExportToFileTask or similar tasks. Optional - EXPORT-FILE-NAME can be specified with full path)
 * EXPORT-FILE-NAME (shared file to export output of com.marklogic.developer.corb.ExportBatchToFileTask - file name with our without full path)
 * INIT-MODULE (XQuery Module, if specified, will be invoked prior to URIS-MODULE)
