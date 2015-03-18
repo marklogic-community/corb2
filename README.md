@@ -39,7 +39,7 @@ Note: Any or all of the properties can be specified as java VM arguments or key 
 * EXPORT-FILE-PART-EXT (if specified, com.marklogic.developer.corb.PreBatchUpdateFileTask adds this extension to export file. It is expected that PostBatchUpdateFileTask will be specified, which removes the extension for the final export file)
 * EXPORT-FILE-TOP-CONTENT (used by com.marklogic.developer.corb.PreBatchUpdateFileTask to insert content at the top of EXPORT-FILE-NAME before batch process starts, if it finds the text @URIS_BATCH_REF it replaces it by batch reference sent by URIS-MODULE)
 * EXPORT-FILE-BOTTOM-CONTENT (used by com.marklogic.developer.corb.PostBatchUpdateFileTask to append content to EXPORT-FILE-NAME after batch process is complete)
-* EXPORT_FILE_AS_ZIP (if true, PreBatchUpdateFileTask compression the output file as a zip file)
+* EXPORT_FILE_AS_ZIP (if true, PostBatchUpdateFileTask compresses the output file as a zip file)
 * URIS-REPLACE-PATTERN (one or more replace patterns for URIs - typically used to save memory, but XQUERY-MODULE should reconstruct the URI. usage: URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2,...)
 * XCC-CONNECTION-RETRY-LIMIT (Number attempts to connect to ML before giving up - default is 3)
 * XCC-CONNECTION-RETRY-INTERVAL (in seconds - Time interval in seconds between retry attempts - default is 60)
