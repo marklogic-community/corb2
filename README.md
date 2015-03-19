@@ -19,7 +19,7 @@ Note: Any or all of the properties can be specified as java VM arguments or key 
 * MODULE-ROOT (default: '/' for root)
 * MODULES-DATABASE (uses the XCC-CONNECTION-URI if not provided; use 0 for file system)
 * INSTALL (default is false; set to 'true' or '1' for installation)
-* URIS-MODULE (URI selector module).
+* URIS-MODULE (URI selector module. Expected to uris count and sequence of uris. Optionally, it can also return an arbitrary string as a first item in this sequence - refer to URIS-BATCH-REF below).
 * URIS-FILE (If defined instead of URIS-MODULE, URIS will be loaded from the file located on the client)
 * PROCESS-TASK (Java Class that implements com.marklogic.developer.corb.Task or extends com.marklogic.developer.corb.AbstractTask. It can talk to XQUERY-MODULE and do additional processing locally)    
 	com.marklogic.developer.corb.ExportBatchToFileTask (included - Writes the data returned by the XQUERY-MODULE To single file specified by EXPORT-FILE-NAME)   
@@ -99,7 +99,7 @@ jasypt.algorithm=PBEWithMD5AndTripleDES
 jasypt.password=passphrase
 
 ### Internal Properties
-URIS_BATCH_REF (This is not a user specified property. URIS-MODULE can optionally send this as batch reference which can be used by pre/post batch hooks)
+URIS_BATCH_REF (This is not a user specified property. URIS-MODULE can optionally return an arbitrary string as a fist item in the sequence i.e. before the count and uris. PRE-BATCH-MODULE, XQUERY-MODULE or POST-BATCH-MODULE can refer/use to this string value by defining an external string variable with name URIS_BATCH_REF. As an example, batch ref can be a link/id of a document that manages the status of the batch job, where pre-batch module updates the status to start and post-batch module can set it to complete. This example can be used to track/manage errors in automated batch jobs)
 
 ### Usage
 #### Usage 1:
