@@ -3,44 +3,46 @@ Version: 2.1.0
 ### Running Corb
 The entry point is the main method in the com.marklogic.developer.corb.Manager class. 
 
-Corb needs one or more of the following parameters as (If specified in more then one place command line argument takes precedence over VM argument which take precedence over myjob.properties)
+Corb needs one or more of the following parameters as (If specified in more than one place command line parameter takes precedence over java system property which take precedence over myjob.properties)
 
-1. command-line arguments 
-2. VM arguments ex: -DXCC-CONNECTION-URI=xcc://user:password@localhost:8202. 
+1. command-line parameters 
+2. Java system properties ex: -DXCC-CONNECTION-URI=xcc://user:password@localhost:8202. 
 3. As properties file in the class path specified using -DOPTIONS-FILE=myjob.properties. Relative and full file paths are also supported. 
 
-Note: Any or all of the properties can be specified as java VM arguments or key value pairs in properties file.
+Note: Any or all of the properties can be specified as java system properties or key value pairs in properties file.
 
 ### Options  
 * XCC-CONNECTION-URI (Connection string to MarkLogic XDBC Server)
-* COLLECTION-NAME (Set to external variable URIS in the URIS XQuery module)
+* COLLECTION-NAME (Value of this parameter will be passed into the URIS XQuery module via the XQuery $URIS parameter)
 * XQUERY-MODULE (XQuery to be executed in a batch for each URI from the URIS-MODULE or URIS-FILE)
 * THREAD-COUNT (number of worker threads; default = 1)
 * MODULE-ROOT (default: '/' for root)
 * MODULES-DATABASE (uses the XCC-CONNECTION-URI if not provided; use 0 for file system)
 * INSTALL (default is false; set to 'true' or '1' for installation)
-* URIS-MODULE (URI selector module. Expected to uris count and sequence of uris. Optionally, it can also return an arbitrary string as a first item in this sequence - refer to URIS-BATCH-REF below).
-* URIS-FILE (If defined instead of URIS-MODULE, URIS will be loaded from the file located on the client)
-* PROCESS-TASK (Java Class that implements com.marklogic.developer.corb.Task or extends com.marklogic.developer.corb.AbstractTask. It can talk to XQUERY-MODULE and do additional processing locally)    
-	com.marklogic.developer.corb.ExportBatchToFileTask (included - Writes the data returned by the XQUERY-MODULE To single file specified by EXPORT-FILE-NAME)   
-	com.marklogic.developer.corb.ExportToFileTask (included - saves the documents returned by XQUERY-MODULE to local file system to EXPORT-FILE-DIR where file name for each document will be the base name of the URI)   
-* PRE-BATCH-MODULE (XQuery module, if specified, will be run before batch processing starts)
-* PRE-BATCH-TASK (Java Class that implements com.marklogic.developer.corb.Task or extends com.marklogic.developer.corb.AbstractTask. Can be specified with in in place of or in addition PRE-BATCH-MODULE)   
-	com.marklogic.developer.corb.PreBatchUpdateFileTask (included - Writes the data returned by the PRE-BATCH-MODULE to EXPORT-FILE-NAME, which can be used to writing dynamic headers. Also, if EXPORT-FILE-TOP-CONTENT is specified, this task will write this value to to the EXPORT-FILE-NAME - this option is especially useful for writing fixed headers to reports. ). 
-* POST-BATCH-MODULE (XQuery module, if specified, will be run after batch processing is completed)
-* POST-BATCH-TASK (Java Class that implements com.marklogic.developer.corb.Task or extends com.marklogic.developer.corb.AbstractTask)   
-	com.marklogic.developer.corb.PostBatchUpdateFileTask (included - Writes the data returned by the POST-BATCH-MODULE to EXPORT-FILE-NAME. Also, if EXPORT-FILE-BOTTOM-CONTENT is specified, this task will write this value to to the EXPORT-FILE-NAME)
-* EXPORT-FILE-DIR (export directory for com.marklogic.developer.corb.ExportToFileTask or similar tasks. Optional - EXPORT-FILE-NAME can be specified with full path)
-* EXPORT-FILE-NAME (shared file to export output of com.marklogic.developer.corb.ExportBatchToFileTask - file name with our without full path)
-* INIT-MODULE (XQuery Module, if specified, will be invoked prior to URIS-MODULE)
-* INIT-TASK (Java Task, if specified, will be called prior to URIS-MODULE, This can be used addition to INIT-MODULE)
+* URIS-MODULE (URI selector module. Expected to return a sequence containing the uris count followed by all the uris. Optionally, it can also return an arbitrary string as a first item in this sequence - refer to URIS\_BATCH\_REF section below).
+* URIS-FILE (If defined instead of URIS-MODULE, URIS will be loaded from the file located on the client. There should only be one URI per each line. This path may be relative or absolute. For example, a file containing a list of document identifiers can be used as a URIS-FILE and XQUERY-MODULE can query for the document based on this document identifier)
+* PROCESS-TASK (Java Class that implements com.marklogic.developer.corb.Task or extends com.marklogic.developer.corb.AbstractTask. Typically, it can talk to XQUERY-MODULE and the do additional processing locally such save a returned value.)    
+  * com.marklogic.developer.corb.ExportBatchToFileTask (included - Writes the data returned by the XQUERY-MODULE to single file specified by EXPORT-FILE-NAME. All returned values from entire CoRB will be streamed into the single file.)   
+  * com.marklogic.developer.corb.ExportToFileTask (included - saves the documents returned by each invocation of XQUERY-MODULE to a separate local file within EXPORT-FILE-DIR where the file name for each document will be the based on the URI.)   
+* PRE-BATCH-MODULE (An XQuery module which, if specified, will be run before batch processing starts)
+* PRE-BATCH-TASK (Java Class that implements com.marklogic.developer.corb.Task or extends com.marklogic.developer.corb.AbstractTask. If PRE-BATCH-MODULE is also specified, the implementation is expected to invoke the XQuery and process the result if any. It can also be specified without PRE-BATCH-MODULE and an example of this is to add a static header to a report.)   
+  * com.marklogic.developer.corb.PreBatchUpdateFileTask (included - Writes the data returned by the PRE-BATCH-MODULE to EXPORT-FILE-NAME, which can particularly be used to to write dynamic headers for CSV output. Also, if EXPORT-FILE-TOP-CONTENT is specified, this task will write this value to the EXPORT-FILE-NAME - this option is especially useful for writing fixed headers to reports.) 
+* POST-BATCH-MODULE (An XQuery module which, if specified, will be run after batch processing is completed)
+* POST-BATCH-TASK (Java Class that implements com.marklogic.developer.corb.Task or extends com.marklogic.developer.corb.AbstractTask. If POST-BATCH-MODULE is also specified, the implementation is expected to invoke the XQuery and process the result if any. It can also be specified without POST-BATCH-MODULE and an example of this is to add static content to the bottom of the report.)   
+  com.marklogic.developer.corb.PostBatchUpdateFileTask (included - Writes the data returned by the POST-BATCH-MODULE to EXPORT-FILE-NAME. Also, if EXPORT-FILE-BOTTOM-CONTENT is specified, this task will write this value to the EXPORT-FILE-NAME)
+* EXPORT-FILE-DIR (Export directory parameter is used by com.marklogic.developer.corb.ExportBatchToFileTask or similar custom task implementations. Optional: Alternatively, EXPORT-FILE-NAME can be specified with a full path)
+* EXPORT-FILE-NAME (shared file to write output of com.marklogic.developer.corb.ExportBatchToFileTask - should be a file name with our without full path)
+* INIT-MODULE (An XQuery Module which, if specified, will be invoked prior to URIS-MODULE)
+* INIT-TASK (Java Task which, if specified, will be called prior to URIS-MODULE - this can be used addition to INIT-MODULE for custom implementations)
 
 ### Additional options
-* EXPORT-FILE-PART-EXT (if specified, com.marklogic.developer.corb.PreBatchUpdateFileTask adds this extension to export file. It is expected that PostBatchUpdateFileTask will be specified, which removes the extension for the final export file)
-* EXPORT-FILE-TOP-CONTENT (used by com.marklogic.developer.corb.PreBatchUpdateFileTask to insert content at the top of EXPORT-FILE-NAME before batch process starts, if it finds the text @URIS_BATCH_REF it replaces it by batch reference sent by URIS-MODULE)
+* EXPORT-FILE-PART-EXT (ex: .tmp - if specified, com.marklogic.developer.corb.PreBatchUpdateFileTask adds this temporary extension to the export file name to indicate EXPORT-FILE-NAME is being actively modified. To remove this temporary extension after EXPORT-FILE-NAME is complete, com.marklogic.developer.corb.PostBatchUpdateFileTask must be specified as POST-BATCH-TASK.)
+* EXPORT-FILE-TOP-CONTENT (used by com.marklogic.developer.corb.PreBatchUpdateFileTask to insert content at the top of EXPORT-FILE-NAME before batch process starts. If it includes the string @URIS\_BATCH\_REF, it is replaced by the batch reference returned by URIS-MODULE)
 * EXPORT-FILE-BOTTOM-CONTENT (used by com.marklogic.developer.corb.PostBatchUpdateFileTask to append content to EXPORT-FILE-NAME after batch process is complete)
 * EXPORT_FILE_AS_ZIP (if true, PostBatchUpdateFileTask compresses the output file as a zip file)
-* URIS-REPLACE-PATTERN (one or more replace patterns for URIs - typically used to save memory, but XQUERY-MODULE should reconstruct the URI. usage: URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2,...)
+* URIS-REPLACE-PATTERN (one or more replace patterns for URIs - Used by java to truncate the length of URIs on the client side, typically to reduce java heap size in very large batch jobs, as the CoRB java client holds all the URIS in memory while processing is in progress. If truncated, XQUERY-MODULE needs to reconstruct the URI before trying to do fn:doc() to fetch the document. Usage: URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2,...)  
+  *Example:*  
+  URIS-REPLACE-PATTERN=/com/marklogic/sample/,,.xml,  (Replace /com/marklogic/sample/ and .xml with empty strings. So, Corb client only need to cache the id '1234' instead of the entire URI /com/marklogic/sample/1234.xml. In the transform XQUERY-MODULE, we need to do let $URI := fn:concat("/com/marklogic/sample/",$URI,".xml"))
 * XCC-CONNECTION-RETRY-LIMIT (Number attempts to connect to ML before giving up - default is 3)
 * XCC-CONNECTION-RETRY-INTERVAL (in seconds - Time interval in seconds between retry attempts - default is 60)
 
@@ -52,35 +54,45 @@ Note: Any or all of the properties can be specified as java VM arguments or key 
 * XCC-DBNAME (Optional)
 
 ### Custom Inputs to XQuery modules
-Any property specified with prefix (with '.') URIS-MODULE,XQUERY-MODULE,PRE-BATCH-MODULE,POST-BATCH-MODULE,INIT-MODULE, will be set as external variables to the corresponding xquery module (if defined).  
-ex:  
-URIS-MODULE.filePath  
-XQUERY-MODULE.outputFolder
+Any property specified with prefix (with '.') URIS-MODULE,XQUERY-MODULE,PRE-BATCH-MODULE,POST-BATCH-MODULE,INIT-MODULE, will be set as an external variable in the corresponding XQuery module (if that variable is defined as an external string variable in XQuery module).  
+
+**Examples:**  
+URIS-MODULE.maxLimit=1000 (Expects an external string variable _maxLimit_ in URIS-MODULE XQuery)  
+XQUERY-MODULE.startDate=2015-01-01 (Expects an external string variable _startDate_ in XQUERY-MODULE XQuery)  
 
 ### Adhoc Tasks
-INIT-MODULE, URIS-MODULE, XQUERY-MODULE, PRE-BATCH-MODULE and POST-BATCH-MODULE can be specified adhoc by adding prefix '|ADHOC' at the end. Adhoc XQuery is local to corb i.e. not deployed to marklogic. The xquery module should be in its named file available in classpath or filesystem.  
-ex:  
-PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC (module as a named file in the classpath or current directory)  
-INIT-MODULE=/path/to/file/adhoc-init-module.xqy|ADHOC (module file with full path in the file system)  
+Appending "|ADHOC" to the name of a module will cause the .xqy module to be read off the file system and executed in MarkLogic without being uploaded to Modules database. This simplifies running CoRB jobs by not requiring deployment of any code to MarkLogic, and makes set of CoRB2 files and configuration more self contained.   
+
+INIT-MODULE, URIS-MODULE, XQUERY-MODULE, PRE-BATCH-MODULE and POST-BATCH-MODULE can be specified adhoc by adding prefix '|ADHOC' at the end. Adhoc XQuery remains local to the CoRB and not deployed to MarkLogic. The xquery module should be in its named file and that file should be available on the file system, including being on the java classpath for CoRB.  
+
+**Examples:**  
+PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC (adhoc-pre-batch.xqy must be on the classpath or in the current directory)  
+XQUERY-MODULE=/path/to/file/adhoc-transform-module.xqy|ADHOC (module file with full path in the file system)  
 
 ### Encryption
-* DECRYPTER (Must extend com.marklogic.developer.corb.AbstractDecrypter. Encryptable options XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOST, XCC-PORT and XCC-DBNAME)   
-  com.marklogic.developer.corb.PrivateKeyDecrypter (Requires private key file)  
-  com.marklogic.developer.corb.JasyptDecrypter (Requires jasypt jar in classpath. Default algorithm PBEWithMD5AndTripleDES)
-* PRIVATE-KEY-FILE (Required property for PrivateKeyDecrypter, should be accessible in classpath or file system)
-* PRIVATE-KEY-ALGORITHM (Optional for PrivateKeyDecrypter. Default is RSA)
-* JASYPT-PROPERTIES-FILE (Optional property for JasyptDecrypter. If not specified, it uses default jasypt.proeprties file, which should be accessible in classpath or file system.)  
+It is often required to protect the database connection string or password from unauthorized access. So, CoRB optionally supports encryption of entire XCC URL or any parts of the XCC URL (if individually specified) such as XCC-PASSWORD. 
  
-#### PrivateKeyDecrypter
-Generate keys and encrypt the URI or password using one of the options below. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx)
+* DECRYPTER (Must extend com.marklogic.developer.corb.AbstractDecrypter. Encryptable options include XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOST, XCC-PORT and XCC-DBNAME)   
+  * com.marklogic.developer.corb.PrivateKeyDecrypter (Included, requires private key file)  
+  * com.marklogic.developer.corb.JasyptDecrypter (Included, requires jasypt-*.jar in classpath)
+* PRIVATE-KEY-FILE (Required property for PrivateKeyDecrypter, should be accessible in classpath or file system)
+* PRIVATE-KEY-ALGORITHM (Optional - Default algorithm for PrivateKeyDecrypter is RSA. Default algorithm for JasyptDecrypter is PBEWithMD5AndTripleDES)
+* JASYPT-PROPERTIES-FILE (Optional property for JasyptDecrypter. If not specified, it uses default jasypt.proeprties file, which should be accessible in the classpath or file system.)  
 
-**Java Crypt**
-* java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024 (Note: if not specified, default algorithm: RSA, default key-length: 1024)
-* java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA (Note: if not specified, default algorithm: RSA)
+#### com.marklogic.developer.corb.PrivateKeyDecrypter
+PrivateKeyDecrypter automatically detects if the text is encrypted. Unencrypted text or clear text is returned as-is. Though, not required, encrypted text can be optionally enclosed with "ENC" ex: ENC(xxxxxx) to clearly indicate that it is encrypted.  
+
+Generate keys and encrypt XCC URL or password using one of the options below.   
+
+**Java Crypt**  
+* Use the PrivateKeyDecrypter class inside the corb jar with the gen-keys option to generate a key.  
+  java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024 (Note: if not specified, default algorithm: RSA, default key-length: 1024)
+* Use the PrivateKeyDecrypter class inside the corb jar with the encrypt option to encrypt the clear text such as an xcc URL or password.  
+  java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA (Note: if not specified, default algorithm: RSA)
 
 **RSA keys**  
 * openssl genrsa -out private.pem 1024 (generate private key in PEM format)
-* openssl pkcs8 -topk8 -nocrypt -in private.pem -out private.pkcs8.key (create PRIVATE-KEY-FILE in PKCS8 std for java)
+* openssl pkcs8 -topk8 -nocrypt -in private.pem -out private.pkcs8.key (create PRIVATE-KEY-FILE in PKCS8 standard for java)
 * openssl rsa -in private.pem -pubout > public.key  (extract public key)
 * echo "uri or password" | openssl rsautl -encrypt -pubin -inkey public.key | base64 (encrypt URI or password. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx))
 
@@ -90,31 +102,35 @@ Generate keys and encrypt the URI or password using one of the options below. Op
 * openssl rsa -in id_rsa -pubout > public.key (asks for passphrase)
 * echo "password or uri" | openssl rsautl -encrypt -pubin -inkey public.key | base64
 
-#### JasyptDecrypter
-Encrypt the URI or password as below. It is assumed that jasypt dist is available on your box. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx)  
+#### com.marklogic.developer.corb.JasyptDecrypter
+JasyptDecrypter automatically detects if the text is encrypted. Unencrypted text or clear text is returned as-is. Though, not required, encrypted text can be optionally enclosed with "ENC" ex: ENC(xxxxxx) to clearly indicate that it is encrypted.    
+
+Encrypt the URI or password as below. It is assumed that jasypt distribution is available on your machine.   
 jasypt-1.9.2/bin/encrypt.sh input="uri or password" password="passphrase" algorithm="algorithm" (ex: PBEWithMD5AndTripleDES or PBEWithMD5AndDES)  
 
 **jasypt.properties file**  
-jasypt.algorithm=PBEWithMD5AndTripleDES  
+jasypt.algorithm=PBEWithMD5AndTripleDES (If not specified, default is PBEWithMD5AndTripleDES)  
 jasypt.password=passphrase
 
-### Internal Properties
-URIS_BATCH_REF (This is not a user specified property. URIS-MODULE can optionally return an arbitrary string as a fist item in the sequence i.e. before the count and uris. PRE-BATCH-MODULE, XQUERY-MODULE or POST-BATCH-MODULE can refer/use to this string value by defining an external string variable with name URIS_BATCH_REF. As an example, batch ref can be a link/id of a document that manages the status of the batch job, where pre-batch module updates the status to start and post-batch module can set it to complete. This example can be used to track/manage errors in automated batch jobs)
+#### URIS\_BATCH\_REF
+If a module, including those specified by PRE-BATCH-MODULE, XQUERY-MODULE or POST-BATCH-MODULE have an external variable named $URIS\_BATCH\_REF, the variable will be set to the first item in the sequence returned by URIS-MODULE. This means that, when used, the URIS-MODULE must return a sequence with the special string value first, then the URI count, then the sequence of URIs to process.  
+
+As an example, a batch ref can be a link/id of a document that manages the status of the batch job, where pre-batch module updates the status to start and post-batch module can set it to complete. This example can be used to manage status and errors in automated batch jobs.
 
 ### Usage
-#### Usage 1:
+#### Usage 1 (Command line options):
 java com.marklogic.developer.corb.Manager XCC-CONNECTION-URI [COLLECTION-NAME [XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT [ MODULES-DATABASE [ INSTALL [ PROCESS-TASK [ PRE-BATCH-MODULE  [ PRE-BATCH-TASK [ POST-XQUERY-MODULE  [ POST-BATCH-TASK [ EXPORT-FILE-DIR [ EXPORT-FILE-NAME [ URIS-FILE ] ] ] ] ] ] ] ] ] ] ] ] ] ] ]
 
-#### Usage 2:
+#### Usage 2 (Java system properties specifying options):
 java -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] -DXQUERY-MODULE=module-name.xqy -DTHREAD-COUNT=10 -DURIS-MODULE=get-uris.xqy -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy -D... com.marklogic.developer.corb.Manager
 
-#### Usage 3:
+#### Usage 3 (Properties file specifying options):
 java -DOPTIONS-FILE=myjob.properties com.marklogic.developer.corb.Manager (looks for myjob.properties file in classpath)
 
-#### Usage 4:
+#### Usage 4 (Combination of properties file with java system properties and command line options):
 java -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10 com.marklogic.developer.corb.Manager XCC-CONNECTION-URI
 
-###  Sample myjob.properties (Note: any of the properteis below can be specified as java VM argument i.e. '-D' option)
+###  Sample myjob.properties (Note: any of the properties below can be specified as java system property i.e. '-D' option)
 
 ##### sample 1 - simple batch
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
