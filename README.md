@@ -72,7 +72,7 @@ XQUERY-MODULE=/path/to/file/adhoc-transform-module.xqy|ADHOC (module file with f
 ### Encryption
 It is often required to protect the database connection string or password from unauthorized access. So, CoRB optionally supports encryption of entire XCC URL or any parts of the XCC URL (if individually specified) such as XCC-PASSWORD. 
  
-* DECRYPTER (Must extend com.marklogic.developer.corb.AbstractDecrypter. Encryptable options include XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOST, XCC-PORT and XCC-DBNAME)   
+* DECRYPTER (Must extend com.marklogic.developer.corb.AbstractDecrypter. Encryptable options include XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and XCC-DBNAME)   
   * com.marklogic.developer.corb.PrivateKeyDecrypter (Included, requires private key file)  
   * com.marklogic.developer.corb.JasyptDecrypter (Included, requires jasypt-*.jar in classpath)
 * PRIVATE-KEY-FILE (Required property for PrivateKeyDecrypter, should be accessible in classpath or file system)
