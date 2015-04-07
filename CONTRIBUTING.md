@@ -46,7 +46,7 @@ information will increase the chances of your issue being dealt with quickly:
 
 #### Fork Corb
 
-Fork the project [on GitHub](https://github.com/marklogic/Corb/fork) and clone
+Fork the project [on GitHub](https://github.com/marklogic/corb2/fork) and clone
 your copy.
 
 ```sh
@@ -178,5 +178,5 @@ local shell as follows:
     git pull --ff upstream master
     ```
 
-[issue tracker]: https://github.com/marklogic/Corb/issues
+[issue tracker]: https://github.com/marklogic/corb2/issues
 [.editorconfig]: http://editorconfig.org/
