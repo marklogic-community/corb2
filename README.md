@@ -1,5 +1,8 @@
 Version: 2.1.0
 
+### User Guide
+Please refer to [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc)
+
 ### Running Corb
 The entry point is the main method in the com.marklogic.developer.corb.Manager class. 
 
