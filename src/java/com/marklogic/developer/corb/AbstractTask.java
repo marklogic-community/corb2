@@ -1,8 +1,10 @@
 package com.marklogic.developer.corb;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import com.marklogic.developer.SimpleLogger;
 import com.marklogic.xcc.ContentSource;
@@ -30,6 +32,9 @@ public abstract class AbstractTask implements Task{
 	protected String inputUri;
 	
 	protected String adhocQuery;
+	
+	static private Object sync = new Object();
+	static private Map<String,Set<String>> modulePropsMap = new HashMap<String,Set<String>>();
 		
 	protected int DEFAULT_RETRY_LIMIT=3;
 	protected int DEFAULT_RETRY_INTERVAL=60;
@@ -93,17 +98,38 @@ public abstract class AbstractTask implements Task{
             	request.setNewStringVariable(Manager.URIS_BATCH_REF, properties.getProperty(Manager.URIS_BATCH_REF));
             }
             
-        	List<String> propertyNames = new ArrayList<String>();
-        	if(properties != null) propertyNames.addAll(properties.stringPropertyNames());
-        	propertyNames.addAll(System.getProperties().stringPropertyNames());
-			
-        	for(String propName:propertyNames){
-            	if(moduleType != null && propName.startsWith(moduleType+".")){
-            		String varName = propName.substring(moduleType.length()+1);
-            		String value = getProperty(propName);
-            		if(value != null) request.setNewStringVariable(varName, value);
+            if(moduleType != null){
+            	Set<String> modulePropNames = modulePropsMap.get(moduleType);
+            	if(modulePropNames == null){
+            		synchronized(sync){
+            			modulePropNames = modulePropsMap.get(moduleType);
+            			if(modulePropNames == null){
+	            			HashSet<String> propSet = new HashSet<String>(); 
+	            			if(properties != null){
+		            			for(String propName: properties.stringPropertyNames()){
+		            				if(propName.startsWith(moduleType+".")){
+		            					propSet.add(propName);
+		            				}
+		            			}
+	            			}
+	            			for(String propName: System.getProperties().stringPropertyNames()){
+	            				if(propName.startsWith(moduleType+".")){
+	            					propSet.add(propName);
+	            				}
+	            			}
+	            			modulePropsMap.put(moduleType,modulePropNames=propSet);
+            			}
+            		}
             	}
-            }
+            	
+            	for(String propName: modulePropNames){
+            		if(propName.startsWith(moduleType+".")){
+	            		String varName = propName.substring(moduleType.length()+1);
+	            		String value = getProperty(propName);
+	            		if(value != null) request.setNewStringVariable(varName, value);
+            		}
+            	}
+            }           
             
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);
