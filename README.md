@@ -3,8 +3,15 @@ Version: 2.1.0
 ### User Guide
 Please refer to CoRB2 online [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc)
 
+### Downloads
+Please download latest release from https://github.com/marklogic/corb2/releases.  
+
+For backwards compatibility, Corb releases upto v2.1.* are built using marklogic xcc v6.0.2. However, a later version of corb (ex: v7.0.4) can be used for running the Corb.
+
+To build corb using ant, please specify java.library.user folder in the build.properties file and place marklogic-xcc-6.0.2.jar in this folder. Please update build.xml for building corb with a later version of xcc jar.   
+
 ### Running Corb
-The entry point is the main method in the com.marklogic.developer.corb.Manager class. 
+The entry point is the main method in the com.marklogic.developer.corb.Manager class. Corb requires marklogic xcc jar in the classpath, which can be downloaded from https://developer.marklogic.com/products/xcc (corb releases are tested with xcc versions 6.0 and 7.0)
 
 Corb needs one or more of the following parameters as (If specified in more than one place command line parameter takes precedence over java system property which take precedence over myjob.properties)
 
