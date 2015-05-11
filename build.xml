@@ -52,9 +52,7 @@
   		  </fileset>
   	</copy>
   	<copy file="README.md" todir="${build.dir}"/>
-    <javac destdir="${build.dir}" target="1.5" source="1.5"
-           debug="true"
-           includeantruntime="false">
+    <javac destdir="${build.dir}" debug="true" includeantruntime="false" source="1.7" target="1.7">
       <compilerarg value="-Xlint"/>
       <src path="${src.dir}"/>
       <classpath refid="master-classpath"/>

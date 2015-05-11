@@ -109,8 +109,7 @@ public class SimpleLogger extends Logger {
         return obj;
     }
 
-    public static synchronized SimpleLogger getSimpleLogger(String name,
-            String resBundle) {
+    public static synchronized SimpleLogger getSimpleLogger(String name,String resBundle) {
         SimpleLogger obj = loggers.get(name);
 
         if (obj == null)
@@ -121,8 +120,7 @@ public class SimpleLogger extends Logger {
 
     public void configureLogger(Properties _prop) {
         if (_prop == null) {
-            System.err
-                    .println("WARNING: null properties. Cannot configure logger");
+            System.err.println("WARNING: null properties. Cannot configure logger");
             return;
         }
 
@@ -140,16 +138,11 @@ public class SimpleLogger extends Logger {
         String logLevel = _prop.getProperty(LOG_LEVEL, DEFAULT_LOG_LEVEL);
 
         // support multiple handlers: comma-separated
-        String[] logHandler = _prop.getProperty(LOG_HANDLER,
-                DEFAULT_LOG_HANDLER).split(",");
-        String logFilePath = _prop.getProperty(LOG_FILEHANDLER_PATH,
-                DEFAULT_FILEHANDLER_PATH);
-        boolean logFileAppend = Boolean.parseBoolean(_prop.getProperty(
-                LOG_FILEHANDLER_APPEND, "true"));
-        int logFileCount = Integer.parseInt(_prop.getProperty(
-                LOG_FILEHANDLER_COUNT, "1"));
-        int logFileLimit = Integer.parseInt(_prop.getProperty(
-                LOG_FILEHANDLER_LIMIT, "0"));
+        String[] logHandler = _prop.getProperty(LOG_HANDLER,DEFAULT_LOG_HANDLER).split(",");
+        String logFilePath = _prop.getProperty(LOG_FILEHANDLER_PATH,DEFAULT_FILEHANDLER_PATH);
+        boolean logFileAppend = Boolean.parseBoolean(_prop.getProperty(LOG_FILEHANDLER_APPEND, "true"));
+        int logFileCount = Integer.parseInt(_prop.getProperty(LOG_FILEHANDLER_COUNT, "1"));
+        int logFileLimit = Integer.parseInt(_prop.getProperty(LOG_FILEHANDLER_LIMIT, "0"));
 
         Handler h = null;
         if (logHandler != null && logHandler.length > 0) {
@@ -167,19 +160,16 @@ public class SimpleLogger extends Logger {
                 if (logHandler[i].equals("FILE")) {
                     System.err.println("logging to file " + logFilePath);
                     try {
-                        h = new FileHandler(logFilePath, logFileLimit,
-                                logFileCount, logFileAppend);
+                        h = new FileHandler(logFilePath, logFileLimit,logFileCount, logFileAppend);
                     } catch (SecurityException e) {
                         e.printStackTrace();
                         // fatal error
-                        System.err
-                                .println("cannot configure logging: exiting");
+                        System.err.println("cannot configure logging: exiting");
                         Runtime.getRuntime().exit(-1);
                     } catch (IOException e) {
                         e.printStackTrace();
                         // fatal error
-                        System.err
-                                .println("cannot configure logging: exiting");
+                        System.err.println("cannot configure logging: exiting");
                         Runtime.getRuntime().exit(-1);
                     }
                     h.setFormatter(new SimpleFormatter());
@@ -192,17 +182,13 @@ public class SimpleLogger extends Logger {
                     try {
                         Class<? extends Handler> lhc = Class.forName(logHandler[i], true,
                                 ClassLoader.getSystemClassLoader()).asSubclass(Handler.class);
-                        System.err.println("logging to class "
-                                + logHandler[i]);
-                        Constructor<? extends Handler> con = lhc
-                                .getConstructor(new Class[] {});
+                        System.err.println("logging to class " + logHandler[i]);
+                        Constructor<? extends Handler> con = lhc.getConstructor(new Class<?>[] {});
                         h = con.newInstance(new Object[] {});
                     } catch (Exception e) {
-                        System.err.println("unrecognized LOG_HANDLER: "
-                                + logHandler[i]);
+                        System.err.println("unrecognized LOG_HANDLER: "+ logHandler[i]);
                         e.printStackTrace();
-                        System.err
-                                .println("cannot configure logging: exiting");
+                        System.err.println("cannot configure logging: exiting");
                         Runtime.getRuntime().exit(-1);
                     }
                 }
