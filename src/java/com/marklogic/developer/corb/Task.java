@@ -26,6 +26,8 @@ public interface Task extends Callable<String> {
 	public void setModuleURI(String moduleURI);
 	
 	public void setAdhocQuery(String adhocQuery);
+	
+	public void setAdhocQueryLanguage(String language);
 		
 	/**
 	 * If additional data is sent from CUSTOM URI module, it is available in properties

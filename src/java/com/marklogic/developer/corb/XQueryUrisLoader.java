@@ -12,7 +12,6 @@ import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
-import com.marklogic.xcc.types.XSInteger;
 
 public class XQueryUrisLoader implements UrisLoader {
 	TransformOptions options;	
@@ -70,50 +69,77 @@ public class XQueryUrisLoader implements UrisLoader {
 	        
 			session = cs.newSession();
 			Request req = null;
-			if(options.getUrisModule().toUpperCase().endsWith("|ADHOC")){
+			if(options.getUrisModule().toUpperCase().endsWith("|ADHOC-JAVASCRIPT")){
 				String queryPath = options.getUrisModule().substring(0, options.getUrisModule().indexOf('|'));
 				String adhocQuery = TaskFactory.getAdhocQuery(queryPath);
 				if(adhocQuery == null || (adhocQuery.length() == 0)){
     				throw new IllegalStateException("Unable to read adhoc query "+queryPath+" from classpath or filesystem");
     			}
-				logger.info("invoking adhoc uris module " + queryPath);
-				req = session.newAdhocQuery(adhocQuery);
+				logger.info("invoking adhoc javascript uris module " + queryPath);
+				StringBuffer sb = new StringBuffer();
+				sb.append("xdmp:javascript-eval('");
+				sb.append(adhocQuery);
+				sb.append("',(");
+				int varCount=0;
+				for(String propName:propertyNames){
+		        	if(propName.startsWith("URIS-MODULE.")){
+		        		String varName = propName.substring("URIS-MODULE.".length());
+		        		String value = getProperty(propName);
+		        		if(value != null){
+		        			if(varCount > 0) sb.append(",");
+		        			sb.append("\""+varName+"\"").append(",\""+value+"\"");
+		        			varCount++;
+		        		}
+		        	}
+		        }
+				sb.append("))");
+				
+				req = session.newAdhocQuery(sb.toString());
 			}else{
-				String root = options.getModuleRoot();
-				if(!root.endsWith("/")) root = root + "/";
-				
-				String module = options.getUrisModule();
-				if(module.startsWith("/") && module.length() > 1) module = module.substring(1);
-				
-				String modulePath = root + module;
-				logger.info("invoking uris module " + modulePath);
-				req = session.newModuleInvoke(modulePath);
+				if(options.getUrisModule().toUpperCase().endsWith("|ADHOC")){
+					String queryPath = options.getUrisModule().substring(0, options.getUrisModule().indexOf('|'));
+					String adhocQuery = TaskFactory.getAdhocQuery(queryPath);
+					if(adhocQuery == null || (adhocQuery.length() == 0)){
+	    				throw new IllegalStateException("Unable to read adhoc query "+queryPath+" from classpath or filesystem");
+	    			}
+					logger.info("invoking adhoc uris module " + queryPath);
+					req = session.newAdhocQuery(adhocQuery);
+				}else{
+					String root = options.getModuleRoot();
+					if(!root.endsWith("/")) root = root + "/";
+					
+					String module = options.getUrisModule();
+					if(module.startsWith("/") && module.length() > 1) module = module.substring(1);
+					
+					String modulePath = root + module;
+					logger.info("invoking uris module " + modulePath);
+					req = session.newModuleInvoke(modulePath);
+				}
+		        // NOTE: collection will be treated as a CWSV
+		        req.setNewStringVariable("URIS", collection);
+		        // TODO support DIRECTORY as type
+		        req.setNewStringVariable("TYPE", TransformOptions.COLLECTION_TYPE);
+		        req.setNewStringVariable("PATTERN", "[,\\s]+");
+		        
+		        //custom inputs	        
+				for(String propName:propertyNames){
+		        	if(propName.startsWith("URIS-MODULE.")){
+		        		String varName = propName.substring("URIS-MODULE.".length());
+		        		String value = getProperty(propName);
+		        		if(value != null) req.setNewStringVariable(varName, value);
+		        	}
+		        }
+		        
+		        req.setOptions(opts);
 			}
-	        // NOTE: collection will be treated as a CWSV
-	        req.setNewStringVariable("URIS", collection);
-	        // TODO support DIRECTORY as type
-	        req.setNewStringVariable("TYPE", TransformOptions.COLLECTION_TYPE);
-	        req.setNewStringVariable("PATTERN", "[,\\s]+");
-	        
-	        //custom inputs	        
-			for(String propName:propertyNames){
-	        	if(propName.startsWith("URIS-MODULE.")){
-	        		String varName = propName.substring("URIS-MODULE.".length());
-	        		String value = getProperty(propName);
-	        		if(value != null) req.setNewStringVariable(varName, value);
-	        	}
-	        }
-	        
-	        req.setOptions(opts);
-	        
 	        res = session.submitRequest(req);
 	        ResultItem next = res.next();
-	        if(!(next.getItem() instanceof XSInteger)){
+	        if(!(next.getItem().asString().matches("\\d+"))){
 	        	batchRef = next.asString();
 	        	next = res.next();
 	        }
 			
-	        total = ((XSInteger) next.getItem()).asPrimitiveInt();
+	        total = Integer.parseInt(next.getItem().asString());
 		}catch(RequestException exc){
 			throw new CorbException("While invoking Uris Module",exc);
 		}

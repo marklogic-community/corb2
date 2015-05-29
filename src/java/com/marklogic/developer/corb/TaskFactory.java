@@ -154,7 +154,7 @@ public class TaskFactory {
     
     private void setupTask(Task task, String moduleType, String module, String _uri){
     	if(module != null){
-    		if(module.toUpperCase().endsWith("|ADHOC")){
+    		if(module.toUpperCase().endsWith("|ADHOC") || module.toUpperCase().endsWith("|ADHOC-JAVASCRIPT")){
     			String adhocQuery = moduleToAdhocQueryMap.get(module);
     			if(adhocQuery == null){
     				adhocQuery=getAdhocQuery(module.substring(0, module.indexOf('|')));
@@ -164,6 +164,9 @@ public class TaskFactory {
     				moduleToAdhocQueryMap.put(module, adhocQuery);
     			}
     			task.setAdhocQuery(adhocQuery);
+    			if(module.toUpperCase().endsWith("|ADHOC-JAVASCRIPT")){
+    				task.setAdhocQueryLanguage("JAVASCRIPT");
+    			}
     		}else{
     			String modulePath = moduleToPathMap.get(module);
     			if(modulePath == null){
