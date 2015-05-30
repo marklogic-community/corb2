@@ -20,7 +20,7 @@ public abstract class AbstractDecrypter{
 			return decrypt("XCC-CONNECTION-URI",uri);
 		}else{
 			return "xcc://"+decrypt("XCC-USERNAME",username)+":"+decrypt("XCC-PASSWORD",password)+"@"+
-					decrypt("XCC-HOST",host)+":"+decrypt("XCC-PORT",port)+(dbname != null ? "/"+decrypt("XCC-DBNAME",dbname) : "");
+					decrypt("XCC-HOSTNAME",host)+":"+decrypt("XCC-PORT",port)+(dbname != null ? "/"+decrypt("XCC-DBNAME",dbname) : "");
 		}
 	}
 	
