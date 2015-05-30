@@ -166,6 +166,8 @@ public class TaskFactory {
     			task.setAdhocQuery(adhocQuery);
     			if(module.toUpperCase().endsWith("|ADHOC-JAVASCRIPT")){
     				task.setAdhocQueryLanguage("JAVASCRIPT");
+    			}else{
+    				task.setAdhocQueryLanguage("XQUERY");
     			}
     		}else{
     			String modulePath = moduleToPathMap.get(module);
