@@ -154,17 +154,18 @@ public class TaskFactory {
     
     private void setupTask(Task task, String moduleType, String module, String _uri){
     	if(module != null){
-    		if(module.toUpperCase().endsWith("|ADHOC") || module.toUpperCase().endsWith("|ADHOC-JAVASCRIPT")){
-    			String adhocQuery = moduleToAdhocQueryMap.get(module);
+    		if(module.toUpperCase().endsWith("|ADHOC")){
+    			String modulePath=module.substring(0, module.indexOf('|'));
+    			String adhocQuery = moduleToAdhocQueryMap.get(modulePath);
     			if(adhocQuery == null){
-    				adhocQuery=getAdhocQuery(module.substring(0, module.indexOf('|')));
+    				adhocQuery=getAdhocQuery(modulePath);
         			if(adhocQuery == null || (adhocQuery.length() == 0)){
         				throw new IllegalStateException("Unable to read adhoc query "+module+" from classpath or filesystem");
         			}
-    				moduleToAdhocQueryMap.put(module, adhocQuery);
+    				moduleToAdhocQueryMap.put(modulePath, adhocQuery);
     			}
     			task.setAdhocQuery(adhocQuery);
-    			if(module.toUpperCase().endsWith("|ADHOC-JAVASCRIPT")){
+    			if(modulePath.toUpperCase().endsWith(".SJS") || modulePath.toUpperCase().endsWith(".JS")){
     				task.setAdhocQueryLanguage("JAVASCRIPT");
     			}else{
     				task.setAdhocQueryLanguage("XQUERY");
