@@ -80,6 +80,17 @@ PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC (adhoc-pre-batch.xqy must be on the c
 XQUERY-MODULE=/path/to/file/adhoc-transform-module.xqy|ADHOC (xquery module file with full path in the file system)  
 URIS-MODULE=adhoc-uris.sjs|ADHOC-JAVASCRIPT (Adhoc JavaScript module in the classpat or current directory)
 
+### JavaScript Modules
+JavaScript modules are supported with Marklogic 8 and can be used in place of an xquery module. However, if returning multiple values (ex: URIS-MODULE), values must be returned as ValueIterator. MarkLogic JavaScript API has helper functions to convert Arrays into ValueIterator (xdmp.arrayValues()) and inserting values into another ValueIterator (fn.insertBefore()). 
+
+For example, a simple URIS-MODULE may look like this
+
+var uris = cts.uris()
+fn.insertBefore(uris,0,uris.count)
+
+To return URIS\_BATCH\_REF, we can do the following. 
+fn.insertBefore(fn.insertBefore(uris,0,uris.count),0,"batch\-ref") 
+
 ### Encryption
 It is often required to protect the database connection string or password from unauthorized access. So, CoRB optionally supports encryption of entire XCC URL or any parts of the XCC URL (if individually specified) such as XCC-PASSWORD. 
  
@@ -124,22 +135,11 @@ jasypt.algorithm=PBEWithMD5AndTripleDES (If not specified, default is PBEWithMD5
 jasypt.password=passphrase
 
 #### URIS\_BATCH\_REF
-If a module, including those specified by PRE-BATCH-MODULE, XQUERY-MODULE or POST-BATCH-MODULE have an external or global variable named $URIS\_BATCH\_REF, the variable will be set to the first item in the sequence returned by URIS-MODULE. This means that, when used, the URIS-MODULE must return a sequence with the special string value first, then the URI count, then the sequence of URIs to process.  
+If a module, including those specified by PRE-BATCH-MODULE, XQUERY-MODULE or POST-BATCH-MODULE have an external or global variable named URIS\_BATCH\_REF, the variable will be set to the first item in the sequence or ValueIterator returned by URIS-MODULE. This means that, when used, the URIS-MODULE must return a sequence or ValueIterator with the special string value first, then the URI count, then the sequence of URIs to process.  
 
 As an example, a batch ref can be a link/id of a document that manages the status of the batch job, where pre-batch module updates the status to start and post-batch module can set it to complete. This example can be used to manage status and errors in automated batch jobs.   
 
 ExportBatchToFileTask, PreBatchUpdateFileTask and PostBatchUpdateFileTask use URIS\_BATCH\_REF as the file name if EXPORT-FILE-NAME is not specified. This is useful for automated jobs where name of the output file name can be determined only by the URIS-MODULE.  
-
-### JavaScript Modules
-JavaScript modules are supported with Marklogic 8 and can be used in place of an xquery module. However, if returning multiple values (ex: URIS-MODULE), values must be returned as ValueIterator. MarkLogic JavaScript API has helper functions to convert Arrays into ValueIterator (xdmp.arrayValues()) and inserting values into another ValueIterator (fn.insertBefore()). 
-
-For example, a simple URIS-MODULE may look like this
-
-var uris = cts.uris()
-fn.insertBefore(uris,0,uris.count)
-
-To return URIS\_BATCH\_REF, we can do the following. 
-fn.insertBefore(fn.insertBefore(uris,0,uris.count),0,"uris\-batch\-ref") 
 
 
 ### Usage
