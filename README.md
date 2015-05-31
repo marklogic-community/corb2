@@ -73,7 +73,7 @@ XQUERY-MODULE.startDate=2015-01-01 (Expects an external string variable _startDa
 ### Adhoc Modules
 Appending "|ADHOC" to the name or path of a XQuery module or "|ADHOC-JAVASCRIPT" to the name and path of JavaScript module will cause the module to be read off the file system and executed in MarkLogic without being uploaded to Modules database. This simplifies running CoRB jobs by not requiring deployment of any code to MarkLogic, and makes set of CoRB2 files and configuration more self contained.   
 
-INIT-MODULE, URIS-MODULE, XQUERY-MODULE, PRE-BATCH-MODULE and POST-BATCH-MODULE can be specified adhoc by adding prefix '|ADHOC' or "|ADHOC-JAVASCRIPT" for JavaScript at the end. Adhoc XQuery or JavaScript remains local to the CoRB and not deployed to MarkLogic. The XQuery or JavaScript module should be in its named file and that file should be available on the file system, including being on the java classpath for CoRB.  
+INIT-MODULE, URIS-MODULE, XQUERY-MODULE, PRE-BATCH-MODULE and POST-BATCH-MODULE can be specified adhoc by adding prefix '|ADHOC' for XQuery or "|ADHOC-JAVASCRIPT" for JavaScript at the end. Adhoc XQuery or JavaScript remains local to the CoRB and not deployed to MarkLogic. The XQuery or JavaScript module should be in its named file and that file should be available on the file system, including being on the java classpath for CoRB.  
 
 **Examples:**  
 PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC (adhoc-pre-batch.xqy must be on the classpath or in the current directory)  
