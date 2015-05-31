@@ -71,17 +71,19 @@ URIS-MODULE.maxLimit=1000 (Expects an external string variable  _maxLimit_ in UR
 XQUERY-MODULE.startDate=2015-01-01 (Expects an external string variable _startDate_ in XQUERY-MODULE XQuery or global variable for JavaScript)  
 
 ### Adhoc Modules
-Appending "|ADHOC" to the name or path of a XQuery module or "|ADHOC-JAVASCRIPT" to the name and path of JavaScript module will cause the module to be read off the file system and executed in MarkLogic without being uploaded to Modules database. This simplifies running CoRB jobs by not requiring deployment of any code to MarkLogic, and makes set of CoRB2 files and configuration more self contained.   
+Appending "|ADHOC" to the name or path of a XQuery module (with .xqy extension) or JavaScript (with .sjs or .js extension) module will cause the module to be read off the file system and executed in MarkLogic without being uploaded to Modules database. This simplifies running CoRB jobs by not requiring deployment of any code to MarkLogic, and makes set of CoRB2 files and configuration more self contained.   
 
-INIT-MODULE, URIS-MODULE, XQUERY-MODULE, PRE-BATCH-MODULE and POST-BATCH-MODULE can be specified adhoc by adding prefix '|ADHOC' for XQuery or "|ADHOC-JAVASCRIPT" for JavaScript at the end. Adhoc XQuery or JavaScript remains local to the CoRB and not deployed to MarkLogic. The XQuery or JavaScript module should be in its named file and that file should be available on the file system, including being on the java classpath for CoRB.  
+INIT-MODULE, URIS-MODULE, XQUERY-MODULE, PRE-BATCH-MODULE and POST-BATCH-MODULE can be specified adhoc by adding prefix '|ADHOC' for XQuery or JavaScript (with .sjs or .js extension) at the end. Adhoc XQuery or JavaScript remains local to the CoRB and not deployed to MarkLogic. The XQuery or JavaScript module should be in its named file and that file should be available on the file system, including being on the java classpath for CoRB.  
 
 **Examples:**  
 PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC (adhoc-pre-batch.xqy must be on the classpath or in the current directory)  
 XQUERY-MODULE=/path/to/file/adhoc-transform-module.xqy|ADHOC (xquery module file with full path in the file system)  
-URIS-MODULE=adhoc-uris.sjs|ADHOC-JAVASCRIPT (Adhoc JavaScript module in the classpat or current directory)
+URIS-MODULE=adhoc-uris.sjs|ADHOC (Adhoc JavaScript module in the classpat or current directory)
 
 ### JavaScript Modules
 JavaScript modules are supported with Marklogic 8 and can be used in place of an xquery module. However, if returning multiple values (ex: URIS-MODULE), values must be returned as ValueIterator. MarkLogic JavaScript API has helper functions to convert Arrays into ValueIterator (xdmp.arrayValues()) and inserting values into another ValueIterator (fn.insertBefore()). 
+
+JavaScritp module must have .sjs file extension when deployed to Modules database. However, adhoc JavaScript modules support both .sjs or .js file extensions. 
 
 For example, a simple URIS-MODULE may look like this
 
@@ -254,5 +256,5 @@ XQUERY-MODULE=transform.sjs
 
 ##### sample 13 - Adhoc JavaScript modules 
 ..  
-URIS-MODULE=get-uris.sjs|ADHOC-JAVASCRIPT  
-XQUERY-MODULE=extract.sjs|ADHOC-JAVASCRIPT  
+URIS-MODULE=get-uris.sjs|ADHOC  
+XQUERY-MODULE=extract.sjs|ADHOC  

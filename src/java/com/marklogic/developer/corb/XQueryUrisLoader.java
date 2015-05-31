@@ -69,7 +69,7 @@ public class XQueryUrisLoader implements UrisLoader {
 	        
 			session = cs.newSession();
 			Request req = null;
-			if(options.getUrisModule().toUpperCase().endsWith("|ADHOC-JAVASCRIPT")){
+			if(options.getUrisModule().toUpperCase().endsWith(".SJS|ADHOC") || options.getUrisModule().toUpperCase().endsWith(".JS|ADHOC")){
 				String queryPath = options.getUrisModule().substring(0, options.getUrisModule().indexOf('|'));
 				String adhocQuery = TaskFactory.getAdhocQuery(queryPath);
 				if(adhocQuery == null || (adhocQuery.length() == 0)){
