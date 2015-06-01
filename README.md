@@ -87,10 +87,10 @@ JavaScritp module must have .sjs file extension when deployed to Modules databas
 
 For example, a simple URIS-MODULE may look like this
 
-var uris = cts.uris()
+var uris = cts.uris()  
 fn.insertBefore(uris,0,uris.count)
 
-To return URIS\_BATCH\_REF, we can do the following. 
+To return URIS\_BATCH\_REF, we can do the following   
 fn.insertBefore(fn.insertBefore(uris,0,uris.count),0,"batch\-ref") 
 
 ### Encryption
