@@ -83,7 +83,7 @@ URIS-MODULE=adhoc-uris.sjs|ADHOC (Adhoc JavaScript module in the classpath or cu
 ### JavaScript Modules
 JavaScript modules are supported with Marklogic 8 and can be used in place of an xquery module. However, if returning multiple values (ex: URIS-MODULE), values must be returned as ValueIterator. MarkLogic JavaScript API has helper functions to convert Arrays into ValueIterator (xdmp.arrayValues()) and inserting values into another ValueIterator (fn.insertBefore()). 
 
-JavaScritp module must have .sjs file extension when deployed to Modules database. However, adhoc JavaScript modules support both .sjs or .js file extensions. 
+JavaScript module must have .sjs file extension when deployed to Modules database. However, adhoc JavaScript modules support both .sjs or .js file extensions. 
 
 For example, a simple URIS-MODULE may look like this
 
@@ -92,6 +92,8 @@ fn.insertBefore(uris,0,uris.count)
 
 To return URIS\_BATCH\_REF, we can do the following   
 fn.insertBefore(fn.insertBefore(uris,0,uris.count),0,"batch\-ref") 
+
+Note: Do not use single quotes with in (adhoc) java script modules. If you must use a single quote, escape it with a quote (ex: ''text'')
 
 ### Encryption
 It is often required to protect the database connection string or password from unauthorized access. So, CoRB optionally supports encryption of entire XCC URL or any parts of the XCC URL (if individually specified) such as XCC-PASSWORD. 
