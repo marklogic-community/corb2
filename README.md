@@ -17,7 +17,7 @@ Corb needs one or more of the following parameters as (If specified in more than
 
 1. command-line parameters 
 2. Java system properties ex: -DXCC-CONNECTION-URI=xcc://user:password@localhost:8202. 
-3. As properties file in the class path specified using -DOPTIONS-FILE=myjob.properties. Relative and full file paths are also supported. 
+3. As properties file in the class path specified using -DOPTIONS-FILE=myjob.properties. Relative and full file system paths are also supported. 
 
 Note: Any or all of the properties can be specified as java system properties or key value pairs in properties file.
 
@@ -148,16 +148,16 @@ ExportBatchToFileTask, PreBatchUpdateFileTask and PostBatchUpdateFileTask use UR
 
 ### Usage
 #### Usage 1 (Command line options):
-java com.marklogic.developer.corb.Manager XCC-CONNECTION-URI [COLLECTION-NAME [XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT [ MODULES-DATABASE [ INSTALL [ PROCESS-TASK [ PRE-BATCH-MODULE  [ PRE-BATCH-TASK [ POST-XQUERY-MODULE  [ POST-BATCH-TASK [ EXPORT-FILE-DIR [ EXPORT-FILE-NAME [ URIS-FILE ] ] ] ] ] ] ] ] ] ] ] ] ] ] ]
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar com.marklogic.developer.corb.Manager XCC-CONNECTION-URI [COLLECTION-NAME [XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT [ MODULES-DATABASE [ INSTALL [ PROCESS-TASK [ PRE-BATCH-MODULE  [ PRE-BATCH-TASK [ POST-XQUERY-MODULE  [ POST-BATCH-TASK [ EXPORT-FILE-DIR [ EXPORT-FILE-NAME [ URIS-FILE ] ] ] ] ] ] ] ] ] ] ] ] ] ] ]
 
 #### Usage 2 (Java system properties specifying options):
-java -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] -DXQUERY-MODULE=module-name.xqy -DTHREAD-COUNT=10 -DURIS-MODULE=get-uris.xqy -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy -D... com.marklogic.developer.corb.Manager
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] -DXQUERY-MODULE=module-name.xqy -DTHREAD-COUNT=10 -DURIS-MODULE=get-uris.xqy -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy -D... com.marklogic.developer.corb.Manager
 
 #### Usage 3 (Properties file specifying options):
-java -DOPTIONS-FILE=myjob.properties com.marklogic.developer.corb.Manager (looks for myjob.properties file in classpath)
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar -DOPTIONS-FILE=myjob.properties com.marklogic.developer.corb.Manager (looks for myjob.properties file in classpath)
 
 #### Usage 4 (Combination of properties file with java system properties and command line options):
-java -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10 com.marklogic.developer.corb.Manager XCC-CONNECTION-URI
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10 com.marklogic.developer.corb.Manager XCC-CONNECTION-URI
 
 ###  Sample myjob.properties (Note: any of the properties below can be specified as java system property i.e. '-D' option)
 
