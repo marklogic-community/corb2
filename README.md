@@ -1,7 +1,7 @@
 Version: 2.1.2
 
 ### User Guide
-This document provides a comprehensive overview of CoRB2.  For additional information, please refer to CoRB2 online [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc).  This document also covers the less robust [RunXQuery Tool]](#runXQuery-readme) which can be used when only a single staged query is necessary.  The RunXQuery Tool is provided as part of the CoRB2 distribution.
+This document provides a comprehensive overview of CoRB2.  For additional information, please refer to CoRB2 online [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc).  This document also covers the less robust [RunXQuery Tool](#runXQuery-readme) which can be used when only a single staged query is necessary.  The RunXQuery Tool is provided as part of the CoRB2 distribution.
 
 ### Downloads
 Please download latest release from https://github.com/marklogic/corb2/releases.  
