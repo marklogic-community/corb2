@@ -307,19 +307,24 @@ The following are example usages from a Windows console:
 
 ##### Usage 1
 
-java -cp pathToXCC.jar:pathToCoRB.jar RunXQueryManager xcc://user:password@host:port/[ database ] ^
-         xqueryOrJavascriptModuleName moduleRootName modulesDatabaseName com.marklogic.developer.corb.ExportBatchToFileTask ^
+java -cp pathToXCC.jar:pathToCoRB.jar RunXQueryManager ^ 
+         xcc://user:password@host:port/[ database ] ^
+         xqueryOrJavascriptModuleName moduleRootName modulesDatabaseName ^ 
+         com.marklogic.developer.corb.ExportBatchToFileTask ^
          c:\\myPath\\to\\file\\directory myFileName
          
 ##### Usage 2
 
-java -cp pathToXCC.jar:pathToCoRB.jar -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] ^
-	 -DXQUERY-MODULE=module-name.xqy -DPROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask ^
+java -cp pathToXCC.jar:pathToCoRB.jar ^
+         -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] ^
+	 -DXQUERY-MODULE=module-name.xqy ^
+	 -DPROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask ^
          -DXQUERY-MODULE.collectionName=myCollectionName RunXQueryManager
          
 ##### Usage 3
 
-java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar -DOPTIONS-FILE=myJob.properties RunXQueryManager
+java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar ^
+         -DOPTIONS-FILE=myJob.properties RunXQueryManager
 
 Where myJob.properties has:
 
@@ -334,7 +339,8 @@ XCC-CONNECTION-URI=ENC(fslfuoifsdofjjwfckmeflkjlj377239843u)
 
 ##### Usage 4
 
-java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar -DOPTIONS-FILE=myJob.properties ^
+java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar ^
+         -DOPTIONS-FILE=myJob.properties ^
          RunXQueryManager ENC(fslfuoifsdofjjwfckmeflkjlj377239843u)
 
 
