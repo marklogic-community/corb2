@@ -1,7 +1,7 @@
 Version: 2.1.2
 
 ### User Guide
-Please refer to CoRB2 online [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc)
+This document provides a comprehensive overview of CoRB2.  For additional information, please refer to CoRB2 online [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc).  This document also covers the less robust [RunXQuery Tool]](#runXQuery-readme) which can be used when only a single staged query is necessary.  The RunXQuery Tool is provided as part of the CoRB2 distribution.
 
 ### Downloads
 Please download latest release from https://github.com/marklogic/corb2/releases.  
@@ -258,3 +258,85 @@ XQUERY-MODULE=transform.sjs
 ..  
 URIS-MODULE=get-uris.sjs|ADHOC  
 XQUERY-MODULE=extract.sjs|ADHOC  
+
+
+### RunXQuery Tool <a id="runXQuery-readme"></a>
+ 
+Sometimes, a two or more staged CoRB job isn't necessary to get the job done.  Sometimes, only a single query needs to be executed and the output captured to file.  Maybe only a single query with no output captured?  In these cases, the RunXQuery Tool can be used to quickly and efficiently execute your XQuery or JavaScript files.
+
+Yes, that's right.  Like CoRB, with Version 8 or higher of the MarkLogic XCC Connection Jar in your classpath, the RunXQuery Tool can run JavaScript queries against a MarkLogic8 server.  We know, bad name for the tool but what can we say, old habits die hard!
+
+So how does the RunXQuery Tool differ from CoRB?  The key differences are:
+
++ There is only one stage in the process so it can only run one query unlike CoRB which is multi staged (init, pre-batch, uri-module, process-module, post-batch)
++ It is a single threaded application
+
+That's it.  Doesn't seem like a lot but it actually limits its functionality significantly.  So what does the RunXQuery Tool have in common with CoRB?  Quite a bit:
+
++ Runs either XQuery or Javascript
++ Supports encryption of passwords using Jasypt
++ Can capture query output to file
++ Can pass custom external variables to the script
++ Supports either ADHOC queries or queries deployed to a modules database
++ Can be configured using:
+  - command line program arguments
+  - command line -D properties
+  - a properties file
+  - a combination of any of these
+  
+So how do you use it?   For convenience, it can be configured using the same techniques as CoRB provides and using the same parameter names. The big difference is that there are far fewer parameters needed and there is a different class used for its execution (com.marklogic.developer.corb.RunXQueryManager).
+
+The following parameters are supported and can be used in the same ways as described above for CoRB:
+
++ XQUERY-MODULE
++ XQUERY-MODULE.customVariableNameExample
++ MODULES-DATABASE
++ MODULES-ROOT
++ DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter
++ PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask
++ EXPORT-FILE-NAME
++ XCC-CONNECTION-URI
++ XCC-USERNAME
++ XCC-PASSWORD
++ XCC-HOSTNAME
++ XCC-PORT
++ EXPORT-FILE-DIR
++ EXPORT-FILE-NAME
+
+The following are example usages from a Windows console:
+
+##### Usage 1
+
+java -cp pathToXCC.jar:pathToCoRB.jar RunXQueryManager xcc://user:password@host:port/[ database ] ^
+         xqueryOrJavascriptModuleName moduleRootName modulesDatabaseName com.marklogic.developer.corb.ExportBatchToFileTask ^
+         c:\\myPath\\to\\file\\directory myFileName
+         
+##### Usage 2
+
+java -cp pathToXCC.jar:pathToCoRB.jar -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] ^
+	 -DXQUERY-MODULE=module-name.xqy -DPROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask ^
+         -DXQUERY-MODULE.collectionName=myCollectionName RunXQueryManager
+         
+##### Usage 3
+
+java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar -DOPTIONS-FILE=myJob.properties RunXQueryManager
+
+Where myJob.properties has:
+
+XQUERY-MODULE=/test/HelloWorld.xqy
+XQUERY-MODULE.lastName=Smith
+MODULES-DATABASE=My-Modules
+DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter
+XQUERY-MODULE.collectionName=myCollectionName
+PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask
+EXPORT-FILE-NAME=C:\\Users\\jon.smith\\Documents\\runXQueryOutput.log
+XCC-CONNECTION-URI=ENC(fslfuoifsdofjjwfckmeflkjlj377239843u)
+
+##### Usage 4
+
+java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar -DOPTIONS-FILE=myJob.properties ^
+         RunXQueryManager ENC(fslfuoifsdofjjwfckmeflkjlj377239843u)
+
+
+
+    
