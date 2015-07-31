@@ -327,7 +327,7 @@ java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar ^
          -DOPTIONS-FILE=myJob.properties RunXQueryManager
 ```
 Where myJob.properties has:
-
+```
 XQUERY-MODULE=/test/HelloWorld.xqy
 XQUERY-MODULE.lastName=Smith
 MODULES-DATABASE=My-Modules
@@ -336,7 +336,7 @@ XQUERY-MODULE.collectionName=myCollectionName
 PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask
 EXPORT-FILE-NAME=C:\\Users\\jon.smith\\Documents\\runXQueryOutput.log
 XCC-CONNECTION-URI=ENC(fslfuoifsdofjjwfckmeflkjlj377239843u)
-
+```
 ##### Usage 4
 ```
 java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar ^
