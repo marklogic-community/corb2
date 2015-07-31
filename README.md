@@ -319,7 +319,7 @@ java -cp pathToXCC.jar:pathToCoRB.jar ^
          -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] ^
 	 -DXQUERY-MODULE=module-name.xqy ^
 	 -DPROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask ^
-         -DXQUERY-MODULE.collectionName=myCollectionName RunXQueryManager
+	 -DXQUERY-MODULE.collectionName=myCollectionName RunXQueryManager
 ```         
 ##### Usage 3
 ```
