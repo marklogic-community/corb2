@@ -34,8 +34,6 @@ public class TransformOptions {
 
     private static final String SLASH = "/";
 
-    private static final char SLASHCHAR = SLASH.toCharArray()[0];
-
     public static final String COLLECTION_TYPE = "COLLECTION";
 
     public static final String DIRECTORY_TYPE = "DIRECTORY";
