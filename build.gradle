@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-    compile "com.marklogic:marklogic-xcc:8.0.3"
+    compile "com.marklogic:marklogic-xcc:6.0.2"
 }
 
 publishing {
