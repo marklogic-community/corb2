@@ -1,0 +1,24 @@
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"
+
+repositories {
+    maven {url "http://developer.marklogic.com/maven2/"}
+}
+
+dependencies {
+    compile "com.marklogic:marklogic-xcc:8.0.3"
+}
+
+publishing {
+    publications {
+        mainJava(MavenPublication) { from components.java }
+    }
+    repositories {
+        maven { url publishUrl }
+    }
+}
