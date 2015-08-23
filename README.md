@@ -17,7 +17,7 @@ Corb needs one or more of the following parameters as (If specified in more than
 
 1. command-line parameters 
 2. Java system properties ex: -DXCC-CONNECTION-URI=xcc://user:password@localhost:8202. 
-3. As properties file in the class path specified using -DOPTIONS-FILE=myjob.properties. Relative and full file paths are also supported. 
+3. As properties file in the class path specified using -DOPTIONS-FILE=myjob.properties. Relative and full file system paths are also supported. 
 
 Note: Any or all of the properties can be specified as java system properties or key value pairs in properties file.
 
@@ -83,7 +83,7 @@ URIS-MODULE=adhoc-uris.sjs|ADHOC (Adhoc JavaScript module in the classpath or cu
 ### JavaScript Modules
 JavaScript modules are supported with Marklogic 8 and can be used in place of an xquery module. However, if returning multiple values (ex: URIS-MODULE), values must be returned as ValueIterator. MarkLogic JavaScript API has helper functions to convert Arrays into ValueIterator (xdmp.arrayValues()) and inserting values into another ValueIterator (fn.insertBefore()). 
 
-JavaScritp module must have .sjs file extension when deployed to Modules database. However, adhoc JavaScript modules support both .sjs or .js file extensions. 
+JavaScript module must have .sjs file extension when deployed to Modules database. However, adhoc JavaScript modules support both .sjs or .js file extensions. 
 
 For example, a simple URIS-MODULE may look like this
 
@@ -92,6 +92,8 @@ fn.insertBefore(uris,0,uris.count)
 
 To return URIS\_BATCH\_REF, we can do the following   
 fn.insertBefore(fn.insertBefore(uris,0,uris.count),0,"batch\-ref") 
+
+Note: Do not use single quotes with in (adhoc) java script modules. If you must use a single quote, escape it with a quote (ex: ''text'')
 
 ### Encryption
 It is often required to protect the database connection string or password from unauthorized access. So, CoRB optionally supports encryption of entire XCC URL or any parts of the XCC URL (if individually specified) such as XCC-PASSWORD. 
@@ -146,16 +148,16 @@ ExportBatchToFileTask, PreBatchUpdateFileTask and PostBatchUpdateFileTask use UR
 
 ### Usage
 #### Usage 1 (Command line options):
-java com.marklogic.developer.corb.Manager XCC-CONNECTION-URI [COLLECTION-NAME [XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT [ MODULES-DATABASE [ INSTALL [ PROCESS-TASK [ PRE-BATCH-MODULE  [ PRE-BATCH-TASK [ POST-XQUERY-MODULE  [ POST-BATCH-TASK [ EXPORT-FILE-DIR [ EXPORT-FILE-NAME [ URIS-FILE ] ] ] ] ] ] ] ] ] ] ] ] ] ] ]
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar com.marklogic.developer.corb.Manager XCC-CONNECTION-URI [COLLECTION-NAME [XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT [ MODULES-DATABASE [ INSTALL [ PROCESS-TASK [ PRE-BATCH-MODULE  [ PRE-BATCH-TASK [ POST-XQUERY-MODULE  [ POST-BATCH-TASK [ EXPORT-FILE-DIR [ EXPORT-FILE-NAME [ URIS-FILE ] ] ] ] ] ] ] ] ] ] ] ] ] ] ]
 
 #### Usage 2 (Java system properties specifying options):
-java -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] -DXQUERY-MODULE=module-name.xqy -DTHREAD-COUNT=10 -DURIS-MODULE=get-uris.xqy -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy -D... com.marklogic.developer.corb.Manager
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] -DXQUERY-MODULE=module-name.xqy -DTHREAD-COUNT=10 -DURIS-MODULE=get-uris.xqy -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy -D... com.marklogic.developer.corb.Manager
 
 #### Usage 3 (Properties file specifying options):
-java -DOPTIONS-FILE=myjob.properties com.marklogic.developer.corb.Manager (looks for myjob.properties file in classpath)
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar -DOPTIONS-FILE=myjob.properties com.marklogic.developer.corb.Manager (looks for myjob.properties file in classpath)
 
 #### Usage 4 (Combination of properties file with java system properties and command line options):
-java -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10 com.marklogic.developer.corb.Manager XCC-CONNECTION-URI
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10 com.marklogic.developer.corb.Manager XCC-CONNECTION-URI
 
 ###  Sample myjob.properties (Note: any of the properties below can be specified as java system property i.e. '-D' option)
 

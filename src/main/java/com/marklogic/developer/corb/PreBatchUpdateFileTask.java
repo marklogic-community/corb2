@@ -5,8 +5,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import com.marklogic.xcc.ResultSequence;
-
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  */
