@@ -61,7 +61,7 @@ import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
 
-public class RunXQueryManager {
+public class ModuleExecutor {
 
 	public static String VERSION = "2015-07-27";
 
@@ -73,7 +73,7 @@ public class RunXQueryManager {
 
 	private static final String XQUERY_VERSION_0_9_ML = "xquery version \"0.9-ml\"\n";
 
-	protected static final String NAME = RunXQueryManager.class.getName();
+	protected static final String NAME = ModuleExecutor.class.getName();
 
 	protected URI connectionUri;
 
@@ -104,7 +104,7 @@ public class RunXQueryManager {
 	 * @param modulePath
 	 * @param uriListPath
 	 */
-	public RunXQueryManager(URI connectionUri, String collection) {
+	public ModuleExecutor(URI connectionUri, String collection) {
 		this.connectionUri = connectionUri;
 	}
 
@@ -119,59 +119,17 @@ public class RunXQueryManager {
 	public static void main(String[] args) throws URISyntaxException,
 			IOException, ClassNotFoundException, InstantiationException,
 			IllegalAccessException, Exception {
-		RunXQueryManager runXQueryManager = createXQueryManager(args);
+		ModuleExecutor moduleExecutor = createExecutor(args);
 
-		if (runXQueryManager != null)
-			runXQueryManager.run();
+		if (moduleExecutor != null)
+			moduleExecutor.run();
 	}
 
-	public static Properties loadPropertiesFile(String filename)
-			throws IOException {
-		return loadPropertiesFile(filename, true);
-	}
-
-	public static Properties loadPropertiesFile(String filename,
-			boolean excIfNotFound) throws IOException {
-		Properties props = new Properties();
-		if (filename != null && (filename = filename.trim()).length() > 0) {
-			InputStream is = null;
-			try {
-				is = Manager.class.getResourceAsStream("/" + filename);
-				if (is != null) {
-					logger.info("Loading " + filename + " from classpath");
-					props.load(is);
-				} else {
-					File f = new File(filename);
-					if (f.exists() && !f.isDirectory()) {
-						logger.info("Loading " + filename + " from filesystem");
-						FileInputStream fis = null;
-						try {
-							fis = new FileInputStream(f);
-							props.load(fis);
-						} finally {
-							if (null != fis) {
-								fis.close();
-							}
-						}
-					} else if (excIfNotFound) {
-						throw new IllegalStateException(
-								"Unable to load properties file " + filename);
-					}
-				}
-			} finally {
-				if (null != is) {
-					is.close();
-				}
-			}
-		}
-		return props;
-	}
-
-	public static RunXQueryManager createXQueryManager(String[] args)
+	public static ModuleExecutor createExecutor(String[] args)
 			throws URISyntaxException, IOException, ClassNotFoundException,
 			InstantiationException, IllegalAccessException {
 		String propsFileName = System.getProperty("OPTIONS-FILE");
-		Properties props = loadPropertiesFile(propsFileName);
+		Properties props = Manager.loadPropertiesFile(propsFileName);
 
 		// gather inputs
 		String connectionUri = getOption(args.length > 0 ? args[0] : null,
@@ -221,12 +179,11 @@ public class RunXQueryManager {
 					+ ":" + port + (dbname != null ? "/" + dbname : "");
 		}
 
-		RunXQueryManager runXQueryManager = new RunXQueryManager(new URI(
-				connectionUri), "");
-		runXQueryManager.setProperties(props); // Keep the properties around for
+		ModuleExecutor moduleExecutor = new ModuleExecutor(new URI(connectionUri), "");
+		moduleExecutor.setProperties(props); // Keep the properties around for
 												// the custom tasks
 		// options
-		TransformOptions options = runXQueryManager.getOptions();
+		TransformOptions options = moduleExecutor.getOptions();
 		if (moduleRoot != null) {
 			options.setModuleRoot(moduleRoot);
 		}
@@ -277,7 +234,7 @@ public class RunXQueryManager {
 				&& null == options.getProcessModule()) {
 			throw new NullPointerException("PROCESS-TASK must be specified");
 		}
-		return runXQueryManager;
+		return moduleExecutor;
 	}
 
 	protected static String getOption(String argVal, String propName,
@@ -551,7 +508,7 @@ public class RunXQueryManager {
 		InputStreamReader reader = null;
 		StringWriter writer = null;
 		try {
-			is = RunXQueryManager.class.getResourceAsStream("/" + module);
+			is = ModuleExecutor.class.getResourceAsStream("/" + module);
 
 			if (is == null) {
 				File f = new File(module);
