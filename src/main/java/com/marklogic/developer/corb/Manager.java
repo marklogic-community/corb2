@@ -37,6 +37,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.RejectedExecutionException;
@@ -111,6 +112,7 @@ public class Manager implements Runnable {
     }
     
     public static String URIS_BATCH_REF = "URIS_BATCH_REF";
+    public static String DEFAULT_BATCH_URI_DELIM = ";";
 
     protected static String versionMessage = "version " + VERSION + " on "
             + System.getProperty("java.version") + " ("
@@ -147,7 +149,7 @@ public class Manager implements Runnable {
 
     private Thread monitorThread;
 
-    private ExecutorCompletionService<String> completionService;
+    private CompletionService<String[]> completionService;
     
 	static public SimpleLogger logger;
 	static{
@@ -249,6 +251,7 @@ public class Manager implements Runnable {
         if(preBatchModule == null) preBatchModule = getOption(null,"PRE-BATCH-XQUERY-MODULE",props);
         if(postBatchModule == null) postBatchModule = getOption(null,"POST-BATCH-XQUERY-MODULE",props);
         
+        String batchSize = getOption(null,"BATCH-SIZE", props);
         
         String initModule = getOption(null, "INIT-MODULE",props);
         String initTask = getOption(null, "INIT-TASK",props);
@@ -290,6 +293,7 @@ public class Manager implements Runnable {
         if(modulesDatabase != null) options.setModulesDatabase(modulesDatabase);
         if(install != null && (install.equalsIgnoreCase("true") || install.equals("1"))) options.setDoInstall(true);
         if(urisFile != null) options.setUrisFile(urisFile);
+        if(batchSize != null) options.setBatchSize(Integer.parseInt(batchSize));
         
         if(!props.containsKey("EXPORT-FILE-DIR") && exportFileDir !=null){
         	props.put("EXPORT-FILE-DIR", exportFileDir);
@@ -310,6 +314,9 @@ public class Manager implements Runnable {
 	        if(Task.class.isAssignableFrom(processCls)){
 	        	processCls.newInstance(); //sanity check
 	        	options.setProcessTaskClass((Class<? extends Task>)processCls.asSubclass(Task.class));
+	        	if(ExportToFileTask.class.equals(processCls)){
+	        		options.setBatchSize(1);
+	        	}
 	        }else{
 	        	throw new IllegalArgumentException("PROCESS-TASK must be of type com.marklogic.developer.corb.Task");
 	        }
@@ -500,7 +507,7 @@ public class Manager implements Runnable {
         pool = new ThreadPoolExecutor(threads, threads, 16,
                 TimeUnit.SECONDS, workQueue, policy);
         pool.prestartAllCoreThreads();
-        completionService = new ExecutorCompletionService<String>(pool);
+        completionService = new ExecutorCompletionService<String[]>(pool);
         monitor = new Monitor(pool, completionService, this, logger);
         Thread monitorThread = new Thread(monitor);
         return monitorThread;
@@ -725,14 +732,14 @@ public class Manager implements Runnable {
 
             // this may return millions of items:
             // try to be memory-efficient
-            String uri;
             long lastMessageMillis = System.currentTimeMillis();
             long freeMemory;
             boolean isFirst = true;
             // char primitives use less memory than strings
             // arrays use less memory than lists or queues
             char[][] urisArray = new char[total][];
-
+            
+            String uri;
             count = 0;
             while (urisLoader.hasNext() && null != pool) {
                 uri = urisLoader.next();
@@ -748,7 +755,7 @@ public class Manager implements Runnable {
                 // all uris in queue as quickly as possible
                 if (isFirst) {
                     isFirst = false;
-                    completionService.submit(tf.newProcessTask(uri));
+                    completionService.submit(tf.newProcessTask(new String[]{uri}));
                     urisArray[count] = null;
                     logger.info("received first uri: " + uri);
                 } else {
@@ -783,6 +790,7 @@ public class Manager implements Runnable {
             }
             
             // start with 1 not 0 because we already queued result 0
+            List<String> ulist = new ArrayList<String>(options.getBatchSize());
             for (int i=1; i<urisArray.length; i++) {
                 // check pool occasionally, for fast-fail
                 if (null == pool) {
@@ -790,10 +798,14 @@ public class Manager implements Runnable {
                 }
                 if(urisArray[i] == null || urisArray[i].length == 0) continue;
                 
-                uri = new String(urisArray[i]);
-                completionService.submit(tf.newProcessTask(uri));
+                uri=new String(urisArray[i]);
+                ulist.add(uri);
                 urisArray[i] = null;
-
+                if(ulist.size() >= options.getBatchSize() || i >= (urisArray.length-1)){
+                	String[] uris = ulist.toArray(new String[ulist.size()]);
+                	ulist.clear();
+                	completionService.submit(tf.newProcessTask(uris));
+                }
                 String msg = "queued " + i + "/" + total + ": " + uri;
                 if (0 == i % 50000) {
                     logger.info(msg);

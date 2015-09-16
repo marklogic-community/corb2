@@ -41,12 +41,12 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 		}
 	}
 	
-	public String call() throws Exception {
+	public String[] call() throws Exception {
 		try{
 			deleteFileIfExists();
 			writeTopContent();
 	    	invokeModule();
-	    	return TRUE;
+	    	return new String[0];
 		}finally{
     		cleanup();
     	}

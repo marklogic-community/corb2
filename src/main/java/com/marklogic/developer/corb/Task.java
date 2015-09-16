@@ -13,7 +13,7 @@ import com.marklogic.xcc.ContentSource;
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  */
-public interface Task extends Callable<String> {
+public interface Task extends Callable<String[]> {
 	
 	public void setContentSource(ContentSource cs);
 	
@@ -36,5 +36,5 @@ public interface Task extends Callable<String> {
 	 */
 	public void setProperties(Properties props);
 	
-	public void setInputURI(String inputUri);
+	public void setInputURI(String[] inputUri);
 }

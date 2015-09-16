@@ -22,7 +22,7 @@ public class ExportToFileTask extends AbstractTask {
 	}
 	
 	protected String getFileName(){
-		return inputUri.charAt(0) == '/' ? inputUri.substring(1)  : inputUri;
+		return inputUris[0].charAt(0) == '/' ? inputUris[0].substring(1)  : inputUris[0];
 	}
 	
 	protected void writeToFile(ResultSequence seq) throws IOException{
@@ -58,7 +58,7 @@ public class ExportToFileTask extends AbstractTask {
 		exportDir=null;
 	}
 	
-    public String call() throws Exception {
+    public String[] call() throws Exception {
     	try{
     		return invokeModule();
     	}finally{

@@ -49,17 +49,17 @@ public class TaskFactory {
      * @param _uri
      * @return
      */
-    public Task newProcessTask(String _uri) {
+    public Task newProcessTask(String[] _uris) {
     	if(null == manager.getOptions().getProcessTaskClass() && null == manager.getOptions().getProcessModule()){
     		throw new NullPointerException("null process task and xquery module");
     	}
-    	if(null != manager.getOptions().getProcessModule() && (null == _uri || null == manager.getContentSource())){
+    	if(null != manager.getOptions().getProcessModule() && (null == _uris || _uris.length == 0 || null == manager.getContentSource())){
     		throw new NullPointerException("null content source or input uri");
     	}
         try{
         	Task task = manager.getOptions().getProcessTaskClass() == null ? 
         				new Transform() : manager.getOptions().getProcessTaskClass().newInstance();
-        	setupTask(task,"XQUERY-MODULE",manager.getOptions().getProcessModule(),_uri);
+        	setupTask(task,"XQUERY-MODULE",manager.getOptions().getProcessModule(),_uris);
         	return task;
         }catch(Exception exc){
         	throw new IllegalArgumentException(exc.getMessage(),exc);
@@ -76,7 +76,7 @@ public class TaskFactory {
         try{
         	Task task = manager.getOptions().getPreBatchTaskClass() == null ? 
         				new Transform() : manager.getOptions().getPreBatchTaskClass().newInstance();
-        	setupTask(task,"PRE-BATCH-MODULE",manager.getOptions().getPreBatchModule(),"");
+        	setupTask(task,"PRE-BATCH-MODULE",manager.getOptions().getPreBatchModule(),new String[0]);
         	return task;
         }catch(Exception exc){
         	throw new IllegalArgumentException(exc.getMessage(),exc);
@@ -93,7 +93,7 @@ public class TaskFactory {
         try{
         	Task task = manager.getOptions().getPostBatchTaskClass() == null ? 
         				new Transform() : manager.getOptions().getPostBatchTaskClass().newInstance();
-        	setupTask(task,"POST-BATCH-MODULE",manager.getOptions().getPostBatchModule(),"");
+        	setupTask(task,"POST-BATCH-MODULE",manager.getOptions().getPostBatchModule(),new String[0]);
         	return task;
         }catch(Exception exc){
         	throw new IllegalArgumentException(exc.getMessage(),exc);
@@ -110,7 +110,7 @@ public class TaskFactory {
         try{
         	Task task = manager.getOptions().getInitTaskClass() == null ? 
         				new Transform() : manager.getOptions().getInitTaskClass().newInstance();
-        	setupTask(task,"INIT-MODULE",manager.getOptions().getInitModule(),"");
+        	setupTask(task,"INIT-MODULE",manager.getOptions().getInitModule(),new String[0]);
         	return task;
         }catch(Exception exc){
         	throw new IllegalArgumentException(exc.getMessage(),exc);
@@ -152,7 +152,7 @@ public class TaskFactory {
 		}
     }
     
-    private void setupTask(Task task, String moduleType, String module, String _uri){
+    private void setupTask(Task task, String moduleType, String module, String[] _uri){
     	if(module != null){
     		if(module.toUpperCase().endsWith("|ADHOC")){
     			String modulePath=module.substring(0, module.indexOf('|'));
