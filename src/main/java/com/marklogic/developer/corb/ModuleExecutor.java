@@ -155,8 +155,7 @@ public class ModuleExecutor {
 
 		if (connectionUri == null
 				&& (username == null || password == null || host == null || port == null)) {
-			System.err
-					.println("XCC-CONNECTION-URI or XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME and XCC-PORT must be specified");
+			System.err.println("XCC-CONNECTION-URI or XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME and XCC-PORT must be specified");
 			usage();
 			return null;
 		}
@@ -165,14 +164,11 @@ public class ModuleExecutor {
 		if (decrypterClassName != null) {
 			Class<?> decrypterCls = Class.forName(decrypterClassName);
 			if (AbstractDecrypter.class.isAssignableFrom(decrypterCls)) {
-				AbstractDecrypter decrypter = (AbstractDecrypter) decrypterCls
-						.newInstance();
+				AbstractDecrypter decrypter = (AbstractDecrypter) decrypterCls.newInstance();
 				decrypter.init(props);
-				connectionUri = decrypter.getConnectionURI(connectionUri,
-						username, password, host, port, dbname);
+				connectionUri = decrypter.getConnectionURI(connectionUri,username, password, host, port, dbname);
 			} else {
-				throw new IllegalArgumentException(
-						"DECRYPTER must be of type com.marklogic.developer.corb.AbstractDecrypter");
+				throw new IllegalArgumentException("DECRYPTER must be of type com.marklogic.developer.corb.AbstractDecrypter");
 			}
 		} else if (connectionUri == null) {
 			connectionUri = "xcc://" + username + ":" + password + "@" + host
@@ -207,8 +203,7 @@ public class ModuleExecutor {
 			Class<?> processCls = Class.forName(processTask);
 			if (Task.class.isAssignableFrom(processCls)) {
 				processCls.newInstance(); // sanity check
-				options.setProcessTaskClass((Class<? extends Task>) processCls
-						.asSubclass(Task.class));
+				options.setProcessTaskClass((Class<? extends Task>) processCls.asSubclass(Task.class));
 			} else {
 				throw new IllegalArgumentException(
 						"PROCESS-TASK must be of type com.marklogic.developer.corb.Task");
@@ -220,8 +215,7 @@ public class ModuleExecutor {
 			if (dirFile.exists() && dirFile.canWrite()) {
 				options.setExportFileDir(exportFileDir);
 			} else {
-				throw new IllegalArgumentException(
-						"Cannot write to export folder " + exportFileDir);
+				throw new IllegalArgumentException("Cannot write to export folder " + exportFileDir);
 			}
 		}
 		// delete the export file if it exists
@@ -230,8 +224,7 @@ public class ModuleExecutor {
 			if (exportFile.exists())
 				exportFile.delete();
 		}
-		if (null == options.getProcessTaskClass()
-				&& null == options.getProcessModule()) {
+		if (null == options.getProcessTaskClass() && null == options.getProcessModule()) {
 			throw new NullPointerException("PROCESS-TASK must be specified");
 		}
 		return moduleExecutor;
@@ -241,11 +234,9 @@ public class ModuleExecutor {
 			Properties props) {
 		if (argVal != null && argVal.trim().length() > 0) {
 			return argVal.trim();
-		} else if (System.getProperty(propName) != null
-				&& System.getProperty(propName).trim().length() > 0) {
+		} else if (System.getProperty(propName) != null && System.getProperty(propName).trim().length() > 0) {
 			return System.getProperty(propName).trim();
-		} else if (props.containsKey(propName)
-				&& props.getProperty(propName).trim().length() > 0) {
+		} else if (props.containsKey(propName) && props.getProperty(propName).trim().length() > 0) {
 			String val = props.getProperty(propName).trim();
 			props.remove(propName);
 			return val;
@@ -302,96 +293,59 @@ public class ModuleExecutor {
 			opts.setCacheResult(false);
 			session = contentSource.newSession();
 			Request req = null;
-			List<String> propertyNames = new ArrayList<String>(
-					properties.stringPropertyNames());
+			List<String> propertyNames = new ArrayList<String>(properties.stringPropertyNames());
 			propertyNames.addAll(System.getProperties().stringPropertyNames());
-			if (options.getProcessModule().toUpperCase().endsWith(".SJS|ADHOC")
-					|| options.getProcessModule().toUpperCase()
-							.endsWith(".JS|ADHOC")) {
-				String queryPath = options.getProcessModule().substring(0,
-						options.getProcessModule().indexOf('|'));
-				String adhocQuery = TaskFactory.getAdhocQuery(queryPath);
+			
+			if (options.getProcessModule().toUpperCase().endsWith("|ADHOC")) {
+				String queryPath = options.getProcessModule().substring(0, options.getProcessModule().indexOf('|'));
+
+				String adhocQuery = getAdhocQuery(queryPath);
 				if (adhocQuery == null || (adhocQuery.length() == 0)) {
-					throw new IllegalStateException(
-							"Unable to read adhoc query " + queryPath
-									+ " from classpath or filesystem");
+					throw new IllegalStateException("Unable to read adhoc query " + queryPath+ " from classpath or filesystem");
 				}
-				logger.info("invoking adhoc javascript xquery module "
-						+ queryPath);
-				StringBuffer sb = new StringBuffer();
-				sb.append("xdmp:javascript-eval('");
-				sb.append(adhocQuery);
-				sb.append("',(");
-				int varCount = 0;
-
-				for (String propName : propertyNames) {
-					if (propName.startsWith("XQUERY-MODULE.")) {
-						String varName = propName.substring("XQUERY-MODULE."
-								.length());
-						String value = getProperty(propName);
-						if (value != null) {
-							if (varCount > 0)
-								sb.append(",");
-							sb.append("\"" + varName + "\"").append(
-									",\"" + value + "\"");
-							varCount++;
-						}
-					}
+				logger.info("invoking adhoc xquery module " + queryPath);
+				req = session.newAdhocQuery(adhocQuery);
+				
+				if (queryPath.toUpperCase().endsWith(".SJS")||queryPath.toUpperCase().endsWith(".JS")) {
+					opts.setQueryLanguage("javascript");
 				}
-				sb.append("))");
-
-				req = session.newAdhocQuery(sb.toString());
-
 			} else {
-				if (options.getProcessModule().toUpperCase().endsWith("|ADHOC")) {
-					String queryPath = options.getProcessModule().substring(0,
-							options.getProcessModule().indexOf('|'));
+				String root = options.getModuleRoot();
+				if (!root.endsWith("/"))
+					root = root + "/";
 
-					String adhocQuery = getAdhocQuery(queryPath);
-					if (adhocQuery == null || (adhocQuery.length() == 0)) {
-						throw new IllegalStateException(
-								"Unable to read adhoc query " + queryPath
-										+ " from classpath or filesystem");
-					}
-					logger.info("invoking adhoc xquery module " + queryPath);
-					req = session.newAdhocQuery(adhocQuery);
-				} else {
-					String root = options.getModuleRoot();
-					if (!root.endsWith("/"))
-						root = root + "/";
+				String module = options.getProcessModule();
+				if (module.startsWith("/") && module.length() > 1)
+					module = module.substring(1);
 
-					String module = options.getProcessModule();
-					if (module.startsWith("/") && module.length() > 1)
-						module = module.substring(1);
-
-					String modulePath = root + module;
-					logger.info("invoking xquery module " + modulePath);
-					req = session.newModuleInvoke(modulePath);
+				String modulePath = root + module;
+				logger.info("invoking xquery module " + modulePath);
+				req = session.newModuleInvoke(modulePath);
+				
+				if (module.toUpperCase().endsWith(".SJS")|| module.toUpperCase().endsWith(".JS|ADHOC")) {
+					opts.setQueryLanguage("javascript");
 				}
-				// NOTE: collection will be treated as a CWSV
-				// req.setNewStringVariable("URIS", collection);
-				// TODO support DIRECTORY as type
-				req.setNewStringVariable("TYPE",
-						TransformOptions.COLLECTION_TYPE);
-				req.setNewStringVariable("PATTERN", "[,\\s]+");
-
-				// custom inputs
-				for (String propName : propertyNames) {
-					if (propName.startsWith("XQUERY-MODULE.")) {
-						String varName = propName.substring("XQUERY-MODULE."
-								.length());
-						String value = getProperty(propName);
-						if (value != null)
-							req.setNewStringVariable(varName, value);
-					}
-				}
-				req.setOptions(opts);
 			}
+			// NOTE: collection will be treated as a CWSV
+			// req.setNewStringVariable("URIS", collection);
+			// TODO support DIRECTORY as type
+			req.setNewStringVariable("TYPE",TransformOptions.COLLECTION_TYPE);
+			req.setNewStringVariable("PATTERN", "[,\\s]+");
+
+			// custom inputs
+			for (String propName : propertyNames) {
+				if (propName.startsWith("XQUERY-MODULE.")) {
+					String varName = propName.substring("XQUERY-MODULE.".length());
+					String value = getProperty(propName);
+					if (value != null)
+						req.setNewStringVariable(varName, value);
+				}
+			}
+			req.setOptions(opts);
+
 			res = session.submitRequest(req);
 
-			if (getProperty("PROCESS-TASK") != null
-					&& getProperty("PROCESS-TASK")
-							.equals("com.marklogic.developer.corb.ExportBatchToFileTask")) {
+			if (getProperty("PROCESS-TASK") != null  && getProperty("PROCESS-TASK").equals("com.marklogic.developer.corb.ExportBatchToFileTask")) {
 				logger.info("Writing output to file");
 				writeToFile(res);
 			}
@@ -410,8 +364,7 @@ public class ModuleExecutor {
 		// logger.info("using content source " + connectionUri);
 		try {
 			System.out.println("connectionUri=" + connectionUri);
-			System.out.println("connectionUri.getScheme()="
-					+ connectionUri.getScheme());
+			System.out.println("connectionUri.getScheme()=" + connectionUri.getScheme());
 			// support SSL
 			boolean ssl = connectionUri != null
 					&& connectionUri.getScheme() != null
@@ -420,9 +373,7 @@ public class ModuleExecutor {
 					connectionUri, newTrustAnyoneOptions())
 					: ContentSourceFactory.newContentSource(connectionUri);
 		} catch (XccConfigException e) {
-			logger.logException(
-					"Problem creating content source. Check if URI is valid. If encrypted, check options are configured correctly.",
-					e);
+			logger.logException("Problem creating content source. Check if URI is valid. If encrypted, check options are configured correctly.",e);
 			throw new RuntimeException(e);
 		} catch (KeyManagementException e) {
 			logger.logException("Problem creating content source with ssl", e);
@@ -495,10 +446,8 @@ public class ModuleExecutor {
 		logger.info("Configured process task: " + options.getProcessTaskClass());
 
 		for (Entry<Object, Object> e : properties.entrySet()) {
-			if (e.getKey() != null
-					&& !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
-				logger.info("Loaded property " + e.getKey() + "="
-						+ e.getValue());
+			if (e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
+				logger.info("Loaded property " + e.getKey() + "=" + e.getValue());
 			}
 		}
 	}
@@ -515,9 +464,7 @@ public class ModuleExecutor {
 				if (f.exists() && !f.isDirectory()) {
 					is = new FileInputStream(f);
 				} else {
-					throw new IllegalStateException(
-							"Unable to find adhoc query module " + module
-									+ " in classpath or filesystem");
+					throw new IllegalStateException("Unable to find adhoc query module " + module + " in classpath or filesystem");
 				}
 			}
 			reader = new InputStreamReader(is);
@@ -535,21 +482,9 @@ public class ModuleExecutor {
 			throw new IllegalStateException(
 					"Problem reading adhoc query module " + module, exc);
 		} finally {
-			try {
-				if (writer != null)
-					writer.close();
-			} catch (Exception exc) {
-			}
-			try {
-				if (reader != null)
-					reader.close();
-			} catch (Exception exc) {
-			}
-			try {
-				if (is != null)
-					is.close();
-			} catch (Exception exc) {
-			}
+			try {if (writer != null) writer.close();} catch (Exception exc) {}		
+			try {if (reader != null) reader.close();} catch (Exception exc) {}
+			try {if (is != null) is.close();} catch (Exception exc) {}
 		}
 	}
 
@@ -570,14 +505,12 @@ public class ModuleExecutor {
 		ContentCreateOptions opts = ContentCreateOptions.newTextInstance();
 		try {
 			for (int i = 0; i < resourceModules.length; i++) {
-				if (resourceModules[i] == null
-						|| resourceModules[i].toUpperCase().endsWith("|ADHOC"))
+				if (resourceModules[i] == null  || resourceModules[i].toUpperCase().endsWith("|ADHOC"))
 					continue;
 
 				// Start by checking install flag.
 				if (!options.isDoInstall()) {
-					logger.info("Skipping module installation: "
-							+ resourceModules[i]);
+					logger.info("Skipping module installation: "+ resourceModules[i]);
 					continue;
 				}
 				// Next check: if XCC is configured for the filesystem, warn
@@ -592,16 +525,13 @@ public class ModuleExecutor {
 					// If not installed, are the specified files on the
 					// filesystem?
 					if (f.exists()) {
-						String moduleUri = options.getModuleRoot()
-								+ f.getName();
+						String moduleUri = options.getModuleRoot()     + f.getName();
 						c = ContentFactory.newContent(moduleUri, f, opts);
 					}
 					// finally, check package
 					else {
-						logger.warning("looking for " + resourceModules[i]
-								+ " as resource");
-						String moduleUri = options.getModuleRoot()
-								+ resourceModules[i];
+						logger.warning("looking for " + resourceModules[i] + " as resource");
+						String moduleUri = options.getModuleRoot()  + resourceModules[i];
 						is = this.getClass().getResourceAsStream(
 								resourceModules[i]);
 						if (null == is) {

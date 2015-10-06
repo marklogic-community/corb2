@@ -68,7 +68,7 @@ public abstract class AbstractTask implements Task{
     	this.adhocQuery = adhocQuery;
     }
     
-    public void setAdhocQueryLanguage(String language){
+    public void setQueryLanguage(String language){
     	this.language = language;
     }
     
@@ -117,62 +117,43 @@ public abstract class AbstractTask implements Task{
         		}
         	}
             
-        	if(moduleUri == null && adhocQuery != null && "JAVASCRIPT".equalsIgnoreCase(language)){
-        		StringBuffer sb = new StringBuffer();
-				sb.append("xdmp:javascript-eval('");
-				sb.append(adhocQuery);
-				sb.append("',(");				
-				sb.append("\"URI\"").append(",\""+inputUris+"\"");
-				if(properties != null && properties.containsKey(Manager.URIS_BATCH_REF)){
-					sb.append(",\""+Manager.URIS_BATCH_REF+"\"").append(",\""+properties.getProperty(Manager.URIS_BATCH_REF)+"\"");
-				}
-				for(String propName: modulePropNames){
-	        		if(propName.startsWith(moduleType+".")){
-	            		String varName = propName.substring(moduleType.length()+1);
-	            		String value = getProperty(propName);
-	            		if(value != null){
-		        			sb.append(",\""+varName+"\"").append(",\""+value+"\"");
-	            		}
-	        		}
-	        	}				
-				sb.append("))");
-				
-				request = session.newAdhocQuery(sb.toString());
-        	}else{
-	            if(moduleUri != null){
-	            	request = session.newModuleInvoke(moduleUri);
-	            }else{
-	            	request = session.newAdhocQuery(adhocQuery);
-	            }
-	            
-	            if(inputUris != null && inputUris.length > 0){
-	            	if(inputUris.length == 1){
-	            		request.setNewStringVariable("URI", inputUris[0]);
-	            	}else{
-	            		String delim=getProperty("BATCH-URI-DELIM");
-	            		if(delim == null || delim.length() == 0) delim = Manager.DEFAULT_BATCH_URI_DELIM;
-	            		StringBuffer buff = new StringBuffer();
-	            		for(String uri: inputUris){
-	            			if(buff.length() > 0) buff.append(delim);
-	            			buff.append(uri);
-	            		}
-	            		request.setNewStringVariable("URI", buff.toString());
-	            	}
-	            }
-	            
-	            
-	            if(properties != null && properties.containsKey(Manager.URIS_BATCH_REF)){
-	            	request.setNewStringVariable(Manager.URIS_BATCH_REF, properties.getProperty(Manager.URIS_BATCH_REF));
-	            }
-	            
-	        	for(String propName: modulePropNames){
-	        		if(propName.startsWith(moduleType+".")){
-	            		String varName = propName.substring(moduleType.length()+1);
-	            		String value = getProperty(propName);
-	            		if(value != null) request.setNewStringVariable(varName, value);
-	        		}
-	        	}   
-        	}
+            if(moduleUri != null){
+            	request = session.newModuleInvoke(moduleUri);
+            }else{
+            	request = session.newAdhocQuery(adhocQuery);
+            }
+            
+            if(language != null){
+            	request.getOptions().setQueryLanguage(language);
+            }
+            
+            if(inputUris != null && inputUris.length > 0){
+            	if(inputUris.length == 1){
+            		request.setNewStringVariable("URI", inputUris[0]);
+            	}else{
+            		String delim=getProperty("BATCH-URI-DELIM");
+            		if(delim == null || delim.length() == 0) delim = Manager.DEFAULT_BATCH_URI_DELIM;
+            		StringBuffer buff = new StringBuffer();
+            		for(String uri: inputUris){
+            			if(buff.length() > 0) buff.append(delim);
+            			buff.append(uri);
+            		}
+            		request.setNewStringVariable("URI", buff.toString());
+            	}
+            }
+            
+            
+            if(properties != null && properties.containsKey(Manager.URIS_BATCH_REF)){
+            	request.setNewStringVariable(Manager.URIS_BATCH_REF, properties.getProperty(Manager.URIS_BATCH_REF));
+            }
+            
+        	for(String propName: modulePropNames){
+        		if(propName.startsWith(moduleType+".")){
+            		String varName = propName.substring(moduleType.length()+1);
+            		String value = getProperty(propName);
+            		if(value != null) request.setNewStringVariable(varName, value);
+        		}
+        	}   
             
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);

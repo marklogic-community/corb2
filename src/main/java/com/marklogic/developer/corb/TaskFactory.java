@@ -166,9 +166,7 @@ public class TaskFactory {
     			}
     			task.setAdhocQuery(adhocQuery);
     			if(modulePath.toUpperCase().endsWith(".SJS") || modulePath.toUpperCase().endsWith(".JS")){
-    				task.setAdhocQueryLanguage("JAVASCRIPT");
-    			}else{
-    				task.setAdhocQueryLanguage("XQUERY");
+    				task.setQueryLanguage("javascript");
     			}
     		}else{
     			String modulePath = moduleToPathMap.get(module);
@@ -180,6 +178,9 @@ public class TaskFactory {
     				moduleToPathMap.put(module, modulePath);
     			}
     			task.setModuleURI(modulePath);
+    			if(module.toUpperCase().endsWith(".SJS") || module.toUpperCase().endsWith(".JS")){
+    				task.setQueryLanguage("javascript");
+    			}
     		}
     	}
     	task.setModuleType(moduleType);
