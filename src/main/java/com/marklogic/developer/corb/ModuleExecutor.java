@@ -20,13 +20,10 @@ package com.marklogic.developer.corb;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.URI;
@@ -299,7 +296,7 @@ public class ModuleExecutor {
 			if (options.getProcessModule().toUpperCase().endsWith("|ADHOC")) {
 				String queryPath = options.getProcessModule().substring(0, options.getProcessModule().indexOf('|'));
 
-				String adhocQuery = getAdhocQuery(queryPath);
+				String adhocQuery = Manager.getAdhocQuery(queryPath);
 				if (adhocQuery == null || (adhocQuery.length() == 0)) {
 					throw new IllegalStateException("Unable to read adhoc query " + queryPath+ " from classpath or filesystem");
 				}
@@ -452,42 +449,7 @@ public class ModuleExecutor {
 		}
 	}
 
-	private String getAdhocQuery(String module) {
-		InputStream is = null;
-		InputStreamReader reader = null;
-		StringWriter writer = null;
-		try {
-			is = ModuleExecutor.class.getResourceAsStream("/" + module);
-
-			if (is == null) {
-				File f = new File(module);
-				if (f.exists() && !f.isDirectory()) {
-					is = new FileInputStream(f);
-				} else {
-					throw new IllegalStateException("Unable to find adhoc query module " + module + " in classpath or filesystem");
-				}
-			}
-			reader = new InputStreamReader(is);
-			writer = new StringWriter();
-			char[] buffer = new char[512];
-			int n = 0;
-			while (-1 != (n = reader.read(buffer))) {
-				writer.write(buffer, 0, n);
-			}
-			writer.close();
-			reader.close();
-
-			return writer.toString().trim();
-		} catch (IOException exc) {
-			throw new IllegalStateException(
-					"Problem reading adhoc query module " + module, exc);
-		} finally {
-			try {if (writer != null) writer.close();} catch (Exception exc) {}		
-			try {if (reader != null) reader.close();} catch (Exception exc) {}
-			try {if (is != null) is.close();} catch (Exception exc) {}
-		}
-	}
-
+	
 	/**
 	 * @throws IOException
 	 * @throws RequestException
