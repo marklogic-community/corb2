@@ -3,11 +3,14 @@ package com.marklogic.developer.corb;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 public class JasyptDecrypter extends AbstractDecrypter{
 	protected Properties jaspytProperties = null;
 	Class<?> decrypterCls = null;
 	Object decrypter = null;
+	
+	protected static Logger logger = Logger.getLogger("Decrypter");
 	
 	@Override
 	protected void init_decrypter() throws IOException,ClassNotFoundException{
@@ -37,7 +40,7 @@ public class JasyptDecrypter extends AbstractDecrypter{
 				throw new IllegalStateException("Unable to initialize org.jasypt.encryption.pbe.StandardPBEStringEncryptor - check if jasypt libraries are in classpath",exc);
 			}
 		}else{
-			Manager.logger.severe("Unable to initialize jasypt decrypter. Couldn't find jasypt.password");
+			logger.severe("Unable to initialize jasypt decrypter. Couldn't find jasypt.password");
 		}
 	}
 
@@ -49,7 +52,7 @@ public class JasyptDecrypter extends AbstractDecrypter{
 				Method decrypt = decrypterCls.getMethod("decrypt", String.class);
 				dValue = (String)decrypt.invoke(decrypter, value);
 			}catch(Exception exc){
-				Manager.logger.info("Cannot decrypt "+property+". Ignore if clear text.");
+				logger.info("Cannot decrypt "+property+". Ignore if clear text.");
 			}
 		}
 		return dValue == null ? value : dValue.trim();

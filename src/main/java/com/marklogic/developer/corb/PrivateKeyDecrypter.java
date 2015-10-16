@@ -14,6 +14,8 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.crypto.Cipher;
 import javax.xml.bind.DatatypeConverter;
@@ -36,6 +38,8 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 	//openssl rsa -in id_rsa -pubout > public.key
 	//echo "password or uri" | openssl rsautl -encrypt -pubin -inkey public.key | base64
 	private PrivateKey privateKey = null;
+	
+	protected static Logger logger = Logger.getLogger("Decrypter");
 
 	@Override
 	protected void init_decrypter() throws IOException,ClassNotFoundException {		
@@ -50,11 +54,11 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 			try {
 				is = Manager.class.getResourceAsStream("/" + filename);
 				if(is != null){
-					Manager.logger.info("Loading private key file "+filename+" from classpath");
+					logger.info("Loading private key file "+filename+" from classpath");
 				}else{
 					File f = new File(filename);
 					if (f.exists() && !f.isDirectory()) {
-						Manager.logger.info("Loading private key file "+filename+" from filesystem");
+						logger.info("Loading private key file "+filename+" from filesystem");
 						is = new FileInputStream(f);
 					}else{
 						throw new IllegalStateException("Unable to load "+filename);
@@ -66,7 +70,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 				try{
 					privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(keyAsBytes));
 				}catch(Exception exc){
-					Manager.logger.info("Attempting to decode private key with base64. Ignore this message if keys are generated with openssl");
+					logger.info("Attempting to decode private key with base64. Ignore this message if keys are generated with openssl");
 					String keyAsString = new String(keyAsBytes);
 				    //remove the begin and end key lines if present. 
 				    keyAsString=keyAsString.replaceAll("[-]+(BEGIN|END)[A-Z ]*KEY[-]+","");
@@ -74,14 +78,14 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 					privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(DatatypeConverter.parseBase64Binary(keyAsString)));				
 				}			    
 			}catch(Exception exc){
-				Manager.logger.logException("Problem initializing PrivateKeyDecrypter", exc);
+				logger.log(Level.SEVERE,"Problem initializing PrivateKeyDecrypter", exc);
 			}finally{
 				if(is != null){
 					is.close();
 				}
 			}
 		}else{
-			Manager.logger.severe("PRIVATE-KEY-FILE property must be defined");
+			logger.severe("PRIVATE-KEY-FILE property must be defined");
 		}
 	}
 	
@@ -108,7 +112,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 			    cipher.init(Cipher.DECRYPT_MODE, privateKey);
 			    dValue = new String(cipher.doFinal(DatatypeConverter.parseBase64Binary(value)));
 			}catch(Exception exc){
-				Manager.logger.info("Cannot decrypt "+property+". Ignore if clear text.");
+				logger.info("Cannot decrypt "+property+". Ignore if clear text.");
 			}
 		}
 		return dValue == null ? value : dValue.trim();

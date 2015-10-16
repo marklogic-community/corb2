@@ -35,11 +35,14 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.Properties;
+
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import com.marklogic.developer.SimpleLogger;
+
 import com.marklogic.developer.Utilities;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.Content;
@@ -86,14 +89,7 @@ public class ModuleExecutor {
 	private static byte[] EMPTY_BYTE_ARRAY = new byte[0];
 	protected static byte[] NEWLINE = "\n".getBytes();
 
-	static public SimpleLogger logger;
-	static {
-		logger = SimpleLogger.getSimpleLogger();
-		Properties props = new Properties();
-		props.setProperty("LOG_LEVEL", "INFO");
-		props.setProperty("LOG_HANDLER", "CONSOLE");
-		logger.configureLogger(props);
-	}
+	protected static Logger logger = Logger.getLogger("ModuleExecutor");
 
 	/**
 	 * @param connectionUri
@@ -370,13 +366,13 @@ public class ModuleExecutor {
 					connectionUri, newTrustAnyoneOptions())
 					: ContentSourceFactory.newContentSource(connectionUri);
 		} catch (XccConfigException e) {
-			logger.logException("Problem creating content source. Check if URI is valid. If encrypted, check options are configured correctly.",e);
+			logger.log(Level.SEVERE,"Problem creating content source. Check if URI is valid. If encrypted, check options are configured correctly.",e);
 			throw new RuntimeException(e);
 		} catch (KeyManagementException e) {
-			logger.logException("Problem creating content source with ssl", e);
+			logger.log(Level.SEVERE,"Problem creating content source with ssl", e);
 			throw new RuntimeException(e);
 		} catch (NoSuchAlgorithmException e) {
-			logger.logException("Problem creating content source with ssl", e);
+			logger.log(Level.SEVERE,"Problem creating content source with ssl", e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -507,10 +503,10 @@ public class ModuleExecutor {
 				}
 			}
 		} catch (IOException e) {
-			logger.logException("fatal error", e);
+			logger.log(Level.SEVERE,"fatal error", e);
 			throw new RuntimeException(e);
 		} catch (RequestException e) {
-			logger.logException("fatal error", e);
+			logger.log(Level.SEVERE,"fatal error", e);
 			throw new RuntimeException(e);
 		} finally {
 			session.close();
@@ -518,7 +514,7 @@ public class ModuleExecutor {
 				try {
 					is.close();
 				} catch (IOException ioe) {
-					logger.logException("Couldn't close the stream", ioe);
+					logger.log(Level.SEVERE,"Couldn't close the stream", ioe);
 				}
 			}
 		}
