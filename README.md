@@ -32,8 +32,8 @@ Corb needs one or more of the following parameters as (If specified in more than
 * URIS-MODULE (URI selector module written in XQuery or JavaScript. Expected to return a sequence containing the uris count followed by all the uris. Optionally, it can also return an arbitrary string as a first item in this sequence - refer to URIS\_BATCH\_REF section below. XQuery and JavaScript modules need to have .xqy and .sjs extensions respectively. JavaScript modules must return a ValueIterator.)
 * URIS-FILE (If defined instead of URIS-MODULE, URIS will be loaded from the file located on the client. There should only be one URI per each line. This path may be relative or absolute. For example, a file containing a list of document identifiers can be used as a URIS-FILE and XQUERY-MODULE can query for the document based on this document identifier.)
 * PROCESS-TASK (Java Class that implements com.marklogic.developer.corb.Task or extends com.marklogic.developer.corb.AbstractTask. Typically, it can talk to XQUERY-MODULE and the do additional processing locally such save a returned value.)    
-  * com.marklogic.developer.corb.ExportBatchToFileTask (Generates _**a single file**_, typically used for reports. Writes the data returned by the XQUERY-MODULE to a single file specified by EXPORT-FILE-NAME. All returned values from entire CoRB will be streamed into the single file. If EXPORT-FILE-NAME is not specified, CoRB uses URIS\_BATCH\_REF returned by URIS-MODULE as the file name.)   
-  * com.marklogic.developer.corb.ExportToFileTask (Generates _**multiple files**_. Saves the documents returned by each invocation of XQUERY-MODULE to a separate local file within EXPORT-FILE-DIR where the file name for each document will be the based on the URI.)   
+  * `com.marklogic.developer.corb.ExportBatchToFileTask` (Generates _**a single file**_, typically used for reports. Writes the data returned by the XQUERY-MODULE to a single file specified by EXPORT-FILE-NAME. All returned values from entire CoRB will be streamed into the single file. If EXPORT-FILE-NAME is not specified, CoRB uses URIS\_BATCH\_REF returned by URIS-MODULE as the file name.)   
+  * `com.marklogic.developer.corb.ExportToFileTask` (Generates _**multiple files**_. Saves the documents returned by each invocation of XQUERY-MODULE to a separate local file within EXPORT-FILE-DIR where the file name for each document will be the based on the URI.)   
 * **PRE-BATCH-MODULE** (An XQuery or JavaScript module which, if specified, will be run before batch processing starts. XQuery and JavaScript modules need to have .xqy and .sjs extensions respectively.)
 * **PRE-BATCH-TASK** (Java Class that implements `com.marklogic.developer.corb.Task` or extends `com.marklogic.developer.corb.AbstractTask`. If PRE-BATCH-MODULE is also specified, the implementation is expected to invoke the XQuery and process the result if any. It can also be specified without PRE-BATCH-MODULE and an example of this is to add a static header to a report.)   
   * `com.marklogic.developer.corb.PreBatchUpdateFileTask` (included - Writes the data returned by the PRE-BATCH-MODULE to EXPORT-FILE-NAME, which can particularly be used to to write dynamic headers for CSV output. Also, if EXPORT-FILE-TOP-CONTENT is specified, this task will write this value to the EXPORT-FILE-NAME - this option is especially useful for writing fixed headers to reports. If EXPORT-FILE-NAME is not specified, CoRB uses URIS\_BATCH\_REF returned by URIS-MODULE as the file name.)
@@ -88,13 +88,14 @@ JavaScript modules are supported with Marklogic 8 and can be used in place of an
 JavaScript module must have .sjs file extension when deployed to Modules database. However, adhoc JavaScript modules support both .sjs or .js file extensions.
 
 For example, a simple URIS-MODULE may look like this:
-```
-var uris = cts.uris()  
-fn.insertBefore(uris,0,uris.count)
+
+    var uris = cts.uris()
+    fn.insertBefore(uris,0,uris.count)
 
 To return URIS\_BATCH\_REF, we can do the following   
-fn.insertBefore(fn.insertBefore(uris,0,uris.count),0,"batch\-ref")
-```
+
+    fn.insertBefore(fn.insertBefore(uris,0,uris.count),0,"batch\-ref")
+
 > Note: Do not use single quotes with in (adhoc) java script modules. If you must use a single quote, escape it with a quote (ex: ''text'')
 
 ### Encryption
@@ -140,7 +141,6 @@ Encrypt the URI or password as below. It is assumed that jasypt distribution is 
     jasypt-1.9.2/bin/encrypt.sh input="uri or password" password="passphrase" algorithm="algorithm" (ex: PBEWithMD5AndTripleDES or PBEWithMD5AndDES)  
 
 **jasypt.properties file**  
-
 ```
 jasypt.algorithm=PBEWithMD5AndTripleDES #(If not specified, default is PBEWithMD5AndTripleDES)
 jasypt.password=passphrase
@@ -153,28 +153,55 @@ As an example, a batch ref can be a link/id of a document that manages the statu
 
 ExportBatchToFileTask, PreBatchUpdateFileTask and PostBatchUpdateFileTask use URIS\_BATCH\_REF as the file name if EXPORT-FILE-NAME is not specified. This is useful for automated jobs where name of the output file name can be determined only by the URIS-MODULE.  
 
-
 ### Usage
 #### Usage 1 (Command line options):
-
-    java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar com.marklogic.developer.corb.Manager XCC-CONNECTION-URI [COLLECTION-NAME [XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT [ MODULES-DATABASE [ INSTALL [ PROCESS-TASK [ PRE-BATCH-MODULE  [ PRE-BATCH-TASK [ POST-XQUERY-MODULE  [ POST-BATCH-TASK [ EXPORT-FILE-DIR [ EXPORT-FILE-NAME [ URIS-FILE ] ] ] ] ] ] ] ] ] ] ] ] ] ] ]
+```
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar ^
+         com.marklogic.developer.corb.Manager ^
+         XCC-CONNECTION-URI ^
+         [COLLECTION-NAME ^
+         [XQUERY-MODULE ^
+         [ THREAD-COUNT ^
+         [ URIS-MODULE ^
+         [ MODULE-ROOT ^
+         [ MODULES-DATABASE ^
+         [ INSTALL ^
+         [ PROCESS-TASK ^
+         [ PRE-BATCH-MODULE  ^
+         [ PRE-BATCH-TASK ^
+         [ POST-XQUERY-MODULE ^
+         [ POST-BATCH-TASK ^
+         [ EXPORT-FILE-DIR ^
+         [ EXPORT-FILE-NAME ^
+         [ URIS-FILE ] ] ] ] ] ] ] ] ] ] ] ] ] ] ]
+```
 
 #### Usage 2 (Java system properties specifying options):
-
-    java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] -DXQUERY-MODULE=module-name.xqy -DTHREAD-COUNT=10 -DURIS-MODULE=get-uris.xqy -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy -D... com.marklogic.developer.corb.Manager
+```
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar ^
+         -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] ^
+         -DXQUERY-MODULE=module-name.xqy -DTHREAD-COUNT=10 ^
+         -DURIS-MODULE=get-uris.xqy ^
+         -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy ^
+         -D... com.marklogic.developer.corb.Manager
+```
 
 #### Usage 3 (Properties file specifying options):
-
-    java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar -DOPTIONS-FILE=myjob.properties com.marklogic.developer.corb.Manager (looks for myjob.properties file in classpath)
+```
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar ^
+         -DOPTIONS-FILE=myjob.properties com.marklogic.developer.corb.Manager 
+> looks for myjob.properties file in classpath
 
 #### Usage 4 (Combination of properties file with java system properties and command line options):
-
-    java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10 com.marklogic.developer.corb.Manager XCC-CONNECTION-URI
+```
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar ^
+         -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10 ^
+         com.marklogic.developer.corb.Manager XCC-CONNECTION-URI
+```
 
 ###  Sample myjob.properties (Note: any of the properties below can be specified as java system property i.e. '-D' option)
 
 ##### sample 1 - simple batch
-
 ```
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
@@ -185,7 +212,6 @@ XQUERY-MODULE=transform.xqy
 ```
 
 ##### sample 2 - Use username, password, host and port instead of connection URI
-
 ```
 XCC-USERNAME=username   
 XCC-PASSWORD=password   
@@ -200,7 +226,6 @@ XQUERY-MODULE=SampleCorbJob.xqy
 ```
 
 ##### sample 3 - simple batch with URIS-FILE (in place of URIS-MODULE)
-
 ```
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
@@ -211,7 +236,6 @@ XQUERY-MODULE=SampleCorbJob.xqy
 ```
 
 ##### sample 4 - report, generates a single file with data from processing each URI
-
 ```
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
@@ -223,21 +247,18 @@ EXPORT-FILE-NAME=/local/path/to/exportmyfile.csv
 ```
 
 ##### sample 5 - report with header, add following to sample 4.
-
 ```
 PRE-BATCH-TASK=com.marklogic.developer.corb.PreBatchUpdateFileTask  
 EXPORT-FILE-TOP-CONTENT=col1,col2,col3  
 ```
 
 ##### sample 6 - dynamic headers, assuming pre-batch-header.xqy module returns the header row, add the following to sample 4.
-
 ```   
 PRE-BATCH-MODULE=pre-batch-header.xqy  
 PRE-BATCH-TASK=com.marklogic.developer.corb.PreBatchUpdateFileTask   
 ```
 
 ##### sample 7 - pre and post batch hooks
-
 ```
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
@@ -250,7 +271,6 @@ POST-BATCH-MODULE=post-batch.xqy
 ```
 
 ##### sample 8 - adhoc tasks (xquery modules live local to filesystem where corb is located. Any xquery module can be adhoc)
-
 ```
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
@@ -262,15 +282,13 @@ PRE-BATCH-MODULE=/local/path/to/adhoc-pre-batch.xqy|ADHOC
 ```
 
 ##### sample 9 - jasypt encryption (XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and/or XCC-DBNAME properties can be encrypted and optionally enclosed by ENC(). If JASYPT-PROPERTIES-FILE is not specified, it assumes default jasypt.properties)
-
 ```
 XCC-CONNECTION-URI=ENC(encrypted_uri)   
 ...   
 DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter  
 ```
 
-**sample jasypt.properties** 
-  
+**sample jasypt.properties**  
 ```
 jasypt.password=foo   
 jasypt.algorithm=PBEWithMD5AndTripleDES  
@@ -391,6 +409,3 @@ java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar ^
          -DOPTIONS-FILE=myJob.properties ^
          com.marklogic.developer.corb.ModuleExecutor ENC(fslfuoifsdofjjwfckmeflkjlj377239843u)
 ```
-
-
-    
