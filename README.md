@@ -22,16 +22,16 @@ Corb needs one or more of the following parameters as (If specified in more than
 > Note: Any or all of the properties can be specified as java system properties or key value pairs in properties file.
 
 ### Options  
-* XCC-CONNECTION-URI (Connection string to MarkLogic XDBC Server)
-* COLLECTION-NAME (Value of this parameter will be passed into the URIS-MODULE via external or global variable with the name URIS)
-* XQUERY-MODULE (XQuery or java script to be executed in a batch for each URI from the URIS-MODULE or URIS-FILE. Module is expected to have at least one external or global variable with name URI. XQuery and java script modules need to have .xqy and .sjs extensions respectively. If returning multiple values from a java script module, values must be returned as ValueIterator.)   
-* THREAD-COUNT (number of worker threads; default = 1)
-* MODULE-ROOT (default: '/' for root)
-* MODULES-DATABASE (uses the XCC-CONNECTION-URI if not provided; use 0 for file system)
-* INSTALL (default is false; set to 'true' or '1' for installation)
-* URIS-MODULE (URI selector module written in XQuery or JavaScript. Expected to return a sequence containing the uris count followed by all the uris. Optionally, it can also return an arbitrary string as a first item in this sequence - refer to URIS\_BATCH\_REF section below. XQuery and JavaScript modules need to have .xqy and .sjs extensions respectively. JavaScript modules must return a ValueIterator.)
-* URIS-FILE (If defined instead of URIS-MODULE, URIS will be loaded from the file located on the client. There should only be one URI per each line. This path may be relative or absolute. For example, a file containing a list of document identifiers can be used as a URIS-FILE and XQUERY-MODULE can query for the document based on this document identifier.)
-* PROCESS-TASK (Java Class that implements com.marklogic.developer.corb.Task or extends com.marklogic.developer.corb.AbstractTask. Typically, it can talk to XQUERY-MODULE and the do additional processing locally such save a returned value.)    
+* **XCC-CONNECTION-URI** (Connection string to MarkLogic XDBC Server)
+* **COLLECTION-NAME** (Value of this parameter will be passed into the URIS-MODULE via external or global variable with the name URIS)
+* **XQUERY-MODULE** (XQuery or java script to be executed in a batch for each URI from the URIS-MODULE or URIS-FILE. Module is expected to have at least one external or global variable with name URI. XQuery and java script modules need to have .xqy and .sjs extensions respectively. If returning multiple values from a java script module, values must be returned as ValueIterator.)   
+* **THREAD-COUNT** (number of worker threads; default = 1)
+* **MODULE-ROOT** (default: '/' for root)
+* **MODULES-DATABASE** (uses the XCC-CONNECTION-URI if not provided; use 0 for file system)
+* **INSTALL** (default is false; set to 'true' or '1' for installation)
+* **URIS-MODULE** (URI selector module written in XQuery or JavaScript. Expected to return a sequence containing the uris count followed by all the uris. Optionally, it can also return an arbitrary string as a first item in this sequence - refer to URIS\_BATCH\_REF section below. XQuery and JavaScript modules need to have .xqy and .sjs extensions respectively. JavaScript modules must return a ValueIterator.)
+* **URIS-FILE** (If defined instead of URIS-MODULE, URIS will be loaded from the file located on the client. There should only be one URI per each line. This path may be relative or absolute. For example, a file containing a list of document identifiers can be used as a URIS-FILE and XQUERY-MODULE can query for the document based on this document identifier.)
+* **PROCESS-TASK** (Java Class that implements com.marklogic.developer.corb.Task or extends com.marklogic.developer.corb.AbstractTask. Typically, it can talk to XQUERY-MODULE and the do additional processing locally such save a returned value.)    
   * `com.marklogic.developer.corb.ExportBatchToFileTask` (Generates _**a single file**_, typically used for reports. Writes the data returned by the XQUERY-MODULE to a single file specified by EXPORT-FILE-NAME. All returned values from entire CoRB will be streamed into the single file. If EXPORT-FILE-NAME is not specified, CoRB uses URIS\_BATCH\_REF returned by URIS-MODULE as the file name.)   
   * `com.marklogic.developer.corb.ExportToFileTask` (Generates _**multiple files**_. Saves the documents returned by each invocation of XQUERY-MODULE to a separate local file within EXPORT-FILE-DIR where the file name for each document will be the based on the URI.)   
 * **PRE-BATCH-MODULE** (An XQuery or JavaScript module which, if specified, will be run before batch processing starts. XQuery and JavaScript modules need to have .xqy and .sjs extensions respectively.)
@@ -157,46 +157,37 @@ ExportBatchToFileTask, PreBatchUpdateFileTask and PostBatchUpdateFileTask use UR
 #### Usage 1 (Command line options):
 ```
 java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar ^
-         com.marklogic.developer.corb.Manager ^
-         XCC-CONNECTION-URI ^
-         [COLLECTION-NAME ^
-         [XQUERY-MODULE ^
-         [ THREAD-COUNT ^
-         [ URIS-MODULE ^
-         [ MODULE-ROOT ^
-         [ MODULES-DATABASE ^
-         [ INSTALL ^
-         [ PROCESS-TASK ^
-         [ PRE-BATCH-MODULE  ^
-         [ PRE-BATCH-TASK ^
-         [ POST-XQUERY-MODULE ^
-         [ POST-BATCH-TASK ^
-         [ EXPORT-FILE-DIR ^
-         [ EXPORT-FILE-NAME ^
-         [ URIS-FILE ] ] ] ] ] ] ] ] ] ] ] ] ] ] ]
+        com.marklogic.developer.corb.Manager ^
+        XCC-CONNECTION-URI ^
+        [COLLECTION-NAME [XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT ^
+          [ MODULES-DATABASE [ INSTALL [ PROCESS-TASK [ PRE-BATCH-MODULE [ PRE-BATCH-TASK ^
+            [ POST-XQUERY-MODULE [ POST-BATCH-TASK [ EXPORT-FILE-DIR [ EXPORT-FILE-NAME ^
+              [ URIS-FILE ] ] ] ] ] ] ] ] ] ] ] ] ] ] ]
 ```
 
 #### Usage 2 (Java system properties specifying options):
 ```
 java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar ^
-         -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] ^
-         -DXQUERY-MODULE=module-name.xqy -DTHREAD-COUNT=10 ^
-         -DURIS-MODULE=get-uris.xqy ^
-         -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy ^
-         -D... com.marklogic.developer.corb.Manager
+        -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] ^
+        -DXQUERY-MODULE=module-name.xqy -DTHREAD-COUNT=10 ^
+        -DURIS-MODULE=get-uris.xqy ^
+        -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy ^
+        -D... ^
+        com.marklogic.developer.corb.Manager
 ```
 
 #### Usage 3 (Properties file specifying options):
 ```
 java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar ^
-         -DOPTIONS-FILE=myjob.properties com.marklogic.developer.corb.Manager 
+        -DOPTIONS-FILE=myjob.properties com.marklogic.developer.corb.Manager
+```
 > looks for myjob.properties file in classpath
 
 #### Usage 4 (Combination of properties file with java system properties and command line options):
 ```
 java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar ^
-         -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10 ^
-         com.marklogic.developer.corb.Manager XCC-CONNECTION-URI
+        -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10 ^
+        com.marklogic.developer.corb.Manager XCC-CONNECTION-URI
 ```
 
 ###  Sample myjob.properties (Note: any of the properties below can be specified as java system property i.e. '-D' option)
@@ -295,7 +286,6 @@ jasypt.algorithm=PBEWithMD5AndTripleDES
 ```
 
 ##### sample 10 - private key encryption with java keys (XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and/or XCC-DBNAME properties can be encrypted and optionally enclosed by ENC())
-
 ```
 XCC-CONNECTION-URI=encrypted_uri  
 ...   
@@ -318,7 +308,6 @@ URIS-MODULE=get-uris.sjs
 XQUERY-MODULE=transform.sjs  
 ```
 ##### sample 13 - Adhoc JavaScript modules
-
 ```
 URIS-MODULE=get-uris.sjs|ADHOC  
 XQUERY-MODULE=extract.sjs|ADHOC  
@@ -372,25 +361,25 @@ The following are example usages from a Windows console:
 ##### Usage 1
 ```
 java -cp pathToXCC.jar:pathToCoRB.jar com.marklogic.developer.corb.ModuleExecutor ^ 
-         xcc://user:password@host:port/[ database ] ^
-         xqueryOrJavascriptModuleName moduleRootName modulesDatabaseName ^ 
-         com.marklogic.developer.corb.ExportBatchToFileTask ^
-         c:\\myPath\\to\\file\\directory myFileName
+        xcc://user:password@host:port/[ database ] ^
+        xqueryOrJavascriptModuleName moduleRootName modulesDatabaseName ^ 
+        com.marklogic.developer.corb.ExportBatchToFileTask ^
+        c:\\myPath\\to\\file\\directory myFileName
 ```         
 ##### Usage 2
 ```
 java -cp pathToXCC.jar:pathToCoRB.jar ^
-     -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] ^
-	 -DXQUERY-MODULE=module-name.xqy ^
-	 -DPROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask ^
-	 -DXQUERY-MODULE.collectionName=myCollectionName ^
-	 com.marklogic.developer.corb.ModuleExecutor
+        -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] ^
+        -DXQUERY-MODULE=module-name.xqy ^
+        -DPROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask ^
+        -DXQUERY-MODULE.collectionName=myCollectionName ^
+        com.marklogic.developer.corb.ModuleExecutor
 ```         
 ##### Usage 3
 ```
 java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar ^
-         -DOPTIONS-FILE=myJob.properties ^
-         com.marklogic.developer.corb.ModuleExecutor
+        -DOPTIONS-FILE=myJob.properties ^
+        com.marklogic.developer.corb.ModuleExecutor
 ```
 Where myJob.properties has:
 ```
@@ -406,6 +395,6 @@ XCC-CONNECTION-URI=ENC(fslfuoifsdofjjwfckmeflkjlj377239843u)
 ##### Usage 4
 ```
 java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar ^
-         -DOPTIONS-FILE=myJob.properties ^
-         com.marklogic.developer.corb.ModuleExecutor ENC(fslfuoifsdofjjwfckmeflkjlj377239843u)
+        -DOPTIONS-FILE=myJob.properties ^
+        com.marklogic.developer.corb.ModuleExecutor ENC(fslfuoifsdofjjwfckmeflkjlj377239843u)
 ```
