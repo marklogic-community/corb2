@@ -13,7 +13,7 @@ import com.marklogic.xcc.ContentSource;
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  */
-public interface Task extends Callable<String> {
+public interface Task extends Callable<String[]> {
 	
 	public void setContentSource(ContentSource cs);
 	
@@ -27,7 +27,7 @@ public interface Task extends Callable<String> {
 	
 	public void setAdhocQuery(String adhocQuery);
 	
-	public void setAdhocQueryLanguage(String language);
+	public void setQueryLanguage(String language);
 		
 	/**
 	 * If additional data is sent from CUSTOM URI module, it is available in properties
@@ -36,5 +36,5 @@ public interface Task extends Callable<String> {
 	 */
 	public void setProperties(Properties props);
 	
-	public void setInputURI(String inputUri);
+	public void setInputURI(String[] inputUri);
 }

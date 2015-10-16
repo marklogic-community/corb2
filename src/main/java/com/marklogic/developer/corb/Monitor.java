@@ -37,7 +37,7 @@ public class Monitor implements Runnable {
 
     private SimpleLogger logger;
 
-    private CompletionService<String> cs;
+    private CompletionService<String[]> cs;
 
     private long lastProgress = 0;
 
@@ -45,7 +45,7 @@ public class Monitor implements Runnable {
 
     private Manager manager;
 
-    private String lastUri;
+    private String[] lastUris;
 
     private long taskCount;
 
@@ -59,9 +59,7 @@ public class Monitor implements Runnable {
      * @param _manager
      * @param _logger
      */
-    public Monitor(ThreadPoolExecutor _pool,
-            CompletionService<String> _cs, Manager _manager,
-            SimpleLogger _logger) {
+    public Monitor(ThreadPoolExecutor _pool, CompletionService<String[]> _cs, Manager _manager, SimpleLogger _logger) {
         pool = _pool;
         cs = _cs;
         manager = _manager;
@@ -95,7 +93,8 @@ public class Monitor implements Runnable {
             ExecutionException, CorbException {
         // fast-fail as soon as we see any exceptions
         logger.info("monitoring " + taskCount + " tasks");
-        Future<String> future = null;
+        long completed = 0;
+        Future<String[]> future = null;
         while (!shutdownNow) {
             // try to avoid thread starvation
             Thread.yield();
@@ -103,33 +102,33 @@ public class Monitor implements Runnable {
             future = cs.poll(TransformOptions.PROGRESS_INTERVAL_MS,TimeUnit.MILLISECONDS);
             if (null != future) {
                 // record result, or throw exception
-                lastUri = future.get();
-                logger.fine("uri: " + lastUri);
+                lastUris = future.get();
+                completed = completed+lastUris.length;
+                //logger.fine("completed uris: " + Arrays.toString(lastUris));
             }
-            showProgress();
+            
+            long active = pool.getActiveCount();
+            
+            showProgress(completed);
 
-            if (pool.getCompletedTaskCount() == taskCount) {
+            if (completed >= taskCount) {
                 break;
-            }
-            if (pool.getCompletedTaskCount() > taskCount) {
-                logger.warning("expected " + taskCount + " tasks, got "
-                        + pool.getCompletedTaskCount());
-                logger.warning("check your uri module!");
-                manager.stop();
-                return;
+            }else if(active == 0){
+            	logger.warning("No active tasks found with "+(taskCount-completed)+" tasks remains to be completed");
+            	if(pool.isTerminated()) break;
             }
         }
         logger.info("waiting for pool to terminate");
         pool.awaitTermination(1, TimeUnit.SECONDS);
-        logger.info("completed all tasks " + getProgressMessage());
+        logger.info("completed all tasks " + completed);
         runPostBatchTaskIfExists(); //post batch tasks
 		logger.info("Done");
     }
 
-    private long showProgress() {
+    private long showProgress(long completed) {
         long current = System.currentTimeMillis();
         if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
-            logger.info("completed " + getProgressMessage());
+            logger.info("completed " + getProgressMessage(completed));
             lastProgress = current;
 
             // check for low memory
@@ -152,8 +151,7 @@ public class Monitor implements Runnable {
     
     private long prevCompleted=0;
     private long prevMillis=0;
-    private String getProgressMessage() {
-        long completed = pool.getCompletedTaskCount();
+    private String getProgressMessage(long completed) {
         long curMillis = System.currentTimeMillis();
         int tps = (int) ((double) completed * (double) 1000 / (curMillis - startMillis));
         int curTps = tps;

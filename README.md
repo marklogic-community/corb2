@@ -1,7 +1,7 @@
 Version: 2.1.2
 
 ### User Guide
-Please refer to CoRB2 online [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc)
+This document provides a comprehensive overview of CoRB2.  For additional information, please refer to CoRB2 online [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc).  This document also covers the less robust [RunXQuery Tool](#runXQuery-readme) which can be used when only a single staged query is necessary.  The RunXQuery Tool is provided as part of the CoRB2 distribution.
 
 ### Downloads
 Please download latest release from https://github.com/marklogic/corb2/releases.  
@@ -22,16 +22,16 @@ Corb needs one or more of the following parameters as (If specified in more than
 > Note: Any or all of the properties can be specified as java system properties or key value pairs in properties file.
 
 ### Options  
-* **XCC-CONNECTION-URI** (Connection string to MarkLogic XDBC Server)
-* **COLLECTION-NAME** (Value of this parameter will be passed into the URIS-MODULE via external or global variable with the name URIS)
-* **XQUERY-MODULE** (XQuery or java script to be executed in a batch for each URI from the URIS-MODULE or URIS-FILE. Module is expected to have at least one external or global variable with name URI. XQuery and java script modules need to have .xqy and .sjs extensions respectively. If returning multiple values from a java script module, values must be returned as ValueIterator.)
-* **THREAD-COUNT** (number of worker threads; default = 1)
-* **MODULE-ROOT** (default: '/' for root)
-* **MODULES-DATABASE** (uses the XCC-CONNECTION-URI if not provided; use 0 for file system)
-* **INSTALL** (default is false; set to 'true' or '1' for installation)
-* **URIS-MODULE** (URI selector module written in XQuery or JavaScript. Expected to return a sequence containing the uris count followed by all the uris. Optionally, it can also return an arbitrary string as a first item in this sequence - refer to URIS\_BATCH\_REF section below. XQuery and JavaScript modules need to have .xqy and .sjs extensions respectively. JavaScript modules must return a ValueIterator.)
-* **URIS-FILE** (If defined instead of URIS-MODULE, URIS will be loaded from the file located on the client. There should only be one URI per each line. This path may be relative or absolute. For example, a file containing a list of document identifiers can be used as a URIS-FILE and XQUERY-MODULE can query for the document based on this document identifier.)
-* **PROCESS-TASK** (Java Class that implements `com.marklogic.developer.corb.Task` or extends `com.marklogic.developer.corb.AbstractTask`. Typically, it can talk to XQUERY-MODULE and the do additional processing locally such save a returned value.)    
+* XCC-CONNECTION-URI (Connection string to MarkLogic XDBC Server)
+* COLLECTION-NAME (Value of this parameter will be passed into the URIS-MODULE via external or global variable with the name URIS)
+* XQUERY-MODULE (XQuery or java script to be executed in a batch for each URI from the URIS-MODULE or URIS-FILE. Module is expected to have at least one external or global variable with name URI. XQuery and java script modules need to have .xqy and .sjs extensions respectively. If returning multiple values from a java script module, values must be returned as ValueIterator.)   
+* THREAD-COUNT (number of worker threads; default = 1)
+* MODULE-ROOT (default: '/' for root)
+* MODULES-DATABASE (uses the XCC-CONNECTION-URI if not provided; use 0 for file system)
+* INSTALL (default is false; set to 'true' or '1' for installation)
+* URIS-MODULE (URI selector module written in XQuery or JavaScript. Expected to return a sequence containing the uris count followed by all the uris. Optionally, it can also return an arbitrary string as a first item in this sequence - refer to URIS\_BATCH\_REF section below. XQuery and JavaScript modules need to have .xqy and .sjs extensions respectively. JavaScript modules must return a ValueIterator.)
+* URIS-FILE (If defined instead of URIS-MODULE, URIS will be loaded from the file located on the client. There should only be one URI per each line. This path may be relative or absolute. For example, a file containing a list of document identifiers can be used as a URIS-FILE and XQUERY-MODULE can query for the document based on this document identifier.)
+* PROCESS-TASK (Java Class that implements com.marklogic.developer.corb.Task or extends com.marklogic.developer.corb.AbstractTask. Typically, it can talk to XQUERY-MODULE and the do additional processing locally such save a returned value.)    
   * com.marklogic.developer.corb.ExportBatchToFileTask (Generates _**a single file**_, typically used for reports. Writes the data returned by the XQUERY-MODULE to a single file specified by EXPORT-FILE-NAME. All returned values from entire CoRB will be streamed into the single file. If EXPORT-FILE-NAME is not specified, CoRB uses URIS\_BATCH\_REF returned by URIS-MODULE as the file name.)   
   * com.marklogic.developer.corb.ExportToFileTask (Generates _**multiple files**_. Saves the documents returned by each invocation of XQUERY-MODULE to a separate local file within EXPORT-FILE-DIR where the file name for each document will be the based on the URI.)   
 * **PRE-BATCH-MODULE** (An XQuery or JavaScript module which, if specified, will be run before batch processing starts. XQuery and JavaScript modules need to have .xqy and .sjs extensions respectively.)
@@ -305,3 +305,92 @@ XQUERY-MODULE=transform.sjs
 URIS-MODULE=get-uris.sjs|ADHOC  
 XQUERY-MODULE=extract.sjs|ADHOC  
 ```
+
+### Run Xquery or JavaScript Tool
+ 
+Sometimes, a two or more staged CoRB job isn't necessary to get the job done.  Sometimes, only a single query needs to be executed and the output captured to file.  Maybe only a single query with no output captured?  In these cases, the ModuleExecutor Tool can be used to quickly and efficiently execute your XQuery or JavaScript files.
+
+Yes, that's right.  Like CoRB, with Version 8 or higher of the MarkLogic XCC Connection Jar in your classpath, the ModuleExecutor Tool can run JavaScript queries against a MarkLogic8 server.  We know, bad name for the tool but what can we say, old habits die hard!
+
+So how does the ModuleExecutor Tool differ from CoRB?  The key differences are:
+
++ There is only one stage in the process so it can only run one query unlike CoRB which is multi staged (init, pre-batch, uri-module, process-module, post-batch)
++ It is a single threaded application
+
+That's it.  Doesn't seem like a lot but it actually limits its functionality significantly.  So what does the ModuleExecutor Tool have in common with CoRB?  Quite a bit:
+
++ Runs either XQuery or Javascript
++ Supports encryption of passwords using Jasypt
++ Can capture query output to file
++ Can pass custom external variables to the script
++ Supports either ADHOC queries or queries deployed to a modules database
++ Can be configured using:
+  - command line program arguments
+  - command line -D properties
+  - a properties file
+  - a combination of any of these
+  
+So how do you use it?   For convenience, it can be configured using the same techniques as CoRB provides and using the same parameter names. The big difference is that there are far fewer parameters needed and there is a different class used for its execution (com.marklogic.developer.corb.RunXQueryManager).
+
+The following parameters are supported and can be used in the same ways as described above for CoRB:
+
++ XQUERY-MODULE
++ XQUERY-MODULE.customVariableNameExample
++ MODULES-DATABASE
++ MODULES-ROOT
++ DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter
++ PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask
++ EXPORT-FILE-NAME
++ XCC-CONNECTION-URI
++ XCC-USERNAME
++ XCC-PASSWORD
++ XCC-HOSTNAME
++ XCC-PORT
++ EXPORT-FILE-DIR
++ EXPORT-FILE-NAME
+
+The following are example usages from a Windows console:
+
+##### Usage 1
+```
+java -cp pathToXCC.jar:pathToCoRB.jar com.marklogic.developer.corb.ModuleExecutor ^ 
+         xcc://user:password@host:port/[ database ] ^
+         xqueryOrJavascriptModuleName moduleRootName modulesDatabaseName ^ 
+         com.marklogic.developer.corb.ExportBatchToFileTask ^
+         c:\\myPath\\to\\file\\directory myFileName
+```         
+##### Usage 2
+```
+java -cp pathToXCC.jar:pathToCoRB.jar ^
+     -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] ^
+	 -DXQUERY-MODULE=module-name.xqy ^
+	 -DPROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask ^
+	 -DXQUERY-MODULE.collectionName=myCollectionName ^
+	 com.marklogic.developer.corb.ModuleExecutor
+```         
+##### Usage 3
+```
+java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar ^
+         -DOPTIONS-FILE=myJob.properties ^
+         com.marklogic.developer.corb.ModuleExecutor
+```
+Where myJob.properties has:
+```
+MODULES-DATABASE=My-Modules
+DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter
+XQUERY-MODULE=/test/HelloWorld.xqy
+XQUERY-MODULE.lastName=Smith
+XQUERY-MODULE.collectionName=myCollectionName
+PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask
+EXPORT-FILE-NAME=C:\\Users\\jon.smith\\Documents\\runXQueryOutput.log
+XCC-CONNECTION-URI=ENC(fslfuoifsdofjjwfckmeflkjlj377239843u)
+```
+##### Usage 4
+```
+java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar ^
+         -DOPTIONS-FILE=myJob.properties ^
+         com.marklogic.developer.corb.ModuleExecutor ENC(fslfuoifsdofjjwfckmeflkjlj377239843u)
+```
+
+
+    

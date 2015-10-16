@@ -21,7 +21,7 @@
 -->
 <project name="corb" basedir="." default="jar">
 	<property name="name" value="marklogic-corb" />
-	<property name="version" value="2.1.2" />
+	<property name="version" value="2.1.3" />
 	<property file="build.properties" />
 
 	<property name="src.dir" value="src/main/java" />
@@ -30,10 +30,10 @@
 
 	<path id="master-classpath">
 		<fileset dir="${java.library.user}">
-			<include name="marklogic-xcc-6.0.2.jar" />
+			<include name="marklogic-xcc-8.0.1.jar" />
 		</fileset>
 		<fileset dir="${java.library.system}">
-			<include name="marklogic-xcc-6.0.2.jar" />
+			<include name="marklogic-xcc-8.0.1.jar" />
 		</fileset>
 		<pathelement path="${build.dir}" />
 	</path>

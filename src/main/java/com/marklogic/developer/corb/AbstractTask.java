@@ -1,5 +1,6 @@
 package com.marklogic.developer.corb;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -29,7 +30,7 @@ public abstract class AbstractTask implements Task{
 	protected String moduleType;
 	protected String moduleUri;
 	protected Properties properties;
-	protected String inputUri;
+	protected String[] inputUris;
 	
 	protected String adhocQuery;
 	protected String language;
@@ -67,7 +68,7 @@ public abstract class AbstractTask implements Task{
     	this.adhocQuery = adhocQuery;
     }
     
-    public void setAdhocQueryLanguage(String language){
+    public void setQueryLanguage(String language){
     	this.language = language;
     }
     
@@ -75,15 +76,15 @@ public abstract class AbstractTask implements Task{
     	this.properties = properties;
     }
     
-	public void setInputURI(String inputUri) {
-		this.inputUri = inputUri;
+	public void setInputURI(String[] inputUri) {
+		this.inputUris = inputUri;
 	}
 	
 	public Session newSession() {
         return cs.newSession();
     }
 	
-	protected String invokeModule() throws CorbException{
+	protected String[] invokeModule() throws CorbException{
 		if(moduleUri == null && adhocQuery == null) return null;
 		
         Session session = null;
@@ -116,47 +117,43 @@ public abstract class AbstractTask implements Task{
         		}
         	}
             
-        	if(moduleUri == null && adhocQuery != null && "JAVASCRIPT".equalsIgnoreCase(language)){
-        		StringBuffer sb = new StringBuffer();
-				sb.append("xdmp:javascript-eval('");
-				sb.append(adhocQuery);
-				sb.append("',(");				
-				sb.append("\"URI\"").append(",\""+inputUri+"\"");
-				if(properties != null && properties.containsKey(Manager.URIS_BATCH_REF)){
-					sb.append(",\""+Manager.URIS_BATCH_REF+"\"").append(",\""+properties.getProperty(Manager.URIS_BATCH_REF)+"\"");
-				}
-				for(String propName: modulePropNames){
-	        		if(propName.startsWith(moduleType+".")){
-	            		String varName = propName.substring(moduleType.length()+1);
-	            		String value = getProperty(propName);
-	            		if(value != null){
-		        			sb.append(",\""+varName+"\"").append(",\""+value+"\"");
-	            		}
-	        		}
-	        	}				
-				sb.append("))");
-				
-				request = session.newAdhocQuery(sb.toString());
-        	}else{
-	            if(moduleUri != null){
-	            	request = session.newModuleInvoke(moduleUri);
-	            }else{
-	            	request = session.newAdhocQuery(adhocQuery);
-	            }
-	            request.setNewStringVariable("URI", inputUri);
-	            
-	            if(properties != null && properties.containsKey(Manager.URIS_BATCH_REF)){
-	            	request.setNewStringVariable(Manager.URIS_BATCH_REF, properties.getProperty(Manager.URIS_BATCH_REF));
-	            }
-	            
-	        	for(String propName: modulePropNames){
-	        		if(propName.startsWith(moduleType+".")){
-	            		String varName = propName.substring(moduleType.length()+1);
-	            		String value = getProperty(propName);
-	            		if(value != null) request.setNewStringVariable(varName, value);
-	        		}
-	        	}   
-        	}
+            if(moduleUri != null){
+            	request = session.newModuleInvoke(moduleUri);
+            }else{
+            	request = session.newAdhocQuery(adhocQuery);
+            }
+            
+            if(language != null){
+            	request.getOptions().setQueryLanguage(language);
+            }
+            
+            if(inputUris != null && inputUris.length > 0){
+            	if(inputUris.length == 1){
+            		request.setNewStringVariable("URI", inputUris[0]);
+            	}else{
+            		String delim=getProperty("BATCH-URI-DELIM");
+            		if(delim == null || delim.length() == 0) delim = Manager.DEFAULT_BATCH_URI_DELIM;
+            		StringBuffer buff = new StringBuffer();
+            		for(String uri: inputUris){
+            			if(buff.length() > 0) buff.append(delim);
+            			buff.append(uri);
+            		}
+            		request.setNewStringVariable("URI", buff.toString());
+            	}
+            }
+            
+            
+            if(properties != null && properties.containsKey(Manager.URIS_BATCH_REF)){
+            	request.setNewStringVariable(Manager.URIS_BATCH_REF, properties.getProperty(Manager.URIS_BATCH_REF));
+            }
+            
+        	for(String propName: modulePropNames){
+        		if(propName.startsWith(moduleType+".")){
+            		String varName = propName.substring(moduleType.length()+1);
+            		String value = getProperty(propName);
+            		if(value != null) request.setNewStringVariable(varName, value);
+        		}
+        	}   
             
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);
@@ -169,21 +166,21 @@ public abstract class AbstractTask implements Task{
             seq.close();
             Thread.yield();// try to avoid thread starvation
               
-            return inputUri;
+            return inputUris;
         }catch(Exception exc){
         	if(exc instanceof ServerConnectionException){
         		int retryLimit = this.getConnectRetryLimit();
         		int retryInterval = this.getConnectRetryInterval();
         		if(connectRetryCount < retryLimit){
         			connectRetryCount++;
-        			logger.severe("Connection failed to Marklogic Server. Retrying attempt "+connectRetryCount+" after "+retryInterval+" seconds..: "+exc.getMessage()+" at URI: "+inputUri);
+        			logger.severe("Connection failed to Marklogic Server. Retrying attempt "+connectRetryCount+" after "+retryInterval+" seconds..: "+exc.getMessage()+" at URI: "+inputUris);
         			try{Thread.sleep(retryInterval*1000L);}catch(Exception exc2){}        			
         			return invokeModule();
         		}else{
-        			throw new CorbException(exc.getMessage()+" at URI: "+inputUri,exc);
+        			throw new CorbException(exc.getMessage()+" at URI: "+Arrays.asList(inputUris),exc);
         		}
         	}else{
-        		throw new CorbException(exc.getMessage()+" at URI: "+inputUri,exc);
+        		throw new CorbException(exc.getMessage()+" at URI: "+Arrays.asList(inputUris),exc);
         	}
         }finally {
         	if(null != session && !session.isClosed()) {
@@ -206,16 +203,16 @@ public abstract class AbstractTask implements Task{
     	moduleType=null;
     	moduleUri=null;
     	properties=null;
-    	inputUri=null;
+    	inputUris=null;
     	adhocQuery=null;
 	}
 		
 	public String getProperty(String key){
 		String val = System.getProperty(key);
-		if((val == null || val.trim().length() == 0) && properties != null){
+		if(val == null && properties != null){
 			val = properties.getProperty(key);
 		}
-		return val != null ? val.trim() : val;
+		return val != null ? val.trim() : null;
 	}
 	
 	protected byte[] getValueAsBytes(XdmItem item){

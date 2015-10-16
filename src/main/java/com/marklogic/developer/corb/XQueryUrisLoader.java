@@ -71,7 +71,7 @@ public class XQueryUrisLoader implements UrisLoader {
 			Request req = null;
 			if(options.getUrisModule().toUpperCase().endsWith(".SJS|ADHOC") || options.getUrisModule().toUpperCase().endsWith(".JS|ADHOC")){
 				String queryPath = options.getUrisModule().substring(0, options.getUrisModule().indexOf('|'));
-				String adhocQuery = TaskFactory.getAdhocQuery(queryPath);
+				String adhocQuery = Manager.getAdhocQuery(queryPath);
 				if(adhocQuery == null || (adhocQuery.length() == 0)){
     				throw new IllegalStateException("Unable to read adhoc query "+queryPath+" from classpath or filesystem");
     			}
@@ -98,7 +98,7 @@ public class XQueryUrisLoader implements UrisLoader {
 			}else{
 				if(options.getUrisModule().toUpperCase().endsWith("|ADHOC")){
 					String queryPath = options.getUrisModule().substring(0, options.getUrisModule().indexOf('|'));
-					String adhocQuery = TaskFactory.getAdhocQuery(queryPath);
+					String adhocQuery = Manager.getAdhocQuery(queryPath);
 					if(adhocQuery == null || (adhocQuery.length() == 0)){
 	    				throw new IllegalStateException("Unable to read adhoc query "+queryPath+" from classpath or filesystem");
 	    			}

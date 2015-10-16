@@ -18,12 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
 import java.util.HashMap;
 
 /**
@@ -49,17 +43,17 @@ public class TaskFactory {
      * @param _uri
      * @return
      */
-    public Task newProcessTask(String _uri) {
+    public Task newProcessTask(String[] _uris) {
     	if(null == manager.getOptions().getProcessTaskClass() && null == manager.getOptions().getProcessModule()){
     		throw new NullPointerException("null process task and xquery module");
     	}
-    	if(null != manager.getOptions().getProcessModule() && (null == _uri || null == manager.getContentSource())){
+    	if(null != manager.getOptions().getProcessModule() && (null == _uris || _uris.length == 0 || null == manager.getContentSource())){
     		throw new NullPointerException("null content source or input uri");
     	}
         try{
         	Task task = manager.getOptions().getProcessTaskClass() == null ? 
         				new Transform() : manager.getOptions().getProcessTaskClass().newInstance();
-        	setupTask(task,"XQUERY-MODULE",manager.getOptions().getProcessModule(),_uri);
+        	setupTask(task,"XQUERY-MODULE",manager.getOptions().getProcessModule(),_uris);
         	return task;
         }catch(Exception exc){
         	throw new IllegalArgumentException(exc.getMessage(),exc);
@@ -76,7 +70,7 @@ public class TaskFactory {
         try{
         	Task task = manager.getOptions().getPreBatchTaskClass() == null ? 
         				new Transform() : manager.getOptions().getPreBatchTaskClass().newInstance();
-        	setupTask(task,"PRE-BATCH-MODULE",manager.getOptions().getPreBatchModule(),"");
+        	setupTask(task,"PRE-BATCH-MODULE",manager.getOptions().getPreBatchModule(),new String[0]);
         	return task;
         }catch(Exception exc){
         	throw new IllegalArgumentException(exc.getMessage(),exc);
@@ -93,7 +87,7 @@ public class TaskFactory {
         try{
         	Task task = manager.getOptions().getPostBatchTaskClass() == null ? 
         				new Transform() : manager.getOptions().getPostBatchTaskClass().newInstance();
-        	setupTask(task,"POST-BATCH-MODULE",manager.getOptions().getPostBatchModule(),"");
+        	setupTask(task,"POST-BATCH-MODULE",manager.getOptions().getPostBatchModule(),new String[0]);
         	return task;
         }catch(Exception exc){
         	throw new IllegalArgumentException(exc.getMessage(),exc);
@@ -110,55 +104,20 @@ public class TaskFactory {
         try{
         	Task task = manager.getOptions().getInitTaskClass() == null ? 
         				new Transform() : manager.getOptions().getInitTaskClass().newInstance();
-        	setupTask(task,"INIT-MODULE",manager.getOptions().getInitModule(),"");
+        	setupTask(task,"INIT-MODULE",manager.getOptions().getInitModule(),new String[0]);
         	return task;
         }catch(Exception exc){
         	throw new IllegalArgumentException(exc.getMessage(),exc);
         }
     }
     
-    static public String getAdhocQuery(String module){
-    	InputStream is = null;
-    	InputStreamReader reader = null;
-		StringWriter writer =null;
-		try{
-			is = TaskFactory.class.getResourceAsStream("/" + module);
-			if(is == null){
-				File f = new File(module);
-				if (f.exists() && !f.isDirectory()) {
-					is = new FileInputStream(f);
-				}else{
-					throw new IllegalStateException("Unable to find adhoc query module "+module+" in classpath or filesystem");
-				}
-			}
-			
-			reader = new InputStreamReader(is);
-			writer = new StringWriter();
-			char[] buffer = new char[512];
-			int n = 0;
-			while (-1 != (n = reader.read(buffer))) {
-				writer.write(buffer, 0, n);
-			}
-			writer.close();
-			reader.close();
-			
-			return writer.toString().trim();
-		}catch(IOException exc){
-			throw new IllegalStateException("Prolem reading adhoc query module "+module,exc);
-		}finally{
-			try{if(writer != null) writer.close();}catch(Exception exc){}
-			try{if(reader != null) reader.close();}catch(Exception exc){}
-			try{if(is != null ) is.close();}catch(Exception exc){}
-		}
-    }
-    
-    private void setupTask(Task task, String moduleType, String module, String _uri){
+    private void setupTask(Task task, String moduleType, String module, String[] _uri){
     	if(module != null){
     		if(module.toUpperCase().endsWith("|ADHOC")){
     			String modulePath=module.substring(0, module.indexOf('|'));
     			String adhocQuery = moduleToAdhocQueryMap.get(modulePath);
     			if(adhocQuery == null){
-    				adhocQuery=getAdhocQuery(modulePath);
+    				adhocQuery = Manager.getAdhocQuery(modulePath);
         			if(adhocQuery == null || (adhocQuery.length() == 0)){
         				throw new IllegalStateException("Unable to read adhoc query "+module+" from classpath or filesystem");
         			}
@@ -166,9 +125,7 @@ public class TaskFactory {
     			}
     			task.setAdhocQuery(adhocQuery);
     			if(modulePath.toUpperCase().endsWith(".SJS") || modulePath.toUpperCase().endsWith(".JS")){
-    				task.setAdhocQueryLanguage("JAVASCRIPT");
-    			}else{
-    				task.setAdhocQueryLanguage("XQUERY");
+    				task.setQueryLanguage("javascript");
     			}
     		}else{
     			String modulePath = moduleToPathMap.get(module);
@@ -180,6 +137,9 @@ public class TaskFactory {
     				moduleToPathMap.put(module, modulePath);
     			}
     			task.setModuleURI(modulePath);
+    			if(module.toUpperCase().endsWith(".SJS") || module.toUpperCase().endsWith(".JS")){
+    				task.setQueryLanguage("javascript");
+    			}
     		}
     	}
     	task.setModuleType(moduleType);

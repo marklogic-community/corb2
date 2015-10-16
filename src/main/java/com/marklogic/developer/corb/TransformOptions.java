@@ -61,6 +61,7 @@ public class TransformOptions {
     private String urisFile = null;
 
     private int threadCount = 1;
+    private int batchSize = 1;
 
     private boolean doInstall = false;
 
@@ -96,6 +97,14 @@ public class TransformOptions {
      */
     public void setThreadCount(int count) {
         this.threadCount = count;
+    }
+    
+    public int getBatchSize(){
+    	return batchSize;
+    }
+    
+    public void setBatchSize(int batchSize){
+    	this.batchSize = batchSize;
     }
 
     /**
