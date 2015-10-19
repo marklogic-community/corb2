@@ -31,7 +31,10 @@ import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -41,28 +44,42 @@ import java.util.List;
  */
 public class Utilities {
 
-    private static DateFormat m_ISO8601Local = new SimpleDateFormat(
+    private static final DateFormat m_ISO8601Local = new SimpleDateFormat(
             "yyyy-MM-dd'T'HH:mm:ssZ");
 
     // private static DateFormat m_ISO8601plusRFC822 = new SimpleDateFormat(
     // "yyyy-MM-dd'T'HH:mm:ssz");
-
     private static final int BUFFER_SIZE = 32 * 1024;
 
+    /**
+     *
+     * @param _date
+     * @return
+     * @throws ParseException
+     */
     public static Date parseDateTime(String _date) throws ParseException {
         synchronized (m_ISO8601Local) {
             return m_ISO8601Local.parse(_date.replaceFirst(":(\\d\\d)$", "$1"));
         }
     }
 
+    /**
+     *
+     * @return
+     */
     public static String formatDateTime() {
         return formatDateTime(new Date());
     }
 
+    /**
+     *
+     * @param date
+     * @return
+     */
     public static String formatDateTime(Date date) {
-        if (date == null)
+        if (date == null) {
             return formatDateTime(new Date());
-
+        }
         // format in (almost) ISO8601 format
         String dateStr = null;
         synchronized (m_ISO8601Local) {
@@ -81,58 +98,67 @@ public class Utilities {
         return _path.replaceFirst(".*\\.([^\\.]+)$", "$1");
     }
 
-    public static String join(List<?> _items, String _delim) {
-        if (null == _items) {
+    /**
+     * Joins items of the provided collection into a single String using the delimiter specified.
+     * @param items
+     * @param delimiter
+     * @return
+     */
+    public static String join(Collection<?> items, String delimiter) {
+        if (items == null) {
             return null;
         }
-        return join(_items.toArray(), _delim);
+        StringBuilder joinedValues = new StringBuilder();
+        Iterator<?> iterator = items.iterator();
+        if (iterator.hasNext()){
+            joinedValues.append(iterator.next().toString());
+        }
+        while (iterator.hasNext()) {
+            joinedValues.append(delimiter);
+            joinedValues.append(iterator.next().toString());
+        }
+        return joinedValues.toString();
     }
-
-    public static String join(Object[] _items, String _delim) {
-        String rval = "";
-        for (int i = 0; i < _items.length; i++)
-            if (i == 0)
-                rval = "" + _items[0];
-            else
-                rval += _delim + _items[i];
-        return rval;
+    
+    /**
+     * Joins items of the provided Array of Objects into a single String using the delimiter specified.
+     * @param items
+     * @param delimiter
+     * @return 
+     */
+    public static String join(Object[] items, String delimiter){
+        return join(Arrays.asList(items), delimiter);
+    }
+    
+    /**
+     * Replace all occurrances of the following characters [&, <, >] with their corresponding entities.
+     * @param _in
+     * @return
+     */
+    public static String escapeXml(String _in) {
+        if (_in == null) {
+            return "";
+        }
+        return _in.replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;");
     }
 
     /**
-     * @param _items
-     * @param _delim
+     *
+     * @param _in
+     * @param _out
      * @return
+     * @throws IOException
      */
-    public static String join(String[] _items, String _delim) {
-        String rval = "";
-        for (int i = 0; i < _items.length; i++)
-            if (i == 0)
-                rval = _items[0];
-            else
-                rval += _delim + _items[i];
-        return rval;
-    }
-
-    public static String escapeXml(String _in) {
-        if (_in == null)
-            return "";
-        return _in.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(
-                ">", "&gt;");
-    }
-
-    public static void main(String[] args) throws Exception {
-        String dateString = "1997-07-11T01:00:00-04:00";
-        Date theDate = parseDateTime(dateString);
-        System.out.println(theDate);
-    }
-
     public static long copy(InputStream _in, OutputStream _out)
             throws IOException {
-        if (_in == null)
+        if (_in == null) {
             throw new IOException("null InputStream");
-        if (_out == null)
+        }
+        if (_out == null) {
             throw new IOException("null OutputStream");
-
+        }
         long totalBytes = 0;
         int len = 0;
         byte[] buf = new byte[BUFFER_SIZE];
@@ -149,10 +175,10 @@ public class Utilities {
         _out.flush();
 
         // check to see if we copied enough data
-        if (available > totalBytes)
+        if (available > totalBytes) {
             throw new IOException("expected at least " + available
                     + " Bytes, copied only " + totalBytes);
-
+        }
         return totalBytes;
     }
 
@@ -167,12 +193,20 @@ public class Utilities {
         copy(in, out);
     }
 
+    /**
+     *
+     * @param _in
+     * @param _out
+     * @return
+     * @throws IOException
+     */
     public static long copy(Reader _in, OutputStream _out) throws IOException {
-        if (_in == null)
+        if (_in == null) {
             throw new IOException("null InputStream");
-        if (_out == null)
+        }
+        if (_out == null) {
             throw new IOException("null OutputStream");
-
+        }
         long totalBytes = 0;
         int len = 0;
         char[] buf = new char[BUFFER_SIZE];
@@ -189,10 +223,10 @@ public class Utilities {
         _out.flush();
 
         // check to see if we copied enough data
-        if (1 > totalBytes)
+        if (1 > totalBytes) {
             throw new IOException("expected at least " + 1
                     + " Bytes, copied only " + totalBytes);
-
+        }
         return totalBytes;
     }
 
@@ -207,10 +241,15 @@ public class Utilities {
         copy(new FileInputStream(inFilePath), new FileOutputStream(outFilePath));
     }
 
+    /**
+     *
+     * @param _file
+     * @throws IOException
+     */
     public static void deleteFile(File _file) throws IOException {
-        if (!_file.exists())
+        if (!_file.exists()) {
             return;
-
+        }
         boolean success;
 
         if (!_file.isDirectory()) {
@@ -225,9 +264,9 @@ public class Utilities {
         // directory, so recurse
         File[] children = _file.listFiles();
         if (children != null) {
-            for (int i = 0; i < children.length; i++) {
+            for (File children1 : children) {
                 // recurse
-                deleteFile(children[i]);
+                deleteFile(children1);
             }
         }
 
@@ -237,36 +276,55 @@ public class Utilities {
         }
     }
 
+    /**
+     *
+     * @param str
+     * @return
+     */
     public static final boolean stringToBoolean(String str) {
         // let the caller decide: should an unset string be true or false?
         return stringToBoolean(str, false);
     }
 
+    /**
+     *
+     * @param str
+     * @param defaultValue
+     * @return
+     */
     public static final boolean stringToBoolean(String str, boolean defaultValue) {
-        if (str == null)
+        if (str == null) {
             return defaultValue;
-
+        }
         String lcStr = str.toLowerCase();
-        if (str == "" || str.equals("0") || lcStr.equals("f")
+        return !(str.equals("") || str.equals("0") || lcStr.equals("f")
                 || lcStr.equals("false") || lcStr.equals("n")
-                || lcStr.equals("no"))
-            return false;
-
-        return true;
+                || lcStr.equals("no"));
     }
 
     /**
-     * @param outHtmlFileName
+     * @param _path
      * @throws IOException
      */
     public static void deleteFile(String _path) throws IOException {
         deleteFile(new File(_path));
     }
 
+    /**
+     *
+     * @param _class
+     * @return
+     */
     public static String buildModulePath(Class<?> _class) {
         return "/" + _class.getName().replace('.', '/') + ".xqy";
     }
 
+    /**
+     *
+     * @param _package
+     * @param _name
+     * @return
+     */
     public static String buildModulePath(Package _package, String _name) {
         return "/" + _package.getName().replace('.', '/') + "/" + _name
                 + (_name.endsWith(".xqy") ? "" : ".xqy");
@@ -299,6 +357,12 @@ public class Utilities {
         return bos.toByteArray();
     }
 
+    /**
+     *
+     * @param is
+     * @return
+     * @throws IOException
+     */
     public static long getSize(InputStream is) throws IOException {
         long size = 0;
         int b = 0;
@@ -309,6 +373,12 @@ public class Utilities {
         return size;
     }
 
+    /**
+     *
+     * @param r
+     * @return
+     * @throws IOException
+     */
     public static long getSize(Reader r) throws IOException {
         long size = 0;
         int b = 0;
@@ -325,19 +395,15 @@ public class Utilities {
      * @throws IOException
      */
     public static byte[] getBytes(File contentFile) throws IOException {
-        InputStream is = null;
-        try{
-	        is = new FileInputStream(contentFile);
-	        ByteArrayOutputStream os = new ByteArrayOutputStream();
-	        byte[] buf = new byte[BUFFER_SIZE];
-	        int read;
-	
-	        while ((read = is.read(buf)) > 0) {
-	            os.write(buf, 0, read);
-	        }
-	        return os.toByteArray();
-        }finally{
-        	if(is != null) is.close();
+        try (InputStream is = new FileInputStream(contentFile)) {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            byte[] buf = new byte[BUFFER_SIZE];
+            int read;
+
+            while ((read = is.read(buf)) > 0) {
+                os.write(buf, 0, read);
+            }
+            return os.toByteArray();
         }
     }
 

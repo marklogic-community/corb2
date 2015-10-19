@@ -22,7 +22,7 @@ package com.marklogic.developer.corb;
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * @author Colleen Whitney, colleen.whitney@marklogic.com
  * @author Bhagat Bandlamudi, MarkLogic Corporation
- * 
+ *
  */
 public class TransformOptions {
 
@@ -40,23 +40,23 @@ public class TransformOptions {
 
     public static final String QUERY_TYPE = "QUERY";
 
-    private String processModule = null;  
+    private String processModule = null;
     private Class<? extends Task> processTaskCls = null;
-    
+
     private String preBatchModule = null;
     private Class<? extends Task> preBatchTaskCls = null;
-    
+
     private String postBatchModule = null;
     private Class<? extends Task> postBatchTaskCls = null;
-    
+
     private String initModule = null;
     private Class<? extends Task> initTaskCls = null;
-    
+
     private String exportFileDir = null;
 
     // Defaults for optional arguments
     private String moduleRoot = SLASH;
-    
+
     private String urisModule = null;
     private String urisFile = null;
 
@@ -150,13 +150,13 @@ public class TransformOptions {
     public void setUrisModule(String urisModule) {
         this.urisModule = urisModule;
     }
-    
-    public String getUrisFile(){
-    	return this.urisFile;
+
+    public String getUrisFile() {
+        return this.urisFile;
     }
-    
-    public void setUrisFile(String urisFile){
-    	this.urisFile=urisFile;
+
+    public void setUrisFile(String urisFile) {
+        this.urisFile = urisFile;
     }
 
     /**
@@ -172,20 +172,23 @@ public class TransformOptions {
     public void setProcessModule(String processModule) {
         this.processModule = processModule;
     }
-    
+
     /**
      * Java class
+     *
+     * @param processTaskCls
      */
-    public void setProcessTaskClass(Class<? extends Task> processTaskCls){
-    	this.processTaskCls = processTaskCls;
+    public void setProcessTaskClass(Class<? extends Task> processTaskCls) {
+        this.processTaskCls = processTaskCls;
     }
-    
+
     /**
      * Java Class
+     *
      * @return
      */
-    public Class<? extends Task> getProcessTaskClass(){
-    	return this.processTaskCls;
+    public Class<? extends Task> getProcessTaskClass() {
+        return this.processTaskCls;
     }
 
     /**
@@ -215,79 +218,91 @@ public class TransformOptions {
     public void setDoInstall(boolean doInstall) {
         this.doInstall = doInstall;
     }
-    
-    public void setPreBatchModule(String preBatchModule){
-    	this.preBatchModule = preBatchModule;
+
+    public void setPreBatchModule(String preBatchModule) {
+        this.preBatchModule = preBatchModule;
     }
-    
-    public String getPreBatchModule(){
-    	return this.preBatchModule;
+
+    public String getPreBatchModule() {
+        return this.preBatchModule;
     }
-    
+
     /**
      * Java Class
+     *
+     * @param preBatchTaskCls
      */
-    public void setPreBatchTaskClass(Class<? extends Task> preBatchTaskCls){
-    	this.preBatchTaskCls = preBatchTaskCls;
+    public void setPreBatchTaskClass(Class<? extends Task> preBatchTaskCls) {
+        this.preBatchTaskCls = preBatchTaskCls;
     }
-    
+
     /**
      * Java Class
+     *
+     * @return
      */
-    public Class<? extends Task> getPreBatchTaskClass(){
-    	return this.preBatchTaskCls;
+    public Class<? extends Task> getPreBatchTaskClass() {
+        return this.preBatchTaskCls;
     }
-    
-    public void setPostBatchModule(String postBatchModule){
-    	this.postBatchModule = postBatchModule;
+
+    public void setPostBatchModule(String postBatchModule) {
+        this.postBatchModule = postBatchModule;
     }
-    
-    public String getPostBatchModule(){
-    	return this.postBatchModule;
+
+    public String getPostBatchModule() {
+        return this.postBatchModule;
     }
-    
+
     /**
      * Java Class
+     *
+     * @param postBatchTaskCls
      */
-    public void setPostBatchTaskClass(Class<? extends Task> postBatchTaskCls){
-    	this.postBatchTaskCls = postBatchTaskCls;
+    public void setPostBatchTaskClass(Class<? extends Task> postBatchTaskCls) {
+        this.postBatchTaskCls = postBatchTaskCls;
     }
-    
+
     /**
      * Java Class
+     *
+     * @return
      */
-    public Class<? extends Task> getPostBatchTaskClass(){
-    	return this.postBatchTaskCls;
+    public Class<? extends Task> getPostBatchTaskClass() {
+        return this.postBatchTaskCls;
     }
-    
-    public String getExportFileDir(){
-    	return this.exportFileDir;
+
+    public String getExportFileDir() {
+        return this.exportFileDir;
     }
-    
-    public void setExportFileDir(String exportFileDir){
-    	this.exportFileDir = exportFileDir;
+
+    public void setExportFileDir(String exportFileDir) {
+        this.exportFileDir = exportFileDir;
     }
-    
-    public void setInitModule(String initModule){
-    	this.initModule = initModule;
+
+    public void setInitModule(String initModule) {
+        this.initModule = initModule;
     }
-    
-    public String getInitModule(){
-    	return this.initModule;
+
+    public String getInitModule() {
+        return this.initModule;
     }
-    
+
     /**
      * Java Class
+     *
+     * @param initTaskCls
      */
-    public void setInitTaskClass(Class<? extends Task> initTaskCls){
-    	this.initTaskCls = initTaskCls;
+    public void setInitTaskClass(Class<? extends Task> initTaskCls) {
+        this.initTaskCls = initTaskCls;
     }
-    
+
     /**
      * Java Class
+     *
+     * @return
      */
-    public Class<? extends Task> getInitTaskClass(){
-    	return this.initTaskCls;
+    public Class<? extends Task> getInitTaskClass() {
+        return this.initTaskCls;
     }
 
     /**

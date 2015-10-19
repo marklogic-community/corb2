@@ -31,58 +31,59 @@ import java.util.logging.SimpleFormatter;
 
 /**
  * @author Michael Blakeley michael.blakeley@marklogic.com
- * 
+ *
  * wrapper for java logging
  */
 public class SimpleLogger extends Logger {
+
     /**
-     * 
+     *
      */
     static public final String LOG_FILEHANDLER_LIMIT = "LOG_FILEHANDLER_LIMIT";
 
     /**
-     * 
+     *
      */
     static public final String LOG_FILEHANDLER_COUNT = "LOG_FILEHANDLER_COUNT";
 
     /**
-     * 
+     *
      */
     static public final String LOG_FILEHANDLER_APPEND = "LOG_FILEHANDLER_APPEND";
 
     /**
-     * 
+     *
      */
     static public final String LOG_FILEHANDLER_PATH = "LOG_FILEHANDLER_PATH";
 
     /**
-     * 
+     *
      */
     static public final String DEFAULT_LOG_HANDLER = "CONSOLE,FILE";
 
     /**
-     * 
+     *
      */
     static public final String DEFAULT_LOG_LEVEL = "INFO";
 
     /**
-     * 
+     *
      */
     static public final String LOG_HANDLER = "LOG_HANDLER";
 
     /**
-     * 
+     *
      */
     static public final String LOG_LEVEL = "LOG_LEVEL";
 
     /**
-     * 
+     *
      */
     static public final String DEFAULT_FILEHANDLER_PATH = "simplelogger-%u-%g.log";
 
     static public final String LOGGER_NAME = "com.marklogic.ps";
 
-    private static Hashtable<String, SimpleLogger> loggers = new Hashtable<String, SimpleLogger>();
+    private static Hashtable<String, SimpleLogger> loggers = new Hashtable<>();
 
     SimpleLogger(String name) {
         super(name, null);
@@ -103,18 +104,18 @@ public class SimpleLogger extends Logger {
     public static synchronized SimpleLogger getSimpleLogger(String name) {
         SimpleLogger obj = loggers.get(name);
 
-        if (obj == null)
+        if (obj == null) {
             obj = new SimpleLogger(name);
-
+        }
         return obj;
     }
 
-    public static synchronized SimpleLogger getSimpleLogger(String name,String resBundle) {
+    public static synchronized SimpleLogger getSimpleLogger(String name, String resBundle) {
         SimpleLogger obj = loggers.get(name);
 
-        if (obj == null)
+        if (obj == null) {
             obj = new SimpleLogger(name, resBundle);
-
+        }
         return obj;
     }
 
@@ -130,7 +131,6 @@ public class SimpleLogger extends Logger {
          * getParent() appears to fetch the first non-null ancestor, usually
          * root! So we take a cruder approach.
          */
-
         // don't use the root settings
         setUseParentHandlers(false);
 
@@ -138,8 +138,8 @@ public class SimpleLogger extends Logger {
         String logLevel = _prop.getProperty(LOG_LEVEL, DEFAULT_LOG_LEVEL);
 
         // support multiple handlers: comma-separated
-        String[] logHandler = _prop.getProperty(LOG_HANDLER,DEFAULT_LOG_HANDLER).split(",");
-        String logFilePath = _prop.getProperty(LOG_FILEHANDLER_PATH,DEFAULT_FILEHANDLER_PATH);
+        String[] logHandler = _prop.getProperty(LOG_HANDLER, DEFAULT_LOG_HANDLER).split(",");
+        String logFilePath = _prop.getProperty(LOG_FILEHANDLER_PATH, DEFAULT_FILEHANDLER_PATH);
         boolean logFileAppend = Boolean.parseBoolean(_prop.getProperty(LOG_FILEHANDLER_APPEND, "true"));
         int logFileCount = Integer.parseInt(_prop.getProperty(LOG_FILEHANDLER_COUNT, "1"));
         int logFileLimit = Integer.parseInt(_prop.getProperty(LOG_FILEHANDLER_LIMIT, "0"));
@@ -148,52 +148,48 @@ public class SimpleLogger extends Logger {
         if (logHandler != null && logHandler.length > 0) {
             // remove any old handlers
             Handler[] v = getHandlers();
-            for (int i = 0; i < v.length; i++) {
-                removeHandler(v[i]);
+            for (Handler v1 : v) {
+                removeHandler(v1);
             }
             // can't use the logger here: all the handlers are gone!
             severe("this should not happen");
-            for (int i = 0; i < logHandler.length; i++) {
-                if (logHandler[i] == null)
+            for (String logHandler1 : logHandler) {
+                if (logHandler1 == null) {
                     continue;
+                }
                 // allow the user to specify the file
-                if (logHandler[i].equals("FILE")) {
+                if (logHandler1.equals("FILE")) {
                     System.err.println("logging to file " + logFilePath);
                     try {
-                        h = new FileHandler(logFilePath, logFileLimit,logFileCount, logFileAppend);
-                    } catch (SecurityException e) {
-                        e.printStackTrace();
-                        // fatal error
-                        System.err.println("cannot configure logging: exiting");
-                        Runtime.getRuntime().exit(-1);
-                    } catch (IOException e) {
+                        h = new FileHandler(logFilePath, logFileLimit, logFileCount, logFileAppend);
+                    } catch (SecurityException | IOException e) {
                         e.printStackTrace();
                         // fatal error
                         System.err.println("cannot configure logging: exiting");
                         Runtime.getRuntime().exit(-1);
                     }
                     h.setFormatter(new SimpleFormatter());
-                } else if (logHandler[i].equals("CONSOLE")) {
-                    System.err.println("logging to " + logHandler[i]);
+                } else if (logHandler1.equals("CONSOLE")) {
+                    System.err.println("logging to " + logHandler1);
                     h = new ConsoleHandler();
                     h.setFormatter(new SimpleFormatter());
                 } else {
                     // try to load the string as a classname
                     try {
-                        Class<? extends Handler> lhc = Class.forName(logHandler[i], true,
-                                ClassLoader.getSystemClassLoader()).asSubclass(Handler.class);
-                        System.err.println("logging to class " + logHandler[i]);
-                        Constructor<? extends Handler> con = lhc.getConstructor(new Class<?>[] {});
-                        h = con.newInstance(new Object[] {});
+                        Class<? extends Handler> lhc = Class.forName(logHandler1, true, ClassLoader.getSystemClassLoader()).asSubclass(Handler.class);
+                        System.err.println("logging to class " + logHandler1);
+                        Constructor<? extends Handler> con = lhc.getConstructor(new Class<?>[]{});
+                        h = con.newInstance(new Object[]{});
                     } catch (Exception e) {
-                        System.err.println("unrecognized LOG_HANDLER: "+ logHandler[i]);
+                        System.err.println("unrecognized LOG_HANDLER: " + logHandler1);
                         e.printStackTrace();
                         System.err.println("cannot configure logging: exiting");
                         Runtime.getRuntime().exit(-1);
                     }
                 }
-                if (h != null)
+                if (h != null) {
                     addHandler(h);
+                }
             } // for handler properties
         } else {
             // default to ConsoleHandler
@@ -207,23 +203,24 @@ public class SimpleLogger extends Logger {
              * Logger.setLevel() isn't sufficient, unless the Handler.level is
              * set equal or lower
              */
-            Level lvl = Level.parse(logLevel);
-            if (lvl != null) {
-                setLevel(lvl);
-                Handler[] v = getHandlers();
-                for (int i = 0; i < v.length; i++) {
-                    v[i].setLevel(lvl);
+            Level level = Level.parse(logLevel);
+            if (level != null) {
+                setLevel(level);
+                Handler[] handlers = getHandlers();
+                for (Handler handler : handlers) {
+                    handler.setLevel(level);
                 }
             }
-            fine("logging set to " + getLevel());
+            log(Level.FINE, "logging set to {0}", getLevel());
         }
-        info("setting up logging for: " + getName());
-    } // setLogging
+        log(Level.INFO, "setting up logging for: {0}", getName());
+    }
 
     public void logException(String message, Throwable exception) {
-        if (message == null)
+        if (message == null) {
             message = "";
+        }
         super.log(Level.SEVERE, message, exception);
-    } // logException
+    }
 
 }

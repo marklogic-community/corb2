@@ -25,11 +25,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import com.marklogic.developer.SimpleLogger;
+import java.util.logging.Level;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * @author Bhagat Bandlamudi, MarkLogic Corporation
- * 
+ *
  */
 public class Monitor implements Runnable {
 
@@ -71,6 +72,7 @@ public class Monitor implements Runnable {
      *
      * @see java.lang.Runnable#run()
      */
+    @Override
     public void run() {
         startMillis = System.currentTimeMillis();
 
@@ -84,27 +86,27 @@ public class Monitor implements Runnable {
             // reset interrupt status and exit
             Thread.interrupted();
             logger.logException("interrupted: exiting", e);
-        } catch (CorbException e){
-			logger.logException("Unexpected error", e);
+        } catch (CorbException e) {
+            logger.logException("Unexpected error", e);
         }
     }
 
     private void monitorResults() throws InterruptedException,
             ExecutionException, CorbException {
         // fast-fail as soon as we see any exceptions
-        logger.info("monitoring " + taskCount + " tasks");
+        logger.log(Level.INFO, "monitoring {0} tasks", taskCount);
         long completed = 0;
         Future<String[]> future = null;
         while (!shutdownNow) {
             // try to avoid thread starvation
             Thread.yield();
 
-            future = cs.poll(TransformOptions.PROGRESS_INTERVAL_MS,TimeUnit.MILLISECONDS);
+            future = cs.poll(TransformOptions.PROGRESS_INTERVAL_MS, TimeUnit.MILLISECONDS);
             if (null != future) {
                 // record result, or throw exception
                 lastUris = future.get();
                 completed = completed+lastUris.length;
-                //logger.fine("completed uris: " + Arrays.toString(lastUris));
+                //logger.log(Level.FINE, "uri: {0}", lastUri);
             }
             
             long active = pool.getActiveCount();
@@ -122,21 +124,19 @@ public class Monitor implements Runnable {
         pool.awaitTermination(1, TimeUnit.SECONDS);
         logger.info("completed all tasks " + completed);
         runPostBatchTaskIfExists(); //post batch tasks
-		logger.info("Done");
+        logger.info("Done");
     }
 
     private long showProgress(long completed) {
         long current = System.currentTimeMillis();
         if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
-            logger.info("completed " + getProgressMessage(completed));
+            logger.log(Level.INFO, "completed {0}", getProgressMessage(completed));
             lastProgress = current;
 
             // check for low memory
             long freeMemory = Runtime.getRuntime().freeMemory();
             if (freeMemory < (16 * 1024 * 1024)) {
-                logger.warning("free memory: "
-                               + (freeMemory / (1024 * 1024))
-                               + " MiB");
+                logger.log(Level.WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
             }
         }
         return lastProgress;
@@ -149,24 +149,24 @@ public class Monitor implements Runnable {
         taskCount = _count;
     }
     
-    private long prevCompleted=0;
-    private long prevMillis=0;
+    private long prevCompleted = 0;
+    private long prevMillis = 0;
     private String getProgressMessage(long completed) {
         long curMillis = System.currentTimeMillis();
         int tps = (int) ((double) completed * (double) 1000 / (curMillis - startMillis));
         int curTps = tps;
-        if(prevMillis > 0){
-        	curTps = (int) ((double) (completed-prevCompleted) * (double) 1000 / (curMillis - prevMillis));
+        if (prevMillis > 0) {
+            curTps = (int) ((double) (completed - prevCompleted) * (double) 1000 / (curMillis - prevMillis));
         }
-        prevCompleted=completed;
+        prevCompleted = completed;
         prevMillis = curMillis;
-        long ets = (tps != 0) ? (taskCount-completed)/tps : -1;
-        String etc = pad0((ets/3600))+":"+pad0((ets%3600)/60)+":"+pad0(ets%60);
-        return completed + "/" + taskCount + ", " + tps + " tps(avg), "+ curTps + " tps(cur), ETC "+ etc + ", "+ pool.getActiveCount() + " active threads.";
+        long ets = (tps != 0) ? (taskCount - completed) / tps : -1;
+        String etc = pad0((ets / 3600)) + ":" + pad0((ets % 3600) / 60) + ":" + pad0(ets % 60);
+        return completed + "/" + taskCount + ", " + tps + " tps(avg), " + curTps + " tps(cur), ETC " + etc + ", " + pool.getActiveCount() + " active threads.";
     }
-    
-    private String pad0(long time){
-    	return time < 10 ? "0"+time : time+"";
+
+    private String pad0(long time) {
+        return time < 10 ? "0" + time : time + "";
     }
 
     /**
@@ -175,18 +175,18 @@ public class Monitor implements Runnable {
     public void shutdownNow() {
         shutdownNow = true;
     }
-    
-    private void runPostBatchTaskIfExists() throws CorbException{
-    	TaskFactory tf = new TaskFactory(manager);
-		try{
-    		Task postTask = tf.newPostBatchTask();
-    		if(postTask != null){
-    			logger.info("Running post batch Task");
-    			postTask.call();
-    		}
-		}catch(Exception exc){
-			throw new CorbException("Error invoking post batch task",exc);
-		}
+
+    private void runPostBatchTaskIfExists() throws CorbException {
+        TaskFactory tf = new TaskFactory(manager);
+        try {
+            Task postTask = tf.newPostBatchTask();
+            if (postTask != null) {
+                logger.info("Running post batch Task");
+                postTask.call();
+            }
+        } catch (Exception exc) {
+            throw new CorbException("Error invoking post batch task", exc);
+        }
     }
 
 }

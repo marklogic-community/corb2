@@ -26,16 +26,18 @@ import com.marklogic.xcc.ResultSequence;
  *
  */
 public class Transform extends AbstractTask {
-    
-	protected String processResult(ResultSequence seq) throws CorbException{
-		return TRUE;
-	}
-	
+
+    @Override
+    protected String processResult(ResultSequence seq) throws CorbException {
+        return TRUE;
+    }
+
+    @Override
     public String[] call() throws Exception {
-    	try{
-    		return invokeModule();
-    	}finally{
-    		cleanup();
-    	}
+        try {
+            return invokeModule();
+        } finally {
+            cleanup();
+        }
     }
 }
