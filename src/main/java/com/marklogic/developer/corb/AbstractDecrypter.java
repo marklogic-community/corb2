@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 public abstract class AbstractDecrypter {
 
-    protected Properties properties = null;
+    protected transient Properties properties = null;
     protected static final Pattern ENCRYPTED_VALUE_REGEX = Pattern.compile("^ENC\\((.*)\\)$");
 
     public void init(Properties properties) throws IOException, ClassNotFoundException {

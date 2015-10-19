@@ -38,5 +38,5 @@ public interface Task extends Callable<String[]> {
      */
     public void setProperties(Properties props);
 
-    public void setInputURI(String[] inputUri);
+    public void setInputURI(String... inputUri);
 }

@@ -63,15 +63,7 @@ import com.marklogic.xcc.types.XdmItem;
 
 public class ModuleExecutor {
 
-	public static String VERSION = "2015-07-27";
-
-	protected static String versionMessage = "version " + VERSION + " on "
-			+ System.getProperty("java.version") + " ("
-			+ System.getProperty("java.runtime.name") + ")";
-
-	private static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server'\n";
-
-	private static final String XQUERY_VERSION_0_9_ML = "xquery version \"0.9-ml\"\n";
+	public static final String VERSION = Manager.VERSION;
 
 	protected static final String NAME = ModuleExecutor.class.getName();
 
@@ -86,16 +78,14 @@ public class ModuleExecutor {
 	private Session session;
 	private ResultSequence res;
 
-	private static byte[] EMPTY_BYTE_ARRAY = new byte[0];
-	protected static byte[] NEWLINE = "\n".getBytes();
+	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+	protected static final byte[] NEWLINE = "\n".getBytes();
 
 	protected static Logger logger = Logger.getLogger("ModuleExecutor");
 
 	/**
 	 * @param connectionUri
 	 * @param collection
-	 * @param modulePath
-	 * @param uriListPath
 	 */
 	public ModuleExecutor(URI connectionUri, String collection) {
 		this.connectionUri = connectionUri;
@@ -114,11 +104,12 @@ public class ModuleExecutor {
 			IllegalAccessException, Exception {
 		ModuleExecutor moduleExecutor = createExecutor(args);
 
-		if (moduleExecutor != null)
+		if (moduleExecutor != null) {
 			moduleExecutor.run();
+        }
 	}
 
-	public static ModuleExecutor createExecutor(String[] args)
+	public static ModuleExecutor createExecutor(String... args)
 			throws URISyntaxException, IOException, ClassNotFoundException,
 			InstantiationException, IllegalAccessException {
 		String propsFileName = System.getProperty("OPTIONS-FILE");
@@ -259,12 +250,12 @@ public class ModuleExecutor {
 	}
 
 	public void run() throws CorbException {
-		logger.info(NAME + " starting: " + versionMessage);
+		logger.info(NAME + " starting: " + Manager.VERSION_MSG);
 		long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
 		logger.info("maximum heap size = " + maxMemory + " MiB");
 
-		RuntimeMXBean RuntimemxBean = ManagementFactory.getRuntimeMXBean();
-		List<String> arguments = RuntimemxBean.getInputArguments();
+		RuntimeMXBean runtimemxBean = ManagementFactory.getRuntimeMXBean();
+		List<String> arguments = runtimemxBean.getInputArguments();
 		int uIdx = -1;
 		for (int i = 0; uIdx == -1 && i < arguments.size(); i++) {
 			if (arguments.get(i).startsWith("-DXCC-CONNECTION-URI")) {
@@ -304,13 +295,13 @@ public class ModuleExecutor {
 				}
 			} else {
 				String root = options.getModuleRoot();
-				if (!root.endsWith("/"))
+				if (!root.endsWith("/")) {
 					root = root + "/";
-
+                }
 				String module = options.getProcessModule();
-				if (module.startsWith("/") && module.length() > 1)
+				if (module.startsWith("/") && module.length() > 1) {
 					module = module.substring(1);
-
+                }
 				String modulePath = root + module;
 				logger.info("invoking xquery module " + modulePath);
 				req = session.newModuleInvoke(modulePath);
@@ -408,8 +399,8 @@ public class ModuleExecutor {
 
 	private void registerStatusInfo() {
 		Session session = contentSource.newSession();
-		AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_0_9_ML
-				+ DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
+		AdhocQuery q = session.newAdhocQuery(Manager.XQUERY_VERSION_0_9_ML
+				+ Manager.DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
 				+ "let $status := \n"
 				+ " xdmp:server-status(xdmp:host(), xdmp:server())\n"
 				+ "let $modules := $status/mlss:modules\n"
@@ -462,13 +453,13 @@ public class ModuleExecutor {
 		Content c = null;
 		ContentCreateOptions opts = ContentCreateOptions.newTextInstance();
 		try {
-			for (int i = 0; i < resourceModules.length; i++) {
-				if (resourceModules[i] == null  || resourceModules[i].toUpperCase().endsWith("|ADHOC"))
+			for (String resourceModule : resourceModules) {
+				if (resourceModule == null  || resourceModule.toUpperCase().endsWith("|ADHOC")) {
 					continue;
-
+                }
 				// Start by checking install flag.
 				if (!options.isDoInstall()) {
-					logger.info("Skipping module installation: "+ resourceModules[i]);
+					logger.info("Skipping module installation: "+ resourceModule);
 					continue;
 				}
 				// Next check: if XCC is configured for the filesystem, warn
@@ -479,7 +470,7 @@ public class ModuleExecutor {
 				}
 				// Finally, if it's configured for a database, install.
 				else {
-					File f = new File(resourceModules[i]);
+					File f = new File(resourceModule);
 					// If not installed, are the specified files on the
 					// filesystem?
 					if (f.exists()) {
@@ -488,12 +479,12 @@ public class ModuleExecutor {
 					}
 					// finally, check package
 					else {
-						logger.warning("looking for " + resourceModules[i] + " as resource");
-						String moduleUri = options.getModuleRoot()  + resourceModules[i];
+						logger.warning("looking for " + resourceModule + " as resource");
+						String moduleUri = options.getModuleRoot()  + resourceModule;
 						is = this.getClass().getResourceAsStream(
-								resourceModules[i]);
+								resourceModule);
 						if (null == is) {
-							throw new NullPointerException(resourceModules[i]
+							throw new NullPointerException(resourceModule
 									+ " could not be found on the filesystem,"
 									+ " or in package resources");
 						}

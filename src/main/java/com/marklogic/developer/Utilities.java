@@ -35,33 +35,30 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * @author mike.blakeley@marklogic.com
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  *
  */
-public class Utilities {
-
-    private Utilities() {}
+public final class Utilities {
     
     private static final DateFormat m_ISO8601Local = new SimpleDateFormat(
             "yyyy-MM-dd'T'HH:mm:ssZ");
 
-    // private static DateFormat m_ISO8601plusRFC822 = new SimpleDateFormat(
-    // "yyyy-MM-dd'T'HH:mm:ssz");
     private static final int BUFFER_SIZE = 32 * 1024;
+    
+    private Utilities() {}
     
     /**
      *
-     * @param _date
+     * @param date
      * @return
      * @throws ParseException
      */
-    public static Date parseDateTime(String _date) throws ParseException {
+    public static Date parseDateTime(String date) throws ParseException {
         synchronized (m_ISO8601Local) {
-            return m_ISO8601Local.parse(_date.replaceFirst(":(\\d\\d)$", "$1"));
+            return m_ISO8601Local.parse(date.replaceFirst(":(\\d\\d)$", "$1"));
         }
     }
 
@@ -93,11 +90,11 @@ public class Utilities {
     }
 
     /**
-     * @param _path
+     * @param path
      * @return
      */
-    public static String getPathExtension(String _path) {
-        return _path.replaceFirst(".*\\.([^\\.]+)$", "$1");
+    public static String getPathExtension(String path) {
+        return path.replaceFirst(".*\\.([^\\.]+)$", "$1");
     }
 
     /**
@@ -133,48 +130,48 @@ public class Utilities {
     }
     
     /**
-     * Replace all occurrances of the following characters [&, <, >] with their corresponding entities.
-     * @param _in
+     * Replace all occurrences of the following characters [&, <, >] with their corresponding entities.
+     * @param str
      * @return
      */
-    public static String escapeXml(String _in) {
-        if (_in == null) {
+    public static String escapeXml(String str) {
+        if (str == null) {
             return "";
         }
-        return _in.replaceAll("&", "&amp;")
+        return str.replaceAll("&", "&amp;")
                 .replaceAll("<", "&lt;")
                 .replaceAll(">", "&gt;");
     }
 
     /**
      *
-     * @param _in
-     * @param _out
+     * @param inputStream
+     * @param outputStream
      * @return
      * @throws IOException
      */
-    public static long copy(InputStream _in, OutputStream _out)
+    public static long copy(InputStream inputStream, OutputStream outputStream)
             throws IOException {
-        if (_in == null) {
+        if (inputStream == null) {
             throw new IOException("null InputStream");
         }
-        if (_out == null) {
+        if (outputStream == null) {
             throw new IOException("null OutputStream");
         }
         long totalBytes = 0;
         int len = 0;
         byte[] buf = new byte[BUFFER_SIZE];
-        int available = _in.available();
+        int available = inputStream.available();
         // System.err.println("DEBUG: " + _in + ": available " + available);
-        while ((len = _in.read(buf, 0, BUFFER_SIZE)) > -1) {
-            _out.write(buf, 0, len);
+        while ((len = inputStream.read(buf, 0, BUFFER_SIZE)) > -1) {
+            outputStream.write(buf, 0, len);
             totalBytes += len;
             // System.err.println("DEBUG: " + _out + ": wrote " + len);
         }
         // System.err.println("DEBUG: " + _in + ": last read " + len);
 
         // caller MUST close the stream for us
-        _out.flush();
+        outputStream.flush();
 
         // check to see if we copied enough data
         if (available > totalBytes) {
@@ -185,44 +182,44 @@ public class Utilities {
     }
 
     /**
-     * @param _in
-     * @param _out
+     * @param source
+     * @param destination
      * @throws IOException
      */
-    public static void copy(File _in, File _out) throws IOException {
-        InputStream in = new FileInputStream(_in);
-        OutputStream out = new FileOutputStream(_out);
-        copy(in, out);
+    public static void copy(File source, File destination) throws IOException {
+        InputStream inputStream = new FileInputStream(source);
+        OutputStream outputStream = new FileOutputStream(destination);
+        copy(inputStream, outputStream);
     }
 
     /**
      *
-     * @param _in
-     * @param _out
+     * @param source
+     * @param destination
      * @return
      * @throws IOException
      */
-    public static long copy(Reader _in, OutputStream _out) throws IOException {
-        if (_in == null) {
+    public static long copy(Reader source, OutputStream destination) throws IOException {
+        if (source == null) {
             throw new IOException("null InputStream");
         }
-        if (_out == null) {
+        if (destination == null) {
             throw new IOException("null OutputStream");
         }
         long totalBytes = 0;
         int len = 0;
         char[] buf = new char[BUFFER_SIZE];
         byte[] bite = null;
-        while ((len = _in.read(buf)) > -1) {
+        while ((len = source.read(buf)) > -1) {
             bite = new String(buf).getBytes();
             // len? different for char vs byte?
             // code is broken if I use bite.length, though
-            _out.write(bite, 0, len);
+            destination.write(bite, 0, len);
             totalBytes += len;
         }
 
         // caller MUST close the stream for us
-        _out.flush();
+        destination.flush();
 
         // check to see if we copied enough data
         if (1 > totalBytes) {
@@ -233,38 +230,38 @@ public class Utilities {
     }
 
     /**
-     * @param inFilePath
-     * @param outFilePath
+     * @param sourceFilePath
+     * @param destinationFilePath
      * @throws IOException
      * @throws FileNotFoundException
      */
-    public static void copy(String inFilePath, String outFilePath)
+    public static void copy(String sourceFilePath, String destinationFilePath)
             throws FileNotFoundException, IOException {
-        copy(new FileInputStream(inFilePath), new FileOutputStream(outFilePath));
+        copy(new FileInputStream(sourceFilePath), new FileOutputStream(destinationFilePath));
     }
 
     /**
      *
-     * @param _file
+     * @param file
      * @throws IOException
      */
-    public static void deleteFile(File _file) throws IOException {
-        if (!_file.exists()) {
+    public static void deleteFile(File file) throws IOException {
+        if (!file.exists()) {
             return;
         }
         boolean success;
 
-        if (!_file.isDirectory()) {
-            success = _file.delete();
+        if (!file.isDirectory()) {
+            success = file.delete();
             if (!success) {
                 throw new IOException("error deleting "
-                        + _file.getCanonicalPath());
+                        + file.getCanonicalPath());
             }
             return;
         }
 
         // directory, so recurse
-        File[] children = _file.listFiles();
+        File[] children = file.listFiles();
         if (children != null) {
             for (File children1 : children) {
                 // recurse
@@ -273,8 +270,8 @@ public class Utilities {
         }
 
         // now this directory should be empty
-        if (_file.exists()) {
-            _file.delete();
+        if (file.exists()) {
+            file.delete();
         }
     }
 
@@ -305,31 +302,31 @@ public class Utilities {
     }
 
     /**
-     * @param _path
+     * @param path
      * @throws IOException
      */
-    public static void deleteFile(String _path) throws IOException {
-        deleteFile(new File(_path));
+    public static void deleteFile(String path) throws IOException {
+        deleteFile(new File(path));
     }
 
     /**
      *
-     * @param _class
+     * @param clazz
      * @return
      */
-    public static String buildModulePath(Class<?> _class) {
-        return "/" + _class.getName().replace('.', '/') + ".xqy";
+    public static String buildModulePath(Class<?> clazz) {
+        return "/" + clazz.getName().replace('.', '/') + ".xqy";
     }
 
     /**
      *
-     * @param _package
-     * @param _name
+     * @param modulePackage
+     * @param name
      * @return
      */
-    public static String buildModulePath(Package _package, String _name) {
-        return "/" + _package.getName().replace('.', '/') + "/" + _name
-                + (_name.endsWith(".xqy") ? "" : ".xqy");
+    public static String buildModulePath(Package modulePackage, String name) {
+        return "/" + modulePackage.getName().replace('.', '/') + "/" + name
+                + (name.endsWith(".xqy") ? "" : ".xqy");
     }
 
     /**
@@ -410,20 +407,20 @@ public class Utilities {
     }
 
     /**
-     * @param _string
-     * @param _encoding
+     * @param value
+     * @param encoding
      * @return
      * @throws UnsupportedEncodingException
      */
-    public static String dumpHex(String _string, String _encoding)
+    public static String dumpHex(String value, String encoding)
             throws UnsupportedEncodingException {
         StringBuilder sb = new StringBuilder();
-        byte[] bytes = _string.getBytes(_encoding);
+        byte[] bytes = value.getBytes(encoding);
         for (int i = 0; i < bytes.length; i++) {
             // bytes are signed: we want unsigned values
             sb.append(Integer.toHexString(bytes[i] & 0xff));
             if (i < bytes.length - 1) {
-                sb.append(" ");
+                sb.append(' ');
             }
         }
         return sb.toString();

@@ -9,7 +9,7 @@ import com.marklogic.xcc.ResultSequence;
 
 public class ExportBatchToFileTask extends ExportToFileTask {
 
-    static private final Object sync = new Object();
+    private static final Object SYNC_OBJ = new Object();
 
     @Override
     protected String getFileName() {
@@ -42,7 +42,7 @@ public class ExportBatchToFileTask extends ExportToFileTask {
         if (seq == null || !seq.hasNext()) {
             return;
         }
-        synchronized (sync) {
+        synchronized (SYNC_OBJ) {
             try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, getPartFileName()), true))) {
                 while (seq.hasNext()) {
                     writer.write(getValueAsBytes(seq.next().getItem()));

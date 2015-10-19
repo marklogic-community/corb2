@@ -20,8 +20,6 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -274,25 +272,25 @@ public class UtilitiesTest {
     @org.junit.Test
     public void testCopy_Reader_OutputStream() throws Exception {
         System.out.println("copy");
-        Reader _in = new FileReader(exampleContentFile);
-        OutputStream _out = new ByteArrayOutputStream();
+        Reader in = new FileReader(exampleContentFile);
+        OutputStream out = new ByteArrayOutputStream();
 
-        long result = Utilities.copy(_in, _out);
+        long result = Utilities.copy(in, out);
         assertEquals(exampleContent.length(), result);
     }
 
     @org.junit.Test (expected = IOException.class)
     public void testCopy_ReaderIsNull_OutputStream() throws IOException {
-        Reader _in = null;
-        OutputStream _out = new ByteArrayOutputStream();
-        long result = Utilities.copy(_in, _out);
+        Reader in = null;
+        OutputStream out = new ByteArrayOutputStream();
+        long result = Utilities.copy(in, out);
     }
     
     @org.junit.Test (expected = IOException.class)
     public void testCopy_Reader_OutputStreamIsNull() throws IOException {
-        Reader _in = new FileReader(exampleContentFile);
-        OutputStream _out = null;
-        long result = Utilities.copy(_in, _out);
+        Reader in = new FileReader(exampleContentFile);
+        OutputStream out = null;
+        long result = Utilities.copy(in, out);
     }
     
     /**
@@ -398,8 +396,8 @@ public class UtilitiesTest {
     //@org.junit.Test
     public void testDeleteFile_String() throws Exception {
         System.out.println("deleteFile");
-        String _path = "";
-        Utilities.deleteFile(_path);
+        String path = "";
+        Utilities.deleteFile(path);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
     }
@@ -420,8 +418,8 @@ public class UtilitiesTest {
     @org.junit.Test
     public void testBuildModulePath_Package_String() {
         System.out.println("buildModulePath");
-        Package _package = Package.getPackage("com.marklogic.developer");
-        String result = Utilities.buildModulePath(_package, "Utilities");
+        Package modulePackage = Package.getPackage("com.marklogic.developer");
+        String result = Utilities.buildModulePath(modulePackage, "Utilities");
         assertEquals("/com/marklogic/developer/Utilities.xqy", result);
     }
 

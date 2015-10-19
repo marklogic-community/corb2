@@ -23,9 +23,10 @@ import java.util.HashMap;
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * @author Bhagat Bandlamudi, MarkLogic Corporation
- * 
+ *
  */
 public class TaskFactory {
+
     protected Manager manager;
     private HashMap<String, String> moduleToAdhocQueryMap = new HashMap<>();
     private HashMap<String, String> moduleToPathMap = new HashMap<>();
@@ -35,83 +36,82 @@ public class TaskFactory {
      * @param _uri
      */
     public TaskFactory(Manager manager) {
-    	this.manager = manager;
+        this.manager = manager;
     }
-    
 
     /**
      * @param _uri
      * @return
      */
-    public Task newProcessTask(String[] _uris) {
+    public Task newProcessTask(String... uris) {
         if (null == manager.getOptions().getProcessTaskClass() && null == manager.getOptions().getProcessModule()) {
             throw new NullPointerException("null process task and xquery module");
         }
-        if (null != manager.getOptions().getProcessModule() && (null == _uris || _uris.length == 0 || null == manager.getContentSource())) {
+        if (null != manager.getOptions().getProcessModule() && (null == uris || uris.length == 0 || null == manager.getContentSource())) {
             throw new NullPointerException("null content source or input uri");
         }
         try {
             Task task = manager.getOptions().getProcessTaskClass() == null
                     ? new Transform() : manager.getOptions().getProcessTaskClass().newInstance();
-            setupTask(task, "XQUERY-MODULE", manager.getOptions().getProcessModule(), _uris);
+            setupTask(task, "XQUERY-MODULE", manager.getOptions().getProcessModule(), uris);
             return task;
         } catch (Exception exc) {
             throw new IllegalArgumentException(exc.getMessage(), exc);
         }
     }
-    
-    public Task newPreBatchTask(){
-    	if(null == manager.getOptions().getPreBatchTaskClass() && null == manager.getOptions().getPreBatchModule()){
-    		return null;
-    	}
-    	if(null != manager.getOptions().getPreBatchModule() && null == manager.getContentSource()){
-    		throw new NullPointerException("null content source");
-    	}
-        try{
-        	Task task = manager.getOptions().getPreBatchTaskClass() == null ? 
-        				new Transform() : manager.getOptions().getPreBatchTaskClass().newInstance();
-        	setupTask(task,"PRE-BATCH-MODULE",manager.getOptions().getPreBatchModule(), new String[0]);
-        	return task;
-        }catch(Exception exc){
-        	throw new IllegalArgumentException(exc.getMessage(),exc);
+
+    public Task newPreBatchTask() {
+        if (null == manager.getOptions().getPreBatchTaskClass() && null == manager.getOptions().getPreBatchModule()) {
+            return null;
         }
-    }
-    
-    public Task newPostBatchTask(){
-    	if(null == manager.getOptions().getPostBatchTaskClass() && null == manager.getOptions().getPostBatchModule()){
-    		return null;
-    	}
-    	if(null != manager.getOptions().getPostBatchModule() && null == manager.getContentSource()){
-    		throw new NullPointerException("null content source");
-    	}
-        try{
-        	Task task = manager.getOptions().getPostBatchTaskClass() == null ? 
-        				new Transform() : manager.getOptions().getPostBatchTaskClass().newInstance();
-        	setupTask(task,"POST-BATCH-MODULE",manager.getOptions().getPostBatchModule(), new String[0]);
-        	return task;
-        }catch(Exception exc){
-        	throw new IllegalArgumentException(exc.getMessage(),exc);
+        if (null != manager.getOptions().getPreBatchModule() && null == manager.getContentSource()) {
+            throw new NullPointerException("null content source");
         }
-    }
-    
-    public Task newInitTask(){
-    	if(null == manager.getOptions().getInitTaskClass() && null == manager.getOptions().getInitModule()){
-    		return null;
-    	}
-    	if(null != manager.getOptions().getInitModule() && null == manager.getContentSource()){
-    		throw new NullPointerException("null content source");
-    	}
-        try{
-        	Task task = manager.getOptions().getInitTaskClass() == null ? 
-        				new Transform() : manager.getOptions().getInitTaskClass().newInstance();
-        	setupTask(task,"INIT-MODULE",manager.getOptions().getInitModule(), new String[0]);
-        	return task;
-        }catch(Exception exc){
-        	throw new IllegalArgumentException(exc.getMessage(),exc);
+        try {
+            Task task = manager.getOptions().getPreBatchTaskClass() == null
+                    ? new Transform() : manager.getOptions().getPreBatchTaskClass().newInstance();
+            setupTask(task, "PRE-BATCH-MODULE", manager.getOptions().getPreBatchModule(), new String[0]);
+            return task;
+        } catch (Exception exc) {
+            throw new IllegalArgumentException(exc.getMessage(), exc);
         }
     }
 
-    private void setupTask(Task task, String moduleType, String module, String[] _uri) {
+    public Task newPostBatchTask() {
+        if (null == manager.getOptions().getPostBatchTaskClass() && null == manager.getOptions().getPostBatchModule()) {
+            return null;
+        }
+        if (null != manager.getOptions().getPostBatchModule() && null == manager.getContentSource()) {
+            throw new NullPointerException("null content source");
+        }
+        try {
+            Task task = manager.getOptions().getPostBatchTaskClass() == null
+                    ? new Transform() : manager.getOptions().getPostBatchTaskClass().newInstance();
+            setupTask(task, "POST-BATCH-MODULE", manager.getOptions().getPostBatchModule(), new String[0]);
+            return task;
+        } catch (Exception exc) {
+            throw new IllegalArgumentException(exc.getMessage(), exc);
+        }
+    }
+
+    public Task newInitTask() {
+        if (null == manager.getOptions().getInitTaskClass() && null == manager.getOptions().getInitModule()) {
+            return null;
+        }
+        if (null != manager.getOptions().getInitModule() && null == manager.getContentSource()) {
+            throw new NullPointerException("null content source");
+        }
+        try {
+            Task task = manager.getOptions().getInitTaskClass() == null
+                    ? new Transform() : manager.getOptions().getInitTaskClass().newInstance();
+            setupTask(task, "INIT-MODULE", manager.getOptions().getInitModule(), new String[0]);
+            return task;
+        } catch (Exception exc) {
+            throw new IllegalArgumentException(exc.getMessage(), exc);
+        }
+    }
+
+    private void setupTask(Task task, String moduleType, String module, String... uri) {
         if (module != null) {
             if (module.toUpperCase().endsWith("|ADHOC")) {
                 String modulePath = module.substring(0, module.indexOf('|'));
@@ -142,7 +142,7 @@ public class TaskFactory {
                 }
                 task.setModuleURI(modulePath);
 
-                if(module.toUpperCase().endsWith(".SJS") || module.toUpperCase().endsWith(".JS")){
+                if (module.toUpperCase().endsWith(".SJS") || module.toUpperCase().endsWith(".JS")) {
                     task.setQueryLanguage("javascript");
                 }
             }
@@ -150,7 +150,7 @@ public class TaskFactory {
         task.setModuleType(moduleType);
         task.setContentSource(manager.getContentSource());
         task.setProperties(manager.getProperties());
-        task.setInputURI(_uri);
+        task.setInputURI(uri);
         if (task instanceof ExportToFileTask) {
             ((ExportToFileTask) task).setExportDir(manager.getOptions().getExportFileDir());
         }
