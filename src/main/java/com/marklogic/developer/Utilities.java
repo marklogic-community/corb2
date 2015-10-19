@@ -44,13 +44,15 @@ import java.util.List;
  */
 public class Utilities {
 
+    private Utilities() {}
+    
     private static final DateFormat m_ISO8601Local = new SimpleDateFormat(
             "yyyy-MM-dd'T'HH:mm:ssZ");
 
     // private static DateFormat m_ISO8601plusRFC822 = new SimpleDateFormat(
     // "yyyy-MM-dd'T'HH:mm:ssz");
     private static final int BUFFER_SIZE = 32 * 1024;
-
+    
     /**
      *
      * @param _date

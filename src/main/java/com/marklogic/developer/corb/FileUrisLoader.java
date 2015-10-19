@@ -5,9 +5,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.Properties;
+import java.util.logging.Logger;
 
-import com.marklogic.developer.SimpleLogger;
 import com.marklogic.xcc.ContentSource;
+import java.util.logging.Level;
 
 public class FileUrisLoader implements UrisLoader {
 
@@ -20,7 +21,8 @@ public class FileUrisLoader implements UrisLoader {
     int total = 0;
 
     String[] replacements = new String[0];
-    SimpleLogger logger;
+
+    protected static Logger logger = Manager.getLogger();
 
     @Override
     public void setOptions(TransformOptions options) {
@@ -44,7 +46,6 @@ public class FileUrisLoader implements UrisLoader {
 
     @Override
     public void open() throws CorbException {
-        configureLogger();
         if (properties.containsKey("URIS-REPLACE-PATTERN")) {
             String pattern = properties.getProperty("URIS-REPLACE-PATTERN").trim();
             replacements = pattern.split(",", -1);
@@ -127,7 +128,7 @@ public class FileUrisLoader implements UrisLoader {
                 br.close();
                 br = null;
             } catch (Exception exc) {
-                logger.logException("while closing uris file reader", exc);
+                logger.log(Level.SEVERE, "while closing uris file reader", exc);
             }
         }
         cleanup();
@@ -143,17 +144,4 @@ public class FileUrisLoader implements UrisLoader {
         logger = null;
         replacements = null;
     }
-
-    private void configureLogger() {
-        if (logger == null) {
-            logger = SimpleLogger.getSimpleLogger();
-        }
-        Properties props = new Properties();
-        if (options != null) {
-            props.setProperty("LOG_LEVEL", options.getLogLevel());
-            props.setProperty("LOG_HANDLER", options.getLogHandler());
-        }
-        logger.configureLogger(props);
-    }
-
 }

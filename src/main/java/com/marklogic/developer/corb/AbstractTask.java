@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import com.marklogic.developer.SimpleLogger;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultSequence;
@@ -15,6 +14,7 @@ import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
+import java.util.logging.Logger;
 
 /**
  *
@@ -45,15 +45,7 @@ public abstract class AbstractTask implements Task {
 
     private int connectRetryCount = 0;
 
-    protected static final SimpleLogger logger;
-
-    static {
-        logger = SimpleLogger.getSimpleLogger();
-        Properties props = new Properties();
-        props.setProperty("LOG_LEVEL", "INFO");
-        props.setProperty("LOG_HANDLER", "CONSOLE");
-        logger.configureLogger(props);
-    }
+    protected static final Logger logger = Manager.getLogger();
 
     public void setContentSource(ContentSource cs) {
         this.cs = cs;

@@ -3,8 +3,8 @@ package com.marklogic.developer.corb;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Logger;
 
-import com.marklogic.developer.SimpleLogger;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
@@ -12,7 +12,6 @@ import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
-import java.util.logging.Level;
 
 public class XQueryUrisLoader implements UrisLoader {
 
@@ -27,38 +26,31 @@ public class XQueryUrisLoader implements UrisLoader {
     String batchRef;
     int total = 0;
 
-    SimpleLogger logger;
-
     String[] replacements = new String[0];
+
+    protected static Logger logger = Manager.getLogger();
 
     public XQueryUrisLoader() {
     }
 
-    @Override
     public void setOptions(TransformOptions options) {
         this.options = options;
     }
 
-    @Override
     public void setContentSource(ContentSource cs) {
         this.cs = cs;
     }
 
-    @Override
     public void setCollection(String collection) {
         this.collection = collection;
     }
 
-    @Override
     public void setProperties(Properties properties) {
         this.properties = properties;
     }
 
-    @Override
     public void open() throws CorbException {
-        configureLogger();
-
-        List<String> propertyNames = new ArrayList<>(properties.stringPropertyNames());
+        List<String> propertyNames = new ArrayList<String>(properties.stringPropertyNames());
         propertyNames.addAll(System.getProperties().stringPropertyNames());
 
         if (propertyNames.contains("URIS-REPLACE-PATTERN")) {
@@ -74,17 +66,18 @@ public class XQueryUrisLoader implements UrisLoader {
             opts.setCacheResult(false);
             // this should be a noop, but xqsync does it
             opts.setResultBufferSize(0);
-            logger.log(Level.INFO, "buffer size = {0}, caching = {1}", new Object[]{opts.getResultBufferSize(), opts.getCacheResult()});
+            logger.info("buffer size = " + opts.getResultBufferSize() + ", caching = " + opts.getCacheResult());
 
             session = cs.newSession();
             Request req = null;
-            if (options.getUrisModule().toUpperCase().endsWith(".SJS|ADHOC") || options.getUrisModule().toUpperCase().endsWith(".JS|ADHOC")) {
+            if (options.getUrisModule().toUpperCase().endsWith(".SJS|ADHOC")
+                    || options.getUrisModule().toUpperCase().endsWith(".JS|ADHOC")) {
                 String queryPath = options.getUrisModule().substring(0, options.getUrisModule().indexOf('|'));
                 String adhocQuery = Manager.getAdhocQuery(queryPath);
                 if (adhocQuery == null || (adhocQuery.length() == 0)) {
                     throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
                 }
-                logger.log(Level.INFO, "invoking adhoc javascript uris module {0}", queryPath);
+                logger.info("invoking adhoc javascript uris module " + queryPath);
                 StringBuffer sb = new StringBuffer();
                 sb.append("xdmp:javascript-eval('");
                 sb.append(adhocQuery);
@@ -98,7 +91,7 @@ public class XQueryUrisLoader implements UrisLoader {
                             if (varCount > 0) {
                                 sb.append(",");
                             }
-                            sb.append("\"").append(varName).append("\"").append(",\"").append(value).append("\"");
+                            sb.append("\"" + varName + "\"").append(",\"" + value + "\"");
                             varCount++;
                         }
                     }
@@ -113,7 +106,7 @@ public class XQueryUrisLoader implements UrisLoader {
                     if (adhocQuery == null || (adhocQuery.length() == 0)) {
                         throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
                     }
-                    logger.log(Level.INFO, "invoking adhoc uris module {0}", queryPath);
+                    logger.info("invoking adhoc uris module " + queryPath);
                     req = session.newAdhocQuery(adhocQuery);
                 } else {
                     String root = options.getModuleRoot();
@@ -127,7 +120,7 @@ public class XQueryUrisLoader implements UrisLoader {
                     }
 
                     String modulePath = root + module;
-                    logger.log(Level.INFO, "invoking uris module {0}", modulePath);
+                    logger.info("invoking uris module " + modulePath);
                     req = session.newModuleInvoke(modulePath);
                 }
                 // NOTE: collection will be treated as a CWSV
@@ -136,7 +129,7 @@ public class XQueryUrisLoader implements UrisLoader {
                 req.setNewStringVariable("TYPE", TransformOptions.COLLECTION_TYPE);
                 req.setNewStringVariable("PATTERN", "[,\\s]+");
 
-                //custom inputs	        
+                // custom inputs
                 for (String propName : propertyNames) {
                     if (propName.startsWith("URIS-MODULE.")) {
                         String varName = propName.substring("URIS-MODULE.".length());
@@ -204,26 +197,13 @@ public class XQueryUrisLoader implements UrisLoader {
     }
 
     protected void cleanup() {
-        //release 
+        // release
         options = null;
         cs = null;
         collection = null;
         properties = null;
         batchRef = null;
-        logger = null;
         replacements = null;
-    }
-
-    private void configureLogger() {
-        if (logger == null) {
-            logger = SimpleLogger.getSimpleLogger();
-        }
-        Properties props = new Properties();
-        if (options != null) {
-            props.setProperty("LOG_LEVEL", options.getLogLevel());
-            props.setProperty("LOG_HANDLER", options.getLogHandler());
-        }
-        logger.configureLogger(props);
     }
 
     public String getProperty(String key) {

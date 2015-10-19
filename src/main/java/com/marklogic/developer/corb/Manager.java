@@ -46,13 +46,13 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import com.marklogic.developer.Utilities;
-import com.marklogic.developer.SimpleLogger;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentCreateOptions;
@@ -76,7 +76,8 @@ import java.util.logging.Level;
  */
 public class Manager implements Runnable {
 
-    public static String VERSION = "2015-01-21";
+    static public String VERSION = "2.1.3";
+    static private Logger logger = getLogger();
 
     public class CallerBlocksPolicy implements RejectedExecutionHandler {
 
@@ -116,56 +117,30 @@ public class Manager implements Runnable {
     public static String URIS_BATCH_REF = "URIS_BATCH_REF";
     public static String DEFAULT_BATCH_URI_DELIM = ";";
 
-    protected static String versionMessage = "version " + VERSION + " on "
-            + System.getProperty("java.version") + " ("
-            + System.getProperty("java.runtime.name") + ")";
-
-    /**
-     *
-     */
+    protected static String versionMessage = "version " + VERSION + " on " + System.getProperty("java.version") + " (" + System.getProperty("java.runtime.name") + ")";
     private static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server'\n";
-
-    /**
-     *
-     */
     private static final String XQUERY_VERSION_0_9_ML = "xquery version \"0.9-ml\"\n";
-
-    /**
-     *
-     */
     protected static final String NAME = Manager.class.getName();
 
     protected URI connectionUri;
-
     protected String collection;
-
     protected Properties properties = new Properties();
-
     protected TransformOptions options = new TransformOptions();
-
     private ThreadPoolExecutor pool = null;
-
     protected ContentSource contentSource;
-
     private Monitor monitor;
-
     private Thread monitorThread;
-
     private CompletionService<String[]> completionService;
 
-    static public SimpleLogger logger;
-
-    static {
-        logger = SimpleLogger.getSimpleLogger();
-        Properties props = new Properties();
-        props.setProperty("LOG_LEVEL", "INFO");
-        props.setProperty("LOG_HANDLER", "CONSOLE");
-        logger.configureLogger(props);
+    static public Logger getLogger() {
+        return Logger.getLogger("Corb2");
     }
 
     /**
      * @param connectionUri
      * @param collection
+     * @param modulePath
+     * @param uriListPath
      */
     public Manager(URI connectionUri, String collection) {
         this.connectionUri = connectionUri;
@@ -492,35 +467,21 @@ public class Manager implements Runnable {
         return this.contentSource;
     }
 
-    /**
-     *
-     */
     protected static void usage() {
         PrintStream err = System.err;
         err.println("usage 1:");
-        err.println("\t" + NAME
-                + " xcc://user:password@host:port/[ database ]"
-                + " input-selector module-name.xqy"
-                + " [ thread-count [ uris-module [ module-root"
-                + " [ modules-database [ install [ process-task"
-                + " [ pre-batch-module [ pre-batch-task"
-                + " [ post-batch-module  [ post-batch-task"
-                + " [ export-file-dir [ export-file-name"
-                + " [ uris-file ] ] ] ] ] ] ] ] ] ] ] ] ]");
+        err.println("\t" + NAME + " xcc://user:password@host:port/[ database ]" + " input-selector module-name.xqy"
+                + " [ thread-count [ uris-module [ module-root" + " [ modules-database [ install [ process-task"
+                + " [ pre-batch-module [ pre-batch-task" + " [ post-batch-module  [ post-batch-task"
+                + " [ export-file-dir [ export-file-name" + " [ uris-file ] ] ] ] ] ] ] ] ] ] ] ] ]");
         err.println("\nusage 2:");
         err.println("\t" + "-DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ]"
-                + " -DXQUERY-MODULE=module-name.xqy"
-                + " -DTHREAD-COUNT=10"
-                + " -DURIS-MODULE=get-uris.xqy"
-                + " -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy"
-                + " -D... "
-                + NAME);
+                + " -DXQUERY-MODULE=module-name.xqy" + " -DTHREAD-COUNT=10" + " -DURIS-MODULE=get-uris.xqy"
+                + " -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy" + " -D... " + NAME);
         err.println("\nusage 3:");
         err.println("\t" + "-DOPTIONS-FILE=myjob.properties " + NAME);
         err.println("\nusage 4:");
-        err.println("\t" + "-DOPTIONS-FILE=myjob.properties"
-                + " -DTHREAD-COUNT=10 "
-                + NAME
+        err.println("\t" + "-DOPTIONS-FILE=myjob.properties" + " -DTHREAD-COUNT=10 " + NAME
                 + " xcc://user:password@host:port/[ database ]");
     }
 
@@ -563,19 +524,20 @@ public class Manager implements Runnable {
                 } catch (InterruptedException e) {
                     // reset interrupt status and continue
                     Thread.interrupted();
-                    logger.logException(
-                            "interrupted while waiting for monitor", e);
+                    logger.log(Level.SEVERE, "interrupted while waiting for monitor", e);
                 }
             }
+
+            runPostBatchTask(); //post batch tasks
+            logger.info("all done");
         } catch (XccException e) {
-            logger.logException(connectionUri.toString(), e);
+            logger.log(Level.SEVERE, e.getMessage(), e);
             stop();
-            // fatal
-            throw new RuntimeException(e);
+            System.exit(1);
         } catch (Exception e) {
-            logger.logException("unexpected", e);
+            logger.log(Level.SEVERE, "unexpected", e);
             stop();
-            throw new RuntimeException(e);
+            System.exit(1);
         }
     }
 
@@ -586,13 +548,11 @@ public class Manager implements Runnable {
         RejectedExecutionHandler policy = new CallerBlocksPolicy();
         int threads = options.getThreadCount();
         // an array queue should be somewhat lighter-weight
-        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(
-                options.getQueueSize());
-        pool = new ThreadPoolExecutor(threads, threads, 16,
-                TimeUnit.SECONDS, workQueue, policy);
+        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(options.getQueueSize());
+        pool = new ThreadPoolExecutor(threads, threads, 16, TimeUnit.SECONDS, workQueue, policy);
         pool.prestartAllCoreThreads();
-        completionService = new ExecutorCompletionService<>(pool);
-        monitor = new Monitor(pool, completionService, this, logger);
+        completionService = new ExecutorCompletionService<String[]>(pool);
+        monitor = new Monitor(pool, completionService, this);
         Thread monitorThread = new Thread(monitor);
         return monitorThread;
     }
@@ -603,22 +563,23 @@ public class Manager implements Runnable {
      *
      */
     private void prepareModules() {
-        String[] resourceModules = new String[]{
-            options.getInitModule(), options.getUrisModule(), options.getProcessModule(), options.getPreBatchModule(), options.getPostBatchModule()};
+        String[] resourceModules = new String[]{options.getInitModule(), options.getUrisModule(),
+            options.getProcessModule(), options.getPreBatchModule(), options.getPostBatchModule()};
         String modulesDatabase = options.getModulesDatabase();
-        logger.log(Level.INFO, "checking modules, database: {0}", modulesDatabase);
+        logger.info("checking modules, database: " + modulesDatabase);
         Session session = contentSource.newSession(modulesDatabase);
         InputStream is = null;
         Content c = null;
         ContentCreateOptions opts = ContentCreateOptions.newTextInstance();
         try {
-            for (String resourceModule : resourceModules) {
-                if (resourceModule == null || resourceModule.toUpperCase().endsWith("|ADHOC")) {
+            for (int i = 0; i < resourceModules.length; i++) {
+                if (resourceModules[i] == null || resourceModules[i].toUpperCase().endsWith("|ADHOC")) {
                     continue;
                 }
+
                 // Start by checking install flag.
                 if (!options.isDoInstall()) {
-                    logger.info("Skipping module installation: " + resourceModule);
+                    logger.info("Skipping module installation: " + resourceModules[i]);
                     continue;
                 } // Next check: if XCC is configured for the filesystem, warn
                 // user
@@ -627,7 +588,7 @@ public class Manager implements Runnable {
                     return;
                 } // Finally, if it's configured for a database, install.
                 else {
-                    File f = new File(resourceModule);
+                    File f = new File(resourceModules[i]);
                     // If not installed, are the specified files on the
                     // filesystem?
                     if (f.exists()) {
@@ -635,13 +596,11 @@ public class Manager implements Runnable {
                         c = ContentFactory.newContent(moduleUri, f, opts);
                     } // finally, check package
                     else {
-                        logger.warning("looking for " + resourceModule + " as resource");
-                        String moduleUri = options.getModuleRoot() + resourceModule;
-                        is = this.getClass().getResourceAsStream(resourceModule);
+                        logger.warning("looking for " + resourceModules[i] + " as resource");
+                        String moduleUri = options.getModuleRoot() + resourceModules[i];
+                        is = this.getClass().getResourceAsStream(resourceModules[i]);
                         if (null == is) {
-                            throw new NullPointerException(
-                                    resourceModule
-                                    + " could not be found on the filesystem,"
+                            throw new NullPointerException(resourceModules[i] + " could not be found on the filesystem,"
                                     + " or in package resources");
                         }
                         c = ContentFactory.newContent(moduleUri, is, opts);
@@ -650,10 +609,10 @@ public class Manager implements Runnable {
                 }
             }
         } catch (IOException e) {
-            logger.logException("fatal error", e);
+            logger.log(Level.SEVERE, "fatal error", e);
             throw new RuntimeException(e);
         } catch (RequestException e) {
-            logger.logException("fatal error", e);
+            logger.log(Level.SEVERE, "fatal error", e);
             throw new RuntimeException(e);
         } finally {
             session.close();
@@ -661,7 +620,7 @@ public class Manager implements Runnable {
                 try {
                     is.close();
                 } catch (IOException ioe) {
-                    logger.logException("Couldn't close the stream", ioe);
+                    logger.log(Level.SEVERE, "Couldn't close the stream", ioe);
                 }
             }
         }
@@ -671,33 +630,30 @@ public class Manager implements Runnable {
      *
      */
     protected void prepareContentSource() {
-        //logger.info("using content source " + connectionUri);
+        // logger.info("using content source " + connectionUri);
         try {
             // support SSL
-            boolean ssl = connectionUri != null && connectionUri.getScheme() != null && connectionUri.getScheme().equals("xccs");
-            contentSource = ssl ? ContentSourceFactory.newContentSource(
-                    connectionUri, newTrustAnyoneOptions())
+            boolean ssl = connectionUri != null && connectionUri.getScheme() != null
+                    && connectionUri.getScheme().equals("xccs");
+            contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, newTrustAnyoneOptions())
                     : ContentSourceFactory.newContentSource(connectionUri);
         } catch (XccConfigException e) {
-            logger.logException("Problem creating content source. Check if URI is valid. If encrypted, check options are configured correctly.", e);
+            logger.log(Level.SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check options are configured correctly.", e);
             throw new RuntimeException(e);
         } catch (KeyManagementException e) {
-            logger.logException("Problem creating content source with ssl", e);
+            logger.log(Level.SEVERE, "Problem creating content source with ssl", e);
             throw new RuntimeException(e);
         } catch (NoSuchAlgorithmException e) {
-            logger.logException("Problem creating content source with ssl", e);
+            logger.log(Level.SEVERE, "Problem creating content source with ssl", e);
             throw new RuntimeException(e);
         }
     }
 
     private void registerStatusInfo() {
         Session session = contentSource.newSession();
-        AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_0_9_ML
-                + DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
-                + "let $status := \n"
-                + " xdmp:server-status(xdmp:host(), xdmp:server())\n"
-                + "let $modules := $status/mlss:modules\n"
-                + "let $root := $status/mlss:root\n"
+        AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_0_9_ML + DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
+                + "let $status := \n" + " xdmp:server-status(xdmp:host(), xdmp:server())\n"
+                + "let $modules := $status/mlss:modules\n" + "let $root := $status/mlss:root\n"
                 + "return (data($modules), data($root))");
         ResultSequence rs = null;
         try {
@@ -718,14 +674,14 @@ public class Manager implements Runnable {
             }
         }
 
-        //HACK
+        // HACK
         if (options.getUrisModule() == null && options.getUrisFile() == null) {
             String urisFile = getOption(null, "URIS-FILE", properties);
             if (urisFile != null && (urisFile = urisFile.trim()).length() > 0) {
                 options.setUrisFile(urisFile);
             }
         }
-        //END HACK
+        // END HACK
 
         logger.info("Configured modules db: " + options.getModulesDatabase());
         logger.info("Configured modules xdbc root: " + options.getXDBC_ROOT());
@@ -748,7 +704,7 @@ public class Manager implements Runnable {
         }
     }
 
-    private void runInitTaskIfExists(TaskFactory tf) throws Exception {
+    private void runInitTask(TaskFactory tf) throws Exception {
         Task initTask = tf.newInitTask();
         if (initTask != null) {
             logger.info("Running init Task");
@@ -756,11 +712,20 @@ public class Manager implements Runnable {
         }
     }
 
-    private void runPreBatchTaskIfExists(TaskFactory tf) throws Exception {
+    private void runPreBatchTask(TaskFactory tf) throws Exception {
         Task preTask = tf.newPreBatchTask();
         if (preTask != null) {
             logger.info("Running pre batch Task");
             preTask.call();
+        }
+    }
+
+    private void runPostBatchTask() throws Exception {
+        TaskFactory tf = new TaskFactory(this);
+        Task postTask = tf.newPostBatchTask();
+        if (postTask != null) {
+            logger.info("Running post batch Task");
+            postTask.call();
         }
     }
 
@@ -788,8 +753,8 @@ public class Manager implements Runnable {
         int total = -1;
         int count = 0;
         try {
-            //run init task
-            runInitTaskIfExists(tf);
+            // run init task
+            runInitTask(tf);
 
             urisLoader.open();
             if (urisLoader.getBatchRef() != null) {
@@ -805,10 +770,10 @@ public class Manager implements Runnable {
                 return;
             }
 
-            //run pre-batch task, if present. 
-            runPreBatchTaskIfExists(tf);
+            // run pre-batch task, if present.
+            runPreBatchTask(tf);
 
-            //now start process tasks
+            // now start process tasks
             monitor.setTaskCount(total);
             monitorThread.start();
 
@@ -851,8 +816,7 @@ public class Manager implements Runnable {
                     logger.info("received " + count + "/" + total + ": " + uri);
 
                     if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
-                        logger.warning("Slow receive!"
-                                + " Consider increasing max heap size"
+                        logger.warning("Slow receive!" + " Consider increasing max heap size"
                                 + " and using -XX:+UseConcMarkSweepGC");
                         freeMemory = Runtime.getRuntime().freeMemory();
                         logger.info("free memory: " + (freeMemory / (1024 * 1024)) + " MiB");
@@ -869,7 +833,8 @@ public class Manager implements Runnable {
             }
 
             if (count < total) {
-                logger.warning("Resetting total uri count to " + count + ". Ignore if URIs are loaded from a file that contains blank lines.");
+                logger.warning("Resetting total uri count to " + count
+                        + ". Ignore if URIs are loaded from a file that contains blank lines.");
                 monitor.setTaskCount(total = count);
             }
 
@@ -955,13 +920,12 @@ public class Manager implements Runnable {
      * @param e
      */
     public void stop(ExecutionException e) {
-        logger.logException("fatal error", e.getCause());
+        logger.log(Level.SEVERE, "fatal error", e.getCause());
         logger.warning("exiting due to fatal error");
         stop();
     }
 
-    protected static SecurityOptions newTrustAnyoneOptions()
-            throws KeyManagementException, NoSuchAlgorithmException {
+    protected static SecurityOptions newTrustAnyoneOptions() throws KeyManagementException, NoSuchAlgorithmException {
         TrustManager[] trust = new TrustManager[]{new X509TrustManager() {
             public X509Certificate[] getAcceptedIssuers() {
                 return new X509Certificate[0];
@@ -978,8 +942,7 @@ public class Manager implements Runnable {
             /**
              * @throws CertificateException
              */
-            public void checkServerTrusted(X509Certificate[] certs,
-                    String authType) throws CertificateException {
+            public void checkServerTrusted(X509Certificate[] certs, String authType) throws CertificateException {
                 // no exception means it's okay
             }
         }};
