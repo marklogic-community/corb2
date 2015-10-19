@@ -122,7 +122,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
     private static String usage1 = "Generate Keys (Note: default algorithm: RSA, default key-length: 1024):\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024";
     private static String usage2 = "Encrypt (Note: default algorithm: RSA):\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA";
 
-    private static void generateKeys(String[] args) throws Exception {
+    private static void generateKeys(String... args) throws Exception {
         String algorithm = "RSA";
         int length = 1024;
         String privateKeyPathName = null;
@@ -169,7 +169,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
         }
     }
 
-    private static void encrypt(String[] args) throws Exception {
+    private static void encrypt(String... args) throws Exception {
         String algorithm = "RSA";
         String publicKeyPathName = null;
         String clearText = null;

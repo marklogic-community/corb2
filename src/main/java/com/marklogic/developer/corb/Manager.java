@@ -76,8 +76,8 @@ import java.util.logging.Level;
  */
 public class Manager implements Runnable {
 
-    static public String VERSION = "2.1.3";
-    static private Logger logger = getLogger();
+    public static final String VERSION = "2.1.3";
+    private static final Logger LOG = getLogger();
 
     public class CallerBlocksPolicy implements RejectedExecutionHandler {
 
@@ -99,7 +99,7 @@ public class Manager implements Runnable {
             try {
                 // block until space becomes available
                 if (!warning) {
-                    logger.info("queue is full: size = " + queue.size()
+                    LOG.info("queue is full: size = " + queue.size()
                             + " (will only appear once)");
                     warning = true;
                 }
@@ -114,12 +114,12 @@ public class Manager implements Runnable {
 
     }
 
-    public static String URIS_BATCH_REF = "URIS_BATCH_REF";
-    public static String DEFAULT_BATCH_URI_DELIM = ";";
+    public static final String URIS_BATCH_REF = "URIS_BATCH_REF";
+    public static final String DEFAULT_BATCH_URI_DELIM = ";";
 
-    protected static String versionMessage = "version " + VERSION + " on " + System.getProperty("java.version") + " (" + System.getProperty("java.runtime.name") + ")";
-    private static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server'\n";
-    private static final String XQUERY_VERSION_0_9_ML = "xquery version \"0.9-ml\"\n";
+    protected static final String VERSION_MSG = "version " + VERSION + " on " + System.getProperty("java.version") + " (" + System.getProperty("java.runtime.name") + ")";
+    protected static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server'\n";
+    protected static final String XQUERY_VERSION_0_9_ML = "xquery version \"0.9-ml\"\n";
     protected static final String NAME = Manager.class.getName();
 
     protected URI connectionUri;
@@ -175,12 +175,12 @@ public class Manager implements Runnable {
             try {
                 is = Manager.class.getResourceAsStream("/" + filename);
                 if (is != null) {
-                    logger.info("Loading " + filename + " from classpath");
+                    LOG.info("Loading " + filename + " from classpath");
                     props.load(is);
                 } else {
                     File f = new File(filename);
                     if (f.exists() && !f.isDirectory()) {
-                        logger.info("Loading " + filename + " from filesystem");
+                        LOG.info("Loading " + filename + " from filesystem");
                         FileInputStream fis = null;
                         try {
                             fis = new FileInputStream(f);
@@ -253,7 +253,7 @@ public class Manager implements Runnable {
         }
     }
 
-    public static Manager createManager(String[] args) throws URISyntaxException, IOException,
+    public static Manager createManager(String... args) throws URISyntaxException, IOException,
             ClassNotFoundException, InstantiationException, IllegalAccessException {
         String propsFileName = System.getProperty("OPTIONS-FILE");
         Properties props = loadPropertiesFile(propsFileName);
@@ -492,12 +492,12 @@ public class Manager implements Runnable {
      */
     @Override
     public void run() {
-        logger.log(Level.INFO, "{0} starting: {1}", new Object[]{NAME, versionMessage});
+        LOG.log(Level.INFO, "{0} starting: {1}", new Object[]{NAME, VERSION_MSG});
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
-        logger.log(Level.INFO, "maximum heap size = {0} MiB", maxMemory);
+        LOG.log(Level.INFO, "maximum heap size = {0} MiB", maxMemory);
 
-        RuntimeMXBean RuntimemxBean = ManagementFactory.getRuntimeMXBean();
-        List<String> arguments = RuntimemxBean.getInputArguments();
+        RuntimeMXBean runtimemxBean = ManagementFactory.getRuntimeMXBean();
+        List<String> arguments = runtimemxBean.getInputArguments();
         int uIdx = -1;
         for (int i = 0; uIdx == -1 && i < arguments.size(); i++) {
             if (arguments.get(i).startsWith("-DXCC-CONNECTION-URI")) {
@@ -508,7 +508,7 @@ public class Manager implements Runnable {
             arguments = new ArrayList<>(arguments);
             arguments.remove(uIdx);
         }
-        logger.log(Level.INFO, "runtime arguments = {0}", Utilities.join(arguments, " "));
+        LOG.log(Level.INFO, "runtime arguments = {0}", Utilities.join(arguments, " "));
 
         prepareContentSource();
         registerStatusInfo();
@@ -524,18 +524,18 @@ public class Manager implements Runnable {
                 } catch (InterruptedException e) {
                     // reset interrupt status and continue
                     Thread.interrupted();
-                    logger.log(Level.SEVERE, "interrupted while waiting for monitor", e);
+                    LOG.log(Level.SEVERE, "interrupted while waiting for monitor", e);
                 }
             }
 
             runPostBatchTask(); //post batch tasks
-            logger.info("all done");
+            LOG.info("all done");
         } catch (XccException e) {
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            LOG.log(Level.SEVERE, e.getMessage(), e);
             stop();
             System.exit(1);
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "unexpected", e);
+            LOG.log(Level.SEVERE, "unexpected", e);
             stop();
             System.exit(1);
         }
@@ -566,29 +566,29 @@ public class Manager implements Runnable {
         String[] resourceModules = new String[]{options.getInitModule(), options.getUrisModule(),
             options.getProcessModule(), options.getPreBatchModule(), options.getPostBatchModule()};
         String modulesDatabase = options.getModulesDatabase();
-        logger.info("checking modules, database: " + modulesDatabase);
+        LOG.info("checking modules, database: " + modulesDatabase);
         Session session = contentSource.newSession(modulesDatabase);
         InputStream is = null;
         Content c = null;
         ContentCreateOptions opts = ContentCreateOptions.newTextInstance();
         try {
-            for (int i = 0; i < resourceModules.length; i++) {
-                if (resourceModules[i] == null || resourceModules[i].toUpperCase().endsWith("|ADHOC")) {
+            for (String resourceModule : resourceModules) {
+                if (resourceModule == null || resourceModule.toUpperCase().endsWith("|ADHOC")) {
                     continue;
                 }
 
                 // Start by checking install flag.
                 if (!options.isDoInstall()) {
-                    logger.info("Skipping module installation: " + resourceModules[i]);
+                    LOG.info("Skipping module installation: " + resourceModule);
                     continue;
                 } // Next check: if XCC is configured for the filesystem, warn
                 // user
                 else if (options.getModulesDatabase().equals("")) {
-                    logger.warning("XCC configured for the filesystem: please install modules manually");
+                    LOG.warning("XCC configured for the filesystem: please install modules manually");
                     return;
                 } // Finally, if it's configured for a database, install.
                 else {
-                    File f = new File(resourceModules[i]);
+                    File f = new File(resourceModule);
                     // If not installed, are the specified files on the
                     // filesystem?
                     if (f.exists()) {
@@ -596,11 +596,11 @@ public class Manager implements Runnable {
                         c = ContentFactory.newContent(moduleUri, f, opts);
                     } // finally, check package
                     else {
-                        logger.warning("looking for " + resourceModules[i] + " as resource");
-                        String moduleUri = options.getModuleRoot() + resourceModules[i];
-                        is = this.getClass().getResourceAsStream(resourceModules[i]);
+                        LOG.warning("looking for " + resourceModule + " as resource");
+                        String moduleUri = options.getModuleRoot() + resourceModule;
+                        is = this.getClass().getResourceAsStream(resourceModule);
                         if (null == is) {
-                            throw new NullPointerException(resourceModules[i] + " could not be found on the filesystem,"
+                            throw new NullPointerException(resourceModule + " could not be found on the filesystem,"
                                     + " or in package resources");
                         }
                         c = ContentFactory.newContent(moduleUri, is, opts);
@@ -609,10 +609,10 @@ public class Manager implements Runnable {
                 }
             }
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "fatal error", e);
+            LOG.log(Level.SEVERE, "fatal error", e);
             throw new RuntimeException(e);
         } catch (RequestException e) {
-            logger.log(Level.SEVERE, "fatal error", e);
+            LOG.log(Level.SEVERE, "fatal error", e);
             throw new RuntimeException(e);
         } finally {
             session.close();
@@ -620,7 +620,7 @@ public class Manager implements Runnable {
                 try {
                     is.close();
                 } catch (IOException ioe) {
-                    logger.log(Level.SEVERE, "Couldn't close the stream", ioe);
+                    LOG.log(Level.SEVERE, "Couldn't close the stream", ioe);
                 }
             }
         }
@@ -638,13 +638,13 @@ public class Manager implements Runnable {
             contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, newTrustAnyoneOptions())
                     : ContentSourceFactory.newContentSource(connectionUri);
         } catch (XccConfigException e) {
-            logger.log(Level.SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check options are configured correctly.", e);
+            LOG.log(Level.SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check options are configured correctly.", e);
             throw new RuntimeException(e);
         } catch (KeyManagementException e) {
-            logger.log(Level.SEVERE, "Problem creating content source with ssl", e);
+            LOG.log(Level.SEVERE, "Problem creating content source with ssl", e);
             throw new RuntimeException(e);
         } catch (NoSuchAlgorithmException e) {
-            logger.log(Level.SEVERE, "Problem creating content source with ssl", e);
+            LOG.log(Level.SEVERE, "Problem creating content source with ssl", e);
             throw new RuntimeException(e);
         }
     }
@@ -683,23 +683,23 @@ public class Manager implements Runnable {
         }
         // END HACK
 
-        logger.info("Configured modules db: " + options.getModulesDatabase());
-        logger.info("Configured modules xdbc root: " + options.getXDBC_ROOT());
-        logger.info("Configured modules root: " + options.getModuleRoot());
-        logger.info("Configured uri module: " + options.getUrisModule());
-        logger.info("Configured uri file: " + options.getUrisFile());
-        logger.info("Configured process module: " + options.getProcessModule());
-        logger.info("Configured process task: " + options.getProcessTaskClass());
-        logger.info("Configured pre batch module: " + options.getPreBatchModule());
-        logger.info("Configured pre batch task: " + options.getPreBatchTaskClass());
-        logger.info("Configured post batch module: " + options.getPostBatchModule());
-        logger.info("Configured post batch task: " + options.getPostBatchTaskClass());
-        logger.info("Configured init module: " + options.getInitModule());
-        logger.info("Configured init task: " + options.getInitTaskClass());
+        LOG.info("Configured modules db: " + options.getModulesDatabase());
+        LOG.info("Configured modules xdbc root: " + options.getXDBC_ROOT());
+        LOG.info("Configured modules root: " + options.getModuleRoot());
+        LOG.info("Configured uri module: " + options.getUrisModule());
+        LOG.info("Configured uri file: " + options.getUrisFile());
+        LOG.info("Configured process module: " + options.getProcessModule());
+        LOG.info("Configured process task: " + options.getProcessTaskClass());
+        LOG.info("Configured pre batch module: " + options.getPreBatchModule());
+        LOG.info("Configured pre batch task: " + options.getPreBatchTaskClass());
+        LOG.info("Configured post batch module: " + options.getPostBatchModule());
+        LOG.info("Configured post batch task: " + options.getPostBatchTaskClass());
+        LOG.info("Configured init module: " + options.getInitModule());
+        LOG.info("Configured init task: " + options.getInitTaskClass());
 
         for (Entry<Object, Object> e : properties.entrySet()) {
             if (e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
-                logger.info("Loaded property " + e.getKey() + "=" + e.getValue());
+                LOG.info("Loaded property " + e.getKey() + "=" + e.getValue());
             }
         }
     }
@@ -707,7 +707,7 @@ public class Manager implements Runnable {
     private void runInitTask(TaskFactory tf) throws Exception {
         Task initTask = tf.newInitTask();
         if (initTask != null) {
-            logger.info("Running init Task");
+            LOG.info("Running init Task");
             initTask.call();
         }
     }
@@ -715,7 +715,7 @@ public class Manager implements Runnable {
     private void runPreBatchTask(TaskFactory tf) throws Exception {
         Task preTask = tf.newPreBatchTask();
         if (preTask != null) {
-            logger.info("Running pre batch Task");
+            LOG.info("Running pre batch Task");
             preTask.call();
         }
     }
@@ -724,7 +724,7 @@ public class Manager implements Runnable {
         TaskFactory tf = new TaskFactory(this);
         Task postTask = tf.newPostBatchTask();
         if (postTask != null) {
-            logger.info("Running post batch Task");
+            LOG.info("Running post batch Task");
             postTask.call();
         }
     }
@@ -747,7 +747,7 @@ public class Manager implements Runnable {
     }
 
     private void populateQueue() throws Exception {
-        logger.info("populating queue");
+        LOG.info("populating queue");
         TaskFactory tf = new TaskFactory(this);
         UrisLoader urisLoader = getUriLoader();
         int total = -1;
@@ -759,13 +759,13 @@ public class Manager implements Runnable {
             urisLoader.open();
             if (urisLoader.getBatchRef() != null) {
                 properties.put(Manager.URIS_BATCH_REF, urisLoader.getBatchRef());
-                logger.info("URIS_BATCH_REF: " + urisLoader.getBatchRef());
+                LOG.info("URIS_BATCH_REF: " + urisLoader.getBatchRef());
             }
 
             total = urisLoader.getTotalCount();
-            logger.info("expecting total " + total);
+            LOG.info("expecting total " + total);
             if (total <= 0) {
-                logger.info("nothing to process");
+                LOG.info("nothing to process");
                 stop();
                 return;
             }
@@ -804,42 +804,42 @@ public class Manager implements Runnable {
                 // all uris in queue as quickly as possible
                 if (isFirst) {
                     isFirst = false;
-                    completionService.submit(tf.newProcessTask(new String[]{uri}));
+                    completionService.submit(tf.newProcessTask(uri));
                     urisArray[count] = null;
-                    logger.info("received first uri: " + uri);
+                    LOG.info("received first uri: " + uri);
                 } else {
                     urisArray[count] = uri.toCharArray();
                 }
                 count++;
 
                 if (0 == count % 25000) {
-                    logger.info("received " + count + "/" + total + ": " + uri);
+                    LOG.info("received " + count + "/" + total + ": " + uri);
 
                     if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
-                        logger.warning("Slow receive!" + " Consider increasing max heap size"
+                        LOG.warning("Slow receive!" + " Consider increasing max heap size"
                                 + " and using -XX:+UseConcMarkSweepGC");
                         freeMemory = Runtime.getRuntime().freeMemory();
-                        logger.info("free memory: " + (freeMemory / (1024 * 1024)) + " MiB");
+                        LOG.info("free memory: " + (freeMemory / (1024 * 1024)) + " MiB");
                     }
                     lastMessageMillis = System.currentTimeMillis();
                 }
 
             }
 
-            logger.info("received " + count + "/" + total);
+            LOG.info("received " + count + "/" + total);
             // done with result set - close session to close everything
             if (null != urisLoader) {
                 urisLoader.close();
             }
 
             if (count < total) {
-                logger.warning("Resetting total uri count to " + count
+                LOG.warning("Resetting total uri count to " + count
                         + ". Ignore if URIs are loaded from a file that contains blank lines.");
                 monitor.setTaskCount(total = count);
             }
 
             // start with 1 not 0 because we already queued result 0
-            List<String> ulist = new ArrayList<String>(options.getBatchSize());
+            List<String> ulist = new ArrayList<>(options.getBatchSize());
             for (int i = 1; i < urisArray.length; i++) {
                 // check pool occasionally, for fast-fail
                 if (null == pool) {
@@ -859,21 +859,21 @@ public class Manager implements Runnable {
                 }
                 String msg = "queued " + i + "/" + total + ": " + uri;
                 if (0 == i % 50000) {
-                    logger.info(msg);
+                    LOG.info(msg);
                     freeMemory = Runtime.getRuntime().freeMemory();
                     if (freeMemory < (16 * 1024 * 1024)) {
-                        logger.warning("free memory: " + (freeMemory / (1024 * 1024)) + " MiB");
+                        LOG.warning("free memory: " + (freeMemory / (1024 * 1024)) + " MiB");
                     }
                     lastMessageMillis = System.currentTimeMillis();
                 } else {
-                    logger.finest(msg);
+                    LOG.finest(msg);
                 }
                 if (i > total) {
-                    logger.warning("expected " + total + ", got " + i);
-                    logger.warning("check your uri module!");
+                    LOG.warning("expected " + total + ", got " + i);
+                    LOG.warning("check your uri module!");
                 }
             }
-            logger.info("queued " + urisArray.length + "/" + total);
+            LOG.info("queued " + urisArray.length + "/" + total);
             urisArray = null;
             pool.shutdown();
 
@@ -892,18 +892,18 @@ public class Manager implements Runnable {
         }
 
         assert total == count;
-        logger.fine("queue is populated with " + total + " tasks");
+        LOG.fine("queue is populated with " + total + " tasks");
     }
 
     /**
      * @param e
      */
     public void stop() {
-        logger.info("cleaning up");
+        LOG.info("cleaning up");
         if (null != pool) {
             List<Runnable> remaining = pool.shutdownNow();
             if (remaining.size() > 0) {
-                logger.warning("thread pool was shut down with "
+                LOG.warning("thread pool was shut down with "
                         + remaining.size() + " pending tasks");
             }
             pool = null;
@@ -920,8 +920,8 @@ public class Manager implements Runnable {
      * @param e
      */
     public void stop(ExecutionException e) {
-        logger.log(Level.SEVERE, "fatal error", e.getCause());
-        logger.warning("exiting due to fatal error");
+        LOG.log(Level.SEVERE, "fatal error", e.getCause());
+        LOG.warning("exiting due to fatal error");
         stop();
     }
 

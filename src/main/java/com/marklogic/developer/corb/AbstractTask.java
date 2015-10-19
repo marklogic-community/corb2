@@ -40,12 +40,12 @@ public abstract class AbstractTask implements Task {
     static private Object sync = new Object();
     static private Map<String, Set<String>> modulePropsMap = new HashMap<>();
 
-    protected int DEFAULT_RETRY_LIMIT = 3;
-    protected int DEFAULT_RETRY_INTERVAL = 60;
+    protected static final int DEFAULT_RETRY_LIMIT = 3;
+    protected static final int DEFAULT_RETRY_INTERVAL = 60;
 
     private int connectRetryCount = 0;
 
-    protected static final Logger logger = Manager.getLogger();
+    protected static final Logger LOG = Manager.getLogger();
 
     public void setContentSource(ContentSource cs) {
         this.cs = cs;
@@ -114,10 +114,10 @@ public abstract class AbstractTask implements Task {
                 }
             }
 
-            if (moduleUri != null) {
-                request = session.newModuleInvoke(moduleUri);
-            } else {
+            if (moduleUri == null) {
                 request = session.newAdhocQuery(adhocQuery);
+            } else {
+                request = session.newModuleInvoke(moduleUri);
             }
 
             if (language != null) {
@@ -174,7 +174,7 @@ public abstract class AbstractTask implements Task {
                 int retryInterval = this.getConnectRetryInterval();
                 if (connectRetryCount < retryLimit) {
                     connectRetryCount++;
-                    logger.severe("Connection failed to Marklogic Server. Retrying attempt " + connectRetryCount + " after " + retryInterval + " seconds..: " + exc.getMessage() + " at URI: " + inputUris);
+                    LOG.severe("Connection failed to Marklogic Server. Retrying attempt " + connectRetryCount + " after " + retryInterval + " seconds..: " + exc.getMessage() + " at URI: " + inputUris);
                     try {
                         Thread.sleep(retryInterval * 1000L);
                     } catch (Exception exc2) {

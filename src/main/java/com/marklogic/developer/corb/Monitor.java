@@ -48,15 +48,14 @@ public class Monitor implements Runnable {
 	protected long completed = 0;
 
 	/**
-	 * @param _pool
-	 * @param _cs
-	 * @param _manager
-	 * @param _logger
+	 * @param pool
+	 * @param cs
+	 * @param manager
 	 */
-	public Monitor(ThreadPoolExecutor _pool, CompletionService<String[]> _cs, Manager _manager) {
-		pool = _pool;
-		cs = _cs;
-		manager = _manager;
+	public Monitor(ThreadPoolExecutor pool, CompletionService<String[]> cs, Manager manager) {
+		this.pool = pool;
+		this.cs = cs;
+		this.manager = manager;
 	}
 
     /*
@@ -132,10 +131,10 @@ public class Monitor implements Runnable {
     }
 
 	/**
-	 * @param _count
+	 * @param count
 	 */
-	public void setTaskCount(long _count) {
-		taskCount = _count;
+	public void setTaskCount(long count) {
+		taskCount = count;
 	}
 	
 	public long getTaskCount(){

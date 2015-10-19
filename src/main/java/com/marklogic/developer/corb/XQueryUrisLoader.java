@@ -78,10 +78,9 @@ public class XQueryUrisLoader implements UrisLoader {
                     throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
                 }
                 logger.info("invoking adhoc javascript uris module " + queryPath);
-                StringBuffer sb = new StringBuffer();
-                sb.append("xdmp:javascript-eval('");
-                sb.append(adhocQuery);
-                sb.append("',(");
+                StringBuffer query = new StringBuffer("xdmp:javascript-eval('")
+                        .append(adhocQuery)
+                        .append("',(");
                 int varCount = 0;
                 for (String propName : propertyNames) {
                     if (propName.startsWith("URIS-MODULE.")) {
@@ -89,16 +88,16 @@ public class XQueryUrisLoader implements UrisLoader {
                         String value = getProperty(propName);
                         if (value != null) {
                             if (varCount > 0) {
-                                sb.append(",");
+                                query.append(',');
                             }
-                            sb.append("\"" + varName + "\"").append(",\"" + value + "\"");
+                            query.append("\"" + varName + "\"").append(",\"" + value + "\"");
                             varCount++;
                         }
                     }
                 }
-                sb.append("))");
+                query.append("))");
 
-                req = session.newAdhocQuery(sb.toString());
+                req = session.newAdhocQuery(query.toString());
             } else {
                 if (options.getUrisModule().toUpperCase().endsWith("|ADHOC")) {
                     String queryPath = options.getUrisModule().substring(0, options.getUrisModule().indexOf('|'));

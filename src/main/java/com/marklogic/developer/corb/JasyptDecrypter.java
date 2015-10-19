@@ -7,11 +7,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class JasyptDecrypter extends AbstractDecrypter{
-	protected Properties jaspytProperties = null;
+	protected transient Properties jaspytProperties = null;
 	Class<?> decrypterCls = null;
 	Object decrypter = null;
 	
-
     protected static Logger logger = Logger.getLogger("Decrypter");
 
 	@Override
