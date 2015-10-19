@@ -35,7 +35,7 @@ import java.util.logging.Logger;
 public class Monitor implements Runnable {
 
 	protected static final int SLEEP_MILLIS = 500;
-	protected static Logger logger = Manager.getLogger();
+	protected static final Logger LOG = Manager.getLogger();
 	
 	private CompletionService<String[]> cs;
 	private long lastProgress = 0;
@@ -76,15 +76,15 @@ public class Monitor implements Runnable {
 		} catch (InterruptedException e) {
 			// reset interrupt status and exit
 			Thread.interrupted();
-			logger.log(Level.SEVERE,"interrupted: exiting", e);
+			LOG.log(Level.SEVERE,"interrupted: exiting", e);
 		} catch (CorbException e) {
-			logger.log(Level.SEVERE,"Unexpected error", e);
+			LOG.log(Level.SEVERE,"Unexpected error", e);
 		}
 	}
 
 	private void monitorResults() throws InterruptedException, ExecutionException, CorbException {
 		// fast-fail as soon as we see any exceptions
-		logger.info("monitoring " + taskCount + " tasks");
+		LOG.log(Level.INFO, "monitoring {0} tasks", taskCount);
 		Future<String[]> future = null;
 		while (!shutdownNow) {
 			// try to avoid thread starvation
@@ -95,7 +95,7 @@ public class Monitor implements Runnable {
 				// record result, or throw exception
 				lastUris = future.get();
 				completed = completed + lastUris.length;
-				logger.fine("completed uris: " + Arrays.toString(lastUris));
+				LOG.log(Level.FINE, "completed uris: {0}", Arrays.toString(lastUris));
 			}
 
 			long active = pool.getActiveCount();
@@ -105,26 +105,26 @@ public class Monitor implements Runnable {
 			if (completed >= taskCount) {
 				break;
 			} else if (active == 0) {
-				logger.warning("No active tasks found with " + (taskCount - completed) + " tasks remains to be completed");
+				LOG.log(Level.WARNING, "No active tasks found with {0} tasks remains to be completed", (taskCount - completed));
 				if (pool.isTerminated())
 					break;
 			}
 		}
-		logger.info("waiting for pool to terminate");
+		LOG.info("waiting for pool to terminate");
 		pool.awaitTermination(1, TimeUnit.SECONDS);
-		logger.info("completed all tasks " + completed + "/" + taskCount);		
+		LOG.log(Level.INFO, "completed all tasks {0}/{1}", new Object[]{completed, taskCount});		
 	}
 
 	private long showProgress() {
 		long current = System.currentTimeMillis();
 		if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
-			logger.info("completed " + getProgressMessage(completed));
+			LOG.log(Level.INFO, "completed {0}", getProgressMessage(completed));
 			lastProgress = current;
 
             // check for low memory
             long freeMemory = Runtime.getRuntime().freeMemory();
             if (freeMemory < (16 * 1024 * 1024)) {
-                logger.log(Level.WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
+                LOG.log(Level.WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
             }
         }
         return lastProgress;

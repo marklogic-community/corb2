@@ -32,15 +32,14 @@ public class TaskFactory {
     private HashMap<String, String> moduleToPathMap = new HashMap<>();
 
     /**
-     * @param _cs
-     * @param _uri
+     * @param manager
      */
     public TaskFactory(Manager manager) {
         this.manager = manager;
     }
 
     /**
-     * @param _uri
+     * @param uris
      * @return
      */
     public Task newProcessTask(String... uris) {

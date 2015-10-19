@@ -92,6 +92,7 @@ public class Manager implements Runnable {
          * java.util.concurrent.RejectedExecutionHandler#rejectedExecution(java
          * .lang.Runnable, java.util.concurrent.ThreadPoolExecutor)
          */
+        @Override
         public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
             if (null == queue) {
                 queue = executor.getQueue();
@@ -99,8 +100,7 @@ public class Manager implements Runnable {
             try {
                 // block until space becomes available
                 if (!warning) {
-                    LOG.info("queue is full: size = " + queue.size()
-                            + " (will only appear once)");
+                    LOG.log(Level.INFO, "queue is full: size = {0} (will only appear once)", queue.size());
                     warning = true;
                 }
                 queue.put(r);
@@ -139,8 +139,6 @@ public class Manager implements Runnable {
     /**
      * @param connectionUri
      * @param collection
-     * @param modulePath
-     * @param uriListPath
      */
     public Manager(URI connectionUri, String collection) {
         this.connectionUri = connectionUri;
@@ -175,12 +173,12 @@ public class Manager implements Runnable {
             try {
                 is = Manager.class.getResourceAsStream("/" + filename);
                 if (is != null) {
-                    LOG.info("Loading " + filename + " from classpath");
+                    LOG.log(Level.INFO, "Loading {0} from classpath", filename);
                     props.load(is);
                 } else {
                     File f = new File(filename);
                     if (f.exists() && !f.isDirectory()) {
-                        LOG.info("Loading " + filename + " from filesystem");
+                        LOG.log(Level.INFO, "Loading {0} from filesystem", filename);
                         FileInputStream fis = null;
                         try {
                             fis = new FileInputStream(f);
@@ -548,10 +546,10 @@ public class Manager implements Runnable {
         RejectedExecutionHandler policy = new CallerBlocksPolicy();
         int threads = options.getThreadCount();
         // an array queue should be somewhat lighter-weight
-        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(options.getQueueSize());
+        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(options.getQueueSize());
         pool = new ThreadPoolExecutor(threads, threads, 16, TimeUnit.SECONDS, workQueue, policy);
         pool.prestartAllCoreThreads();
-        completionService = new ExecutorCompletionService<String[]>(pool);
+        completionService = new ExecutorCompletionService<>(pool);
         monitor = new Monitor(pool, completionService, this);
         Thread monitorThread = new Thread(monitor);
         return monitorThread;
@@ -566,7 +564,7 @@ public class Manager implements Runnable {
         String[] resourceModules = new String[]{options.getInitModule(), options.getUrisModule(),
             options.getProcessModule(), options.getPreBatchModule(), options.getPostBatchModule()};
         String modulesDatabase = options.getModulesDatabase();
-        LOG.info("checking modules, database: " + modulesDatabase);
+        LOG.log(Level.INFO, "checking modules, database: {0}", modulesDatabase);
         Session session = contentSource.newSession(modulesDatabase);
         InputStream is = null;
         Content c = null;
@@ -579,7 +577,7 @@ public class Manager implements Runnable {
 
                 // Start by checking install flag.
                 if (!options.isDoInstall()) {
-                    LOG.info("Skipping module installation: " + resourceModule);
+                    LOG.log(Level.INFO, "Skipping module installation: {0}", resourceModule);
                     continue;
                 } // Next check: if XCC is configured for the filesystem, warn
                 // user
@@ -596,7 +594,7 @@ public class Manager implements Runnable {
                         c = ContentFactory.newContent(moduleUri, f, opts);
                     } // finally, check package
                     else {
-                        LOG.warning("looking for " + resourceModule + " as resource");
+                        LOG.log(Level.WARNING, "looking for {0} as resource", resourceModule);
                         String moduleUri = options.getModuleRoot() + resourceModule;
                         is = this.getClass().getResourceAsStream(resourceModule);
                         if (null == is) {
@@ -608,10 +606,7 @@ public class Manager implements Runnable {
                     session.insertContent(c);
                 }
             }
-        } catch (IOException e) {
-            LOG.log(Level.SEVERE, "fatal error", e);
-            throw new RuntimeException(e);
-        } catch (RequestException e) {
+        } catch (IOException | RequestException e) {
             LOG.log(Level.SEVERE, "fatal error", e);
             throw new RuntimeException(e);
         } finally {
@@ -640,10 +635,7 @@ public class Manager implements Runnable {
         } catch (XccConfigException e) {
             LOG.log(Level.SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check options are configured correctly.", e);
             throw new RuntimeException(e);
-        } catch (KeyManagementException e) {
-            LOG.log(Level.SEVERE, "Problem creating content source with ssl", e);
-            throw new RuntimeException(e);
-        } catch (NoSuchAlgorithmException e) {
+        } catch (KeyManagementException | NoSuchAlgorithmException e) {
             LOG.log(Level.SEVERE, "Problem creating content source with ssl", e);
             throw new RuntimeException(e);
         }
@@ -683,23 +675,23 @@ public class Manager implements Runnable {
         }
         // END HACK
 
-        LOG.info("Configured modules db: " + options.getModulesDatabase());
-        LOG.info("Configured modules xdbc root: " + options.getXDBC_ROOT());
-        LOG.info("Configured modules root: " + options.getModuleRoot());
-        LOG.info("Configured uri module: " + options.getUrisModule());
-        LOG.info("Configured uri file: " + options.getUrisFile());
-        LOG.info("Configured process module: " + options.getProcessModule());
-        LOG.info("Configured process task: " + options.getProcessTaskClass());
-        LOG.info("Configured pre batch module: " + options.getPreBatchModule());
-        LOG.info("Configured pre batch task: " + options.getPreBatchTaskClass());
-        LOG.info("Configured post batch module: " + options.getPostBatchModule());
-        LOG.info("Configured post batch task: " + options.getPostBatchTaskClass());
-        LOG.info("Configured init module: " + options.getInitModule());
-        LOG.info("Configured init task: " + options.getInitTaskClass());
+        LOG.log(Level.INFO, "Configured modules db: {0}", options.getModulesDatabase());
+        LOG.log(Level.INFO, "Configured modules xdbc root: {0}", options.getXDBC_ROOT());
+        LOG.log(Level.INFO, "Configured modules root: {0}", options.getModuleRoot());
+        LOG.log(Level.INFO, "Configured uri module: {0}", options.getUrisModule());
+        LOG.log(Level.INFO, "Configured uri file: {0}", options.getUrisFile());
+        LOG.log(Level.INFO, "Configured process module: {0}", options.getProcessModule());
+        LOG.log(Level.INFO, "Configured process task: {0}", options.getProcessTaskClass());
+        LOG.log(Level.INFO, "Configured pre batch module: {0}", options.getPreBatchModule());
+        LOG.log(Level.INFO, "Configured pre batch task: {0}", options.getPreBatchTaskClass());
+        LOG.log(Level.INFO, "Configured post batch module: {0}", options.getPostBatchModule());
+        LOG.log(Level.INFO, "Configured post batch task: {0}", options.getPostBatchTaskClass());
+        LOG.log(Level.INFO, "Configured init module: {0}", options.getInitModule());
+        LOG.log(Level.INFO, "Configured init task: {0}", options.getInitTaskClass());
 
         for (Entry<Object, Object> e : properties.entrySet()) {
             if (e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
-                LOG.info("Loaded property " + e.getKey() + "=" + e.getValue());
+                LOG.log(Level.INFO, "Loaded property {0}={1}", new Object[]{e.getKey(), e.getValue()});
             }
         }
     }
@@ -759,11 +751,11 @@ public class Manager implements Runnable {
             urisLoader.open();
             if (urisLoader.getBatchRef() != null) {
                 properties.put(Manager.URIS_BATCH_REF, urisLoader.getBatchRef());
-                LOG.info("URIS_BATCH_REF: " + urisLoader.getBatchRef());
+                LOG.log(Level.INFO, "URIS_BATCH_REF: {0}", urisLoader.getBatchRef());
             }
 
             total = urisLoader.getTotalCount();
-            LOG.info("expecting total " + total);
+            LOG.log(Level.INFO, "expecting total {0}", total);
             if (total <= 0) {
                 LOG.info("nothing to process");
                 stop();
@@ -806,35 +798,34 @@ public class Manager implements Runnable {
                     isFirst = false;
                     completionService.submit(tf.newProcessTask(uri));
                     urisArray[count] = null;
-                    LOG.info("received first uri: " + uri);
+                    LOG.log(Level.INFO, "received first uri: {0}", uri);
                 } else {
                     urisArray[count] = uri.toCharArray();
                 }
                 count++;
 
                 if (0 == count % 25000) {
-                    LOG.info("received " + count + "/" + total + ": " + uri);
+                    LOG.log(Level.INFO, "received {0}/{1}: {2}", new Object[]{count, total, uri});
 
                     if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
                         LOG.warning("Slow receive!" + " Consider increasing max heap size"
                                 + " and using -XX:+UseConcMarkSweepGC");
                         freeMemory = Runtime.getRuntime().freeMemory();
-                        LOG.info("free memory: " + (freeMemory / (1024 * 1024)) + " MiB");
+                        LOG.log(Level.INFO, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
                     }
                     lastMessageMillis = System.currentTimeMillis();
                 }
 
             }
 
-            LOG.info("received " + count + "/" + total);
+            LOG.log(Level.INFO, "received {0}/{1}", new Object[]{count, total});
             // done with result set - close session to close everything
             if (null != urisLoader) {
                 urisLoader.close();
             }
 
             if (count < total) {
-                LOG.warning("Resetting total uri count to " + count
-                        + ". Ignore if URIs are loaded from a file that contains blank lines.");
+                LOG.log(Level.WARNING, "Resetting total uri count to {0}. Ignore if URIs are loaded from a file that contains blank lines.", count);
                 monitor.setTaskCount(total = count);
             }
 
@@ -862,18 +853,18 @@ public class Manager implements Runnable {
                     LOG.info(msg);
                     freeMemory = Runtime.getRuntime().freeMemory();
                     if (freeMemory < (16 * 1024 * 1024)) {
-                        LOG.warning("free memory: " + (freeMemory / (1024 * 1024)) + " MiB");
+                        LOG.log(Level.WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
                     }
                     lastMessageMillis = System.currentTimeMillis();
                 } else {
                     LOG.finest(msg);
                 }
                 if (i > total) {
-                    LOG.warning("expected " + total + ", got " + i);
+                    LOG.log(Level.WARNING, "expected {0}, got {1}", new Object[]{total, i});
                     LOG.warning("check your uri module!");
                 }
             }
-            LOG.info("queued " + urisArray.length + "/" + total);
+            LOG.log(Level.INFO, "queued {0}/{1}", new Object[]{urisArray.length, total});
             urisArray = null;
             pool.shutdown();
 
@@ -892,19 +883,17 @@ public class Manager implements Runnable {
         }
 
         assert total == count;
-        LOG.fine("queue is populated with " + total + " tasks");
+        LOG.log(Level.FINE, "queue is populated with {0} tasks", total);
     }
 
     /**
-     * @param e
      */
     public void stop() {
         LOG.info("cleaning up");
         if (null != pool) {
             List<Runnable> remaining = pool.shutdownNow();
             if (remaining.size() > 0) {
-                LOG.warning("thread pool was shut down with "
-                        + remaining.size() + " pending tasks");
+                LOG.log(Level.WARNING, "thread pool was shut down with {0} pending tasks", remaining.size());
             }
             pool = null;
         }
@@ -927,6 +916,7 @@ public class Manager implements Runnable {
 
     protected static SecurityOptions newTrustAnyoneOptions() throws KeyManagementException, NoSuchAlgorithmException {
         TrustManager[] trust = new TrustManager[]{new X509TrustManager() {
+            @Override
             public X509Certificate[] getAcceptedIssuers() {
                 return new X509Certificate[0];
             }
@@ -934,6 +924,7 @@ public class Manager implements Runnable {
             /**
              * @throws CertificateException
              */
+            @Override
             public void checkClientTrusted(X509Certificate[] certs,
                     String authType) throws CertificateException {
                 // no exception means it's okay
@@ -942,6 +933,7 @@ public class Manager implements Runnable {
             /**
              * @throws CertificateException
              */
+            @Override
             public void checkServerTrusted(X509Certificate[] certs, String authType) throws CertificateException {
                 // no exception means it's okay
             }

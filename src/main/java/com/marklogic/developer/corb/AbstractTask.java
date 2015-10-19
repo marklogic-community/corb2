@@ -14,6 +14,7 @@ import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -37,8 +38,8 @@ public abstract class AbstractTask implements Task {
     protected String adhocQuery;
     protected String language;
 
-    static private Object sync = new Object();
-    static private Map<String, Set<String>> modulePropsMap = new HashMap<>();
+    private static final Object SYNC_OBJ = new Object();
+    private static final Map<String, Set<String>> MODULE_PROPS = new HashMap<>();
 
     protected static final int DEFAULT_RETRY_LIMIT = 3;
     protected static final int DEFAULT_RETRY_INTERVAL = 60;
@@ -47,31 +48,38 @@ public abstract class AbstractTask implements Task {
 
     protected static final Logger LOG = Manager.getLogger();
 
+    @Override
     public void setContentSource(ContentSource cs) {
         this.cs = cs;
     }
 
+    @Override
     public void setModuleType(String moduleType) {
         this.moduleType = moduleType;
     }
 
+    @Override
     public void setModuleURI(String moduleUri) {
         this.moduleUri = moduleUri;
     }
 
+    @Override
     public void setAdhocQuery(String adhocQuery) {
         this.adhocQuery = adhocQuery;
     }
 
+    @Override
     public void setQueryLanguage(String language) {
         this.language = language;
     }
 
+    @Override
     public void setProperties(Properties properties) {
         this.properties = properties;
     }
 
-    public void setInputURI(String[] inputUri) {
+    @Override
+    public void setInputURI(String... inputUri) {
         this.inputUris = inputUri;
     }
 
@@ -91,10 +99,10 @@ public abstract class AbstractTask implements Task {
             session = newSession();
             Request request = null;
 
-            Set<String> modulePropNames = modulePropsMap.get(moduleType);
+            Set<String> modulePropNames = MODULE_PROPS.get(moduleType);
             if (modulePropNames == null) {
-                synchronized (sync) {
-                    modulePropNames = modulePropsMap.get(moduleType);
+                synchronized (SYNC_OBJ) {
+                    modulePropNames = MODULE_PROPS.get(moduleType);
                     if (modulePropNames == null) {
                         HashSet<String> propSet = new HashSet<>();
                         if (properties != null) {
@@ -109,7 +117,7 @@ public abstract class AbstractTask implements Task {
                                 propSet.add(propName);
                             }
                         }
-                        modulePropsMap.put(moduleType, modulePropNames = propSet);
+                        MODULE_PROPS.put(moduleType, modulePropNames = propSet);
                     }
                 }
             }
@@ -174,7 +182,7 @@ public abstract class AbstractTask implements Task {
                 int retryInterval = this.getConnectRetryInterval();
                 if (connectRetryCount < retryLimit) {
                     connectRetryCount++;
-                    LOG.severe("Connection failed to Marklogic Server. Retrying attempt " + connectRetryCount + " after " + retryInterval + " seconds..: " + exc.getMessage() + " at URI: " + inputUris);
+                    LOG.log(Level.SEVERE, "Connection failed to Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}", new Object[]{connectRetryCount, retryInterval, exc.getMessage(), inputUris});
                     try {
                         Thread.sleep(retryInterval * 1000L);
                     } catch (Exception exc2) {

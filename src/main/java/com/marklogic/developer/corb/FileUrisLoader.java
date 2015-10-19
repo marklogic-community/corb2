@@ -22,7 +22,7 @@ public class FileUrisLoader implements UrisLoader {
 
     String[] replacements = new String[0];
 
-    protected static Logger logger = Manager.getLogger();
+    protected static final Logger LOG = Manager.getLogger();
 
     @Override
     public void setOptions(TransformOptions options) {
@@ -123,12 +123,12 @@ public class FileUrisLoader implements UrisLoader {
     @Override
     public void close() {
         if (br != null) {
-            logger.info("closing uris file reader");
+            LOG.info("closing uris file reader");
             try {
                 br.close();
                 br = null;
             } catch (Exception exc) {
-                logger.log(Level.SEVERE, "while closing uris file reader", exc);
+                LOG.log(Level.SEVERE, "while closing uris file reader", exc);
             }
         }
         cleanup();
@@ -141,7 +141,6 @@ public class FileUrisLoader implements UrisLoader {
         cs = null;
         collection = null;
         properties = null;
-        logger = null;
         replacements = null;
     }
 }

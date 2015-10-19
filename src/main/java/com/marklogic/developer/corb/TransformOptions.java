@@ -98,13 +98,13 @@ public class TransformOptions {
     public void setThreadCount(int count) {
         this.threadCount = count;
     }
-    
-    public int getBatchSize(){
-    	return batchSize;
+
+    public int getBatchSize() {
+        return batchSize;
     }
-    
-    public void setBatchSize(int batchSize){
-    	this.batchSize = batchSize;
+
+    public void setBatchSize(int batchSize) {
+        this.batchSize = batchSize;
     }
 
     /**

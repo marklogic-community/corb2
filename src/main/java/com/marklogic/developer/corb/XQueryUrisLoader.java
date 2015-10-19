@@ -12,6 +12,7 @@ import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
+import java.util.logging.Level;
 
 public class XQueryUrisLoader implements UrisLoader {
 
@@ -28,29 +29,34 @@ public class XQueryUrisLoader implements UrisLoader {
 
     String[] replacements = new String[0];
 
-    protected static Logger logger = Manager.getLogger();
+    protected static final Logger LOG = Manager.getLogger();
 
     public XQueryUrisLoader() {
     }
 
+    @Override
     public void setOptions(TransformOptions options) {
         this.options = options;
     }
 
+    @Override
     public void setContentSource(ContentSource cs) {
         this.cs = cs;
     }
 
+    @Override
     public void setCollection(String collection) {
         this.collection = collection;
     }
 
+    @Override
     public void setProperties(Properties properties) {
         this.properties = properties;
     }
 
+    @Override
     public void open() throws CorbException {
-        List<String> propertyNames = new ArrayList<String>(properties.stringPropertyNames());
+        List<String> propertyNames = new ArrayList<>(properties.stringPropertyNames());
         propertyNames.addAll(System.getProperties().stringPropertyNames());
 
         if (propertyNames.contains("URIS-REPLACE-PATTERN")) {
@@ -66,7 +72,7 @@ public class XQueryUrisLoader implements UrisLoader {
             opts.setCacheResult(false);
             // this should be a noop, but xqsync does it
             opts.setResultBufferSize(0);
-            logger.info("buffer size = " + opts.getResultBufferSize() + ", caching = " + opts.getCacheResult());
+            LOG.log(Level.INFO, "buffer size = {0}, caching = {1}", new Object[]{opts.getResultBufferSize(), opts.getCacheResult()});
 
             session = cs.newSession();
             Request req = null;
@@ -77,7 +83,7 @@ public class XQueryUrisLoader implements UrisLoader {
                 if (adhocQuery == null || (adhocQuery.length() == 0)) {
                     throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
                 }
-                logger.info("invoking adhoc javascript uris module " + queryPath);
+                LOG.log(Level.INFO, "invoking adhoc javascript uris module {0}", queryPath);
                 StringBuffer query = new StringBuffer("xdmp:javascript-eval('")
                         .append(adhocQuery)
                         .append("',(");
@@ -90,7 +96,7 @@ public class XQueryUrisLoader implements UrisLoader {
                             if (varCount > 0) {
                                 query.append(',');
                             }
-                            query.append("\"" + varName + "\"").append(",\"" + value + "\"");
+                            query.append("\"").append(varName).append("\"").append(",\"").append(value).append("\"");
                             varCount++;
                         }
                     }
@@ -105,7 +111,7 @@ public class XQueryUrisLoader implements UrisLoader {
                     if (adhocQuery == null || (adhocQuery.length() == 0)) {
                         throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
                     }
-                    logger.info("invoking adhoc uris module " + queryPath);
+                    LOG.log(Level.INFO, "invoking adhoc uris module {0}", queryPath);
                     req = session.newAdhocQuery(adhocQuery);
                 } else {
                     String root = options.getModuleRoot();
@@ -119,7 +125,7 @@ public class XQueryUrisLoader implements UrisLoader {
                     }
 
                     String modulePath = root + module;
-                    logger.info("invoking uris module " + modulePath);
+                    LOG.log(Level.INFO, "invoking uris module {0}", modulePath);
                     req = session.newModuleInvoke(modulePath);
                 }
                 // NOTE: collection will be treated as a CWSV
@@ -181,7 +187,7 @@ public class XQueryUrisLoader implements UrisLoader {
     @Override
     public void close() {
         if (session != null) {
-            logger.info("closing uris session");
+            LOG.info("closing uris session");
             try {
                 if (res != null) {
                     res.close();

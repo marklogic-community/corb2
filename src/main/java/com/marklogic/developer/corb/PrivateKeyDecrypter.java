@@ -40,7 +40,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
     //echo "password or uri" | openssl rsautl -encrypt -pubin -inkey public.key | base64
     private PrivateKey privateKey = null;
 
-    protected static Logger logger = Logger.getLogger("Decrypter");
+    protected static final Logger LOG = Logger.getLogger("Decrypter");
 
     @Override
     protected void init_decrypter() throws IOException, ClassNotFoundException {
@@ -55,11 +55,11 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
             try {
                 is = Manager.class.getResourceAsStream("/" + filename);
                 if (is != null) {
-                    logger.info("Loading private key file " + filename + " from classpath");
+                    LOG.log(Level.INFO, "Loading private key file {0} from classpath", filename);
                 } else {
                     File f = new File(filename);
                     if (f.exists() && !f.isDirectory()) {
-                        logger.info("Loading private key file " + filename + " from filesystem");
+                        LOG.log(Level.INFO, "Loading private key file {0} from filesystem", filename);
                         is = new FileInputStream(f);
                     } else {
                         throw new IllegalStateException("Unable to load " + filename);
@@ -71,7 +71,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
                 try {
                     privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(keyAsBytes));
                 } catch (Exception exc) {
-                    logger.info("Attempting to decode private key with base64. Ignore this message if keys are generated with openssl");
+                    LOG.info("Attempting to decode private key with base64. Ignore this message if keys are generated with openssl");
                     String keyAsString = new String(keyAsBytes);
                     //remove the begin and end key lines if present. 
                     keyAsString = keyAsString.replaceAll("[-]+(BEGIN|END)[A-Z ]*KEY[-]+", "");
@@ -79,14 +79,14 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
                     privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(DatatypeConverter.parseBase64Binary(keyAsString)));
                 }
             } catch (Exception exc) {
-                logger.log(Level.SEVERE, "Problem initializing PrivateKeyDecrypter", exc);
+                LOG.log(Level.SEVERE, "Problem initializing PrivateKeyDecrypter", exc);
             } finally {
                 if (is != null) {
                     is.close();
                 }
             }
         } else {
-            logger.severe("PRIVATE-KEY-FILE property must be defined");
+            LOG.severe("PRIVATE-KEY-FILE property must be defined");
         }
     }
 
@@ -113,14 +113,14 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
                 cipher.init(Cipher.DECRYPT_MODE, privateKey);
                 dValue = new String(cipher.doFinal(DatatypeConverter.parseBase64Binary(value)));
             } catch (Exception exc) {
-                logger.info("Cannot decrypt " + property + ". Ignore if clear text.");
+                LOG.log(Level.INFO, "Cannot decrypt {0}. Ignore if clear text.", property);
             }
         }
         return dValue == null ? value : dValue.trim();
     }
 
-    private static String usage1 = "Generate Keys (Note: default algorithm: RSA, default key-length: 1024):\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024";
-    private static String usage2 = "Encrypt (Note: default algorithm: RSA):\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA";
+    private static final String usage1 = "Generate Keys (Note: default algorithm: RSA, default key-length: 1024):\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024";
+    private static final String usage2 = "Encrypt (Note: default algorithm: RSA):\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA";
 
     private static void generateKeys(String... args) throws Exception {
         String algorithm = "RSA";

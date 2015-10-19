@@ -81,7 +81,7 @@ public class ModuleExecutor {
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 	protected static final byte[] NEWLINE = "\n".getBytes();
 
-	protected static Logger logger = Logger.getLogger("ModuleExecutor");
+	protected static final Logger LOG = Logger.getLogger("ModuleExecutor");
 
 	/**
 	 * @param connectionUri
@@ -205,8 +205,9 @@ public class ModuleExecutor {
 		// delete the export file if it exists
 		if (exportFileName != null) {
 			File exportFile = new File(exportFileDir, exportFileName);
-			if (exportFile.exists())
-				exportFile.delete();
+			if (exportFile.exists()) {
+                exportFile.delete();
+            }
 		}
 		if (null == options.getProcessTaskClass() && null == options.getProcessModule()) {
 			throw new NullPointerException("PROCESS-TASK must be specified");
@@ -250,9 +251,9 @@ public class ModuleExecutor {
 	}
 
 	public void run() throws CorbException {
-		logger.info(NAME + " starting: " + Manager.VERSION_MSG);
+		LOG.log(Level.INFO, "{0} starting: {1}", new Object[]{NAME, Manager.VERSION_MSG});
 		long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
-		logger.info("maximum heap size = " + maxMemory + " MiB");
+		LOG.log(Level.INFO, "maximum heap size = {0} MiB", maxMemory);
 
 		RuntimeMXBean runtimemxBean = ManagementFactory.getRuntimeMXBean();
 		List<String> arguments = runtimemxBean.getInputArguments();
@@ -263,10 +264,10 @@ public class ModuleExecutor {
 			}
 		}
 		if (uIdx > -1) {
-			arguments = new ArrayList<String>(arguments);
+			arguments = new ArrayList<>(arguments);
 			arguments.remove(uIdx);
 		}
-		logger.info("runtime arguments = " + Utilities.join(arguments, " "));
+		LOG.log(Level.INFO, "runtime arguments = {0}", Utilities.join(arguments, " "));
 
 		prepareContentSource();
 		registerStatusInfo();
@@ -277,7 +278,7 @@ public class ModuleExecutor {
 			opts.setCacheResult(false);
 			session = contentSource.newSession();
 			Request req = null;
-			List<String> propertyNames = new ArrayList<String>(properties.stringPropertyNames());
+			List<String> propertyNames = new ArrayList<>(properties.stringPropertyNames());
 			propertyNames.addAll(System.getProperties().stringPropertyNames());
 			
 			if (options.getProcessModule().toUpperCase().endsWith("|ADHOC")) {
@@ -287,7 +288,7 @@ public class ModuleExecutor {
 				if (adhocQuery == null || (adhocQuery.length() == 0)) {
 					throw new IllegalStateException("Unable to read adhoc query " + queryPath+ " from classpath or filesystem");
 				}
-				logger.info("invoking adhoc xquery module " + queryPath);
+				LOG.log(Level.INFO, "invoking adhoc xquery module {0}", queryPath);
 				req = session.newAdhocQuery(adhocQuery);
 				
 				if (queryPath.toUpperCase().endsWith(".SJS")||queryPath.toUpperCase().endsWith(".JS")) {
@@ -303,7 +304,7 @@ public class ModuleExecutor {
 					module = module.substring(1);
                 }
 				String modulePath = root + module;
-				logger.info("invoking xquery module " + modulePath);
+				LOG.log(Level.INFO, "invoking xquery module {0}", modulePath);
 				req = session.newModuleInvoke(modulePath);
 				
 				if (module.toUpperCase().endsWith(".SJS")|| module.toUpperCase().endsWith(".JS|ADHOC")) {
@@ -321,8 +322,9 @@ public class ModuleExecutor {
 				if (propName.startsWith("XQUERY-MODULE.")) {
 					String varName = propName.substring("XQUERY-MODULE.".length());
 					String value = getProperty(propName);
-					if (value != null)
-						req.setNewStringVariable(varName, value);
+					if (value != null) {
+                        req.setNewStringVariable(varName, value);
+                    }
 				}
 			}
 			req.setOptions(opts);
@@ -330,11 +332,11 @@ public class ModuleExecutor {
 			res = session.submitRequest(req);
 
 			if (getProperty("PROCESS-TASK") != null  && getProperty("PROCESS-TASK").equals("com.marklogic.developer.corb.ExportBatchToFileTask")) {
-				logger.info("Writing output to file");
+				LOG.info("Writing output to file");
 				writeToFile(res);
 			}
 
-			logger.info("Done");
+			LOG.info("Done");
 		} catch (RequestException exc) {
 			throw new CorbException("While invoking XQuery Module", exc);
 		} catch (IOException exc) {
@@ -357,13 +359,10 @@ public class ModuleExecutor {
 					connectionUri, newTrustAnyoneOptions())
 					: ContentSourceFactory.newContentSource(connectionUri);
 		} catch (XccConfigException e) {
-			logger.log(Level.SEVERE,"Problem creating content source. Check if URI is valid. If encrypted, check options are configured correctly.",e);
+			LOG.log(Level.SEVERE,"Problem creating content source. Check if URI is valid. If encrypted, check options are configured correctly.",e);
 			throw new RuntimeException(e);
-		} catch (KeyManagementException e) {
-			logger.log(Level.SEVERE,"Problem creating content source with ssl", e);
-			throw new RuntimeException(e);
-		} catch (NoSuchAlgorithmException e) {
-			logger.log(Level.SEVERE,"Problem creating content source with ssl", e);
+		} catch (KeyManagementException | NoSuchAlgorithmException e) {
+			LOG.log(Level.SEVERE,"Problem creating content source with ssl", e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -371,6 +370,7 @@ public class ModuleExecutor {
 	protected static SecurityOptions newTrustAnyoneOptions()
 			throws KeyManagementException, NoSuchAlgorithmException {
 		TrustManager[] trust = new TrustManager[] { new X509TrustManager() {
+            @Override
 			public X509Certificate[] getAcceptedIssuers() {
 				return new X509Certificate[0];
 			}
@@ -378,6 +378,7 @@ public class ModuleExecutor {
 			/**
 			 * @throws CertificateException
 			 */
+            @Override
 			public void checkClientTrusted(X509Certificate[] certs,
 					String authType) throws CertificateException {
 				// no exception means it's okay
@@ -386,6 +387,7 @@ public class ModuleExecutor {
 			/**
 			 * @throws CertificateException
 			 */
+            @Override
 			public void checkServerTrusted(X509Certificate[] certs,
 					String authType) throws CertificateException {
 				// no exception means it's okay
@@ -424,14 +426,14 @@ public class ModuleExecutor {
 				options.setXDBC_ROOT(item.asString());
 			}
 		}
-		logger.info("Configured modules db: " + options.getModulesDatabase());
-		logger.info("Configured modules root: " + options.getModuleRoot());
-		logger.info("Configured process module: " + options.getProcessModule());
-		logger.info("Configured process task: " + options.getProcessTaskClass());
+		LOG.log(Level.INFO, "Configured modules db: {0}", options.getModulesDatabase());
+		LOG.log(Level.INFO, "Configured modules root: {0}", options.getModuleRoot());
+		LOG.log(Level.INFO, "Configured process module: {0}", options.getProcessModule());
+		LOG.log(Level.INFO, "Configured process task: {0}", options.getProcessTaskClass());
 
 		for (Entry<Object, Object> e : properties.entrySet()) {
 			if (e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
-				logger.info("Loaded property " + e.getKey() + "=" + e.getValue());
+				LOG.log(Level.INFO, "Loaded property {0}={1}", new Object[]{e.getKey(), e.getValue()});
 			}
 		}
 	}
@@ -447,7 +449,7 @@ public class ModuleExecutor {
 				options.getUrisModule(), options.getProcessModule(),
 				options.getPreBatchModule(), options.getPostBatchModule() };
 		String modulesDatabase = options.getModulesDatabase();
-		logger.info("checking modules, database: " + modulesDatabase);
+		LOG.log(Level.INFO, "checking modules, database: {0}", modulesDatabase);
 		Session session = contentSource.newSession(modulesDatabase);
 		InputStream is = null;
 		Content c = null;
@@ -459,13 +461,13 @@ public class ModuleExecutor {
                 }
 				// Start by checking install flag.
 				if (!options.isDoInstall()) {
-					logger.info("Skipping module installation: "+ resourceModule);
+					LOG.log(Level.INFO, "Skipping module installation: {0}", resourceModule);
 					continue;
 				}
 				// Next check: if XCC is configured for the filesystem, warn
 				// user
 				else if (options.getModulesDatabase().equals("")) {
-					logger.warning("XCC configured for the filesystem: please install modules manually");
+					LOG.warning("XCC configured for the filesystem: please install modules manually");
 					return;
 				}
 				// Finally, if it's configured for a database, install.
@@ -479,7 +481,7 @@ public class ModuleExecutor {
 					}
 					// finally, check package
 					else {
-						logger.warning("looking for " + resourceModule + " as resource");
+						LOG.log(Level.WARNING, "looking for {0} as resource", resourceModule);
 						String moduleUri = options.getModuleRoot()  + resourceModule;
 						is = this.getClass().getResourceAsStream(
 								resourceModule);
@@ -493,11 +495,8 @@ public class ModuleExecutor {
 					session.insertContent(c);
 				}
 			}
-		} catch (IOException e) {
-			logger.log(Level.SEVERE,"fatal error", e);
-			throw new RuntimeException(e);
-		} catch (RequestException e) {
-			logger.log(Level.SEVERE,"fatal error", e);
+		} catch (IOException | RequestException e) {
+			LOG.log(Level.SEVERE,"fatal error", e);
 			throw new RuntimeException(e);
 		} finally {
 			session.close();
@@ -505,7 +504,7 @@ public class ModuleExecutor {
 				try {
 					is.close();
 				} catch (IOException ioe) {
-					logger.log(Level.SEVERE,"Couldn't close the stream", ioe);
+					LOG.log(Level.SEVERE,"Couldn't close the stream", ioe);
 				}
 			}
 		}
@@ -521,8 +520,9 @@ public class ModuleExecutor {
 
 	private void writeToFile(ResultSequence seq) throws IOException,
 			CorbException {
-		if (seq == null || !seq.hasNext())
-			return;
+		if (seq == null || !seq.hasNext()) {
+            return;
+        }
 		BufferedOutputStream writer = null;
 		try {
 			String fileName = (String) this.properties.get("EXPORT-FILE-NAME");
