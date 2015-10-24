@@ -39,391 +39,387 @@ import java.util.Iterator;
 /**
  * @author mike.blakeley@marklogic.com
  * @author Bhagat Bandlamudi, MarkLogic Corporation
- *
+ * 
  */
 public final class Utilities {
-    
-    private static final DateFormat m_ISO8601Local = new SimpleDateFormat(
-            "yyyy-MM-dd'T'HH:mm:ssZ");
 
-    private static final int BUFFER_SIZE = 32 * 1024;
-    
-    private Utilities() {}
-    
-    /**
-     *
-     * @param date
-     * @return
-     * @throws ParseException
-     */
-    public static Date parseDateTime(String date) throws ParseException {
-        synchronized (m_ISO8601Local) {
-            return m_ISO8601Local.parse(date.replaceFirst(":(\\d\\d)$", "$1"));
-        }
-    }
+	private static final DateFormat m_ISO8601Local = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
-    /**
-     *
-     * @return
-     */
-    public static String formatDateTime() {
-        return formatDateTime(new Date());
-    }
+	private static final int BUFFER_SIZE = 32 * 1024;
 
-    /**
-     *
-     * @param date
-     * @return
-     */
-    public static String formatDateTime(Date date) {
-        if (date == null) {
-            return formatDateTime(new Date());
-        }
-        // format in (almost) ISO8601 format
-        String dateStr = null;
-        synchronized (m_ISO8601Local) {
-            dateStr = m_ISO8601Local.format(date);
-        }
+	private Utilities() {
+	}
 
-        // remap the timezone from 0000 to 00:00 (starts at char 22)
-        return dateStr.substring(0, 22) + ":" + dateStr.substring(22);
-    }
+	/**
+	 * 
+	 * @param date
+	 * @return
+	 * @throws ParseException
+	 */
+	public static Date parseDateTime(String date) throws ParseException {
+		synchronized (m_ISO8601Local) {
+			return m_ISO8601Local.parse(date.replaceFirst(":(\\d\\d)$", "$1"));
+		}
+	}
 
-    /**
-     * @param path
-     * @return
-     */
-    public static String getPathExtension(String path) {
-        return path.replaceFirst(".*\\.([^\\.]+)$", "$1");
-    }
+	/**
+	 * 
+	 * @return
+	 */
+	public static String formatDateTime() {
+		return formatDateTime(new Date());
+	}
 
-    /**
-     * Joins items of the provided collection into a single String using the delimiter specified.
-     * @param items
-     * @param delimiter
-     * @return
-     */
-    public static String join(Collection<?> items, String delimiter) {
-        if (items == null) {
-            return null;
-        }
-        StringBuilder joinedValues = new StringBuilder();
-        Iterator<?> iterator = items.iterator();
-        if (iterator.hasNext()){
-            joinedValues.append(iterator.next().toString());
-        }
-        while (iterator.hasNext()) {
-            joinedValues.append(delimiter);
-            joinedValues.append(iterator.next().toString());
-        }
-        return joinedValues.toString();
-    }
-    
-    /**
-     * Joins items of the provided Array of Objects into a single String using the delimiter specified.
-     * @param items
-     * @param delimiter
-     * @return 
-     */
-    public static String join(Object[] items, String delimiter){
-        return join(Arrays.asList(items), delimiter);
-    }
-    
-    /**
-     * Replace all occurrences of the following characters [&, <, >] with their corresponding entities.
-     * @param str
-     * @return
-     */
-    public static String escapeXml(String str) {
-        if (str == null) {
-            return "";
-        }
-        return str.replaceAll("&", "&amp;")
-                .replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;");
-    }
+	/**
+	 * 
+	 * @param date
+	 * @return
+	 */
+	public static String formatDateTime(Date date) {
+		if (date == null) {
+			return formatDateTime(new Date());
+		}
+		// format in (almost) ISO8601 format
+		String dateStr = null;
+		synchronized (m_ISO8601Local) {
+			dateStr = m_ISO8601Local.format(date);
+		}
 
-    /**
-     *
-     * @param inputStream
-     * @param outputStream
-     * @return
-     * @throws IOException
-     */
-    public static long copy(InputStream inputStream, OutputStream outputStream)
-            throws IOException {
-        if (inputStream == null) {
-            throw new IOException("null InputStream");
-        }
-        if (outputStream == null) {
-            throw new IOException("null OutputStream");
-        }
-        long totalBytes = 0;
-        int len = 0;
-        byte[] buf = new byte[BUFFER_SIZE];
-        int available = inputStream.available();
-        // System.err.println("DEBUG: " + _in + ": available " + available);
-        while ((len = inputStream.read(buf, 0, BUFFER_SIZE)) > -1) {
-            outputStream.write(buf, 0, len);
-            totalBytes += len;
-            // System.err.println("DEBUG: " + _out + ": wrote " + len);
-        }
-        // System.err.println("DEBUG: " + _in + ": last read " + len);
+		// remap the timezone from 0000 to 00:00 (starts at char 22)
+		return dateStr.substring(0, 22) + ":" + dateStr.substring(22);
+	}
 
-        // caller MUST close the stream for us
-        outputStream.flush();
+	/**
+	 * @param path
+	 * @return
+	 */
+	public static String getPathExtension(String path) {
+		return path.replaceFirst(".*\\.([^\\.]+)$", "$1");
+	}
 
-        // check to see if we copied enough data
-        if (available > totalBytes) {
-            throw new IOException("expected at least " + available
-                    + " Bytes, copied only " + totalBytes);
-        }
-        return totalBytes;
-    }
+	/**
+	 * Joins items of the provided collection into a single String using the
+	 * delimiter specified.
+	 * 
+	 * @param items
+	 * @param delimiter
+	 * @return
+	 */
+	public static String join(Collection<?> items, String delimiter) {
+		if (items == null) {
+			return null;
+		}
+		StringBuilder joinedValues = new StringBuilder();
+		Iterator<?> iterator = items.iterator();
+		if (iterator.hasNext()) {
+			joinedValues.append(iterator.next().toString());
+		}
+		while (iterator.hasNext()) {
+			joinedValues.append(delimiter);
+			joinedValues.append(iterator.next().toString());
+		}
+		return joinedValues.toString();
+	}
 
-    /**
-     * @param source
-     * @param destination
-     * @throws IOException
-     */
-    public static void copy(File source, File destination) throws IOException {
-        InputStream inputStream = new FileInputStream(source);
-        OutputStream outputStream = new FileOutputStream(destination);
-        copy(inputStream, outputStream);
-    }
+	/**
+	 * Joins items of the provided Array of Objects into a single String using the
+	 * delimiter specified.
+	 * 
+	 * @param items
+	 * @param delimiter
+	 * @return
+	 */
+	public static String join(Object[] items, String delimiter) {
+		return join(Arrays.asList(items), delimiter);
+	}
 
-    /**
-     *
-     * @param source
-     * @param destination
-     * @return
-     * @throws IOException
-     */
-    public static long copy(Reader source, OutputStream destination) throws IOException {
-        if (source == null) {
-            throw new IOException("null InputStream");
-        }
-        if (destination == null) {
-            throw new IOException("null OutputStream");
-        }
-        long totalBytes = 0;
-        int len = 0;
-        char[] buf = new char[BUFFER_SIZE];
-        byte[] bite = null;
-        while ((len = source.read(buf)) > -1) {
-            bite = new String(buf).getBytes();
-            // len? different for char vs byte?
-            // code is broken if I use bite.length, though
-            destination.write(bite, 0, len);
-            totalBytes += len;
-        }
+	/**
+	 * Replace all occurrences of the following characters [&, <, >] with their
+	 * corresponding entities.
+	 * 
+	 * @param str
+	 * @return
+	 */
+	public static String escapeXml(String str) {
+		if (str == null) {
+			return "";
+		}
+		return str.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+	}
 
-        // caller MUST close the stream for us
-        destination.flush();
+	/**
+	 * 
+	 * @param inputStream
+	 * @param outputStream
+	 * @return
+	 * @throws IOException
+	 */
+	public static long copy(InputStream inputStream, OutputStream outputStream) throws IOException {
+		if (inputStream == null) {
+			throw new IOException("null InputStream");
+		}
+		if (outputStream == null) {
+			throw new IOException("null OutputStream");
+		}
+		long totalBytes = 0;
+		int len = 0;
+		byte[] buf = new byte[BUFFER_SIZE];
+		int available = inputStream.available();
+		// System.err.println("DEBUG: " + _in + ": available " + available);
+		while ((len = inputStream.read(buf, 0, BUFFER_SIZE)) > -1) {
+			outputStream.write(buf, 0, len);
+			totalBytes += len;
+			// System.err.println("DEBUG: " + _out + ": wrote " + len);
+		}
+		// System.err.println("DEBUG: " + _in + ": last read " + len);
 
-        // check to see if we copied enough data
-        if (1 > totalBytes) {
-            throw new IOException("expected at least " + 1
-                    + " Bytes, copied only " + totalBytes);
-        }
-        return totalBytes;
-    }
+		// caller MUST close the stream for us
+		outputStream.flush();
 
-    /**
-     * @param sourceFilePath
-     * @param destinationFilePath
-     * @throws IOException
-     * @throws FileNotFoundException
-     */
-    public static void copy(String sourceFilePath, String destinationFilePath)
-            throws FileNotFoundException, IOException {
-        copy(new FileInputStream(sourceFilePath), new FileOutputStream(destinationFilePath));
-    }
+		// check to see if we copied enough data
+		if (available > totalBytes) {
+			throw new IOException("expected at least " + available + " Bytes, copied only " + totalBytes);
+		}
+		return totalBytes;
+	}
 
-    /**
-     *
-     * @param file
-     * @throws IOException
-     */
-    public static void deleteFile(File file) throws IOException {
-        if (!file.exists()) {
-            return;
-        }
-        boolean success;
+	/**
+	 * @param source
+	 * @param destination
+	 * @throws IOException
+	 */
+	public static void copy(File source, File destination) throws IOException {
+		InputStream inputStream = new FileInputStream(source);
+		OutputStream outputStream = new FileOutputStream(destination);
+		copy(inputStream, outputStream);
+	}
 
-        if (!file.isDirectory()) {
-            success = file.delete();
-            if (!success) {
-                throw new IOException("error deleting "
-                        + file.getCanonicalPath());
-            }
-            return;
-        }
+	/**
+	 * 
+	 * @param source
+	 * @param destination
+	 * @return
+	 * @throws IOException
+	 */
+	public static long copy(Reader source, OutputStream destination) throws IOException {
+		if (source == null) {
+			throw new IOException("null InputStream");
+		}
+		if (destination == null) {
+			throw new IOException("null OutputStream");
+		}
+		long totalBytes = 0;
+		int len = 0;
+		char[] buf = new char[BUFFER_SIZE];
+		byte[] bite = null;
+		while ((len = source.read(buf)) > -1) {
+			bite = new String(buf).getBytes();
+			// len? different for char vs byte?
+			// code is broken if I use bite.length, though
+			destination.write(bite, 0, len);
+			totalBytes += len;
+		}
 
-        // directory, so recurse
-        File[] children = file.listFiles();
-        if (children != null) {
-            for (File children1 : children) {
-                // recurse
-                deleteFile(children1);
-            }
-        }
+		// caller MUST close the stream for us
+		destination.flush();
 
-        // now this directory should be empty
-        if (file.exists()) {
-            file.delete();
-        }
-    }
+		// check to see if we copied enough data
+		if (1 > totalBytes) {
+			throw new IOException("expected at least " + 1 + " Bytes, copied only " + totalBytes);
+		}
+		return totalBytes;
+	}
 
-    /**
-     *
-     * @param str
-     * @return
-     */
-    public static final boolean stringToBoolean(String str) {
-        // let the caller decide: should an unset string be true or false?
-        return stringToBoolean(str, false);
-    }
+	/**
+	 * @param sourceFilePath
+	 * @param destinationFilePath
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 */
+	public static void copy(String sourceFilePath, String destinationFilePath) throws FileNotFoundException, IOException {
+		copy(new FileInputStream(sourceFilePath), new FileOutputStream(destinationFilePath));
+	}
 
-    /**
-     *
-     * @param str
-     * @param defaultValue
-     * @return
-     */
-    public static final boolean stringToBoolean(String str, boolean defaultValue) {
-        if (str == null) {
-            return defaultValue;
-        }
-        String lcStr = str.toLowerCase();
-        return !(str.equals("") || str.equals("0") || lcStr.equals("f")
-                || lcStr.equals("false") || lcStr.equals("n")
-                || lcStr.equals("no"));
-    }
+	/**
+	 * 
+	 * @param file
+	 * @throws IOException
+	 */
+	public static void deleteFile(File file) throws IOException {
+		if (!file.exists()) {
+			return;
+		}
+		boolean success;
 
-    /**
-     * @param path
-     * @throws IOException
-     */
-    public static void deleteFile(String path) throws IOException {
-        deleteFile(new File(path));
-    }
+		if (!file.isDirectory()) {
+			success = file.delete();
+			if (!success) {
+				throw new IOException("error deleting " + file.getCanonicalPath());
+			}
+			return;
+		}
 
-    /**
-     *
-     * @param clazz
-     * @return
-     */
-    public static String buildModulePath(Class<?> clazz) {
-        return "/" + clazz.getName().replace('.', '/') + ".xqy";
-    }
+		// directory, so recurse
+		File[] children = file.listFiles();
+		if (children != null) {
+			for (File children1 : children) {
+				// recurse
+				deleteFile(children1);
+			}
+		}
 
-    /**
-     *
-     * @param modulePackage
-     * @param name
-     * @return
-     */
-    public static String buildModulePath(Package modulePackage, String name) {
-        return "/" + modulePackage.getName().replace('.', '/') + "/" + name
-                + (name.endsWith(".xqy") ? "" : ".xqy");
-    }
+		// now this directory should be empty
+		if (file.exists()) {
+			file.delete();
+		}
+	}
 
-    /**
-     * @param r
-     * @return
-     * @throws IOException
-     */
-    public static String cat(Reader r) throws IOException {
-        StringBuilder rv = new StringBuilder();
+	/**
+	 * 
+	 * @param str
+	 * @return
+	 */
+	public static final boolean stringToBoolean(String str) {
+		// let the caller decide: should an unset string be true or false?
+		return stringToBoolean(str, false);
+	}
 
-        int size;
-        char[] buf = new char[BUFFER_SIZE];
-        while ((size = r.read(buf)) > 0) {
-            rv.append(buf, 0, size);
-        }
-        return rv.toString();
-    }
+	/**
+	 * 
+	 * @param str
+	 * @param defaultValue
+	 * @return
+	 */
+	public static final boolean stringToBoolean(String str, boolean defaultValue) {
+		if (str == null) {
+			return defaultValue;
+		}
+		String lcStr = str.toLowerCase();
+		return !(str.equals("") || str.equals("0") || lcStr.equals("f") || lcStr.equals("false") || lcStr.equals("n") || lcStr
+				.equals("no"));
+	}
 
-    /**
-     * @param is
-     * @return
-     * @throws IOException
-     */
-    public static byte[] cat(InputStream is) throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream(BUFFER_SIZE);
-        copy(is, bos);
-        return bos.toByteArray();
-    }
+	/**
+	 * @param path
+	 * @throws IOException
+	 */
+	public static void deleteFile(String path) throws IOException {
+		deleteFile(new File(path));
+	}
 
-    /**
-     *
-     * @param is
-     * @return
-     * @throws IOException
-     */
-    public static long getSize(InputStream is) throws IOException {
-        long size = 0;
-        int b = 0;
-        byte[] buf = new byte[BUFFER_SIZE];
-        while ((b = is.read(buf)) > 0) {
-            size += b;
-        }
-        return size;
-    }
+	/**
+	 * 
+	 * @param clazz
+	 * @return
+	 */
+	public static String buildModulePath(Class<?> clazz) {
+		return "/" + clazz.getName().replace('.', '/') + ".xqy";
+	}
 
-    /**
-     *
-     * @param r
-     * @return
-     * @throws IOException
-     */
-    public static long getSize(Reader r) throws IOException {
-        long size = 0;
-        int b = 0;
-        char[] buf = new char[BUFFER_SIZE];
-        while ((b = r.read(buf)) > 0) {
-            size += b;
-        }
-        return size;
-    }
+	/**
+	 * 
+	 * @param modulePackage
+	 * @param name
+	 * @return
+	 */
+	public static String buildModulePath(Package modulePackage, String name) {
+		return "/" + modulePackage.getName().replace('.', '/') + "/" + name + (name.endsWith(".xqy") ? "" : ".xqy");
+	}
 
-    /**
-     * @param contentFile
-     * @return
-     * @throws IOException
-     */
-    public static byte[] getBytes(File contentFile) throws IOException {
-        try (InputStream is = new FileInputStream(contentFile)) {
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
-            byte[] buf = new byte[BUFFER_SIZE];
-            int read;
+	/**
+	 * @param r
+	 * @return
+	 * @throws IOException
+	 */
+	public static String cat(Reader r) throws IOException {
+		StringBuilder rv = new StringBuilder();
 
-            while ((read = is.read(buf)) > 0) {
-                os.write(buf, 0, read);
-            }
-            return os.toByteArray();
-        }
-    }
+		int size;
+		char[] buf = new char[BUFFER_SIZE];
+		while ((size = r.read(buf)) > 0) {
+			rv.append(buf, 0, size);
+		}
+		return rv.toString();
+	}
 
-    /**
-     * @param value
-     * @param encoding
-     * @return
-     * @throws UnsupportedEncodingException
-     */
-    public static String dumpHex(String value, String encoding)
-            throws UnsupportedEncodingException {
-        StringBuilder sb = new StringBuilder();
-        byte[] bytes = value.getBytes(encoding);
-        for (int i = 0; i < bytes.length; i++) {
-            // bytes are signed: we want unsigned values
-            sb.append(Integer.toHexString(bytes[i] & 0xff));
-            if (i < bytes.length - 1) {
-                sb.append(' ');
-            }
-        }
-        return sb.toString();
-    }
+	/**
+	 * @param is
+	 * @return
+	 * @throws IOException
+	 */
+	public static byte[] cat(InputStream is) throws IOException {
+		ByteArrayOutputStream bos = new ByteArrayOutputStream(BUFFER_SIZE);
+		copy(is, bos);
+		return bos.toByteArray();
+	}
+
+	/**
+	 * 
+	 * @param is
+	 * @return
+	 * @throws IOException
+	 */
+	public static long getSize(InputStream is) throws IOException {
+		long size = 0;
+		int b = 0;
+		byte[] buf = new byte[BUFFER_SIZE];
+		while ((b = is.read(buf)) > 0) {
+			size += b;
+		}
+		return size;
+	}
+
+	/**
+	 * 
+	 * @param r
+	 * @return
+	 * @throws IOException
+	 */
+	public static long getSize(Reader r) throws IOException {
+		long size = 0;
+		int b = 0;
+		char[] buf = new char[BUFFER_SIZE];
+		while ((b = r.read(buf)) > 0) {
+			size += b;
+		}
+		return size;
+	}
+
+	/**
+	 * @param contentFile
+	 * @return
+	 * @throws IOException
+	 */
+	public static byte[] getBytes(File contentFile) throws IOException {
+		try (InputStream is = new FileInputStream(contentFile)) {
+			ByteArrayOutputStream os = new ByteArrayOutputStream();
+			byte[] buf = new byte[BUFFER_SIZE];
+			int read;
+
+			while ((read = is.read(buf)) > 0) {
+				os.write(buf, 0, read);
+			}
+			return os.toByteArray();
+		}
+	}
+
+	/**
+	 * @param value
+	 * @param encoding
+	 * @return
+	 * @throws UnsupportedEncodingException
+	 */
+	public static String dumpHex(String value, String encoding) throws UnsupportedEncodingException {
+		StringBuilder sb = new StringBuilder();
+		byte[] bytes = value.getBytes(encoding);
+		for (int i = 0; i < bytes.length; i++) {
+			// bytes are signed: we want unsigned values
+			sb.append(Integer.toHexString(bytes[i] & 0xff));
+			if (i < bytes.length - 1) {
+				sb.append(' ');
+			}
+		}
+		return sb.toString();
+	}
 
 }

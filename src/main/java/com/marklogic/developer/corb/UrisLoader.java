@@ -6,23 +6,23 @@ import com.marklogic.xcc.ContentSource;
 
 public interface UrisLoader {
 
-    public void setOptions(TransformOptions options);
+	public void setOptions(TransformOptions options);
 
-    public void setContentSource(ContentSource cs);
+	public void setContentSource(ContentSource cs);
 
-    public void setCollection(String collection);
+	public void setCollection(String collection);
 
-    public void setProperties(Properties properties);
+	public void setProperties(Properties properties);
 
-    public void open() throws CorbException;
+	public void open() throws CorbException;
 
-    public String getBatchRef();
+	public String getBatchRef();
 
-    public int getTotalCount();
+	public int getTotalCount();
 
-    public boolean hasNext() throws CorbException;
+	public boolean hasNext() throws CorbException;
 
-    public String next() throws CorbException;
+	public String next() throws CorbException;
 
-    public void close();
+	public void close();
 }

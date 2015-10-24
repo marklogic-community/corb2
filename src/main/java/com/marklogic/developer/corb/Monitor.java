@@ -95,19 +95,23 @@ public class Monitor implements Runnable {
 				// record result, or throw exception
 				lastUris = future.get();
 				completed = completed + lastUris.length;
-				LOG.log(Level.FINE, "completed uris: {0}", Arrays.toString(lastUris));
+				if(LOG.getLevel().intValue() <= Level.FINE.intValue()){
+					LOG.log(Level.FINE, "completed uris: {0}", Arrays.toString(lastUris));
+				}
 			}
-
-			long active = pool.getActiveCount();
 
 			showProgress();
 
 			if (completed >= taskCount) {
+				if(pool.getActiveCount() > 0 || (pool.getTaskCount() - pool.getCompletedTaskCount()) > 0){
+					LOG.log(Level.SEVERE, "Thread pool is still active with all the tasks completed and received. We shouldn't see this message.");
+				}
 				break;
-			} else if (active == 0) {
+			} else if (pool.getActiveCount() == 0) {
 				LOG.log(Level.WARNING, "No active tasks found with {0} tasks remains to be completed", (taskCount - completed));
-				if (pool.isTerminated())
+				if (pool.isTerminated()){
 					break;
+				}
 			}
 		}
 		LOG.info("waiting for pool to terminate");
@@ -121,14 +125,14 @@ public class Monitor implements Runnable {
 			LOG.log(Level.INFO, "completed {0}", getProgressMessage(completed));
 			lastProgress = current;
 
-            // check for low memory
-            long freeMemory = Runtime.getRuntime().freeMemory();
-            if (freeMemory < (16 * 1024 * 1024)) {
-                LOG.log(Level.WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
-            }
-        }
-        return lastProgress;
+      // check for low memory
+      long freeMemory = Runtime.getRuntime().freeMemory();
+      if (freeMemory < (16 * 1024 * 1024)) {
+          LOG.log(Level.WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
+      }
     }
+    return lastProgress;
+  }
 
 	/**
 	 * @param count
@@ -159,8 +163,7 @@ public class Monitor implements Runnable {
 		prevMillis = curMillis;
 		long ets = (tps != 0) ? (taskCount - completed) / tps : -1;
 		String etc = pad0((ets / 3600)) + ":" + pad0((ets % 3600) / 60) + ":" + pad0(ets % 60);
-		return completed + "/" + taskCount + ", " + tps + " tps(avg), " + curTps + " tps(cur), ETC " + etc + ", "
-				+ pool.getActiveCount() + " active threads.";
+		return completed + "/" + taskCount + ", " + tps + " tps(avg), " + curTps + " tps(cur), ETC " + etc + ", "+ pool.getActiveCount() + " active threads.";
 	}
 
 	private String pad0(long time) {
