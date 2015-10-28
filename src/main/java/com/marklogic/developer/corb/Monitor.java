@@ -95,9 +95,7 @@ public class Monitor implements Runnable {
 				// record result, or throw exception
 				lastUris = future.get();
 				completed = completed + lastUris.length;
-				if(LOG.getLevel().intValue() <= Level.FINE.intValue()){
-					LOG.log(Level.FINE, "completed uris: {0}", Arrays.toString(lastUris));
-				}
+				LOG.log(Level.FINE, "completed uris: {0}", Arrays.toString(lastUris));
 			}
 
 			showProgress();
