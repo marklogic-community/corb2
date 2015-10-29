@@ -57,6 +57,10 @@ Corb needs one or more of the following parameters as (If specified in more than
   `URIS-REPLACE-PATTERN=/com/marklogic/sample/,,.xml,`  (Replace /com/marklogic/sample/ and .xml with empty strings. So, Corb client only need to cache the id '1234' instead of the entire URI /com/marklogic/sample/1234.xml. In the transform XQUERY-MODULE, we need to do `let $URI := fn:concat("/com/marklogic/sample/",$URI,".xml"))`
 * **XCC-CONNECTION-RETRY-LIMIT** (Number attempts to connect to ML before giving up - default is 3)
 * **XCC-CONNECTION-RETRY-INTERVAL** (in seconds - Time interval in seconds between retry attempts - default is 60)
+* **BATCH-SIZE** (default is 1. Number of uris to be executed in single transform. Tranform module will receive a delimited string as URI variable and which needs to be tokenized to get individual uris. Default delimiter is ';' which can be overwritten with the option BATCH-URI-DELIM below)  
+* **BATCH-URI-DELIM** (Optional i.e., if default delimiter ';' cannot be used. Used for BATCH-SIZE greater than 1. Transform modules needs to use this delimiter value to tokenize the URI to get individual uris.)   
+* **FAIL-ON-ERROR** (Default is true. If false, corb job will not fail and exit if the transform module throws xquery error after the first URI is successfully run. This option will not handle repeated connection failures)  
+* **ERROR-FILE-NAME** (Optional. Used when FAIL-ON-ERROR is false. If specified, the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default ';' to seperate URI and error message)  
 
 ### Alternate XCC connection configuration
 * **XCC-USERNAME** (Required if XCC-CONNECTION-URI is not specified)
