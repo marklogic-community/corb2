@@ -297,6 +297,11 @@ public abstract class AbstractTask implements Task {
 		String errorFileName = getProperty("ERROR-FILE-NAME");
 		if(errorFileName == null || errorFileName.length() == 0) return;
 		
+		String delim = getProperty("BATCH-URI-DELIM");
+		if (delim == null || delim.length() == 0) {
+			delim = Manager.DEFAULT_BATCH_URI_DELIM;
+		}
+		
 		synchronized(ERROR_SYNC_OBJ){
 			BufferedOutputStream writer = null;
 			try{
@@ -304,7 +309,7 @@ public abstract class AbstractTask implements Task {
 				for (int i=0; i< uris.length;i++) {
             writer.write(uris[i].getBytes());
             if(message != null && message.length() > 0){
-            	writer.write(',');
+            	writer.write(delim.getBytes());
             	writer.write(message.getBytes());
             }
             writer.write(NEWLINE);
