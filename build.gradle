@@ -4,17 +4,31 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: "jacoco"
 
+
 sourceCompatibility = "1.7"
 targetCompatibility = "1.7"
 
 repositories {
+    
     maven {url "http://developer.marklogic.com/maven2/"}
     mavenCentral()
+    flatDir {
+      dirs 'src\\test\\resources\\'
+    }
 }
 
 dependencies {
     compile "com.marklogic:marklogic-xcc:8.0.1"
-    testCompile 'junit:junit:4.12' 
+    // if you want to compile without testing comment out the line below
+    testCompile group: 'junit', name: 'junit', version: '4+'
+    testCompile "org.jasypt:jasypt:1.9.2"
+}
+
+test {
+     testLogging {
+       events 'started','passed'
+     }
+     
 }
 
 publishing {

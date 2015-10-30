@@ -1,0 +1,1 @@
+"This is from the POST-BATCH-MODULE using the POST-XQUERY-MODULE."
