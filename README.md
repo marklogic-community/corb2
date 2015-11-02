@@ -6,12 +6,12 @@ This document provides a comprehensive overview of CoRB2.  For additional inform
 ### Downloads
 Please download latest release from https://github.com/marklogic/corb2/releases.  
 
-For backwards compatibility with marklogic server, Corb releases upto v2.1.* are built using marklogic xcc v6.0.2. However, a later version of corb can be used for running the Corb. Please note that xcc v8.0.* is required to communicate with Marklogic 8 server. Also, please use java 1.7 or later for running corb.
+Corb v2.1.3 or later requires marklogic-xcc-8.0.*.jar or later to run. Please note that xcc 8 is backwards compatible up to MarkLogic 5. Also, please use java 1.7 or later for running corb.
 
-To build corb using ant, please specify java.library.user folder in the build.properties file and place marklogic-xcc-6.0.2.jar in this folder. Please update build.xml for building corb with a later version of xcc jar.   
+To build corb using ant, please specify java.library.user folder in the build.properties file and place marklogic-xcc-8.0.3.jar in this folder. Please update build.xml for building corb with a later version of xcc jar.   
 
 ### Running Corb
-The entry point is the main method in the com.marklogic.developer.corb.Manager class. Corb requires marklogic xcc jar in the classpath, preferably the version that corresponds to marklogic server version, which can be downloaded from https://developer.marklogic.com/products/xcc (corb releases are tested with xcc versions 6.0, 7.0 and 8.0). Requires java 1.7 or later.
+The entry point is the main method in the com.marklogic.developer.corb.Manager class. Corb requires marklogic xcc jar in the classpath, preferably the version that corresponds to marklogic server version, which can be downloaded from https://developer.marklogic.com/products/xcc (corb 2.1.3 is tested with xcc 8.0.* talking to Marklogic 7 and 8). Requires java 1.7 or later.
 
 Corb needs one or more of the following parameters as (If specified in more than one place command line parameter takes precedence over java system property which take precedence over myjob.properties)
 
@@ -39,7 +39,7 @@ Corb needs one or more of the following parameters as (If specified in more than
   * `com.marklogic.developer.corb.PreBatchUpdateFileTask` (included - Writes the data returned by the PRE-BATCH-MODULE to EXPORT-FILE-NAME, which can particularly be used to to write dynamic headers for CSV output. Also, if EXPORT-FILE-TOP-CONTENT is specified, this task will write this value to the EXPORT-FILE-NAME - this option is especially useful for writing fixed headers to reports. If EXPORT-FILE-NAME is not specified, CoRB uses URIS\_BATCH\_REF returned by URIS-MODULE as the file name.)
 * **POST-BATCH-MODULE** (An XQuery or JavaScript module which, if specified, will be run after batch processing is completed. XQuery and JavaScript modules need to have .xqy and .sjs extensions respectively.)
 * **POST-BATCH-TASK** (Java Class that implements `com.marklogic.developer.corb.Task` or extends `com.marklogic.developer.corb.AbstractTask`. If POST-BATCH-MODULE is also specified, the implementation is expected to invoke the XQuery and process the result if any. It can also be specified without POST-BATCH-MODULE and an example of this is to add static content to the bottom of the report.)   
-  `com.marklogic.developer.corb.PostBatchUpdateFileTask` (included - Writes the data returned by the POST-BATCH-MODULE to EXPORT-FILE-NAME. Also, if EXPORT-FILE-BOTTOM-CONTENT is specified, this task will write this value to the EXPORT-FILE-NAME. If EXPORT-FILE-NAME is not specified, CoRB uses URIS\_BATCH\_REF returned by URIS-MODULE as the file name.)
+  * `com.marklogic.developer.corb.PostBatchUpdateFileTask` (included - Writes the data returned by the POST-BATCH-MODULE to EXPORT-FILE-NAME. Also, if EXPORT-FILE-BOTTOM-CONTENT is specified, this task will write this value to the EXPORT-FILE-NAME. If EXPORT-FILE-NAME is not specified, CoRB uses URIS\_BATCH\_REF returned by URIS-MODULE as the file name.)
 * **EXPORT-FILE-DIR** (Export directory parameter is used by `com.marklogic.developer.corb.ExportBatchToFileTask` or similar custom task implementations. Optional: Alternatively, EXPORT-FILE-NAME can be specified with a full path)
 * **EXPORT-FILE-NAME** (shared file to write output of com.marklogic.developer.corb.ExportBatchToFileTask - should be a file name with our without full path. EXPORT-FILE-DIR is not required if full path is used. If EXPORT-FILE-NAME is not specified, CoRB attempts to use URIS\_BATCH\_REF as the file name and this is especially useful in case of automated jobs where file name can only be determined by the URIS-MODULE - refer to URIS\_BATCH\_REF section below)
 * **INIT-MODULE** (An XQuery or JavaScript module which, if specified, will be invoked prior to URIS-MODULE. XQuery and JavaScript modules need to have .xqy and .sjs extensions respectively.)
@@ -50,20 +50,18 @@ Corb needs one or more of the following parameters as (If specified in more than
 * **EXPORT-FILE-TOP-CONTENT** (used by `com.marklogic.developer.corb.PreBatchUpdateFileTask` to insert content at the top of EXPORT-FILE-NAME before batch process starts. If it includes the string @URIS\_BATCH\_REF, it is replaced by the batch reference returned by URIS-MODULE)
 * **EXPORT-FILE-BOTTOM-CONTENT** (used by com.marklogic.developer.corb.PostBatchUpdateFileTask to append content to EXPORT-FILE-NAME after batch process is complete)
 * **EXPORT_FILE_AS_ZIP** (if true, PostBatchUpdateFileTask compresses the output file as a zip file)
-* **URIS-REPLACE-PATTERN** (one or more replace patterns for URIs - Used by java to truncate the length of URIs on the client side, typically to reduce java heap size in very large batch jobs, as the CoRB java client holds all the URIS in memory while processing is in progress. If truncated, XQUERY-MODULE needs to reconstruct the URI before trying to do `fn:doc()` to fetch the document.
-
-  Usage: `URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2,...)`  
-  *Example:*  
-  `URIS-REPLACE-PATTERN=/com/marklogic/sample/,,.xml,`  (Replace /com/marklogic/sample/ and .xml with empty strings. So, Corb client only need to cache the id '1234' instead of the entire URI /com/marklogic/sample/1234.xml. In the transform XQUERY-MODULE, we need to do `let $URI := fn:concat("/com/marklogic/sample/",$URI,".xml"))`
+* **URIS-REPLACE-PATTERN** (one or more replace patterns for URIs - Used by java to truncate the length of URIs on the client side, typically to reduce java heap size in very large batch jobs, as the CoRB java client holds all the URIS in memory while processing is in progress. If truncated, XQUERY-MODULE needs to reconstruct the URI before trying to do `fn:doc()` to fetch the document. Usage: `URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2,...)`  
+  **Example:** 
+  `URIS-REPLACE-PATTERN=/com/marklogic/sample/,,.xml,`  (Replace /com/marklogic/sample/ and .xml with empty strings. So, Corb client only need to cache the id '1234' instead of the entire URI /com/marklogic/sample/1234.xml. In the transform XQUERY-MODULE, we need to do `let $URI := fn:concat("/com/marklogic/sample/",$URI,".xml")`)
 * **XCC-CONNECTION-RETRY-LIMIT** (Number attempts to connect to ML before giving up - default is 3)
 * **XCC-CONNECTION-RETRY-INTERVAL** (in seconds - Time interval in seconds between retry attempts - default is 60)
 * **BATCH-SIZE** (default is 1. Number of uris to be executed in single transform. If more than 1, transform module will receive a delimited string as URI variable and which needs to be tokenized to get individual uris. Default delimiter is ';' which can be overwritten with the option BATCH-URI-DELIM below)   
-  Example Transform: 
-  `declare variable URI as xs:string exernal;  
-  `let $all-uris := fn:tokenize($URI,";")`  
-* **BATCH-URI-DELIM** (Optional i.e., if default delimiter ';' cannot be used to join multiple URIS when BATCH-SIZE is greater than 1.)   
+  **Sample code for transform:** 
+  `declare variable URI as xs:string exernal;` 
+  `let $all-uris := fn:tokenize($URI,";")`   
+* **BATCH-URI-DELIM** (Optional i.e., if default delimiter `';'` cannot be used to join multiple URIS when BATCH-SIZE is greater than 1.)   
 * **FAIL-ON-ERROR** (Default is true. If false, corb job will not fail and exit if the transform module throws xquery error after the first URI is successfully run. This option will not handle repeated connection failures)  
-* **ERROR-FILE-NAME** (Optional. Used when FAIL-ON-ERROR is false. If specified, the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default ';' to seperate URI and error message)  
+* **ERROR-FILE-NAME** (Optional. Used when FAIL-ON-ERROR is false. If specified, the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to seperate URI and error message)  
 
 ### Alternate XCC connection configuration
 * **XCC-USERNAME** (Required if XCC-CONNECTION-URI is not specified)
@@ -75,7 +73,7 @@ Corb needs one or more of the following parameters as (If specified in more than
 ### Custom Inputs to XQuery or JavaScript Modules
 Any property specified with prefix (with '.') URIS-MODULE, XQUERY-MODULE, PRE-BATCH-MODULE, POST-BATCH-MODULE, INIT-MODULE, will be set as an external variable in the corresponding XQuery module (if that variable is defined as an external string variable in XQuery module). For JavaScript modules the variables need be defined as global variables.  
 
-**Examples:**  
+**Examples:** 
 * `URIS-MODULE.maxLimit=1000` (Expects an external string variable  _maxLimit_ in URIS-MODULE XQuery or global variable for JavaScript)  
 * `XQUERY-MODULE.startDate=2015-01-01` (Expects an external string variable _startDate_ in XQUERY-MODULE XQuery or global variable for JavaScript)  
 
@@ -149,8 +147,8 @@ Encrypt the URI or password as below. It is assumed that jasypt distribution is 
 
 **jasypt.properties file**  
 ```
-jasypt.algorithm=PBEWithMD5AndTripleDES #(If not specified, default is PBEWithMD5AndTripleDES)
-jasypt.password=passphrase
+jasypt.algorithm=PBEWithMD5AndTripleDES #(If not specified, default is PBEWithMD5AndTripleDES) ^
+jasypt.password=passphrase  
 ```
 
 #### URIS\_BATCH\_REF
@@ -317,7 +315,7 @@ XQUERY-MODULE=transform.sjs
 ##### sample 13 - Adhoc JavaScript modules
 ```
 URIS-MODULE=get-uris.sjs|ADHOC  
-XQUERY-MODULE=extract.sjs|ADHOC  
+XQUERY-MODULE=extract.sjs|ADHOC 
 ```
 
 ### Run Xquery or JavaScript Tool
