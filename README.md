@@ -8,7 +8,10 @@ Please download latest release from https://github.com/marklogic/corb2/releases.
 
 Corb v2.1.3 or later requires marklogic-xcc-8.0.*.jar or later to run. Please note that xcc 8 is backwards compatible up to MarkLogic 5. Also, please use java 1.7 or later for running corb.
 
-To build corb using ant, please specify java.library.user folder in the build.properties file and place marklogic-xcc-8.0.3.jar in this folder. Please update build.xml for building corb with a later version of xcc jar.   
+To build corb using ant, please specify java.library.user folder in the build.properties file and place marklogic-xcc-8.0.3.jar in this folder. Please update build.xml for building corb with a later version of xcc jar.  
+
+Corb uses java logger. To customize logging, please specify logging configuration file using java system arg  
+`-Djava.util.logging.config.file=\path\to\logging.properties`
 
 ### Running Corb
 The entry point is the main method in the com.marklogic.developer.corb.Manager class. Corb requires marklogic xcc jar in the classpath, preferably the version that corresponds to marklogic server version, which can be downloaded from https://developer.marklogic.com/products/xcc (corb 2.1.3 is tested with xcc 8.0.* talking to Marklogic 7 and 8). Requires java 1.7 or later.
@@ -57,8 +60,10 @@ Corb needs one or more of the following parameters as (If specified in more than
 * **XCC-CONNECTION-RETRY-INTERVAL** (in seconds - Time interval in seconds between retry attempts - default is 60)
 * **BATCH-SIZE** (default is 1. Number of uris to be executed in single transform. If more than 1, transform module will receive a delimited string as URI variable and which needs to be tokenized to get individual uris. Default delimiter is ';' which can be overwritten with the option BATCH-URI-DELIM below)   
   **Sample code for transform:** 
-  `declare variable URI as xs:string exernal;` 
-  `let $all-uris := fn:tokenize($URI,";")`   
+  ```
+  declare variable URI as xs:string exernal;  
+  let $all-uris := fn:tokenize($URI,";")
+  ```  
 * **BATCH-URI-DELIM** (Optional i.e., if default delimiter `';'` cannot be used to join multiple URIS when BATCH-SIZE is greater than 1.)   
 * **FAIL-ON-ERROR** (Default is true. If false, corb job will not fail and exit if the transform module throws xquery error after the first URI is successfully run. This option will not handle repeated connection failures)  
 * **ERROR-FILE-NAME** (Optional. Used when FAIL-ON-ERROR is false. If specified, the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to seperate URI and error message)  
@@ -147,7 +152,7 @@ Encrypt the URI or password as below. It is assumed that jasypt distribution is 
 
 **jasypt.properties file**  
 ```
-jasypt.algorithm=PBEWithMD5AndTripleDES #(If not specified, default is PBEWithMD5AndTripleDES) ^
+jasypt.algorithm=PBEWithMD5AndTripleDES #(If not specified, default is PBEWithMD5AndTripleDES) 
 jasypt.password=passphrase  
 ```
 
@@ -161,37 +166,37 @@ ExportBatchToFileTask, PreBatchUpdateFileTask and PostBatchUpdateFileTask use UR
 ### Usage
 #### Usage 1 (Command line options):
 ```
-java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar ^
-        com.marklogic.developer.corb.Manager ^
-        XCC-CONNECTION-URI ^
-        [COLLECTION-NAME [XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT ^
-          [ MODULES-DATABASE [ INSTALL [ PROCESS-TASK [ PRE-BATCH-MODULE [ PRE-BATCH-TASK ^
-            [ POST-XQUERY-MODULE [ POST-BATCH-TASK [ EXPORT-FILE-DIR [ EXPORT-FILE-NAME ^
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar 
+        com.marklogic.developer.corb.Manager 
+        XCC-CONNECTION-URI 
+        [COLLECTION-NAME [XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT 
+          [ MODULES-DATABASE [ INSTALL [ PROCESS-TASK [ PRE-BATCH-MODULE [ PRE-BATCH-TASK 
+            [ POST-XQUERY-MODULE [ POST-BATCH-TASK [ EXPORT-FILE-DIR [ EXPORT-FILE-NAME 
               [ URIS-FILE ] ] ] ] ] ] ] ] ] ] ] ] ] ] ]
 ```
 
 #### Usage 2 (Java system properties specifying options):
 ```
-java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar ^
-        -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] ^
-        -DXQUERY-MODULE=module-name.xqy -DTHREAD-COUNT=10 ^
-        -DURIS-MODULE=get-uris.xqy ^
-        -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy ^
-        -D... ^
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar 
+        -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] 
+        -DXQUERY-MODULE=module-name.xqy -DTHREAD-COUNT=10 
+        -DURIS-MODULE=get-uris.xqy 
+        -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy 
+        -D... 
         com.marklogic.developer.corb.Manager
 ```
 
 #### Usage 3 (Properties file specifying options):
 ```
-java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar ^
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar 
         -DOPTIONS-FILE=myjob.properties com.marklogic.developer.corb.Manager
 ```
 > looks for myjob.properties file in classpath
 
 #### Usage 4 (Combination of properties file with java system properties and command line options):
 ```
-java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar ^
-        -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10 ^
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar 
+        -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10 
         com.marklogic.developer.corb.Manager XCC-CONNECTION-URI
 ```
 
@@ -365,25 +370,25 @@ The following are example usages from a Windows console:
 
 ##### Usage 1
 ```
-java -cp pathToXCC.jar:pathToCoRB.jar com.marklogic.developer.corb.ModuleExecutor ^ 
-        xcc://user:password@host:port/[ database ] ^
-        xqueryOrJavascriptModuleName moduleRootName modulesDatabaseName ^ 
-        com.marklogic.developer.corb.ExportBatchToFileTask ^
+java -cp pathToXCC.jar:pathToCoRB.jar com.marklogic.developer.corb.ModuleExecutor  
+        xcc://user:password@host:port/[ database ] 
+        xqueryOrJavascriptModuleName moduleRootName modulesDatabaseName  
+        com.marklogic.developer.corb.ExportBatchToFileTask 
         c:\\myPath\\to\\file\\directory myFileName
 ```         
 ##### Usage 2
 ```
-java -cp pathToXCC.jar:pathToCoRB.jar ^
-        -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] ^
-        -DXQUERY-MODULE=module-name.xqy ^
-        -DPROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask ^
-        -DXQUERY-MODULE.collectionName=myCollectionName ^
+java -cp pathToXCC.jar:pathToCoRB.jar 
+        -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] 
+        -DXQUERY-MODULE=module-name.xqy 
+        -DPROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask 
+        -DXQUERY-MODULE.collectionName=myCollectionName 
         com.marklogic.developer.corb.ModuleExecutor
 ```         
 ##### Usage 3
 ```
-java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar ^
-        -DOPTIONS-FILE=myJob.properties ^
+java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar 
+        -DOPTIONS-FILE=myJob.properties 
         com.marklogic.developer.corb.ModuleExecutor
 ```
 Where myJob.properties has:
@@ -399,7 +404,7 @@ XCC-CONNECTION-URI=ENC(fslfuoifsdofjjwfckmeflkjlj377239843u)
 ```
 ##### Usage 4
 ```
-java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar ^
-        -DOPTIONS-FILE=myJob.properties ^
+java -cp pathToXCC.jar:pathToCoRB.jar:pathToJasypt.jar 
+        -DOPTIONS-FILE=myJob.properties 
         com.marklogic.developer.corb.ModuleExecutor ENC(fslfuoifsdofjjwfckmeflkjlj377239843u)
 ```
