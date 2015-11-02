@@ -466,7 +466,7 @@ public class Manager{
 			LOG.info("all done");
 			return count;
 		} catch (Exception e) {
-			LOG.log(Level.SEVERE, e.getMessage(), e);
+			LOG.log(Level.SEVERE, e.getMessage());
 			stop();
 			throw e;
 		}
