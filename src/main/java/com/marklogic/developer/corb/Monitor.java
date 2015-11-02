@@ -105,11 +105,8 @@ public class Monitor implements Runnable {
 					LOG.log(Level.SEVERE, "Thread pool is still active with all the tasks completed and received. We shouldn't see this message.");
 				}
 				break;
-			} else if (pool.getActiveCount() == 0) {
+			} else if (future == null && pool.getActiveCount() == 0) {
 				LOG.log(Level.WARNING, "No active tasks found with {0} tasks remains to be completed", (taskCount - completed));
-				if (pool.isTerminated()){
-					break;
-				}
 			}
 		}
 		LOG.info("waiting for pool to terminate");
