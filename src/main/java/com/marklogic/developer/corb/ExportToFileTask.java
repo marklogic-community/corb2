@@ -10,59 +10,65 @@ import com.marklogic.xcc.ResultSequence;
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  */
-public class ExportToFileTask extends AbstractTask {		
+public class ExportToFileTask extends AbstractTask {
+
 	protected String exportDir;
-	
-	public void setExportDir(String exportFileDir){
+
+	public void setExportDir(String exportFileDir) {
 		this.exportDir = exportFileDir;
 	}
-	
-	public String getExportDir(){
+
+	public String getExportDir() {
 		return this.exportDir;
 	}
-	
-	protected String getFileName(){
-		return inputUris[0].charAt(0) == '/' ? inputUris[0].substring(1)  : inputUris[0];
+
+	protected String getFileName() {
+		return inputUris[0].charAt(0) == '/' ? inputUris[0].substring(1) : inputUris[0];
 	}
-	
-	protected void writeToFile(ResultSequence seq) throws IOException{
-		if(seq == null || !seq.hasNext()) return;
+
+	protected void writeToFile(ResultSequence seq) throws IOException {
+		if (seq == null || !seq.hasNext()) {
+			return;
+		}
 		BufferedOutputStream writer = null;
-		try{
-			File f = new File(exportDir,getFileName());
+		try {
+			File f = new File(exportDir, getFileName());
 			f.getParentFile().mkdirs();
 			writer = new BufferedOutputStream(new FileOutputStream(f));
-			while(seq.hasNext()){				
+			while (seq.hasNext()) {
 				writer.write(getValueAsBytes(seq.next().getItem()));
 				writer.write(NEWLINE);
 			}
 			writer.flush();
-		}finally{
-			if(writer != null){
+		} finally {
+			if (writer != null) {
 				writer.close();
 			}
 		}
 	}
-	
-	protected String processResult(ResultSequence seq) throws CorbException{
-		try{
+
+	@Override
+	protected String processResult(ResultSequence seq) throws CorbException {
+		try {
 			writeToFile(seq);
 			return TRUE;
-		}catch(IOException exc){
-			throw new CorbException(exc.getMessage(),exc);
+		} catch (IOException exc) {
+			throw new CorbException(exc.getMessage(), exc);
 		}
 	}
-	
-	protected void cleanup(){
+
+	@Override
+	protected void cleanup() {
 		super.cleanup();
-		exportDir=null;
+		exportDir = null;
 	}
-	
-    public String[] call() throws Exception {
-    	try{
-    		return invokeModule();
-    	}finally{
-    		cleanup();
-    	}
-    }
+
+	@Override
+	public String[] call() throws Exception {
+		try {
+			return invokeModule();
+		} finally {
+			cleanup();
+		}
+	}
 }
