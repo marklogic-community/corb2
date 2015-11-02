@@ -65,8 +65,8 @@ import com.marklogic.xcc.SecurityOptions;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
-import com.marklogic.xcc.exceptions.XccException;
 import com.marklogic.xcc.types.XdmItem;
+
 import java.util.logging.Level;
 
 /**
@@ -74,23 +74,41 @@ import java.util.logging.Level;
  * @author Colleen Whitney, MarkLogic Corporation
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  */
-public class Manager implements Runnable {
+public class Manager{
 
 	public static final String VERSION = "2.1.3";
-	private static final Logger LOG = getLogger();
+	
+	public static final String URIS_BATCH_REF = "URIS_BATCH_REF";
+	public static final String DEFAULT_BATCH_URI_DELIM = ";";
 
+	protected static final String VERSION_MSG = "version " + VERSION + " on " + System.getProperty("java.version") + " ("+ System.getProperty("java.runtime.name") + ")";
+	protected static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server'\n";
+	protected static final String XQUERY_VERSION_0_9_ML = "xquery version \"0.9-ml\"\n";
+	protected static final String NAME = Manager.class.getName();
+
+	protected URI connectionUri;
+	protected String collection;
+	protected Properties properties = null;
+	protected TransformOptions options = null;
+	private ThreadPoolExecutor pool = null;
+	private ContentSource contentSource;
+	private Monitor monitor;
+	private Thread monitorThread;
+	private CompletionService<String[]> completionService;
+
+	private static final Logger LOG = getLogger();
+	
+	public static Logger getLogger() {
+		return Logger.getLogger("Corb2");
+	}
+
+	
 	public class CallerBlocksPolicy implements RejectedExecutionHandler {
 
 		private BlockingQueue<Runnable> queue;
 
 		private boolean warning = false;
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see java.util.concurrent.RejectedExecutionHandler#rejectedExecution(java
-		 * .lang.Runnable, java.util.concurrent.ThreadPoolExecutor)
-		 */
 		@Override
 		public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
 			if (null == queue) {
@@ -112,62 +130,17 @@ public class Manager implements Runnable {
 		}
 
 	}
-
-	public static final String URIS_BATCH_REF = "URIS_BATCH_REF";
-	public static final String DEFAULT_BATCH_URI_DELIM = ";";
-
-	protected static final String VERSION_MSG = "version " + VERSION + " on " + System.getProperty("java.version") + " ("
-			+ System.getProperty("java.runtime.name") + ")";
-	protected static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server'\n";
-	protected static final String XQUERY_VERSION_0_9_ML = "xquery version \"0.9-ml\"\n";
-	protected static final String NAME = Manager.class.getName();
-
-	protected URI connectionUri;
-	protected String collection;
-	protected Properties properties = new Properties();
-	protected TransformOptions options = new TransformOptions();
-	private ThreadPoolExecutor pool = null;
-	protected ContentSource contentSource;
-	private Monitor monitor;
-	private Thread monitorThread;
-	private CompletionService<String[]> completionService;
-
-	static public Logger getLogger() {
-		return Logger.getLogger("Corb2");
-	}
-
-	/**
-	 * @param connectionUri
-	 * @param collection
-	 */
-	public Manager(URI connectionUri, String collection) {
-		this.connectionUri = connectionUri;
-		this.collection = collection;
-	}
-
-	/**
-	 * @param args
-	 * @throws URISyntaxException
-	 * @throws IOException
-	 * @throws ClassNotFoundException
-	 * @throws IllegalAccessException
-	 * @throws InstantiationException
-	 */
-	public static void main(String[] args) throws URISyntaxException, IOException, ClassNotFoundException,
-			InstantiationException, IllegalAccessException {
-		Manager tm = createManager(args);
-		// now its time to start processing
-		if (tm != null) {
-			tm.run();
-		}
-	}
-
+	
 	public static Properties loadPropertiesFile(String filename) throws IOException {
 		return loadPropertiesFile(filename, true);
 	}
-
+	
 	public static Properties loadPropertiesFile(String filename, boolean excIfNotFound) throws IOException {
 		Properties props = new Properties();
+		return loadPropertiesFile(filename,excIfNotFound,props);
+	}
+
+	private static Properties loadPropertiesFile(String filename, boolean excIfNotFound, Properties props) throws IOException {
 		if (filename != null && (filename = filename.trim()).length() > 0) {
 			InputStream is = null;
 			try {
@@ -201,7 +174,7 @@ public class Manager implements Runnable {
 		return props;
 	}
 
-	static public String getAdhocQuery(String module) {
+	public static String getAdhocQuery(String module) {
 		InputStream is = null;
 		InputStreamReader reader = null;
 		StringWriter writer = null;
@@ -234,177 +207,168 @@ public class Manager implements Runnable {
 				if (writer != null) {
 					writer.close();
 				}
-			} catch (Exception exc) {
-			}
+			} catch (Exception exc) {}
 			try {
 				if (reader != null) {
 					reader.close();
 				}
-			} catch (Exception exc) {
-			}
+			} catch (Exception exc) {}
 			try {
 				if (is != null) {
 					is.close();
 				}
-			} catch (Exception exc) {
+			} catch (Exception exc) {}
+		}
+	}
+	
+	/**
+	 * @param args
+	 * @throws URISyntaxException
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 * @throws IllegalAccessException
+	 * @throws InstantiationException
+	 */
+	public static void main(String[] args){
+		Manager tm = new Manager();
+		try{
+			tm.init(args);
+		}catch(Exception exc){
+			LOG.log(Level.SEVERE, "Error initializing CORB",exc);
+			System.exit(1);
+		}
+		//now we can start corb. 
+		try{
+			int count = tm.run();
+			
+			if(count == 0){
+				System.exit(9);
+			}else{
+				System.exit(0);
 			}
+		}catch(Exception exc){
+			LOG.log(Level.SEVERE, "Error while running CORB",exc);
+			System.exit(2);
 		}
 	}
 
-	public static Manager createManager(String... args) throws URISyntaxException, IOException, ClassNotFoundException,
-			InstantiationException, IllegalAccessException {
+	public Manager(){
+		this.options = new TransformOptions();
+		this.properties = new Properties();
+	}
+	
+	protected void init(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException{		
 		String propsFileName = System.getProperty("OPTIONS-FILE");
-		Properties props = loadPropertiesFile(propsFileName);
+		loadPropertiesFile(propsFileName,true,this.properties);
+		
+		initURI(args.length > 0 ? args[0] : null);
+		
+		String collection = getOption(args.length > 1 ? args[1] : null, "COLLECTION-NAME");
+		this.collection = collection != null ? collection : "";
+		
+		initOptions(args);
+	}
+	
+	protected void initURI(String uriArg) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException, URISyntaxException{
+		String uriAsString = getOption(uriArg, "XCC-CONNECTION-URI");
+		String username = getOption(null, "XCC-USERNAME");
+		String password = getOption(null, "XCC-PASSWORD");
+		String host = getOption(null, "XCC-HOSTNAME");
+		String port = getOption(null, "XCC-PORT");
+		String dbname = getOption(null, "XCC-DBNAME");
 
-		// gather inputs
-		String connectionUri = getOption(args.length > 0 ? args[0] : null, "XCC-CONNECTION-URI", props);
-		String collection = getOption(args.length > 1 ? args[1] : null, "COLLECTION-NAME", props);
-		String processModule = getOption(args.length > 2 ? args[2] : null, "XQUERY-MODULE", props);
-		String threadCount = getOption(args.length > 3 ? args[3] : null, "THREAD-COUNT", props);
-		String urisModule = getOption(args.length > 4 ? args[4] : null, "URIS-MODULE", props);
-		String moduleRoot = getOption(args.length > 5 ? args[5] : null, "MODULE-ROOT", props);
-		String modulesDatabase = getOption(args.length > 6 ? args[6] : null, "MODULES-DATABASE", props);
-		String install = getOption(args.length > 7 ? args[7] : null, "INSTALL", props);
-		String processTask = getOption(args.length > 8 ? args[8] : null, "PROCESS-TASK", props);
-		String preBatchModule = getOption(args.length > 9 ? args[9] : null, "PRE-BATCH-MODULE", props);
-		String preBatchTask = getOption(args.length > 10 ? args[10] : null, "PRE-BATCH-TASK", props);
-		String postBatchModule = getOption(args.length > 11 ? args[11] : null, "POST-BATCH-MODULE", props);
-		String postBatchTask = getOption(args.length > 12 ? args[12] : null, "POST-BATCH-TASK", props);
-		String exportFileDir = getOption(args.length > 13 ? args[13] : null, "EXPORT-FILE-DIR", props);
-		String exportFileName = getOption(args.length > 14 ? args[14] : null, "EXPORT-FILE-NAME", props);
-		String urisFile = getOption(args.length > 15 ? args[15] : null, "URIS-FILE", props);
-
-		if (preBatchModule == null) {
-			preBatchModule = getOption(null, "PRE-BATCH-XQUERY-MODULE", props);
-		}
-		if (postBatchModule == null) {
-			postBatchModule = getOption(null, "POST-BATCH-XQUERY-MODULE", props);
-		}
-
-		String batchSize = getOption(null, "BATCH-SIZE", props);
-
-		String initModule = getOption(null, "INIT-MODULE", props);
-		String initTask = getOption(null, "INIT-TASK", props);
-
-		String username = getOption(null, "XCC-USERNAME", props);
-		String password = getOption(null, "XCC-PASSWORD", props);
-		String host = getOption(null, "XCC-HOSTNAME", props);
-		String port = getOption(null, "XCC-PORT", props);
-		String dbname = getOption(null, "XCC-DBNAME", props);
-
-		String failOnError = getOption(null, "FAIL-ON-ERROR", props);
-
-		if (connectionUri == null && (username == null || password == null || host == null || port == null)) {
-			System.err.println("XCC-CONNECTION-URI or XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME and XCC-PORT must be specified");
+		if (uriAsString == null && (username == null || password == null || host == null || port == null)) {
+			LOG.severe("XCC-CONNECTION-URI or XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME and XCC-PORT must be specified");
 			usage();
-			return null;
+			System.exit(1);
 		}
-
-		String decrypterClassName = getOption(null, "DECRYPTER", props);
+		
+		String decrypterClassName = getOption(null, "DECRYPTER");
 		if (decrypterClassName != null) {
 			Class<?> decrypterCls = Class.forName(decrypterClassName);
 			if (AbstractDecrypter.class.isAssignableFrom(decrypterCls)) {
 				AbstractDecrypter decrypter = (AbstractDecrypter) decrypterCls.newInstance();
-				decrypter.init(props);
-				connectionUri = decrypter.getConnectionURI(connectionUri, username, password, host, port, dbname);
+				decrypter.init(this.properties);
+				uriAsString = decrypter.getConnectionURI(uriAsString, username, password, host, port, dbname);
 			} else {
 				throw new IllegalArgumentException("DECRYPTER must be of type com.marklogic.developer.corb.AbstractDecrypter");
 			}
-		} else if (connectionUri == null) {
-			connectionUri = "xcc://" + username + ":" + password + "@" + host + ":" + port
-					+ (dbname != null ? "/" + dbname : "");
+		} else if (uriAsString == null) {
+			uriAsString = "xcc://" + username + ":" + password + "@" + host + ":" + port+ (dbname != null ? "/" + dbname : "");
 		}
-
-		Manager tm = new Manager(new URI(connectionUri), collection != null ? collection : "");
-		tm.setProperties(props); // Keep the properties around for the custom tasks
-		// options
-		TransformOptions options = tm.getOptions();
-		if (moduleRoot != null) {
-			options.setModuleRoot(moduleRoot);
+		
+		this.connectionUri = new URI(uriAsString);
+	}
+	
+	private void initOptions(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
+		// gather inputs		
+		String processModule = getOption(args.length > 2 ? args[2] : null, "XQUERY-MODULE");
+		String threadCount = getOption(args.length > 3 ? args[3] : null, "THREAD-COUNT");
+		String urisModule = getOption(args.length > 4 ? args[4] : null, "URIS-MODULE");
+		String moduleRoot = getOption(args.length > 5 ? args[5] : null, "MODULE-ROOT");
+		String modulesDatabase = getOption(args.length > 6 ? args[6] : null, "MODULES-DATABASE");
+		String install = getOption(args.length > 7 ? args[7] : null, "INSTALL");
+		String processTask = getOption(args.length > 8 ? args[8] : null, "PROCESS-TASK");
+		String preBatchModule = getOption(args.length > 9 ? args[9] : null, "PRE-BATCH-MODULE");
+		String preBatchTask = getOption(args.length > 10 ? args[10] : null, "PRE-BATCH-TASK");
+		String postBatchModule = getOption(args.length > 11 ? args[11] : null, "POST-BATCH-MODULE");
+		String postBatchTask = getOption(args.length > 12 ? args[12] : null, "POST-BATCH-TASK");
+		String exportFileDir = getOption(args.length > 13 ? args[13] : null, "EXPORT-FILE-DIR");
+		String exportFileName = getOption(args.length > 14 ? args[14] : null, "EXPORT-FILE-NAME");
+		String urisFile = getOption(args.length > 15 ? args[15] : null, "URIS-FILE");
+		
+		String initModule = getOption(null, "INIT-MODULE");
+		String initTask = getOption(null, "INIT-TASK");
+		
+		String batchSize = getOption(null, "BATCH-SIZE");
+		String failOnError = getOption(null, "FAIL-ON-ERROR");
+		
+		if (processModule == null) processModule = getOption(null, "PROCESS-MODULE");
+		
+		if (moduleRoot != null) options.setModuleRoot(moduleRoot);
+		if (processModule != null) options.setProcessModule(processModule);
+		if (threadCount != null) options.setThreadCount(Integer.parseInt(threadCount));
+		if (urisModule != null) options.setUrisModule(urisModule);
+		if (modulesDatabase != null) options.setModulesDatabase(modulesDatabase);
+		if (install != null && (install.equalsIgnoreCase("true") || install.equals("1"))) options.setDoInstall(true);
+		if (urisFile != null) options.setUrisFile(urisFile);
+		if (batchSize != null) options.setBatchSize(Integer.parseInt(batchSize));
+		if (failOnError != null && (failOnError.equalsIgnoreCase("false"))) options.setFailOnError(false);
+		
+		if (!this.properties.containsKey("EXPORT-FILE-DIR") && exportFileDir != null) {
+			this.properties.put("EXPORT-FILE-DIR", exportFileDir);
 		}
-		if (processModule != null) {
-			options.setProcessModule(processModule);
+		if (!this.properties.containsKey("EXPORT-FILE-NAME") && exportFileName != null) {
+			this.properties.put("EXPORT-FILE-NAME", exportFileName);
 		}
-		if (threadCount != null) {
-			options.setThreadCount(Integer.parseInt(threadCount));
-		}
-		if (urisModule != null) {
-			options.setUrisModule(urisModule);
-		}
-		if (modulesDatabase != null) {
-			options.setModulesDatabase(modulesDatabase);
-		}
-		if (install != null && (install.equalsIgnoreCase("true") || install.equals("1"))) {
-			options.setDoInstall(true);
-		}
-		if (urisFile != null) {
-			options.setUrisFile(urisFile);
-		}
-		if (batchSize != null) {
-			options.setBatchSize(Integer.parseInt(batchSize));
-		}
-		if (failOnError != null && (failOnError.equalsIgnoreCase("false"))) {
-			options.setFailOnError(false);
-		}
-
-		if (!props.containsKey("EXPORT-FILE-DIR") && exportFileDir != null) {
-			props.put("EXPORT-FILE-DIR", exportFileDir);
-		}
-		if (!props.containsKey("EXPORT-FILE-NAME") && exportFileName != null) {
-			props.put("EXPORT-FILE-NAME", exportFileName);
-		}
-
+		
 		if (urisFile != null && urisFile.trim().length() > 0) {
 			File f = new File(options.getUrisFile());
 			if (!f.exists()) {
 				throw new IllegalArgumentException("Uris file " + urisFile + " not found");
 			}
 		}
-
+		
+		if (initModule != null) options.setInitModule(initModule);
+		if (initTask != null) options.setInitTaskClass(getTaskCls("INIT-TASK",initTask));
+				
 		// java class for processing individual tasks.
 		// If specified, it is used instead of xquery module, but xquery module is
 		// still required.
-		if (processTask != null) {
-			Class<?> processCls = Class.forName(processTask);
-			if (Task.class.isAssignableFrom(processCls)) {
-				processCls.newInstance(); // sanity check
-				options.setProcessTaskClass((Class<? extends Task>) processCls.asSubclass(Task.class));
-				if (ExportToFileTask.class.equals(processCls)) {
-					options.setBatchSize(1);
-				}
-			} else {
-				throw new IllegalArgumentException("PROCESS-TASK must be of type com.marklogic.developer.corb.Task");
-			}
+		if (processTask != null) options.setProcessTaskClass(getTaskCls("PROCESS-TASK",processTask));
+		if (null == options.getProcessTaskClass() && null == options.getProcessModule()) {
+			throw new NullPointerException("PROCESS-TASK or XQUERY-MODULE must be specified");
 		}
-
-		if (preBatchModule != null) {
-			options.setPreBatchModule(preBatchModule);
-		}
-		if (preBatchTask != null) {
-			Class<?> preBatchCls = Class.forName(preBatchTask);
-			if (Task.class.isAssignableFrom(preBatchCls)) {
-				preBatchCls.newInstance(); // sanity check
-				options.setPreBatchTaskClass((Class<? extends Task>) preBatchCls.asSubclass(Task.class));
-			} else {
-				throw new IllegalArgumentException("PRE-BATCH-TASK must be of type com.marklogic.developer.corb.Task");
-			}
-		}
-
-		if (postBatchModule != null) {
-			options.setPostBatchModule(postBatchModule);
-		}
-		if (postBatchTask != null) {
-			Class<?> postBatchCls = Class.forName(postBatchTask);
-			if (Task.class.isAssignableFrom(postBatchCls)) {
-				postBatchCls.newInstance(); // sanity check
-				options.setPostBatchTaskClass((Class<? extends Task>) postBatchCls.asSubclass(Task.class));
-			} else {
-				throw new IllegalArgumentException("POST-BATCH-TASK must be of type com.marklogic.developer.corb.Task");
-			}
-		}
-
-		if (props.containsKey("EXPORT-FILE-PART-EXT") && options.getPostBatchTaskClass() == null) {
-			props.remove("EXPORT-FILE-PART-EXT");
+		
+		if (preBatchModule != null) options.setPreBatchModule(preBatchModule);
+		if (preBatchTask != null) options.setPreBatchTaskClass(getTaskCls("PRE-BATCH-TASK",preBatchTask));
+		
+		if (postBatchModule != null) options.setPostBatchModule(postBatchModule);
+		if (postBatchTask != null) options.setPostBatchTaskClass(getTaskCls("POST-BATCH-TASK",postBatchTask));
+		
+		if (options.getPostBatchTaskClass() == null) {
+			if(this.properties.containsKey("EXPORT-FILE-PART-EXT")) this.properties.remove("EXPORT-FILE-PART-EXT");
+			if(System.getProperty("EXPORT-FILE-PART-EXT") != null) System.clearProperty("EXPORT-FILE-PART-EXT");
 		}
 
 		if (exportFileDir != null) {
@@ -423,41 +387,29 @@ public class Manager implements Runnable {
 				exportFile.delete();
 			}
 		}
-
-		if (initModule != null) {
-			options.setInitModule(initModule);
-		}
-		if (initTask != null) {
-			Class<?> initCls = Class.forName(initTask);
-			if (Task.class.isAssignableFrom(initCls)) {
-				initCls.newInstance(); // sanity check
-				options.setInitTaskClass((Class<? extends Task>) initCls.asSubclass(Task.class));
-			} else {
-				throw new IllegalArgumentException("INIT-TASK must be of type com.marklogic.developer.corb.Task");
-			}
-		}
-
-		if (null == options.getProcessTaskClass() && null == options.getProcessModule()) {
-			throw new NullPointerException("PROCESS-TASK or XQUERY-MODULE must be specified");
-		}
-		return tm;
 	}
-
-	protected static String getOption(String argVal, String propName, Properties props) {
+	
+	private Class<? extends Task> getTaskCls(String type, String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
+		Class<?> cls = Class.forName(className);
+		if (Task.class.isAssignableFrom(cls)) {
+			cls.newInstance(); // sanity check
+			return cls.asSubclass(Task.class);
+		} else {
+			throw new IllegalArgumentException(type+" must be of type com.marklogic.developer.corb.Task");
+		}
+	}
+	
+	protected String getOption(String argVal, String propName) {
 		if (argVal != null && argVal.trim().length() > 0) {
 			return argVal.trim();
 		} else if (System.getProperty(propName) != null && System.getProperty(propName).trim().length() > 0) {
 			return System.getProperty(propName).trim();
-		} else if (props.containsKey(propName) && props.getProperty(propName).trim().length() > 0) {
-			String val = props.getProperty(propName).trim();
-			props.remove(propName);
+		} else if (this.properties.containsKey(propName) && this.properties.getProperty(propName).trim().length() > 0) {
+			String val = this.properties.getProperty(propName).trim();
+			this.properties.remove(propName); //remove from properties file as we would like to keep the properties file simple. 
 			return val;
 		}
 		return null;
-	}
-
-	protected void setProperties(Properties props) {
-		this.properties = props;
 	}
 
 	public Properties getProperties() {
@@ -490,38 +442,20 @@ public class Manager implements Runnable {
 				+ " xcc://user:password@host:port/[ database ]");
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Runnable#run()
-	 */
-	@Override
-	public void run() {
+	public int run() throws Exception {
 		LOG.log(Level.INFO, "{0} starting: {1}", new Object[] { NAME, VERSION_MSG });
 		long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
 		LOG.log(Level.INFO, "maximum heap size = {0} MiB", maxMemory);
 
-		RuntimeMXBean runtimemxBean = ManagementFactory.getRuntimeMXBean();
-		List<String> arguments = runtimemxBean.getInputArguments();
-		int uIdx = -1;
-		for (int i = 0; uIdx == -1 && i < arguments.size(); i++) {
-			if (arguments.get(i).startsWith("-DXCC-CONNECTION-URI")) {
-				uIdx = i;
-			}
-		}
-		if (uIdx > -1) {
-			arguments = new ArrayList<>(arguments);
-			arguments.remove(uIdx);
-		}
-		LOG.log(Level.INFO, "runtime arguments = {0}", Utilities.join(arguments, " "));
-
+		logRuntimeArgs();
+		
 		prepareContentSource();
 		registerStatusInfo();
 		prepareModules();
 		monitorThread = preparePool();
-
+		
 		try {
-			populateQueue();
+			int count = populateQueue();
 
 			while (monitorThread.isAlive()) {
 				try {
@@ -535,15 +469,24 @@ public class Manager implements Runnable {
 
 			runPostBatchTask(); // post batch tasks
 			LOG.info("all done");
-		} catch (XccException e) {
+			return count;
+		} catch (Exception e) {
 			LOG.log(Level.SEVERE, e.getMessage(), e);
 			stop();
-			System.exit(1);
-		} catch (Exception e) {
-			LOG.log(Level.SEVERE, "unexpected", e);
-			stop();
-			System.exit(1);
+			throw e;
 		}
+	}
+	
+	protected void logRuntimeArgs(){
+		RuntimeMXBean runtimemxBean = ManagementFactory.getRuntimeMXBean();
+		List<String> arguments = runtimemxBean.getInputArguments();
+		List<String> argsToLog = new ArrayList<String>();
+		for (int i = 0; i < arguments.size(); i++) {
+			if (!arguments.get(i).startsWith("-DXCC")) {
+				argsToLog.add(arguments.get(i));
+			}
+		}
+		LOG.log(Level.INFO, "runtime arguments = {0}", Utilities.join(argsToLog, " "));
 	}
 
 	/**
@@ -605,8 +548,7 @@ public class Manager implements Runnable {
 						String moduleUri = options.getModuleRoot() + resourceModule;
 						is = this.getClass().getResourceAsStream(resourceModule);
 						if (null == is) {
-							throw new NullPointerException(resourceModule + " could not be found on the filesystem,"
-									+ " or in package resources");
+							throw new NullPointerException(resourceModule + " could not be found on the filesystem," + " or in package resources");
 						}
 						c = ContentFactory.newContent(moduleUri, is, opts);
 					}
@@ -673,15 +615,6 @@ public class Manager implements Runnable {
 			}
 		}
 
-		// HACK
-		if (options.getUrisModule() == null && options.getUrisFile() == null) {
-			String urisFile = getOption(null, "URIS-FILE", properties);
-			if (urisFile != null && (urisFile = urisFile.trim()).length() > 0) {
-				options.setUrisFile(urisFile);
-			}
-		}
-		// END HACK
-
 		LOG.log(Level.INFO, "Configured modules db: {0}", options.getModulesDatabase());
 		LOG.log(Level.INFO, "Configured modules xdbc root: {0}", options.getXDBC_ROOT());
 		LOG.log(Level.INFO, "Configured modules root: {0}", options.getModuleRoot());
@@ -698,6 +631,10 @@ public class Manager implements Runnable {
 		LOG.log(Level.INFO, "Configured batch size: {0}", options.getBatchSize());
 		LOG.log(Level.INFO, "Configured failonError: {0}", options.isFailOnError());
 
+		logProperties();
+	}
+	
+	protected void logProperties(){
 		for (Entry<Object, Object> e : properties.entrySet()) {
 			if (e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
 				LOG.log(Level.INFO, "Loaded property {0}={1}", new Object[] { e.getKey(), e.getValue() });
@@ -747,7 +684,7 @@ public class Manager implements Runnable {
 		return loader;
 	}
 
-	private void populateQueue() throws Exception {
+	private int populateQueue() throws Exception {
 		LOG.info("populating queue");
 		TaskFactory tf = new TaskFactory(this);
 		UrisLoader urisLoader = getUriLoader();
@@ -768,7 +705,7 @@ public class Manager implements Runnable {
 			if (total <= 0) {
 				LOG.info("nothing to process");
 				stop();
-				return;
+				return 0;
 			}
 
 			// run pre-batch task, if present.
@@ -885,13 +822,12 @@ public class Manager implements Runnable {
 			}
 		}
 
-		// if the pool went away, the monitor stopped it: bail out.
-		if (null == pool) {
-			return;
+		if(total == count){
+			LOG.log(Level.INFO, "queue is populated with {0} tasks", total);
+		}else{
+			LOG.log(Level.WARNING,"queue is expected to be populated with {0} tasks, but only got {1} tasks.", new Object[]{total,count});
 		}
-
-		assert total == count;
-		LOG.log(Level.FINE, "queue is populated with {0} tasks", total);
+		return count;
 	}
 
 	/**
