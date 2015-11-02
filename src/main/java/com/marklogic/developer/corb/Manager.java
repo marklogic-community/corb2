@@ -300,7 +300,7 @@ public class Manager{
 		this.connectionUri = new URI(uriAsString);
 	}
 	
-	private void initOptions(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
+	protected void initOptions(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
 		// gather inputs		
 		String processModule = getOption(args.length > 2 ? args[2] : null, "XQUERY-MODULE");
 		String threadCount = getOption(args.length > 3 ? args[3] : null, "THREAD-COUNT");
@@ -389,7 +389,7 @@ public class Manager{
 		}
 	}
 	
-	private Class<? extends Task> getTaskCls(String type, String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
+	protected Class<? extends Task> getTaskCls(String type, String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
 		Class<?> cls = Class.forName(className);
 		if (Task.class.isAssignableFrom(cls)) {
 			cls.newInstance(); // sanity check
