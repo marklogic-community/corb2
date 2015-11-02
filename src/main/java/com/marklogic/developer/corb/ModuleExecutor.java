@@ -82,7 +82,7 @@ public class ModuleExecutor {
 
 	private static final String XQUERY_VERSION_0_9_ML = "xquery version \"0.9-ml\"\n";
 
-	protected static final String NAME = ModuleExecutor.class.getName();
+	protected static final String NAME = ModuleExecutor.class.getSimpleName();
 
 	protected URI connectionUri;
 
@@ -98,7 +98,7 @@ public class ModuleExecutor {
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 	protected static final byte[] NEWLINE = "\n".getBytes();
 
-	protected static Logger logger = Logger.getLogger("ModuleExecutor");
+	protected static Logger logger = Logger.getLogger(ModuleExecutor.class.getCanonicalName());
 
 	/**
 	 * @param connectionUri

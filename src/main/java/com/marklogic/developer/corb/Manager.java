@@ -96,13 +96,8 @@ public class Manager{
 	private Thread monitorThread;
 	private CompletionService<String[]> completionService;
 
-	private static final Logger LOG = getLogger();
-	
-	public static Logger getLogger() {
-		return Logger.getLogger("Corb2");
-	}
-
-	
+	private static final Logger LOG = Logger.getLogger(Manager.class.getSimpleName());
+		
 	public class CallerBlocksPolicy implements RejectedExecutionHandler {
 
 		private BlockingQueue<Runnable> queue;

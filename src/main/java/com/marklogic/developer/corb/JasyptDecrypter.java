@@ -12,7 +12,7 @@ public class JasyptDecrypter extends AbstractDecrypter {
 	Class<?> decrypterCls = null;
 	Object decrypter = null;
 
-	protected static final Logger LOG = Logger.getLogger("Decrypter");
+	protected static final Logger LOG = Logger.getLogger(JasyptDecrypter.class.getSimpleName());
 
 	@Override
 	protected void init_decrypter() throws IOException, ClassNotFoundException {

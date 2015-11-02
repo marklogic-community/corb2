@@ -52,7 +52,7 @@ public abstract class AbstractTask implements Task {
 	
 	protected boolean failOnError = true; 
 
-	protected static final Logger LOG = Manager.getLogger();
+	private static final Logger LOG = Logger.getLogger(AbstractTask.class.getSimpleName());
 
 	@Override
 	public void setContentSource(ContentSource cs) {

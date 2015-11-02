@@ -29,7 +29,7 @@ public class XQueryUrisLoader implements UrisLoader {
 
 	String[] replacements = new String[0];
 
-	protected static final Logger LOG = Manager.getLogger();
+	private static final Logger LOG = Logger.getLogger(XQueryUrisLoader.class.getSimpleName());
 
 	public XQueryUrisLoader() {
 	}
