@@ -573,7 +573,7 @@ public class Manager{
 			contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
 					: ContentSourceFactory.newContentSource(connectionUri);
 		} catch (XccConfigException e) {
-			LOG.log(Level.SEVERE,"Problem creating content source. Check if URI is valid. If encrypted, check options are configured correctly.", e);
+			LOG.log(Level.SEVERE,"Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly.", e);
 			throw new RuntimeException(e);
 		} catch (KeyManagementException | NoSuchAlgorithmException e) {
 			LOG.log(Level.SEVERE, "Problem creating content source with ssl", e);
