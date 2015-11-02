@@ -565,16 +565,12 @@ public class Manager{
 		}
 	}
 
-	/**
-     *
-     */
 	protected void prepareContentSource() {
-		// logger.info("using content source " + connectionUri);
 		try {
 			// support SSL
 			boolean ssl = connectionUri != null && connectionUri.getScheme() != null
 					&& connectionUri.getScheme().equals("xccs");
-			contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, newTrustAnyoneOptions())
+			contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
 					: ContentSourceFactory.newContentSource(connectionUri);
 		} catch (XccConfigException e) {
 			LOG.log(Level.SEVERE,"Problem creating content source. Check if URI is valid. If encrypted, check options are configured correctly.", e);
@@ -583,6 +579,10 @@ public class Manager{
 			LOG.log(Level.SEVERE, "Problem creating content source with ssl", e);
 			throw new RuntimeException(e);
 		}
+	}
+	
+	protected SecurityOptions getSecurityOptions() throws KeyManagementException, NoSuchAlgorithmException{
+		return newTrustAnyoneOptions();
 	}
 
 	private void registerStatusInfo() {
