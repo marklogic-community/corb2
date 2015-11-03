@@ -29,6 +29,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
@@ -241,6 +242,9 @@ public class Manager{
 			}else{
 				System.exit(0);
 			}
+		} catch (XccConfigException | GeneralSecurityException exc) {
+			LOG.log(Level.SEVERE, "Problem with XCC connection configuration.",exc);
+			System.exit(1);
 		}catch(Exception exc){
 			LOG.log(Level.SEVERE, "Error while running CORB",exc);
 			System.exit(2);
@@ -501,11 +505,10 @@ public class Manager{
 	}
 
 	/**
-	 * @throws IOException
-	 * @throws RequestException
+	 * @throws IOException,RequestException 
 	 * 
 	 */
-	private void prepareModules() {
+	private void prepareModules() throws IOException,RequestException {
 		String[] resourceModules = new String[] { options.getInitModule(), options.getUrisModule(),
 				options.getProcessModule(), options.getPreBatchModule(), options.getPostBatchModule() };
 		String modulesDatabase = options.getModulesDatabase();
@@ -551,8 +554,8 @@ public class Manager{
 				}
 			}
 		} catch (IOException | RequestException e) {
-			LOG.log(Level.SEVERE, "fatal error", e);
-			throw new RuntimeException(e);
+			LOG.log(Level.SEVERE, "fatal error while preparing modules " + e.getMessage());
+			throw e;
 		} finally {
 			session.close();
 			if (null != is) {
@@ -565,7 +568,7 @@ public class Manager{
 		}
 	}
 
-	protected void prepareContentSource() {
+	protected void prepareContentSource() throws XccConfigException, GeneralSecurityException {
 		try {
 			// support SSL
 			boolean ssl = connectionUri != null && connectionUri.getScheme() != null
@@ -573,11 +576,11 @@ public class Manager{
 			contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
 					: ContentSourceFactory.newContentSource(connectionUri);
 		} catch (XccConfigException e) {
-			LOG.log(Level.SEVERE,"Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly.", e);
-			throw new RuntimeException(e);
+			LOG.log(Level.SEVERE,"Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly."+e.getMessage());
+			throw e;
 		} catch (KeyManagementException | NoSuchAlgorithmException e) {
-			LOG.log(Level.SEVERE, "Problem creating content source with ssl", e);
-			throw new RuntimeException(e);
+			LOG.log(Level.SEVERE, "Problem creating content source with ssl. "+e.getMessage());
+			throw e;
 		}
 	}
 	
