@@ -11,7 +11,7 @@ Corb v2.1.3 or later requires marklogic-xcc-8.0.*.jar or later to run. Please no
 To build corb using ant, please specify java.library.user folder in the build.properties file and place marklogic-xcc-8.0.3.jar in this folder. Please update build.xml for building corb with a later version of xcc jar.  
 
 Corb uses java logger. To customize logging, please specify logging configuration file using java system arg  
-`-Djava.util.logging.config.file=\path\to\logging.properties`
+`-Djava.util.logging.config.file=/path/to/logging.properties`
 
 ### Running Corb
 The entry point is the main method in the com.marklogic.developer.corb.Manager class. Corb requires marklogic xcc jar in the classpath, preferably the version that corresponds to marklogic server version, which can be downloaded from https://developer.marklogic.com/products/xcc (corb 2.1.3 is tested with xcc 8.0.* talking to Marklogic 7 and 8). Requires java 1.7 or later.
@@ -34,6 +34,7 @@ Corb needs one or more of the following parameters as (If specified in more than
 * **INSTALL** (default is false; set to 'true' or '1' for installation)
 * **URIS-MODULE** (URI selector module written in XQuery or JavaScript. Expected to return a sequence containing the uris count followed by all the uris. Optionally, it can also return an arbitrary string as a first item in this sequence - refer to URIS\_BATCH\_REF section below. XQuery and JavaScript modules need to have .xqy and .sjs extensions respectively. JavaScript modules must return a ValueIterator.)
 * **URIS-FILE** (If defined instead of URIS-MODULE, URIS will be loaded from the file located on the client. There should only be one URI per each line. This path may be relative or absolute. For example, a file containing a list of document identifiers can be used as a URIS-FILE and XQUERY-MODULE can query for the document based on this document identifier.)
+* **URIS-LOADER** (Java Class that implements com.marklogic.developer.corb.UrisLoader. A custom class to load URIS instead of built-in loaders for URIS-MODULE or URIS-FILE options.)  
 * **PROCESS-TASK** (Java Class that implements com.marklogic.developer.corb.Task or extends com.marklogic.developer.corb.AbstractTask. Typically, it can talk to XQUERY-MODULE and the do additional processing locally such save a returned value.)    
   * `com.marklogic.developer.corb.ExportBatchToFileTask` (Generates _**a single file**_, typically used for reports. Writes the data returned by the XQUERY-MODULE to a single file specified by EXPORT-FILE-NAME. All returned values from entire CoRB will be streamed into the single file. If EXPORT-FILE-NAME is not specified, CoRB uses URIS\_BATCH\_REF returned by URIS-MODULE as the file name.)   
   * `com.marklogic.developer.corb.ExportToFileTask` (Generates _**multiple files**_. Saves the documents returned by each invocation of XQUERY-MODULE to a separate local file within EXPORT-FILE-DIR where the file name for each document will be the based on the URI.)   
@@ -64,9 +65,10 @@ Corb needs one or more of the following parameters as (If specified in more than
   declare variable URI as xs:string exernal;  
   let $all-uris := fn:tokenize($URI,";")
   ```  
-* **BATCH-URI-DELIM** (Optional i.e., if default delimiter `';'` cannot be used to join multiple URIS when BATCH-SIZE is greater than 1.)   
+* **BATCH-URI-DELIM** (Use if default delimiter `';'` cannot be used to join multiple URIS when BATCH-SIZE is greater than 1.)   
 * **FAIL-ON-ERROR** (Default is true. If false, corb job will not fail and exit if the transform module throws xquery error after the first URI is successfully run. This option will not handle repeated connection failures)  
-* **ERROR-FILE-NAME** (Optional. Used when FAIL-ON-ERROR is false. If specified, the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to seperate URI and error message)  
+* **ERROR-FILE-NAME** (Used when FAIL-ON-ERROR is false. If specifiedf true, removes duplicates from , the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to seperate URI and error message)  
+* **EXPORT-FILE-REMOVE-DUPLICATES** (If `true`, duplicate lines from EXPORT-FILE-NAME will be removed. If `true|sorted`, lines will be sorted. If `true|ordered', lines will not be reordered after removing duplicates.)  
 
 ### Alternate XCC connection configuration
 * **XCC-USERNAME** (Required if XCC-CONNECTION-URI is not specified)
