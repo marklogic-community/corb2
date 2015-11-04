@@ -48,6 +48,12 @@ Corb needs one or more of the following parameters as (If specified in more than
 * **EXPORT-FILE-NAME** (shared file to write output of com.marklogic.developer.corb.ExportBatchToFileTask - should be a file name with our without full path. EXPORT-FILE-DIR is not required if full path is used. If EXPORT-FILE-NAME is not specified, CoRB attempts to use URIS\_BATCH\_REF as the file name and this is especially useful in case of automated jobs where file name can only be determined by the URIS-MODULE - refer to URIS\_BATCH\_REF section below)
 * **INIT-MODULE** (An XQuery or JavaScript module which, if specified, will be invoked prior to URIS-MODULE. XQuery and JavaScript modules need to have .xqy and .sjs extensions respectively.)
 * **INIT-TASK** (Java Task which, if specified, will be called prior to URIS-MODULE - this can be used addition to INIT-MODULE for custom implementations)
+* **BATCH-SIZE** (default is 1. Number of uris to be executed in single transform. If more than 1, transform module will receive a delimited string as URI variable and which needs to be tokenized to get individual uris. Default delimiter is ';' which can be overwritten with the option BATCH-URI-DELIM below)   
+  **Sample code for transform:**  
+  ```
+  declare variable URI as xs:string exernal;  
+  let $all-uris := fn:tokenize($URI,";")
+  ```
 
 ### Additional options
 * **EXPORT-FILE-PART-EXT** (ex: .tmp - if specified, com.marklogic.developer.corb.PreBatchUpdateFileTask adds this temporary extension to the export file name to indicate EXPORT-FILE-NAME is being actively modified. To remove this temporary extension after EXPORT-FILE-NAME is complete, `com.marklogic.developer.corb.PostBatchUpdateFileTask` must be specified as POST-BATCH-TASK.)
@@ -58,13 +64,7 @@ Corb needs one or more of the following parameters as (If specified in more than
   **Example:** 
   `URIS-REPLACE-PATTERN=/com/marklogic/sample/,,.xml,`  (Replace /com/marklogic/sample/ and .xml with empty strings. So, Corb client only need to cache the id '1234' instead of the entire URI /com/marklogic/sample/1234.xml. In the transform XQUERY-MODULE, we need to do `let $URI := fn:concat("/com/marklogic/sample/",$URI,".xml")`)
 * **XCC-CONNECTION-RETRY-LIMIT** (Number attempts to connect to ML before giving up - default is 3)
-* **XCC-CONNECTION-RETRY-INTERVAL** (in seconds - Time interval in seconds between retry attempts - default is 60)
-* **BATCH-SIZE** (default is 1. Number of uris to be executed in single transform. If more than 1, transform module will receive a delimited string as URI variable and which needs to be tokenized to get individual uris. Default delimiter is ';' which can be overwritten with the option BATCH-URI-DELIM below)   
-  **Sample code for transform:** 
-  ```
-  declare variable URI as xs:string exernal;  
-  let $all-uris := fn:tokenize($URI,";")
-  ```  
+* **XCC-CONNECTION-RETRY-INTERVAL** (in seconds - Time interval in seconds between retry attempts - default is 60)  
 * **BATCH-URI-DELIM** (Use if default delimiter `';'` cannot be used to join multiple URIS when BATCH-SIZE is greater than 1.)   
 * **FAIL-ON-ERROR** (Default is true. If false, corb job will not fail and exit if the transform module throws xquery error after the first URI is successfully run. This option will not handle repeated connection failures)  
 * **ERROR-FILE-NAME** (Used when FAIL-ON-ERROR is false. If specifiedf true, removes duplicates from , the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to seperate URI and error message)  
