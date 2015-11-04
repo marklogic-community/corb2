@@ -8,9 +8,9 @@ Please download latest release from https://github.com/marklogic/corb2/releases.
 
 Corb v2.1.3 or later requires marklogic-xcc-8.0.*.jar or later to run. Please note that xcc 8 is backwards compatible up to MarkLogic 5. Also, please use java 1.7 or later for running corb.
 
-To build corb using ant, please specify java.library.user folder in the build.properties file and place marklogic-xcc-8.0.3.jar in this folder. Please update build.xml for building corb with a later version of xcc jar.  
+To build corb using ant, please specify java.library.user folder in the build.properties file and place marklogic-xcc-8.0.*.jar in this folder. Please update build.xml for building corb with a later version of xcc jar.  
 
-Corb uses java logger. To customize logging, please specify logging configuration file using java system arg  
+Corb uses java logger. To customize logging, please specify logging configuration file using java system argument  
 `-Djava.util.logging.config.file=/path/to/logging.properties`
 
 ### Running Corb
