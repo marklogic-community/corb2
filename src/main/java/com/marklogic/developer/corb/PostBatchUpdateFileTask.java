@@ -1,10 +1,18 @@
 package com.marklogic.developer.corb;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -115,6 +123,59 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 			}
 		}
 	}
+	
+	private void removeDuplicatesAndSort() throws IOException{
+		String removeDuplicates = getProperty("EXPORT-FILE-REMOVE-DUPLICATES");
+		if(removeDuplicates == null || !removeDuplicates.toLowerCase().startsWith("true")) return;
+		
+		String outFileName = getFileName();
+		File outFile = new File(exportDir, outFileName);
+		if(!outFile.exists()) return;
+		
+		Set<String> lines = null;
+		if(removeDuplicates.toLowerCase().startsWith("true|sort")){
+			lines = new TreeSet<String>();
+		}else if(removeDuplicates.toLowerCase().startsWith("true|order")){
+			lines = new LinkedHashSet<String>(10000);
+		}else{
+			lines = new HashSet<String>(10000);
+		}
+		
+		BufferedReader reader = null;
+		try{
+			reader = new BufferedReader(new FileReader(outFile));	    
+	    String line;
+	    while ((line = reader.readLine()) != null) {
+	        lines.add(line);
+	    }
+		}finally{
+			if(reader != null) reader.close();
+		}
+		
+		String partExt = getProperty("EXPORT-FILE-PART-EXT");
+		if (partExt == null || partExt.length() == 0) {
+			partExt=".part";
+		}
+		if (!partExt.startsWith(".")) {
+			partExt = "." + partExt;
+		}
+		String partFileName = outFileName+partExt;
+    
+    BufferedWriter writer = null;
+    try{
+    	writer = new BufferedWriter(new FileWriter(new File(exportDir,partFileName)));
+	    for (String unique : lines) {
+	        writer.write(unique);
+	        writer.newLine();
+	    }
+	    writer.flush();
+    }finally{
+    	if(writer != null) writer.close();
+    }    
+    lines.clear();
+    
+    moveFile(partFileName, outFileName);
+	}
 
 	@Override
 	public String[] call() throws Exception {
@@ -122,6 +183,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 			invokeModule();
 			writeBottomContent();
 			moveFile();
+			removeDuplicatesAndSort();
 			compressFile();
 			return new String[0];
 		} finally {
