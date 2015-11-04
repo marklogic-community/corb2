@@ -14,7 +14,7 @@ import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import java.util.logging.Level;
 
-public class XQueryUrisLoader implements UrisLoader {
+public class QueryUrisLoader implements UrisLoader {
 
 	TransformOptions options;
 	ContentSource cs;
@@ -29,9 +29,9 @@ public class XQueryUrisLoader implements UrisLoader {
 
 	String[] replacements = new String[0];
 
-	private static final Logger LOG = Logger.getLogger(XQueryUrisLoader.class.getSimpleName());
+	private static final Logger LOG = Logger.getLogger(QueryUrisLoader.class.getSimpleName());
 
-	public XQueryUrisLoader() {
+	public QueryUrisLoader() {
 	}
 
 	@Override

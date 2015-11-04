@@ -681,7 +681,7 @@ public class Manager{
 	private UrisLoader getUriLoader() throws InstantiationException, IllegalAccessException {
 		UrisLoader loader = null;
 		if (options.getUrisModule() != null && options.getUrisModule().trim().length() > 0) {
-			loader = new XQueryUrisLoader();
+			loader = new QueryUrisLoader();
 		} else if (options.getUrisFile() != null && options.getUrisFile().trim().length() > 0) {
 			loader = new FileUrisLoader();
 		} else if (options.getUrisLoaderClass() != null) {
