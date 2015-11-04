@@ -51,10 +51,8 @@ Corb needs one or more of the following parameters as (If specified in more than
 * **INIT-TASK** (Java Task which, if specified, will be called prior to URIS-MODULE - this can be used addition to INIT-MODULE for custom implementations)
 * **BATCH-SIZE** (default is 1. Number of uris to be executed in single transform. If more than 1, transform module will receive a delimited string as URI variable and which needs to be tokenized to get individual uris. Default delimiter is ';' which can be overwritten with the option BATCH-URI-DELIM below)   
   **Sample code for transform:**  
-  ```
-  declare variable URI as xs:string exernal;  
-  let $all-uris := fn:tokenize($URI,";")
-  ```
+  `declare variable URI as xs:string exernal;`  
+  `let $all-uris := fn:tokenize($URI,";")`
 
 ### Additional options
 * **EXPORT-FILE-PART-EXT** (ex: .tmp - if specified, com.marklogic.developer.corb.PreBatchUpdateFileTask adds this temporary extension to the export file name to indicate EXPORT-FILE-NAME is being actively modified. To remove this temporary extension after EXPORT-FILE-NAME is complete, `com.marklogic.developer.corb.PostBatchUpdateFileTask` must be specified as POST-BATCH-TASK.)
