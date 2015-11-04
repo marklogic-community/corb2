@@ -336,7 +336,7 @@ public class ModuleExecutor {
 			req.setOptions(opts);
 
 			res = session.submitRequest(req);
-			Class processTaskClass = options.getProcessTaskClass();
+			Class<? extends Task> processTaskClass = options.getProcessTaskClass();
 			String processTaskClassName = null;
 			if (processTaskClass != null) {
 				processTaskClassName = processTaskClass.getName();

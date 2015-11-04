@@ -316,6 +316,9 @@ public class Manager{
 		String exportFileName = getOption(args.length > 14 ? args[14] : null, "EXPORT-FILE-NAME");
 		String urisFile = getOption(args.length > 15 ? args[15] : null, "URIS-FILE");
 		
+		String urisLoader = getOption(null, "URIS-LOADER");
+		if (urisLoader != null) options.setUrisLoaderClass(getUrisLoaderCls(urisLoader));
+		
 		String initModule = getOption(null, "INIT-MODULE");
 		String initTask = getOption(null, "INIT-TASK");
 		
@@ -395,6 +398,16 @@ public class Manager{
 			return cls.asSubclass(Task.class);
 		} else {
 			throw new IllegalArgumentException(type+" must be of type com.marklogic.developer.corb.Task");
+		}
+	}
+	
+	protected Class<? extends UrisLoader> getUrisLoaderCls(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
+		Class<?> cls = Class.forName(className);
+		if (UrisLoader.class.isAssignableFrom(cls)) {
+			cls.newInstance(); // sanity check
+			return cls.asSubclass(UrisLoader.class);
+		} else {
+			throw new IllegalArgumentException("Uris Loader must be of type com.marklogic.developer.corb.UrisLoader");
 		}
 	}
 	
@@ -665,14 +678,16 @@ public class Manager{
 		}
 	}
 
-	private UrisLoader getUriLoader() {
+	private UrisLoader getUriLoader() throws InstantiationException, IllegalAccessException {
 		UrisLoader loader = null;
 		if (options.getUrisModule() != null && options.getUrisModule().trim().length() > 0) {
 			loader = new XQueryUrisLoader();
 		} else if (options.getUrisFile() != null && options.getUrisFile().trim().length() > 0) {
 			loader = new FileUrisLoader();
-		} else {
-			throw new IllegalArgumentException("Cannot find URIS-MODULE or URIS-FILE");
+		} else if (options.getUrisLoaderClass() != null) {
+			loader = options.getUrisLoaderClass().newInstance();
+		}else {
+			throw new IllegalArgumentException("Cannot find URIS-MODULE, URIS-FILE or URIS-LOADER");
 		}
 
 		loader.setOptions(options);

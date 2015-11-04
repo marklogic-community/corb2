@@ -68,8 +68,7 @@ public class TaskFactory {
 			throw new NullPointerException("null content source");
 		}
 		try {
-			Task task = manager.getOptions().getPreBatchTaskClass() == null ? new Transform() : manager.getOptions()
-					.getPreBatchTaskClass().newInstance();
+			Task task = manager.getOptions().getPreBatchTaskClass() == null ? new Transform() : manager.getOptions().getPreBatchTaskClass().newInstance();
 			setupTask(task, "PRE-BATCH-MODULE", manager.getOptions().getPreBatchModule(), new String[0]);
 			return task;
 		} catch (Exception exc) {
@@ -85,8 +84,7 @@ public class TaskFactory {
 			throw new NullPointerException("null content source");
 		}
 		try {
-			Task task = manager.getOptions().getPostBatchTaskClass() == null ? new Transform() : manager.getOptions()
-					.getPostBatchTaskClass().newInstance();
+			Task task = manager.getOptions().getPostBatchTaskClass() == null ? new Transform() : manager.getOptions().getPostBatchTaskClass().newInstance();
 			setupTask(task, "POST-BATCH-MODULE", manager.getOptions().getPostBatchModule(), new String[0]);
 			return task;
 		} catch (Exception exc) {
@@ -102,8 +100,7 @@ public class TaskFactory {
 			throw new NullPointerException("null content source");
 		}
 		try {
-			Task task = manager.getOptions().getInitTaskClass() == null ? new Transform() : manager.getOptions()
-					.getInitTaskClass().newInstance();
+			Task task = manager.getOptions().getInitTaskClass() == null ? new Transform() : manager.getOptions().getInitTaskClass().newInstance();
 			setupTask(task, "INIT-MODULE", manager.getOptions().getInitModule(), new String[0]);
 			return task;
 		} catch (Exception exc) {

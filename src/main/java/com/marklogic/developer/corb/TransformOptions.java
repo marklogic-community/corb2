@@ -59,6 +59,7 @@ public class TransformOptions {
 
 	private String urisModule = null;
 	private String urisFile = null;
+	private Class<? extends UrisLoader> urisLoaderCls = null;
 
 	private int threadCount = 1;
 	private int batchSize = 1;
@@ -159,6 +160,14 @@ public class TransformOptions {
 
 	public void setUrisFile(String urisFile) {
 		this.urisFile = urisFile;
+	}
+	
+	public Class<? extends UrisLoader> getUrisLoaderClass() {
+		return this.urisLoaderCls;
+	}
+
+	public void setUrisLoaderClass(Class<? extends UrisLoader> urisLoaderCls) {
+		this.urisLoaderCls = urisLoaderCls;
 	}
 
 	/**
