@@ -256,7 +256,7 @@ public class Manager{
 		this.properties = new Properties();
 	}
 	
-	protected void init(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException{		
+	public void init(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException{		
 		String propsFileName = System.getProperty("OPTIONS-FILE");
 		loadPropertiesFile(propsFileName,true,this.properties);
 		
@@ -601,7 +601,7 @@ public class Manager{
 		return newTrustAnyoneOptions();
 	}
 
-	private void registerStatusInfo() {
+	protected void registerStatusInfo() {
 		Session session = contentSource.newSession();
 		AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_0_9_ML + DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
 				+ "let $status := \n" + " xdmp:server-status(xdmp:host(), xdmp:server())\n"
@@ -631,6 +631,7 @@ public class Manager{
 		LOG.log(Level.INFO, "Configured modules root: {0}", options.getModuleRoot());
 		LOG.log(Level.INFO, "Configured uri module: {0}", options.getUrisModule());
 		LOG.log(Level.INFO, "Configured uri file: {0}", options.getUrisFile());
+		LOG.log(Level.INFO, "Configured uri loader: {0}", options.getUrisLoaderClass());
 		LOG.log(Level.INFO, "Configured process module: {0}", options.getProcessModule());
 		LOG.log(Level.INFO, "Configured process task: {0}", options.getProcessTaskClass());
 		LOG.log(Level.INFO, "Configured pre batch module: {0}", options.getPreBatchModule());

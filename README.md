@@ -22,7 +22,8 @@ Corb needs one or more of the following parameters as (If specified in more than
 2. Java system properties ex: `-DXCC-CONNECTION-URI=xcc://user:password@localhost:8202`
 3. As properties file in the class path specified using `-DOPTIONS-FILE=myjob.properties`. Relative and full file system paths are also supported.
 
-> Note: Any or all of the properties can be specified as java system properties or key value pairs in properties file.
+> Note: Any or all of the properties can be specified as java system properties or key value pairs in properties file.  
+> Note: Corb exit codes `0` - successful, `9` - nothing to process, `1` - initialization or connection error and `2` - execution error
 
 ### Options  
 * **XCC-CONNECTION-URI** (Connection string to MarkLogic XDBC Server)
