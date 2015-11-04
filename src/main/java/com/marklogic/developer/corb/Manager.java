@@ -32,8 +32,6 @@ import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -48,10 +46,6 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import com.marklogic.developer.Utilities;
 import com.marklogic.xcc.AdhocQuery;
@@ -96,6 +90,8 @@ public class Manager{
 	private Monitor monitor;
 	private Thread monitorThread;
 	private CompletionService<String[]> completionService;
+	
+	private AbstractSSLOptions sslOptions = null;
 
 	private static final Logger LOG = Logger.getLogger(Manager.class.getSimpleName());
 		
@@ -266,6 +262,7 @@ public class Manager{
 		this.collection = collection != null ? collection : "";
 		
 		initOptions(args);
+		initSSLOptions();
 	}
 	
 	protected void initURI(String uriArg) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException, URISyntaxException{
@@ -411,6 +408,22 @@ public class Manager{
 		}
 	}
 	
+	protected void initSSLOptions() throws ClassNotFoundException, InstantiationException, IllegalAccessException{
+		String sslConfigClassName = getOption(null, "SSL-OPTIONS");
+		if (sslConfigClassName != null) {
+			Class<?> decrypterCls = Class.forName(sslConfigClassName);
+			if (AbstractSSLOptions.class.isAssignableFrom(decrypterCls)) {
+				this.sslOptions = (AbstractSSLOptions) decrypterCls.newInstance();
+			} else {
+				throw new IllegalArgumentException("SSL Options must be of type com.marklogic.developer.corb.AbstractSSLOptions");
+			}
+		}else{
+			this.sslOptions = new TrustAnyoneSSLOptions();
+		}
+		sslOptions.setProperties(this.properties);
+	}
+	
+		
 	protected String getOption(String argVal, String propName) {
 		if (argVal != null && argVal.trim().length() > 0) {
 			return argVal.trim();
@@ -598,7 +611,7 @@ public class Manager{
 	}
 	
 	protected SecurityOptions getSecurityOptions() throws KeyManagementException, NoSuchAlgorithmException{
-		return newTrustAnyoneOptions();
+		return this.sslOptions.getSecurityOptions();
 	}
 
 	protected void registerStatusInfo() {
@@ -872,32 +885,4 @@ public class Manager{
 		stop();
 	}
 
-	protected static SecurityOptions newTrustAnyoneOptions() throws KeyManagementException, NoSuchAlgorithmException {
-		TrustManager[] trust = new TrustManager[] { new X509TrustManager() {
-			@Override
-			public X509Certificate[] getAcceptedIssuers() {
-				return new X509Certificate[0];
-			}
-
-			/**
-			 * @throws CertificateException
-			 */
-			@Override
-			public void checkClientTrusted(X509Certificate[] certs, String authType) throws CertificateException {
-				// no exception means it's okay
-			}
-
-			/**
-			 * @throws CertificateException
-			 */
-			@Override
-			public void checkServerTrusted(X509Certificate[] certs, String authType) throws CertificateException {
-				// no exception means it's okay
-			}
-		} };
-
-		SSLContext sslContext = SSLContext.getInstance("SSLv3");
-		sslContext.init(null, trust, null);
-		return new SecurityOptions(sslContext);
-	}
 }

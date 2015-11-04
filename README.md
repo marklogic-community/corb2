@@ -52,7 +52,8 @@ Corb needs one or more of the following parameters as (If specified in more than
 * **BATCH-SIZE** (default is 1. Number of uris to be executed in single transform. If more than 1, transform module will receive a delimited string as URI variable and which needs to be tokenized to get individual uris. Default delimiter is ';' which can be overwritten with the option BATCH-URI-DELIM below)   
   **Sample code for transform:**  
   `declare variable URI as xs:string exernal;`  
-  `let $all-uris := fn:tokenize($URI,";")`
+  `let $all-uris := fn:tokenize($URI,";")`  
+* **SSL-OPTIONS** (A java class that must extend `com.marklogic.developer.corb.AbstractSSLOptions`. If not specified, Corb defaults to `com.marklogic.developer.corb.TrustAnyoneSSLOptions` for `xccs` connections)  
 
 ### Additional options
 * **EXPORT-FILE-PART-EXT** (ex: .tmp - if specified, com.marklogic.developer.corb.PreBatchUpdateFileTask adds this temporary extension to the export file name to indicate EXPORT-FILE-NAME is being actively modified. To remove this temporary extension after EXPORT-FILE-NAME is complete, `com.marklogic.developer.corb.PostBatchUpdateFileTask` must be specified as POST-BATCH-TASK.)
