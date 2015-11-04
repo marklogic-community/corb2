@@ -127,10 +127,10 @@ Generate keys and encrypt XCC URL or password using one of the options below.
 
 **Java Crypt**  
 * Use the PrivateKeyDecrypter class inside the corb jar with the gen-keys option to generate a key.  
-  `java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024`
+  `java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024`  
   > Note: if not specified, default algorithm: RSA, default key-length: 1024
 * Use the PrivateKeyDecrypter class inside the corb jar with the encrypt option to encrypt the clear text such as an xcc URL or password.  
-  `java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA`
+  `java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA`  
   > Note: if not specified, default algorithm: RSA
 
 **RSA keys**  
@@ -150,7 +150,7 @@ JasyptDecrypter automatically detects if the text is encrypted. Unencrypted text
 
 Encrypt the URI or password as below. It is assumed that jasypt distribution is available on your machine.   
 
-    jasypt-1.9.2/bin/encrypt.sh input="uri or password" password="passphrase" algorithm="algorithm" (ex: PBEWithMD5AndTripleDES or PBEWithMD5AndDES)  
+`jasypt-1.9.2/bin/encrypt.sh input="uri or password" password="passphrase" algorithm="algorithm" (ex: PBEWithMD5AndTripleDES or PBEWithMD5AndDES)`  
 
 **jasypt.properties file**  
 ```
