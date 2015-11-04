@@ -92,7 +92,7 @@ INIT-MODULE, URIS-MODULE, XQUERY-MODULE, PRE-BATCH-MODULE and POST-BATCH-MODULE 
 **Examples:**  
 `PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC` (adhoc-pre-batch.xqy must be on the classpath or in the current directory)  
 `XQUERY-MODULE=/path/to/file/adhoc-transform-module.xqy|ADHOC` (xquery module file with full path in the file system)  
-URIS-MODULE=adhoc-uris.sjs|ADHOC (Adhoc JavaScript module in the classpath or current directory)
+`URIS-MODULE=adhoc-uris.sjs|ADHOC` (Adhoc JavaScript module in the classpath or current directory)
 
 ### JavaScript Modules
 JavaScript modules are supported with Marklogic 8 and can be used in place of an XQuery module. However, if returning multiple values (ex: URIS-MODULE), values must be returned as ValueIterator. MarkLogic JavaScript API has helper functions to convert Arrays into ValueIterator ([`xdmp.arrayValues()`](https://docs.marklogic.com/xdmp.arrayValues)) and inserting values into another ValueIterator ([`fn.insertBefore()`](https://docs.marklogic.com/fn.insertBefore)).
