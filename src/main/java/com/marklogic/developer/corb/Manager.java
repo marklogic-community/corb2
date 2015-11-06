@@ -83,15 +83,15 @@ public class Manager{
 
 	protected URI connectionUri;
 	protected String collection;
-	protected Properties properties = null;
-	protected TransformOptions options = null;
-	private ThreadPoolExecutor pool = null;
-	private ContentSource contentSource;
+	protected Properties properties;
+	protected TransformOptions options;
+	protected ContentSource contentSource;
+	protected AbstractSSLOptions sslOptions;
+	
+	private ThreadPoolExecutor pool;
 	private Monitor monitor;
 	private Thread monitorThread;
 	private CompletionService<String[]> completionService;
-	
-	private AbstractSSLOptions sslOptions = null;
 
 	private static final Logger LOG = Logger.getLogger(Manager.class.getSimpleName());
 		
