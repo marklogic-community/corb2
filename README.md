@@ -116,6 +116,7 @@ It is often required to protect the database connection string or password from 
 * **DECRYPTER** (Must extend `com.marklogic.developer.corb.AbstractDecrypter`. Encryptable options include XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and XCC-DBNAME)   
   * `com.marklogic.developer.corb.PrivateKeyDecrypter` (Included, requires private key file)  
   * `com.marklogic.developer.corb.JasyptDecrypter` (Included, requires jasypt-*.jar in classpath)
+  * `com.marklogic.developer.corb.HostKeyDecrypter` (Included, requires Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files )
 * **PRIVATE-KEY-FILE** (Required property for PrivateKeyDecrypter, should be accessible in classpath or file system)
 * **PRIVATE-KEY-ALGORITHM** (Optional - Default algorithm for PrivateKeyDecrypter is RSA. Default algorithm for JasyptDecrypter is PBEWithMD5AndTripleDES)
 * **JASYPT-PROPERTIES-FILE** (Optional property for JasyptDecrypter. If not specified, it uses default jasypt.proeprties file, which should be accessible in the classpath or file system.)  
@@ -157,6 +158,15 @@ Encrypt the URI or password as below. It is assumed that jasypt distribution is 
 jasypt.algorithm=PBEWithMD5AndTripleDES #(If not specified, default is PBEWithMD5AndTripleDES) 
 jasypt.password=passphrase  
 ```
+
+#### com.marklogic.developer.corb.HostKeyDecrypter
+HostKeyDecrypter uses internal server identifiers to generate a private key unique to the host server. It then uses that private key as input to AES-258 encryption algorithm. Due to the use of AES-258, it requires JCE Unlimited Strength Jurisdiction Policy Files. Note: certain server identifiers used may change in cases of driver installation or if underlying hardware changes. In such cases, passwords will need to be regenerated. Encrypted passwords will be always be unique to the server they are generated on.
+
+Encrypt the password as follows:
+`java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.HostKeyDecrypter encrypt clearText`  
+
+To test if server is properly configured to use the HostKeyDecrypter:
+`java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.HostKeyDecrypter test`  
 
 #### URIS\_BATCH\_REF
 If a module, including those specified by PRE-BATCH-MODULE, XQUERY-MODULE or POST-BATCH-MODULE have an external or global variable named URIS\_BATCH\_REF, the variable will be set to the first item in the sequence or ValueIterator returned by URIS-MODULE. This means that, when used, the URIS-MODULE must return a sequence or ValueIterator with the special string value first, then the URI count, then the sequence of URIs to process.  
