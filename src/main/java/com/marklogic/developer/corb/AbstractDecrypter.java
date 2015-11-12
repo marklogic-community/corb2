@@ -5,7 +5,7 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class AbstractDecrypter {
+public abstract class AbstractDecrypter implements Decrypter{
 
     protected transient Properties properties = null;
     protected static final Pattern ENCRYPTED_VALUE_REGEX = Pattern.compile("^ENC\\((.*)\\)$");
@@ -25,7 +25,7 @@ public abstract class AbstractDecrypter {
         }
     }
 
-    protected String decrypt(String property, String value) {
+    public String decrypt(String property, String value) {
         Matcher match = ENCRYPTED_VALUE_REGEX.matcher(value);
         if (match.matches()) {
             value = match.group(1);

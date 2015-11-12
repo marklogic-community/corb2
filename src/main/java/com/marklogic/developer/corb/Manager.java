@@ -81,12 +81,14 @@ public class Manager{
 	protected static final String XQUERY_VERSION_0_9_ML = "xquery version \"0.9-ml\"\n";
 	protected static final String NAME = Manager.class.getName();
 
+	protected Decrypter decrypter;
+	protected SSLConfig sslConfig;
+	
 	protected URI connectionUri;
 	protected String collection;
 	protected Properties properties;
 	protected TransformOptions options;
 	protected ContentSource contentSource;
-	protected AbstractSSLOptions sslOptions;
 	
 	private ThreadPoolExecutor pool;
 	private Monitor monitor;
@@ -256,13 +258,54 @@ public class Manager{
 		String propsFileName = System.getProperty("OPTIONS-FILE");
 		loadPropertiesFile(propsFileName,true,this.properties);
 		
+		initDecrypter();
+		initSSLConfig();
+		
 		initURI(args.length > 0 ? args[0] : null);
 		
 		String collection = getOption(args.length > 1 ? args[1] : null, "COLLECTION-NAME");
 		this.collection = collection != null ? collection : "";
 		
 		initOptions(args);
-		initSSLOptions();
+	}
+		
+	/**
+	 * function that is used to get the Decrypter, returns null if not specified
+	 * @return AbstractDecrypter
+	 * @throws ClassNotFoundException
+	 * @throws IOException
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 */
+	protected void initDecrypter() throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
+		String decrypterClassName = getOption(null, "DECRYPTER");
+		if (decrypterClassName != null) {
+			Class<?> decrypterCls = Class.forName(decrypterClassName);
+			if (Decrypter.class.isAssignableFrom(decrypterCls)) {
+				this.decrypter = (Decrypter) decrypterCls.newInstance();
+				decrypter.init(this.properties);
+			} else {
+				throw new IllegalArgumentException("DECRYPTER must be of type com.marklogic.developer.corb.Decrypter");
+			}
+		}else{
+			this.decrypter = null;
+		}
+	}
+	
+	protected void initSSLConfig() throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException{
+		String sslConfigClassName = getOption(null, "SSL-CONFIG-CLASS");
+		if (sslConfigClassName != null) {
+			Class<?> decrypterCls = Class.forName(sslConfigClassName);
+			if (SSLConfig.class.isAssignableFrom(decrypterCls)) {
+				this.sslConfig = (SSLConfig) decrypterCls.newInstance();
+			} else {
+				throw new IllegalArgumentException("SSL Options must be of type com.marklogic.developer.corb.SSLConfig");
+			}
+		}else{
+			this.sslConfig = new TrustAnyoneSSLConfig();
+		}
+		sslConfig.setProperties(this.properties);
+		sslConfig.setDecrypter(this.decrypter);
 	}
 	
 	protected void initURI(String uriArg) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException, URISyntaxException{
@@ -279,37 +322,13 @@ public class Manager{
 			System.exit(1);
 		}
 		
-		AbstractDecrypter decrypter = getDecrypter();
-		if (decrypter != null) {
-			uriAsString = decrypter.getConnectionURI(uriAsString, username, password, host, port, dbname);
+		if (this.decrypter != null) {
+			uriAsString = this.decrypter.getConnectionURI(uriAsString, username, password, host, port, dbname);
 		} else if (uriAsString == null) {
 			uriAsString = "xcc://" + username + ":" + password + "@" + host + ":" + port+ (dbname != null ? "/" + dbname : "");
 		}
 		
 		this.connectionUri = new URI(uriAsString);
-	}
-	
-	/**
-	 * function that is used to get the Decrypter, returns null if not specified
-	 * @return AbstractDecrypter
-	 * @throws ClassNotFoundException
-	 * @throws IOException
-	 * @throws InstantiationException
-	 * @throws IllegalAccessException
-	 */
-	protected AbstractDecrypter getDecrypter() throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
-		String decrypterClassName = getOption(null, "DECRYPTER");
-		if (decrypterClassName != null) {
-			Class<?> decrypterCls = Class.forName(decrypterClassName);
-			if (AbstractDecrypter.class.isAssignableFrom(decrypterCls)) {
-				AbstractDecrypter decrypter = (AbstractDecrypter) decrypterCls.newInstance();
-				decrypter.init(this.properties);
-				return decrypter;
-			} else {
-				throw new IllegalArgumentException("DECRYPTER must be of type com.marklogic.developer.corb.AbstractDecrypter");
-			}
-		} 
-		return null;
 	}
 	
 	
@@ -424,24 +443,7 @@ public class Manager{
 			throw new IllegalArgumentException("Uris Loader must be of type com.marklogic.developer.corb.UrisLoader");
 		}
 	}
-	
-	protected void initSSLOptions() throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException{
-		String sslConfigClassName = getOption(null, "SSL-CONFIG-CLASS");
-		if (sslConfigClassName != null) {
-			Class<?> decrypterCls = Class.forName(sslConfigClassName);
-			if (AbstractSSLOptions.class.isAssignableFrom(decrypterCls)) {
-				this.sslOptions = (AbstractSSLOptions) decrypterCls.newInstance();
-			} else {
-				throw new IllegalArgumentException("SSL Options must be of type com.marklogic.developer.corb.AbstractSSLOptions");
-			}
-		}else{
-			this.sslOptions = new TrustAnyoneSSLOptions();
-		}
-		sslOptions.setProperties(this.properties);
-		sslOptions.setDecrypter(getDecrypter());
-	}
-	
-		
+			
 	protected String getOption(String argVal, String propName) {
 		if (argVal != null && argVal.trim().length() > 0) {
 			return argVal.trim();
@@ -629,7 +631,7 @@ public class Manager{
 	}
 	
 	protected SecurityOptions getSecurityOptions() throws KeyManagementException, NoSuchAlgorithmException{
-		return this.sslOptions.getSecurityOptions();
+		return this.sslConfig.getSecurityOptions();
 	}
 
 	protected void registerStatusInfo() {

@@ -4,8 +4,6 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 
-import javax.net.ssl.SSLContext;
-
 import com.marklogic.xcc.SecurityOptions;
 
 /**
@@ -15,21 +13,17 @@ import com.marklogic.xcc.SecurityOptions;
  * getEnabledProtocols - ssl protocols such as TLSv1
  * @author rkennedy
  */
-public abstract class AbstractSSLOptions {
+public abstract class AbstractSSLConfig implements SSLConfig{
 	protected Properties properties = null;
-	protected AbstractDecrypter decrypter = null;
+	protected Decrypter decrypter = null;
 	
 	public void setProperties(Properties props){
 		this.properties = props;
 	}
 	
-	public void setDecrypter(AbstractDecrypter decrypter) {
+	public void setDecrypter(Decrypter decrypter) {
 		this.decrypter = decrypter;
 	}
-	
-	public abstract String[] getEnabledCipherSuites();
-	public abstract String[] getEnabledProtocols();
-	public abstract SSLContext getSSLContext() throws NoSuchAlgorithmException,KeyManagementException;
 	
 	/**
 	 * Returns SecurityOptions with 
@@ -37,7 +31,7 @@ public abstract class AbstractSSLOptions {
 	 * @throws NoSuchAlgorithmException
 	 * @throws KeyManagementException
 	 */
-	public  SecurityOptions getSecurityOptions() throws NoSuchAlgorithmException, KeyManagementException {
+	public SecurityOptions getSecurityOptions() throws NoSuchAlgorithmException, KeyManagementException {
 		SecurityOptions securityOptions = new SecurityOptions(getSSLContext());
 		String[] enabledCipherSuites = getEnabledCipherSuites();
 		if (enabledCipherSuites != null) {

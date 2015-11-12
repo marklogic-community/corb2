@@ -10,7 +10,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 
-public class TrustAnyoneSSLOptions extends AbstractSSLOptions{
+public class TrustAnyoneSSLConfig extends AbstractSSLConfig{
 	
 	@Override
 	public SSLContext getSSLContext() throws NoSuchAlgorithmException,KeyManagementException {

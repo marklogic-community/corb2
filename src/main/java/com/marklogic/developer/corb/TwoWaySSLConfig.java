@@ -15,9 +15,9 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-public class TwoWaySSLOptions extends AbstractSSLOptions {
+public class TwoWaySSLConfig extends AbstractSSLConfig {
 
-	private static final Logger LOG = Logger.getLogger(TwoWaySSLOptions.class.getSimpleName());
+	private static final Logger LOG = Logger.getLogger(TwoWaySSLConfig.class.getSimpleName());
 
 	/**
 	 * @return acceptable list of cipher suites

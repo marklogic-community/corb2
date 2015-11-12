@@ -53,7 +53,8 @@ Corb needs one or more of the following parameters as (If specified in more than
   **Sample code for transform:**  
   `declare variable URI as xs:string exernal;`  
   `let $all-uris := fn:tokenize($URI,";")`  
-* **SSL-CONFIG-CLASS** (A java class that must extend `com.marklogic.developer.corb.AbstractSSLOptions`. If not specified, Corb defaults to `com.marklogic.developer.corb.TrustAnyoneSSLOptions` for `xccs` connections)  
+* **DECRYPTER** (Must implement `com.marklogic.developer.corb.Decrypter`. Encryptable options include XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and XCC-DBNAME)  
+* **SSL-CONFIG-CLASS** (A java class that must implement `com.marklogic.developer.corb.SSLConfig`. If not specified, Corb defaults to `com.marklogic.developer.corb.TrustAnyoneSSLConfig` for `xccs` connections)  
 
 ### Additional options
 * **EXPORT-FILE-PART-EXT** (ex: .tmp - if specified, com.marklogic.developer.corb.PreBatchUpdateFileTask adds this temporary extension to the export file name to indicate EXPORT-FILE-NAME is being actively modified. To remove this temporary extension after EXPORT-FILE-NAME is complete, `com.marklogic.developer.corb.PostBatchUpdateFileTask` must be specified as POST-BATCH-TASK.)
@@ -113,7 +114,7 @@ To return URIS\_BATCH\_REF, we can do the following
 ### Encryption
 It is often required to protect the database connection string or password from unauthorized access. So, CoRB optionally supports encryption of the entire XCC URL or any parts of the XCC URL (if individually specified), such as XCC-PASSWORD.
 
-* **DECRYPTER** (Must extend `com.marklogic.developer.corb.AbstractDecrypter`. Encryptable options include XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and XCC-DBNAME)   
+* **DECRYPTER** (Must implement `com.marklogic.developer.corb.Decrypter`. Encryptable options include XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and XCC-DBNAME)   
   * `com.marklogic.developer.corb.PrivateKeyDecrypter` (Included, requires private key file)  
   * `com.marklogic.developer.corb.JasyptDecrypter` (Included, requires jasypt-*.jar in classpath)
   * `com.marklogic.developer.corb.HostKeyDecrypter` (Included, requires Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files )
@@ -162,24 +163,24 @@ jasypt.password=passphrase
 #### com.marklogic.developer.corb.HostKeyDecrypter
 HostKeyDecrypter uses internal server identifiers to generate a private key unique to the host server. It then uses that private key as input to AES-258 encryption algorithm. Due to the use of AES-258, it requires JCE Unlimited Strength Jurisdiction Policy Files. Note: certain server identifiers used may change in cases of driver installation or if underlying hardware changes. In such cases, passwords will need to be regenerated. Encrypted passwords will be always be unique to the server they are generated on.
 
-Encrypt the password as follows:
+Encrypt the password as follows:  
 `java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.HostKeyDecrypter encrypt clearText`  
 
-To test if server is properly configured to use the HostKeyDecrypter:
+To test if server is properly configured to use the HostKeyDecrypter:  
 `java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.HostKeyDecrypter test`  
 
 ### SSL Support
 CORB2 provides support for SSL over XCC. As a prerequisite to enabling CORB2 SSL support, the XDBC server must be configured to use SSL. It is necessary to specify XCC-CONNECTION-URI property with a protocol of 'xccs'. To configure a particular type of SSL configuration use the following property:
 
-* **SSL-CONFIG-CLASS** (Must extend `com.marklogic.developer.corb.AbstractSSLOptions`).    
-  * `com.marklogic.developer.corb.TrustAnyoneSSLOptions` (Included)  
-  * `com.marklogic.developer.corb.TwoWaySSLOptions` (Included, supports 2-way SSL)
+* **SSL-CONFIG-CLASS** (Must implement `com.marklogic.developer.corb.SSLConfig`)    
+  * `com.marklogic.developer.corb.TrustAnyoneSSLConfig` (Included)  
+  * `com.marklogic.developer.corb.TwoWaySSLConfig` (Included, supports 2-way SSL)
 
-#### com.marklogic.developer.corb.TrustAnyoneSSLOptions
-TrustAnyoneSSLOptions is the default implementation of the SSLContext. It will accept any certificate presented by the MarkLogic server. 
+#### com.marklogic.developer.corb.TrustAnyoneSSLConfig
+TrustAnyoneSSLConfig is the default implementation of the SSLContext. It will accept any certificate presented by the MarkLogic server. 
 
-#### com.marklogic.developer.corb.TwoWaySSLOptions
-TwoWaySSLOptions is more complete and configurable implementation of the SSLContext. It supports SSL with mutual authentication. It is configurable via the following properties:
+#### com.marklogic.developer.corb.TwoWaySSLConfig
+TwoWaySSLConfig is more complete and configurable implementation of the SSLContext. It supports SSL with mutual authentication. It is configurable via the following properties:
 
 * **SSL-PROPERTIES-FILE** (Optional) A properties file that can be used to load a common SSL configuration
 * **SSL-KEYSTORE** Location of the keystore certificate
