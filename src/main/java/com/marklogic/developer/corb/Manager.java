@@ -279,22 +279,39 @@ public class Manager{
 			System.exit(1);
 		}
 		
-		String decrypterClassName = getOption(null, "DECRYPTER");
-		if (decrypterClassName != null) {
-			Class<?> decrypterCls = Class.forName(decrypterClassName);
-			if (AbstractDecrypter.class.isAssignableFrom(decrypterCls)) {
-				AbstractDecrypter decrypter = (AbstractDecrypter) decrypterCls.newInstance();
-				decrypter.init(this.properties);
-				uriAsString = decrypter.getConnectionURI(uriAsString, username, password, host, port, dbname);
-			} else {
-				throw new IllegalArgumentException("DECRYPTER must be of type com.marklogic.developer.corb.AbstractDecrypter");
-			}
+		AbstractDecrypter decrypter = getDecrypter();
+		if (decrypter != null) {
+			uriAsString = decrypter.getConnectionURI(uriAsString, username, password, host, port, dbname);
 		} else if (uriAsString == null) {
 			uriAsString = "xcc://" + username + ":" + password + "@" + host + ":" + port+ (dbname != null ? "/" + dbname : "");
 		}
 		
 		this.connectionUri = new URI(uriAsString);
 	}
+	
+	/**
+	 * function that is used to get the Decrypter, returns null if not specified
+	 * @return AbstractDecrypter
+	 * @throws ClassNotFoundException
+	 * @throws IOException
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 */
+	protected AbstractDecrypter getDecrypter() throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
+		String decrypterClassName = getOption(null, "DECRYPTER");
+		if (decrypterClassName != null) {
+			Class<?> decrypterCls = Class.forName(decrypterClassName);
+			if (AbstractDecrypter.class.isAssignableFrom(decrypterCls)) {
+				AbstractDecrypter decrypter = (AbstractDecrypter) decrypterCls.newInstance();
+				decrypter.init(this.properties);
+				return decrypter;
+			} else {
+				throw new IllegalArgumentException("DECRYPTER must be of type com.marklogic.developer.corb.AbstractDecrypter");
+			}
+		} 
+		return null;
+	}
+	
 	
 	protected void initOptions(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
 		// gather inputs		
@@ -408,8 +425,8 @@ public class Manager{
 		}
 	}
 	
-	protected void initSSLOptions() throws ClassNotFoundException, InstantiationException, IllegalAccessException{
-		String sslConfigClassName = getOption(null, "SSL-OPTIONS");
+	protected void initSSLOptions() throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException{
+		String sslConfigClassName = getOption(null, "SSL-CONFIG-CLASS");
 		if (sslConfigClassName != null) {
 			Class<?> decrypterCls = Class.forName(sslConfigClassName);
 			if (AbstractSSLOptions.class.isAssignableFrom(decrypterCls)) {
@@ -421,6 +438,7 @@ public class Manager{
 			this.sslOptions = new TrustAnyoneSSLOptions();
 		}
 		sslOptions.setProperties(this.properties);
+		sslOptions.setDecrypter(getDecrypter());
 	}
 	
 		

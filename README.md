@@ -53,7 +53,7 @@ Corb needs one or more of the following parameters as (If specified in more than
   **Sample code for transform:**  
   `declare variable URI as xs:string exernal;`  
   `let $all-uris := fn:tokenize($URI,";")`  
-* **SSL-OPTIONS** (A java class that must extend `com.marklogic.developer.corb.AbstractSSLOptions`. If not specified, Corb defaults to `com.marklogic.developer.corb.TrustAnyoneSSLOptions` for `xccs` connections)  
+* **SSL-CONFIG-CLASS** (A java class that must extend `com.marklogic.developer.corb.AbstractSSLOptions`. If not specified, Corb defaults to `com.marklogic.developer.corb.TrustAnyoneSSLOptions` for `xccs` connections)  
 
 ### Additional options
 * **EXPORT-FILE-PART-EXT** (ex: .tmp - if specified, com.marklogic.developer.corb.PreBatchUpdateFileTask adds this temporary extension to the export file name to indicate EXPORT-FILE-NAME is being actively modified. To remove this temporary extension after EXPORT-FILE-NAME is complete, `com.marklogic.developer.corb.PostBatchUpdateFileTask` must be specified as POST-BATCH-TASK.)
@@ -167,6 +167,27 @@ Encrypt the password as follows:
 
 To test if server is properly configured to use the HostKeyDecrypter:
 `java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.HostKeyDecrypter test`  
+
+### SSL Support
+CORB2 provides support for SSL over XCC. As a prerequisite to enabling CORB2 SSL support, the XDBC server must be configured to use SSL. It is necessary to specify XCC-CONNECTION-URI property with a protocol of 'xccs'. To configure a particular type of SSL configuration use the following property:
+
+* **SSL-CONFIG-CLASS** (Must extend `com.marklogic.developer.corb.AbstractSSLOptions`).    
+  * `com.marklogic.developer.corb.TrustAnyoneSSLOptions` (Included)  
+  * `com.marklogic.developer.corb.TwoWaySSLOptions` (Included, supports 2-way SSL)
+
+#### com.marklogic.developer.corb.TrustAnyoneSSLOptions
+TrustAnyoneSSLOptions is the default implementation of the SSLContext. It will accept any certificate presented by the MarkLogic server. 
+
+#### com.marklogic.developer.corb.TwoWaySSLOptions
+TwoWaySSLOptions is more complete and configurable implementation of the SSLContext. It supports SSL with mutual authentication. It is configurable via the following properties:
+
+* **SSL-PROPERTIES-FILE** (Optional) A properties file that can be used to load a common SSL configuration
+* **SSL-KEYSTORE** Location of the keystore certificate
+* **SSL-KEYSTORE-PASSWORD** (Encrytable) Password of the keystore file
+* **SSL-KEY-PASSWORD** (Encryptable) Password of the private key
+* **SSL-KEYSTORE-TYPE** Type of the keystore such as 'JKS' or 'PKCS12'
+* **SSL-ENABLED-PROTOCOLS** (Optional) A comma separated list of acceptable ssl protocols
+* **SSL-CIPHER-SUITES** A comma separated list of acceptable cipher suites used
 
 #### URIS\_BATCH\_REF
 If a module, including those specified by PRE-BATCH-MODULE, XQUERY-MODULE or POST-BATCH-MODULE have an external or global variable named URIS\_BATCH\_REF, the variable will be set to the first item in the sequence or ValueIterator returned by URIS-MODULE. This means that, when used, the URIS-MODULE must return a sequence or ValueIterator with the special string value first, then the URI count, then the sequence of URIs to process.  

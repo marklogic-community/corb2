@@ -34,4 +34,14 @@ public class TrustAnyoneSSLOptions extends AbstractSSLOptions{
 			// no exception means it's okay
 		}
 	}
+
+	@Override
+	public String[] getEnabledCipherSuites() {
+		return null;
+	}
+
+	@Override
+	public String[] getEnabledProtocols() {
+		return null;
+	}
 }
