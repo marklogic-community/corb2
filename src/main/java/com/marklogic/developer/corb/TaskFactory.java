@@ -53,7 +53,7 @@ public class TaskFactory {
 		try {
 			Task task = manager.getOptions().getProcessTaskClass() == null ? new Transform() : manager.getOptions()
 					.getProcessTaskClass().newInstance();
-			setupTask(task, "XQUERY-MODULE", manager.getOptions().getProcessModule(), uris, failOnError);
+			setupTask(task, "PROCESS-MODULE", manager.getOptions().getProcessModule(), uris, failOnError);
 			return task;
 		} catch (Exception exc) {
 			throw new IllegalArgumentException(exc.getMessage(), exc);

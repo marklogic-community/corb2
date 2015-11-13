@@ -28,7 +28,7 @@ Corb needs one or more of the following parameters as (If specified in more than
 ### Options  
 * **XCC-CONNECTION-URI** (Connection string to MarkLogic XDBC Server)
 * **COLLECTION-NAME** (Value of this parameter will be passed into the URIS-MODULE via external or global variable with the name URIS)
-* **XQUERY-MODULE** (XQuery or java script to be executed in a batch for each URI from the URIS-MODULE or URIS-FILE. Module is expected to have at least one external or global variable with name URI. XQuery and java script modules need to have .xqy and .sjs extensions respectively. If returning multiple values from a java script module, values must be returned as ValueIterator.)   
+* **PROCESS-MODULE** (or **XQUERY-MODULE** - XQuery or java script to be executed in a batch for each URI from the URIS-MODULE or URIS-FILE. Module is expected to have at least one external or global variable with name URI. XQuery and java script modules need to have .xqy and .sjs extensions respectively. If returning multiple values from a java script module, values must be returned as ValueIterator.)   
 * **THREAD-COUNT** (number of worker threads; default = 1)
 * **MODULE-ROOT** (default: '/' for root)
 * **MODULES-DATABASE** (uses the XCC-CONNECTION-URI if not provided; use 0 for file system)
@@ -88,11 +88,11 @@ Any property specified with prefix (with '.') URIS-MODULE, XQUERY-MODULE, PRE-BA
 ### Adhoc Modules
 Appending "|ADHOC" to the name or path of a XQuery module (with .xqy extension) or JavaScript (with .sjs or .js extension) module will cause the module to be read off the file system and executed in MarkLogic without being uploaded to Modules database. This simplifies running CoRB jobs by not requiring deployment of any code to MarkLogic, and makes set of CoRB2 files and configuration more self contained.   
 
-INIT-MODULE, URIS-MODULE, XQUERY-MODULE, PRE-BATCH-MODULE and POST-BATCH-MODULE can be specified adhoc by adding prefix '|ADHOC' for XQuery or JavaScript (with .sjs or .js extension) at the end. Adhoc XQuery or JavaScript remains local to the CoRB and not deployed to MarkLogic. The XQuery or JavaScript module should be in its named file and that file should be available on the file system, including being on the java classpath for CoRB.  
+INIT-MODULE, URIS-MODULE, PROCESS-MODULE, PRE-BATCH-MODULE and POST-BATCH-MODULE can be specified adhoc by adding prefix '|ADHOC' for XQuery or JavaScript (with .sjs or .js extension) at the end. Adhoc XQuery or JavaScript remains local to the CoRB and not deployed to MarkLogic. The XQuery or JavaScript module should be in its named file and that file should be available on the file system, including being on the java classpath for CoRB.  
 
 **Examples:**  
 `PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC` (adhoc-pre-batch.xqy must be on the classpath or in the current directory)  
-`XQUERY-MODULE=/path/to/file/adhoc-transform-module.xqy|ADHOC` (xquery module file with full path in the file system)  
+`PROCESS-MODULE=/path/to/file/adhoc-transform-module.xqy|ADHOC` (xquery module file with full path in the file system)  
 `URIS-MODULE=adhoc-uris.sjs|ADHOC` (Adhoc JavaScript module in the classpath or current directory)
 
 ### JavaScript Modules
@@ -203,7 +203,7 @@ ExportBatchToFileTask, PreBatchUpdateFileTask and PostBatchUpdateFileTask use UR
 java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar 
         com.marklogic.developer.corb.Manager 
         XCC-CONNECTION-URI 
-        [COLLECTION-NAME [XQUERY-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT 
+        [COLLECTION-NAME [PROCESS-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT 
           [ MODULES-DATABASE [ INSTALL [ PROCESS-TASK [ PRE-BATCH-MODULE [ PRE-BATCH-TASK 
             [ POST-XQUERY-MODULE [ POST-BATCH-TASK [ EXPORT-FILE-DIR [ EXPORT-FILE-NAME 
               [ URIS-FILE ] ] ] ] ] ] ] ] ] ] ] ] ] ] ]
@@ -213,7 +213,7 @@ java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar
 ```
 java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar 
         -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] 
-        -DXQUERY-MODULE=module-name.xqy -DTHREAD-COUNT=10 
+        -DPROCESS-MODULE=module-name.xqy -DTHREAD-COUNT=10 
         -DURIS-MODULE=get-uris.xqy 
         -DPOST-BATCH-XQUERY-MODULE=post-batch.xqy 
         -D... 
@@ -243,7 +243,7 @@ THREAD-COUNT=10
 MODULE-ROOT=/temp/  
 MODULES-DATABASE=MY-Modules-DB   
 URIS-MODULE=get-uris.xqy  
-XQUERY-MODULE=transform.xqy  
+PROCESS-MODULE=transform.xqy  
 ```
 
 ##### sample 2 - Use username, password, host and port instead of connection URI
@@ -257,7 +257,7 @@ THREAD-COUNT=10
 MODULE-ROOT=/temp/  
 MODULES-DATABASE=MY-Modules-DB   
 URIS-MODULE=get-uris.xqy  
-XQUERY-MODULE=SampleCorbJob.xqy
+PROCESS-MODULE=SampleCorbJob.xqy
 ```
 
 ##### sample 3 - simple batch with URIS-FILE (in place of URIS-MODULE)
@@ -267,7 +267,7 @@ THREAD-COUNT=10
 MODULE-ROOT=/temp/  
 MODULES-DATABASE=MY-Modules-DB   
 URIS-FILE=input-uris.csv  
-XQUERY-MODULE=SampleCorbJob.xqy  
+PROCESS-MODULE=SampleCorbJob.xqy  
 ```
 
 ##### sample 4 - report, generates a single file with data from processing each URI
@@ -276,7 +276,7 @@ XCC-CONNECTION-URI=xcc://user:password@localhost:8202/
 THREAD-COUNT=10  
 MODULE-ROOT=/temp/  
 MODULES-DATABASE=MY-Modules-DB
-XQUERY-MODULE=get-data-from-document.xqy   
+PROCESS-MODULE=get-data-from-document.xqy   
 PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask   
 EXPORT-FILE-NAME=/local/path/to/exportmyfile.csv   
 ```
@@ -300,7 +300,7 @@ THREAD-COUNT=10
 MODULE-ROOT=/temp/  
 MODULES-DATABASE=MY-Modules-DB   
 URIS-MODULE=get-uris.xqy  
-XQUERY-MODULE=transform.xqy  
+PROCESS-MODULE=transform.xqy  
 PRE-BATCH-MODULE=pre-batch.xqy   
 POST-BATCH-MODULE=post-batch.xqy   
 ```
@@ -312,7 +312,7 @@ THREAD-COUNT=10
 MODULE-ROOT=/temp/  
 MODULES-DATABASE=MY-Modules-DB   
 URIS-MODULE=get-uris.xqy|ADHOC   
-XQUERY-MODULE=SampleCorbJob.xqy|ADHOC   
+PROCESS-MODULE=SampleCorbJob.xqy|ADHOC   
 PRE-BATCH-MODULE=/local/path/to/adhoc-pre-batch.xqy|ADHOC
 ```
 
@@ -349,12 +349,12 @@ PRIVATE-KEY-FILE=/path/to/rsa/key/rivate.pkcs8.key
 MODULE-ROOT=/temp/  
 MODULES-DATABASE=MY-Modules-DB  
 URIS-MODULE=get-uris.sjs  
-XQUERY-MODULE=transform.sjs  
+PROCESS-MODULE=transform.sjs  
 ```
 ##### sample 13 - Adhoc JavaScript modules
 ```
 URIS-MODULE=get-uris.sjs|ADHOC  
-XQUERY-MODULE=extract.sjs|ADHOC 
+PROCESS-MODULE=extract.sjs|ADHOC 
 ```
 
 ### Run Xquery or JavaScript Tool

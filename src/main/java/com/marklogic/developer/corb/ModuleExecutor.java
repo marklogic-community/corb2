@@ -78,10 +78,6 @@ public class ModuleExecutor {
 			+ System.getProperty("java.version") + " ("
 			+ System.getProperty("java.runtime.name") + ")";
 
-	private static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server'\n";
-
-	private static final String XQUERY_VERSION_0_9_ML = "xquery version \"0.9-ml\"\n";
-
 	protected static final String NAME = ModuleExecutor.class.getSimpleName();
 
 	protected URI connectionUri;

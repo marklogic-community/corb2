@@ -334,7 +334,7 @@ public class Manager{
 	
 	protected void initOptions(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
 		// gather inputs		
-		String processModule = getOption(args.length > 2 ? args[2] : null, "XQUERY-MODULE");
+		String processModule = getOption(args.length > 2 ? args[2] : null, "PROCESS-MODULE");
 		String threadCount = getOption(args.length > 3 ? args[3] : null, "THREAD-COUNT");
 		String urisModule = getOption(args.length > 4 ? args[4] : null, "URIS-MODULE");
 		String moduleRoot = getOption(args.length > 5 ? args[5] : null, "MODULE-ROOT");
@@ -358,7 +358,7 @@ public class Manager{
 		String batchSize = getOption(null, "BATCH-SIZE");
 		String failOnError = getOption(null, "FAIL-ON-ERROR");
 		
-		if (processModule == null) processModule = getOption(null, "PROCESS-MODULE");
+		if (processModule == null) processModule = getOption(null, "XQUERY-MODULE");
 		
 		if (moduleRoot != null) options.setModuleRoot(moduleRoot);
 		if (processModule != null) options.setProcessModule(processModule);
@@ -392,7 +392,7 @@ public class Manager{
 		// still required.
 		if (processTask != null) options.setProcessTaskClass(getTaskCls("PROCESS-TASK",processTask));
 		if (null == options.getProcessTaskClass() && null == options.getProcessModule()) {
-			throw new NullPointerException("PROCESS-TASK or XQUERY-MODULE must be specified");
+			throw new NullPointerException("PROCESS-TASK or PROCESS-MODULE must be specified");
 		}
 		
 		if (preBatchModule != null) options.setPreBatchModule(preBatchModule);
@@ -422,6 +422,18 @@ public class Manager{
 				exportFile.delete();
 			}
 		}
+		
+		//fix map keys for backward compatibility
+		Properties newProps = new Properties();
+		for(String key : this.properties.stringPropertyNames()) {
+		  String value = this.properties.getProperty(key);
+		  if(key.startsWith("XQUERY-MODULE.")){
+		  	newProps.setProperty(key.replace("XQUERY-MODULE.", "PROCESS-MODULE."), value);
+		  }else{
+		  	newProps.setProperty(key, value);
+		  }
+		}
+		this.properties = newProps;
 	}
 	
 	protected Class<? extends Task> getTaskCls(String type, String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
