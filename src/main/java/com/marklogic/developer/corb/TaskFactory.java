@@ -118,7 +118,7 @@ public class TaskFactory {
 				String modulePath = module.substring(0, module.indexOf('|'));
 				String adhocQuery = moduleToAdhocQueryMap.get(modulePath);
 				if (adhocQuery == null) {
-					adhocQuery = Manager.getAdhocQuery(modulePath);
+					adhocQuery = AbstractManager.getAdhocQuery(modulePath);
 					if (adhocQuery == null || (adhocQuery.length() == 0)) {
 						throw new IllegalStateException("Unable to read adhoc query " + module + " from classpath or filesystem");
 					}

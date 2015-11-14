@@ -266,7 +266,7 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		clearProperties();
 		System.setProperty("EXPORT-FILE-NAME","src\\test\\resources\\testGetValueAsBytes_1.txt");
 		System.setProperty("OPTIONS-FILE","src\\test\\resources\\helloWorld.properties");
-		System.setProperty("XQUERY-MODULE","src\\test\\resources\\transform2.xqy|ADHOC");
+		System.setProperty("PROCESS-MODULE","src\\test\\resources\\transform2.xqy|ADHOC");
 		Properties props = getProperties();
 		String[] args = {props.getProperty("XCC-CONNECTION-URI")};
 		ModuleExecutor executor = ModuleExecutor.createExecutor(args);
@@ -293,7 +293,7 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		throws Exception {
 		clearProperties();
 		System.setProperty("OPTIONS-FILE","src\\test\\resources\\helloWorld.properties");
-		System.setProperty("XQUERY-MODULE","src\\test\\resources\\transform2.xqy|ADHOC");
+		System.setProperty("PROCESS-MODULE","src\\test\\resources\\transform2.xqy|ADHOC");
 		System.setProperty("EXPORT-FILE-NAME","src\\test\\resources\\helloWorld.txt");
 		String[] args = new String[] {};
 
@@ -353,7 +353,7 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		throws Exception {
 		clearProperties();
 		System.setProperty("OPTIONS-FILE","src\\test\\resources\\helloWorld.properties");
-		System.setProperty("XQUERY-MODULE","src\\test\\resources\\transform2.xqy|ADHOC");
+		System.setProperty("PROCESS-MODULE","src\\test\\resources\\transform2.xqy|ADHOC");
 		System.setProperty("EXPORT-FILE-NAME","src\\test\\resources\\helloWorld.txt");
 		String[] args = {};
 		ModuleExecutor executor = ModuleExecutor.createExecutor(args);
@@ -383,7 +383,6 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 				"src\\test\\resources\\transform2.xqy|ADHOC",
 				"",
 				"",
-				"com.marklogic.developer.corb.ExportBatchToFileTask",
 				"",
 				"src\\test\\resources\\helloWorld.txt"
 				};
@@ -410,12 +409,10 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		clearProperties();
 		String[] args = {};
 		System.setProperty("XCC-CONNECTION-URI","xcc://admin:admin@localhost:2223/FFE");
-		System.setProperty("XQUERY-MODULE","src\\test\\resources\\transform2.xqy|ADHOC");
+		System.setProperty("PROCESS-MODULE","src\\test\\resources\\transform2.xqy|ADHOC");
 		System.setProperty("DECRYPTER","com.marklogic.developer.corb.JasyptDecrypter");
 		System.setProperty("JASYPT-PROPERTIES-FILE", "src\\test\\resources\\jasypt.properties");
-		System.setProperty("PRE-BATCH-TASK","com.marklogic.developer.corb.PreBatchUpdateFileTask");
 		System.setProperty("EXPORT-FILE-NAME","src\\test\\resources\\helloWorld.txt");
-		System.setProperty("PROCESS-TASK","com.marklogic.developer.corb.ExportBatchToFileTask");
 		
 		ModuleExecutor executor = ModuleExecutor.createExecutor(args);
 		executor.run();
@@ -536,8 +533,7 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 					properties.stringPropertyNames());
 			propertyNames.addAll(System.getProperties().stringPropertyNames());
 			
-			String queryPath = options.getProcessModule().substring(0,
-			options.getProcessModule().indexOf('|'));
+			String queryPath = options.getProcessModule().substring(0,options.getProcessModule().indexOf('|'));
 
 			String adhocQuery = executor.getAdhocQuery(queryPath);
 			if (adhocQuery == null || (adhocQuery.length() == 0)) {
@@ -547,8 +543,8 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 			}
 			req = session.newAdhocQuery(adhocQuery);
 			for (String propName : propertyNames) {
-				if (propName.startsWith("XQUERY-MODULE.")) {
-					String varName = propName.substring("XQUERY-MODULE.".length());
+				if (propName.startsWith("PROCESS-MODULE.")) {
+					String varName = propName.substring("PROCESS-MODULE.".length());
 						String value = properties.getProperty(propName);
 						if (value != null)
 							req.setNewStringVariable(varName, value);
@@ -566,25 +562,14 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 	}
 	
 	private void clearProperties() {
-		System.clearProperty("URIS-MODULE");
 		System.clearProperty("OPTIONS-FILE");
 		System.clearProperty("XCC-CONNECTION-URI");
-		System.clearProperty("COLLECTION-NAME"); 
-		System.clearProperty("XQUERY-MODULE");
-		System.clearProperty("THREAD-COUNT");
+		System.clearProperty("PROCESS-MODULE");
 		System.clearProperty("MODULE-ROOT");
 		System.clearProperty("MODULES-DATABASE"); 
-		System.clearProperty("INSTALL");
-		System.clearProperty("PROCESS-TASK");
-		System.clearProperty("PRE-BATCH-MODULE");
-		System.clearProperty("PRE-BATCH-TASK");
-		System.clearProperty("POST-BATCH-MODULE");
-		System.clearProperty("POST-BATCH-TASK");
-		System.clearProperty("EXPORT-FILE-DIR"); 
+		System.clearProperty("EXPORT-FILE-DIR");
 		System.clearProperty("EXPORT-FILE-NAME");
-		System.clearProperty("URIS-FILE");
-		System.clearProperty("XQUERY-MODULE.foo");
-		System.clearProperty("EXPORT_FILE_AS_ZIP");
+		System.clearProperty("PROCESS-MODULE.foo");
 	}
 	
 	private void clearFile(File file) {

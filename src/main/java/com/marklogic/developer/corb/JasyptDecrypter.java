@@ -20,12 +20,11 @@ public class JasyptDecrypter extends AbstractDecrypter {
 		if (decryptPropsFile == null || decryptPropsFile.trim().length() == 0) {
 			decryptPropsFile = "jasypt.properties";
 		}
-		jaspytProperties = Manager.loadPropertiesFile(decryptPropsFile, false);
+		jaspytProperties = AbstractManager.loadPropertiesFile(decryptPropsFile, false);
 
 		String algorithm = jaspytProperties.getProperty("jasypt.algorithm");
 		if (algorithm == null || algorithm.trim().length() == 0) {
-			algorithm = "PBEWithMD5AndTripleDES"; // select a secure algorithm as
-																						// default
+			algorithm = "PBEWithMD5AndTripleDES"; // select a secure algorithm as default
 		}
 		String passphrase = jaspytProperties.getProperty("jasypt.password");
 		if (passphrase != null && passphrase.trim().length() > 0) {
@@ -40,9 +39,7 @@ public class JasyptDecrypter extends AbstractDecrypter {
 			} catch (ClassNotFoundException exc) {
 				throw exc;
 			} catch (Exception exc) {
-				throw new IllegalStateException(
-						"Unable to initialize org.jasypt.encryption.pbe.StandardPBEStringEncryptor - check if jasypt libraries are in classpath",
-						exc);
+				throw new IllegalStateException("Unable to initialize org.jasypt.encryption.pbe.StandardPBEStringEncryptor - check if jasypt libraries are in classpath",exc);
 			}
 		} else {
 			LOG.severe("Unable to initialize jasypt decrypter. Couldn't find jasypt.password");

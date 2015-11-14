@@ -80,7 +80,7 @@ public class QueryUrisLoader implements UrisLoader {
 			
 			if (options.getUrisModule().toUpperCase().endsWith("|ADHOC")) {
 				String queryPath = options.getUrisModule().substring(0, options.getUrisModule().indexOf('|'));
-				String adhocQuery = Manager.getAdhocQuery(queryPath);
+				String adhocQuery = AbstractManager.getAdhocQuery(queryPath);
 				if (adhocQuery == null || (adhocQuery.length() == 0)) {
 					throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
 				}

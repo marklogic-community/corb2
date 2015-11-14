@@ -18,7 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-import java.util.Arrays;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;

@@ -385,13 +385,11 @@ So how do you use it?   For convenience, it can be configured using the same tec
 
 The following parameters are supported and can be used in the same ways as described above for CoRB:
 
-+ XQUERY-MODULE
-+ XQUERY-MODULE.customVariableNameExample
++ PROCESS-MODULE
++ PROCESS-MODULE.customVariableNameExample
 + MODULES-DATABASE
 + MODULES-ROOT
-+ DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter
-+ PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask
-+ EXPORT-FILE-NAME
++ DECRYPTER
 + XCC-CONNECTION-URI
 + XCC-USERNAME
 + XCC-PASSWORD
@@ -407,16 +405,14 @@ The following are example usages from a Windows console:
 java -cp pathToXCC.jar:pathToCoRB.jar com.marklogic.developer.corb.ModuleExecutor  
         xcc://user:password@host:port/[ database ] 
         xqueryOrJavascriptModuleName moduleRootName modulesDatabaseName  
-        com.marklogic.developer.corb.ExportBatchToFileTask 
-        c:\\myPath\\to\\file\\directory myFileName
+        c:\\myPath\\to\\file\\directory\\myFileName
 ```         
 ##### Usage 2
 ```
 java -cp pathToXCC.jar:pathToCoRB.jar 
         -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] 
-        -DXQUERY-MODULE=module-name.xqy 
-        -DPROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask 
-        -DXQUERY-MODULE.collectionName=myCollectionName 
+        -DPROCESS-MODULE=module-name.xqy 
+        -DPROCESS-MODULE.collectionName=myCollectionName 
         com.marklogic.developer.corb.ModuleExecutor
 ```         
 ##### Usage 3
@@ -429,10 +425,9 @@ Where myJob.properties has:
 ```
 MODULES-DATABASE=My-Modules
 DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter
-XQUERY-MODULE=/test/HelloWorld.xqy
-XQUERY-MODULE.lastName=Smith
-XQUERY-MODULE.collectionName=myCollectionName
-PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask
+PROCESS-MODULE=/test/HelloWorld.xqy
+PROCESS-MODULE.lastName=Smith
+PROCESS-MODULE.collectionName=myCollectionName
 EXPORT-FILE-NAME=C:\\Users\\jon.smith\\Documents\\runXQueryOutput.log
 XCC-CONNECTION-URI=ENC(fslfuoifsdofjjwfckmeflkjlj377239843u)
 ```
