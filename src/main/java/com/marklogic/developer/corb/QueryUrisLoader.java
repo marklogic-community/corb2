@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
@@ -15,7 +16,9 @@ import com.marklogic.xcc.exceptions.RequestException;
 import java.util.logging.Level;
 
 public class QueryUrisLoader implements UrisLoader {
-
+	private static int DEFAULT_MAX_OPTS_FROM_MODULE = 10;
+	private static Pattern pattern = Pattern.compile("(PRE-BATCH-MODULE|PROCESS-MODULE|POST-BATCH-MODULE)\\.[A-Za-z0-9]+=[A-Za-z0-9]+");
+	
 	TransformOptions options;
 	ContentSource cs;
 	String collection;
@@ -60,10 +63,12 @@ public class QueryUrisLoader implements UrisLoader {
 		propertyNames.addAll(System.getProperties().stringPropertyNames());
 
 		if (propertyNames.contains("URIS-REPLACE-PATTERN")) {
-			String pattern = getProperty("URIS-REPLACE-PATTERN").trim();
-			replacements = pattern.split(",", -1);
-			if (replacements.length % 2 != 0) {
-				throw new IllegalArgumentException("Invalid replacement pattern " + pattern);
+			String pattern = getProperty("URIS-REPLACE-PATTERN");
+			if(pattern != null && pattern.length() > 0){
+				replacements = pattern.split(",", -1);
+				if (replacements.length % 2 != 0) {
+					throw new IllegalArgumentException("Invalid replacement pattern " + pattern);
+				}
 			}
 		}
 
@@ -125,12 +130,24 @@ public class QueryUrisLoader implements UrisLoader {
 
 			res = session.submitRequest(req);
 			ResultItem next = res.next();
-			if (!(next.getItem().asString().matches("\\d+"))) {
-				batchRef = next.asString();
+			
+			int maxOpts = this.getMaxOptionsFromModule();
+			for(int i=0; i < maxOpts && next != null && batchRef == null && !(next.getItem().asString().matches("\\d+")); i++){
+				String value = next.getItem().asString();
+				if(pattern.matcher(value).matches()){
+					int idx = value.indexOf('=');
+					properties.put(value.substring(0, idx), value.substring(idx+1));
+				}else{
+					batchRef = value;
+				}
 				next = res.next();
 			}
-
-			total = Integer.parseInt(next.getItem().asString());
+			
+			try{
+				total = Integer.parseInt(next.getItem().asString());
+			}catch(NumberFormatException exc){
+				throw new CorbException("Uris module "+options.getUrisModule()+" does not return total URI count");
+			}
 		} catch (RequestException exc) {
 			throw new CorbException("While invoking Uris Module", exc);
 		}
@@ -189,9 +206,20 @@ public class QueryUrisLoader implements UrisLoader {
 
 	public String getProperty(String key) {
 		String val = System.getProperty(key);
-		if (val == null || val.trim().length() == 0) {
+		if (val == null && properties != null) {
 			val = properties.getProperty(key);
 		}
 		return val != null ? val.trim() : val;
+	}
+	
+	private int getMaxOptionsFromModule(){
+		int max = DEFAULT_MAX_OPTS_FROM_MODULE;
+		try{
+			String maxStr = getProperty("MAX_OPTS_FROM_MODULE");
+			if(maxStr != null && maxStr.length() > 0){
+				max = Integer.parseInt(maxStr);
+			}
+		}catch(Exception exc){}
+		return max;
 	}
 }

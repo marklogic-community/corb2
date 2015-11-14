@@ -1,4 +1,4 @@
-Version: 2.1.2
+Version: 2.2.0
 
 ### User Guide
 This document provides a comprehensive overview of CoRB2.  For additional information, please refer to CoRB2 online [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc).  This document also covers the less robust [RunXQuery Tool](#runXQuery-readme) which can be used when only a single staged query is necessary.  The RunXQuery Tool is provided as part of the CoRB2 distribution.
@@ -6,7 +6,7 @@ This document provides a comprehensive overview of CoRB2.  For additional inform
 ### Downloads
 Please download latest release from https://github.com/marklogic/corb2/releases.  
 
-Corb v2.1.3 or later requires marklogic-xcc-8.0.*.jar or later to run. Please note that xcc 8 is backwards compatible up to MarkLogic 5. Also, please use java 1.7 or later for running corb.
+Corb v2.2.0 or later requires marklogic-xcc-8.0.*.jar or later to run. Please note that xcc 8 is backwards compatible up to MarkLogic 5. Also, please use java 1.7 or later for running corb.
 
 To build corb using ant, please specify java.library.user folder in the build.properties file and place marklogic-xcc-8.0.*.jar in this folder. Please update build.xml for building corb with a later version of xcc jar.  
 
@@ -70,6 +70,7 @@ Corb needs one or more of the following parameters as (If specified in more than
 * **FAIL-ON-ERROR** (Default is true. If false, corb job will not fail and exit if the transform module throws xquery error after the first URI is successfully run. This option will not handle repeated connection failures)  
 * **ERROR-FILE-NAME** (Used when FAIL-ON-ERROR is false. If specifiedf true, removes duplicates from , the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to seperate URI and error message)  
 * **EXPORT-FILE-REMOVE-DUPLICATES** (If `true`, duplicate lines from EXPORT-FILE-NAME will be removed. If `true|sorted`, lines will be sorted. If `true|ordered`, lines will not be reordered after removing duplicates.)  
+* **MAX_OPTS_FROM_MODULE** (Default 10. Max number of custom inputs from the URIS-MODULE to other modules)  
 
 ### Alternate XCC connection configuration
 * **XCC-USERNAME** (Required if XCC-CONNECTION-URI is not specified)
@@ -78,12 +79,27 @@ Corb needs one or more of the following parameters as (If specified in more than
 * **XCC-PORT** (Required if XCC-CONNECTION-URI is not specified)
 * **XCC-DBNAME** (Optional)
 
+#### URIS\_BATCH\_REF
+If a module, including those specified by PRE-BATCH-MODULE, PROCESS-MODULE or POST-BATCH-MODULE have an external or global variable named URIS\_BATCH\_REF, the variable will be set to the first non-numeric item in the sequence or ValueIterator returned by URIS-MODULE. This means that, when used, the URIS-MODULE must return a sequence or ValueIterator with the special string value first, then the URI count, then the sequence of URIs to process.  
+
+As an example, a batch ref can be a link/id of a document that manages the status of the batch job, where pre-batch module updates the status to start and post-batch module can set it to complete. This example can be used to manage status and errors in automated batch jobs.   
+
+ExportBatchToFileTask, PreBatchUpdateFileTask and PostBatchUpdateFileTask use URIS\_BATCH\_REF as the file name if EXPORT-FILE-NAME is not specified. This is useful for automated jobs where name of the output file name can be determined only by the URIS-MODULE.  
+
 ### Custom Inputs to XQuery or JavaScript Modules
-Any property specified with prefix (with '.') URIS-MODULE, XQUERY-MODULE, PRE-BATCH-MODULE, POST-BATCH-MODULE, INIT-MODULE, will be set as an external variable in the corresponding XQuery module (if that variable is defined as an external string variable in XQuery module). For JavaScript modules the variables need be defined as global variables.  
+Any property specified with prefix (with '.') INIT-MODULE, URIS-MODULE, PRE-BATCH-MODULE, PROCESS-MODULE, POST-BATCH-MODULE will be set as an external variable in the corresponding XQuery module (if that variable is defined as an external string variable in XQuery module). For JavaScript modules the variables need be defined as global variables.  
 
 **Examples:** 
 * `URIS-MODULE.maxLimit=1000` (Expects an external string variable  _maxLimit_ in URIS-MODULE XQuery or global variable for JavaScript)  
-* `XQUERY-MODULE.startDate=2015-01-01` (Expects an external string variable _startDate_ in XQUERY-MODULE XQuery or global variable for JavaScript)  
+* `PROCESS-MODULE.startDate=2015-01-01` (Expects an external string variable _startDate_ in XQUERY-MODULE XQuery or global variable for JavaScript)  
+
+Alternatively, URIS-MODULE can pass custom inputs to PRE-BATCH-MODULE, PROCESS-MODULE, POST-BATCH-MODULE by returning one or more of the property values in above format before the count the of URIs. If the URIS-MODULE needs URIS\_BATCH\_REF (above) as well, it needs to be just before the URIS count.  
+
+**Example:** 
+```
+let $uris := cts:uris()
+return ("PROCESS-MODULE.foo=bar","POST-BATCH-MODULE.alpha=10",fn:count($uris),$uris)
+```
 
 ### Adhoc Modules
 Appending "|ADHOC" to the name or path of a XQuery module (with .xqy extension) or JavaScript (with .sjs or .js extension) module will cause the module to be read off the file system and executed in MarkLogic without being uploaded to Modules database. This simplifies running CoRB jobs by not requiring deployment of any code to MarkLogic, and makes set of CoRB2 files and configuration more self contained.   
@@ -189,13 +205,6 @@ TwoWaySSLConfig is more complete and configurable implementation of the SSLConte
 * **SSL-KEYSTORE-TYPE** Type of the keystore such as 'JKS' or 'PKCS12'
 * **SSL-ENABLED-PROTOCOLS** (Optional) A comma separated list of acceptable ssl protocols
 * **SSL-CIPHER-SUITES** A comma separated list of acceptable cipher suites used
-
-#### URIS\_BATCH\_REF
-If a module, including those specified by PRE-BATCH-MODULE, XQUERY-MODULE or POST-BATCH-MODULE have an external or global variable named URIS\_BATCH\_REF, the variable will be set to the first item in the sequence or ValueIterator returned by URIS-MODULE. This means that, when used, the URIS-MODULE must return a sequence or ValueIterator with the special string value first, then the URI count, then the sequence of URIs to process.  
-
-As an example, a batch ref can be a link/id of a document that manages the status of the batch job, where pre-batch module updates the status to start and post-batch module can set it to complete. This example can be used to manage status and errors in automated batch jobs.   
-
-ExportBatchToFileTask, PreBatchUpdateFileTask and PostBatchUpdateFileTask use URIS\_BATCH\_REF as the file name if EXPORT-FILE-NAME is not specified. This is useful for automated jobs where name of the output file name can be determined only by the URIS-MODULE.  
 
 ### Usage
 #### Usage 1 (Command line options):
