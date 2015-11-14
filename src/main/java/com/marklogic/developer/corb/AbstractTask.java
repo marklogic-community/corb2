@@ -12,6 +12,7 @@ import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
+import com.marklogic.xcc.exceptions.RequestPermissionException;
 import com.marklogic.xcc.exceptions.RequestServerException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmBinary;
@@ -187,34 +188,32 @@ public abstract class AbstractTask implements Task {
 			Thread.yield();// try to avoid thread starvation
 
 			return inputUris;
-		} catch (Exception exc) {
-			if (exc instanceof ServerConnectionException) {
-				int retryLimit = this.getConnectRetryLimit();
-				int retryInterval = this.getConnectRetryInterval();
-				if (connectRetryCount < retryLimit) {
-					connectRetryCount++;
-					LOG.log(Level.SEVERE,
-							"Connection failed to Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
-							new Object[] { connectRetryCount, retryInterval, exc.getMessage(), asString(inputUris) });
-					try {
-						Thread.sleep(retryInterval * 1000L);
-					} catch (Exception exc2) {}
-					return invokeModule();
-				} else {
-					throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
-				}
-			} else if (exc instanceof RequestServerException) {
-				if(failOnError){
-					throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
-				}else{
-					LOG.log(Level.SEVERE,"Encountered server exception at URI: "+ asString(inputUris),exc);
-					writeToErrorFile(inputUris,exc.getMessage());
-					return inputUris;
-				}
+		}catch(ServerConnectionException exc){
+			int retryLimit = this.getConnectRetryLimit();
+			int retryInterval = this.getConnectRetryInterval();
+			if (connectRetryCount < retryLimit) {
+				connectRetryCount++;
+				LOG.log(Level.SEVERE,
+						"Connection failed to Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
+						new Object[] { connectRetryCount, retryInterval, exc.getMessage(), asString(inputUris) });
+				try {
+					Thread.sleep(retryInterval * 1000L);
+				} catch (Exception exc2) {}
+				return invokeModule();
 			} else {
 				throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
 			}
-		} finally {
+		}catch(RequestServerException | RequestPermissionException exc){
+			if(failOnError){
+				throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
+			}else{
+				LOG.log(Level.SEVERE,"Encountered server exception at URI: "+ asString(inputUris),exc);
+				writeToErrorFile(inputUris,exc.getMessage());
+				return inputUris;
+			}
+		}catch(Exception exc){
+			throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
+		}finally{
 			if (null != session && !session.isClosed()) {
 				session.close();
 				session = null;
