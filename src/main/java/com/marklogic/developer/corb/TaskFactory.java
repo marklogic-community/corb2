@@ -149,8 +149,8 @@ public class TaskFactory {
 			}
 		}
 		task.setModuleType(moduleType);
-		task.setContentSource(manager.getContentSource());
-		task.setProperties(manager.getProperties());
+		task.setContentSource(manager.contentSource);
+		task.setProperties(manager.properties);
 		task.setInputURI(uris);
 		task.setFailOnError(failOnError);
 
