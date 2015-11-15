@@ -53,12 +53,16 @@ public class FileUrisLoader implements UrisLoader {
 				throw new IllegalArgumentException("Invalid replacement pattern " + pattern);
 			}
 		}
+		
 		try {
 			String fileName = options.getUrisFile();
-
-			try (LineNumberReader lnr = new LineNumberReader(new FileReader(fileName))) {
+			LineNumberReader lnr = null;
+			try{
+				lnr = new LineNumberReader(new FileReader(fileName));
 				lnr.skip(Long.MAX_VALUE);
 				total = lnr.getLineNumber() + 1;
+			}finally{
+				if(lnr != null) lnr.close();
 			}
 
 			FileReader fr = new FileReader(fileName);

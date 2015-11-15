@@ -227,7 +227,10 @@ public abstract class AbstractManager {
 		} catch (XccConfigException e) {
 			LOG.log(Level.SEVERE,"Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly."+e.getMessage());
 			throw e;
-		} catch (KeyManagementException | NoSuchAlgorithmException e) {
+		} catch (KeyManagementException e) {
+			LOG.log(Level.SEVERE, "Problem creating content source with ssl. "+e.getMessage());
+			throw e;
+		}catch (NoSuchAlgorithmException e) {
 			LOG.log(Level.SEVERE, "Problem creating content source with ssl. "+e.getMessage());
 			throw e;
 		}

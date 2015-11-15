@@ -122,10 +122,13 @@ public class Manager extends AbstractManager{
 			}else{
 				System.exit(0);
 			}
-		} catch (XccConfigException | GeneralSecurityException exc) {
+		} catch (XccConfigException exc) {
 			LOG.log(Level.SEVERE, "Problem with XCC connection configuration.",exc);
 			System.exit(1);
-		}catch(Exception exc){
+		} catch (GeneralSecurityException exc) {
+			LOG.log(Level.SEVERE, "Problem with creating XCC connection.",exc);
+			System.exit(1);
+		} catch(Exception exc){
 			LOG.log(Level.SEVERE, "Error while running CORB",exc);
 			System.exit(2);
 		}
@@ -334,10 +337,10 @@ public class Manager extends AbstractManager{
 		RejectedExecutionHandler policy = new CallerBlocksPolicy();
 		int threads = options.getThreadCount();
 		// an array queue should be somewhat lighter-weight
-		BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(options.getQueueSize());
+		BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(options.getQueueSize());
 		pool = new ThreadPoolExecutor(threads, threads, 16, TimeUnit.SECONDS, workQueue, policy);
 		pool.prestartAllCoreThreads();
-		completionService = new ExecutorCompletionService<>(pool);
+		completionService = new ExecutorCompletionService<String[]>(pool);
 		monitor = new Monitor(pool, completionService, this);
 		Thread monitorThread = new Thread(monitor);
 		return monitorThread;
@@ -392,8 +395,11 @@ public class Manager extends AbstractManager{
 					session.insertContent(c);
 				}
 			}
-		} catch (IOException | RequestException e) {
-			LOG.log(Level.SEVERE, "fatal error while preparing modules " + e.getMessage());
+		} catch (IOException e) {
+			LOG.log(Level.SEVERE, "error while reading modules " + e.getMessage());
+			throw e;
+		}catch (RequestException e) {
+			LOG.log(Level.SEVERE, "error while loading modules " + e.getMessage());
 			throw e;
 		} finally {
 			session.close();
@@ -595,7 +601,7 @@ public class Manager extends AbstractManager{
 			}
 
 			// start with 1 not 0 because we already queued result 0
-			List<String> ulist = new ArrayList<>(options.getBatchSize());
+			List<String> ulist = new ArrayList<String>(options.getBatchSize());
 			for (int i = 1; i < urisArray.length; i++) {
 				// check pool occasionally, for fast-fail
 				if (null == pool) {

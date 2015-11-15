@@ -52,7 +52,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
 		String decryptedText = null;
 		try {
 			decryptedText = decrypt(value);
-		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException e) {
+		} catch (Exception e) {
 			new RuntimeException("Unabled to decrypt property:"+property, e);
 		}
 		return decryptedText;

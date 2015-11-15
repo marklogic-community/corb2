@@ -28,8 +28,8 @@ import java.util.HashMap;
 public class TaskFactory {
 
 	protected Manager manager;
-	private HashMap<String, String> moduleToAdhocQueryMap = new HashMap<>();
-	private HashMap<String, String> moduleToPathMap = new HashMap<>();
+	private HashMap<String, String> moduleToAdhocQueryMap = new HashMap<String, String>();
+	private HashMap<String, String> moduleToPathMap = new HashMap<String, String>();
 
 	/**
 	 * @param manager

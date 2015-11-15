@@ -88,11 +88,14 @@ public class ModuleExecutor extends AbstractManager{
 		try{
 			moduleExecutor.run();
 			System.exit(0);
-		} catch (XccConfigException | GeneralSecurityException exc) {
+		} catch (XccConfigException exc) {
 			LOG.log(Level.SEVERE, "Problem with XCC connection configuration.",exc);
 			System.exit(1);
-		}catch(Exception exc){
-			LOG.log(Level.SEVERE, "Error while running ModuleExecutor",exc);
+		} catch (GeneralSecurityException exc) {
+			LOG.log(Level.SEVERE, "Problem with creating XCC connection.",exc);
+			System.exit(1);
+		} catch(Exception exc){
+			LOG.log(Level.SEVERE, "Error while running CORB",exc);
 			System.exit(2);
 		}
 	}

@@ -59,7 +59,7 @@ public class QueryUrisLoader implements UrisLoader {
 
 	@Override
 	public void open() throws CorbException {
-		List<String> propertyNames = new ArrayList<>(properties.stringPropertyNames());
+		List<String> propertyNames = new ArrayList<String>(properties.stringPropertyNames());
 		propertyNames.addAll(System.getProperties().stringPropertyNames());
 
 		if (propertyNames.contains("URIS-REPLACE-PATTERN")) {

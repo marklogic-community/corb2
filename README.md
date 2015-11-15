@@ -14,7 +14,7 @@ Corb uses java logger. To customize logging, please specify logging configuratio
 `-Djava.util.logging.config.file=/path/to/logging.properties`
 
 ### Running Corb
-The entry point is the main method in the com.marklogic.developer.corb.Manager class. Corb requires marklogic xcc jar in the classpath, preferably the version that corresponds to marklogic server version, which can be downloaded from https://developer.marklogic.com/products/xcc (corb 2.1.3 is tested with xcc 8.0.* talking to Marklogic 7 and 8). Requires java 1.7 or later.
+The entry point is the main method in the com.marklogic.developer.corb.Manager class. Corb requires marklogic xcc jar in the classpath, preferably the version that corresponds to marklogic server version, which can be downloaded from https://developer.marklogic.com/products/xcc (This version is tested with xcc 8.0.* talking to Marklogic 7 and 8). Use java 1.7 or later.
 
 Corb needs one or more of the following parameters as (If specified in more than one place command line parameter takes precedence over java system property which take precedence over myjob.properties)
 

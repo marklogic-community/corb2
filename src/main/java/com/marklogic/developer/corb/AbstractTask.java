@@ -44,7 +44,7 @@ public abstract class AbstractTask implements Task {
 	protected String language;
 
 	private static final Object SYNC_OBJ = new Object();
-	private static final Map<String, Set<String>> MODULE_PROPS = new HashMap<>();
+	private static final Map<String, Set<String>> MODULE_PROPS = new HashMap<String, Set<String>>();
 
 	protected static final int DEFAULT_RETRY_LIMIT = 3;
 	protected static final int DEFAULT_RETRY_INTERVAL = 60;
@@ -115,7 +115,7 @@ public abstract class AbstractTask implements Task {
 				synchronized (SYNC_OBJ) {
 					modulePropNames = MODULE_PROPS.get(moduleType);
 					if (modulePropNames == null) {
-						HashSet<String> propSet = new HashSet<>();
+						HashSet<String> propSet = new HashSet<String>();
 						if (properties != null) {
 							for (String propName : properties.stringPropertyNames()) {
 								if (propName.startsWith(moduleType + ".")) {
@@ -203,11 +203,19 @@ public abstract class AbstractTask implements Task {
 			} else {
 				throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
 			}
-		}catch(RequestServerException | RequestPermissionException exc){
+		}catch(RequestServerException exc){
 			if(failOnError){
 				throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
 			}else{
 				LOG.log(Level.SEVERE,"Encountered server exception at URI: "+ asString(inputUris),exc);
+				writeToErrorFile(inputUris,exc.getMessage());
+				return inputUris;
+			}
+		}catch(RequestPermissionException exc){
+			if(failOnError){
+				throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
+			}else{
+				LOG.log(Level.SEVERE,"Encountered permission exception at URI: "+ asString(inputUris),exc);
 				writeToErrorFile(inputUris,exc.getMessage());
 				return inputUris;
 			}
