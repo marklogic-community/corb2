@@ -21,7 +21,7 @@ public class TrustAnyoneSSLConfig extends AbstractSSLConfig{
 	}
 	
 	private class TrustAnyoneManager implements X509TrustManager{
-
+		public TrustAnyoneManager(){}
 		public X509Certificate[] getAcceptedIssuers() {
 			return new X509Certificate[0];
 		}
