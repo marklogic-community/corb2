@@ -141,7 +141,18 @@ public abstract class AbstractManager {
 	public TransformOptions getOptions() {
 		return options;
 	}
-		
+	
+	public void initPropertiesFromOptionsFile() throws IOException{	
+		String propsFileName = System.getProperty("OPTIONS-FILE");
+		loadPropertiesFile(propsFileName,true,this.properties);
+	}
+	
+	public void init(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException{			
+		init(args,null);
+	}
+	
+	public abstract void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException;			
+
 	/**
 	 * function that is used to get the Decrypter, returns null if not specified
 	 * @return AbstractDecrypter

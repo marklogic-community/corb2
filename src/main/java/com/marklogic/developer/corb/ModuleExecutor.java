@@ -28,6 +28,7 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -104,10 +105,16 @@ public class ModuleExecutor extends AbstractManager{
 		
 	}
 	
-	public void init(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException{	
-		String propsFileName = System.getProperty("OPTIONS-FILE");
-		loadPropertiesFile(propsFileName,true,this.properties);
-		
+	public void init(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException{			
+		init(args,null);
+	}
+	
+	public void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException{			
+		if(props == null || props.isEmpty()){
+			initPropertiesFromOptionsFile();
+		}else{
+			this.properties = props;
+		}
 		initDecrypter();
 		initSSLConfig();
 		

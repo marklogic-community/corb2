@@ -138,9 +138,12 @@ public class Manager extends AbstractManager{
 		
 	}
 	
-	public void init(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException{		
-		String propsFileName = System.getProperty("OPTIONS-FILE");
-		loadPropertiesFile(propsFileName,true,this.properties);
+	public void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException{			
+		if(props == null || props.isEmpty()){
+			initPropertiesFromOptionsFile();
+		}else{
+			this.properties = props;
+		}
 		
 		initDecrypter();
 		initSSLConfig();
