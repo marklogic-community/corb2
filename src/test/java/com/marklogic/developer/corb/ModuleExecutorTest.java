@@ -63,7 +63,7 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		Properties props = getProperties();
 		URI connectionUri = new URI(props.getProperty("XCC-CONNECTION-URI"));
 		
-		ModuleExecutor result = new ModuleExecutor(connectionUri);
+		ModuleExecutor result = new ModuleExecutor();
 
 		assertNotNull(result);
 	}
@@ -100,12 +100,21 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		throws Exception {
 		clearProperties();
 		ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
-		executor.contentSource = new ContentSourceBean();
-		executor.options = new TransformOptions();
-
 		ContentSource result = executor.getContentSource();
 
 		assertNotNull(result);
+	}
+	
+	protected String getOption(String argVal, String propName, Properties properties) {
+		if (argVal != null && argVal.trim().length() > 0) {
+			return argVal.trim();
+		} else if (System.getProperty(propName) != null && System.getProperty(propName).trim().length() > 0) {
+			return System.getProperty(propName).trim();
+		} else if (properties.containsKey(propName) && properties.getProperty(propName).trim().length() > 0) {
+			String val = properties.getProperty(propName).trim();
+			return val;
+		}
+		return null;
 	}
 
 	/**
@@ -123,7 +132,7 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		String propName = "URIS-MODULE";
 		ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
 
-		String result = ModuleExecutor.getOption(argVal, propName, executor.getProperties());
+		String result = getOption(argVal, propName, executor.getProperties());
 		
 		assertNotNull(result);
 	}
@@ -144,7 +153,7 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		String propName = "URIS-MODULE";
 		Properties props = new Properties();
 		
-		String result = ModuleExecutor.getOption(argVal, propName, props);
+		String result = getOption(argVal, propName, props);
 
 		assertNotNull(result);
 	}
@@ -164,7 +173,7 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		String propName = "";
 		Properties props = new Properties();
 
-		String result = ModuleExecutor.getOption(argVal, propName, props);
+		String result = getOption(argVal, propName, props);
 
 		assertNotNull(result);
 	}
@@ -181,10 +190,6 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		throws Exception {
 		clearProperties();
 		ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
-		
-		executor.contentSource = new ContentSourceBean();
-		executor.options = new TransformOptions();
-
 		TransformOptions result = executor.getOptions();
 
 		assertNotNull(result);
@@ -202,9 +207,6 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		throws Exception {
 		clearProperties();
 		ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
-		executor.contentSource = new ContentSourceBean();
-		executor.options = new TransformOptions();
-
 		Properties result = executor.getProperties();
 
 		assertNotNull(result);
@@ -269,7 +271,8 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		System.setProperty("PROCESS-MODULE","src\\test\\resources\\transform2.xqy|ADHOC");
 		Properties props = getProperties();
 		String[] args = {props.getProperty("XCC-CONNECTION-URI")};
-		ModuleExecutor executor = ModuleExecutor.createExecutor(args);
+		ModuleExecutor executor = new ModuleExecutor();
+		executor.init(args);
 		ResultSequence resSeq = run(executor);
 		byte[] report = executor.getValueAsBytes(resSeq.next().getItem());
 		
@@ -301,7 +304,7 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		
 		File report = new File("src\\test\\resources\\helloWorld.txt");
 		boolean fileExists = report.exists();
-        clearFile(report);
+    clearFile(report);
 		assertTrue(fileExists);
 	}
 
@@ -316,7 +319,7 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 	public void testNewTrustAnyoneOptions_1()
 		throws Exception {
 
-		SecurityOptions result = ModuleExecutor.newTrustAnyoneOptions();
+		SecurityOptions result = new TrustAnyoneSSLConfig().getSecurityOptions();
 
 		// add additional test code here
 		assertNotNull(result);
@@ -356,7 +359,8 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		System.setProperty("PROCESS-MODULE","src\\test\\resources\\transform2.xqy|ADHOC");
 		System.setProperty("EXPORT-FILE-NAME","src\\test\\resources\\helloWorld.txt");
 		String[] args = {};
-		ModuleExecutor executor = ModuleExecutor.createExecutor(args);
+		ModuleExecutor executor = new ModuleExecutor();
+		executor.init(args);
 		executor.run();
 		
 		String reportPath = executor.getProperty("EXPORT-FILE-NAME");
@@ -386,7 +390,8 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 				"",
 				"src\\test\\resources\\helloWorld.txt"
 				};
-		ModuleExecutor executor = ModuleExecutor.createExecutor(args);
+		ModuleExecutor executor = new ModuleExecutor();
+		executor.init(args);
 		executor.run();
 		
 		String reportPath = executor.getProperty("EXPORT-FILE-NAME");
@@ -414,7 +419,8 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		System.setProperty("JASYPT-PROPERTIES-FILE", "src\\test\\resources\\jasypt.properties");
 		System.setProperty("EXPORT-FILE-NAME","src\\test\\resources\\helloWorld.txt");
 		
-		ModuleExecutor executor = ModuleExecutor.createExecutor(args);
+		ModuleExecutor executor = new ModuleExecutor();
+		executor.init(args);
 		executor.run();
 		
 		String reportPath = executor.getProperty("EXPORT-FILE-NAME");
@@ -488,7 +494,7 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 			
 		String propFileLocation = System.getProperty("OPTIONS-FILE");
 		if (propFileLocation == null || propFileLocation.length() == 0) {
-			propFileLocation = this.propertyFileLocation;
+			propFileLocation = propertyFileLocation;
 		}
 		File propFile = new File(propFileLocation);
 		URL url = null;
@@ -501,22 +507,16 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		return loadProperties(url);
 	}
 	
-	private ModuleExecutor buildModuleExecutorAndLoadProperties() {
+	private ModuleExecutor buildModuleExecutorAndLoadProperties() throws Exception{
 		ModuleExecutor executor = null;
 		Properties props = getProperties();
-		try {
-			executor = new ModuleExecutor(new URI(props.getProperty("XCC-CONNECTION-URI")));
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		executor.setProperties(props);
-		
-	    return executor;	
+		executor = new ModuleExecutor();
+		executor.init(new String[0], props);		
+	  return executor;	
 	
 	}
 	
-	private ResultSequence run(ModuleExecutor executor) throws CorbException {
+	private ResultSequence run(ModuleExecutor executor) throws Exception {
 
 		executor.prepareContentSource();
 	    Session session = null;
@@ -562,14 +562,25 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 	}
 	
 	private void clearProperties() {
+		System.clearProperty("URIS-MODULE");
 		System.clearProperty("OPTIONS-FILE");
 		System.clearProperty("XCC-CONNECTION-URI");
-		System.clearProperty("PROCESS-MODULE");
+		System.clearProperty("COLLECTION-NAME"); 
+		System.clearProperty("XQUERY-MODULE");
+		System.clearProperty("THREAD-COUNT");
 		System.clearProperty("MODULE-ROOT");
 		System.clearProperty("MODULES-DATABASE"); 
-		System.clearProperty("EXPORT-FILE-DIR");
+		System.clearProperty("INSTALL");
+		System.clearProperty("PROCESS-TASK");
+		System.clearProperty("PRE-BATCH-MODULE");
+		System.clearProperty("PRE-BATCH-TASK");
+		System.clearProperty("POST-BATCH-MODULE");
+		System.clearProperty("POST-BATCH-TASK");
+		System.clearProperty("EXPORT-FILE-DIR"); 
 		System.clearProperty("EXPORT-FILE-NAME");
-		System.clearProperty("PROCESS-MODULE.foo");
+		System.clearProperty("URIS-FILE");
+		System.clearProperty("XQUERY-MODULE.foo");
+		System.clearProperty("EXPORT_FILE_AS_ZIP");
 	}
 	
 	private void clearFile(File file) {
