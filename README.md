@@ -80,7 +80,7 @@ Corb needs one or more of the following parameters as (If specified in more than
 * **XCC-DBNAME** (Optional)
 
 #### URIS\_BATCH\_REF
-If a module, including those specified by PRE-BATCH-MODULE, PROCESS-MODULE or POST-BATCH-MODULE have an external or global variable named URIS\_BATCH\_REF, the variable will be set to the first non-numeric item in the sequence or ValueIterator returned by URIS-MODULE. This means that, when used, the URIS-MODULE must return a sequence or ValueIterator with the special string value first, then the URI count, then the sequence of URIs to process.  
+If a module, including those specified by PRE-BATCH-MODULE, PROCESS-MODULE or POST-BATCH-MODULE have an external or global variable named URIS\_BATCH\_REF, the variable will be set to the first **non-numeric** item in the sequence or ValueIterator returned by URIS-MODULE. This means that, when used, the URIS-MODULE must return a sequence or ValueIterator with the special string value first, then the URI count, then the sequence of URIs to process.  
 
 As an example, a batch ref can be a link/id of a document that manages the status of the batch job, where pre-batch module updates the status to start and post-batch module can set it to complete. This example can be used to manage status and errors in automated batch jobs.   
 
