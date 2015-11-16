@@ -23,6 +23,7 @@ import com.marklogic.developer.Utilities;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ContentSourceFactory;
 import com.marklogic.xcc.SecurityOptions;
+import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
 
 public abstract class AbstractManager {
@@ -147,11 +148,11 @@ public abstract class AbstractManager {
 		loadPropertiesFile(propsFileName,true,this.properties);
 	}
 	
-	public void init(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException{			
+	public void init(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException{			
 		init(args,null);
 	}
 	
-	public abstract void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException;			
+	public abstract void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException;			
 
 	/**
 	 * function that is used to get the Decrypter, returns null if not specified

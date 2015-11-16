@@ -122,12 +122,6 @@ public class Manager extends AbstractManager{
 			}else{
 				System.exit(0);
 			}
-		} catch (XccConfigException exc) {
-			LOG.log(Level.SEVERE, "Problem with XCC connection configuration.",exc);
-			System.exit(1);
-		} catch (GeneralSecurityException exc) {
-			LOG.log(Level.SEVERE, "Problem with creating XCC connection.",exc);
-			System.exit(1);
 		} catch(Exception exc){
 			LOG.log(Level.SEVERE, "Error while running CORB",exc);
 			System.exit(2);
@@ -138,7 +132,7 @@ public class Manager extends AbstractManager{
 		
 	}
 	
-	public void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException{			
+	public void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException{			
 		if(props == null || props.isEmpty()){
 			initPropertiesFromOptionsFile();
 		}else{
@@ -154,6 +148,12 @@ public class Manager extends AbstractManager{
 		this.collection = collection != null ? collection : "";
 		
 		initOptions(args);
+		
+		logRuntimeArgs();
+		
+		prepareContentSource();
+		registerStatusInfo();
+		prepareModules();
 	}
 			
 	protected void initOptions(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
@@ -314,11 +314,6 @@ public class Manager extends AbstractManager{
 		long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
 		LOG.log(Level.INFO, "maximum heap size = {0} MiB", maxMemory);
 
-		logRuntimeArgs();
-		
-		prepareContentSource();
-		registerStatusInfo();
-		prepareModules();
 		monitorThread = preparePool();
 		
 		try {

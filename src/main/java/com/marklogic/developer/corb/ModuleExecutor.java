@@ -89,13 +89,7 @@ public class ModuleExecutor extends AbstractManager{
 		try{
 			moduleExecutor.run();
 			System.exit(0);
-		} catch (XccConfigException exc) {
-			LOG.log(Level.SEVERE, "Problem with XCC connection configuration.",exc);
-			System.exit(1);
-		} catch (GeneralSecurityException exc) {
-			LOG.log(Level.SEVERE, "Problem with creating XCC connection.",exc);
-			System.exit(1);
-		} catch(Exception exc){
+		}catch(Exception exc){
 			LOG.log(Level.SEVERE, "Error while running CORB",exc);
 			System.exit(2);
 		}
@@ -105,11 +99,11 @@ public class ModuleExecutor extends AbstractManager{
 		
 	}
 	
-	public void init(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException{			
+	public void init(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException{			
 		init(args,null);
 	}
 	
-	public void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException{			
+	public void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException{			
 		if(props == null || props.isEmpty()){
 			initPropertiesFromOptionsFile();
 		}else{
@@ -121,6 +115,11 @@ public class ModuleExecutor extends AbstractManager{
 		initURI(args.length > 0 ? args[0] : null);
 		
 		initOptions(args);
+		
+		logRuntimeArgs();
+
+		prepareContentSource();
+		registerStatusInfo();
 	}
 	
 	protected void initOptions(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
@@ -226,11 +225,6 @@ public class ModuleExecutor extends AbstractManager{
 		LOG.info(NAME + " starting: " + Manager.VERSION_MSG);
 		long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
 		LOG.info("maximum heap size = " + maxMemory + " MiB");
-
-		logRuntimeArgs();
-
-		prepareContentSource();
-		registerStatusInfo();
 
 		try {
 			RequestOptions opts = new RequestOptions();
