@@ -286,7 +286,9 @@ public class ModuleExecutorTest {
 		System.setProperty("EXPORT-FILE-NAME", EXPORT_FILE_NAME);
 		String[] args = new String[] {};
 
-		ModuleExecutor.main(args);
+		ModuleExecutor executor = new ModuleExecutor();
+		executor.init(args);
+		executor.run();
 		
 		File report = new File(EXPORT_FILE_NAME);
 		boolean fileExists = report.exists();
