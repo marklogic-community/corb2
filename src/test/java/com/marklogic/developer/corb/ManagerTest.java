@@ -177,7 +177,7 @@ public class ManagerTest {
 		System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
 		System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR); 
 		System.setProperty("EXPORT-FILE-NAME", "testManagerUsingInputFile.txt");
-		System.setProperty("URIS-FILE", "src/test/esources/uriInputFile.txt");
+		System.setProperty("URIS-FILE", "src/test/resources/uriInputFile.txt");
 		String[] args = {};
 		Manager.main(args);
 		String exportFilePath = "src/test/resources/testManagerUsingInputFile.txt";

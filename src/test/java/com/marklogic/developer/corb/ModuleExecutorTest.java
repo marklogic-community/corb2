@@ -87,6 +87,8 @@ public class ModuleExecutorTest {
 	public void testGetContentSource_1()
 		throws Exception {
 		clearProperties();
+		System.setProperty("OPTIONS-FILE", OPTIONS_FILE);
+		System.setProperty("EXPORT-FILE-NAME",EXPORT_FILE_NAME);
 		ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
 		ContentSource result = executor.getContentSource();
 
@@ -194,6 +196,7 @@ public class ModuleExecutorTest {
 	public void testGetProperties_1()
 		throws Exception {
 		clearProperties();
+		System.setProperty("OPTIONS-FILE", OPTIONS_FILE);
 		ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
 		Properties result = executor.getProperties();
 
