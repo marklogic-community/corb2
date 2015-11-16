@@ -11,7 +11,7 @@ repositories {
     maven { url 'http://developer.marklogic.com/maven2/' }
     mavenCentral()
     flatDir {
-      dirs 'src\\test\\resources\\'
+      dirs 'src/test/resources/'
     }
 }
 
