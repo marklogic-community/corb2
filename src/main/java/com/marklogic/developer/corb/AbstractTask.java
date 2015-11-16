@@ -47,7 +47,7 @@ public abstract class AbstractTask implements Task {
 	protected String exportDir;
 
 	private static final Object SYNC_OBJ = new Object();
-	private static final Map<String, Set<String>> MODULE_PROPS = new HashMap<String, Set<String>>();
+	protected static final Map<String, Set<String>> MODULE_PROPS = new HashMap<String, Set<String>>();
 
 	protected static final int DEFAULT_RETRY_LIMIT = 3;
 	protected static final int DEFAULT_RETRY_INTERVAL = 60;

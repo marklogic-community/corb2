@@ -154,6 +154,9 @@ public class Manager extends AbstractManager{
 		prepareContentSource();
 		registerStatusInfo();
 		prepareModules();
+		
+		//This is relavant for unit tests only. clear the static map so it gets re-initialized for fresh run
+		if(AbstractTask.MODULE_PROPS != null) AbstractTask.MODULE_PROPS.clear(); 
 	}
 			
 	protected void initOptions(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
@@ -259,16 +262,20 @@ public class Manager extends AbstractManager{
 		}
 		
 		//fix map keys for backward compatibility
-		Properties newProps = new Properties();
 		for(String key : this.properties.stringPropertyNames()) {
 		  String value = this.properties.getProperty(key);
-		  if(key.startsWith("XQUERY-MODULE.")){
-		  	newProps.setProperty(key.replace("XQUERY-MODULE.", "PROCESS-MODULE."), value);
-		  }else{
-		  	newProps.setProperty(key, value);
+		  if(key.startsWith("XQUERY-MODULE.") && value != null){
+		  	properties.setProperty(key.replace("XQUERY-MODULE.", "PROCESS-MODULE."), value);
 		  }
 		}
-		this.properties = newProps;
+		
+		for(String key : System.getProperties().stringPropertyNames()) {
+		  String value = System.getProperty(key);
+		  if(key.startsWith("XQUERY-MODULE.") && value != null){
+		  	String nkey = key.replace("XQUERY-MODULE.", "PROCESS-MODULE.");
+		  	System.setProperty(nkey, value);
+		  }
+		}
 	}
 	
 	protected Class<? extends Task> getTaskCls(String type, String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException{

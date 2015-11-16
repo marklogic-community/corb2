@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.PrintWriter;
+import java.util.Properties;
 import org.junit.*;
 import static org.junit.Assert.*;
 
@@ -62,7 +63,7 @@ public class ManagerTest {
 						preBatchModule,preBatchTask,postXqueryModule,postXqueryTask,exportFileDir,
 						exportFileName	};
 				
-		Manager.main(args);
+		runCorb(args);
 		
 		File report = new File(exportFileDir+exportFileName);
 		report.deleteOnExit();
@@ -93,7 +94,7 @@ public class ManagerTest {
 		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
 		System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
 		System.setProperty("THREAD-COUNT", THREAD_COUNT);
-		System.setProperty("URIS-MODULE","src/test/resources/elector.xqy|ADHOC");
+		System.setProperty("URIS-MODULE","src/test/resources/selector.xqy|ADHOC");
 		System.setProperty("MODULE-ROOT", MODULES_ROOT);
 		System.setProperty("MODULES-DATABASE", MODULES_DATABASE); 
 		System.setProperty("INSTALL","false");
@@ -107,7 +108,7 @@ public class ManagerTest {
 		
 		String[] args = {};
 				
-		Manager.main(args);
+		runCorb(args);
 		
 		File report = new File("src/test/resources/testManagerUsingSysProps.txt");
 		report.deleteOnExit();
@@ -137,7 +138,7 @@ public class ManagerTest {
 		System.setProperty("EXPORT-FILE-NAME", exportFileName);
 		
 		String[] args = {};
-		Manager.main(args);
+		runCorb(args);
 		File report = new File(exportFileName);
 		report.deleteOnExit();
 		boolean fileExists = report.exists();
@@ -179,7 +180,7 @@ public class ManagerTest {
 		System.setProperty("EXPORT-FILE-NAME", "testManagerUsingInputFile.txt");
 		System.setProperty("URIS-FILE", "src/test/resources/uriInputFile.txt");
 		String[] args = {};
-		Manager.main(args);
+		runCorb(args);
 		String exportFilePath = "src/test/resources/testManagerUsingInputFile.txt";
 		File report = new File(exportFilePath);
 		report.deleteOnExit();
@@ -222,7 +223,7 @@ public class ManagerTest {
 		System.setProperty("EXPORT-FILE-NAME", "testManagersPreBatchTask.txt");
 		System.setProperty("URIS-FILE", URIS_FILE);
 		String[] args = {};
-		Manager.main(args);
+		runCorb(args);
 		String exportFilePath = "src/test/resources/testManagersPreBatchTask.txt";
 		File report = new File(exportFilePath);
 		report.deleteOnExit();
@@ -265,7 +266,7 @@ public class ManagerTest {
 		System.setProperty("EXPORT-FILE-NAME", "testManagersPostBatchTask.txt");
 		System.setProperty("URIS-FILE", URIS_FILE);
 		String[] args = {};
-		Manager.main(args);
+		runCorb(args);
 		String exportFilePath = "src/test/resources/testManagersPostBatchTask.txt";
 		File report = new File(exportFilePath);
 		boolean fileExists = report.exists();
@@ -308,7 +309,7 @@ public class ManagerTest {
 		System.setProperty("URIS-FILE", URIS_FILE);
 		System.setProperty("EXPORT_FILE_AS_ZIP", "true");
 		String[] args = {};
-		Manager.main(args);
+		runCorb(args);
 		String zippedExportFilePath = "src/test/resources/helloWorld.txt.zip";
 		File report = new File(zippedExportFilePath);
 		boolean fileExists = report.exists();
@@ -343,7 +344,7 @@ public class ManagerTest {
 		System.setProperty("URIS-FILE", "src/test/resources/uris-file.txt");
 		System.setProperty("XQUERY-MODULE.foo", "bar1");
 		String[] args = {};
-		Manager.main(args);
+		runCorb(args);
 		String exportFilePath = "src/test/resources/testManagerJavaScriptTransform.txt";
 		File report = new File(exportFilePath);
 		report.deleteOnExit();
@@ -422,6 +423,7 @@ public class ManagerTest {
 		System.clearProperty("EXPORT-FILE-NAME");
 		System.clearProperty("URIS-FILE");
 		System.clearProperty("XQUERY-MODULE.foo");
+		System.clearProperty("PROCESS-MODULE.foo");
 		System.clearProperty("EXPORT_FILE_AS_ZIP");
 	}
 	
@@ -436,5 +438,17 @@ public class ManagerTest {
 		if (pw != null) {
 			pw.close();	
 		}
+	}
+	
+	public void runCorb(String[] args) throws Exception{
+		Manager tm = new Manager();
+		tm.init(args);
+		tm.run();
+	}
+	
+	public void runCorb(String[] args, Properties props) throws Exception{
+		Manager tm = new Manager();
+		tm.init(args, props);
+		tm.run();
 	}
 }
