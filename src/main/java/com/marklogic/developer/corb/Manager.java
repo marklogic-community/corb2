@@ -181,6 +181,7 @@ public class Manager extends AbstractManager{
 		
 		String batchSize = getOption(null, "BATCH-SIZE");
 		String failOnError = getOption(null, "FAIL-ON-ERROR");
+		String errorFileName = getOption(null, "ERROR-FILE-NAME");
 		
 		if (processModule == null) processModule = getOption(null, "XQUERY-MODULE");
 		
@@ -199,6 +200,9 @@ public class Manager extends AbstractManager{
 		}
 		if (!this.properties.containsKey("EXPORT-FILE-NAME") && exportFileName != null) {
 			this.properties.put("EXPORT-FILE-NAME", exportFileName);
+		}
+		if (!this.properties.containsKey("ERROR-FILE-NAME") && errorFileName != null) {
+			this.properties.put("ERROR-FILE-NAME", errorFileName);
 		}
 		
 		if (urisFile != null && urisFile.trim().length() > 0) {
@@ -244,6 +248,13 @@ public class Manager extends AbstractManager{
 			File exportFile = new File(exportFileDir, exportFileName);
 			if (exportFile.exists()) {
 				exportFile.delete();
+			}
+		}
+		
+		if (errorFileName != null) {
+			File errorFile = new File(exportFileDir, errorFileName);
+			if (errorFile.exists()) {
+				errorFile.delete();
 			}
 		}
 		
@@ -571,7 +582,7 @@ public class Manager extends AbstractManager{
 				// all uris in queue as quickly as possible
 				if (isFirst) {
 					isFirst = false;
-					completionService.submit(tf.newProcessTask(new String[] { uri }));
+					completionService.submit(tf.newProcessTask(new String[] { uri },options.isFailOnError()));
 					urisArray[count] = null;
 					LOG.log(Level.INFO, "received first uri: {0}", uri);
 				} else {

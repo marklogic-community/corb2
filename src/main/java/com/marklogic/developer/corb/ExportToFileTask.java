@@ -11,17 +11,6 @@ import com.marklogic.xcc.ResultSequence;
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  */
 public class ExportToFileTask extends AbstractTask {
-
-	protected String exportDir;
-
-	public void setExportDir(String exportFileDir) {
-		this.exportDir = exportFileDir;
-	}
-
-	public String getExportDir() {
-		return this.exportDir;
-	}
-
 	protected String getFileName() {
 		return inputUris[0].charAt(0) == '/' ? inputUris[0].substring(1) : inputUris[0];
 	}

@@ -41,4 +41,6 @@ public interface Task extends Callable<String[]> {
 	public void setInputURI(String[] inputUri);
 
 	public void setFailOnError(boolean failOnError);
+	
+	public void setExportDir(String exportFileDir);
 }

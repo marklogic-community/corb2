@@ -67,7 +67,7 @@ Corb needs one or more of the following parameters as (If specified in more than
 * **XCC-CONNECTION-RETRY-LIMIT** (Number attempts to connect to ML before giving up - default is 3)
 * **XCC-CONNECTION-RETRY-INTERVAL** (in seconds - Time interval in seconds between retry attempts - default is 60)  
 * **BATCH-URI-DELIM** (Use if default delimiter `';'` cannot be used to join multiple URIS when BATCH-SIZE is greater than 1.)   
-* **FAIL-ON-ERROR** (Default is true. If false, corb job will not fail and exit if the transform module throws xquery error after the first URI is successfully run. This option will not handle repeated connection failures)  
+* **FAIL-ON-ERROR** (Default is true. If false, corb job will not fail and exit if the transform module throws xquery error. This option will not handle repeated connection failures)  
 * **ERROR-FILE-NAME** (Used when FAIL-ON-ERROR is false. If specifiedf true, removes duplicates from , the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to seperate URI and error message)  
 * **EXPORT-FILE-REMOVE-DUPLICATES** (If `true`, duplicate lines from EXPORT-FILE-NAME will be removed. If `true|sorted`, lines will be sorted. If `true|ordered`, lines will not be reordered after removing duplicates.)  
 * **MAX_OPTS_FROM_MODULE** (Default 10. Max number of custom inputs from the URIS-MODULE to other modules)  

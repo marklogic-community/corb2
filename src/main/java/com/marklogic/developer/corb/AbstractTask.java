@@ -1,6 +1,7 @@
 package com.marklogic.developer.corb;
 
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,6 +43,8 @@ public abstract class AbstractTask implements Task {
 
 	protected String adhocQuery;
 	protected String language;
+	
+	protected String exportDir;
 
 	private static final Object SYNC_OBJ = new Object();
 	private static final Map<String, Set<String>> MODULE_PROPS = new HashMap<String, Set<String>>();
@@ -92,6 +95,14 @@ public abstract class AbstractTask implements Task {
 	
 	public void setFailOnError(boolean failOnError){
 		this.failOnError = failOnError;
+	}
+	
+	public void setExportDir(String exportFileDir) {
+		this.exportDir = exportFileDir;
+	}
+
+	public String getExportDir() {
+		return this.exportDir;
 	}
 
 	public Session newSession() {
@@ -207,7 +218,7 @@ public abstract class AbstractTask implements Task {
 			if(failOnError){
 				throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
 			}else{
-				LOG.log(Level.SEVERE,"Encountered server exception at URI: "+ asString(inputUris),exc);
+				LOG.log(Level.WARNING,"failOnErroris is false. Encountered server exception at URI: "+ asString(inputUris),exc);
 				writeToErrorFile(inputUris,exc.getMessage());
 				return inputUris;
 			}
@@ -215,7 +226,7 @@ public abstract class AbstractTask implements Task {
 			if(failOnError){
 				throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
 			}else{
-				LOG.log(Level.SEVERE,"Encountered permission exception at URI: "+ asString(inputUris),exc);
+				LOG.log(Level.WARNING,"failOnErroris is false. Encountered permission exception at URI: "+ asString(inputUris),exc);
 				writeToErrorFile(inputUris,exc.getMessage());
 				return inputUris;
 			}
@@ -312,7 +323,7 @@ public abstract class AbstractTask implements Task {
 		synchronized(ERROR_SYNC_OBJ){
 			BufferedOutputStream writer = null;
 			try{
-				writer = new BufferedOutputStream(new FileOutputStream(errorFileName, true));
+				writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir,errorFileName), true));
 				for (int i=0; i< uris.length;i++) {
             writer.write(uris[i].getBytes());
             if(message != null && message.length() > 0){

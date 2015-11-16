@@ -64,21 +64,21 @@ public class Monitor implements Runnable {
      */
     @Override
     public void run() {
-        startMillis = System.currentTimeMillis();
+    	startMillis = System.currentTimeMillis();
 
-		try {
-			Thread.yield();
-			monitorResults();
-		} catch (ExecutionException e) {
-			// tell the main thread to quit
-			manager.stop(e);
-		} catch (InterruptedException e) {
-			// reset interrupt status and exit
-			Thread.interrupted();
-			LOG.log(Level.SEVERE,"interrupted: exiting", e);
-		} catch (CorbException e) {
-			LOG.log(Level.SEVERE,"Unexpected error", e);
-		}
+    	try {
+    		Thread.yield();
+    		monitorResults();
+    	} catch (ExecutionException e) {
+    		// tell the main thread to quit
+    		manager.stop(e);
+    	} catch (InterruptedException e) {
+    		// reset interrupt status and exit
+    		Thread.interrupted();
+    		LOG.log(Level.SEVERE,"interrupted: exiting", e);
+    	} catch (CorbException e) {
+    		LOG.log(Level.SEVERE,"Unexpected error", e);
+    	}
 	}
 
 	private void monitorResults() throws InterruptedException, ExecutionException, CorbException {

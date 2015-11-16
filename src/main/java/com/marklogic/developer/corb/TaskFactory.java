@@ -153,10 +153,8 @@ public class TaskFactory {
 		task.setProperties(manager.properties);
 		task.setInputURI(uris);
 		task.setFailOnError(failOnError);
+		task.setExportDir(manager.getOptions().getExportFileDir());
 
-		if (task instanceof ExportToFileTask) {
-			((ExportToFileTask) task).setExportDir(manager.getOptions().getExportFileDir());
-		}
 		if (task instanceof ExportBatchToFileTask) {
 			String fileName = ((ExportBatchToFileTask) task).getFileName();
 			if (fileName == null || fileName.trim().length() == 0) {
