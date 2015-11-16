@@ -1,7 +1,4 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
  */
 package com.marklogic.developer;
 
@@ -49,8 +46,18 @@ public class UtilitiesTest {
         exampleDate = cal.getTime();
         
         exampleContentFile = File.createTempFile("exampleContentFile", "txt");
-        try (PrintWriter print = new PrintWriter(exampleContentFile, "UTF-8")) {
+        PrintWriter print = null;
+        try {
+            print = new PrintWriter(exampleContentFile, "UTF-8");
             print.write(exampleContent);
+        } catch (FileNotFoundException fileNotFoundException) {
+            throw fileNotFoundException;
+        } catch (UnsupportedEncodingException unsupportedEncodingException) {
+            throw unsupportedEncodingException;
+        } finally {
+            if (print != null) {
+                print.close();
+            }
         }
     }
 
@@ -72,6 +79,7 @@ public class UtilitiesTest {
 
     /**
      * Test of parseDateTime method, of class Utilities.
+     * @throws java.lang.Exception
      */
     @org.junit.Test
     public void testParseDateTime() throws Exception {
@@ -95,6 +103,7 @@ public class UtilitiesTest {
 
     /**
      * Test of formatDateTime method, of class Utilities.
+     * @throws java.text.ParseException
      */
     @org.junit.Test
     public void testFormatDateTime_0args() throws ParseException {
@@ -106,6 +115,7 @@ public class UtilitiesTest {
 
     /**
      * Test of formatDateTime method, of class Utilities.
+     * @throws java.text.ParseException
      */
     @org.junit.Test
     public void testFormatDateTime_Date() throws ParseException {
@@ -169,7 +179,7 @@ public class UtilitiesTest {
     @org.junit.Test
     public void testJoin_emptyList() {
         System.out.println("join");
-        List<String> items = new ArrayList<>();
+        List<String> items = new ArrayList<String>();
         String result = Utilities.join(items, ",");
         assertEquals("", result);
     }
@@ -181,7 +191,7 @@ public class UtilitiesTest {
     public void testJoin_ObjectArr_String() {
         System.out.println("join");
         Object[] items = new Object[2];
-        items[0] = Integer.valueOf(2);
+        items[0] = 2;
         items[1] = "foo";
         String delim = "|";
         String result = Utilities.join(items, delim);
@@ -242,9 +252,13 @@ public class UtilitiesTest {
 
         File out = File.createTempFile("copiedFile", "txt");
         Utilities.copy(exampleContentFile, out);
-        String result;
-        try (BufferedReader reader = new BufferedReader(new FileReader(out))) {
+        String result = null;
+        BufferedReader reader;
+        try { 
+            reader = new BufferedReader(new FileReader(out));
             result = reader.readLine();
+        } catch (Exception ex) {
+            
         }
         assertEquals(exampleContent, result);
         out.deleteOnExit();
@@ -268,6 +282,7 @@ public class UtilitiesTest {
     
     /**
      * Test of copy method, of class Utilities.
+     * @throws java.lang.Exception
      */
     @org.junit.Test
     public void testCopy_Reader_OutputStream() throws Exception {
@@ -295,6 +310,7 @@ public class UtilitiesTest {
     
     /**
      * Test of copy method, of class Utilities.
+     * @throws java.lang.Exception
      */
     @org.junit.Test
     public void testCopy_String_String() throws Exception {
@@ -303,10 +319,12 @@ public class UtilitiesTest {
         File destFile = File.createTempFile("output", "txt");
         String outFilePath = destFile.getAbsolutePath();
         Utilities.copy(inFilePath, outFilePath);
-
-         String result;
-        try (BufferedReader reader = new BufferedReader(new FileReader(destFile))) {
+        BufferedReader reader;
+        String result = null;
+        try {
+            reader = new BufferedReader(new FileReader(destFile));
             result = reader.readLine();
+        } catch (Exception e){
         }
         assertEquals(exampleContent, result);
         destFile.deleteOnExit();
@@ -314,6 +332,7 @@ public class UtilitiesTest {
 
     /**
      * Test of deleteFile method, of class Utilities.
+     * @throws java.lang.Exception
      */
     @org.junit.Test
     public void testDeleteFile_File() throws Exception {
@@ -391,18 +410,6 @@ public class UtilitiesTest {
     }
 
     /**
-     * Test of deleteFile method, of class Utilities.
-     */
-    //@org.junit.Test
-    public void testDeleteFile_String() throws Exception {
-        System.out.println("deleteFile");
-        String path = "";
-        Utilities.deleteFile(path);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-
-    /**
      * Test of buildModulePath method, of class Utilities.
      */
     @org.junit.Test
@@ -433,6 +440,7 @@ public class UtilitiesTest {
 
     /**
      * Test of cat method, of class Utilities.
+     * @throws java.lang.Exception
      */
     @org.junit.Test
     public void testCat_Reader() throws Exception {
@@ -445,6 +453,7 @@ public class UtilitiesTest {
 
     /**
      * Test of cat method, of class Utilities.
+     * @throws java.lang.Exception
      */
     @org.junit.Test
     public void testCat_InputStream() throws Exception {
@@ -457,18 +466,24 @@ public class UtilitiesTest {
 
     /**
      * Test of getSize method, of class Utilities.
+     * @throws java.lang.Exception
      */
     @org.junit.Test
     public void testGetSize_InputStream() throws Exception {
         System.out.println("getSize");
-        try (InputStream is = new FileInputStream(exampleContentFile)) {
-            long result = Utilities.getSize(is);
-            assertEquals(exampleContent.length(), result);
-        }
+        long result = -1;
+        InputStream is;
+        try {
+            is = new FileInputStream(exampleContentFile);
+            result = Utilities.getSize(is);
+            
+        } catch (Exception ex) {}
+        assertEquals(exampleContent.length(), result);
     }
 
     /**
      * Test of getSize method, of class Utilities.
+     * @throws java.lang.Exception
      */
     @org.junit.Test
     public void testGetSize_Reader() throws Exception {
@@ -481,6 +496,7 @@ public class UtilitiesTest {
 
     /**
      * Test of getBytes method, of class Utilities.
+     * @throws java.lang.Exception
      */
     @org.junit.Test
     public void testGetBytes() throws Exception {
@@ -492,6 +508,7 @@ public class UtilitiesTest {
 
     /**
      * Test of dumpHex method, of class Utilities.
+     * @throws java.lang.Exception
      */
     @org.junit.Test
     public void testDumpHex() throws Exception {

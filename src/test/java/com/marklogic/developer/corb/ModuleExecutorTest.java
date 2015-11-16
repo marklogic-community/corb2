@@ -1,42 +1,27 @@
 package com.marklogic.developer.corb;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import org.junit.*;
 import static org.junit.Assert.*;
 
-import com.marklogic.developer.Utilities;
-import com.marklogic.developer.corb.ModuleExecutor;
 import com.marklogic.xcc.ContentSource;
-import com.marklogic.xcc.ContentSourceFactory;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.SecurityOptions;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
-import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.jndi.ContentSourceBean;
-import com.marklogic.xcc.types.ItemType;
-import com.marklogic.xcc.types.XdmItem;
-import com.marklogic.xcc.types.impl.AbstractStreamableItem;
 
 /**
  * The class <code>ModuleExecutorTest</code> contains tests for the class <code>{@link ModuleExecutor}</code>.
@@ -47,9 +32,12 @@ import com.marklogic.xcc.types.impl.AbstractStreamableItem;
  */
 public class ModuleExecutorTest {
 	
-private static final String propertyFileLocation = "src\\test\\resources\\helloWorld.properties";
-
-	/**
+    private static final String XCC_CONNECTION_URI = "xcc://admin:admin@localhost:2223/FFE";
+    private static final String OPTIONS_FILE = "src/test/resources/helloWorld.properties";
+    private static final String EXPORT_FILE_NAME = "src/test/resources/helloWorld.txt";
+    private static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
+	
+    /**
 	 * Run the ModuleExecutor(URI) constructor test.
 	 *
 	 * @throws Exception
@@ -266,9 +254,9 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 	public void testGetValueAsBytes_1()
 		throws Exception {
 		clearProperties();
-		System.setProperty("EXPORT-FILE-NAME","src\\test\\resources\\testGetValueAsBytes_1.txt");
-		System.setProperty("OPTIONS-FILE","src\\test\\resources\\helloWorld.properties");
-		System.setProperty("PROCESS-MODULE","src\\test\\resources\\transform2.xqy|ADHOC");
+		System.setProperty("EXPORT-FILE-NAME","src/test/resources/testGetValueAsBytes_1.txt");
+		System.setProperty("OPTIONS-FILE", OPTIONS_FILE);
+		System.setProperty("PROCESS-MODULE","src/test/resources/transform2.xqy|ADHOC");
 		Properties props = getProperties();
 		String[] args = {props.getProperty("XCC-CONNECTION-URI")};
 		ModuleExecutor executor = new ModuleExecutor();
@@ -277,11 +265,6 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		byte[] report = executor.getValueAsBytes(resSeq.next().getItem());
 		
 		assertNotNull(report);
-	}
-
-	private String getPropertyFileLocation() {
-		// TODO Auto-generated method stub
-		return this.propertyFileLocation;
 	}
 
 	/**
@@ -295,14 +278,14 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 	public void testMain_1()
 		throws Exception {
 		clearProperties();
-		System.setProperty("OPTIONS-FILE","src\\test\\resources\\helloWorld.properties");
-		System.setProperty("PROCESS-MODULE","src\\test\\resources\\transform2.xqy|ADHOC");
-		System.setProperty("EXPORT-FILE-NAME","src\\test\\resources\\helloWorld.txt");
+		System.setProperty("OPTIONS-FILE", OPTIONS_FILE);
+		System.setProperty("PROCESS-MODULE", PROCESS_MODULE);
+		System.setProperty("EXPORT-FILE-NAME", EXPORT_FILE_NAME);
 		String[] args = new String[] {};
 
 		ModuleExecutor.main(args);
 		
-		File report = new File("src\\test\\resources\\helloWorld.txt");
+		File report = new File(EXPORT_FILE_NAME);
 		boolean fileExists = report.exists();
     clearFile(report);
 		assertTrue(fileExists);
@@ -323,8 +306,8 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 
 		// add additional test code here
 		assertNotNull(result);
-		assertEquals(null, result.getEnabledProtocols());
-		assertEquals(null, result.getEnabledCipherSuites());
+        assertNull(result.getEnabledProtocols());
+        assertNull(result.getEnabledCipherSuites());
 	}
 
 	/**
@@ -355,9 +338,9 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 	public void testRun_1()
 		throws Exception {
 		clearProperties();
-		System.setProperty("OPTIONS-FILE","src\\test\\resources\\helloWorld.properties");
-		System.setProperty("PROCESS-MODULE","src\\test\\resources\\transform2.xqy|ADHOC");
-		System.setProperty("EXPORT-FILE-NAME","src\\test\\resources\\helloWorld.txt");
+		System.setProperty("OPTIONS-FILE", OPTIONS_FILE);
+		System.setProperty("PROCESS-MODULE", PROCESS_MODULE);
+		System.setProperty("EXPORT-FILE-NAME", EXPORT_FILE_NAME);
 		String[] args = {};
 		ModuleExecutor executor = new ModuleExecutor();
 		executor.init(args);
@@ -383,12 +366,12 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		throws Exception {
 		clearProperties();
 		String[] args = {
-				"xcc://admin:admin@localhost:2223/FFE",
-				"src\\test\\resources\\transform2.xqy|ADHOC",
+				XCC_CONNECTION_URI,
+				PROCESS_MODULE,
 				"",
 				"",
 				"",
-				"src\\test\\resources\\helloWorld.txt"
+				EXPORT_FILE_NAME
 				};
 		ModuleExecutor executor = new ModuleExecutor();
 		executor.init(args);
@@ -413,11 +396,11 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 		throws Exception {
 		clearProperties();
 		String[] args = {};
-		System.setProperty("XCC-CONNECTION-URI","xcc://admin:admin@localhost:2223/FFE");
-		System.setProperty("PROCESS-MODULE","src\\test\\resources\\transform2.xqy|ADHOC");
+		System.setProperty("XCC-CONNECTION-URI",XCC_CONNECTION_URI);
+		System.setProperty("PROCESS-MODULE", PROCESS_MODULE);
 		System.setProperty("DECRYPTER","com.marklogic.developer.corb.JasyptDecrypter");
-		System.setProperty("JASYPT-PROPERTIES-FILE", "src\\test\\resources\\jasypt.properties");
-		System.setProperty("EXPORT-FILE-NAME","src\\test\\resources\\helloWorld.txt");
+		System.setProperty("JASYPT-PROPERTIES-FILE", "src/test/resources/jasypt.properties");
+		System.setProperty("EXPORT-FILE-NAME", EXPORT_FILE_NAME);
 		
 		ModuleExecutor executor = new ModuleExecutor();
 		executor.init(args);
@@ -441,14 +424,12 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 	public void testSetProperties_1()
 		throws Exception {
 		clearProperties();
-		System.setProperty("OPTIONS-FILE", "src\\test\\resources\\helloWorld.properties");
+		System.setProperty("OPTIONS-FILE", OPTIONS_FILE);
 		ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
 		Properties props = executor.getProperties();
 		
 		assertNotNull(props);
-		if (props != null) {
-			assertFalse(props.isEmpty());
-		}
+		assertFalse(props.isEmpty());
 	}
 
 	/**
@@ -494,7 +475,7 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 			
 		String propFileLocation = System.getProperty("OPTIONS-FILE");
 		if (propFileLocation == null || propFileLocation.length() == 0) {
-			propFileLocation = propertyFileLocation;
+			propFileLocation = OPTIONS_FILE;
 		}
 		File propFile = new File(propFileLocation);
 		URL url = null;
@@ -535,7 +516,7 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 			
 			String queryPath = options.getProcessModule().substring(0,options.getProcessModule().indexOf('|'));
 
-			String adhocQuery = executor.getAdhocQuery(queryPath);
+			String adhocQuery = AbstractManager.getAdhocQuery(queryPath);
 			if (adhocQuery == null || (adhocQuery.length() == 0)) {
 					throw new IllegalStateException(
 								"Unable to read adhoc query " + queryPath
@@ -545,11 +526,12 @@ private static final String propertyFileLocation = "src\\test\\resources\\helloW
 			for (String propName : propertyNames) {
 				if (propName.startsWith("PROCESS-MODULE.")) {
 					String varName = propName.substring("PROCESS-MODULE.".length());
-						String value = properties.getProperty(propName);
-						if (value != null)
-							req.setNewStringVariable(varName, value);
-					}
+                    String value = properties.getProperty(propName);
+                    if (value != null) {
+                        req.setNewStringVariable(varName, value);
+                    }
 				}
+			}
 			req.setOptions(opts);
 			res = session.submitRequest(req);
 

@@ -4,15 +4,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.PrintWriter;
-import java.net.URI;
-import java.util.Properties;
-import java.util.concurrent.ExecutionException;
 import org.junit.*;
 import static org.junit.Assert.*;
 
-import com.marklogic.xcc.ContentSource;
-import com.marklogic.xcc.SecurityOptions;
-import com.marklogic.xcc.jndi.ContentSourceBean;
 
 /**
  * The class <code>ManagerTest</code> contains tests for the class <code>{@link Manager}</code>.
@@ -22,7 +16,21 @@ import com.marklogic.xcc.jndi.ContentSourceBean;
  * @version $Revision: 1.0 $
  */
 public class ManagerTest {
-	
+	public static final String XCC_CONNECTION_URI = "xcc://admin:admin@localhost:2223/FFE";
+    public static final String COLLECTION_NAME = "StringPassedToTheURIsModule";
+    public static final String XQUERY_MODULE = "src/test/resources/transform.xqy|ADHOC";
+    public static final String THREAD_COUNT = "2";
+    public static final String PROCESS_TASK = "com.marklogic.developer.corb.ExportBatchToFileTask";
+    public static final String MODULES_ROOT = "/";
+    public static final String MODULES_DATABASE = "Documents";
+    public static final String PRE_BATCH_MODULE = "src/test/resources/preBatchModule.xqy|ADHOC";        
+    public static final String PRE_BATCH_TASK = "com.marklogic.developer.corb.PreBatchUpdateFileTask";
+    public static final String POST_BATCH_MODULE = "src/test/resources/postBatchModule.xqy|ADHOC";
+    public static final String POST_BATCH_TASK = "com.marklogic.developer.corb.PostBatchUpdateFileTask";
+    public static final String EXPORT_FILE_DIR = "src/test/resources/";
+    public static final String URIS_FILE = "src/test/resources/uriInputFile.txt";
+    
+    
 	/**
 	 * Functional test for the Manager using program arguments.
 	 *
@@ -33,20 +41,20 @@ public class ManagerTest {
 	public void testManagerUsingProgArgs()
 		throws Exception {
 		clearProperties();
-		String xccConnection = "xcc://admin:admin@localhost:2223/FFE";
-		String collection = "StringPassedToTheURIsModule";
-		String xqueryModuleAlsoCalledTransformModule = "src\\test\\resources\\transform.xqy|ADHOC"; 
-		String threadCount = "2";
-		String urisModuleAlsoCalledSelector = "src\\test\\resources\\selector.xqy|ADHOC";
-		String modulesRoot = "/";
-		String modulesDatabase = "Document";
+		String xccConnection = XCC_CONNECTION_URI;
+		String collection = COLLECTION_NAME;
+		String xqueryModuleAlsoCalledTransformModule = XQUERY_MODULE; 
+		String threadCount = THREAD_COUNT;
+		String urisModuleAlsoCalledSelector = "src/test/resources/selector.xqy|ADHOC";
+		String modulesRoot = MODULES_ROOT;
+		String modulesDatabase = MODULES_DATABASE;
 		String install = "true";
-		String processTask = "com.marklogic.developer.corb.ExportBatchToFileTask";
-		String preBatchModule = "src\\test\\resources\\preBatchModule.xqy|ADHOC";
-		String preBatchTask = "com.marklogic.developer.corb.PreBatchUpdateFileTask";
-		String postXqueryModule = "src\\test\\resources\\postBatchModule.xqy|ADHOC";
-		String postXqueryTask  = "com.marklogic.developer.corb.PostBatchUpdateFileTask";
-		String exportFileDir = "src\\test\\resources\\";
+		String processTask = PROCESS_TASK;
+		String preBatchModule = PRE_BATCH_MODULE;
+		String preBatchTask = PRE_BATCH_TASK;
+		String postXqueryModule = POST_BATCH_MODULE;
+		String postXqueryTask  = POST_BATCH_TASK;
+		String exportFileDir = EXPORT_FILE_DIR;
 		String exportFileName = "testManagerUsingProgArgs.txt";
 		
 		String[] args = { xccConnection,collection,xqueryModuleAlsoCalledTransformModule,threadCount,
@@ -81,27 +89,27 @@ public class ManagerTest {
 	public void testManagerUsingSysProps()
 		throws Exception {
 		clearProperties();
-		System.setProperty("XCC-CONNECTION-URI","xcc://admin:admin@localhost:2223/FFE");
-		System.setProperty("COLLECTION-NAME","StringPassedToTheURIsModule"); 
-		System.setProperty("XQUERY-MODULE","src\\test\\resources\\transform.xqy|ADHOC");
-		System.setProperty("THREAD-COUNT","2");
-		System.setProperty("URIS-MODULE","src\\test\\resources\\selector.xqy|ADHOC");
-		System.setProperty("MODULE-ROOT","/");
-		System.setProperty("MODULES-DATABASE","Document"); 
+		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
+		System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
+		System.setProperty("THREAD-COUNT", THREAD_COUNT);
+		System.setProperty("URIS-MODULE","src/test/resources/elector.xqy|ADHOC");
+		System.setProperty("MODULE-ROOT", MODULES_ROOT);
+		System.setProperty("MODULES-DATABASE", MODULES_DATABASE); 
 		System.setProperty("INSTALL","false");
-		System.setProperty("PROCESS-TASK","com.marklogic.developer.corb.ExportBatchToFileTask");
-		System.setProperty("PRE-BATCH-MODULE","src\\test\\resources\\preBatchModule.xqy|ADHOC");
-		System.setProperty("PRE-BATCH-TASK","com.marklogic.developer.corb.PreBatchUpdateFileTask");
-		System.setProperty("POST-BATCH-MODULE","src\\test\\resources\\postBatchModule.xqy|ADHOC");
-		System.setProperty("POST-BATCH-TASK","com.marklogic.developer.corb.PostBatchUpdateFileTask");
-		System.setProperty("EXPORT-FILE-DIR","src\\test\\resources\\"); 
-		System.setProperty("EXPORT-FILE-NAME","testManagerUsingSysProps.txt");
+		System.setProperty("PROCESS-TASK", PROCESS_TASK);
+		System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
+		System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
+		System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
+		System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
+		System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR); 
+		System.setProperty("EXPORT-FILE-NAME", "testManagerUsingSysProps.txt");
 		
 		String[] args = {};
 				
 		Manager.main(args);
 		
-		File report = new File("src\\test\\resources\\testManagerUsingSysProps.txt");
+		File report = new File("src/test/resources/testManagerUsingSysProps.txt");
 		report.deleteOnExit();
 		char [] a = new char[500];
 		FileReader reader = new FileReader(report);
@@ -123,14 +131,14 @@ public class ManagerTest {
 	@Test
 	public void testManagerUsingPropsFile()
 		throws Exception {
+        String exportFileName = "src/test/resources/testManagerUsingPropsFile.txt";
 		clearProperties();
-		System.setProperty("OPTIONS-FILE","src\\test\\resources\\helloWorld.properties");	
-		System.setProperty("EXPORT-FILE-NAME","src\\test\\resources\\testManagerUsingPropsFile.txt");
+		System.setProperty("OPTIONS-FILE","src/test/resources/helloWorld.properties");	
+		System.setProperty("EXPORT-FILE-NAME", exportFileName);
 		
 		String[] args = {};
 		Manager.main(args);
-		String exportFilePath = "src\\test\\resources\\testManagerUsingPropsFile.txt";
-		File report = new File(exportFilePath);
+		File report = new File(exportFileName);
 		report.deleteOnExit();
 		boolean fileExists = report.exists();
 		assertTrue(fileExists);
@@ -155,24 +163,24 @@ public class ManagerTest {
 	public void testManagerUsingInputFile()
 		throws Exception {
 		clearProperties();
-		System.setProperty("XCC-CONNECTION-URI","xcc://admin:admin@localhost:2223/FFE");
-		System.setProperty("COLLECTION-NAME","StringPassedToTheURIsModule"); 
-		System.setProperty("XQUERY-MODULE","src\\test\\resources\\transform.xqy|ADHOC");
-		System.setProperty("THREAD-COUNT","2");
-		System.setProperty("MODULE-ROOT","/");
-		System.setProperty("MODULES-DATABASE","Document"); 
-		System.setProperty("INSTALL","false");
-		System.setProperty("PROCESS-TASK","com.marklogic.developer.corb.ExportBatchToFileTask");
-		System.setProperty("PRE-BATCH-MODULE","src\\test\\resources\\preBatchModule.xqy|ADHOC");
-		System.setProperty("PRE-BATCH-TASK","com.marklogic.developer.corb.PreBatchUpdateFileTask");
-		System.setProperty("POST-BATCH-MODULE","src\\test\\resources\\postBatchModule.xqy|ADHOC");
-		System.setProperty("POST-BATCH-TASK","com.marklogic.developer.corb.PostBatchUpdateFileTask");
-		System.setProperty("EXPORT-FILE-DIR","src\\test\\resources\\"); 
-		System.setProperty("EXPORT-FILE-NAME","testManagerUsingInputFile.txt");
-		System.setProperty("URIS-FILE","src\\test\\resources\\uriInputFile.txt");
+		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
+		System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
+		System.setProperty("THREAD-COUNT", THREAD_COUNT);
+		System.setProperty("MODULE-ROOT", MODULES_ROOT);
+		System.setProperty("MODULES-DATABASE", MODULES_DATABASE); 
+		System.setProperty("INSTALL", "false");
+		System.setProperty("PROCESS-TASK", PROCESS_TASK);
+		System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
+		System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
+		System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
+		System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
+		System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR); 
+		System.setProperty("EXPORT-FILE-NAME", "testManagerUsingInputFile.txt");
+		System.setProperty("URIS-FILE", "src/test/esources/uriInputFile.txt");
 		String[] args = {};
 		Manager.main(args);
-		String exportFilePath = "src\\test\\resources\\testManagerUsingInputFile.txt";
+		String exportFilePath = "src/test/resources/testManagerUsingInputFile.txt";
 		File report = new File(exportFilePath);
 		report.deleteOnExit();
 		boolean fileExists = report.exists();
@@ -198,24 +206,24 @@ public class ManagerTest {
 	public void testManagersPreBatchTask()
 		throws Exception {
 		clearProperties();
-		System.setProperty("XCC-CONNECTION-URI","xcc://admin:admin@localhost:2223/FFE");
-		System.setProperty("COLLECTION-NAME","StringPassedToTheURIsModule"); 
-		System.setProperty("XQUERY-MODULE","src\\test\\resources\\transform.xqy|ADHOC");
-		System.setProperty("THREAD-COUNT","2");
-		System.setProperty("MODULE-ROOT","/");
-		System.setProperty("MODULES-DATABASE","Document"); 
-		System.setProperty("INSTALL","false");
-		System.setProperty("PROCESS-TASK","com.marklogic.developer.corb.ExportBatchToFileTask");
-		System.setProperty("PRE-BATCH-MODULE","src\\test\\resources\\preBatchModule.xqy|ADHOC");
-		System.setProperty("PRE-BATCH-TASK","com.marklogic.developer.corb.PreBatchUpdateFileTask");
-		System.setProperty("POST-BATCH-MODULE","src\\test\\resources\\postBatchModule.xqy|ADHOC");
-		System.setProperty("POST-BATCH-TASK","com.marklogic.developer.corb.PostBatchUpdateFileTask");
-		System.setProperty("EXPORT-FILE-DIR","src\\test\\resources\\"); 
-		System.setProperty("EXPORT-FILE-NAME","testManagersPreBatchTask.txt");
-		System.setProperty("URIS-FILE","src\\test\\resources\\uriInputFile.txt");
+		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
+		System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
+		System.setProperty("THREAD-COUNT", THREAD_COUNT);
+		System.setProperty("MODULE-ROOT", MODULES_ROOT);
+		System.setProperty("MODULES-DATABASE", MODULES_DATABASE); 
+		System.setProperty("INSTALL", "false");
+		System.setProperty("PROCESS-TASK", PROCESS_TASK);
+		System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
+		System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
+		System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
+		System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
+		System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR); 
+		System.setProperty("EXPORT-FILE-NAME", "testManagersPreBatchTask.txt");
+		System.setProperty("URIS-FILE", URIS_FILE);
 		String[] args = {};
 		Manager.main(args);
-		String exportFilePath = "src\\test\\resources\\testManagersPreBatchTask.txt";
+		String exportFilePath = "src/test/resources/testManagersPreBatchTask.txt";
 		File report = new File(exportFilePath);
 		report.deleteOnExit();
 		boolean fileExists = report.exists();
@@ -241,24 +249,24 @@ public class ManagerTest {
 	public void testManagersPostBatchTask()
 		throws Exception {
 		clearProperties();
-		System.setProperty("XCC-CONNECTION-URI","xcc://admin:admin@localhost:2223/FFE");
-		System.setProperty("COLLECTION-NAME","StringPassedToTheURIsModule"); 
-		System.setProperty("XQUERY-MODULE","src\\test\\resources\\transform.xqy|ADHOC");
-		System.setProperty("THREAD-COUNT","2");
-		System.setProperty("MODULE-ROOT","/");
-		System.setProperty("MODULES-DATABASE","Document"); 
-		System.setProperty("INSTALL","false");
-		System.setProperty("PROCESS-TASK","com.marklogic.developer.corb.ExportBatchToFileTask");
-		System.setProperty("PRE-BATCH-MODULE","src\\test\\resources\\preBatchModule.xqy|ADHOC");
-		System.setProperty("PRE-BATCH-TASK","com.marklogic.developer.corb.PreBatchUpdateFileTask");
-		System.setProperty("POST-BATCH-MODULE","src\\test\\resources\\postBatchModule.xqy|ADHOC");
-		System.setProperty("POST-BATCH-TASK","com.marklogic.developer.corb.PostBatchUpdateFileTask");
-		System.setProperty("EXPORT-FILE-DIR","src\\test\\resources\\"); 
-		System.setProperty("EXPORT-FILE-NAME","testManagersPostBatchTask.txt");
-		System.setProperty("URIS-FILE","src\\test\\resources\\uriInputFile.txt");
+		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
+		System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
+		System.setProperty("THREAD-COUNT", THREAD_COUNT);
+		System.setProperty("MODULE-ROOT", MODULES_ROOT);
+		System.setProperty("MODULES-DATABASE", MODULES_DATABASE); 
+		System.setProperty("INSTALL", "false");
+		System.setProperty("PROCESS-TASK", PROCESS_TASK);
+		System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
+		System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
+		System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
+		System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
+		System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR); 
+		System.setProperty("EXPORT-FILE-NAME", "testManagersPostBatchTask.txt");
+		System.setProperty("URIS-FILE", URIS_FILE);
 		String[] args = {};
 		Manager.main(args);
-		String exportFilePath = "src\\test\\resources\\testManagersPostBatchTask.txt";
+		String exportFilePath = "src/test/resources/testManagersPostBatchTask.txt";
 		File report = new File(exportFilePath);
 		boolean fileExists = report.exists();
 		assertTrue(fileExists);
@@ -283,30 +291,29 @@ public class ManagerTest {
 	public void testManagersPostBatchTaskZip()
 		throws Exception {
 		clearProperties();
-		System.setProperty("XCC-CONNECTION-URI","xcc://admin:admin@localhost:2223/FFE");
-		System.setProperty("COLLECTION-NAME","StringPassedToTheURIsModule"); 
-		System.setProperty("XQUERY-MODULE","src\\test\\resources\\transform.xqy|ADHOC");
-		System.setProperty("THREAD-COUNT","2");
-		System.setProperty("MODULE-ROOT","/");
-		System.setProperty("MODULES-DATABASE","Document"); 
-		System.setProperty("INSTALL","false");
-		System.setProperty("PROCESS-TASK","com.marklogic.developer.corb.ExportBatchToFileTask");
-		System.setProperty("PRE-BATCH-MODULE","src\\test\\resources\\preBatchModule.xqy|ADHOC");
-		System.setProperty("PRE-BATCH-TASK","com.marklogic.developer.corb.PreBatchUpdateFileTask");
-		System.setProperty("POST-BATCH-MODULE","src\\test\\resources\\postBatchModule.xqy|ADHOC");
-		System.setProperty("POST-BATCH-TASK","com.marklogic.developer.corb.PostBatchUpdateFileTask");
-		System.setProperty("EXPORT-FILE-DIR","src\\test\\resources\\"); 
-		System.setProperty("EXPORT-FILE-NAME","helloWorld.txt");
-		System.setProperty("URIS-FILE","src\\test\\resources\\uriInputFile.txt");
-		System.setProperty("EXPORT_FILE_AS_ZIP","true");
+		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
+		System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
+		System.setProperty("THREAD-COUNT", THREAD_COUNT);
+		System.setProperty("MODULE-ROOT", MODULES_ROOT);
+		System.setProperty("MODULES-DATABASE", MODULES_DATABASE); 
+		System.setProperty("INSTALL", "false");
+		System.setProperty("PROCESS-TASK", PROCESS_TASK);
+		System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
+		System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
+		System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
+		System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
+		System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR); 
+		System.setProperty("EXPORT-FILE-NAME", "helloWorld.txt");
+		System.setProperty("URIS-FILE", URIS_FILE);
+		System.setProperty("EXPORT_FILE_AS_ZIP", "true");
 		String[] args = {};
 		Manager.main(args);
-		String zippedExportFilePath = "src\\test\\resources\\helloWorld.txt.zip";
+		String zippedExportFilePath = "src/test/resources/helloWorld.txt.zip";
 		File report = new File(zippedExportFilePath);
 		boolean fileExists = report.exists();
 		clearFile(report);
 		assertTrue(fileExists);
-		
 	}
 	
 	/**
@@ -319,25 +326,25 @@ public class ManagerTest {
 	public void testManagerJavaScriptTransform()
 		throws Exception {
 		clearProperties();
-		System.setProperty("XCC-CONNECTION-URI","xcc://admin:admin@localhost:2223/FFE");
-		System.setProperty("COLLECTION-NAME","StringPassedToTheURIsModule"); 
-		System.setProperty("XQUERY-MODULE","src\\test\\resources\\mod-print-uri.sjs|ADHOC");
-		System.setProperty("THREAD-COUNT","2");
-		System.setProperty("MODULE-ROOT","/");
-		System.setProperty("MODULES-DATABASE","Document"); 
-		System.setProperty("INSTALL","false");
-		System.setProperty("PROCESS-TASK","com.marklogic.developer.corb.ExportBatchToFileTask");
-		System.setProperty("PRE-BATCH-MODULE","src\\test\\resources\\preBatchModule.xqy|ADHOC");
-		System.setProperty("PRE-BATCH-TASK","com.marklogic.developer.corb.PreBatchUpdateFileTask");
-		System.setProperty("POST-BATCH-MODULE","src\\test\\resources\\postBatchModule.xqy|ADHOC");
-		System.setProperty("POST-BATCH-TASK","com.marklogic.developer.corb.PostBatchUpdateFileTask");
-		System.setProperty("EXPORT-FILE-DIR","src\\test\\resources\\"); 
-		System.setProperty("EXPORT-FILE-NAME","testManagerJavaScriptTransform.txt");
-		System.setProperty("URIS-FILE","src\\test\\resources\\uris-file.txt");
-		System.setProperty("XQUERY-MODULE.foo","bar1");
+		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
+		System.setProperty("XQUERY-MODULE", "src/test/resources/mod-print-uri.sjs|ADHOC");
+		System.setProperty("THREAD-COUNT", THREAD_COUNT);
+		System.setProperty("MODULE-ROOT", MODULES_ROOT);
+		System.setProperty("MODULES-DATABASE", MODULES_DATABASE); 
+		System.setProperty("INSTALL", "false");
+		System.setProperty("PROCESS-TASK", PROCESS_TASK);
+		System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
+		System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
+		System.setProperty("POST-BATCH-MODULE",POST_BATCH_MODULE);
+		System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
+		System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR); 
+		System.setProperty("EXPORT-FILE-NAME", "testManagerJavaScriptTransform.txt");
+		System.setProperty("URIS-FILE", "src/test/resources/uris-file.txt");
+		System.setProperty("XQUERY-MODULE.foo", "bar1");
 		String[] args = {};
 		Manager.main(args);
-		String exportFilePath = "src\\test\\resources\\testManagerJavaScriptTransform.txt";
+		String exportFilePath = "src/test/resources/testManagerJavaScriptTransform.txt";
 		File report = new File(exportFilePath);
 		report.deleteOnExit();
 		boolean fileExists = report.exists();
@@ -352,8 +359,6 @@ public class ManagerTest {
 		clearFile(report);
 		assertTrue(passed);
 	}
-	
-	
 
 	/**
 	 * Perform pre-test initialization.
@@ -380,7 +385,7 @@ public class ManagerTest {
 	@After
 	public void tearDown()
 		throws Exception {
-		String exportFilePath = "src\\test\\resources\\helloWorld.txt";
+		String exportFilePath = "src/test/resources/helloWorld.txt";
 		File report = new File(exportFilePath);
 		if (report.exists()) {
 			report.delete();
