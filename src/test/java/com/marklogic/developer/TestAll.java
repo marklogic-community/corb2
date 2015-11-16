@@ -15,7 +15,7 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-	com.marklogic.developer.corb.TestAll.class,
+	//com.marklogic.developer.corb.TestAll.class,
 })
 public class TestAll {
 

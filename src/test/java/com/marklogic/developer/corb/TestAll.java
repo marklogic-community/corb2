@@ -15,8 +15,8 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-	ManagerTest.class,
-	ModuleExecutorTest.class
+	//ManagerTest.class
+	//ModuleExecutorTest.class
 })
 public class TestAll {
 
