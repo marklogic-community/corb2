@@ -15,6 +15,8 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+    ExportToFileTaskTest.class,
+    HostKeyDecrypterTest.class,
 	ManagerTest.class,
 	ModuleExecutorTest.class,
     TwoWaySSLConfigTest.class
