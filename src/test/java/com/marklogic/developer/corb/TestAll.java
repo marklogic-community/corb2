@@ -19,6 +19,7 @@ import org.junit.runners.Suite;
     HostKeyDecrypterTest.class,
 	ManagerTest.class,
 	ModuleExecutorTest.class,
+    PrivateKeyDecrypterTest.class,
     TwoWaySSLConfigTest.class
 })
 public class TestAll {

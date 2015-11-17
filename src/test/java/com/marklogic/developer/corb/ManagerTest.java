@@ -3,6 +3,7 @@ package com.marklogic.developer.corb;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -31,9 +32,9 @@ public class ManagerTest {
     public static final String PRE_BATCH_TASK = "com.marklogic.developer.corb.PreBatchUpdateFileTask";
     public static final String POST_BATCH_MODULE = "src/test/resources/postBatchModule.xqy|ADHOC";
     public static final String POST_BATCH_TASK = "com.marklogic.developer.corb.PostBatchUpdateFileTask";
-    public static final String EXPORT_FILE_DIR = "src/test/resources/";
+    public static String EXPORT_FILE_DIR = null;
     public static final String URIS_FILE = "src/test/resources/uriInputFile.txt";
-    
+ 
 	/**
 	 * Functional test for the Manager using program arguments.
 	 *
@@ -115,7 +116,7 @@ public class ManagerTest {
 		exit.expectSystemExit();		
 		Manager.main(args);
 		
-		File report = new File("src/test/resources/testManagerUsingSysProps.txt");
+		File report = new File(EXPORT_FILE_DIR + "/testManagerUsingSysProps.txt");
 		report.deleteOnExit();
 		char [] a = new char[500];
 		FileReader reader = new FileReader(report);
@@ -138,7 +139,7 @@ public class ManagerTest {
 	@Test
 	public void testManagerUsingPropsFile()
 		throws Exception {
-        String exportFileName = "src/test/resources/testManagerUsingPropsFile.txt";
+        String exportFileName = EXPORT_FILE_DIR + "/testManagerUsingPropsFile.txt";
 		clearProperties();
 		System.setProperty("OPTIONS-FILE","src/test/resources/helloWorld.properties");	
 		System.setProperty("EXPORT-FILE-NAME", exportFileName);
@@ -194,7 +195,7 @@ public class ManagerTest {
         exit.expectSystemExit();
 		Manager.main(args);
 
-        String exportFilePath = "src/test/resources/testManagerUsingInputFile.txt";
+        String exportFilePath = EXPORT_FILE_DIR + "/testManagerUsingInputFile.txt";
 		File report = new File(exportFilePath);
 		report.deleteOnExit();
 		boolean fileExists = report.exists();
@@ -241,7 +242,7 @@ public class ManagerTest {
         exit.expectSystemExit();
 		Manager.main(args);
         
-		String exportFilePath = "src/test/resources/testManagersPreBatchTask.txt";
+		String exportFilePath = EXPORT_FILE_DIR + "/testManagersPreBatchTask.txt";
 		File report = new File(exportFilePath);
 		report.deleteOnExit();
 		boolean fileExists = report.exists();
@@ -288,7 +289,7 @@ public class ManagerTest {
         exit.expectSystemExit();
 		Manager.main(args);
         
-		String exportFilePath = "src/test/resources/testManagersPostBatchTask.txt";
+		String exportFilePath = EXPORT_FILE_DIR + "testManagersPostBatchTask.txt";
 		File report = new File(exportFilePath);
 		boolean fileExists = report.exists();
 		assertTrue(fileExists);
@@ -335,7 +336,7 @@ public class ManagerTest {
         exit.expectSystemExit();
 		Manager.main(args);
         
-		String zippedExportFilePath = "src/test/resources/helloWorld.txt.zip";
+		String zippedExportFilePath = EXPORT_FILE_DIR + "/helloWorld.txt.zip";
 		File report = new File(zippedExportFilePath);
 		boolean fileExists = report.exists();
 		clearFile(report);
@@ -373,7 +374,7 @@ public class ManagerTest {
         exit.expectSystemExit();
 		Manager.main(args);
         
-		String exportFilePath = "src/test/resources/testManagerJavaScriptTransform.txt";
+		String exportFilePath = EXPORT_FILE_DIR + "/testManagerJavaScriptTransform.txt";
 		File report = new File(exportFilePath);
 		report.deleteOnExit();
 		boolean fileExists = report.exists();
@@ -403,6 +404,8 @@ public class ManagerTest {
 	public void setUp()
 		throws Exception {
 		// add additional set up code here
+        File tempDir = createTempDirectory();
+        EXPORT_FILE_DIR = tempDir.toString();
 	}
 
 	/**
@@ -414,15 +417,10 @@ public class ManagerTest {
 	 * @generatedBy CodePro at 9/18/15 10:51 AM
 	 */
 	@After
-	public void tearDown()
-		throws Exception {
-		String exportFilePath = "src/test/resources/helloWorld.txt";
-		File report = new File(exportFilePath);
-		if (report.exists()) {
-			report.delete();
-		}
+	public void tearDown() throws Exception {
+        deleteDir(new File(EXPORT_FILE_DIR));
 	}
-
+        
 	/**
 	 * Launch the test.
 	 *
@@ -469,4 +467,34 @@ public class ManagerTest {
 			pw.close();	
 		}
 	}
+    
+    //TODO: remove this when we upgrade to a JRE >= 1.7
+    public static File createTempDirectory() throws IOException {
+        final File temp;
+
+        temp = File.createTempFile("temp", Long.toString(System.nanoTime()));
+
+        if (!(temp.delete())) {
+            throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
+        }
+
+        if (!(temp.mkdir())) {
+            throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
+        }
+
+        return (temp);
+    }
+    
+    public static boolean deleteDir(File dir) {
+        if (dir.exists()) {
+            for (File file : dir.listFiles()) {
+                if (file.isDirectory()) {
+                    deleteDir(file);
+                } else {
+                    file.delete();
+                }
+            }
+        }
+        return dir.delete();
+    }
 }

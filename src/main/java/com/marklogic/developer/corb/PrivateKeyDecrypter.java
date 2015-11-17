@@ -194,14 +194,14 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 		}
 		
 		FileInputStream fis = null;
-		try{
+		try {
 			fis = new FileInputStream(publicKeyPathName);
 			X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(toByteArray(fis));
 			Cipher cipher = Cipher.getInstance(algorithm);
 			cipher.init(Cipher.ENCRYPT_MODE, KeyFactory.getInstance(algorithm).generatePublic(x509EncodedKeySpec));
 			String encryptedText = DatatypeConverter.printBase64Binary(cipher.doFinal(clearText.getBytes("UTF-8")));
 			System.out.println("Input: " + clearText + "\nOutput: " + encryptedText);
-		}finally{
+		} finally{
 			if(fis != null) fis.close();
 		}
 	}
