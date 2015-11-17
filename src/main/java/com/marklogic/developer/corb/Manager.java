@@ -197,6 +197,8 @@ public class Manager extends AbstractManager{
 		String errorFileName = getOption(null, "ERROR-FILE-NAME");
 		
 		if (processModule == null) processModule = getOption(null, "XQUERY-MODULE");
+		if (preBatchModule == null) preBatchModule = getOption(null,"PRE-BATCH-XQUERY-MODULE");
+    if (postBatchModule == null) postBatchModule = getOption(null,"POST-BATCH-XQUERY-MODULE");
 		
 		if (moduleRoot != null) options.setModuleRoot(moduleRoot);
 		if (processModule != null) options.setProcessModule(processModule);
