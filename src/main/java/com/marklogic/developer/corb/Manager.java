@@ -107,19 +107,19 @@ public class Manager extends AbstractManager{
 	 */
 	public static void main(String[] args){
 		Manager tm = new Manager();
-		try{
+		try {
 			tm.init(args);
-		}catch(Exception exc){
+		} catch(Exception exc){
 			LOG.log(Level.SEVERE, "Error initializing CORB",exc);
 			System.exit(1);
 		}
 		//now we can start corb. 
-		try{
+		try {
 			int count = tm.run();
 			
-			if(count == 0){
+			if (count == 0) {
 				System.exit(9);
-			}else{
+			} else {
 				System.exit(0);
 			}
 		} catch(Exception exc){
@@ -301,6 +301,7 @@ public class Manager extends AbstractManager{
 		}
 	}
 			
+    @Override
 	protected void usage() {
 		PrintStream err = System.err;
 		err.println("usage 1:");
@@ -415,10 +416,10 @@ public class Manager extends AbstractManager{
 				}
 			}
 		} catch (IOException e) {
-			LOG.log(Level.SEVERE, "error while reading modules " + e.getMessage());
+			LOG.log(Level.SEVERE, "error while reading modules {0}", e.getMessage());
 			throw e;
 		}catch (RequestException e) {
-			LOG.log(Level.SEVERE, "error while loading modules " + e.getMessage());
+			LOG.log(Level.SEVERE, "error while loading modules {0}", e.getMessage());
 			throw e;
 		} finally {
 			session.close();
