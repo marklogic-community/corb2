@@ -35,13 +35,13 @@ public class HostKeyDecrypter extends AbstractDecrypter {
 	private static final byte[] defaultBytes = { 45 ,32 ,67 ,34 ,67, 23, 21 ,45 ,7 , 89 ,3 ,27, 39 ,62 ,15};
 	private static final byte[] hardCodedBytes = { 120, 26, 58, 29, 43, 77, 95, 103, 29, 86, 97, 105, 52, 16, 42, 63, 37, 100, 45, 109, 108, 79, 75, 71, 11, 46, 36, 62, 124, 12, 7, 127};
 	// currently only usage is encrypt
-	private static String usage1 = "Encrypt:\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.HostKeyDecrypter"
+	private static final String usage1 = "Encrypt:\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.HostKeyDecrypter"
 			+ " encrypt clearText\nTest:\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.HostKeyDecrypter test";
 
  	@Override
 	protected void init_decrypter() throws IOException, ClassNotFoundException {
 		try {
-			privateKey= getPrivateKey();
+			privateKey = getPrivateKey();
 		} catch (NoSuchAlgorithmException e) {
 			new RuntimeException("Error constructing private key", e);
 		}
@@ -55,10 +55,8 @@ public class HostKeyDecrypter extends AbstractDecrypter {
 		} catch (Exception e) {
 			new RuntimeException("Unabled to decrypt property:"+property, e);
 		}
-		return decryptedText;
-		
+		return decryptedText;	
 	}
-
 
 	/**
 	 * Performs an xor on two byte arrays by doing an xor on each byte
@@ -96,6 +94,9 @@ public class HostKeyDecrypter extends AbstractDecrypter {
 	/**
 	 * Performs a SHA-256 hash
 	 * @author Richard Kennedy
+     * @param input
+     * @return 
+     * @throws java.security.NoSuchAlgorithmException
 	 */
 	public static byte[] getSHA256Hash(byte[] input) throws NoSuchAlgorithmException {
 		MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -236,7 +237,6 @@ public class HostKeyDecrypter extends AbstractDecrypter {
 		}
 	}
 	
-	
 	private static BufferedReader read(String command) {
 		OutputStream os = null;
 		InputStream is = null;
@@ -263,8 +263,9 @@ public class HostKeyDecrypter extends AbstractDecrypter {
 	/**
 	 * Encrypts plaintext password using private key internal to host
 	 * and AES 256 algorithm
-	 * @param String plaintext password
 	 * @author Richard Kennedy
+     * @param plaintext
+     * @return 
 	 * @throws NoSuchPaddingException 
 	 * @throws NoSuchAlgorithmException 
 	 * @throws InvalidKeyException 
@@ -309,16 +310,16 @@ public class HostKeyDecrypter extends AbstractDecrypter {
 
     }
 
-	
 	/**
 	 * command line utility for doing password encryption
-	 * @param String encryptedtext
 	 * @author Richard Kennedy
+     * @param args
+     * @throws java.lang.Exception
 	 */
 	public static void main(String[] args) throws Exception{
         String method = (args != null && args.length > 0) ? args[0].trim() : "";
        
-        if(method.equals("encrypt") && args.length == 2){
+        if (method.equals("encrypt") && args.length == 2){
         	System.out.println(encrypt(args[1].trim()));
         } else if (method.equals("test")){
 			HostKeyDecrypter decrypter = new HostKeyDecrypter();
@@ -331,7 +332,5 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         } else {
         	System.out.println(usage1);
         }
-        
 	}
-
 }
