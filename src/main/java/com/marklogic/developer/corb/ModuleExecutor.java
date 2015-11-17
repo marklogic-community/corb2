@@ -95,6 +95,16 @@ public class ModuleExecutor extends AbstractManager{
 		}
 	}
 	
+	public static void main_no_exit(String[] args) throws Exception{
+		main_no_exit(args,null);
+	}
+	
+	public static void main_no_exit(String[] args, Properties props) throws Exception{
+		ModuleExecutor moduleExecutor = new ModuleExecutor();
+		moduleExecutor.init(args,props);
+		moduleExecutor.run();
+	}
+	
 	public ModuleExecutor() {
 		
 	}

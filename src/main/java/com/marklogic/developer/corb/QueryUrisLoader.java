@@ -17,7 +17,7 @@ import java.util.logging.Level;
 
 public class QueryUrisLoader implements UrisLoader {
 	private static int DEFAULT_MAX_OPTS_FROM_MODULE = 10;
-	private static Pattern pattern = Pattern.compile("(PRE-BATCH-MODULE|PROCESS-MODULE|POST-BATCH-MODULE)\\.[A-Za-z0-9]+=[A-Za-z0-9]+");
+	private static Pattern pattern = Pattern.compile("(PRE-BATCH-MODULE|PROCESS-MODULE|XQUERY-MODULE|POST-BATCH-MODULE)\\.[A-Za-z0-9]+=[A-Za-z0-9]+");
 	
 	TransformOptions options;
 	ContentSource cs;
@@ -136,7 +136,7 @@ public class QueryUrisLoader implements UrisLoader {
 				String value = next.getItem().asString();
 				if(pattern.matcher(value).matches()){
 					int idx = value.indexOf('=');
-					properties.put(value.substring(0, idx), value.substring(idx+1));
+					properties.put(value.substring(0, idx).replace("XQUERY-MODULE.", "PROCESS-MODULE."), value.substring(idx+1));
 				}else{
 					batchRef = value;
 				}
