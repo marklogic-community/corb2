@@ -4,9 +4,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.PrintWriter;
-import java.util.Properties;
 import org.junit.*;
 import static org.junit.Assert.*;
+import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 
 
 /**
@@ -17,6 +17,9 @@ import static org.junit.Assert.*;
  * @version $Revision: 1.0 $
  */
 public class ManagerTest {
+    @Rule
+    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
+
 	public static final String XCC_CONNECTION_URI = "xcc://admin:admin@localhost:2223/FFE";
     public static final String COLLECTION_NAME = "StringPassedToTheURIsModule";
     public static final String XQUERY_MODULE = "src/test/resources/transform.xqy|ADHOC";
@@ -30,7 +33,6 @@ public class ManagerTest {
     public static final String POST_BATCH_TASK = "com.marklogic.developer.corb.PostBatchUpdateFileTask";
     public static final String EXPORT_FILE_DIR = "src/test/resources/";
     public static final String URIS_FILE = "src/test/resources/uriInputFile.txt";
-    
     
 	/**
 	 * Functional test for the Manager using program arguments.
@@ -62,8 +64,9 @@ public class ManagerTest {
 						urisModuleAlsoCalledSelector,modulesRoot,modulesDatabase,install,processTask,
 						preBatchModule,preBatchTask,postXqueryModule,postXqueryTask,exportFileDir,
 						exportFileName	};
-				
-		Manager.main_no_exit(args);
+		
+        exit.expectSystemExit();
+		Manager.main(args);
 		
 		File report = new File(exportFileDir+exportFileName);
 		report.deleteOnExit();
@@ -108,8 +111,9 @@ public class ManagerTest {
 		System.setProperty("EXPORT-FILE-NAME", "testManagerUsingSysProps.txt");
 		
 		String[] args = {};
-				
-		Manager.main_no_exit(args);
+
+		exit.expectSystemExit();		
+		Manager.main(args);
 		
 		File report = new File("src/test/resources/testManagerUsingSysProps.txt");
 		report.deleteOnExit();
@@ -140,7 +144,10 @@ public class ManagerTest {
 		System.setProperty("EXPORT-FILE-NAME", exportFileName);
 		
 		String[] args = {};
-		Manager.main_no_exit(args);
+        
+        exit.expectSystemExit();
+		Manager.main(args);
+        
 		File report = new File(exportFileName);
 		report.deleteOnExit();
 		boolean fileExists = report.exists();
@@ -183,8 +190,11 @@ public class ManagerTest {
 		System.setProperty("EXPORT-FILE-NAME", "testManagerUsingInputFile.txt");
 		System.setProperty("URIS-FILE", "src/test/resources/uriInputFile.txt");
 		String[] args = {};
-		Manager.main_no_exit(args);
-		String exportFilePath = "src/test/resources/testManagerUsingInputFile.txt";
+
+        exit.expectSystemExit();
+		Manager.main(args);
+
+        String exportFilePath = "src/test/resources/testManagerUsingInputFile.txt";
 		File report = new File(exportFilePath);
 		report.deleteOnExit();
 		boolean fileExists = report.exists();
@@ -227,7 +237,10 @@ public class ManagerTest {
 		System.setProperty("EXPORT-FILE-NAME", "testManagersPreBatchTask.txt");
 		System.setProperty("URIS-FILE", URIS_FILE);
 		String[] args = {};
-		Manager.main_no_exit(args);
+        
+        exit.expectSystemExit();
+		Manager.main(args);
+        
 		String exportFilePath = "src/test/resources/testManagersPreBatchTask.txt";
 		File report = new File(exportFilePath);
 		report.deleteOnExit();
@@ -271,7 +284,10 @@ public class ManagerTest {
 		System.setProperty("EXPORT-FILE-NAME", "testManagersPostBatchTask.txt");
 		System.setProperty("URIS-FILE", URIS_FILE);
 		String[] args = {};
-		Manager.main_no_exit(args);
+        
+        exit.expectSystemExit();
+		Manager.main(args);
+        
 		String exportFilePath = "src/test/resources/testManagersPostBatchTask.txt";
 		File report = new File(exportFilePath);
 		boolean fileExists = report.exists();
@@ -315,7 +331,10 @@ public class ManagerTest {
 		System.setProperty("URIS-FILE", URIS_FILE);
 		System.setProperty("EXPORT_FILE_AS_ZIP", "true");
 		String[] args = {};
-		Manager.main_no_exit(args);
+        
+        exit.expectSystemExit();
+		Manager.main(args);
+        
 		String zippedExportFilePath = "src/test/resources/helloWorld.txt.zip";
 		File report = new File(zippedExportFilePath);
 		boolean fileExists = report.exists();
@@ -350,7 +369,10 @@ public class ManagerTest {
 		System.setProperty("URIS-FILE", "src/test/resources/uris-file.txt");
 		System.setProperty("XQUERY-MODULE.foo", "bar1");
 		String[] args = {};
-		Manager.main_no_exit(args);
+        
+        exit.expectSystemExit();
+		Manager.main(args);
+        
 		String exportFilePath = "src/test/resources/testManagerJavaScriptTransform.txt";
 		File report = new File(exportFilePath);
 		report.deleteOnExit();
@@ -363,6 +385,7 @@ public class ManagerTest {
 		reader.close();
 		System.out.println("testManagerJavaScriptTransform,corbOutput=" + corbOutput);
 		String expectedOutput = "object-id-1=bar1";
+        System.out.println(corbOutput);
 		boolean passed = corbOutput.contains(expectedOutput);
 		clearFile(report);
 		assertTrue(passed);

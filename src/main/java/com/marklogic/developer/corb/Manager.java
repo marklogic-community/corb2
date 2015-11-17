@@ -127,21 +127,12 @@ public class Manager extends AbstractManager{
 			System.exit(2);
 		}
 	}
-	
-	public static int main_no_exit(String[] args) throws Exception{
-		return main_no_exit(args,null);
-	}
-	
-	public static int main_no_exit(String[] args, Properties props) throws Exception{
-		Manager tm = new Manager();
-		tm.init(args,props);
-		return tm.run();
-	}
 
 	public Manager(){
 		
 	}
 	
+    @Override
 	public void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException{			
 		if(props == null || props.isEmpty()){
 			initPropertiesFromOptionsFile();
