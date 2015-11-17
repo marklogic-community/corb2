@@ -284,8 +284,7 @@ public class Manager extends AbstractManager{
 		for(String key : System.getProperties().stringPropertyNames()) {
 		  String value = System.getProperty(key);
 		  if(key.startsWith("XQUERY-MODULE.") && value != null){
-		  	String nkey = key.replace("XQUERY-MODULE.", "PROCESS-MODULE.");
-		  	System.setProperty(nkey, value);
+		  	System.setProperty(key.replace("XQUERY-MODULE.", "PROCESS-MODULE."), value);
 		  }
 		}
 	}
