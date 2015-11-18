@@ -10,12 +10,14 @@ public abstract class AbstractDecrypter implements Decrypter{
     protected transient Properties properties = null;
     protected static final Pattern ENCRYPTED_VALUE_REGEX = Pattern.compile("^ENC\\((.*)\\)$");
 
+    @Override
     public void init(Properties properties) throws IOException, ClassNotFoundException {
         this.properties = (properties == null ? new Properties() : properties);
 
         init_decrypter();
     }
 
+    @Override
     public String getConnectionURI(String uri, String username, String password, String host, String port, String dbname) {
         if (uri != null) {
             return decrypt("XCC-CONNECTION-URI", uri);
@@ -25,6 +27,7 @@ public abstract class AbstractDecrypter implements Decrypter{
         }
     }
 
+    @Override
     public String decrypt(String property, String value) {
         Matcher match = ENCRYPTED_VALUE_REGEX.matcher(value);
         if (match.matches()) {

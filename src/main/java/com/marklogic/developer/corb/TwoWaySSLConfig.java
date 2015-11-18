@@ -7,6 +7,9 @@ import java.io.InputStream;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
+import java.text.MessageFormat;
+import java.util.Properties;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.net.ssl.KeyManager;
@@ -16,20 +19,29 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
 public class TwoWaySSLConfig extends AbstractSSLConfig {
-
+    
 	private static final Logger LOG = Logger.getLogger(TwoWaySSLConfig.class.getSimpleName());
+    public static final String SSL_CIPHER_SUITES = "SSL-CIPHER-SUITES";
+    public static final String SSL_ENABLED_PROTOCOLS = "SSL-ENABLED-PROTOCOLS";
+    public static final String SSL_KEYSTORE = "SSL-KEYSTORE";
+    public static final String SSL_KEY_PASSWORD = "SSL-KEY-PASSWORD";
+    public static final String SSL_KEYSTORE_PASSWORD = "SSL-KEYSTORE-PASSWORD";
+    public static final String SSL_KEYSTORE_TYPE = "SSL-KEYSTORE-TYPE";
+    public static final String SSL_PROPERTIES_FILE = "SSL-PROPERTIES-FILE"; 
 
 	/**
 	 * @return acceptable list of cipher suites
 	 */
 	@Override
 	public String[] getEnabledCipherSuites() {
-		String cipherSuites = properties.getProperty("SSL-CIPHER-SUITES");
-		if (cipherSuites != null && !cipherSuites.isEmpty()) {
-			String[] cipherSuitesList = cipherSuites.split(",");
-			LOG.info("Using cipher suites: " + cipherSuitesList);
-			return cipherSuitesList;
-		}
+        if (properties != null) {
+            String cipherSuites = properties.getProperty(SSL_CIPHER_SUITES);
+            if (cipherSuites != null && !cipherSuites.isEmpty()) {
+                String[] cipherSuitesList = cipherSuites.split(",");
+                LOG.log(Level.INFO, "Using cipher suites: {0}", cipherSuitesList);
+                return cipherSuitesList;
+            }
+        }
 		return null;
 	}
 
@@ -38,12 +50,14 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
 	 */
 	@Override
 	public String[] getEnabledProtocols() {
-		String enabledProtocols = properties.getProperty("SSL-ENABLED-PROTOCOLS");
-		if (enabledProtocols != null && !enabledProtocols.isEmpty()) {
-			String[] enabledProtocolsList = enabledProtocols.split(",");
-			LOG.info("Using enabled protocols: "+enabledProtocolsList);
-			return enabledProtocolsList;
-		}
+        if (properties != null) {
+            String enabledProtocols = properties.getProperty(SSL_ENABLED_PROTOCOLS);
+            if (enabledProtocols != null && !enabledProtocols.isEmpty()) {
+                String[] enabledProtocolsList = enabledProtocols.split(",");
+                LOG.log(Level.INFO, "Using enabled protocols: {0}", enabledProtocolsList);
+                return enabledProtocolsList;
+            }
+        }
 		return null;
 	}
 
@@ -61,14 +75,17 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
 	 * @throws IOException
 	 */
 	protected void loadPropertiesFile() throws IOException {
-		String securityFileName = getProperty("SSL-PROPERTIES-FILE");
+		String securityFileName = getProperty(SSL_PROPERTIES_FILE);
 		if (securityFileName != null && securityFileName.trim().length() != 0) {
 			File f = new File(securityFileName);
 			if (f.exists() && !f.isDirectory()) {
-				LOG.info("Loading SSL configuration file " + securityFileName + " from filesystem");
+				LOG.log(Level.INFO, "Loading SSL configuration file {0} from filesystem", securityFileName);
 				InputStream is = null;
 				try {
 					is = new FileInputStream(f);
+                    if (properties == null){
+                        properties = new Properties();
+                    }
 					properties.load(is);
 				} catch (IOException e) {
 					LOG.severe("Error loading ssl properties file");
@@ -78,36 +95,34 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
 						is.close();
 					}
 				}
-
 			} else {
 				throw new IllegalStateException("Unable to load " + securityFileName);
 			}
 		} else {
-			LOG.info("Property SSL-PROPERTIES-FILE not present");
+			LOG.info(MessageFormat.format("Property {0} not present", SSL_PROPERTIES_FILE));
 		}
 	}
-	
-	
+		
 	@Override
 	public SSLContext getSSLContext() throws NoSuchAlgorithmException, KeyManagementException {
 		try {
 			loadPropertiesFile();
 		} catch (IOException e1) {
-			LOG.severe("Error loading SSL-PROPERTIES-FILE");
+			LOG.severe(MessageFormat.format("Error loading {0}", SSL_PROPERTIES_FILE));
 			throw new RuntimeException(e1);
 		}
 
-		String sslkeyStore = getRequiredProperty("SSL-KEYSTORE");
-		String sslkeyStorePassword = getRequiredProperty("SSL-KEYSTORE-PASSWORD");
-		String sslkeyPassword = getRequiredProperty("SSL-KEY-PASSWORD");
-		String sslkeyStoreType = getRequiredProperty("SSL-KEYSTORE-TYPE");
+		String sslkeyStore = getRequiredProperty(SSL_KEYSTORE);
+		String sslkeyStorePassword = getRequiredProperty(SSL_KEYSTORE_PASSWORD);
+		String sslkeyPassword = getRequiredProperty(SSL_KEY_PASSWORD);
+		String sslkeyStoreType = getRequiredProperty(SSL_KEYSTORE_TYPE);
 		// decrypting password values
 		if (decrypter != null) {
 			if (sslkeyStorePassword != null) {
-				sslkeyStorePassword = decrypter.decrypt("SSL-KEYSTORE-PASSWORD", sslkeyStorePassword);
+				sslkeyStorePassword = decrypter.decrypt(SSL_KEYSTORE_PASSWORD, sslkeyStorePassword);
 			}
 			if (sslkeyPassword != null) {
-				sslkeyPassword = decrypter.decrypt("SSL-KEY-PASSWORD", sslkeyPassword);
+				sslkeyPassword = decrypter.decrypt(SSL_KEY_PASSWORD, sslkeyPassword);
 			}
 		} else {
 			LOG.info("Decrypter is not initialized");
@@ -130,6 +145,5 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
 		} catch (Exception e) {
 			throw new IllegalStateException("Unable to create SSLContext in TwoWaySSLOptions", e);
 		}
-
 	}
 }

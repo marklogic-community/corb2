@@ -15,8 +15,12 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-	//ManagerTest.class
-	//ModuleExecutorTest.class
+    ExportToFileTaskTest.class,
+    HostKeyDecrypterTest.class,
+	ManagerTest.class,
+	ModuleExecutorTest.class,
+    PrivateKeyDecrypterTest.class,
+    TwoWaySSLConfigTest.class
 })
 public class TestAll {
 

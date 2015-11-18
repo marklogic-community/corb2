@@ -22,6 +22,7 @@ import com.marklogic.xcc.SecurityOptions;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.jndi.ContentSourceBean;
+import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 
 /**
  * The class <code>ModuleExecutorTest</code> contains tests for the class <code>{@link ModuleExecutor}</code>.
@@ -31,7 +32,9 @@ import com.marklogic.xcc.jndi.ContentSourceBean;
  * @version $Revision: 1.0 $
  */
 public class ModuleExecutorTest {
-	
+	@Rule
+    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
+
     private static final String XCC_CONNECTION_URI = "xcc://admin:admin@localhost:2223/FFE";
     private static final String OPTIONS_FILE = "src/test/resources/helloWorld.properties";
     private static final String EXPORT_FILE_NAME = "src/test/resources/helloWorld.txt";

@@ -142,7 +142,7 @@ public class ModuleExecutor extends AbstractManager{
 		if (moduleRoot != null) options.setModuleRoot(moduleRoot);
 		if (processModule != null) options.setProcessModule(processModule);
 		if (modulesDatabase != null) options.setModulesDatabase(modulesDatabase);
-		
+		//TODO: normalize XQUERY-MODULE properties
 		if (null == options.getProcessModule()) {
 			throw new NullPointerException("PROCESS-MODULE must be specified");
 		}
@@ -273,10 +273,11 @@ public class ModuleExecutor extends AbstractManager{
 			// custom inputs
 			for (String propName : propertyNames) {
 				if (propName.startsWith("PROCESS-MODULE.")) {
-				String varName = propName.substring("PROCESS-MODULE.".length());
-					String value = getProperty(propName);
-					if (value != null)
-						req.setNewStringVariable(varName, value);
+                    String varName = propName.substring("PROCESS-MODULE.".length());
+                    String value = getProperty(propName);
+                    if (value != null) {
+                        req.setNewStringVariable(varName, value);
+                    }
 				}
 			}
 			
