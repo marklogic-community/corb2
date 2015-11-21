@@ -22,14 +22,17 @@ public class TrustAnyoneSSLConfig extends AbstractSSLConfig{
 	
 	private class TrustAnyoneManager implements X509TrustManager{
 		public TrustAnyoneManager(){}
+        @Override
 		public X509Certificate[] getAcceptedIssuers() {
 			return new X509Certificate[0];
 		}
 
+        @Override
 		public void checkClientTrusted(X509Certificate[] certs, String authType) throws CertificateException {
 			// no exception means it's okay
 		}
 
+        @Override
 		public void checkServerTrusted(X509Certificate[] certs, String authType) throws CertificateException {
 			// no exception means it's okay
 		}

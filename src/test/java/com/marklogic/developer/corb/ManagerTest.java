@@ -1,14 +1,13 @@
 package com.marklogic.developer.corb;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintWriter;
 import org.junit.*;
 import static org.junit.Assert.*;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
-
+import static com.marklogic.developer.corb.TestUtils.clearFile;
+import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import static com.marklogic.developer.corb.TestUtils.deleteDir;
 
 /**
  * The class <code>ManagerTest</code> contains tests for the class <code>{@link Manager}</code>.
@@ -44,7 +43,7 @@ public class ManagerTest {
 	@Test
 	public void testManagerUsingProgArgs()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		String xccConnection = XCC_CONNECTION_URI;
 		String collection = COLLECTION_NAME;
 		String xqueryModuleAlsoCalledTransformModule = XQUERY_MODULE; 
@@ -94,7 +93,7 @@ public class ManagerTest {
 	@Test
 	public void testManagerUsingSysProps()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
 		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
 		System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
@@ -140,7 +139,7 @@ public class ManagerTest {
 	public void testManagerUsingPropsFile()
 		throws Exception {
         String exportFileName = EXPORT_FILE_DIR + "/testManagerUsingPropsFile.txt";
-		clearProperties();
+		clearSystemProperties();
 		System.setProperty("OPTIONS-FILE","src/test/resources/helloWorld.properties");	
 		System.setProperty("EXPORT-FILE-NAME", exportFileName);
 		
@@ -174,7 +173,7 @@ public class ManagerTest {
 	@Test
 	public void testManagerUsingInputFile()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
 		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
 		System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
@@ -221,7 +220,7 @@ public class ManagerTest {
 	@Test
 	public void testManagersPreBatchTask()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
 		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
 		System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
@@ -268,7 +267,7 @@ public class ManagerTest {
 	@Test
 	public void testManagersPostBatchTask()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
 		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
 		System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
@@ -314,7 +313,7 @@ public class ManagerTest {
 	@Test
 	public void testManagersPostBatchTaskZip()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
 		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
 		System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
@@ -352,7 +351,7 @@ public class ManagerTest {
 	@Test
 	public void testManagerJavaScriptTransform()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
 		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
 		System.setProperty("XQUERY-MODULE", "src/test/resources/mod-print-uri.sjs|ADHOC");
@@ -403,8 +402,8 @@ public class ManagerTest {
 	@Before
 	public void setUp()
 		throws Exception {
-		// add additional set up code here
-        File tempDir = createTempDirectory();
+		clearSystemProperties();
+        File tempDir = TestUtils.createTempDirectory();
         EXPORT_FILE_DIR = tempDir.toString();
 	}
 
@@ -418,7 +417,8 @@ public class ManagerTest {
 	 */
 	@After
 	public void tearDown() throws Exception {
-        deleteDir(new File(EXPORT_FILE_DIR));
+        deleteDir(new File(ManagerTest.EXPORT_FILE_DIR));
+        clearSystemProperties();
 	}
         
 	/**
@@ -432,69 +432,4 @@ public class ManagerTest {
 		new org.junit.runner.JUnitCore().run(ManagerTest.class);
 	}
 	
-	private void clearProperties() {
-		System.clearProperty("URIS-MODULE");
-		System.clearProperty("OPTIONS-FILE");
-		System.clearProperty("XCC-CONNECTION-URI");
-		System.clearProperty("COLLECTION-NAME"); 
-		System.clearProperty("XQUERY-MODULE");
-		System.clearProperty("THREAD-COUNT");
-		System.clearProperty("MODULE-ROOT");
-		System.clearProperty("MODULES-DATABASE"); 
-		System.clearProperty("INSTALL");
-		System.clearProperty("PROCESS-TASK");
-		System.clearProperty("PRE-BATCH-MODULE");
-		System.clearProperty("PRE-BATCH-TASK");
-		System.clearProperty("POST-BATCH-MODULE");
-		System.clearProperty("POST-BATCH-TASK");
-		System.clearProperty("EXPORT-FILE-DIR"); 
-		System.clearProperty("EXPORT-FILE-NAME");
-		System.clearProperty("URIS-FILE");
-		System.clearProperty("XQUERY-MODULE.foo");
-		System.clearProperty("PROCESS-MODULE.foo");
-		System.clearProperty("EXPORT_FILE_AS_ZIP");
-	}
-	
-	private void clearFile(File file) {
-		PrintWriter pw = null;
-		try {
-			pw = new PrintWriter(file);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		if (pw != null) {
-			pw.close();	
-		}
-	}
-    
-    //TODO: remove this when we upgrade to a JRE >= 1.7
-    public static File createTempDirectory() throws IOException {
-        final File temp;
-
-        temp = File.createTempFile("temp", Long.toString(System.nanoTime()));
-
-        if (!(temp.delete())) {
-            throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
-        }
-
-        if (!(temp.mkdir())) {
-            throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
-        }
-
-        return (temp);
-    }
-    
-    public static boolean deleteDir(File dir) {
-        if (dir.exists()) {
-            for (File file : dir.listFiles()) {
-                if (file.isDirectory()) {
-                    deleteDir(file);
-                } else {
-                    file.delete();
-                }
-            }
-        }
-        return dir.delete();
-    }
 }

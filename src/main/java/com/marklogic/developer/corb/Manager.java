@@ -134,9 +134,9 @@ public class Manager extends AbstractManager{
 	
     @Override
 	public void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException{			
-		if(props == null || props.isEmpty()){
+		if (props == null || props.isEmpty()){
 			initPropertiesFromOptionsFile();
-		}else{
+		} else {
 			this.properties = props;
 		}
 		

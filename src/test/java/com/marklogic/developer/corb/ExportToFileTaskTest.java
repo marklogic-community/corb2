@@ -6,9 +6,9 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.AbstractTask.TRUE;
+import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import com.marklogic.xcc.ResultSequence;
 import java.io.File;
-import java.io.RandomAccessFile;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -40,10 +40,12 @@ public class ExportToFileTaskTest {
     
     @Before
     public void setUp() {
+        clearSystemProperties();
     }
     
     @After
     public void tearDown() {
+        clearSystemProperties();
     }
 
     /**
