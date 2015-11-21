@@ -39,6 +39,8 @@ public class TestUtils {
         System.clearProperty("XQUERY-MODULE.foo");
         System.clearProperty("PROCESS-MODULE.foo");
         System.clearProperty("EXPORT_FILE_AS_ZIP");
+        System.clearProperty("EXPORT-FILE-BOTTOM-CONTENT)");
+        System.clearProperty("EXPORT-FILE-PART-EXT");
     }
     
     public static void clearFile(File file) {
