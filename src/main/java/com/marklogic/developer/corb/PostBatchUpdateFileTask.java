@@ -44,7 +44,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 	protected void moveFile(String source, String dest) throws IOException {
 		if (!source.equals(dest)) {
 			File srcFile = new File(exportDir, source);
-			if (srcFile.exists()) {
+            if (srcFile.exists()) {
 				File destFile = new File(exportDir, dest);
 				if (destFile.exists()) {
 					destFile.delete();
@@ -135,7 +135,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 		Set<String> lines = null;
 		if (removeDuplicates.toLowerCase().startsWith("true|sort")) {
 			lines = new TreeSet<String>();
-		} else if(removeDuplicates.toLowerCase().startsWith("true|order")) {
+		} else if (removeDuplicates.toLowerCase().startsWith("true|order")) {
 			lines = new LinkedHashSet<String>(10000);
 		} else {
 			lines = new HashSet<String>(10000);
@@ -163,7 +163,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     
     BufferedWriter writer = null;
     try {
-    	writer = new BufferedWriter(new FileWriter(new File(exportDir,partFileName)));
+    	writer = new BufferedWriter(new FileWriter(new File(exportDir, partFileName)));
 	    for (String unique : lines) {
 	        writer.write(unique);
 	        writer.newLine();
