@@ -65,7 +65,7 @@ public class AbstractManagerTest {
         Logger logger = Logger.getLogger(AbstractManager.class.getSimpleName());
         logger.addHandler(testLogger);
         clearSystemProperties();
-        String text = new Scanner(new File(selectorFilePath), "UTF-8").useDelimiter("\\A").next();
+        String text = TestUtils.readFile(selectorFilePath);
         selectorAsText = text.trim();
     }
 

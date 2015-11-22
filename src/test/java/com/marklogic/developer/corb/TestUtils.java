@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Scanner;
 
 /**
  *
@@ -41,6 +42,15 @@ public class TestUtils {
         System.clearProperty("EXPORT_FILE_AS_ZIP");
         System.clearProperty("EXPORT-FILE-BOTTOM-CONTENT)");
         System.clearProperty("EXPORT-FILE-PART-EXT");
+    }
+    
+    public static String readFile(String filePath) throws FileNotFoundException {
+        return readFile(new File(filePath));
+    }
+    
+    public static String readFile(File file) throws FileNotFoundException {
+        // \A == The beginning of the input
+        return new Scanner(file, "UTF-8").useDelimiter("\\A").next();
     }
     
     public static void clearFile(File file) {
