@@ -93,10 +93,12 @@ public abstract class AbstractTask implements Task {
 		this.inputUris = inputUri;
 	}
 	
+    @Override
 	public void setFailOnError(boolean failOnError){
 		this.failOnError = failOnError;
 	}
 	
+    @Override
 	public void setExportDir(String exportFileDir) {
 		this.exportDir = exportFileDir;
 	}
@@ -214,25 +216,25 @@ public abstract class AbstractTask implements Task {
 			} else {
 				throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
 			}
-		}catch(RequestServerException exc){
-			if(failOnError){
+		} catch(RequestServerException exc) {
+			if (failOnError) {
 				throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
-			}else{
+			} else {
 				LOG.log(Level.WARNING,"failOnErroris is false. Encountered server exception at URI: "+ asString(inputUris),exc);
 				writeToErrorFile(inputUris,exc.getMessage());
 				return inputUris;
 			}
-		}catch(RequestPermissionException exc){
-			if(failOnError){
+		} catch(RequestPermissionException exc){
+			if (failOnError) {
 				throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
-			}else{
+			} else {
 				LOG.log(Level.WARNING,"failOnErroris is false. Encountered permission exception at URI: "+ asString(inputUris),exc);
 				writeToErrorFile(inputUris,exc.getMessage());
 				return inputUris;
 			}
-		}catch(Exception exc){
+		} catch (Exception exc) {
 			throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
-		}finally{
+		} finally {
 			if (null != session && !session.isClosed()) {
 				session.close();
 				session = null;
@@ -246,10 +248,10 @@ public abstract class AbstractTask implements Task {
 	}
 	
 	protected String asString(String[] uris){
-    if(uris == null || uris.length == 0) return "";
+    if (uris == null || uris.length == 0) { return ""; }
     StringBuilder sb = new StringBuilder();
-    for(int i=0; i < uris.length; i++){
-    	if (i > 0) sb.append(',');
+    for (int i=0; i < uris.length; i++) {
+    	if (i > 0) { sb.append(','); }
     	sb.append(uris[i]);
     }
     return sb.toString();
@@ -310,10 +312,10 @@ public abstract class AbstractTask implements Task {
 	}
 	
 	private void writeToErrorFile(String[] uris, String message){
-		if(uris == null || uris.length == 0) return;
+		if(uris == null || uris.length == 0) { return; }
 		
 		String errorFileName = getProperty("ERROR-FILE-NAME");
-		if(errorFileName == null || errorFileName.length() == 0) return;
+		if (errorFileName == null || errorFileName.length() == 0) { return; }
 		
 		String delim = getProperty("BATCH-URI-DELIM");
 		if (delim == null || delim.length() == 0) {
@@ -322,23 +324,23 @@ public abstract class AbstractTask implements Task {
 		
 		synchronized(ERROR_SYNC_OBJ){
 			BufferedOutputStream writer = null;
-			try{
+			try {
 				writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir,errorFileName), true));
-				for (int i=0; i< uris.length;i++) {
-            writer.write(uris[i].getBytes());
-            if(message != null && message.length() > 0){
-            	writer.write(delim.getBytes());
-            	writer.write(message.getBytes());
-            }
-            writer.write(NEWLINE);
-        }
-        writer.flush();
-			}catch(Exception exc){
+                for (String uri : uris) {
+                    writer.write(uri.getBytes());
+                    if (message != null && message.length() > 0) {
+                        writer.write(delim.getBytes());
+                        writer.write(message.getBytes());
+                    }       
+                    writer.write(NEWLINE);
+                }
+                writer.flush();
+			} catch(Exception exc) {
 				LOG.log(Level.SEVERE, "Problem writing uris to ERROR-FILE-NAME",exc);
-			}finally{
-				try{
-					if(writer != null) writer.close();
-				}catch(Exception exc){}
+			} finally {
+				try {
+					if (writer != null) { writer.close(); }
+				} catch(Exception exc){}
 			}
 		}
 	}

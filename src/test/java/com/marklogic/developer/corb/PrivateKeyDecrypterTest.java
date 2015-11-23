@@ -6,20 +6,12 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
+import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
-import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -55,20 +47,18 @@ public class PrivateKeyDecrypterTest {
 
     @Before
     public void setUp() {
+        clearSystemProperties();
         Logger logger = Logger.getLogger(PrivateKeyDecrypter.class.getSimpleName());
         logger.addHandler(testLogger);
     }
 
     @After
     public void tearDown() {
+        clearSystemProperties();
     }
 
     private void setSystemProperties() {
         System.setProperty("PRIVATE-KEY-FILE", privateKeyPath);
-    }
-
-    private void clearSystemProperties() {
-        System.clearProperty("PRIVATE-KEY-FILE");
     }
 
     /**

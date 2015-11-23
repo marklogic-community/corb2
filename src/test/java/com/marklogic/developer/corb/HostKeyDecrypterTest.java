@@ -2,16 +2,8 @@
  */
 package com.marklogic.developer.corb;
 
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -38,10 +30,12 @@ public class HostKeyDecrypterTest {
     
     @Before
     public void setUp() {
+        clearSystemProperties();
     }
     
     @After
     public void tearDown() {
+        clearSystemProperties();
     }
 
     /**
@@ -98,10 +92,18 @@ public class HostKeyDecrypterTest {
     }
     
     /* Illegal key size thrown if JCE is not loaded
+    
     @Test
     public void testMain() throws Exception {
         System.out.println("main");
         String[] args = {"encrypt", "foo"};
+        HostKeyDecrypter.main(args);
+    }
+    
+    @Test
+    public void testMain_test() throws Exception {
+        System.out.println("main");
+        String[] args = {"test"};
         HostKeyDecrypter.main(args);
     }
     */

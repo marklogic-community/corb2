@@ -1,10 +1,8 @@
 package com.marklogic.developer.corb;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -22,6 +20,8 @@ import com.marklogic.xcc.SecurityOptions;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.jndi.ContentSourceBean;
+import static com.marklogic.developer.corb.TestUtils.clearFile;
+import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 
 /**
@@ -50,7 +50,7 @@ public class ModuleExecutorTest {
 	@Test
 	public void testModuleExecutor_1()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		Properties props = getProperties();
 		URI connectionUri = new URI(props.getProperty("XCC-CONNECTION-URI"));
 		
@@ -89,7 +89,7 @@ public class ModuleExecutorTest {
 	@Test
 	public void testGetContentSource_1()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		System.setProperty("OPTIONS-FILE", OPTIONS_FILE);
 		System.setProperty("EXPORT-FILE-NAME",EXPORT_FILE_NAME);
 		ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
@@ -120,7 +120,7 @@ public class ModuleExecutorTest {
 	@Test
 	public void testGetOption_1()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		String argVal = "";
 		String propName = "URIS-MODULE";
 		ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
@@ -140,7 +140,7 @@ public class ModuleExecutorTest {
 	@Test
 	public void testGetOption_2()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		System.setProperty("URIS-MODULE", "helloWorld-selector.xqy");
 		String argVal = "";
 		String propName = "URIS-MODULE";
@@ -161,7 +161,7 @@ public class ModuleExecutorTest {
 	@Test
 	public void testGetOption_3()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		String argVal = "URIS-MODULE";
 		String propName = "";
 		Properties props = new Properties();
@@ -181,7 +181,7 @@ public class ModuleExecutorTest {
 	@Test
 	public void testGetOptions_1()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
 		TransformOptions result = executor.getOptions();
 
@@ -198,7 +198,7 @@ public class ModuleExecutorTest {
 	@Test
 	public void testGetProperties_1()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		System.setProperty("OPTIONS-FILE", OPTIONS_FILE);
 		ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
 		Properties result = executor.getProperties();
@@ -216,7 +216,7 @@ public class ModuleExecutorTest {
 	@Test
 	public void testGetProperty_1()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		System.setProperty("systemProperty", "hellowWorld");
 		ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
 		executor.contentSource = new ContentSourceBean();
@@ -238,7 +238,7 @@ public class ModuleExecutorTest {
 	@Test
 	public void testGetProperty_2()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
 		executor.contentSource = new ContentSourceBean();
 		executor.options = new TransformOptions();
@@ -259,7 +259,7 @@ public class ModuleExecutorTest {
 	@Test
 	public void testGetValueAsBytes_1()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		System.setProperty("EXPORT-FILE-NAME","src/test/resources/testGetValueAsBytes_1.txt");
 		System.setProperty("OPTIONS-FILE", OPTIONS_FILE);
 		System.setProperty("PROCESS-MODULE","src/test/resources/transform2.xqy|ADHOC");
@@ -283,7 +283,7 @@ public class ModuleExecutorTest {
 	@Test
 	public void testMain_1()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		System.setProperty("OPTIONS-FILE", OPTIONS_FILE);
 		System.setProperty("PROCESS-MODULE", PROCESS_MODULE);
 		System.setProperty("EXPORT-FILE-NAME", EXPORT_FILE_NAME);
@@ -295,7 +295,7 @@ public class ModuleExecutorTest {
 		
 		File report = new File(EXPORT_FILE_NAME);
 		boolean fileExists = report.exists();
-    clearFile(report);
+        clearFile(report);
 		assertTrue(fileExists);
 	}
 
@@ -327,7 +327,7 @@ public class ModuleExecutorTest {
 	 */
 	@Test
 	public void testPrepareContentSource() throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
 
 		executor.prepareContentSource();
@@ -345,7 +345,7 @@ public class ModuleExecutorTest {
 	@Test
 	public void testRun_1()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		System.setProperty("OPTIONS-FILE", OPTIONS_FILE);
 		System.setProperty("PROCESS-MODULE", PROCESS_MODULE);
 		System.setProperty("EXPORT-FILE-NAME", EXPORT_FILE_NAME);
@@ -372,7 +372,7 @@ public class ModuleExecutorTest {
 	@Test
 	public void testRun_2()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		String[] args = {
 				XCC_CONNECTION_URI,
 				PROCESS_MODULE,
@@ -402,7 +402,7 @@ public class ModuleExecutorTest {
 	@Test
 	public void testRun_3()
 		throws Exception {
-		clearProperties();
+		clearSystemProperties();
 		String[] args = {};
 		System.setProperty("XCC-CONNECTION-URI",XCC_CONNECTION_URI);
 		System.setProperty("PROCESS-MODULE", PROCESS_MODULE);
@@ -431,7 +431,7 @@ public class ModuleExecutorTest {
 	@Test
 	public void testSetProperties_1()
 		throws Exception {
-		clearProperties();
+		TestUtils.clearSystemProperties();
 		System.setProperty("OPTIONS-FILE", OPTIONS_FILE);
 		ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
 		Properties props = executor.getProperties();
@@ -439,6 +439,14 @@ public class ModuleExecutorTest {
 		assertNotNull(props);
 		assertFalse(props.isEmpty());
 	}
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
+    }
 
 	/**
 	 * Perform pre-test initialization.
@@ -466,6 +474,7 @@ public class ModuleExecutorTest {
 	public void tearDown()
 		throws Exception {
 		// Add additional tear down code here
+        clearSystemProperties();
 	}
 
 	/**
@@ -550,39 +559,5 @@ public class ModuleExecutorTest {
 		}
 		return res;
 	}
-	
-	private void clearProperties() {
-		System.clearProperty("URIS-MODULE");
-		System.clearProperty("OPTIONS-FILE");
-		System.clearProperty("XCC-CONNECTION-URI");
-		System.clearProperty("COLLECTION-NAME"); 
-		System.clearProperty("XQUERY-MODULE");
-		System.clearProperty("THREAD-COUNT");
-		System.clearProperty("MODULE-ROOT");
-		System.clearProperty("MODULES-DATABASE"); 
-		System.clearProperty("INSTALL");
-		System.clearProperty("PROCESS-TASK");
-		System.clearProperty("PRE-BATCH-MODULE");
-		System.clearProperty("PRE-BATCH-TASK");
-		System.clearProperty("POST-BATCH-MODULE");
-		System.clearProperty("POST-BATCH-TASK");
-		System.clearProperty("EXPORT-FILE-DIR"); 
-		System.clearProperty("EXPORT-FILE-NAME");
-		System.clearProperty("URIS-FILE");
-		System.clearProperty("XQUERY-MODULE.foo");
-		System.clearProperty("EXPORT_FILE_AS_ZIP");
-	}
-	
-	private void clearFile(File file) {
-		PrintWriter pw = null;
-		try {
-			pw = new PrintWriter(file);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		if (pw != null) {
-			pw.close();	
-		}
-	}
+    
 }

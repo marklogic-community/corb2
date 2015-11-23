@@ -2,6 +2,7 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import java.util.Properties;
 import javax.net.ssl.SSLContext;
 import org.junit.After;
@@ -32,10 +33,12 @@ public class TwoWaySSLConfigTest {
     
     @Before
     public void setUp() {
+        clearSystemProperties();
     }
     
     @After
     public void tearDown() {
+        clearSystemProperties();
     }
 
     /**

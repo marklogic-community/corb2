@@ -51,7 +51,7 @@ public abstract class AbstractManager {
 	
 	public static Properties loadPropertiesFile(String filename, boolean excIfNotFound) throws IOException {
 		Properties props = new Properties();
-		return loadPropertiesFile(filename,excIfNotFound,props);
+		return loadPropertiesFile(filename, excIfNotFound, props);
 	}
 
 	protected static Properties loadPropertiesFile(String filename, boolean excIfNotFound, Properties props) throws IOException {
@@ -156,7 +156,6 @@ public abstract class AbstractManager {
 
 	/**
 	 * function that is used to get the Decrypter, returns null if not specified
-	 * @return AbstractDecrypter
 	 * @throws ClassNotFoundException
 	 * @throws IOException
 	 * @throws InstantiationException
@@ -172,7 +171,7 @@ public abstract class AbstractManager {
 			} else {
 				throw new IllegalArgumentException("DECRYPTER must be of type com.marklogic.developer.corb.Decrypter");
 			}
-		}else{
+		} else {
 			this.decrypter = null;
 		}
 	}
@@ -186,7 +185,7 @@ public abstract class AbstractManager {
 			} else {
 				throw new IllegalArgumentException("SSL Options must be of type com.marklogic.developer.corb.SSLConfig");
 			}
-		}else{
+		} else {
 			this.sslConfig = new TrustAnyoneSSLConfig();
 		}
 		sslConfig.setProperties(this.properties);
@@ -237,13 +236,13 @@ public abstract class AbstractManager {
 			contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
 					: ContentSourceFactory.newContentSource(connectionUri);
 		} catch (XccConfigException e) {
-			LOG.log(Level.SEVERE,"Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly."+e.getMessage());
+			LOG.log(Level.SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly.{0}", e.getMessage());
 			throw e;
 		} catch (KeyManagementException e) {
-			LOG.log(Level.SEVERE, "Problem creating content source with ssl. "+e.getMessage());
+			LOG.log(Level.SEVERE, "Problem creating content source with ssl. {0}", e.getMessage());
 			throw e;
 		}catch (NoSuchAlgorithmException e) {
-			LOG.log(Level.SEVERE, "Problem creating content source with ssl. "+e.getMessage());
+			LOG.log(Level.SEVERE, "Problem creating content source with ssl. {0}", e.getMessage());
 			throw e;
 		}
 	}
@@ -262,11 +261,11 @@ public abstract class AbstractManager {
 		RuntimeMXBean runtimemxBean = ManagementFactory.getRuntimeMXBean();
 		List<String> arguments = runtimemxBean.getInputArguments();
 		List<String> argsToLog = new ArrayList<String>();
-		for (int i = 0; i < arguments.size(); i++) {
-			if (!arguments.get(i).startsWith("-DXCC")) {
-				argsToLog.add(arguments.get(i));
-			}
-		}
+        for (String argument : arguments) {
+            if (!argument.startsWith("-DXCC")) {
+                argsToLog.add(argument);
+            }
+        }
 		LOG.log(Level.INFO, "runtime arguments = {0}", Utilities.join(argsToLog, " "));
 	}
 }

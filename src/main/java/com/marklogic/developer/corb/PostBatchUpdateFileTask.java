@@ -36,7 +36,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 				writer.write(NEWLINE);
 				writer.flush();
 			} finally {
-				if(writer != null) writer.close();
+				if (writer != null) { writer.close(); }
 			}
 		}
 	}
@@ -44,7 +44,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 	protected void moveFile(String source, String dest) throws IOException {
 		if (!source.equals(dest)) {
 			File srcFile = new File(exportDir, source);
-			if (srcFile.exists()) {
+            if (srcFile.exists()) {
 				File destFile = new File(exportDir, dest);
 				if (destFile.exists()) {
 					destFile.delete();
@@ -126,18 +126,18 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 	
 	private void removeDuplicatesAndSort() throws IOException{
 		String removeDuplicates = getProperty("EXPORT-FILE-REMOVE-DUPLICATES");
-		if(removeDuplicates == null || !removeDuplicates.toLowerCase().startsWith("true")) return;
+		if (removeDuplicates == null || !removeDuplicates.toLowerCase().startsWith("true")) { return; }
 		
 		String outFileName = getFileName();
 		File outFile = new File(exportDir, outFileName);
-		if(!outFile.exists()) return;
+		if (!outFile.exists()) { return; }
 		
 		Set<String> lines = null;
-		if(removeDuplicates.toLowerCase().startsWith("true|sort")){
+		if (removeDuplicates.toLowerCase().startsWith("true|sort")) {
 			lines = new TreeSet<String>();
-		}else if(removeDuplicates.toLowerCase().startsWith("true|order")){
+		} else if (removeDuplicates.toLowerCase().startsWith("true|order")) {
 			lines = new LinkedHashSet<String>(10000);
-		}else{
+		} else {
 			lines = new HashSet<String>(10000);
 		}
 		
@@ -148,8 +148,8 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 	    while ((line = reader.readLine()) != null) {
 	        lines.add(line);
 	    }
-		}finally{
-			if(reader != null) reader.close();
+		} finally {
+			if (reader != null) { reader.close(); }
 		}
 		
 		String partExt = getProperty("EXPORT-FILE-PART-EXT");
@@ -162,15 +162,15 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 		String partFileName = outFileName+partExt;
     
     BufferedWriter writer = null;
-    try{
-    	writer = new BufferedWriter(new FileWriter(new File(exportDir,partFileName)));
+    try {
+    	writer = new BufferedWriter(new FileWriter(new File(exportDir, partFileName)));
 	    for (String unique : lines) {
 	        writer.write(unique);
 	        writer.newLine();
 	    }
 	    writer.flush();
-    }finally{
-    	if(writer != null) writer.close();
+    } finally {
+    	if (writer != null) { writer.close(); }
     }    
     lines.clear();
     
