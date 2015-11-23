@@ -66,6 +66,7 @@ public class Manager extends AbstractManager{
 	private Monitor monitor;
 	private Thread monitorThread;
 	private CompletionService<String[]> completionService;
+	private boolean execError=false;
 
 	private static final Logger LOG = Logger.getLogger(Manager.class.getSimpleName());
 		
@@ -116,8 +117,9 @@ public class Manager extends AbstractManager{
 		//now we can start corb. 
 		try {
 			int count = tm.run();
-			
-			if (count == 0) {
+			if(tm.execError){
+				System.exit(2);
+			}else if (count == 0) {
 				System.exit(9);
 			} else {
 				System.exit(0);
@@ -278,8 +280,7 @@ public class Manager extends AbstractManager{
 		for(String key : System.getProperties().stringPropertyNames()) {
 		  String value = System.getProperty(key);
 		  if(key.startsWith("XQUERY-MODULE.") && value != null){
-		  	String nkey = key.replace("XQUERY-MODULE.", "PROCESS-MODULE.");
-		  	System.setProperty(nkey, value);
+		  	System.setProperty(key.replace("XQUERY-MODULE.", "PROCESS-MODULE."), value);
 		  }
 		}
 	}
@@ -327,7 +328,7 @@ public class Manager extends AbstractManager{
 		LOG.log(Level.INFO, "{0} starting: {1}", new Object[] { NAME, VERSION_MSG });
 		long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
 		LOG.log(Level.INFO, "maximum heap size = {0} MiB", maxMemory);
-
+		this.execError=false; //reset execution error flag for a new run
 		monitorThread = preparePool();
 		
 		try {
@@ -342,9 +343,10 @@ public class Manager extends AbstractManager{
 					LOG.log(Level.SEVERE, "interrupted while waiting for monitor", e);
 				}
 			}
-
-			runPostBatchTask(); // post batch tasks
-			LOG.info("all done");
+			if(!execError){
+				runPostBatchTask(); // post batch tasks
+				LOG.info("all done");
+			}
 			return count;
 		} catch (Exception e) {
 			LOG.log(Level.SEVERE, e.getMessage());
@@ -703,6 +705,7 @@ public class Manager extends AbstractManager{
 	 * @param e
 	 */
 	public void stop(ExecutionException e) {
+		this.execError=true;
 		LOG.log(Level.SEVERE, "fatal error", e.getCause());
 		LOG.warning("exiting due to fatal error");
 		stop();
