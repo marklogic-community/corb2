@@ -325,7 +325,7 @@ public class Manager extends AbstractManager{
 		LOG.log(Level.INFO, "{0} starting: {1}", new Object[] { NAME, VERSION_MSG });
 		long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
 		LOG.log(Level.INFO, "maximum heap size = {0} MiB", maxMemory);
-
+		this.execError=false; //reset execution error flag for a new run
 		monitorThread = preparePool();
 		
 		try {
