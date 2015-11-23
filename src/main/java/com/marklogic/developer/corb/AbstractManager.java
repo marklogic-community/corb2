@@ -241,7 +241,7 @@ public abstract class AbstractManager {
 		} catch (KeyManagementException e) {
 			LOG.log(Level.SEVERE, "Problem creating content source with ssl. {0}", e.getMessage());
 			throw e;
-		}catch (NoSuchAlgorithmException e) {
+		} catch (NoSuchAlgorithmException e) {
 			LOG.log(Level.SEVERE, "Problem creating content source with ssl. {0}", e.getMessage());
 			throw e;
 		}

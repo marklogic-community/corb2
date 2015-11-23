@@ -134,7 +134,10 @@ public class Manager extends AbstractManager{
 	
     @Override
 	public void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException{			
-		if (props == null || props.isEmpty()){
+		if (args == null) {
+            args = new String[0];
+        }
+        if (props == null || props.isEmpty()){
 			initPropertiesFromOptionsFile();
 		} else {
 			this.properties = props;
@@ -418,7 +421,7 @@ public class Manager extends AbstractManager{
 		} catch (IOException e) {
 			LOG.log(Level.SEVERE, "error while reading modules {0}", e.getMessage());
 			throw e;
-		}catch (RequestException e) {
+		} catch (RequestException e) {
 			LOG.log(Level.SEVERE, "error while loading modules {0}", e.getMessage());
 			throw e;
 		} finally {
@@ -435,10 +438,11 @@ public class Manager extends AbstractManager{
 
 	protected void registerStatusInfo() {
 		Session session = contentSource.newSession();
-		AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_0_9_ML + DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
-				+ "let $status := \n" + " xdmp:server-status(xdmp:host(), xdmp:server())\n"
-				+ "let $modules := $status/mlss:modules\n" + "let $root := $status/mlss:root\n"
-				+ "return (data($modules), data($root))");
+		AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_0_9_ML + DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER + 
+                "let $status := \n" + " xdmp:server-status(xdmp:host(), xdmp:server())\n" + 
+                "let $modules := $status/mlss:modules\n" + 
+                "let $root := $status/mlss:root\n" + 
+                "return (data($modules), data($root))");
 		ResultSequence rs = null;
 		try {
 			rs = session.submitRequest(q);
@@ -519,7 +523,7 @@ public class Manager extends AbstractManager{
 			loader = new FileUrisLoader();
 		} else if (options.getUrisLoaderClass() != null) {
 			loader = options.getUrisLoaderClass().newInstance();
-		}else {
+		} else {
 			throw new IllegalArgumentException("Cannot find URIS-MODULE, URIS-FILE or URIS-LOADER");
 		}
 

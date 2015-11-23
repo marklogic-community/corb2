@@ -2,7 +2,6 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.AbstractTask.NEWLINE;
 import java.util.Properties;
 import org.junit.After;
 import org.junit.AfterClass;
