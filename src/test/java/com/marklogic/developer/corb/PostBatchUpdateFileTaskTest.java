@@ -218,7 +218,7 @@ public class PostBatchUpdateFileTaskTest {
         String result = testRemoveDuplicatesAndSort("true");
         List<String> tokens = Arrays.asList(result.split("\n"));
         assertEquals(4,tokens.size());
-        for (String next : new String[]{"a","b","d","d"})
+        for (String next : new String[]{"a","b","d","z"})
         	assertTrue(tokens.contains(next));
     }
     
