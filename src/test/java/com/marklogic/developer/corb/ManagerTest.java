@@ -1,5 +1,6 @@
 package com.marklogic.developer.corb;
 
+import com.marklogic.developer.TestHandler;
 import java.io.File;
 import java.io.FileReader;
 import org.junit.*;
@@ -8,428 +9,704 @@ import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import static com.marklogic.developer.corb.TestUtils.clearFile;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.deleteDir;
+import com.marklogic.xcc.AdhocQuery;
+import com.marklogic.xcc.ContentSource;
+import com.marklogic.xcc.ContentSourceFactory;
+import com.marklogic.xcc.ModuleInvoke;
+import com.marklogic.xcc.Request;
+import com.marklogic.xcc.ResultItem;
+import com.marklogic.xcc.ResultSequence;
+import com.marklogic.xcc.Session;
+import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.types.XdmItem;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.net.URI;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
- * The class <code>ManagerTest</code> contains tests for the class <code>{@link Manager}</code>.
+ * The class <code>ManagerTest</code> contains tests for the class
+ * <code>{@link Manager}</code>.
  *
  * @generatedBy CodePro at 9/18/15 10:51 AM
  * @author matthew.heckel
  * @version $Revision: 1.0 $
  */
 public class ManagerTest {
+
     @Rule
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
-
-	public static final String XCC_CONNECTION_URI = "xcc://admin:admin@localhost:2223/FFE";
+    private final TestHandler testLogger = new TestHandler();
+    public static final String XCC_CONNECTION_URI = "xcc://admin:admin@localhost:2223/FFE";
     public static final String COLLECTION_NAME = "StringPassedToTheURIsModule";
     public static final String XQUERY_MODULE = "src/test/resources/transform.xqy|ADHOC";
     public static final String THREAD_COUNT = "2";
     public static final String PROCESS_TASK = "com.marklogic.developer.corb.ExportBatchToFileTask";
     public static final String MODULES_ROOT = "/";
     public static final String MODULES_DATABASE = "Documents";
-    public static final String PRE_BATCH_MODULE = "src/test/resources/preBatchModule.xqy|ADHOC";        
+    public static final String PRE_BATCH_MODULE = "src/test/resources/preBatchModule.xqy|ADHOC";
     public static final String PRE_BATCH_TASK = "com.marklogic.developer.corb.PreBatchUpdateFileTask";
     public static final String POST_BATCH_MODULE = "src/test/resources/postBatchModule.xqy|ADHOC";
     public static final String POST_BATCH_TASK = "com.marklogic.developer.corb.PostBatchUpdateFileTask";
     public static String EXPORT_FILE_DIR = null;
     public static final String URIS_FILE = "src/test/resources/uriInputFile.txt";
- 
-	/**
-	 * Functional test for the Manager using program arguments.
-	 *
-	 * @throws Exception
-	 *
-	 */
-	@Test
-	public void testManagerUsingProgArgs()
-		throws Exception {
-		clearSystemProperties();
-		String xccConnection = XCC_CONNECTION_URI;
-		String collection = COLLECTION_NAME;
-		String xqueryModuleAlsoCalledTransformModule = XQUERY_MODULE; 
-		String threadCount = THREAD_COUNT;
-		String urisModuleAlsoCalledSelector = "src/test/resources/selector.xqy|ADHOC";
-		String modulesRoot = MODULES_ROOT;
-		String modulesDatabase = MODULES_DATABASE;
-		String install = "true";
-		String processTask = PROCESS_TASK;
-		String preBatchModule = PRE_BATCH_MODULE;
-		String preBatchTask = PRE_BATCH_TASK;
-		String postXqueryModule = POST_BATCH_MODULE;
-		String postXqueryTask  = POST_BATCH_TASK;
-		String exportFileDir = EXPORT_FILE_DIR;
-		String exportFileName = "testManagerUsingProgArgs.txt";
-		
-		String[] args = { xccConnection,collection,xqueryModuleAlsoCalledTransformModule,threadCount,
-						urisModuleAlsoCalledSelector,modulesRoot,modulesDatabase,install,processTask,
-						preBatchModule,preBatchTask,postXqueryModule,postXqueryTask,exportFileDir,
-						exportFileName	};
-		
+
+    /**
+     * Functional test for the Manager using program arguments.
+     *
+     * @throws Exception
+     *
+     */
+    @Test
+    public void testManagerUsingProgArgs()
+            throws Exception {
+        clearSystemProperties();
+        String xccConnection = XCC_CONNECTION_URI;
+        String collection = COLLECTION_NAME;
+        String xqueryModuleAlsoCalledTransformModule = XQUERY_MODULE;
+        String threadCount = THREAD_COUNT;
+        String urisModuleAlsoCalledSelector = "src/test/resources/selector.xqy|ADHOC";
+        String modulesRoot = MODULES_ROOT;
+        String modulesDatabase = MODULES_DATABASE;
+        String install = "true";
+        String processTask = PROCESS_TASK;
+        String preBatchModule = PRE_BATCH_MODULE;
+        String preBatchTask = PRE_BATCH_TASK;
+        String postXqueryModule = POST_BATCH_MODULE;
+        String postXqueryTask = POST_BATCH_TASK;
+        String exportFileDir = EXPORT_FILE_DIR;
+        String exportFileName = "testManagerUsingProgArgs.txt";
+
+        String[] args = {xccConnection, collection, xqueryModuleAlsoCalledTransformModule, threadCount,
+            urisModuleAlsoCalledSelector, modulesRoot, modulesDatabase, install, processTask,
+            preBatchModule, preBatchTask, postXqueryModule, postXqueryTask, exportFileDir,
+            exportFileName};
+
         exit.expectSystemExit();
-		Manager.main(args);
-		
-		File report = new File(exportFileDir+exportFileName);
-		report.deleteOnExit();
-		char [] a = new char[500];
-		if (report.exists()){
-			FileReader reader = new FileReader(report);
-			reader.read(a);
-			reader.close();
-		}
-		String corbOutput = String.valueOf(a).trim();
-		System.out.println("testManagerUsingProgArgs,corbOutput=" + corbOutput);
-		String expectedOutput = "This is being returned from the PRE-BATCH-MODULE which is often used for column headers.\nThis is a file generated by the XQUERY-MODULE (Transform) which typically contains a report.  This information [The Selector sends its greetings!  The COLLECTION-NAME is StringPassedToTheURIsModule] was passed from the Selector.\nThis is from the POST-BATCH-MODULE using the POST-XQUERY-MODULE.";
-	  boolean passed = expectedOutput.equals(corbOutput);
-    clearFile(report);
-	  assertTrue(passed);
-	}
+        Manager.main(args);
 
-	/**
-	 * Functional test for the Manager using system properties.
-	 *
-	 * @throws Exception
-	 *
-	 */
-	@Test
-	public void testManagerUsingSysProps()
-		throws Exception {
-		clearSystemProperties();
-		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
-		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
-		System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
-		System.setProperty("THREAD-COUNT", THREAD_COUNT);
-		System.setProperty("URIS-MODULE","src/test/resources/selector.xqy|ADHOC");
-		System.setProperty("MODULE-ROOT", MODULES_ROOT);
-		System.setProperty("MODULES-DATABASE", MODULES_DATABASE); 
-		System.setProperty("INSTALL","false");
-		System.setProperty("PROCESS-TASK", PROCESS_TASK);
-		System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
-		System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
-		System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
-		System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
-		System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR); 
-		System.setProperty("EXPORT-FILE-NAME", "testManagerUsingSysProps.txt");
-		
-		String[] args = {};
+        File report = new File(exportFileDir + exportFileName);
+        report.deleteOnExit();
+        char[] a = new char[500];
+        if (report.exists()) {
+            FileReader reader = new FileReader(report);
+            reader.read(a);
+            reader.close();
+        }
+        String corbOutput = String.valueOf(a).trim();
+        System.out.println("testManagerUsingProgArgs,corbOutput=" + corbOutput);
+        String expectedOutput = "This is being returned from the PRE-BATCH-MODULE which is often used for column headers.\nThis is a file generated by the XQUERY-MODULE (Transform) which typically contains a report.  This information [The Selector sends its greetings!  The COLLECTION-NAME is StringPassedToTheURIsModule] was passed from the Selector.\nThis is from the POST-BATCH-MODULE using the POST-XQUERY-MODULE.";
+        boolean passed = expectedOutput.equals(corbOutput);
+        clearFile(report);
+        assertTrue(passed);
+    }
 
-		exit.expectSystemExit();		
-		Manager.main(args);
-		
-		File report = new File(EXPORT_FILE_DIR + "/testManagerUsingSysProps.txt");
-		report.deleteOnExit();
-		char [] a = new char[500];
-		FileReader reader = new FileReader(report);
-		reader.read(a);		
-		String corbOutput = String.valueOf(a).trim();
-		reader.close();
-		System.out.println("testManagerUsingSysProps,corbOutput=" + corbOutput);
-		String expectedOutput = "This is being returned from the PRE-BATCH-MODULE which is often used for column headers.\nThis is a file generated by the XQUERY-MODULE (Transform) which typically contains a report.  This information [The Selector sends its greetings!  The COLLECTION-NAME is StringPassedToTheURIsModule] was passed from the Selector.\nThis is from the POST-BATCH-MODULE using the POST-XQUERY-MODULE.";
-		boolean passed = expectedOutput.equals(corbOutput);
-		clearFile(report);
-		assertTrue(passed);
-	}
-	
-	/**
-	 * Functional test for the Manager using a properties file.
-	 *
-	 * @throws Exception
-	 *
-	 */
-	@Test
-	public void testManagerUsingPropsFile()
-		throws Exception {
+    /**
+     * Functional test for the Manager using system properties.
+     *
+     * @throws Exception
+     *
+     */
+    @Test
+    public void testManagerUsingSysProps()
+            throws Exception {
+        clearSystemProperties();
+        System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+        System.setProperty("COLLECTION-NAME", COLLECTION_NAME);
+        System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
+        System.setProperty("THREAD-COUNT", THREAD_COUNT);
+        System.setProperty("URIS-MODULE", "src/test/resources/selector.xqy|ADHOC");
+        System.setProperty("MODULE-ROOT", MODULES_ROOT);
+        System.setProperty("MODULES-DATABASE", MODULES_DATABASE);
+        System.setProperty("INSTALL", "false");
+        System.setProperty("PROCESS-TASK", PROCESS_TASK);
+        System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
+        System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
+        System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
+        System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
+        System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR);
+        System.setProperty("EXPORT-FILE-NAME", "testManagerUsingSysProps.txt");
+
+        String[] args = {};
+
+        exit.expectSystemExit();
+        Manager.main(args);
+
+        File report = new File(EXPORT_FILE_DIR + "/testManagerUsingSysProps.txt");
+        report.deleteOnExit();
+        char[] a = new char[500];
+        FileReader reader = new FileReader(report);
+        reader.read(a);
+        String corbOutput = String.valueOf(a).trim();
+        reader.close();
+        System.out.println("testManagerUsingSysProps,corbOutput=" + corbOutput);
+        String expectedOutput = "This is being returned from the PRE-BATCH-MODULE which is often used for column headers.\nThis is a file generated by the XQUERY-MODULE (Transform) which typically contains a report.  This information [The Selector sends its greetings!  The COLLECTION-NAME is StringPassedToTheURIsModule] was passed from the Selector.\nThis is from the POST-BATCH-MODULE using the POST-XQUERY-MODULE.";
+        boolean passed = expectedOutput.equals(corbOutput);
+        clearFile(report);
+        assertTrue(passed);
+    }
+
+    /**
+     * Functional test for the Manager using a properties file.
+     *
+     * @throws Exception
+     *
+     */
+    @Test
+    public void testManagerUsingPropsFile()
+            throws Exception {
         String exportFileName = EXPORT_FILE_DIR + "/testManagerUsingPropsFile.txt";
-		clearSystemProperties();
-		System.setProperty("OPTIONS-FILE","src/test/resources/helloWorld.properties");	
-		System.setProperty("EXPORT-FILE-NAME", exportFileName);
-		
-		String[] args = {};
-        
-        exit.expectSystemExit();
-		Manager.main(args);
-        
-		File report = new File(exportFileName);
-		report.deleteOnExit();
-		boolean fileExists = report.exists();
-		assertTrue(fileExists);
-		FileReader reader = new FileReader(report);
-		char [] a = new char[400];
-		reader.read(a);
-		String corbOutput = String.valueOf(a).trim();
-		reader.close();
-		System.out.println("testManagerUsingPropsFile,corbOutput=" + corbOutput);
-		String expectedOutput = "This is being returned from the PRE-BATCH-MODULE which is often used for column headers.\nThis is a file generated by the XQUERY-MODULE (Transform) which typically contains a report.  This information [The Selector sends its greetings!  The COLLECTION-NAME is StringPassedToTheURIsModule] was passed from the Selector.\nThis is from the POST-BATCH-MODULE using the POST-XQUERY-MODULE.";
-		boolean passed = expectedOutput.equals(corbOutput);
-		clearFile(report);
-		assertTrue(passed);
-	}
+        clearSystemProperties();
+        System.setProperty("OPTIONS-FILE", "src/test/resources/helloWorld.properties");
+        System.setProperty("EXPORT-FILE-NAME", exportFileName);
 
-	/**
-	 * Functional test for the Manager using an input file for the URI selector.
-	 *
-	 * @throws Exception
-	 *
-	 */
-	@Test
-	public void testManagerUsingInputFile()
-		throws Exception {
-		clearSystemProperties();
-		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
-		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
-		System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
-		System.setProperty("THREAD-COUNT", THREAD_COUNT);
-		System.setProperty("MODULE-ROOT", MODULES_ROOT);
-		System.setProperty("MODULES-DATABASE", MODULES_DATABASE); 
-		System.setProperty("INSTALL", "false");
-		System.setProperty("PROCESS-TASK", PROCESS_TASK);
-		System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
-		System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
-		System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
-		System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
-		System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR); 
-		System.setProperty("EXPORT-FILE-NAME", "testManagerUsingInputFile.txt");
-		System.setProperty("URIS-FILE", "src/test/resources/uriInputFile.txt");
-		String[] args = {};
+        String[] args = {};
 
         exit.expectSystemExit();
-		Manager.main(args);
+        Manager.main(args);
+
+        File report = new File(exportFileName);
+        report.deleteOnExit();
+        boolean fileExists = report.exists();
+        assertTrue(fileExists);
+        FileReader reader = new FileReader(report);
+        char[] a = new char[400];
+        reader.read(a);
+        String corbOutput = String.valueOf(a).trim();
+        reader.close();
+        System.out.println("testManagerUsingPropsFile,corbOutput=" + corbOutput);
+        String expectedOutput = "This is being returned from the PRE-BATCH-MODULE which is often used for column headers.\nThis is a file generated by the XQUERY-MODULE (Transform) which typically contains a report.  This information [The Selector sends its greetings!  The COLLECTION-NAME is StringPassedToTheURIsModule] was passed from the Selector.\nThis is from the POST-BATCH-MODULE using the POST-XQUERY-MODULE.";
+        boolean passed = expectedOutput.equals(corbOutput);
+        clearFile(report);
+        assertTrue(passed);
+    }
+
+    /**
+     * Functional test for the Manager using an input file for the URI selector.
+     *
+     * @throws Exception
+     *
+     */
+    @Test
+    public void testManagerUsingInputFile()
+            throws Exception {
+        clearSystemProperties();
+        System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+        System.setProperty("COLLECTION-NAME", COLLECTION_NAME);
+        System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
+        System.setProperty("THREAD-COUNT", THREAD_COUNT);
+        System.setProperty("MODULE-ROOT", MODULES_ROOT);
+        System.setProperty("MODULES-DATABASE", MODULES_DATABASE);
+        System.setProperty("INSTALL", "false");
+        System.setProperty("PROCESS-TASK", PROCESS_TASK);
+        System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
+        System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
+        System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
+        System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
+        System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR);
+        System.setProperty("EXPORT-FILE-NAME", "testManagerUsingInputFile.txt");
+        System.setProperty("URIS-FILE", "src/test/resources/uriInputFile.txt");
+        String[] args = {};
+
+        exit.expectSystemExit();
+        Manager.main(args);
 
         String exportFilePath = EXPORT_FILE_DIR + "/testManagerUsingInputFile.txt";
-		File report = new File(exportFilePath);
-		report.deleteOnExit();
-		boolean fileExists = report.exists();
-		assertTrue(fileExists);
-		FileReader reader = new FileReader(report);
-		char [] a = new char[400];
-		reader.read(a);
-		String corbOutput = String.valueOf(a).trim();
-		reader.close();
-		System.out.println("testManagerUsingInputFile,corbOutput=" + corbOutput);
-		String expectedOutput = "This is being returned from the PRE-BATCH-MODULE which is often used for column headers.\nThis is a file generated by the XQUERY-MODULE (Transform) which typically contains a report.  This information [Hello from the URIS-FILE!] was passed from the Selector.\nThis is from the POST-BATCH-MODULE using the POST-XQUERY-MODULE.";
-		boolean passed = expectedOutput.equals(corbOutput);
-		clearFile(report);
-		assertTrue(passed);
-	}
-	
-	/**
-	 * Functional test for the Manager's PRE-BATCH-TASK.
-	 *
-	 * @throws Exception
-	 *
-	 */
-	@Test
-	public void testManagersPreBatchTask()
-		throws Exception {
-		clearSystemProperties();
-		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
-		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
-		System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
-		System.setProperty("THREAD-COUNT", THREAD_COUNT);
-		System.setProperty("MODULE-ROOT", MODULES_ROOT);
-		System.setProperty("MODULES-DATABASE", MODULES_DATABASE); 
-		System.setProperty("INSTALL", "false");
-		System.setProperty("PROCESS-TASK", PROCESS_TASK);
-		System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
-		System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
-		System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
-		System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
-		System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR); 
-		System.setProperty("EXPORT-FILE-NAME", "testManagersPreBatchTask.txt");
-		System.setProperty("URIS-FILE", URIS_FILE);
-		String[] args = {};
-        
-        exit.expectSystemExit();
-		Manager.main(args);
-        
-		String exportFilePath = EXPORT_FILE_DIR + "/testManagersPreBatchTask.txt";
-		File report = new File(exportFilePath);
-		report.deleteOnExit();
-		boolean fileExists = report.exists();
-		assertTrue(fileExists);
-		FileReader reader = new FileReader(report);
-		char [] a = new char[400];
-		reader.read(a);
-		String corbOutput = String.valueOf(a).trim();
-		reader.close();
-		System.out.println("testManagersPreBatchTask,corbOutput=" + corbOutput);
-		String expectedOutput = "This is being returned from the PRE-BATCH-MODULE which is often used for column headers.";
-		boolean passed = corbOutput.startsWith(expectedOutput);
-		clearFile(report);
-		assertTrue(passed);
-	}
-	
-	/**
-	 * Functional test for the Manager's POST-BATCH-TASK.
-	 *
-	 * @throws Exception
-	 *
-	 */
-	@Test
-	public void testManagersPostBatchTask()
-		throws Exception {
-		clearSystemProperties();
-		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
-		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
-		System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
-		System.setProperty("THREAD-COUNT", THREAD_COUNT);
-		System.setProperty("MODULE-ROOT", MODULES_ROOT);
-		System.setProperty("MODULES-DATABASE", MODULES_DATABASE); 
-		System.setProperty("INSTALL", "false");
-		System.setProperty("PROCESS-TASK", PROCESS_TASK);
-		System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
-		System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
-		System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
-		System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
-		System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR); 
-		System.setProperty("EXPORT-FILE-NAME", "testManagersPostBatchTask.txt");
-		System.setProperty("URIS-FILE", URIS_FILE);
-		String[] args = {};
-        
-        exit.expectSystemExit();
-		Manager.main(args);
-        
-		String exportFilePath = EXPORT_FILE_DIR + "testManagersPostBatchTask.txt";
-		File report = new File(exportFilePath);
-		boolean fileExists = report.exists();
-		assertTrue(fileExists);
-		FileReader reader = new FileReader(report);
-		char [] a = new char[400];
-		reader.read(a);
-		String corbOutput = String.valueOf(a).trim();
-		reader.close();
-		System.out.println("testManagersPostBatchTask,corbOutput=" + corbOutput);
-		String expectedOutput = "This is from the POST-BATCH-MODULE using the POST-XQUERY-MODULE.";
-		boolean passed = corbOutput.endsWith(expectedOutput);
-		clearFile(report);
-		assertTrue(passed);
-	}
-	
-	/**
-	 * Functional test for the Manager's POST-BATCH-TASK for zipping the output file.
-	 *
-	 * @throws Exception
-	 *
-	 */
-	@Test
-	public void testManagersPostBatchTaskZip()
-		throws Exception {
-		clearSystemProperties();
-		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
-		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
-		System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
-		System.setProperty("THREAD-COUNT", THREAD_COUNT);
-		System.setProperty("MODULE-ROOT", MODULES_ROOT);
-		System.setProperty("MODULES-DATABASE", MODULES_DATABASE); 
-		System.setProperty("INSTALL", "false");
-		System.setProperty("PROCESS-TASK", PROCESS_TASK);
-		System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
-		System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
-		System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
-		System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
-		System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR); 
-		System.setProperty("EXPORT-FILE-NAME", "helloWorld.txt");
-		System.setProperty("URIS-FILE", URIS_FILE);
-		System.setProperty("EXPORT_FILE_AS_ZIP", "true");
-		String[] args = {};
-        
-        exit.expectSystemExit();
-		Manager.main(args);
-        
-		String zippedExportFilePath = EXPORT_FILE_DIR + "/helloWorld.txt.zip";
-		File report = new File(zippedExportFilePath);
-		boolean fileExists = report.exists();
-		clearFile(report);
-		assertTrue(fileExists);
-	}
-	
-	/**
-	 * Functional test for the Manager's POST-BATCH-TASK.
-	 *
-	 * @throws Exception
-	 *
-	 */
-	@Test
-	public void testManagerJavaScriptTransform()
-		throws Exception {
-		clearSystemProperties();
-		System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
-		System.setProperty("COLLECTION-NAME", COLLECTION_NAME); 
-		System.setProperty("XQUERY-MODULE", "src/test/resources/mod-print-uri.sjs|ADHOC");
-		System.setProperty("THREAD-COUNT", THREAD_COUNT);
-		System.setProperty("MODULE-ROOT", MODULES_ROOT);
-		System.setProperty("MODULES-DATABASE", MODULES_DATABASE); 
-		System.setProperty("INSTALL", "false");
-		System.setProperty("PROCESS-TASK", PROCESS_TASK);
-		System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
-		System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
-		System.setProperty("POST-BATCH-MODULE",POST_BATCH_MODULE);
-		System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
-		System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR); 
-		System.setProperty("EXPORT-FILE-NAME", "testManagerJavaScriptTransform.txt");
-		System.setProperty("URIS-FILE", "src/test/resources/uris-file.txt");
-		System.setProperty("XQUERY-MODULE.foo", "bar1");
-		String[] args = {};
-        
-        exit.expectSystemExit();
-		Manager.main(args);
-        
-		String exportFilePath = EXPORT_FILE_DIR + "/testManagerJavaScriptTransform.txt";
-		File report = new File(exportFilePath);
-		report.deleteOnExit();
-		boolean fileExists = report.exists();
-		assertTrue(fileExists);
-		FileReader reader = new FileReader(report);
-		char [] a = new char[400];
-		reader.read(a);
-		String corbOutput = String.valueOf(a).trim();
-		reader.close();
-		System.out.println("testManagerJavaScriptTransform,corbOutput=" + corbOutput);
-		String expectedOutput = "object-id-1=bar1";
-        System.out.println(corbOutput);
-		boolean passed = corbOutput.contains(expectedOutput);
-		clearFile(report);
-		assertTrue(passed);
-	}
+        File report = new File(exportFilePath);
+        report.deleteOnExit();
+        boolean fileExists = report.exists();
+        assertTrue(fileExists);
+        FileReader reader = new FileReader(report);
+        char[] a = new char[400];
+        reader.read(a);
+        String corbOutput = String.valueOf(a).trim();
+        reader.close();
+        System.out.println("testManagerUsingInputFile,corbOutput=" + corbOutput);
+        String expectedOutput = "This is being returned from the PRE-BATCH-MODULE which is often used for column headers.\nThis is a file generated by the XQUERY-MODULE (Transform) which typically contains a report.  This information [Hello from the URIS-FILE!] was passed from the Selector.\nThis is from the POST-BATCH-MODULE using the POST-XQUERY-MODULE.";
+        boolean passed = expectedOutput.equals(corbOutput);
+        clearFile(report);
+        assertTrue(passed);
+    }
 
-	/**
-	 * Perform pre-test initialization.
-	 *
-	 * @throws Exception
-	 *         if the initialization fails for some reason
-	 *
-	 * @generatedBy CodePro at 9/18/15 10:51 AM
-	 */
-	@Before
-	public void setUp()
-		throws Exception {
-		clearSystemProperties();
+    /**
+     * Functional test for the Manager's PRE-BATCH-TASK.
+     *
+     * @throws Exception
+     *
+     */
+    @Test
+    public void testManagersPreBatchTask()
+            throws Exception {
+        clearSystemProperties();
+        System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+        System.setProperty("COLLECTION-NAME", COLLECTION_NAME);
+        System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
+        System.setProperty("THREAD-COUNT", THREAD_COUNT);
+        System.setProperty("MODULE-ROOT", MODULES_ROOT);
+        System.setProperty("MODULES-DATABASE", MODULES_DATABASE);
+        System.setProperty("INSTALL", "false");
+        System.setProperty("PROCESS-TASK", PROCESS_TASK);
+        System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
+        System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
+        System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
+        System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
+        System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR);
+        System.setProperty("EXPORT-FILE-NAME", "testManagersPreBatchTask.txt");
+        System.setProperty("URIS-FILE", URIS_FILE);
+        String[] args = {};
+
+        exit.expectSystemExit();
+        Manager.main(args);
+
+        String exportFilePath = EXPORT_FILE_DIR + "/testManagersPreBatchTask.txt";
+        File report = new File(exportFilePath);
+        report.deleteOnExit();
+        boolean fileExists = report.exists();
+        assertTrue(fileExists);
+        FileReader reader = new FileReader(report);
+        char[] a = new char[400];
+        reader.read(a);
+        String corbOutput = String.valueOf(a).trim();
+        reader.close();
+        System.out.println("testManagersPreBatchTask,corbOutput=" + corbOutput);
+        String expectedOutput = "This is being returned from the PRE-BATCH-MODULE which is often used for column headers.";
+        boolean passed = corbOutput.startsWith(expectedOutput);
+        clearFile(report);
+        assertTrue(passed);
+    }
+
+    /**
+     * Functional test for the Manager's POST-BATCH-TASK.
+     *
+     * @throws Exception
+     *
+     */
+    @Test
+    public void testManagersPostBatchTask()
+            throws Exception {
+        clearSystemProperties();
+        System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+        System.setProperty("COLLECTION-NAME", COLLECTION_NAME);
+        System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
+        System.setProperty("THREAD-COUNT", THREAD_COUNT);
+        System.setProperty("MODULE-ROOT", MODULES_ROOT);
+        System.setProperty("MODULES-DATABASE", MODULES_DATABASE);
+        System.setProperty("INSTALL", "false");
+        System.setProperty("PROCESS-TASK", PROCESS_TASK);
+        System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
+        System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
+        System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
+        System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
+        System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR);
+        System.setProperty("EXPORT-FILE-NAME", "testManagersPostBatchTask.txt");
+        System.setProperty("URIS-FILE", URIS_FILE);
+        String[] args = {};
+
+        exit.expectSystemExit();
+        Manager.main(args);
+
+        String exportFilePath = EXPORT_FILE_DIR + "testManagersPostBatchTask.txt";
+        File report = new File(exportFilePath);
+        boolean fileExists = report.exists();
+        assertTrue(fileExists);
+        FileReader reader = new FileReader(report);
+        char[] a = new char[400];
+        reader.read(a);
+        String corbOutput = String.valueOf(a).trim();
+        reader.close();
+        System.out.println("testManagersPostBatchTask,corbOutput=" + corbOutput);
+        String expectedOutput = "This is from the POST-BATCH-MODULE using the POST-XQUERY-MODULE.";
+        boolean passed = corbOutput.endsWith(expectedOutput);
+        clearFile(report);
+        assertTrue(passed);
+    }
+
+    /**
+     * Functional test for the Manager's POST-BATCH-TASK for zipping the output
+     * file.
+     *
+     * @throws Exception
+     *
+     */
+    @Test
+    public void testManagersPostBatchTaskZip()
+            throws Exception {
+        clearSystemProperties();
+        System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+        System.setProperty("COLLECTION-NAME", COLLECTION_NAME);
+        System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
+        System.setProperty("THREAD-COUNT", THREAD_COUNT);
+        System.setProperty("MODULE-ROOT", MODULES_ROOT);
+        System.setProperty("MODULES-DATABASE", MODULES_DATABASE);
+        System.setProperty("INSTALL", "false");
+        System.setProperty("PROCESS-TASK", PROCESS_TASK);
+        System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
+        System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
+        System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
+        System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
+        System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR);
+        System.setProperty("EXPORT-FILE-NAME", "helloWorld.txt");
+        System.setProperty("URIS-FILE", URIS_FILE);
+        System.setProperty("EXPORT_FILE_AS_ZIP", "true");
+        String[] args = {};
+
+        exit.expectSystemExit();
+        Manager.main(args);
+
+        String zippedExportFilePath = EXPORT_FILE_DIR + "/helloWorld.txt.zip";
+        File report = new File(zippedExportFilePath);
+        boolean fileExists = report.exists();
+        clearFile(report);
+        assertTrue(fileExists);
+    }
+
+    /**
+     * Functional test for the Manager's POST-BATCH-TASK.
+     *
+     * @throws Exception
+     *
+     */
+    @Test
+    public void testManagerJavaScriptTransform()
+            throws Exception {
+        clearSystemProperties();
+        System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+        System.setProperty("COLLECTION-NAME", COLLECTION_NAME);
+        System.setProperty("XQUERY-MODULE", "src/test/resources/mod-print-uri.sjs|ADHOC");
+        System.setProperty("THREAD-COUNT", THREAD_COUNT);
+        System.setProperty("MODULE-ROOT", MODULES_ROOT);
+        System.setProperty("MODULES-DATABASE", MODULES_DATABASE);
+        System.setProperty("INSTALL", "false");
+        System.setProperty("PROCESS-TASK", PROCESS_TASK);
+        System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
+        System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
+        System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
+        System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
+        System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR);
+        System.setProperty("EXPORT-FILE-NAME", "testManagerJavaScriptTransform.txt");
+        System.setProperty("URIS-FILE", "src/test/resources/uris-file.txt");
+        System.setProperty("XQUERY-MODULE.foo", "bar1");
+        String[] args = {};
+
+        exit.expectSystemExit();
+        Manager.main(args);
+
+        String exportFilePath = EXPORT_FILE_DIR + "/testManagerJavaScriptTransform.txt";
+        File report = new File(exportFilePath);
+        report.deleteOnExit();
+        boolean fileExists = report.exists();
+        assertTrue(fileExists);
+        FileReader reader = new FileReader(report);
+        char[] a = new char[400];
+        reader.read(a);
+        String corbOutput = String.valueOf(a).trim();
+        reader.close();
+        System.out.println("testManagerJavaScriptTransform,corbOutput=" + corbOutput);
+        String expectedOutput = "object-id-1=bar1";
+        System.out.println(corbOutput);
+        boolean passed = corbOutput.contains(expectedOutput);
+        clearFile(report);
+        assertTrue(passed);
+    }
+
+    /**
+     * Perform pre-test initialization.
+     *
+     * @throws Exception if the initialization fails for some reason
+     *
+     * @generatedBy CodePro at 9/18/15 10:51 AM
+     */
+    @Before
+    public void setUp()
+            throws Exception {
+        clearSystemProperties();
+        Logger logger = Logger.getLogger(Manager.class.getSimpleName());
+        logger.addHandler(testLogger);
         File tempDir = TestUtils.createTempDirectory();
         EXPORT_FILE_DIR = tempDir.toString();
-	}
+    }
 
-	/**
-	 * Perform post-test clean-up.
-	 *
-	 * @throws Exception
-	 *         if the clean-up fails for some reason
-	 *
-	 * @generatedBy CodePro at 9/18/15 10:51 AM
-	 */
-	@After
-	public void tearDown() throws Exception {
+    /**
+     * Perform post-test clean-up.
+     *
+     * @throws Exception if the clean-up fails for some reason
+     *
+     * @generatedBy CodePro at 9/18/15 10:51 AM
+     */
+    @After
+    public void tearDown() throws Exception {
         deleteDir(new File(ManagerTest.EXPORT_FILE_DIR));
         clearSystemProperties();
-	}
+    }
+
+    /**
+     * Launch the test.
+     *
+     * @param args the command line arguments
+     *
+     * @generatedBy CodePro at 9/18/15 10:51 AM
+     */
+    public static void main(String[] args) {
+        new org.junit.runner.JUnitCore().run(ManagerTest.class);
+    }
+
+    /**
+     * Test of main method, of class Manager.
+     */
+    @Test
+    public void testMain() {
+        System.out.println("main");
+        String[] args = null;
+        exit.expectSystemExit();
+        Manager.main(args);
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(Level.SEVERE, records.get(0).getLevel());
+        assertEquals("Error initializing CORB", records.get(0).getMessage());
+    }
+
+    /**
+     * Test of init method, of class Manager.
+     */
+    @Test
+    public void testInit_nullArgs_properties() throws Exception {
+        System.out.println("init");
+        String[] args = null;
+        Properties props = new Properties();
+        props.setProperty("BATCH-SIZE", "5");
+        Manager instance = new Manager();
+        exit.expectSystemExit();
+        instance.init(args, props);
+        assertEquals(props, instance.properties);
+    }
+
+    @Test
+    public void testInit_nullArgs_emptyProperties() throws Exception {
+        System.out.println("init");
+        String[] args = null;
+        Properties props = new Properties();
+        Manager instance = new Manager();
+        exit.expectSystemExit();
+        instance.init(args, props);
+        assertEquals(props, instance.properties);
+    }
+    
+    /**
+     * Test of initOptions method, of class Manager.
+     */
+    @Test (expected = NullPointerException.class)
+    public void testInitOptions() throws Exception {
+        System.out.println("initOptions");
+        String[] args = null;
+        Manager instance = new Manager();
+        instance.initOptions(args);
+    }
+
+    /**
+     * Test of getTaskCls method, of class Manager.
+     */
+    @Test
+    public void testGetTaskCls() throws Exception {
+        System.out.println("getTaskCls");
+        String type = "";
+        String className = "com.marklogic.developer.corb.Transform";
+        Manager instance = new Manager();
+        Class<? extends Task> expResult = Transform.class;
+        Class<? extends Task> result = instance.getTaskCls(type, className);
+        assertEquals(expResult, result);
+    }
+
+    /**
+     * Test of getUrisLoaderCls method, of class Manager.
+     */
+    @Test
+    public void testGetUrisLoaderCls() throws Exception {
+        System.out.println("getUrisLoaderCls");
+        String className = "com.marklogic.developer.corb.FileUrisLoader";
+        Manager instance = new Manager();
+        Class<? extends UrisLoader> expResult = FileUrisLoader.class;
+        Class<? extends UrisLoader> result = instance.getUrisLoaderCls(className);
+        assertEquals(expResult, result);
+    }
+
+    @Test (expected = ClassNotFoundException.class)
+    public void testGetUrisLoaderCls_badClassname() throws Exception {
+        System.out.println("getUrisLoaderCls");
+        String className = "does.not.Exist";
+        Manager instance = new Manager();
+        Class<? extends UrisLoader> result = instance.getUrisLoaderCls(className);
+    }
+    /**
+     * Test of usage method, of class Manager.
+     */
+    @Test
+    public void testUsage() {
+        System.out.println("usage");
+        Manager instance = new Manager();
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(outContent));
+        instance.usage();
+        assertTrue(outContent.toString().contains("usage"));
+    }
+
+    /**
+     * Test of run method, of class Manager.
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testRun_missingURIS_MODULE_FILE_AND_LOADER() throws Exception {
+        System.out.println("run");
+        Manager instance = new Manager();
+        int result = instance.run();
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testRun_getURILoader_withURIS_MODULE_noContentSource() throws Exception {
+        System.out.println("run");
+        Manager instance = new Manager();
+        instance.options.setUrisModule("someFile.xqy");
+        int result = instance.run();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRun_getURILoader_withURIS_MODULE_invalidCollection() throws Exception {
+        System.out.println("run");
+        Manager instance = new Manager();
+        Properties props = new Properties();
+        instance.contentSource = ContentSourceFactory.newContentSource(new URI(XCC_CONNECTION_URI));
+        instance.options.setUrisModule("someFile.xqy");
+        int result = instance.run();
+    }
+
+    @Test
+    public void testRun_getURILoader_withURIS_MODULE() throws Exception {
+        System.out.println("run");
+        Manager instance = new Manager();
+        ContentSource contentSource = mock(ContentSource.class);
+        Session session = mock(Session.class);
+        ModuleInvoke moduleInvoke = mock(ModuleInvoke.class);
+        ResultSequence res = mock(ResultSequence.class);
+        ResultItem resultItem = mock(ResultItem.class);
+        ResultItem uriCountResult = mock(ResultItem.class);
+        XdmItem batchRefItem = mock(XdmItem.class);
+        XdmItem uriCount = mock(XdmItem.class);
+        when(contentSource.newSession()).thenReturn(session);
+        when(session.newModuleInvoke(anyString())).thenReturn(moduleInvoke);
+        when(session.submitRequest(moduleInvoke)).thenReturn(res);
+        when(res.next()).thenReturn(resultItem).thenReturn(uriCountResult).thenReturn(null);
+        when(resultItem.getItem()).thenReturn(batchRefItem);
+        when(uriCountResult.getItem()).thenReturn(uriCount);
+        when(batchRefItem.asString()).thenReturn("batchRefVal");
+        when(uriCount.asString()).thenReturn("0");
         
-	/**
-	 * Launch the test.
-	 *
-	 * @param args the command line arguments
-	 *
-	 * @generatedBy CodePro at 9/18/15 10:51 AM
-	 */
-	public static void main(String[] args) {
-		new org.junit.runner.JUnitCore().run(ManagerTest.class);
-	}
-	
+        instance.contentSource = contentSource;
+        instance.collection = "Modules";
+        instance.options.setUrisModule("someFile.xqy");
+        int result = instance.run();
+    }
+
+    /**
+     * Test of registerStatusInfo method, of class Manager.
+     */
+    @Test
+    public void testRegisterStatusInfo() throws RequestException {
+        System.out.println("registerStatusInfo");
+        String xccRootValue = "xccRootValue";
+
+        ContentSource contentSource = mock(ContentSource.class);
+        Session session = mock(Session.class);
+        AdhocQuery adhocQuery = mock(AdhocQuery.class);
+        ResultSequence resultSequence = mock(ResultSequence.class);
+        ResultItem first = mock(ResultItem.class);
+        XdmItem firstXdmItem = mock(XdmItem.class);
+        ResultItem second = mock(ResultItem.class);
+        XdmItem secondXdmItem = mock(XdmItem.class);
+
+        when(contentSource.newSession()).thenReturn(session);
+        when(session.newAdhocQuery(anyString())).thenReturn(adhocQuery);
+        when(resultSequence.hasNext()).thenReturn(true, true, false);
+        when(firstXdmItem.asString()).thenReturn("0");
+        when(first.getItem()).thenReturn(firstXdmItem);
+        when(first.getIndex()).thenReturn(0);
+        when(secondXdmItem.asString()).thenReturn(xccRootValue);
+        when(second.getItem()).thenReturn(secondXdmItem);
+        when(second.getIndex()).thenReturn(1);
+        when(resultSequence.next()).thenReturn(first, second);
+        when(session.submitRequest(any(Request.class))).thenReturn(resultSequence);
+
+        Manager instance = new Manager();
+        instance.contentSource = contentSource;
+        instance.registerStatusInfo();
+
+        assertEquals(xccRootValue, instance.options.getXDBC_ROOT());
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(16, records.size());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testRegisterStatusInfo_nullContentSource() {
+        System.out.println("registerStatusInfo");
+        Manager instance = new Manager();
+        instance.registerStatusInfo();
+    }
+
+    /**
+     * Test of logProperties method, of class Manager.
+     */
+    @Test
+    public void testLogProperties() {
+        System.out.println("logProperties");
+        Properties props = new Properties();
+        props.setProperty("key1", "value1");
+        props.setProperty("key2", "value2");
+        Manager instance = new Manager();
+        instance.properties = props;
+        instance.logProperties();
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(props.size(), records.size());
+    }
+
+    @Test
+    public void testLogProperties_nullProperties() {
+        System.out.println("logProperties");
+        Manager instance = new Manager();
+        instance.logProperties();
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(0, records.size());
+    }
+
+    /**
+     * Test of stop method, of class Manager.
+     */
+    @Test
+    public void testStop_0args() {
+        System.out.println("stop");
+        Manager instance = new Manager();
+        instance.stop();
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(Level.INFO, records.get(0).getLevel());
+        assertEquals("cleaning up", records.get(0).getMessage());
+    }
+
+    /**
+     * Test of stop method, of class Manager.
+     */
+    @Test
+    public void testStop_ExecutionException() {
+        System.out.println("stop");
+        ExecutionException e = new ExecutionException("test", new Error());
+        Manager instance = new Manager();
+        instance.stop(e);
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(Level.SEVERE, records.get(0).getLevel());
+        assertEquals("fatal error", records.get(0).getMessage());
+    }
+
 }
