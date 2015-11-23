@@ -117,9 +117,9 @@ public class Manager extends AbstractManager{
 		//now we can start corb. 
 		try {
 			int count = tm.run();
-			if(tm.execError){
+			if (tm.execError){
 				System.exit(2);
-			}else if (count == 0) {
+			} else if (count == 0) {
 				System.exit(9);
 			} else {
 				System.exit(0);
@@ -162,7 +162,7 @@ public class Manager extends AbstractManager{
 		prepareModules();
 		
 		//This is relavant for unit tests only. clear the static map so it gets re-initialized for fresh run
-		if(AbstractTask.MODULE_PROPS != null) AbstractTask.MODULE_PROPS.clear(); 
+		if (AbstractTask.MODULE_PROPS != null) AbstractTask.MODULE_PROPS.clear(); 
 	}
 			
 	protected void initOptions(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
@@ -194,7 +194,7 @@ public class Manager extends AbstractManager{
 		
 		if (processModule == null) processModule = getOption(null, "XQUERY-MODULE");
 		if (preBatchModule == null) preBatchModule = getOption(null,"PRE-BATCH-XQUERY-MODULE");
-    if (postBatchModule == null) postBatchModule = getOption(null,"POST-BATCH-XQUERY-MODULE");
+        if (postBatchModule == null) postBatchModule = getOption(null,"POST-BATCH-XQUERY-MODULE");
 		
 		if (moduleRoot != null) options.setModuleRoot(moduleRoot);
 		if (processModule != null) options.setProcessModule(processModule);
@@ -272,14 +272,14 @@ public class Manager extends AbstractManager{
 		//fix map keys for backward compatibility
 		for(String key : this.properties.stringPropertyNames()) {
 		  String value = this.properties.getProperty(key);
-		  if(key.startsWith("XQUERY-MODULE.") && value != null){
+		  if (key.startsWith("XQUERY-MODULE.") && value != null){
 		  	properties.setProperty(key.replace("XQUERY-MODULE.", "PROCESS-MODULE."), value);
 		  }
 		}
 		
 		for(String key : System.getProperties().stringPropertyNames()) {
 		  String value = System.getProperty(key);
-		  if(key.startsWith("XQUERY-MODULE.") && value != null){
+		  if (key.startsWith("XQUERY-MODULE.") && value != null){
 		  	System.setProperty(key.replace("XQUERY-MODULE.", "PROCESS-MODULE."), value);
 		  }
 		}
@@ -343,7 +343,7 @@ public class Manager extends AbstractManager{
 					LOG.log(Level.SEVERE, "interrupted while waiting for monitor", e);
 				}
 			}
-			if(!execError){
+			if (!execError) {
 				runPostBatchTask(); // post batch tasks
 				LOG.info("all done");
 			}
@@ -367,8 +367,8 @@ public class Manager extends AbstractManager{
 		pool.prestartAllCoreThreads();
 		completionService = new ExecutorCompletionService<String[]>(pool);
 		monitor = new Monitor(pool, completionService, this);
-		Thread monitorThread = new Thread(monitor);
-		return monitorThread;
+		Thread thread = new Thread(monitor);
+		return thread;
 	}
 
 	/**
