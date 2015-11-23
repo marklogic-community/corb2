@@ -14,6 +14,8 @@ import static com.marklogic.developer.corb.TestUtils.createTempDirectory;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -214,29 +216,39 @@ public class PostBatchUpdateFileTaskTest {
         String result = testRemoveDuplicatesAndSort("true");
         List<String> tokens = Arrays.asList(result.split("\n"));
         assertEquals(4,tokens.size());
-        for (String next : new String[]{"a","b","d","z"})
+        for (String next : new String[]{"a","b","d","z"}) {
         	assertTrue(tokens.contains(next));
+        }
     }
     
     @Test
     public void testCall_removeDuplicatesAndSort_trueSort() throws Exception {
         System.out.println("call");
         String result = testRemoveDuplicatesAndSort("true|sort");
-        assertEquals("a\nb\nd\nz\n", result);
+        assertEquals(splitAndAppendNewline("a,b,d,z"), result);
     }
     
     @Test
     public void testCall_removeDuplicatesAndSort_trueOrdered() throws Exception {
         System.out.println("call");
         String result = testRemoveDuplicatesAndSort("true|ordered");
-        assertEquals("z\nd\na\nb\n", result);
+        assertEquals(splitAndAppendNewline("z,d,a,b"), result);
     }
     
     @Test
     public void testCall_removeDuplicatesAndSort_false() throws Exception {
         System.out.println("call");
         String result = testRemoveDuplicatesAndSort("false");
-        assertEquals("z\nd\nd\na\nb\n", result);
+        assertEquals(splitAndAppendNewline("z,d,d,a,b"), result);
+    }
+
+    private String splitAndAppendNewline(String values) {
+        String result = "";
+
+        for (String value: values.split(",")) {
+            result += value + "\n";
+        }
+        return result;
     }
     
     @Test
