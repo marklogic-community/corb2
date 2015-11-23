@@ -152,7 +152,7 @@ public class Manager extends AbstractManager{
 		
 		String collection = getOption(args.length > 1 ? args[1] : null, "COLLECTION-NAME");
 		this.collection = collection != null ? collection : "";
-		
+        
 		initOptions(args);
 		
 		logRuntimeArgs();
@@ -162,7 +162,7 @@ public class Manager extends AbstractManager{
 		prepareModules();
 		
 		//This is relavant for unit tests only. clear the static map so it gets re-initialized for fresh run
-		if (AbstractTask.MODULE_PROPS != null) AbstractTask.MODULE_PROPS.clear(); 
+		if (AbstractTask.MODULE_PROPS != null) { AbstractTask.MODULE_PROPS.clear(); }
 	}
 			
 	protected void initOptions(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException{

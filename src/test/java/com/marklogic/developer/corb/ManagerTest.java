@@ -479,6 +479,7 @@ public class ManagerTest {
     @Test
     public void testInit_nullArgs_properties() throws Exception {
         System.out.println("init");
+        clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
         props.setProperty("BATCH-SIZE", "5");
@@ -488,6 +489,21 @@ public class ManagerTest {
         assertEquals(props, instance.properties);
     }
 
+    @Test
+    public void testInit_blankCollection() throws Exception {
+        System.out.println("init");
+        clearSystemProperties();
+        String[] args = null;
+        Properties props = new Properties();
+        props.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+        //no "COLLECTION-NAME" specified
+        props.setProperty("PROCESS-MODULE", "src/test/resources/mod-print-uri.sjs|ADHOC");
+        
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertEquals("", instance.collection);
+    }
+    
     @Test
     public void testInit_nullArgs_emptyProperties() throws Exception {
         System.out.println("init");
