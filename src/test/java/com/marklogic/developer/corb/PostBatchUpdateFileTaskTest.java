@@ -3,6 +3,9 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.AbstractTask.NEWLINE;
+
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -213,7 +216,10 @@ public class PostBatchUpdateFileTaskTest {
     public void testCall_removeDuplicatesAndSort_true() throws Exception {
         System.out.println("call");
         String result = testRemoveDuplicatesAndSort("true");
-        assertEquals("a\nb\nd\nz\n", result);
+        List<String> tokens = Arrays.asList(result.split("\n"));
+        assertEquals(4,tokens.size());
+        for (String next : new String[]{"a","b","d","d"})
+        	assertTrue(tokens.contains(next));
     }
     
     @Test
