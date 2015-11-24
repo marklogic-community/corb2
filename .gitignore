@@ -5,3 +5,5 @@
 build/
 .gradle/
 .project
+/.nb-gradle/
+/eclipse_bin/

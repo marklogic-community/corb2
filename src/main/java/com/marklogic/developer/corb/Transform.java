@@ -23,19 +23,21 @@ import com.marklogic.xcc.ResultSequence;
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * @author Bhagat Bandlamudi, MarkLogic Corporation
- *
+ * 
  */
 public class Transform extends AbstractTask {
-    
-	protected String processResult(ResultSequence seq) throws CorbException{
+
+	@Override
+	protected String processResult(ResultSequence seq) throws CorbException {
 		return TRUE;
 	}
-	
-    public String call() throws Exception {
-    	try{
-    		return invokeModule();
-    	}finally{
-    		cleanup();
-    	}
-    }
+
+	@Override
+	public String[] call() throws Exception {
+		try {
+			return invokeModule();
+		} finally {
+			cleanup();
+		}
+	}
 }

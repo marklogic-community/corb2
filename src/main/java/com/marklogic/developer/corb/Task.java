@@ -13,28 +13,34 @@ import com.marklogic.xcc.ContentSource;
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  */
-public interface Task extends Callable<String> {
-	
+public interface Task extends Callable<String[]> {
+
 	public void setContentSource(ContentSource cs);
-	
+
 	/**
 	 * XQUERY-MODULE,PRE-BATCH-MODULE,POST-BATCH-MODULE,INIT-MODULE
+	 * 
 	 * @param moduleType
 	 */
 	public void setModuleType(String moduleType);
-		
+
 	public void setModuleURI(String moduleURI);
-	
+
 	public void setAdhocQuery(String adhocQuery);
-	
-	public void setAdhocQueryLanguage(String language);
-		
+
+	public void setQueryLanguage(String language);
+
 	/**
-	 * If additional data is sent from CUSTOM URI module, it is available in properties
-	 * with key URIS_BATCH_REF 
+	 * If additional data is sent from CUSTOM URI module, it is available in
+	 * properties with key URIS_BATCH_REF
+	 * 
 	 * @param props
 	 */
 	public void setProperties(Properties props);
+
+	public void setInputURI(String[] inputUri);
+
+	public void setFailOnError(boolean failOnError);
 	
-	public void setInputURI(String inputUri);
+	public void setExportDir(String exportFileDir);
 }
