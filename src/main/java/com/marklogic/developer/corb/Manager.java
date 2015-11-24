@@ -106,12 +106,12 @@ public class Manager extends AbstractManager{
 	 * @throws IllegalAccessException
 	 * @throws InstantiationException
 	 */
-	public static void main(String[] args){
+	public static void main(String[] args) {
 		Manager tm = new Manager();
 		try {
 			tm.init(args);
-		} catch(Exception exc){
-			LOG.log(Level.SEVERE, "Error initializing CORB",exc);
+		} catch(Exception exc) {
+			LOG.log(Level.SEVERE, "Error initializing CORB", exc);
 			System.exit(1);
 		}
 		//now we can start corb. 
@@ -125,7 +125,7 @@ public class Manager extends AbstractManager{
 				System.exit(0);
 			}
 		} catch(Exception exc){
-			LOG.log(Level.SEVERE, "Error while running CORB",exc);
+			LOG.log(Level.SEVERE, "Error while running CORB", exc);
 			System.exit(2);
 		}
 	}
@@ -183,7 +183,7 @@ public class Manager extends AbstractManager{
 		String urisFile = getOption(args.length > 15 ? args[15] : null, "URIS-FILE");
 		
 		String urisLoader = getOption(null, "URIS-LOADER");
-		if (urisLoader != null) options.setUrisLoaderClass(getUrisLoaderCls(urisLoader));
+		if (urisLoader != null) { options.setUrisLoaderClass(getUrisLoaderCls(urisLoader)); }
 		
 		String initModule = getOption(null, "INIT-MODULE");
 		String initTask = getOption(null, "INIT-TASK");
@@ -192,9 +192,9 @@ public class Manager extends AbstractManager{
 		String failOnError = getOption(null, "FAIL-ON-ERROR");
 		String errorFileName = getOption(null, "ERROR-FILE-NAME");
 		
-		if (processModule == null) processModule = getOption(null, "XQUERY-MODULE");
-		if (preBatchModule == null) preBatchModule = getOption(null,"PRE-BATCH-XQUERY-MODULE");
-        if (postBatchModule == null) postBatchModule = getOption(null,"POST-BATCH-XQUERY-MODULE");
+		if (processModule == null) { processModule = getOption(null, "XQUERY-MODULE"); }
+		if (preBatchModule == null) { preBatchModule = getOption(null,"PRE-BATCH-XQUERY-MODULE"); }
+        if (postBatchModule == null) { postBatchModule = getOption(null,"POST-BATCH-XQUERY-MODULE"); }
 		
 		if (moduleRoot != null) options.setModuleRoot(moduleRoot);
 		if (processModule != null) options.setProcessModule(processModule);
@@ -216,7 +216,7 @@ public class Manager extends AbstractManager{
 			this.properties.put("ERROR-FILE-NAME", errorFileName);
 		}
 		
-		if (urisFile != null && urisFile.trim().length() > 0) {
+		if (urisFile != null) {
 			File f = new File(options.getUrisFile());
 			if (!f.exists()) {
 				throw new IllegalArgumentException("Uris file " + urisFile + " not found");

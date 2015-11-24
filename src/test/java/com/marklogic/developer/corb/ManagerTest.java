@@ -58,7 +58,7 @@ public class ManagerTest {
     public static final String POST_BATCH_MODULE = "src/test/resources/postBatchModule.xqy|ADHOC";
     public static final String POST_BATCH_TASK = "com.marklogic.developer.corb.PostBatchUpdateFileTask";
     public static String EXPORT_FILE_DIR = null;
-    public static final String URIS_FILE = "src/test/resources/uriInputFile.txt";
+    public static final String URIS_FILE = "src/test/resources/uris-file.txt";
 
     /**
      * Functional test for the Manager using program arguments.
@@ -70,27 +70,11 @@ public class ManagerTest {
     public void testManagerUsingProgArgs()
             throws Exception {
         clearSystemProperties();
-        String xccConnection = XCC_CONNECTION_URI;
-        String collection = COLLECTION_NAME;
-        String xqueryModuleAlsoCalledTransformModule = XQUERY_MODULE;
-        String threadCount = THREAD_COUNT;
-        String urisModuleAlsoCalledSelector = "src/test/resources/selector.xqy|ADHOC";
-        String modulesRoot = MODULES_ROOT;
-        String modulesDatabase = MODULES_DATABASE;
-        String install = "true";
-        String processTask = PROCESS_TASK;
-        String preBatchModule = PRE_BATCH_MODULE;
-        String preBatchTask = PRE_BATCH_TASK;
-        String postXqueryModule = POST_BATCH_MODULE;
-        String postXqueryTask = POST_BATCH_TASK;
-        String exportFileDir = EXPORT_FILE_DIR;
         String exportFileName = "testManagerUsingProgArgs.txt";
-
-        String[] args = {xccConnection, collection, xqueryModuleAlsoCalledTransformModule, threadCount,
-            urisModuleAlsoCalledSelector, modulesRoot, modulesDatabase, install, processTask,
-            preBatchModule, preBatchTask, postXqueryModule, postXqueryTask, exportFileDir,
-            exportFileName};
-
+        String exportFileDir = EXPORT_FILE_DIR;
+        String[] args = getDefaultArgs();
+        args[11] = exportFileName;
+        
         exit.expectSystemExit();
         Manager.main(args);
 
@@ -393,7 +377,7 @@ public class ManagerTest {
         System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
         System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR);
         System.setProperty("EXPORT-FILE-NAME", "testManagerJavaScriptTransform.txt");
-        System.setProperty("URIS-FILE", "src/test/resources/uris-file.txt");
+        System.setProperty("URIS-FILE", URIS_FILE);
         System.setProperty("XQUERY-MODULE.foo", "bar1");
         String[] args = {};
 
@@ -498,12 +482,26 @@ public class ManagerTest {
         props.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
         //no "COLLECTION-NAME" specified
         props.setProperty("PROCESS-MODULE", "src/test/resources/mod-print-uri.sjs|ADHOC");
-        
+
         Manager instance = new Manager();
         instance.init(args, props);
         assertEquals("", instance.collection);
     }
-    
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInit_urisFileDoesNoteExist() throws Exception {
+        System.out.println("init");
+        clearSystemProperties();
+        String[] args = null;
+        Properties props = new Properties();
+        props.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+        props.setProperty("PROCESS-MODULE", "src/test/resources/mod-print-uri.sjs|ADHOC");
+        props.setProperty("URIS-FILE", "does/not/exist");
+
+        Manager instance = new Manager();
+        instance.init(args, props);
+    }
+
     @Test
     public void testInit_nullArgs_emptyProperties() throws Exception {
         System.out.println("init");
@@ -514,16 +512,57 @@ public class ManagerTest {
         instance.init(args, props);
         assertEquals(props, instance.properties);
     }
-    
+
     /**
      * Test of initOptions method, of class Manager.
      */
-    @Test (expected = NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void testInitOptions() throws Exception {
         System.out.println("initOptions");
         String[] args = null;
         Manager instance = new Manager();
         instance.initOptions(args);
+    }
+
+    @Test
+    public void testInitOptions_urisFileIsBlank() throws Exception {
+        System.out.println("init");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[15] = "      ";
+
+        Properties props = new Properties();
+
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertNull(instance.options.getUrisFile());
+    }
+
+    @Test
+    public void testInitOptions_urisFileIsNull() throws Exception {
+        System.out.println("init");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[15] = null;
+
+        Properties props = new Properties();
+
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertNull(instance.options.getUrisFile());
+    }
+
+    @Test
+    public void testInitOptions_customUrisLoader() throws Exception {
+        System.out.println("init");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        String loader =  "com.marklogic.developer.corb.FileUrisLoader";
+        Properties props = new Properties();
+        props.setProperty("URIS-LOADER",loader);
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertEquals(loader, instance.options.getUrisLoaderClass().getName());
     }
 
     /**
@@ -553,13 +592,14 @@ public class ManagerTest {
         assertEquals(expResult, result);
     }
 
-    @Test (expected = ClassNotFoundException.class)
+    @Test(expected = ClassNotFoundException.class)
     public void testGetUrisLoaderCls_badClassname() throws Exception {
         System.out.println("getUrisLoaderCls");
         String className = "does.not.Exist";
         Manager instance = new Manager();
         Class<? extends UrisLoader> result = instance.getUrisLoaderCls(className);
     }
+
     /**
      * Test of usage method, of class Manager.
      */
@@ -621,7 +661,7 @@ public class ManagerTest {
         when(uriCountResult.getItem()).thenReturn(uriCount);
         when(batchRefItem.asString()).thenReturn("batchRefVal");
         when(uriCount.asString()).thenReturn("0");
-        
+
         instance.contentSource = contentSource;
         instance.collection = "Modules";
         instance.options.setUrisModule("someFile.xqy");
@@ -725,4 +765,16 @@ public class ManagerTest {
         assertEquals("fatal error", records.get(0).getMessage());
     }
 
+    public String[] getDefaultArgs() {
+        String[] args = {XCC_CONNECTION_URI, COLLECTION_NAME, 
+        XQUERY_MODULE, THREAD_COUNT, 
+        "src/test/resources/selector.xqy|ADHOC",
+        MODULES_ROOT, MODULES_DATABASE, 
+        "false", PROCESS_TASK,
+        PRE_BATCH_MODULE, PRE_BATCH_TASK,
+        POST_BATCH_MODULE, POST_BATCH_TASK, 
+        EXPORT_FILE_DIR, "exportFile.out",
+        URIS_FILE};
+        return args;
+    }
 }
