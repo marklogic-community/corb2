@@ -23,7 +23,7 @@ Corb needs one or more of the following parameters as (If specified in more than
 3. As properties file in the class path specified using `-DOPTIONS-FILE=myjob.properties`. Relative and full file system paths are also supported.
 
 > Note: Any or all of the properties can be specified as java system properties or key value pairs in properties file.  
-> Note: Corb exit codes `0` - successful, `9` - nothing to process, `1` - initialization or connection error and `2` - execution error
+> Note: Corb exit codes `0` - successful, `0` - nothing to process (ref: EXIT-CODE-NO-URIS), `1` - initialization or connection error and `2` - execution error
 
 ### Options  
 * **XCC-CONNECTION-URI** (Connection string to MarkLogic XDBC Server)
@@ -71,6 +71,7 @@ Corb needs one or more of the following parameters as (If specified in more than
 * **ERROR-FILE-NAME** (Used when FAIL-ON-ERROR is false. If specifiedf true, removes duplicates from , the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to seperate URI and error message)  
 * **EXPORT-FILE-REMOVE-DUPLICATES** (If `true`, duplicate lines from EXPORT-FILE-NAME will be removed. If `true|sorted`, lines will be sorted. If `true|ordered`, lines will not be reordered after removing duplicates.)  
 * **MAX_OPTS_FROM_MODULE** (Default 10. Max number of custom inputs from the URIS-MODULE to other modules)  
+* **EXIT-CODE-NO-URIS** (Default 0. Returns this exit code when there is nothing to process.)  
 
 ### Alternate XCC connection configuration
 * **XCC-USERNAME** (Required if XCC-CONNECTION-URI is not specified)
