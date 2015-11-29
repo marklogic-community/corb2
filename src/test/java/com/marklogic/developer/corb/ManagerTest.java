@@ -1,6 +1,7 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
+import com.marklogic.developer.corb.Manager.CallerBlocksPolicy;
 import java.io.File;
 import java.io.FileReader;
 import org.junit.*;
@@ -24,7 +25,11 @@ import java.io.PrintStream;
 import java.net.URI;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -32,6 +37,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import org.mockito.exceptions.base.MockitoException;
 
 /**
  * The class <code>ManagerTest</code> contains tests for the class
@@ -58,7 +64,10 @@ public class ManagerTest {
     public static final String POST_BATCH_MODULE = "src/test/resources/postBatchModule.xqy|ADHOC";
     public static final String POST_BATCH_TASK = "com.marklogic.developer.corb.PostBatchUpdateFileTask";
     public static String EXPORT_FILE_DIR = null;
+    public static final String EXPORT_FILE_NAME = "exportFile.out";
     public static final String URIS_FILE = "src/test/resources/uris-file.txt";
+
+    private static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
 
     /**
      * Functional test for the Manager using program arguments.
@@ -74,7 +83,7 @@ public class ManagerTest {
         String exportFileDir = EXPORT_FILE_DIR;
         String[] args = getDefaultArgs();
         args[11] = exportFileName;
-        
+
         exit.expectSystemExit();
         Manager.main(args);
 
@@ -443,13 +452,74 @@ public class ManagerTest {
         new org.junit.runner.JUnitCore().run(ManagerTest.class);
     }
 
+    @Test(expected = NullPointerException.class)
+    public void testRejectedExecution_npe() {
+        Runnable r = mock(Runnable.class);
+        ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
+        Manager manager = new Manager();
+        RejectedExecutionHandler cbp = manager.new CallerBlocksPolicy();
+        cbp.rejectedExecution(r, threadPool);
+    }
+
+    @Test
+    public void testRejectedExecution() {
+        Runnable r = mock(Runnable.class);
+        ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
+        BlockingQueue queue = mock(BlockingQueue.class);
+        when(threadPool.getQueue()).thenReturn(queue).thenThrow(new NullPointerException());
+        Manager manager = new Manager();
+        RejectedExecutionHandler cbp = manager.new CallerBlocksPolicy();
+        cbp.rejectedExecution(r, threadPool);
+
+    }
+
+    @Test(expected = MockitoException.class)
+    public void testRejectedExecution_rejectedExecution() {
+        Runnable r = mock(Runnable.class);
+        ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
+        BlockingQueue queue = mock(BlockingQueue.class);
+        when(threadPool.getQueue()).thenThrow(new InterruptedException());
+        threadPool.getQueue();
+        Manager manager = new Manager();
+        RejectedExecutionHandler cbp = manager.new CallerBlocksPolicy();
+        cbp.rejectedExecution(r, threadPool);
+    }
+
+    @Test
+    public void testRejectedExecution_warningIsTrueAndQueIsNotNull() {
+        Runnable r = mock(Runnable.class);
+        ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
+        BlockingQueue queue = mock(BlockingQueue.class);
+        when(threadPool.getQueue()).thenReturn(queue).thenThrow(new NullPointerException());
+
+        Manager manager = new Manager();
+        RejectedExecutionHandler cbp = manager.new CallerBlocksPolicy();
+        cbp.rejectedExecution(r, threadPool);
+        cbp.rejectedExecution(r, threadPool);
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(Level.INFO, records.get(0).getLevel());
+        assertEquals("queue is full: size = {0} (will only appear once)", records.get(0).getMessage());
+        assertEquals(1, records.size());
+    }
+
     /**
      * Test of main method, of class Manager.
      */
     @Test
-    public void testMain() {
+    public void testMain_nullArgs() {
         System.out.println("main");
         String[] args = null;
+        exit.expectSystemExit();
+        Manager.main(args);
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(Level.SEVERE, records.get(0).getLevel());
+        assertEquals("Error initializing CORB", records.get(0).getMessage());
+    }
+
+    @Test
+    public void testMain_exception() {
+        System.out.println("main");
+        String[] args = getDefaultArgs();
         exit.expectSystemExit();
         Manager.main(args);
         List<LogRecord> records = testLogger.getLogRecords();
@@ -517,10 +587,27 @@ public class ManagerTest {
      * Test of initOptions method, of class Manager.
      */
     @Test(expected = NullPointerException.class)
-    public void testInitOptions() throws Exception {
+    public void testInitOptions_nullArgs() throws Exception {
         System.out.println("initOptions");
         String[] args = null;
         Manager instance = new Manager();
+        instance.initOptions(args);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testInitOptions() throws Exception {
+        System.out.println("initOptions");
+        String[] args = {};
+        Manager instance = new Manager();
+        instance.initOptions(args);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testInitOptions_withEmptyProperties() throws Exception {
+        System.out.println("initOptions");
+        String[] args = null;
+        Manager instance = new Manager();
+        instance.properties = new Properties();
         instance.initOptions(args);
     }
 
@@ -540,7 +627,7 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_urisFileIsNull() throws Exception {
-        System.out.println("init");
+        System.out.println("initOptions");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[15] = null;
@@ -553,16 +640,331 @@ public class ManagerTest {
     }
 
     @Test
+    public void testInitOptions_setXQUERY_MODULE_property() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[2] = null;
+
+        Properties props = new Properties();
+        props.setProperty("XQUERY-MODULE", PROCESS_MODULE);
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
+    }
+
+    @Test
+    public void testInitOptions_setPROCESS_MODULE_property() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[2] = "";
+
+        Properties props = new Properties();
+        props.setProperty("PROCESS-MODULE", PROCESS_MODULE);
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
+    }
+
+    @Test
+    public void testInitOptions_missingPROCESS_MODULE() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[2] = "";
+
+        Properties props = new Properties();
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertNull(instance.options.getProcessModule());
+    }
+
+    @Test
+    public void testInitOptions_normalizeLegacySystemProperties() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        System.setProperty("XQUERY-MODULE", PROCESS_MODULE);
+        System.setProperty("XQUERY-MODULE.foo", "process-bar");
+        System.setProperty("PRE-BATCH-XQUERY-MODULE", PRE_BATCH_MODULE);
+        System.setProperty("PRE-BATCH-XQUERY-MODULE.foo", "pre-bar");
+        System.setProperty("POST-BATCH-XQUERY-MODULE", POST_BATCH_MODULE);
+        System.setProperty("POST-BATCH-XQUERY-MODULE.foo", "post-bar");
+
+        String[] args = getDefaultArgs();
+        args[2] = null; //process-module
+        args[11] = null; //pre-batch-module
+        args[13] = null; //post-batch-module
+
+        Properties props = new Properties();
+
+        Manager instance = new Manager();
+        instance.init(args, props);
+
+        assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
+        assertEquals("process-bar", System.getProperty("PROCESS-MODULE.foo"));
+        assertEquals(PRE_BATCH_MODULE, instance.options.getPreBatchModule());
+        assertEquals("pre-bar", System.getProperty("PRE-BATCH-MODULE.foo"));
+        assertEquals(POST_BATCH_MODULE, instance.options.getPostBatchModule());
+        assertEquals("post-bar", System.getProperty("POST-BATCH-MODULE.foo"));
+    }
+
+    @Test
+    public void testInitOptions_normalizeLegacyProperties() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[2] = null; //process-module
+        args[11] = null; //pre-batch-module
+        args[13] = null; //post-batch-module
+
+        Properties props = new Properties();
+        props.setProperty("XQUERY-MODULE", PROCESS_MODULE);
+        props.setProperty("XQUERY-MODULE.foo", "process-bar");
+        props.setProperty("PRE-BATCH-XQUERY-MODULE", PRE_BATCH_MODULE);
+        props.setProperty("PRE-BATCH-XQUERY-MODULE.foo", "pre-bar");
+        props.setProperty("POST-BATCH-XQUERY-MODULE", POST_BATCH_MODULE);
+        props.setProperty("POST-BATCH-XQUERY-MODULE.foo", "post-bar");
+
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
+        assertEquals("process-bar", instance.properties.getProperty("PROCESS-MODULE.foo"));
+        assertEquals(PRE_BATCH_MODULE, instance.options.getPreBatchModule());
+        assertEquals("pre-bar", instance.properties.getProperty("PRE-BATCH-MODULE.foo"));
+        assertEquals(POST_BATCH_MODULE, instance.options.getPostBatchModule());
+        assertEquals("post-bar", instance.properties.getProperty("POST-BATCH-MODULE.foo"));
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void testInitOptions_batchSize_parseError() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        Properties props = new Properties();
+        props.setProperty("BATCH-SIZE", "one");
+        Manager instance = new Manager();
+        instance.init(args, props);
+    }
+
+    @Test
+    public void testInitOptions_batchSize() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        Properties props = new Properties();
+        props.setProperty("BATCH-SIZE", "5");
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertEquals(5, instance.options.getBatchSize());
+    }
+
+    @Test
+    public void testInit_failOnError_falseCaseInsensitive() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        System.setProperty("FAIL-ON-ERROR", "False");
+        String[] args = getDefaultArgs();
+        Properties props = new Properties();
+
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertFalse(instance.options.isFailOnError());
+    }
+
+    @Test
+    public void testInit_failOnErrorInvalidValue() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        System.setProperty("FAIL-ON-ERROR", "No");
+        String[] args = getDefaultArgs();
+        Properties props = new Properties();
+
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertTrue(instance.options.isFailOnError());
+    }
+
+    @Test
+    public void testInitOptions_ensurePropertiesAreSet() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        System.setProperty("ERROR-FILE-NAME", EXPORT_FILE_DIR + "/out");
+        System.setProperty("EXPORT-FILE-PART-EXT", "pt");
+        String[] args = getDefaultArgs();
+        Properties props = new Properties();
+
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertEquals(1, instance.options.getBatchSize());
+        assertEquals(EXPORT_FILE_DIR, instance.properties.getProperty("EXPORT-FILE-DIR"));
+        assertEquals(EXPORT_FILE_NAME, instance.properties.getProperty("EXPORT-FILE-NAME"));
+        assertEquals(EXPORT_FILE_DIR + "/out", instance.properties.getProperty("ERROR-FILE-NAME"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInitOptions_exportDirNotExists() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+
+        String[] args = getDefaultArgs();
+        args[13] = "/does/not/exist";
+
+        Properties props = new Properties();
+        Manager instance = new Manager();
+        instance.init(args, props);
+    }
+
+    @Test
+    public void testInitOptions_exportFileAndErrorFileExists() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        String errorFilename = "error.txt";
+        File errorFile = new File(EXPORT_FILE_DIR, errorFilename);
+        errorFile.createNewFile();
+        File exportFile = new File(EXPORT_FILE_DIR, EXPORT_FILE_NAME);
+        exportFile.createNewFile();
+        String[] args = getDefaultArgs();
+
+        Properties props = new Properties();
+        props.setProperty("ERROR-FILE-NAME", errorFilename);
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertFalse(errorFile.exists());
+        assertFalse(exportFile.exists());
+    }
+
+    @Test
+    public void testInitOptions_clearExportFilePartExt() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+
+        System.setProperty("EXPORT-FILE-PART-EXT", "exp");
+        String[] args = getDefaultArgs();
+        args[12] = null;
+        Properties props = new Properties();
+        props.setProperty("EXPORT-FILE-PART-EXT", "expt");
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertNull(instance.properties.getProperty("EXPORT-FILE-PART-EXT"));
+        assertNull(System.getProperty("EXPORT-FILE-PART-EXT"));
+    }
+
+    @Test
+    public void testInitOptions_defaultOptions() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        //args[2] = null;
+        args[3] = null;
+        args[4] = null;
+        args[5] = null;
+        args[6] = null;
+        args[7] = null;
+        args[8] = null;
+        args[9] = null;
+        args[10] = null;
+        args[11] = null;
+        args[12] = null;
+        args[13] = null;
+        args[14] = null;
+        args[15] = null;
+        Properties props = new Properties();
+
+        Manager instance = new Manager();
+        instance.init(args, props);
+
+        assertNull(instance.properties.getProperty("PROCESS-TASK"));
+        assertFalse(instance.options.isDoInstall());
+        assertNull(instance.options.getUrisModule());
+        assertEquals("Modules", instance.options.getModulesDatabase());
+        assertNull(instance.options.getUrisFile());
+        assertEquals(1, instance.options.getBatchSize());
+        assertTrue(instance.options.isFailOnError());
+        assertNull(instance.properties.getProperty("EXPORT-FILE-DIR"));
+        assertNull(instance.properties.getProperty("EXPORT-FILE-NAME"));
+        assertNull(instance.properties.getProperty("ERROR-FILE-NAME"));
+        assertNull(instance.options.getInitModule());
+        assertNull(instance.options.getInitTaskClass());
+        assertNull(instance.options.getPreBatchModule());
+        assertNull(instance.options.getPreBatchTaskClass());
+        assertNull(instance.options.getPostBatchModule());
+        assertNull(instance.options.getPostBatchTaskClass());
+        assertNull(instance.properties.getProperty("EXPORT-FILE-PART-EXT"));
+        assertNull(System.getProperty("EXPORT-FILE-PART-EXT"));
+    }
+
+    @Test
+    public void testInitOptions_initModule() throws Exception {
+        System.out.println("init");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        Properties props = new Properties();
+        props.setProperty("INIT-MODULE", "initModule");
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertEquals("initModule", instance.options.getInitModule());
+    }
+
+    @Test
+    public void testInitOptions_processTaskClass() throws Exception {
+        System.out.println("init");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        Properties props = new Properties();
+        props.setProperty("INIT-TASK", PROCESS_TASK);
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertEquals(PROCESS_TASK, instance.options.getProcessTaskClass().getName());
+    }
+
+    @Test
     public void testInitOptions_customUrisLoader() throws Exception {
         System.out.println("init");
         clearSystemProperties();
         String[] args = getDefaultArgs();
-        String loader =  "com.marklogic.developer.corb.FileUrisLoader";
+        String loader = "com.marklogic.developer.corb.FileUrisLoader";
         Properties props = new Properties();
-        props.setProperty("URIS-LOADER",loader);
+        props.setProperty("URIS-LOADER", loader);
         Manager instance = new Manager();
         instance.init(args, props);
         assertEquals(loader, instance.options.getUrisLoaderClass().getName());
+    }
+
+    @Test
+    public void testNormalizeLegacyProperties_whenPropertiesIsNull() {
+        System.out.println("normalizeLegacyProperties");
+        Manager manager = new Manager();
+        manager.properties = null;
+        manager.normalizeLegacyProperties();
+        assertNull(manager.properties);
+    }
+
+    @Test
+    public void testNormalizeLegacyProperties() {
+        System.out.println("normalizeLegacyProperties");
+        Properties props = new Properties();
+        props.setProperty("XQUERY-MODULE", "foo");
+        props.setProperty("XQUERY-MODULE.bar", "baz");
+        Manager manager = new Manager();
+        manager.properties = props;
+        manager.normalizeLegacyProperties();
+
+        assertEquals("foo", manager.properties.getProperty("PROCESS-MODULE"));
+        assertEquals("baz", manager.properties.getProperty("PROCESS-MODULE.bar"));
+    }
+
+    @Test
+    public void testNormalizeLegacyProperties_precedenceChecks() {
+        System.out.println("normalizeLegacyProperties");
+        Properties props = new Properties();
+        props.setProperty("PROCESS-MODULE.bar", "foo");
+        props.setProperty("XQUERY-MODULE.bar", "baz");
+        Manager manager = new Manager();
+        manager.properties = props;
+        manager.normalizeLegacyProperties();
+
+        assertEquals("foo", manager.properties.getProperty("PROCESS-MODULE.bar"));
     }
 
     /**
@@ -579,6 +981,17 @@ public class ManagerTest {
         assertEquals(expResult, result);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetTaskCls_notTaskClass() throws Exception {
+        System.out.println("getTaskCls");
+        String type = "";
+        String className = "java.lang.String";
+        Manager instance = new Manager();
+        Class<? extends Task> expResult = Transform.class;
+        Class<? extends Task> result = instance.getTaskCls(type, className);
+        assertEquals(expResult, result);
+    }
+
     /**
      * Test of getUrisLoaderCls method, of class Manager.
      */
@@ -586,6 +999,16 @@ public class ManagerTest {
     public void testGetUrisLoaderCls() throws Exception {
         System.out.println("getUrisLoaderCls");
         String className = "com.marklogic.developer.corb.FileUrisLoader";
+        Manager instance = new Manager();
+        Class<? extends UrisLoader> expResult = FileUrisLoader.class;
+        Class<? extends UrisLoader> result = instance.getUrisLoaderCls(className);
+        assertEquals(expResult, result);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetUrisLoaderCls_notUrisClass() throws Exception {
+        System.out.println("getUrisLoaderCls");
+        String className = "java.lang.String";
         Manager instance = new Manager();
         Class<? extends UrisLoader> expResult = FileUrisLoader.class;
         Class<? extends UrisLoader> result = instance.getUrisLoaderCls(className);
@@ -764,17 +1187,24 @@ public class ManagerTest {
         assertEquals(Level.SEVERE, records.get(0).getLevel());
         assertEquals("fatal error", records.get(0).getMessage());
     }
-
+    
     public String[] getDefaultArgs() {
-        String[] args = {XCC_CONNECTION_URI, COLLECTION_NAME, 
-        XQUERY_MODULE, THREAD_COUNT, 
-        "src/test/resources/selector.xqy|ADHOC",
-        MODULES_ROOT, MODULES_DATABASE, 
-        "false", PROCESS_TASK,
-        PRE_BATCH_MODULE, PRE_BATCH_TASK,
-        POST_BATCH_MODULE, POST_BATCH_TASK, 
-        EXPORT_FILE_DIR, "exportFile.out",
-        URIS_FILE};
+        String[] args = {XCC_CONNECTION_URI,
+            COLLECTION_NAME,
+            XQUERY_MODULE,
+            THREAD_COUNT,
+            "src/test/resources/selector.xqy|ADHOC",
+            MODULES_ROOT,
+            MODULES_DATABASE,
+            "false",
+            PROCESS_TASK,
+            PRE_BATCH_MODULE,
+            PRE_BATCH_TASK,
+            POST_BATCH_MODULE,
+            POST_BATCH_TASK,
+            EXPORT_FILE_DIR,
+            EXPORT_FILE_NAME,
+            URIS_FILE};
         return args;
     }
 }

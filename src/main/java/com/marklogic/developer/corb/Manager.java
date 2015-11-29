@@ -50,6 +50,8 @@ import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.types.XdmItem;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Michael Blakeley, MarkLogic Corporation
@@ -69,6 +71,7 @@ public class Manager extends AbstractManager{
 	private boolean execError=false;
 	
 	private static int EXIT_CODE_NO_URIS = 0;
+
 
 	private static final Logger LOG = Logger.getLogger(Manager.class.getSimpleName());
 		
@@ -152,8 +155,8 @@ public class Manager extends AbstractManager{
 		
 		initURI(args.length > 0 ? args[0] : null);
 		
-		String collection = getOption(args.length > 1 ? args[1] : null, "COLLECTION-NAME");
-		this.collection = collection != null ? collection : "";
+		String collectionName = getOption(args.length > 1 ? args[1] : null, "COLLECTION-NAME");
+		this.collection = collectionName != null ? collectionName : "";
         
 		initOptions(args);
 		
@@ -203,19 +206,20 @@ public class Manager extends AbstractManager{
 		String failOnError = getOption(null, "FAIL-ON-ERROR");
 		String errorFileName = getOption(null, "ERROR-FILE-NAME");
 		
+        //Check legacy properties keys, for backwards compatability
 		if (processModule == null) { processModule = getOption(null, "XQUERY-MODULE"); }
-		if (preBatchModule == null) { preBatchModule = getOption(null,"PRE-BATCH-XQUERY-MODULE"); }
-        if (postBatchModule == null) { postBatchModule = getOption(null,"POST-BATCH-XQUERY-MODULE"); }
+		if (preBatchModule == null) { preBatchModule = getOption(null, "PRE-BATCH-XQUERY-MODULE"); }
+        if (postBatchModule == null) { postBatchModule = getOption(null, "POST-BATCH-XQUERY-MODULE"); }
 		
-		if (moduleRoot != null) options.setModuleRoot(moduleRoot);
-		if (processModule != null) options.setProcessModule(processModule);
-		if (threadCount != null) options.setThreadCount(Integer.parseInt(threadCount));
-		if (urisModule != null) options.setUrisModule(urisModule);
-		if (modulesDatabase != null) options.setModulesDatabase(modulesDatabase);
-		if (install != null && (install.equalsIgnoreCase("true") || install.equals("1"))) options.setDoInstall(true);
-		if (urisFile != null) options.setUrisFile(urisFile);
-		if (batchSize != null) options.setBatchSize(Integer.parseInt(batchSize));
-		if (failOnError != null && (failOnError.equalsIgnoreCase("false"))) options.setFailOnError(false);
+		if (moduleRoot != null) { options.setModuleRoot(moduleRoot); }
+		if (processModule != null) { options.setProcessModule(processModule); }
+		if (threadCount != null) { options.setThreadCount(Integer.parseInt(threadCount)); }
+		if (urisModule != null) { options.setUrisModule(urisModule); }
+		if (modulesDatabase != null) { options.setModulesDatabase(modulesDatabase); }
+		if (install != null && (install.equalsIgnoreCase("true") || install.equals("1"))) { options.setDoInstall(true); }
+		if (urisFile != null) { options.setUrisFile(urisFile); }
+		if (batchSize != null) { options.setBatchSize(Integer.parseInt(batchSize)); }
+		if (failOnError != null && (failOnError.equalsIgnoreCase("false"))) { options.setFailOnError(false); }
 		
 		if (!this.properties.containsKey("EXPORT-FILE-DIR") && exportFileDir != null) {
 			this.properties.put("EXPORT-FILE-DIR", exportFileDir);
@@ -234,26 +238,26 @@ public class Manager extends AbstractManager{
 			}
 		}
 		
-		if (initModule != null) options.setInitModule(initModule);
-		if (initTask != null) options.setInitTaskClass(getTaskCls("INIT-TASK",initTask));
+		if (initModule != null) { options.setInitModule(initModule); }
+		if (initTask != null) { options.setInitTaskClass(getTaskCls("INIT-TASK", initTask)); }
 				
 		// java class for processing individual tasks.
 		// If specified, it is used instead of xquery module, but xquery module is
 		// still required.
-		if (processTask != null) options.setProcessTaskClass(getTaskCls("PROCESS-TASK",processTask));
+		if (processTask != null) { options.setProcessTaskClass(getTaskCls("PROCESS-TASK", processTask)); }
 		if (null == options.getProcessTaskClass() && null == options.getProcessModule()) {
 			throw new NullPointerException("PROCESS-TASK or PROCESS-MODULE must be specified");
 		}
 		
-		if (preBatchModule != null) options.setPreBatchModule(preBatchModule);
-		if (preBatchTask != null) options.setPreBatchTaskClass(getTaskCls("PRE-BATCH-TASK",preBatchTask));
+		if (preBatchModule != null) { options.setPreBatchModule(preBatchModule); }
+		if (preBatchTask != null) { options.setPreBatchTaskClass(getTaskCls("PRE-BATCH-TASK", preBatchTask)); }
 		
-		if (postBatchModule != null) options.setPostBatchModule(postBatchModule);
-		if (postBatchTask != null) options.setPostBatchTaskClass(getTaskCls("POST-BATCH-TASK",postBatchTask));
+		if (postBatchModule != null) { options.setPostBatchModule(postBatchModule); }
+		if (postBatchTask != null) { options.setPostBatchTaskClass(getTaskCls("POST-BATCH-TASK", postBatchTask)); }
 		
 		if (options.getPostBatchTaskClass() == null) {
-			if(this.properties.containsKey("EXPORT-FILE-PART-EXT")) this.properties.remove("EXPORT-FILE-PART-EXT");
-			if(System.getProperty("EXPORT-FILE-PART-EXT") != null) System.clearProperty("EXPORT-FILE-PART-EXT");
+			if (this.properties.containsKey("EXPORT-FILE-PART-EXT")) { this.properties.remove("EXPORT-FILE-PART-EXT"); }
+			if (System.getProperty("EXPORT-FILE-PART-EXT") != null) { System.clearProperty("EXPORT-FILE-PART-EXT"); }
 		}
 
 		if (exportFileDir != null) {
@@ -280,22 +284,57 @@ public class Manager extends AbstractManager{
 			}
 		}
 		
-		//fix map keys for backward compatibility
-		for(String key : this.properties.stringPropertyNames()) {
-		  String value = this.properties.getProperty(key);
-		  if (key.startsWith("XQUERY-MODULE.") && value != null){
-		  	properties.setProperty(key.replace("XQUERY-MODULE.", "PROCESS-MODULE."), value);
-		  }
-		}
-		
-		for(String key : System.getProperties().stringPropertyNames()) {
-		  String value = System.getProperty(key);
-		  if (key.startsWith("XQUERY-MODULE.") && value != null){
-		  	System.setProperty(key.replace("XQUERY-MODULE.", "PROCESS-MODULE."), value);
-		  }
-		}
+		normalizeLegacyProperties();
 	}
 	
+    protected void normalizeLegacyProperties() {
+        //fix map keys for backward compatibility
+        if (this.properties != null) {
+            this.properties.putAll(getNormalizedProperties(this.properties));
+        }
+        
+        Properties props = getNormalizedProperties(System.getProperties());
+        for (Map.Entry entry : props.entrySet()) {
+            System.setProperty(entry.getKey().toString(), entry.getValue().toString());
+        }
+    }
+    
+    private Properties getNormalizedProperties(Properties properties) {
+        Properties normalizedProperties = new Properties();
+        if (properties == null) {
+            return normalizedProperties;
+        }
+        
+        //key=Current Property, value=Legacy Property
+        Map<String, String> legacyProperties = new HashMap<String, String>();
+        legacyProperties.put("PROCESS-MODULE", "XQUERY-MODULE");
+        legacyProperties.put("PRE-BATCH-MODULE", "PRE-BATCH-XQUERY-MODULE");
+        legacyProperties.put("POST-BATCH-MODULE", "POST-BATCH-XQUERY-MODULE");
+        
+        for (String key : properties.stringPropertyNames()) {
+            String value = properties.getProperty(key);
+            for (Map.Entry<String, String> entry : legacyProperties.entrySet()) {
+                String legacyKey = entry.getValue();
+                String legacyKeyPrefix = legacyKey + ".";
+                String normalizedKey = entry.getKey();
+                String normalizedKeyPrefix = normalizedKey + ".";
+                String normalizedCustomInputKey = key.replace(legacyKeyPrefix, normalizedKeyPrefix);
+                
+                //First check for an exact match of the keys
+                if (!properties.containsKey(normalizedKey) && key.equals(legacyKey)) {
+                    normalizedProperties.setProperty(normalizedKey, value);
+                //Then look for custom inputs with the base property as a prefix    
+                } else if (!properties.containsKey(normalizedCustomInputKey) && 
+                        key.startsWith(legacyKeyPrefix) && value != null) {
+                    normalizedProperties.setProperty(normalizedCustomInputKey, value);
+                }
+                
+            }
+        }
+        
+        return normalizedProperties;
+    }
+    
 	protected Class<? extends Task> getTaskCls(String type, String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
 		Class<?> cls = Class.forName(className);
 		if (Task.class.isAssignableFrom(cls)) {
@@ -685,9 +724,9 @@ public class Manager extends AbstractManager{
 			}
 		}
 
-		if(total == count){
+		if (total == count) {
 			LOG.log(Level.INFO, "queue is populated with {0} tasks", total);
-		}else{
+		} else {
 			LOG.log(Level.WARNING,"queue is expected to be populated with {0} tasks, but only got {1} tasks.", new Object[]{total,count});
 		}
 		return count;
