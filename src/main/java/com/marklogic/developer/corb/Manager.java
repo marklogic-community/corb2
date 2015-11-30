@@ -71,8 +71,6 @@ public class Manager extends AbstractManager{
 	private boolean execError=false;
 	
 	private static int EXIT_CODE_NO_URIS = 0;
-
-
 	private static final Logger LOG = Logger.getLogger(Manager.class.getSimpleName());
 		
 	public class CallerBlocksPolicy implements RejectedExecutionHandler {
@@ -169,11 +167,11 @@ public class Manager extends AbstractManager{
 		//This is relavant for unit tests only. clear the static map so it gets re-initialized for fresh run
 		if (AbstractTask.MODULE_PROPS != null) { AbstractTask.MODULE_PROPS.clear(); }
 		
-		String val = getOption(null,"EXIT-CODE-NO-URIS");
+		String val = getOption(null, "EXIT-CODE-NO-URIS");
 		if (val != null) { 
-			try{
+			try {
 				EXIT_CODE_NO_URIS = Integer.parseInt(val); 
-			}catch(Exception exc){
+			} catch(Exception exc) {
 				EXIT_CODE_NO_URIS = 0;
 			}
 		}
@@ -375,10 +373,11 @@ public class Manager extends AbstractManager{
 	}
 
 	public int run() throws Exception {
-		LOG.log(Level.INFO, "{0} starting: {1}", new Object[] { NAME, VERSION_MSG });
+		LOG.log(Level.INFO, "{0} starting: {1}", new Object[]{NAME, VERSION_MSG});
 		long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
 		LOG.log(Level.INFO, "maximum heap size = {0} MiB", maxMemory);
-		this.execError=false; //reset execution error flag for a new run
+		
+        this.execError = false; //reset execution error flag for a new run
 		monitorThread = preparePool();
 		
 		try {
@@ -598,7 +597,7 @@ public class Manager extends AbstractManager{
 
 			urisLoader.open();
 			if (urisLoader.getBatchRef() != null) {
-				properties.put(Manager.URIS_BATCH_REF, urisLoader.getBatchRef());
+				properties.put(URIS_BATCH_REF, urisLoader.getBatchRef());
 				LOG.log(Level.INFO, "URIS_BATCH_REF: {0}", urisLoader.getBatchRef());
 			}
 

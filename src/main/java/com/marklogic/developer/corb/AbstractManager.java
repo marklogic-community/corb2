@@ -167,7 +167,7 @@ public abstract class AbstractManager {
 	}
 	
 	public void init(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException{			
-		init(args,null);
+		init(args, null);
 	}
 	
 	public abstract void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException;			
@@ -286,4 +286,5 @@ public abstract class AbstractManager {
         }
 		LOG.log(Level.INFO, "runtime arguments = {0}", Utilities.join(argsToLog, " "));
 	}
+    
 }

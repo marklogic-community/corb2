@@ -219,7 +219,7 @@ public abstract class AbstractTask implements Task {
 			Thread.yield();// try to avoid thread starvation
 
 			return inputUris;
-		}catch(ServerConnectionException exc){
+		} catch(ServerConnectionException exc) {
 			int retryLimit = this.getConnectRetryLimit();
 			int retryInterval = this.getConnectRetryInterval();
 			if (connectRetryCount < retryLimit) {
