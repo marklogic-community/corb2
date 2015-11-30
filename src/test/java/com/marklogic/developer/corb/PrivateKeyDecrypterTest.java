@@ -77,7 +77,7 @@ public class PrivateKeyDecrypterTest {
     /**
      * Test of init_decrypter method, of class PrivateKeyDecrypter.
      */
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testInit_decrypter_initNotInvoked() throws Exception {
         System.out.println("init_decrypter");
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();

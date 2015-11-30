@@ -33,14 +33,18 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+    AbstractDecrypterTest.class,
     AbstractManagerTest.class,
+    AbstractTaskTest.class,
     ExportToFileTaskTest.class,
     HostKeyDecrypterTest.class,
+    JasyptDecrypterTest.class,
 	ManagerTest.class,
 	ModuleExecutorTest.class,
     PostBatchUpdateFileTaskTest.class,
     PreBatchUpdateFileTaskTest.class,
     PrivateKeyDecrypterTest.class,
+    TrustAnyoneSSLConfigTest.class,
     TwoWaySSLConfigTest.class
 })
 public class TestAll {
