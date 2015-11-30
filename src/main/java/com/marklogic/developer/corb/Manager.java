@@ -68,7 +68,10 @@ public class Manager extends AbstractManager{
 	private Monitor monitor;
 	private Thread monitorThread;
 	private CompletionService<String[]> completionService;
-	private boolean execError = false;
+	private boolean execError=false;
+	
+	private static int EXIT_CODE_NO_URIS = 0;
+
 
 	private static final Logger LOG = Logger.getLogger(Manager.class.getSimpleName());
 		
@@ -122,7 +125,7 @@ public class Manager extends AbstractManager{
 			if (tm.execError){
 				System.exit(2);
 			} else if (count == 0) {
-				System.exit(9);
+				System.exit(EXIT_CODE_NO_URIS);
 			} else {
 				System.exit(0);
 			}
@@ -165,6 +168,15 @@ public class Manager extends AbstractManager{
 		
 		//This is relavant for unit tests only. clear the static map so it gets re-initialized for fresh run
 		if (AbstractTask.MODULE_PROPS != null) { AbstractTask.MODULE_PROPS.clear(); }
+		
+		String val = getOption(null,"EXIT-CODE-NO-URIS");
+		if (val != null) { 
+			try{
+				EXIT_CODE_NO_URIS = Integer.parseInt(val); 
+			}catch(Exception exc){
+				EXIT_CODE_NO_URIS = 0;
+			}
+		}
 	}
 			
 	protected void initOptions(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
@@ -381,7 +393,7 @@ public class Manager extends AbstractManager{
 					LOG.log(Level.SEVERE, "interrupted while waiting for monitor", e);
 				}
 			}
-			if (!execError) {
+			if (!execError && count > 0) {
 				runPostBatchTask(); // post batch tasks
 				LOG.info("all done");
 			}
