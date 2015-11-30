@@ -39,6 +39,7 @@ import org.junit.runners.Suite;
 	ManagerTest.class,
 	ModuleExecutorTest.class,
     PostBatchUpdateFileTaskTest.class,
+    PreBatchUpdateFileTaskTest.class,
     PrivateKeyDecrypterTest.class,
     TwoWaySSLConfigTest.class
 })
