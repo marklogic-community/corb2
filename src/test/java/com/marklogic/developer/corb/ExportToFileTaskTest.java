@@ -20,7 +20,9 @@ package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.AbstractTask.TRUE;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
+import com.marklogic.xcc.types.XdmItem;
 import java.io.File;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -30,6 +32,12 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import org.mockito.exceptions.base.MockitoException;
 
 /**
  *
@@ -121,7 +129,7 @@ public class ExportToFileTaskTest {
      * Test of processResult method, of class ExportToFileTask.
      */
     @Test
-    public void testProcessResult() throws Exception {
+    public void testProcessResult_noResults() throws Exception {
         System.out.println("processResult");
         ResultSequence seq = null;
         ExportToFileTask instance = new ExportToFileTask();
@@ -129,6 +137,36 @@ public class ExportToFileTaskTest {
         assertEquals(TRUE, result);
     }
 
+    @Test (expected = NullPointerException.class)
+    public void testProcessResult_nullInputUris() throws Exception {
+        System.out.println("processResult");
+        ResultSequence seq = mock(ResultSequence.class);
+        
+        when(seq.hasNext()).thenReturn(true).thenReturn(false);
+        ExportToFileTask instance = new ExportToFileTask();
+   
+        String result = instance.processResult(seq);
+        assertEquals(TRUE, result);
+    }
+    
+    @Test
+    public void testProcessResult() throws Exception {
+        System.out.println("processResult");
+        ResultSequence seq = mock(ResultSequence.class);
+        ResultItem resultItem = mock(ResultItem.class);
+        XdmItem item = mock(XdmItem.class);
+        when(seq.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(seq.next()).thenReturn(resultItem);
+        when(resultItem.getItem()).thenReturn(item);
+        when(item.asString()).thenReturn("item");
+        ExportToFileTask instance = new ExportToFileTask();
+        String[] uris = {"foo.xqy"};
+        instance.inputUris = uris;
+        instance.exportDir = TestUtils.createTempDirectory().toString();
+        String result = instance.processResult(seq);
+        assertEquals(TRUE, result);
+    }
+    
     /**
      * Test of cleanup method, of class ExportToFileTask.
      */
@@ -148,11 +186,7 @@ public class ExportToFileTaskTest {
     public void testCall() throws Exception {
         System.out.println("call");
         ExportToFileTask instance = new ExportToFileTask();
-        String[] expResult = null;
         String[] result = instance.call();
-        assertArrayEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
     }
 
 }

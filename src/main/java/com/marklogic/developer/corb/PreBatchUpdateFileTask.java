@@ -55,7 +55,7 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 				writer.write(NEWLINE);
 				writer.flush();
 			} finally {
-				if(writer != null) writer.close();
+				if(writer != null) { writer.close(); }
 			}
 		}
 	}
