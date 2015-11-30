@@ -7,3 +7,6 @@ build/
 .project
 /.nb-gradle/
 /eclipse_bin/
+target/
+private/
+nb-configuration.xml
