@@ -1,7 +1,7 @@
 Version: 2.2.0
 
 ### User Guide
-This document provides a comprehensive overview of CoRB2.  For additional information, please refer to CoRB2 online [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc).  This document also covers the less robust [RunXQuery Tool](#runXQuery-readme) which can be used when only a single staged query is necessary.  The RunXQuery Tool is provided as part of the CoRB2 distribution.
+This document provides a comprehensive overview of CoRB2.  For additional information, please refer to CoRB2 online [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc).  This document also covers the new [ModuleExecutor](#ModuleExecutor-readme) tool which can be used when only a single staged query is necessary.  The ModuleExecutor tool is provided as part of the CoRB2 distribution.
 
 ### Downloads
 Please download latest release from https://github.com/marklogic/corb2/releases.  
@@ -367,11 +367,11 @@ URIS-MODULE=get-uris.sjs|ADHOC
 PROCESS-MODULE=extract.sjs|ADHOC 
 ```
 
-### Run Xquery or JavaScript Tool
+### ModuleExecutor Tool
  
-Sometimes, a two or more staged CoRB job isn't necessary to get the job done.  Sometimes, only a single query needs to be executed and the output captured to file.  Maybe only a single query with no output captured?  In these cases, the ModuleExecutor Tool can be used to quickly and efficiently execute your XQuery or JavaScript files.
+Sometimes, a two or more staged CoRB job with both a selector and transform isn't necessary to get the job done.  Sometimes, only a single query needs to be executed and the output captured to file.  Maybe even to execute only a single query with no output captured?  In these cases, the ModuleExecutor Tool can be used to quickly and efficiently execute your XQuery or JavaScript files.
 
-Yes, that's right.  Like CoRB, with Version 8 or higher of the MarkLogic XCC Connection Jar in your classpath, the ModuleExecutor Tool can run JavaScript queries against a MarkLogic8 server.  We know, bad name for the tool but what can we say, old habits die hard!
+Yes, that's right.  Like CoRB, with Version 8 or higher of the MarkLogic XCC Connection Jar in your classpath, the ModuleExecutor Tool can run JavaScript queries against a MarkLogic8 server.  
 
 So how does the ModuleExecutor Tool differ from CoRB?  The key differences are:
 
@@ -391,7 +391,7 @@ That's it.  Doesn't seem like a lot but it actually limits its functionality sig
   - a properties file
   - a combination of any of these
   
-So how do you use it?   For convenience, it can be configured using the same techniques as CoRB provides and using the same parameter names. The big difference is that there are far fewer parameters needed and there is a different class used for its execution (com.marklogic.developer.corb.RunXQueryManager).
+So how do you use it?   For convenience, it can be configured using the same techniques as CoRB provides and using the same parameter names. The big difference is that there are far fewer parameters needed and there is a different class used for its execution (com.marklogic.developer.corb.ModuleExecutor).
 
 The following parameters are supported and can be used in the same ways as described above for CoRB:
 
