@@ -106,7 +106,7 @@ public abstract class AbstractManager {
 		return props;
 	}
 
-	public static String getAdhocQuery(String module) {
+	public static String getAdhocQuery(String module) {       
 		InputStream is = null;
 		InputStreamReader reader = null;
 		StringWriter writer = null;
@@ -119,7 +119,9 @@ public abstract class AbstractManager {
 				} else {
 					throw new IllegalStateException("Unable to find adhoc query module " + module + " in classpath or filesystem");
 				}
-			}
+			} else if (isDirectory(is)) {
+                throw new IllegalStateException("Adhoc query module cannot be a directory");
+            }
 
 			reader = new InputStreamReader(is);
 			writer = new StringWriter();
@@ -133,7 +135,7 @@ public abstract class AbstractManager {
 
 			return writer.toString().trim();
 		} catch (IOException exc) {
-			throw new IllegalStateException("Prolem reading adhoc query module " + module, exc);
+			throw new IllegalStateException("Problem reading adhoc query module " + module, exc);
 		} finally {
 			try {
 				if (writer != null) {
@@ -153,6 +155,16 @@ public abstract class AbstractManager {
 		}
 	}
 	
+    /**
+     * Tests whether the <code>InputStream</code> is a directory. 
+     * A Directory will be a ByteArrayInputStream and a File will be a BufferedInputStream.
+     * @param is
+     * @return <code>true</code> if the InputStream class is ByteArrayInputStream
+     */
+    protected static final boolean isDirectory(InputStream is) {
+        return is.getClass().getSimpleName().equals("ByteArrayInputStream");
+    }
+    
 	public Properties getProperties() {
 		return this.properties;
 	}

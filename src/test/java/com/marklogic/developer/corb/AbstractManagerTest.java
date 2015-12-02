@@ -181,6 +181,24 @@ public class AbstractManagerTest {
         String result = AbstractManager.getAdhocQuery(invalidFilePath);
     }
 
+    @Test(expected = NullPointerException.class)
+    public void testGetAdhocQuery_null() {
+        System.out.println("getAdhocQuery");
+        String result = AbstractManager.getAdhocQuery(null);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGetAdhocQuery_emptyString() {
+        System.out.println("getAdhocQuery");
+        String result = AbstractManager.getAdhocQuery("");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGetAdhocQuery_blankString() {
+        System.out.println("getAdhocQuery");
+        String result = AbstractManager.getAdhocQuery("    ");
+    }
+
     @Test
     public void testGetAdhocQuery_fromClassloader() {
         System.out.println("getAdhocQuery");
@@ -319,6 +337,7 @@ public class AbstractManagerTest {
         instance.initURI(uriArg);
         assertEquals(uriArg, instance.connectionUri.toString());
     }
+
     @Test
     public void testInitURI_URI_withValues() throws Exception {
         System.out.println("initURI");
@@ -329,6 +348,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty("XCC-PORT", "80");
         instance.initURI("xcc://foo:bar@localhost:8008/baz");
     }
+
     @Test
     public void testInitURI_invalidURI() throws Exception {
         System.out.println("initURI");
@@ -355,7 +375,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty("XCC-PORT", "80");
         instance.initURI(null);
     }
-    
+
     @Test
     public void testInitURI_nullURI_withPassword() throws Exception {
         System.out.println("initURI");
@@ -429,8 +449,8 @@ public class AbstractManagerTest {
         assertNotNull(result);
         Assert.assertArrayEquals(sslConfig.getSecurityOptions().getEnabledProtocols(), result.getEnabledProtocols());
     }
-    
-     @Test(expected = NullPointerException.class)
+
+    @Test(expected = NullPointerException.class)
     public void testGetSecurityOptions_nullPointer() throws Exception {
         System.out.println("getSecurityOptions");
         AbstractManager instance = new AbstractManagerImpl();
@@ -438,7 +458,6 @@ public class AbstractManagerTest {
         SecurityOptions result = instance.getSecurityOptions();
         assertEquals(expResult, result);
     }
-
 
     /**
      * Test of getContentSource method, of class AbstractManager.
@@ -470,7 +489,7 @@ public class AbstractManagerTest {
         System.out.println("logRuntimeArgs");
         AbstractManager instance = new AbstractManagerImpl();
         instance.logRuntimeArgs();
-        
+
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.INFO, records.get(0).getLevel());
         assertEquals("runtime arguments = {0}", records.get(0).getMessage());
