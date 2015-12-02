@@ -35,7 +35,7 @@ import java.util.logging.Level;
 
 public class QueryUrisLoader implements UrisLoader {
 	private static final int DEFAULT_MAX_OPTS_FROM_MODULE = 10;
-	private static Pattern pattern = Pattern.compile("(PRE-BATCH-MODULE|PROCESS-MODULE|XQUERY-MODULE|POST-BATCH-MODULE)\\.[A-Za-z0-9]+=[A-Za-z0-9]+");
+	private static final Pattern MODULE_CUSTOM_INPUT = Pattern.compile("(PRE-BATCH-MODULE|PROCESS-MODULE|XQUERY-MODULE|POST-BATCH-MODULE)\\.[A-Za-z0-9]+=[A-Za-z0-9]+");
 	
 	TransformOptions options;
 	ContentSource cs;
@@ -77,7 +77,10 @@ public class QueryUrisLoader implements UrisLoader {
 
 	@Override
 	public void open() throws CorbException {
-		List<String> propertyNames = new ArrayList<String>(properties.stringPropertyNames());
+		List<String> propertyNames = new ArrayList<String>();
+        if (properties != null) {
+            propertyNames.addAll(properties.stringPropertyNames());
+        }
 		propertyNames.addAll(System.getProperties().stringPropertyNames());
 
 		if (propertyNames.contains("URIS-REPLACE-PATTERN")) {
@@ -152,7 +155,7 @@ public class QueryUrisLoader implements UrisLoader {
 			int maxOpts = this.getMaxOptionsFromModule();
 			for (int i=0; i < maxOpts && next != null && batchRef == null && !(next.getItem().asString().matches("\\d+")); i++){
 				String value = next.getItem().asString();
-				if (pattern.matcher(value).matches()) {
+				if (MODULE_CUSTOM_INPUT.matcher(value).matches()) {
 					int idx = value.indexOf('=');
 					properties.put(value.substring(0, idx).replace("XQUERY-MODULE.", "PROCESS-MODULE."), value.substring(idx+1));
 				} else {
