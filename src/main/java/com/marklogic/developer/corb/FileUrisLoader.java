@@ -64,7 +64,8 @@ public class FileUrisLoader implements UrisLoader {
 
 	@Override
 	public void open() throws CorbException {
-		if (properties.containsKey("URIS-REPLACE-PATTERN")) {
+        
+		if (properties != null && properties.containsKey("URIS-REPLACE-PATTERN")) {
 			String pattern = properties.getProperty("URIS-REPLACE-PATTERN").trim();
 			replacements = pattern.split(",", -1);
 			if (replacements.length % 2 != 0) {
@@ -75,12 +76,12 @@ public class FileUrisLoader implements UrisLoader {
 		try {
 			String fileName = options.getUrisFile();
 			LineNumberReader lnr = null;
-			try{
+			try {
 				lnr = new LineNumberReader(new FileReader(fileName));
 				lnr.skip(Long.MAX_VALUE);
 				total = lnr.getLineNumber() + 1;
-			}finally{
-				if(lnr != null) lnr.close();
+			} finally {
+				if (lnr != null) { lnr.close(); }
 			}
 
 			FileReader fr = new FileReader(fileName);
@@ -136,7 +137,7 @@ public class FileUrisLoader implements UrisLoader {
 				throw new CorbException("Problem while reading the uris file");
 			}
 		}
-		for (int i = 0; line != null && i < replacements.length - 1; i = i + 2) {
+		for (int i = 0; line != null && i < replacements.length - 1; i += 2) {
 			line = line.replaceAll(replacements[i], replacements[i + 1]);
 		}
 		return line;
@@ -164,5 +165,6 @@ public class FileUrisLoader implements UrisLoader {
 		collection = null;
 		properties = null;
 		replacements = null;
+        
 	}
 }
