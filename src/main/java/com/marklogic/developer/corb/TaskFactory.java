@@ -133,7 +133,7 @@ public class TaskFactory {
 				if (modulePath == null) {
 					String root = manager.getOptions().getModuleRoot();
 					if (!root.endsWith("/")) {
-						root = root + "/";
+						root += "/";
 					}
 					if (module.startsWith("/") && module.length() > 1) {
 						module = module.substring(1);

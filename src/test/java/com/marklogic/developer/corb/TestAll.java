@@ -37,6 +37,7 @@ import org.junit.runners.Suite;
     AbstractManagerTest.class,
     AbstractTaskTest.class,
     ExportToFileTaskTest.class,
+    FileUrisLoaderTest.class,
     HostKeyDecrypterTest.class,
     JasyptDecrypterTest.class,
 	ManagerTest.class,
@@ -44,6 +45,7 @@ import org.junit.runners.Suite;
     PostBatchUpdateFileTaskTest.class,
     PreBatchUpdateFileTaskTest.class,
     PrivateKeyDecrypterTest.class,
+    TaskFactoryTest.class,
     TrustAnyoneSSLConfigTest.class,
     TwoWaySSLConfigTest.class
 })
