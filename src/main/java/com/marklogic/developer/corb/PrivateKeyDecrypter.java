@@ -220,7 +220,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 			String encryptedText = DatatypeConverter.printBase64Binary(cipher.doFinal(clearText.getBytes("UTF-8")));
 			System.out.println("Input: " + clearText + "\nOutput: " + encryptedText);
 		} finally{
-			if(fis != null) fis.close();
+			if (fis != null) { fis.close(); }
 		}
 	}
 

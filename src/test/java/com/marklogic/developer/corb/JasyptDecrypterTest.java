@@ -119,7 +119,7 @@ public class JasyptDecrypterTest {
         assertEquals("Cannot decrypt {0}. Ignore if clear text.", records.get(0).getMessage());
     }
 
-        @Test
+    @Test
     public void testDoDecrypt_decryptorIsNull() {
         System.out.println("doDecrypt");
         String property = "foo";
@@ -129,7 +129,7 @@ public class JasyptDecrypterTest {
         String result = instance.doDecrypt(property, value);
         assertEquals(value, result);
     }
-    
+
     private class TestDecrypt {
 
         public String decrypt(String value) {

@@ -71,7 +71,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
 		try {
 			decryptedText = decrypt(value);
 		} catch (Exception e) {
-			new RuntimeException("Unabled to decrypt property:"+property, e);
+			new RuntimeException("Unabled to decrypt property:" + property, e);
 		}
 		return decryptedText;	
 	}

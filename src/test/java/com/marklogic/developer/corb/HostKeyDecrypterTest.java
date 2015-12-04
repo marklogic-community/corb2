@@ -63,7 +63,7 @@ public class HostKeyDecrypterTest {
         HostKeyDecrypter instance = new HostKeyDecrypter();
         instance.init_decrypter();
     }
-
+    
     /**
      * Test of xor method, of class HostKeyDecrypter.
      */
