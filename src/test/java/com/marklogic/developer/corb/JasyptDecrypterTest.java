@@ -20,6 +20,8 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -82,6 +84,7 @@ public class JasyptDecrypterTest {
         Properties props = new Properties();
         props.setProperty("JASYPT-PROPERTIES-FILE", "does/not/exist");
         props.setProperty("jasypt.algorithm", "MD5");
+        props.setProperty("jasypt.password", "secret");
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.properties = props;
         instance.init_decrypter();
@@ -89,6 +92,66 @@ public class JasyptDecrypterTest {
         //TODO figure out why executing this method (or all tests for this class one time) succeeds, but when suite is executing and runs multiple times, gets indexOutOfBounds for Records
         //assertEquals(Level.SEVERE, records.get(0).getLevel());
         //assertEquals("Unable to initialize jasypt decrypter. Couldn't find jasypt.password", records.get(0).getMessage());
+    }
+
+    @Test
+    public void testInit_decrypter_propertiesAreBlank() throws Exception {
+        System.out.println("init_decrypter");
+        clearSystemProperties();
+        Properties props = new Properties();
+        props.setProperty("JASYPT-PROPERTIES-FILE", " ");
+        JasyptDecrypter instance = new JasyptDecrypter();
+        instance.properties = props;
+        instance.init_decrypter();
+        List<LogRecord> records = testLogger.getLogRecords();
+    }
+
+    @Test
+    public void testInit_decrypter_algorithmIsBlank() throws Exception {
+        System.out.println("init_decrypter");
+        clearSystemProperties();
+        Properties blankProps = new Properties();
+        blankProps.setProperty("jasypt.algorithm", "  ");
+        blankProps.setProperty("jasypt.passphrase", "  ");
+        File blankPropsFile = File.createTempFile("temp", ".properties");
+        blankPropsFile.deleteOnExit();
+        blankProps.store(new FileOutputStream(blankPropsFile), "");
+        Properties props = new Properties();
+        props.setProperty("JASYPT-PROPERTIES-FILE", blankPropsFile.getAbsolutePath());
+
+        JasyptDecrypter instance = new JasyptDecrypter();
+        instance.properties = props;
+        instance.init_decrypter();
+        List<LogRecord> records = testLogger.getLogRecords();
+    }
+
+    @Test
+    public void testInit_decrypter_noJasyptProperties() throws Exception {
+        System.out.println("init_decrypter");
+        clearSystemProperties();
+        Properties emptyProps = new Properties();
+        File emptyFile = File.createTempFile("temp", ".properties");
+        emptyFile.deleteOnExit();
+        emptyProps.store(new FileOutputStream(emptyFile), "");
+        Properties props = new Properties();
+        props.setProperty("JASYPT-PROPERTIES-FILE", emptyFile.getAbsolutePath());
+
+        JasyptDecrypter instance = new JasyptDecrypter();
+        instance.properties = props;
+        instance.init_decrypter();
+        List<LogRecord> records = testLogger.getLogRecords();
+    }
+
+    @Test
+    public void testInit_decrypter_withPassord() throws Exception {
+        System.out.println("init_decrypter");
+        clearSystemProperties();
+        Properties props = new Properties();
+        props.setProperty("JASYPT-PROPERTIES-FILE", "src/test/resources/jasypt.properties");
+        JasyptDecrypter instance = new JasyptDecrypter();
+        instance.properties = props;
+        instance.init_decrypter();
+        List<LogRecord> records = testLogger.getLogRecords();
     }
 
     /**

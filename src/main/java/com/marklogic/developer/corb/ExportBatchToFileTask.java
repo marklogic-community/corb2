@@ -44,19 +44,17 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 		return fileName;
 	}
 
-	protected String getPartFileName() {
-		String fileName = getFileName();
-		if (fileName != null && fileName.length() > 0) {
-			String partExt = getProperty("EXPORT-FILE-PART-EXT");
-			if (partExt != null && partExt.length() > 0) {
-				if (!partExt.startsWith(".")) {
-					partExt = "." + partExt;
-				}
-				fileName += partExt;
-			}
-		}
-		return fileName;
-	}
+    protected String getPartFileName() {
+        String fileName = getFileName();
+        String partExt = getProperty("EXPORT-FILE-PART-EXT");
+        if (partExt != null && partExt.length() > 0) {
+            if (!partExt.startsWith(".")) {
+                partExt = "." + partExt;
+            }
+            fileName += partExt;
+        }
+        return fileName;
+    }
 
 	@Override
 	protected void writeToFile(ResultSequence seq) throws IOException {

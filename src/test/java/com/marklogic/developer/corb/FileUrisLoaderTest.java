@@ -20,6 +20,9 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.xcc.ContentSource;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
 import java.util.Properties;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -151,6 +154,23 @@ public class FileUrisLoaderTest {
         instance.close();
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testOpen_invalidReplacePattern() throws Exception {
+        System.out.println("open");
+        FileUrisLoader instance = new FileUrisLoader();
+        TransformOptions options = new TransformOptions();
+        options.setUrisFile("src/test/resources/uris-file.txt");
+        Properties props = new Properties();
+        props.setProperty("URIS-REPLACE-PATTERN", "object-id-2,test,unevenPattern");
+        instance.properties = props;
+        instance.options = options;
+        instance.open();
+        assertNotNull(instance.br);
+        assertEquals("object-id-1", instance.next());
+        assertEquals("test", instance.next());
+        instance.close();
+    }
+
     @Test(expected = CorbException.class)
     public void testOpen_fileDoesNotExist() throws Exception {
         System.out.println("open");
@@ -196,7 +216,7 @@ public class FileUrisLoaderTest {
     /**
      * Test of hasNext method, of class FileUrisLoader.
      */
-    @Test (expected = CorbException.class)
+    @Test(expected = CorbException.class)
     public void testHasNext_throwException() throws Exception {
         System.out.println("hasNext");
         FileUrisLoader instance = new FileUrisLoader();
@@ -211,14 +231,14 @@ public class FileUrisLoaderTest {
         options.setUrisFile("src/test/resources/uris-file.txt");
         instance.options = options;
         instance.open();
-        
+
         for (int i = 0; i < instance.getTotalCount(); i++) {
             assertTrue(instance.hasNext());
         }
         //Verify that hasNext() does not advance the buffered reader to the next line
         assertTrue(instance.hasNext());
     }
-    
+
     /**
      * Test of next method, of class FileUrisLoader.
      */
@@ -234,6 +254,26 @@ public class FileUrisLoaderTest {
         for (int i = 0; i < instance.getTotalCount(); i++) {
             assertNotNull(instance.next());
         }
+        assertFalse(instance.hasNext());
+        assertNull(instance.next());
+    }
+
+    @Test
+    public void testNext_withEmptyLine() throws Exception {
+        System.out.println("next");
+        FileUrisLoader instance = new FileUrisLoader();
+        TransformOptions options = new TransformOptions();
+        File file = File.createTempFile("temp", ".txt");
+        file.deleteOnExit();
+        Writer writer = new FileWriter(file);
+        writer.append("foo\n\nbar");
+        writer.close();
+        options.setUrisFile(file.getAbsolutePath());
+        instance.options = options;
+        instance.open();
+        
+        assertEquals("foo", instance.next());
+        assertEquals("bar", instance.next());
         assertFalse(instance.hasNext());
         assertNull(instance.next());
     }
@@ -265,7 +305,7 @@ public class FileUrisLoaderTest {
         instance.properties = new Properties();
         instance.replacements = new String[]{};
         instance.total = 100;
-       
+
         instance.cleanup();
         assertNull(instance.br);
         assertNull(instance.collection);
