@@ -128,6 +128,14 @@ public abstract class AbstractTask implements Task {
 	public Session newSession() {
 		return cs.newSession();
 	}
+	
+	public String[] call() throws Exception {
+		try {
+			return invokeModule();
+		} finally {
+			cleanup();
+		}
+	}
 
 	protected String[] invokeModule() throws CorbException {
 		if (moduleUri == null && adhocQuery == null) {
@@ -285,6 +293,8 @@ public abstract class AbstractTask implements Task {
 		properties = null;
 		inputUris = null;
 		adhocQuery = null;
+		language = null;
+		exportDir = null;
 	}
 
 	public String getProperty(String key) {

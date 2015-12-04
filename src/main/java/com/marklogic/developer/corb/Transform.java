@@ -32,12 +32,4 @@ public class Transform extends AbstractTask {
 		return TRUE;
 	}
 
-	@Override
-	public String[] call() throws Exception {
-		try {
-			return invokeModule();
-		} finally {
-			cleanup();
-		}
-	}
 }
