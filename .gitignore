@@ -10,3 +10,4 @@ build/
 target/
 private/
 nb-configuration.xml
+/nbproject/
