@@ -41,11 +41,15 @@ import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.jndi.ContentSourceBean;
 import static com.marklogic.developer.corb.TestUtils.clearFile;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * The class <code>ModuleExecutorTest</code> contains tests for the class
@@ -694,12 +698,32 @@ public class ModuleExecutorTest {
      * Test of getValueAsBytes method, of class ModuleExecutor.
      */
     @Test
-    public void testGetValueAsBytes() {
+    public void testGetValueAsBytes_withXdmBinary() {
         System.out.println("getValueAsBytes");
-        XdmItem item = null;
+        XdmBinary item = mock(XdmBinary.class);
+        byte[] expected = {'a', 'b', 'c'};
+        when(item.asBinaryData()).thenReturn(expected);
         ModuleExecutor instance = new ModuleExecutor();
-        byte[] expResult = null;
         byte[] result = instance.getValueAsBytes(item);
+        Assert.assertArrayEquals(expected, result);
     }
 
+    @Test
+    public void testGetValueAsBytes() {
+        System.out.println("getValueAsBytes");
+        XdmItem item = mock(XdmItem.class);
+        String expected = "foo";
+        when(item.asString()).thenReturn(expected);
+        ModuleExecutor instance = new ModuleExecutor();
+        byte[] result = instance.getValueAsBytes(item);
+        assertArrayEquals(expected.getBytes(), result);
+    }
+    
+    @Test
+    public void testGetValueAsBytes_null() {
+        System.out.println("getValueAsBytes");
+        ModuleExecutor instance = new ModuleExecutor();
+        byte[] result = instance.getValueAsBytes(null);
+        assertArrayEquals(new byte[]{}, result);
+    }
 }
