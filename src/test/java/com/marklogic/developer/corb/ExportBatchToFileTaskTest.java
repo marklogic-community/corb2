@@ -124,7 +124,7 @@ public class ExportBatchToFileTaskTest {
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
         String result = instance.getPartFileName();
-        assertEquals("foo", result);
+        assertEquals("foo.part", result);
     }
 
     @Test

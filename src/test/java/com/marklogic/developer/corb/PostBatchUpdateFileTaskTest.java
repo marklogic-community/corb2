@@ -102,7 +102,7 @@ public class PostBatchUpdateFileTaskTest {
 
         instance.writeBottomContent();
 
-        File outputFile = new File(tempDir, filename);
+        File outputFile = new File(tempDir, instance.getPartFileName());
         String outputText = TestUtils.readFile(outputFile);
         assertEquals(expextedResult, outputText);
     }
