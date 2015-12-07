@@ -128,6 +128,7 @@ public abstract class AbstractTask implements Task {
 		return cs.newSession();
 	}
 	
+    @Override
 	public String[] call() throws Exception {
 		try {
 			return invokeModule();
