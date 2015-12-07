@@ -192,7 +192,7 @@ public abstract class AbstractManager {
 	 * @throws IllegalAccessException
 	 */
 	protected void initDecrypter() throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
-		String decrypterClassName = getOption(null, "DECRYPTER");
+		String decrypterClassName = getOption("DECRYPTER");
 		if (decrypterClassName != null) {
 			Class<?> decrypterCls = Class.forName(decrypterClassName);
 			if (Decrypter.class.isAssignableFrom(decrypterCls)) {
@@ -207,7 +207,7 @@ public abstract class AbstractManager {
 	}
 	
 	protected void initSSLConfig() throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException{
-		String sslConfigClassName = getOption(null, "SSL-CONFIG-CLASS");
+		String sslConfigClassName = getOption("SSL-CONFIG-CLASS");
 		if (sslConfigClassName != null) {
 			Class<?> decrypterCls = Class.forName(sslConfigClassName);
 			if (SSLConfig.class.isAssignableFrom(decrypterCls)) {
@@ -224,11 +224,11 @@ public abstract class AbstractManager {
 	
 	protected void initURI(String uriArg) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException, URISyntaxException{
 		String uriAsString = getOption(uriArg, "XCC-CONNECTION-URI");
-		String username = getOption(null, "XCC-USERNAME");
-		String password = getOption(null, "XCC-PASSWORD");
-		String host = getOption(null, "XCC-HOSTNAME");
-		String port = getOption(null, "XCC-PORT");
-		String dbname = getOption(null, "XCC-DBNAME");
+		String username = getOption("XCC-USERNAME");
+		String password = getOption("XCC-PASSWORD");
+		String host = getOption("XCC-HOSTNAME");
+		String port = getOption("XCC-PORT");
+		String dbname = getOption("XCC-DBNAME");
 
 		if (uriAsString == null && (username == null || password == null || host == null || port == null)) {
 			LOG.severe("XCC-CONNECTION-URI or XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME and XCC-PORT must be specified");
@@ -245,6 +245,21 @@ public abstract class AbstractManager {
 		this.connectionUri = new URI(uriAsString);
 	}
 	
+    /**
+     * Retrieve the value of the specified key from either the System properties, or the properties object.
+     * @param propName
+     * @return the trimmed property value
+     */
+    protected String getOption(String propName) {
+        return getOption(null, propName);
+    }
+    
+    /**
+     * Retrieve either the argVal or the first property value from the System.properties or properties object that is not empty or null.
+     * @param argVal
+     * @param propName
+     * @return the trimmed property value
+     */
 	protected String getOption(String argVal, String propName) {
 		if (argVal != null && argVal.trim().length() > 0) {
 			return argVal.trim();
