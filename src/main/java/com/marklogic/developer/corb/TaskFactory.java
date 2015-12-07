@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
@@ -28,8 +29,8 @@ import java.util.HashMap;
 public class TaskFactory {
 
 	protected Manager manager;
-	private HashMap<String, String> moduleToAdhocQueryMap = new HashMap<String, String>();
-	private HashMap<String, String> moduleToPathMap = new HashMap<String, String>();
+	private final Map<String, String> moduleToAdhocQueryMap = new HashMap<String, String>();
+	private final Map<String, String> moduleToPathMap = new HashMap<String, String>();
 
 	/**
 	 * @param manager
