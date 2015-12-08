@@ -73,7 +73,7 @@ public class Manager extends AbstractManager{
 	private static int EXIT_CODE_NO_URIS = 0;
 	private static final Logger LOG = Logger.getLogger(Manager.class.getSimpleName());
 		
-	public class CallerBlocksPolicy implements RejectedExecutionHandler {
+	public static class CallerBlocksPolicy implements RejectedExecutionHandler {
 
 		private BlockingQueue<Runnable> queue;
 

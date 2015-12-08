@@ -473,8 +473,8 @@ public class ManagerTest {
     public void testRejectedExecution_npe() {
         Runnable r = mock(Runnable.class);
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
-        Manager manager = new Manager();
-        RejectedExecutionHandler cbp = manager.new CallerBlocksPolicy();
+ 
+        RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
         cbp.rejectedExecution(r, threadPool);
     }
 
@@ -484,8 +484,8 @@ public class ManagerTest {
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
         BlockingQueue queue = mock(BlockingQueue.class);
         when(threadPool.getQueue()).thenReturn(queue).thenThrow(new NullPointerException());
-        Manager manager = new Manager();
-        RejectedExecutionHandler cbp = manager.new CallerBlocksPolicy();
+      
+        RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
         cbp.rejectedExecution(r, threadPool);
 
     }
@@ -494,11 +494,10 @@ public class ManagerTest {
     public void testRejectedExecution_rejectedExecution() {
         Runnable r = mock(Runnable.class);
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
-        BlockingQueue queue = mock(BlockingQueue.class);
+
         when(threadPool.getQueue()).thenThrow(new InterruptedException());
         threadPool.getQueue();
-        Manager manager = new Manager();
-        RejectedExecutionHandler cbp = manager.new CallerBlocksPolicy();
+        RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
         cbp.rejectedExecution(r, threadPool);
     }
 
@@ -509,8 +508,7 @@ public class ManagerTest {
         BlockingQueue queue = mock(BlockingQueue.class);
         when(threadPool.getQueue()).thenReturn(queue).thenThrow(new NullPointerException());
 
-        Manager manager = new Manager();
-        RejectedExecutionHandler cbp = manager.new CallerBlocksPolicy();
+        RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
         cbp.rejectedExecution(r, threadPool);
         cbp.rejectedExecution(r, threadPool);
         List<LogRecord> records = testLogger.getLogRecords();
