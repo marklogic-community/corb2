@@ -33,20 +33,20 @@ import com.marklogic.xcc.ContentSource;
  */
 public interface Task extends Callable<String[]> {
 
-	public void setContentSource(ContentSource cs);
+	void setContentSource(ContentSource cs);
 
 	/**
 	 * XQUERY-MODULE,PRE-BATCH-MODULE,POST-BATCH-MODULE,INIT-MODULE
 	 * 
 	 * @param moduleType
 	 */
-	public void setModuleType(String moduleType);
+	void setModuleType(String moduleType);
 
-	public void setModuleURI(String moduleURI);
+	void setModuleURI(String moduleURI);
 
-	public void setAdhocQuery(String adhocQuery);
+	void setAdhocQuery(String adhocQuery);
 
-	public void setQueryLanguage(String language);
+	void setQueryLanguage(String language);
 
 	/**
 	 * If additional data is sent from CUSTOM URI module, it is available in
@@ -54,11 +54,11 @@ public interface Task extends Callable<String[]> {
 	 * 
 	 * @param props
 	 */
-	public void setProperties(Properties props);
+	void setProperties(Properties props);
 
-	public void setInputURI(String[] inputUri);
+	void setInputURI(String[] inputUri);
 
-	public void setFailOnError(boolean failOnError);
+	void setFailOnError(boolean failOnError);
 	
-	public void setExportDir(String exportFileDir);
+	void setExportDir(String exportFileDir);
 }
