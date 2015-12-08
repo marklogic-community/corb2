@@ -36,13 +36,13 @@ public class Monitor implements Runnable {
 	protected static final int SLEEP_MILLIS = 500;
 	protected static final Logger LOG = Logger.getLogger(Monitor.class.getSimpleName());
 	
-	private CompletionService<String[]> cs;
+	private final CompletionService<String[]> cs;
 	private long lastProgress = 0;
 	private long startMillis;
-	private Manager manager;
+	private final Manager manager;
 	private String[] lastUris;
 	private long taskCount;
-	private ThreadPoolExecutor pool;
+	private final ThreadPoolExecutor pool;
 	private boolean shutdownNow = false;
 	protected long completed = 0;
 
@@ -93,7 +93,7 @@ public class Monitor implements Runnable {
 			if (null != future) {
 				// record result, or throw exception
 				lastUris = future.get();
-				completed = completed + lastUris.length;
+				completed += lastUris.length;
 				//LOG.log(Level.FINE, "completed uris: {0}", Arrays.toString(lastUris));
 			}
 
