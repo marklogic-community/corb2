@@ -55,8 +55,8 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     private static final byte[] DEFAULT_BYTES = {45, 32, 67, 34, 67, 23, 21, 45, 7, 89, 3, 27, 39, 62, 15};
     private static final byte[] HARD_CODED_BYTES = {120, 26, 58, 29, 43, 77, 95, 103, 29, 86, 97, 105, 52, 16, 42, 63, 37, 100, 45, 109, 108, 79, 75, 71, 11, 46, 36, 62, 124, 12, 7, 127};
     // currently only usage is encrypt
-    private static final String USAGE = "Encrypt:\n java -cp marklogic-corb-2.2.*.jar com.marklogic.developer.corb.HostKeyDecrypter encrypt clearText\n" +
-                                        "Test:\n java -cp marklogic-corb-2.2.*.jar com.marklogic.developer.corb.HostKeyDecrypter test";
+    private static final String USAGE = "Encrypt:\n java -cp marklogic-corb-2.2.*.jar com.marklogic.developer.corb.HostKeyDecrypter encrypt clearText\n"
+            + "Test:\n java -cp marklogic-corb-2.2.*.jar com.marklogic.developer.corb.HostKeyDecrypter test";
 
     protected enum OSType {
         Windows {
@@ -82,7 +82,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                         }
                     }
                     String sn = sb.toString();
-                    if (sn != null && !sn.isEmpty()) {
+                    if (!sn.isEmpty()) {
                         return sn.getBytes();
                     } else {
                         throw new IllegalStateException("Unable to find serial number on Windows");
@@ -175,6 +175,30 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         };
 
         public abstract byte[] getSN();
+
+        private static BufferedReader read(String command) {
+            OutputStream os = null;
+            InputStream is = null;
+
+            Runtime runtime = Runtime.getRuntime();
+            Process process = null;
+            try {
+                process = runtime.exec(command.split(" "));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            os = process.getOutputStream();
+            is = process.getInputStream();
+
+            try {
+                os.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            return new BufferedReader(new InputStreamReader(is));
+        }
     }
 
     @Override
@@ -285,30 +309,6 @@ public class HostKeyDecrypter extends AbstractDecrypter {
             }
         }
         return type;
-    }
-
-    private static BufferedReader read(String command) {
-        OutputStream os = null;
-        InputStream is = null;
-
-        Runtime runtime = Runtime.getRuntime();
-        Process process = null;
-        try {
-            process = runtime.exec(command.split(" "));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        os = process.getOutputStream();
-        is = process.getInputStream();
-
-        try {
-            os.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return new BufferedReader(new InputStreamReader(is));
     }
 
     /**
