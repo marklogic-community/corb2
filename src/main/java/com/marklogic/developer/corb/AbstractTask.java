@@ -107,7 +107,7 @@ public abstract class AbstractTask implements Task {
 
 	@Override
 	public void setInputURI(String[] inputUri) {
-		this.inputUris = inputUri;
+		this.inputUris = inputUri != null ? inputUri.clone() : new String[]{};
 	}
 	
     @Override

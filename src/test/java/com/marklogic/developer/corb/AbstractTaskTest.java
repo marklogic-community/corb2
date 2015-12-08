@@ -165,6 +165,15 @@ public class AbstractTaskTest {
         Assert.assertArrayEquals(inputUri, instance.inputUris);
     }
 
+    @Test
+    public void testSetInputURI_null() {
+        System.out.println("setInputURI");
+        AbstractTask instance = new AbstractTaskImpl();
+        assertNull(instance.inputUris);
+        instance.setInputURI(null);
+        assertNotNull(instance.inputUris);
+    }
+    
     /**
      * Test of setFailOnError method, of class AbstractTask.
      */
