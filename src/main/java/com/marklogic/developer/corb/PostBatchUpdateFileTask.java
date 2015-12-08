@@ -92,8 +92,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 
             ZipOutputStream zos = null;
             FileOutputStream fos = null;
-            FileInputStream fis = null;
-
+            
             try {
                 if (outFile.exists()) {
                     if (zipFile.exists()) {
@@ -107,12 +106,18 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
                     zos.putNextEntry(ze);
 
                     byte[] buffer = new byte[2048];
-                    fis = new FileInputStream(outFile);
-                    int len;
-                    while ((len = fis.read(buffer)) > 0) {
-                        zos.write(buffer, 0, len);
+                    FileInputStream fis = null; 
+                    try {
+                        fis = new FileInputStream(outFile);
+                        int len;
+                        while ((len = fis.read(buffer)) > 0) {
+                            zos.write(buffer, 0, len);
+                        }
+                    } finally {
+                        if (fis != null) {
+                            fis.close();
+                        }
                     }
-
                     zos.closeEntry();
                     zos.flush();
                 }
@@ -120,9 +125,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
                 if (zos != null) {
                     zos.close();
                 }
-                if (fis != null) {
-                    fis.close();
-                }
+             
                 if (fos != null) {
                     fos.close();
                 }
