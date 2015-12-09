@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -152,7 +153,11 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 		
 		Set<String> lines = null;
 		if (removeDuplicates.toLowerCase().startsWith("true|sort")) {
-			lines = new TreeSet<String>();
+			if(removeDuplicates.toLowerCase().contains("descend")){
+				lines = new TreeSet<String>(Collections.reverseOrder());
+			}else{
+				lines = new TreeSet<String>();
+			}
 		} else if (removeDuplicates.toLowerCase().startsWith("true|order")) {
 			lines = new LinkedHashSet<String>(10000);
 		} else {
