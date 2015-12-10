@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -164,12 +165,27 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 			lines = new HashSet<String>(10000);
 		}
 		
+		int headLineCt = 0;
+		String headLineCtStr = getProperty("EXPORT-FILE-HEADER-LINE-COUNT");
+		if(headLineCtStr != null){
+			try {
+				headLineCt = Integer.parseInt(headLineCtStr);
+			} catch(Exception exc){ headLineCt = 0; }
+		}
+		
+		ArrayList<String> header = new ArrayList<String>(headLineCt);
 		BufferedReader reader = null;
-		try{
+		try {
 			reader = new BufferedReader(new FileReader(outFile));	    
 	    String line;
+	    int ct = 0;
 	    while ((line = reader.readLine()) != null) {
-	        lines.add(line);
+	    	if (ct < headLineCt){
+	    		header.add(line);
+	    	}else{
+	    		lines.add(line);
+	    	}
+	    	ct++;
 	    }
 		} finally {
 			if (reader != null) { reader.close(); }
@@ -187,7 +203,12 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     BufferedWriter writer = null;
     try {
     	writer = new BufferedWriter(new FileWriter(new File(exportDir, partFileName)));
-	    for (String unique : lines) {
+    	for (String line : header) {
+        writer.write(line);
+        writer.newLine();
+    	}
+    	
+    	for (String unique : lines) {
 	        writer.write(unique);
 	        writer.newLine();
 	    }
