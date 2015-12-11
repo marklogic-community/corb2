@@ -62,6 +62,7 @@ public class Manager extends AbstractManager{
 	protected static final String NAME = Manager.class.getName();
 	
 	public static final String URIS_BATCH_REF = "URIS_BATCH_REF";
+    
 	public static final String DEFAULT_BATCH_URI_DELIM = ";";
 	
 	private ThreadPoolExecutor pool;
@@ -319,8 +320,7 @@ public class Manager extends AbstractManager{
                 } else if (!properties.containsKey(normalizedCustomInputKey) && 
                         key.startsWith(legacyKeyPrefix) && value != null) {
                     normalizedProperties.setProperty(normalizedCustomInputKey, value);
-                }
-                
+                }             
             }
         }
         
@@ -527,7 +527,7 @@ public class Manager extends AbstractManager{
 		logProperties();
 	}
 	
-	protected void logProperties(){
+	protected void logProperties() {
 		for (Entry<Object, Object> e : properties.entrySet()) {
 			if (e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
 				LOG.log(Level.INFO, "Loaded property {0}={1}", new Object[] { e.getKey(), e.getValue() });
@@ -637,7 +637,7 @@ public class Manager extends AbstractManager{
 				// all uris in queue as quickly as possible
 				if (isFirst) {
 					isFirst = false;
-					completionService.submit(tf.newProcessTask(new String[] { uri },options.isFailOnError()));
+					completionService.submit(tf.newProcessTask(new String[] { uri }, options.isFailOnError()));
 					urisArray[count] = null;
 					LOG.log(Level.INFO, "received first uri: {0}", uri);
 				} else {
@@ -655,7 +655,6 @@ public class Manager extends AbstractManager{
 					}
 					lastMessageMillis = System.currentTimeMillis();
 				}
-
 			}
 
 			LOG.log(Level.INFO, "received {0}/{1}", new Object[] { count, total });
