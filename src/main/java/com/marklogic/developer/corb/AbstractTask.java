@@ -21,6 +21,9 @@ package com.marklogic.developer.corb;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.LineNumberReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -246,51 +249,51 @@ public abstract class AbstractTask implements Task {
 		}
 	}
 	
-    protected String[] handleRequestException(ServerConnectionException exc) throws CorbException {
-        int retryLimit = this.getConnectRetryLimit();
-        int retryInterval = this.getConnectRetryInterval();
-        if (connectRetryCount < retryLimit) {
-            connectRetryCount++;
-            LOG.log(Level.SEVERE,
-                    "Connection failed to Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
-                    new Object[]{connectRetryCount, retryInterval, exc.getMessage(), asString(inputUris)});
-            try {
-                Thread.sleep(retryInterval * 1000L);
-            } catch (Exception exc2) {
-            }
-            return invokeModule();
-        } else {
-            throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
-        }
-    }
+  protected String[] handleRequestException(ServerConnectionException exc) throws CorbException {
+      int retryLimit = this.getConnectRetryLimit();
+      int retryInterval = this.getConnectRetryInterval();
+      if (connectRetryCount < retryLimit) {
+          connectRetryCount++;
+          LOG.log(Level.SEVERE,
+                  "Connection failed to Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
+                  new Object[]{connectRetryCount, retryInterval, exc.getMessage(), asString(inputUris)});
+          try {
+              Thread.sleep(retryInterval * 1000L);
+          } catch (Exception exc2) {
+          }
+          return invokeModule();
+      } else {
+          throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
+      }
+  }
 
-    protected String[] handleRequestException(RequestException requestException) throws CorbException {
-        String name = requestException.getClass().getSimpleName();
-        String exceptionType = name.replace("Request", "").replace("Exception", "").toLowerCase();
-        
-        System.out.println(exceptionType);
-        if (failOnError) {
-            throw new CorbException(requestException.getMessage() + " at URI: " + asString(inputUris), requestException);
-        } else {
-            LOG.log(Level.WARNING, "failOnError is is false. Encountered " + exceptionType + " exception at URI: " + asString(inputUris), requestException);
-            writeToErrorFile(inputUris, requestException.getMessage());
-            return inputUris;
-        }
-    }
+  protected String[] handleRequestException(RequestException requestException) throws CorbException {
+    String name = requestException.getClass().getSimpleName();
+    String exceptionType = name.replace("Request", "").replace("Exception", "").toLowerCase();
     
-    protected String asString(String[] uris) {
-        if (uris == null || uris.length == 0) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < uris.length; i++) {
-            if (i > 0) {
-                sb.append(',');
-            }
-            sb.append(uris[i]);
-        }
-        return sb.toString();
+    System.out.println(exceptionType);
+    if (failOnError) {
+        throw new CorbException(requestException.getMessage() + " at URI: " + asString(inputUris), requestException);
+    } else {
+        LOG.log(Level.WARNING, "failOnError is is false. Encountered " + exceptionType + " exception at URI: " + asString(inputUris), requestException);
+        writeToErrorFile(inputUris, requestException.getMessage());
+        return inputUris;
     }
+  }
+    
+  protected String asString(String[] uris) {
+    if (uris == null || uris.length == 0) {
+    	return "";
+    }
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < uris.length; i++) {
+    	if (i > 0) {
+    		sb.append(',');
+      }
+      sb.append(uris[i]);
+    }
+    return sb.toString();
+  }
 
 	protected abstract String processResult(ResultSequence seq) throws CorbException;
 
@@ -367,15 +370,15 @@ public abstract class AbstractTask implements Task {
 			BufferedOutputStream writer = null;
 			try {
 				writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, errorFileName), true));
-                for (String uri : uris) {
-                    writer.write(uri.getBytes());
-                    if (message != null && message.length() > 0) {
-                        writer.write(delim.getBytes());
-                        writer.write(message.getBytes());
-                    }       
-                    writer.write(NEWLINE);
-                }
-                writer.flush();
+        for (String uri : uris) {
+            writer.write(uri.getBytes());
+            if (message != null && message.length() > 0) {
+                writer.write(delim.getBytes());
+                writer.write(message.getBytes());
+            }       
+            writer.write(NEWLINE);
+        }
+        writer.flush();
 			} catch(Exception exc) {
 				LOG.log(Level.SEVERE, "Problem writing uris to ERROR-FILE-NAME",exc);
 			} finally {
@@ -384,5 +387,19 @@ public abstract class AbstractTask implements Task {
 				} catch(Exception exc){}
 			}
 		}
+	}
+	
+	protected int getLineCount(File file) throws IOException{
+		if(file != null && file.exists()){
+			LineNumberReader lnr = null;
+			try {
+				lnr = new LineNumberReader(new FileReader(file));
+				lnr.skip(Long.MAX_VALUE);
+				return lnr.getLineNumber();
+			} finally {
+				if (lnr != null) { lnr.close(); }
+			}
+		}
+		return 0;
 	}
 }

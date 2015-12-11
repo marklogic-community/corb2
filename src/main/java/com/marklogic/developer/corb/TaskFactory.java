@@ -119,17 +119,17 @@ public class TaskFactory {
 	private void setupTask(Task task, String moduleType, String module, String[] uris, boolean failOnError) {
 		if (module != null) {
 			if (module.toUpperCase().endsWith("|ADHOC")) {
-				String modulePath = module.substring(0, module.indexOf('|'));
-				String adhocQuery = moduleToAdhocQueryMap.get(modulePath);
+				String adhocQuery = moduleToAdhocQueryMap.get(module);
 				if (adhocQuery == null) {
+					String modulePath = module.substring(0, module.indexOf('|'));
 					adhocQuery = AbstractManager.getAdhocQuery(modulePath);
 					if (adhocQuery == null || (adhocQuery.length() == 0)) {
 						throw new IllegalStateException("Unable to read adhoc query " + module + " from classpath or filesystem");
 					}
-					moduleToAdhocQueryMap.put(modulePath, adhocQuery);
+					moduleToAdhocQueryMap.put(module, adhocQuery);
 				}
 				task.setAdhocQuery(adhocQuery);
-				if (modulePath.toUpperCase().endsWith(".SJS") || modulePath.toUpperCase().endsWith(".JS")) {
+				if (module.toUpperCase().endsWith(".SJS|ADHOC") || module.toUpperCase().endsWith(".JS|ADHOC")) {
 					task.setQueryLanguage("javascript");
 				}
 			} else {

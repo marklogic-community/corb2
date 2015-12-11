@@ -664,7 +664,7 @@ public class Manager extends AbstractManager{
 			}
 
 			if (count < total) {
-				LOG.log(Level.WARNING,"Resetting total uri count to {0}. Ignore if URIs are loaded from a file that contains blank lines.", count);
+				LOG.log(Level.INFO,"Resetting total uri count to {0}. Ignore if URIs are loaded from a file that contains blank lines.", count);
 				monitor.setTaskCount(total = count);
 			}
 

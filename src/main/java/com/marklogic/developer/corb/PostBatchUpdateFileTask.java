@@ -27,6 +27,8 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -154,20 +156,36 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 
         Set<String> lines = null;
         if (removeDuplicates.toLowerCase().startsWith("true|sort")) {
-            lines = new TreeSet<String>();
+			if (removeDuplicates.toLowerCase().contains("descend")) {
+				lines = new TreeSet<String>(Collections.reverseOrder());
+			} else {
+                lines = new TreeSet<String>();
+			}
         } else if (removeDuplicates.toLowerCase().startsWith("true|order")) {
             lines = new LinkedHashSet<String>(10000);
         } else {
             lines = new HashSet<String>(10000);
         }
 
+		int headLineCt = getIntProperty("EXPORT-FILE-HEADER-LINE-COUNT");
+		if (headLineCt < 0) {
+            headLineCt = 0;
+        }
+		
+		ArrayList<String> header = new ArrayList<String>(headLineCt);
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader(outFile));
             String line;
+            int ct = 0;
             while ((line = reader.readLine()) != null) {
+	    	if (ct < headLineCt){
+	    		header.add(line);
+	    	} else {
                 lines.add(line);
             }
+	    	ct++;
+	    }
         } finally {
             if (reader != null) {
                 reader.close();
@@ -180,8 +198,13 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
         BufferedWriter writer = null;
         try {
             writer = new BufferedWriter(new FileWriter(new File(exportDir, partFileName)));
-            for (String line : lines) {
+            for (String line : header) {
                 writer.write(line);
+                writer.newLine();
+            }
+    	
+            for (String unique : lines) {
+                writer.write(unique);
                 writer.newLine();
             }
             writer.flush();
@@ -199,9 +222,9 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     public String[] call() throws Exception {
         try {
             invokeModule();
-            removeDuplicatesAndSort();
             writeBottomContent();
             moveFile();
+			removeDuplicatesAndSort();
             compressFile();
             return new String[0];
         } finally {

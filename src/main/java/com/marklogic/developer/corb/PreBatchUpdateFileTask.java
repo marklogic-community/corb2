@@ -59,6 +59,13 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 			}
 		}
 	}
+	
+	private void addLineCountToProps() throws IOException{
+		int ct = getLineCount(new File(exportDir, getPartFileName()));
+		if(this.properties != null && ct > 0){
+			this.properties.setProperty("EXPORT-FILE-HEADER-LINE-COUNT", String.valueOf(ct));
+		}
+	}
 
 	@Override
 	public String[] call() throws Exception {
@@ -66,9 +73,11 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 			deleteFileIfExists();
 			writeTopContent();
 			invokeModule();
+			addLineCountToProps();
 			return new String[0];
 		} finally {
 			cleanup();
 		}
 	}
+	
 }
