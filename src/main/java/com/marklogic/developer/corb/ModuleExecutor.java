@@ -1,5 +1,5 @@
 /*
- * Copyright (c)2005-2012 Mark Logic Corporation
+ * Copyright 2005-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,12 +51,6 @@ import com.marklogic.xcc.types.XdmItem;
  */
 public class ModuleExecutor extends AbstractManager{
 
-	public static final String VERSION = Manager.VERSION;
-
-	protected static String versionMessage = "version " + VERSION + " on "
-			+ System.getProperty("java.version") + " ("
-			+ System.getProperty("java.runtime.name") + ")";
-
 	protected static final String NAME = ModuleExecutor.class.getSimpleName();
 
 	private Session session;
@@ -65,7 +59,7 @@ public class ModuleExecutor extends AbstractManager{
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 	protected static final byte[] NEWLINE = "\n".getBytes();
 
-	protected static Logger LOG = Logger.getLogger(ModuleExecutor.class.getCanonicalName());
+	protected static final Logger LOG = Logger.getLogger(ModuleExecutor.class.getCanonicalName());
 
 	/**
 	 * @param args
@@ -79,44 +73,35 @@ public class ModuleExecutor extends AbstractManager{
 			IOException, ClassNotFoundException, InstantiationException,
 			IllegalAccessException, Exception {
 		ModuleExecutor moduleExecutor = new ModuleExecutor();
-		try{
+		try {
 			moduleExecutor.init(args);
-		}catch(Exception exc){
+		} catch(Exception exc) {
 			LOG.log(Level.SEVERE, "Error initializing ModuleExecutor",exc);
 			System.exit(1);
 		}
 		//now we can start corb. 
-		try{
+		try {
 			moduleExecutor.run();
 			System.exit(0);
-		}catch(Exception exc){
+		} catch(Exception exc) {
 			LOG.log(Level.SEVERE, "Error while running CORB",exc);
 			System.exit(2);
 		}
-	}
-	
-	public static void main_no_exit(String[] args) throws Exception{
-		main_no_exit(args,null);
-	}
-	
-	public static void main_no_exit(String[] args, Properties props) throws Exception{
-		ModuleExecutor moduleExecutor = new ModuleExecutor();
-		moduleExecutor.init(args,props);
-		moduleExecutor.run();
 	}
 	
 	public ModuleExecutor() {
 		
 	}
 	
-	public void init(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException{			
-		init(args,null);
-	}
-	
+    @Override
 	public void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException{			
-		if(props == null || props.isEmpty()){
+		if (args == null) {
+            args = new String[0];
+        }
+        
+        if (props == null || props.isEmpty()) {
 			initPropertiesFromOptionsFile();
-		}else{
+		} else {
 			this.properties = props;
 		}
 		initDecrypter();
@@ -139,9 +124,9 @@ public class ModuleExecutor extends AbstractManager{
 		String exportFileDir = getOption(args.length > 4 ? args[4] : null,"EXPORT-FILE-DIR");
 		String exportFileName = getOption(args.length > 5 ? args[5] : null,"EXPORT-FILE-NAME");
 				
-		if (moduleRoot != null) options.setModuleRoot(moduleRoot);
-		if (processModule != null) options.setProcessModule(processModule);
-		if (modulesDatabase != null) options.setModulesDatabase(modulesDatabase);
+		if (moduleRoot != null) { options.setModuleRoot(moduleRoot); }
+		if (processModule != null) { options.setProcessModule(processModule); }
+		if (modulesDatabase != null) { options.setModulesDatabase(modulesDatabase); }
 		//TODO: normalize XQUERY-MODULE properties
 		if (null == options.getProcessModule()) {
 			throw new NullPointerException("PROCESS-MODULE must be specified");
@@ -172,7 +157,7 @@ public class ModuleExecutor extends AbstractManager{
 		}
 	}
 
-	
+    @Override
 	protected void usage() {
 		PrintStream err = System.err;
 		err.println("usage 1:");
@@ -194,8 +179,8 @@ public class ModuleExecutor extends AbstractManager{
 
 	private void registerStatusInfo() {
 		Session session = contentSource.newSession();
-		AdhocQuery q = session.newAdhocQuery(Manager.XQUERY_VERSION_0_9_ML
-				+ Manager.DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
+		AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_0_9_ML
+				+ DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
 				+ "let $status := \n"
 				+ " xdmp:server-status(xdmp:host(), xdmp:server())\n"
 				+ "let $modules := $status/mlss:modules\n"
@@ -219,80 +204,78 @@ public class ModuleExecutor extends AbstractManager{
 				options.setXDBC_ROOT(item.asString());
 			}
 		}
-		LOG.info("Configured modules db: " + options.getModulesDatabase());
-		LOG.info("Configured modules root: " + options.getModuleRoot());
-		LOG.info("Configured process module: " + options.getProcessModule());
+		LOG.log(Level.INFO, "Configured modules db: {0}", options.getModulesDatabase());
+		LOG.log(Level.INFO, "Configured modules root: {0}", options.getModuleRoot());
+		LOG.log(Level.INFO, "Configured process module: {0}", options.getProcessModule());
 
 		for (Entry<Object, Object> e : properties.entrySet()) {
 			if (e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
-				LOG.info("Loaded property " + e.getKey() + "=" + e.getValue());
+				LOG.log(Level.INFO, "Loaded property {0}={1}", new Object[]{e.getKey(), e.getValue()});
 			}
 		}
 	}
 
-	
-	public void run() throws Exception {
-		LOG.info(NAME + " starting: " + Manager.VERSION_MSG);
-		long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
-		LOG.info("maximum heap size = " + maxMemory + " MiB");
+    public void run() throws Exception {
+        LOG.log(Level.INFO, "{0} starting: {1}", new Object[]{NAME, VERSION_MSG});
+        long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
+        LOG.log(Level.INFO, "maximum heap size = {0} MiB", maxMemory);
 
-		try {
-			RequestOptions opts = new RequestOptions();
-			opts.setCacheResult(false);
-			session = contentSource.newSession();
-			Request req = null;
-			List<String> propertyNames = new ArrayList<String>(properties.stringPropertyNames());
-			propertyNames.addAll(System.getProperties().stringPropertyNames());
-			
-			if (options.getProcessModule().toUpperCase().endsWith("|ADHOC")) {
-			  String queryPath = options.getProcessModule().substring(0, options.getProcessModule().indexOf('|'));
+        try {
+            RequestOptions opts = new RequestOptions();
+            opts.setCacheResult(false);
+            session = contentSource.newSession();
+            Request req = null;
+            List<String> propertyNames = new ArrayList<String>(properties.stringPropertyNames());
+            propertyNames.addAll(System.getProperties().stringPropertyNames());
 
-			  String adhocQuery = getAdhocQuery(queryPath);
-				if (adhocQuery == null || (adhocQuery.length() == 0)) {
-					throw new IllegalStateException("Unable to read adhoc query " + queryPath+ " from classpath or filesystem");
-				}
-				LOG.info("invoking adhoc process module " + queryPath);
-				req = session.newAdhocQuery(adhocQuery);
-				if (queryPath.toUpperCase().endsWith(".SJS") || queryPath.toUpperCase().endsWith(".JS")) {
-					opts.setQueryLanguage("javascript");
-				}
-			} else {
-				String root = options.getModuleRoot();
-				if (!root.endsWith("/")) {
-					root = root + "/";
-        }
-				String module = options.getProcessModule();
-				if (module.startsWith("/") && module.length() > 1) {
-					module = module.substring(1);
-        }
-				String modulePath = root + module;
-				LOG.info("invoking module " + modulePath);
-				req = session.newModuleInvoke(modulePath);
-			}
+            if (options.getProcessModule().toUpperCase().endsWith("|ADHOC")) {
+                String queryPath = options.getProcessModule().substring(0, options.getProcessModule().indexOf('|'));
 
-			// custom inputs
-			for (String propName : propertyNames) {
-				if (propName.startsWith("PROCESS-MODULE.")) {
+                String adhocQuery = getAdhocQuery(queryPath);
+                if (adhocQuery == null || (adhocQuery.length() == 0)) {
+                    throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
+                }
+                LOG.log(Level.INFO, "invoking adhoc process module {0}", queryPath);
+                req = session.newAdhocQuery(adhocQuery);
+                if (queryPath.toUpperCase().endsWith(".SJS") || queryPath.toUpperCase().endsWith(".JS")) {
+                    opts.setQueryLanguage("javascript");
+                }
+            } else {
+                String root = options.getModuleRoot();
+                if (!root.endsWith("/")) {
+                    root += "/";
+                }
+                String module = options.getProcessModule();
+                if (module.startsWith("/") && module.length() > 1) {
+                    module = module.substring(1);
+                }
+                String modulePath = root + module;
+                LOG.log(Level.INFO, "invoking module {0}", modulePath);
+                req = session.newModuleInvoke(modulePath);
+            }
+
+            // custom inputs
+            for (String propName : propertyNames) {
+                if (propName.startsWith("PROCESS-MODULE.")) {
                     String varName = propName.substring("PROCESS-MODULE.".length());
                     String value = getProperty(propName);
                     if (value != null) {
                         req.setNewStringVariable(varName, value);
                     }
-				}
-			}
-			
-			req.setOptions(opts);
-			res = session.submitRequest(req);
+                }
+            }
 
-			writeToFile(res);
+            req.setOptions(opts);
+            res = session.submitRequest(req);
 
-			LOG.info("Done");
-		} catch (Exception exc) {
-			LOG.log(Level.SEVERE, exc.getMessage());
-			throw exc;
-		} 
-	}
+            writeToFile(res);
 
+            LOG.info("Done");
+        } catch (Exception exc) {
+            LOG.log(Level.SEVERE, exc.getMessage());
+            throw exc;
+        }
+    }
 	
 	public String getProperty(String key) {
 		String val = System.getProperty(key);
@@ -303,8 +286,9 @@ public class ModuleExecutor extends AbstractManager{
 	}
 
 	private void writeToFile(ResultSequence seq) throws IOException{
-		if (seq == null || !seq.hasNext())
+		if (seq == null || !seq.hasNext()) {
 			return;
+        }
 		String fileDir = getProperty("EXPORT-FILE-DIR");
 		String fileName = getProperty("EXPORT-FILE-NAME");
 		if (fileName == null || fileName.length() == 0) {
@@ -315,7 +299,7 @@ public class ModuleExecutor extends AbstractManager{
 		BufferedOutputStream writer = null;
 		try {		
 			File f = new File(fileDir,fileName);
-			if(f.getParentFile() != null) f.getParentFile().mkdirs();
+			if (f.getParentFile() != null) { f.getParentFile().mkdirs(); }
 			writer = new BufferedOutputStream(new FileOutputStream(f));
 			while (seq.hasNext()) {
 				writer.write(getValueAsBytes(seq.next().getItem()));

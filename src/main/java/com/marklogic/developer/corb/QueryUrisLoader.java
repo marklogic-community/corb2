@@ -1,3 +1,21 @@
+/*
+ * Copyright 2005-2015 MarkLogic Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * The use of the Apache License does not indicate that this project is
+ * affiliated with the Apache Software Foundation.
+ */
 package com.marklogic.developer.corb;
 
 import java.util.ArrayList;
@@ -17,7 +35,7 @@ import java.util.logging.Level;
 
 public class QueryUrisLoader implements UrisLoader {
 	private static final int DEFAULT_MAX_OPTS_FROM_MODULE = 10;
-	private static Pattern pattern = Pattern.compile("(PRE-BATCH-MODULE|PROCESS-MODULE|XQUERY-MODULE|POST-BATCH-MODULE)\\.[A-Za-z0-9]+=[A-Za-z0-9]+");
+	private static final Pattern MODULE_CUSTOM_INPUT = Pattern.compile("(PRE-BATCH-MODULE|PROCESS-MODULE|XQUERY-MODULE|POST-BATCH-MODULE)\\.[A-Za-z0-9]+=[A-Za-z0-9]+");
 	
 	TransformOptions options;
 	ContentSource cs;
@@ -59,7 +77,10 @@ public class QueryUrisLoader implements UrisLoader {
 
 	@Override
 	public void open() throws CorbException {
-		List<String> propertyNames = new ArrayList<String>(properties.stringPropertyNames());
+		List<String> propertyNames = new ArrayList<String>();
+        if (properties != null) {
+            propertyNames.addAll(properties.stringPropertyNames());
+        }
 		propertyNames.addAll(System.getProperties().stringPropertyNames());
 
 		if (propertyNames.contains("URIS-REPLACE-PATTERN")) {
@@ -134,7 +155,7 @@ public class QueryUrisLoader implements UrisLoader {
 			int maxOpts = this.getMaxOptionsFromModule();
 			for (int i=0; i < maxOpts && next != null && batchRef == null && !(next.getItem().asString().matches("\\d+")); i++){
 				String value = next.getItem().asString();
-				if (pattern.matcher(value).matches()) {
+				if (MODULE_CUSTOM_INPUT.matcher(value).matches()) {
 					int idx = value.indexOf('=');
 					properties.put(value.substring(0, idx).replace("XQUERY-MODULE.", "PROCESS-MODULE."), value.substring(idx+1));
 				} else {

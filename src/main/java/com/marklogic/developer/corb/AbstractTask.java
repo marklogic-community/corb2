@@ -1,8 +1,29 @@
+/*
+ * Copyright 2005-2015 MarkLogic Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * The use of the Apache License does not indicate that this project is
+ * affiliated with the Apache Software Foundation.
+ */
 package com.marklogic.developer.corb;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.LineNumberReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -13,8 +34,7 @@ import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
-import com.marklogic.xcc.exceptions.RequestPermissionException;
-import com.marklogic.xcc.exceptions.RequestServerException;
+import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
@@ -110,6 +130,14 @@ public abstract class AbstractTask implements Task {
 	public Session newSession() {
 		return cs.newSession();
 	}
+	
+	public String[] call() throws Exception {
+		try {
+			return invokeModule();
+		} finally {
+			cleanup();
+		}
+	}
 
 	protected String[] invokeModule() throws CorbException {
 		if (moduleUri == null && adhocQuery == null) {
@@ -201,38 +229,11 @@ public abstract class AbstractTask implements Task {
 			Thread.yield();// try to avoid thread starvation
 
 			return inputUris;
-		}catch(ServerConnectionException exc){
-			int retryLimit = this.getConnectRetryLimit();
-			int retryInterval = this.getConnectRetryInterval();
-			if (connectRetryCount < retryLimit) {
-				connectRetryCount++;
-				LOG.log(Level.SEVERE,
-						"Connection failed to Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
-						new Object[] { connectRetryCount, retryInterval, exc.getMessage(), asString(inputUris) });
-				try {
-					Thread.sleep(retryInterval * 1000L);
-				} catch (Exception exc2) {}
-				return invokeModule();
-			} else {
-				throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
-			}
-		} catch(RequestServerException exc) {
-			if (failOnError) {
-				throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
-			} else {
-				LOG.log(Level.WARNING,"failOnErroris is false. Encountered server exception at URI: "+ asString(inputUris),exc);
-				writeToErrorFile(inputUris,exc.getMessage());
-				return inputUris;
-			}
-		} catch(RequestPermissionException exc){
-			if (failOnError) {
-				throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
-			} else {
-				LOG.log(Level.WARNING,"failOnErroris is false. Encountered permission exception at URI: "+ asString(inputUris),exc);
-				writeToErrorFile(inputUris,exc.getMessage());
-				return inputUris;
-			}
-		} catch (Exception exc) {
+		} catch (ServerConnectionException exc){
+            return handleRequestException(exc);
+        } catch (RequestException exc) {
+          return handleRequestException(exc);  
+        } catch (Exception exc) {
 			throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
 		} finally {
 			if (null != session && !session.isClosed()) {
@@ -247,15 +248,51 @@ public abstract class AbstractTask implements Task {
 		}
 	}
 	
-	protected String asString(String[] uris){
-    if (uris == null || uris.length == 0) { return ""; }
+  protected String[] handleRequestException(ServerConnectionException exc) throws CorbException {
+      int retryLimit = this.getConnectRetryLimit();
+      int retryInterval = this.getConnectRetryInterval();
+      if (connectRetryCount < retryLimit) {
+          connectRetryCount++;
+          LOG.log(Level.SEVERE,
+                  "Connection failed to Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
+                  new Object[]{connectRetryCount, retryInterval, exc.getMessage(), asString(inputUris)});
+          try {
+              Thread.sleep(retryInterval * 1000L);
+          } catch (Exception exc2) {
+          }
+          return invokeModule();
+      } else {
+          throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
+      }
+  }
+
+  protected String[] handleRequestException(RequestException requestException) throws CorbException {
+    String name = requestException.getClass().getSimpleName();
+    String exceptionType = name.replace("Request", "").replace("Exception", "").toLowerCase();
+    
+    System.out.println(exceptionType);
+    if (failOnError) {
+        throw new CorbException(requestException.getMessage() + " at URI: " + asString(inputUris), requestException);
+    } else {
+        LOG.log(Level.WARNING, "failOnError is is false. Encountered " + exceptionType + " exception at URI: " + asString(inputUris), requestException);
+        writeToErrorFile(inputUris, requestException.getMessage());
+        return inputUris;
+    }
+  }
+    
+  protected String asString(String[] uris) {
+    if (uris == null || uris.length == 0) {
+    	return "";
+    }
     StringBuilder sb = new StringBuilder();
-    for (int i=0; i < uris.length; i++) {
-    	if (i > 0) { sb.append(','); }
-    	sb.append(uris[i]);
+    for (int i = 0; i < uris.length; i++) {
+    	if (i > 0) {
+    		sb.append(',');
+      }
+      sb.append(uris[i]);
     }
     return sb.toString();
-	}
+  }
 
 	protected abstract String processResult(ResultSequence seq) throws CorbException;
 
@@ -267,6 +304,8 @@ public abstract class AbstractTask implements Task {
 		properties = null;
 		inputUris = null;
 		adhocQuery = null;
+		language = null;
+		exportDir = null;
 	}
 
 	public String getProperty(String key) {
@@ -288,31 +327,33 @@ public abstract class AbstractTask implements Task {
 	}
 
 	private int getConnectRetryLimit() {
-		int connectRetryLimit = -1;
-		String propStr = getProperty("XCC-CONNECTION-RETRY-LIMIT");
-		if (propStr != null && propStr.length() > 0) {
-			try {
-				connectRetryLimit = Integer.parseInt(propStr);
-			} catch (Exception exc) {
-			}
-		}
+		int connectRetryLimit = getIntProperty("XCC-CONNECTION-RETRY-LIMIT");
 		return connectRetryLimit < 0 ? DEFAULT_RETRY_LIMIT : connectRetryLimit;
 	}
 
 	private int getConnectRetryInterval() {
-		int connectRetryInterval = -1;
-		String propStr = getProperty("XCC-CONNECTION-RETRY-INTERVAL");
-		if (propStr != null && propStr.length() > 0) {
-			try {
-				connectRetryInterval = Integer.parseInt(propStr);
-			} catch (Exception exc) {
-			}
-		}
+		int connectRetryInterval = getIntProperty("XCC-CONNECTION-RETRY-INTERVAL");
 		return connectRetryInterval < 0 ? DEFAULT_RETRY_INTERVAL : connectRetryInterval;
 	}
 	
+    /**
+    * Retrieves an int value.
+    * @param key The key name.
+    * @return The requested value (<code>-1</code> if not found or could not parse value as int).
+    */
+    protected int getIntProperty(String key) {
+    	int intVal = -1;
+      String value = getProperty(key);
+      if (value != null && value.length() > 0) {
+      	try {
+      		intVal = Integer.parseInt(value);
+      	} catch (Exception exc) {}
+      }
+      return intVal;
+    }
+    
 	private void writeToErrorFile(String[] uris, String message){
-		if(uris == null || uris.length == 0) { return; }
+		if (uris == null || uris.length == 0) { return; }
 		
 		String errorFileName = getProperty("ERROR-FILE-NAME");
 		if (errorFileName == null || errorFileName.length() == 0) { return; }
@@ -325,16 +366,16 @@ public abstract class AbstractTask implements Task {
 		synchronized(ERROR_SYNC_OBJ){
 			BufferedOutputStream writer = null;
 			try {
-				writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir,errorFileName), true));
-                for (String uri : uris) {
-                    writer.write(uri.getBytes());
-                    if (message != null && message.length() > 0) {
-                        writer.write(delim.getBytes());
-                        writer.write(message.getBytes());
-                    }       
-                    writer.write(NEWLINE);
-                }
-                writer.flush();
+				writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, errorFileName), true));
+        for (String uri : uris) {
+            writer.write(uri.getBytes());
+            if (message != null && message.length() > 0) {
+                writer.write(delim.getBytes());
+                writer.write(message.getBytes());
+            }       
+            writer.write(NEWLINE);
+        }
+        writer.flush();
 			} catch(Exception exc) {
 				LOG.log(Level.SEVERE, "Problem writing uris to ERROR-FILE-NAME",exc);
 			} finally {
@@ -343,5 +384,19 @@ public abstract class AbstractTask implements Task {
 				} catch(Exception exc){}
 			}
 		}
+	}
+	
+	protected int getLineCount(File file) throws IOException{
+		if(file != null && file.exists()){
+			LineNumberReader lnr = null;
+			try {
+				lnr = new LineNumberReader(new FileReader(file));
+				lnr.skip(Long.MAX_VALUE);
+				return lnr.getLineNumber();
+			} finally {
+				if (lnr != null) { lnr.close(); }
+			}
+		}
+		return 0;
 	}
 }

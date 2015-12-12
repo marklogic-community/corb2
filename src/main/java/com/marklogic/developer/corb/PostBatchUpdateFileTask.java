@@ -1,3 +1,21 @@
+/*
+ * Copyright 2005-2015 MarkLogic Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * The use of the Apache License does not indicate that this project is
+ * affiliated with the Apache Software Foundation.
+ */
 package com.marklogic.developer.corb;
 
 import java.io.BufferedOutputStream;
@@ -9,6 +27,8 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -134,19 +154,38 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 		
 		Set<String> lines = null;
 		if (removeDuplicates.toLowerCase().startsWith("true|sort")) {
-			lines = new TreeSet<String>();
+			if(removeDuplicates.toLowerCase().contains("descend")){
+				lines = new TreeSet<String>(Collections.reverseOrder());
+			}else{
+				lines = new TreeSet<String>();
+			}
 		} else if (removeDuplicates.toLowerCase().startsWith("true|order")) {
 			lines = new LinkedHashSet<String>(10000);
 		} else {
 			lines = new HashSet<String>(10000);
 		}
 		
+		int headLineCt = 0;
+		String headLineCtStr = getProperty("EXPORT-FILE-HEADER-LINE-COUNT");
+		if(headLineCtStr != null){
+			try {
+				headLineCt = Integer.parseInt(headLineCtStr);
+			} catch(Exception exc){ headLineCt = 0; }
+		}
+		
+		ArrayList<String> header = new ArrayList<String>(headLineCt);
 		BufferedReader reader = null;
-		try{
+		try {
 			reader = new BufferedReader(new FileReader(outFile));	    
 	    String line;
+	    int ct = 0;
 	    while ((line = reader.readLine()) != null) {
-	        lines.add(line);
+	    	if (ct < headLineCt){
+	    		header.add(line);
+	    	}else{
+	    		lines.add(line);
+	    	}
+	    	ct++;
 	    }
 		} finally {
 			if (reader != null) { reader.close(); }
@@ -164,7 +203,12 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     BufferedWriter writer = null;
     try {
     	writer = new BufferedWriter(new FileWriter(new File(exportDir, partFileName)));
-	    for (String unique : lines) {
+    	for (String line : header) {
+        writer.write(line);
+        writer.newLine();
+    	}
+    	
+    	for (String unique : lines) {
 	        writer.write(unique);
 	        writer.newLine();
 	    }

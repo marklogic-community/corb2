@@ -1,5 +1,5 @@
 /*
- * Copyright (c)2005-2012 Mark Logic Corporation
+ * Copyright 2005-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,12 +32,4 @@ public class Transform extends AbstractTask {
 		return TRUE;
 	}
 
-	@Override
-	public String[] call() throws Exception {
-		try {
-			return invokeModule();
-		} finally {
-			cleanup();
-		}
-	}
 }

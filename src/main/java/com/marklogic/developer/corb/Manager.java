@@ -1,5 +1,5 @@
 /*
- * Copyright (c)2005-2012 Mark Logic Corporation
+ * Copyright 2005-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,8 @@ import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.types.XdmItem;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Michael Blakeley, MarkLogic Corporation
@@ -69,7 +71,6 @@ public class Manager extends AbstractManager{
 	private boolean execError=false;
 	
 	private static int EXIT_CODE_NO_URIS = 0;
-
 	private static final Logger LOG = Logger.getLogger(Manager.class.getSimpleName());
 		
 	public class CallerBlocksPolicy implements RejectedExecutionHandler {
@@ -152,8 +153,8 @@ public class Manager extends AbstractManager{
 		
 		initURI(args.length > 0 ? args[0] : null);
 		
-		String collection = getOption(args.length > 1 ? args[1] : null, "COLLECTION-NAME");
-		this.collection = collection != null ? collection : "";
+		String collectionName = getOption(args.length > 1 ? args[1] : null, "COLLECTION-NAME");
+		this.collection = collectionName != null ? collectionName : "";
         
 		initOptions(args);
 		
@@ -166,11 +167,11 @@ public class Manager extends AbstractManager{
 		//This is relavant for unit tests only. clear the static map so it gets re-initialized for fresh run
 		if (AbstractTask.MODULE_PROPS != null) { AbstractTask.MODULE_PROPS.clear(); }
 		
-		String val = getOption(null,"EXIT-CODE-NO-URIS");
+		String val = getOption(null, "EXIT-CODE-NO-URIS");
 		if (val != null) { 
-			try{
+			try {
 				EXIT_CODE_NO_URIS = Integer.parseInt(val); 
-			}catch(Exception exc){
+			} catch(Exception exc) {
 				EXIT_CODE_NO_URIS = 0;
 			}
 		}
@@ -203,19 +204,20 @@ public class Manager extends AbstractManager{
 		String failOnError = getOption(null, "FAIL-ON-ERROR");
 		String errorFileName = getOption(null, "ERROR-FILE-NAME");
 		
+        //Check legacy properties keys, for backwards compatability
 		if (processModule == null) { processModule = getOption(null, "XQUERY-MODULE"); }
-		if (preBatchModule == null) { preBatchModule = getOption(null,"PRE-BATCH-XQUERY-MODULE"); }
-        if (postBatchModule == null) { postBatchModule = getOption(null,"POST-BATCH-XQUERY-MODULE"); }
+		if (preBatchModule == null) { preBatchModule = getOption(null, "PRE-BATCH-XQUERY-MODULE"); }
+        if (postBatchModule == null) { postBatchModule = getOption(null, "POST-BATCH-XQUERY-MODULE"); }
 		
-		if (moduleRoot != null) options.setModuleRoot(moduleRoot);
-		if (processModule != null) options.setProcessModule(processModule);
-		if (threadCount != null) options.setThreadCount(Integer.parseInt(threadCount));
-		if (urisModule != null) options.setUrisModule(urisModule);
-		if (modulesDatabase != null) options.setModulesDatabase(modulesDatabase);
-		if (install != null && (install.equalsIgnoreCase("true") || install.equals("1"))) options.setDoInstall(true);
-		if (urisFile != null) options.setUrisFile(urisFile);
-		if (batchSize != null) options.setBatchSize(Integer.parseInt(batchSize));
-		if (failOnError != null && (failOnError.equalsIgnoreCase("false"))) options.setFailOnError(false);
+		if (moduleRoot != null) { options.setModuleRoot(moduleRoot); }
+		if (processModule != null) { options.setProcessModule(processModule); }
+		if (threadCount != null) { options.setThreadCount(Integer.parseInt(threadCount)); }
+		if (urisModule != null) { options.setUrisModule(urisModule); }
+		if (modulesDatabase != null) { options.setModulesDatabase(modulesDatabase); }
+		if (install != null && (install.equalsIgnoreCase("true") || install.equals("1"))) { options.setDoInstall(true); }
+		if (urisFile != null) { options.setUrisFile(urisFile); }
+		if (batchSize != null) { options.setBatchSize(Integer.parseInt(batchSize)); }
+		if (failOnError != null && (failOnError.equalsIgnoreCase("false"))) { options.setFailOnError(false); }
 		
 		if (!this.properties.containsKey("EXPORT-FILE-DIR") && exportFileDir != null) {
 			this.properties.put("EXPORT-FILE-DIR", exportFileDir);
@@ -234,26 +236,26 @@ public class Manager extends AbstractManager{
 			}
 		}
 		
-		if (initModule != null) options.setInitModule(initModule);
-		if (initTask != null) options.setInitTaskClass(getTaskCls("INIT-TASK",initTask));
+		if (initModule != null) { options.setInitModule(initModule); }
+		if (initTask != null) { options.setInitTaskClass(getTaskCls("INIT-TASK", initTask)); }
 				
 		// java class for processing individual tasks.
 		// If specified, it is used instead of xquery module, but xquery module is
 		// still required.
-		if (processTask != null) options.setProcessTaskClass(getTaskCls("PROCESS-TASK",processTask));
+		if (processTask != null) { options.setProcessTaskClass(getTaskCls("PROCESS-TASK", processTask)); }
 		if (null == options.getProcessTaskClass() && null == options.getProcessModule()) {
 			throw new NullPointerException("PROCESS-TASK or PROCESS-MODULE must be specified");
 		}
 		
-		if (preBatchModule != null) options.setPreBatchModule(preBatchModule);
-		if (preBatchTask != null) options.setPreBatchTaskClass(getTaskCls("PRE-BATCH-TASK",preBatchTask));
+		if (preBatchModule != null) { options.setPreBatchModule(preBatchModule); }
+		if (preBatchTask != null) { options.setPreBatchTaskClass(getTaskCls("PRE-BATCH-TASK", preBatchTask)); }
 		
-		if (postBatchModule != null) options.setPostBatchModule(postBatchModule);
-		if (postBatchTask != null) options.setPostBatchTaskClass(getTaskCls("POST-BATCH-TASK",postBatchTask));
+		if (postBatchModule != null) { options.setPostBatchModule(postBatchModule); }
+		if (postBatchTask != null) { options.setPostBatchTaskClass(getTaskCls("POST-BATCH-TASK", postBatchTask)); }
 		
 		if (options.getPostBatchTaskClass() == null) {
-			if(this.properties.containsKey("EXPORT-FILE-PART-EXT")) this.properties.remove("EXPORT-FILE-PART-EXT");
-			if(System.getProperty("EXPORT-FILE-PART-EXT") != null) System.clearProperty("EXPORT-FILE-PART-EXT");
+			if (this.properties.containsKey("EXPORT-FILE-PART-EXT")) { this.properties.remove("EXPORT-FILE-PART-EXT"); }
+			if (System.getProperty("EXPORT-FILE-PART-EXT") != null) { System.clearProperty("EXPORT-FILE-PART-EXT"); }
 		}
 
 		if (exportFileDir != null) {
@@ -280,22 +282,57 @@ public class Manager extends AbstractManager{
 			}
 		}
 		
-		//fix map keys for backward compatibility
-		for(String key : this.properties.stringPropertyNames()) {
-		  String value = this.properties.getProperty(key);
-		  if (key.startsWith("XQUERY-MODULE.") && value != null){
-		  	properties.setProperty(key.replace("XQUERY-MODULE.", "PROCESS-MODULE."), value);
-		  }
-		}
-		
-		for(String key : System.getProperties().stringPropertyNames()) {
-		  String value = System.getProperty(key);
-		  if (key.startsWith("XQUERY-MODULE.") && value != null){
-		  	System.setProperty(key.replace("XQUERY-MODULE.", "PROCESS-MODULE."), value);
-		  }
-		}
+		normalizeLegacyProperties();
 	}
 	
+    protected void normalizeLegacyProperties() {
+        //fix map keys for backward compatibility
+        if (this.properties != null) {
+            this.properties.putAll(getNormalizedProperties(this.properties));
+        }
+        
+        Properties props = getNormalizedProperties(System.getProperties());
+        for (Map.Entry entry : props.entrySet()) {
+            System.setProperty(entry.getKey().toString(), entry.getValue().toString());
+        }
+    }
+    
+    private Properties getNormalizedProperties(Properties properties) {
+        Properties normalizedProperties = new Properties();
+        if (properties == null) {
+            return normalizedProperties;
+        }
+        
+        //key=Current Property, value=Legacy Property
+        Map<String, String> legacyProperties = new HashMap<String, String>();
+        legacyProperties.put("PROCESS-MODULE", "XQUERY-MODULE");
+        legacyProperties.put("PRE-BATCH-MODULE", "PRE-BATCH-XQUERY-MODULE");
+        legacyProperties.put("POST-BATCH-MODULE", "POST-BATCH-XQUERY-MODULE");
+        
+        for (String key : properties.stringPropertyNames()) {
+            String value = properties.getProperty(key);
+            for (Map.Entry<String, String> entry : legacyProperties.entrySet()) {
+                String legacyKey = entry.getValue();
+                String legacyKeyPrefix = legacyKey + ".";
+                String normalizedKey = entry.getKey();
+                String normalizedKeyPrefix = normalizedKey + ".";
+                String normalizedCustomInputKey = key.replace(legacyKeyPrefix, normalizedKeyPrefix);
+                
+                //First check for an exact match of the keys
+                if (!properties.containsKey(normalizedKey) && key.equals(legacyKey)) {
+                    normalizedProperties.setProperty(normalizedKey, value);
+                //Then look for custom inputs with the base property as a prefix    
+                } else if (!properties.containsKey(normalizedCustomInputKey) && 
+                        key.startsWith(legacyKeyPrefix) && value != null) {
+                    normalizedProperties.setProperty(normalizedCustomInputKey, value);
+                }
+                
+            }
+        }
+        
+        return normalizedProperties;
+    }
+    
 	protected Class<? extends Task> getTaskCls(String type, String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
 		Class<?> cls = Class.forName(className);
 		if (Task.class.isAssignableFrom(cls)) {
@@ -336,10 +373,11 @@ public class Manager extends AbstractManager{
 	}
 
 	public int run() throws Exception {
-		LOG.log(Level.INFO, "{0} starting: {1}", new Object[] { NAME, VERSION_MSG });
+		LOG.log(Level.INFO, "{0} starting: {1}", new Object[]{NAME, VERSION_MSG});
 		long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
 		LOG.log(Level.INFO, "maximum heap size = {0} MiB", maxMemory);
-		this.execError=false; //reset execution error flag for a new run
+		
+        this.execError = false; //reset execution error flag for a new run
 		monitorThread = preparePool();
 		
 		try {
@@ -559,7 +597,7 @@ public class Manager extends AbstractManager{
 
 			urisLoader.open();
 			if (urisLoader.getBatchRef() != null) {
-				properties.put(Manager.URIS_BATCH_REF, urisLoader.getBatchRef());
+				properties.put(URIS_BATCH_REF, urisLoader.getBatchRef());
 				LOG.log(Level.INFO, "URIS_BATCH_REF: {0}", urisLoader.getBatchRef());
 			}
 
@@ -633,7 +671,7 @@ public class Manager extends AbstractManager{
 			}
 
 			if (count < total) {
-				LOG.log(Level.WARNING,"Resetting total uri count to {0}. Ignore if URIs are loaded from a file that contains blank lines.", count);
+				LOG.log(Level.INFO,"Resetting total uri count to {0}. Ignore if URIs are loaded from a file that contains blank lines.", count);
 				monitor.setTaskCount(total = count);
 			}
 
@@ -685,9 +723,9 @@ public class Manager extends AbstractManager{
 			}
 		}
 
-		if(total == count){
+		if (total == count) {
 			LOG.log(Level.INFO, "queue is populated with {0} tasks", total);
-		}else{
+		} else {
 			LOG.log(Level.WARNING,"queue is expected to be populated with {0} tasks, but only got {1} tasks.", new Object[]{total,count});
 		}
 		return count;

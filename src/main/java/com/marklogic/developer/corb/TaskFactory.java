@@ -1,5 +1,5 @@
 /*
- * Copyright (c)2005-2008 Mark Logic Corporation
+ * Copyright 2005-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,17 +115,17 @@ public class TaskFactory {
 	private void setupTask(Task task, String moduleType, String module, String[] uris, boolean failOnError) {
 		if (module != null) {
 			if (module.toUpperCase().endsWith("|ADHOC")) {
-				String modulePath = module.substring(0, module.indexOf('|'));
-				String adhocQuery = moduleToAdhocQueryMap.get(modulePath);
+				String adhocQuery = moduleToAdhocQueryMap.get(module);
 				if (adhocQuery == null) {
+					String modulePath = module.substring(0, module.indexOf('|'));
 					adhocQuery = AbstractManager.getAdhocQuery(modulePath);
 					if (adhocQuery == null || (adhocQuery.length() == 0)) {
 						throw new IllegalStateException("Unable to read adhoc query " + module + " from classpath or filesystem");
 					}
-					moduleToAdhocQueryMap.put(modulePath, adhocQuery);
+					moduleToAdhocQueryMap.put(module, adhocQuery);
 				}
 				task.setAdhocQuery(adhocQuery);
-				if (modulePath.toUpperCase().endsWith(".SJS") || modulePath.toUpperCase().endsWith(".JS")) {
+				if (module.toUpperCase().endsWith(".SJS|ADHOC") || module.toUpperCase().endsWith(".JS|ADHOC")) {
 					task.setQueryLanguage("javascript");
 				}
 			} else {
@@ -133,7 +133,7 @@ public class TaskFactory {
 				if (modulePath == null) {
 					String root = manager.getOptions().getModuleRoot();
 					if (!root.endsWith("/")) {
-						root = root + "/";
+						root += "/";
 					}
 					if (module.startsWith("/") && module.length() > 1) {
 						module = module.substring(1);

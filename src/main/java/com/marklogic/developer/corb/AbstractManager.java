@@ -1,3 +1,21 @@
+/*
+ * Copyright 2005-2015 MarkLogic Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * The use of the Apache License does not indicate that this project is
+ * affiliated with the Apache Software Foundation.
+ */
 package com.marklogic.developer.corb;
 
 import java.io.File;
@@ -88,7 +106,7 @@ public abstract class AbstractManager {
 		return props;
 	}
 
-	public static String getAdhocQuery(String module) {
+	public static String getAdhocQuery(String module) {       
 		InputStream is = null;
 		InputStreamReader reader = null;
 		StringWriter writer = null;
@@ -101,7 +119,9 @@ public abstract class AbstractManager {
 				} else {
 					throw new IllegalStateException("Unable to find adhoc query module " + module + " in classpath or filesystem");
 				}
-			}
+			} else if (isDirectory(is)) {
+                throw new IllegalStateException("Adhoc query module cannot be a directory");
+            }
 
 			reader = new InputStreamReader(is);
 			writer = new StringWriter();
@@ -115,7 +135,7 @@ public abstract class AbstractManager {
 
 			return writer.toString().trim();
 		} catch (IOException exc) {
-			throw new IllegalStateException("Prolem reading adhoc query module " + module, exc);
+			throw new IllegalStateException("Problem reading adhoc query module " + module, exc);
 		} finally {
 			try {
 				if (writer != null) {
@@ -135,6 +155,16 @@ public abstract class AbstractManager {
 		}
 	}
 	
+    /**
+     * Tests whether the <code>InputStream</code> is a directory. 
+     * A Directory will be a ByteArrayInputStream and a File will be a BufferedInputStream.
+     * @param is
+     * @return <code>true</code> if the InputStream class is ByteArrayInputStream
+     */
+    protected static final boolean isDirectory(InputStream is) {
+        return is.getClass().getSimpleName().equals("ByteArrayInputStream");
+    }
+    
 	public Properties getProperties() {
 		return this.properties;
 	}
@@ -149,7 +179,7 @@ public abstract class AbstractManager {
 	}
 	
 	public void init(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException{			
-		init(args,null);
+		init(args, null);
 	}
 	
 	public abstract void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException;			
@@ -268,4 +298,5 @@ public abstract class AbstractManager {
         }
 		LOG.log(Level.INFO, "runtime arguments = {0}", Utilities.join(argsToLog, " "));
 	}
+    
 }

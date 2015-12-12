@@ -1,7 +1,20 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright 2005-2015 MarkLogic Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * The use of the Apache License does not indicate that this project is
+ * affiliated with the Apache Software Foundation.
  */
 package com.marklogic.developer.corb;
 
@@ -32,7 +45,7 @@ import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 
 /**
  *
- * @author mhansen
+ * @author Mads Hansen, MarkLogic Corporation
  */
 public class AbstractManagerTest {
 
@@ -166,6 +179,24 @@ public class AbstractManagerTest {
     public void testGetAdhocQuery_missingFile() {
         System.out.println("getAdhocQuery");
         String result = AbstractManager.getAdhocQuery(invalidFilePath);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testGetAdhocQuery_null() {
+        System.out.println("getAdhocQuery");
+        String result = AbstractManager.getAdhocQuery(null);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGetAdhocQuery_emptyString() {
+        System.out.println("getAdhocQuery");
+        String result = AbstractManager.getAdhocQuery("");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGetAdhocQuery_blankString() {
+        System.out.println("getAdhocQuery");
+        String result = AbstractManager.getAdhocQuery("    ");
     }
 
     @Test
@@ -306,6 +337,7 @@ public class AbstractManagerTest {
         instance.initURI(uriArg);
         assertEquals(uriArg, instance.connectionUri.toString());
     }
+
     @Test
     public void testInitURI_URI_withValues() throws Exception {
         System.out.println("initURI");
@@ -316,6 +348,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty("XCC-PORT", "80");
         instance.initURI("xcc://foo:bar@localhost:8008/baz");
     }
+
     @Test
     public void testInitURI_invalidURI() throws Exception {
         System.out.println("initURI");
@@ -342,7 +375,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty("XCC-PORT", "80");
         instance.initURI(null);
     }
-    
+
     @Test
     public void testInitURI_nullURI_withPassword() throws Exception {
         System.out.println("initURI");
@@ -416,8 +449,8 @@ public class AbstractManagerTest {
         assertNotNull(result);
         Assert.assertArrayEquals(sslConfig.getSecurityOptions().getEnabledProtocols(), result.getEnabledProtocols());
     }
-    
-     @Test(expected = NullPointerException.class)
+
+    @Test(expected = NullPointerException.class)
     public void testGetSecurityOptions_nullPointer() throws Exception {
         System.out.println("getSecurityOptions");
         AbstractManager instance = new AbstractManagerImpl();
@@ -425,7 +458,6 @@ public class AbstractManagerTest {
         SecurityOptions result = instance.getSecurityOptions();
         assertEquals(expResult, result);
     }
-
 
     /**
      * Test of getContentSource method, of class AbstractManager.
@@ -457,7 +489,7 @@ public class AbstractManagerTest {
         System.out.println("logRuntimeArgs");
         AbstractManager instance = new AbstractManagerImpl();
         instance.logRuntimeArgs();
-        
+
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.INFO, records.get(0).getLevel());
         assertEquals("runtime arguments = {0}", records.get(0).getMessage());
