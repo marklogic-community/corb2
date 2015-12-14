@@ -28,7 +28,7 @@ Corb needs one or more of the following parameters as (If specified in more than
 ### Options  
 * **XCC-CONNECTION-URI** (Connection string to MarkLogic XDBC Server)
 * **COLLECTION-NAME** (Value of this parameter will be passed into the URIS-MODULE via external or global variable with the name URIS)
-* **PROCESS-MODULE** (or **XQUERY-MODULE** - XQuery or java script to be executed in a batch for each URI from the URIS-MODULE or URIS-FILE. Module is expected to have at least one external or global variable with name URI. XQuery and java script modules need to have .xqy and .sjs extensions respectively. If returning multiple values from a java script module, values must be returned as ValueIterator.)   
+* **PROCESS-MODULE** (or **XQUERY-MODULE** - XQuery or JavaScript to be executed in a batch for each URI from the URIS-MODULE or URIS-FILE. Module is expected to have at least one external or global variable with name URI. XQuery and JavaScript modules need to have .xqy and .sjs extensions respectively. If returning multiple values from a JavaScript module, values must be returned as ValueIterator.)   
 * **THREAD-COUNT** (number of worker threads; default = 1)
 * **MODULE-ROOT** (default: '/' for root)
 * **MODULES-DATABASE** (uses the XCC-CONNECTION-URI if not provided; use 0 for file system)
@@ -126,7 +126,7 @@ To return URIS\_BATCH\_REF, we can do the following
 
     fn.insertBefore(fn.insertBefore(uris,0,uris.count),0,"batch\-ref")
 
-> Note: Do not use single quotes with in (adhoc) java script modules. If you must use a single quote, escape it with a quote (ex: ''text'')
+> Note: Do not use single quotes with in (adhoc) JavaScript modules. If you must use a single quote, escape it with a quote (ex: ''text'')
 
 ### Encryption
 It is often required to protect the database connection string or password from unauthorized access. So, CoRB optionally supports encryption of the entire XCC URL or any parts of the XCC URL (if individually specified), such as XCC-PASSWORD.
