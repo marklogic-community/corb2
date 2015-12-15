@@ -30,6 +30,9 @@ import java.util.Iterator;
  */
 public class StringUtils {
 
+    private StringUtils() {
+    }
+
     /**
      * Replace all occurrences of the following characters [&, <, >] with their
      * corresponding entities.
@@ -152,6 +155,7 @@ public class StringUtils {
 
     /**
      * Checks if a CharSequence is null or empty ("")
+     *
      * @param value
      * @return true if the value is null or empty
      */
@@ -161,8 +165,9 @@ public class StringUtils {
 
     /**
      * Checks if a CharSequence is not null or empty ("")
+     *
      * @param value
-     * @return 
+     * @return
      */
     public static boolean isNotEmpty(final CharSequence value) {
         return !isEmpty(value);
@@ -170,8 +175,9 @@ public class StringUtils {
 
     /**
      * Checks if a CharSequence is null or whitespace-only characters
+     *
      * @param value
-     * @return 
+     * @return
      */
     public static boolean isBlank(final CharSequence value) {
         int length;
@@ -185,23 +191,23 @@ public class StringUtils {
         }
         return true;
     }
-    
+
     /**
      * Checks if a CharSequence is not null and not whitespace-only characters
+     *
      * @param value
-     * @return 
+     * @return
      */
     public static boolean isNotBlank(final CharSequence value) {
         return !isBlank(value);
     }
-    
+
     /**
-     * Removes control characters (char <= 32) from both ends of the string. If null, returns null.
-     * @param value
-     * @return 
+     * Removes control characters (char <= 32) from both ends of the string. If
+     * null, returns null. @param value @return
      */
-    public static String trim(final String value){
+    public static String trim(final String value) {
         return value == null ? null : value.trim();
     }
-    
+
 }

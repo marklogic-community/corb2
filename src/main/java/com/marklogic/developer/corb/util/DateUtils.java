@@ -31,6 +31,9 @@ public class DateUtils {
 
     public static final DateFormat ISO_8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
+    private DateUtils(){
+    }
+    
     /**
      *
      * @param date
