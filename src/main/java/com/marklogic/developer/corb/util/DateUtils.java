@@ -31,9 +31,9 @@ public class DateUtils {
 
     public static final DateFormat ISO_8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
-    private DateUtils(){
+    private DateUtils() {
     }
-    
+
     /**
      *
      * @param date
@@ -71,5 +71,5 @@ public class DateUtils {
         // remap the timezone from 0000 to 00:00 (starts at char 22)
         return dateStr.substring(0, 22) + ":" + dateStr.substring(22);
     }
-    
+
 }

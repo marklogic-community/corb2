@@ -18,16 +18,9 @@
  */
 package com.marklogic.developer.corb.util;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.After;
@@ -37,7 +30,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import org.mockito.exceptions.base.MockitoException;
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
@@ -81,7 +76,7 @@ public class FileUtilsTest {
     /**
      * Test of copy method, of class Utilities.
      */
-    @org.junit.Test
+    @Test
     public void testCopy_File_File() throws Exception {
         System.out.println("copy");
 
@@ -98,7 +93,7 @@ public class FileUtilsTest {
      *
      * @throws java.lang.Exception
      */
-    @org.junit.Test
+    @Test
     public void testCopy_String_String() throws Exception {
         System.out.println("copy");
         String inFilePath = exampleContentFile.getAbsolutePath();
@@ -115,7 +110,7 @@ public class FileUtilsTest {
      *
      * @throws java.lang.Exception
      */
-    @org.junit.Test
+    @Test
     public void testDeleteFile_File() throws Exception {
         System.out.println("deleteFile");
         File file = File.createTempFile("originalFile", "txt");
@@ -123,14 +118,14 @@ public class FileUtilsTest {
         assertFalse(file.exists());
     }
 
-    @org.junit.Test
+    @Test
     public void testDeleteFile_FileIsNull() throws IOException {
         File file = new File("/tmp/_doesNotExit_" + Math.random());
         FileUtils.deleteFile(file);
         file.deleteOnExit();
     }
 
-    @org.junit.Test
+    @Test
     public void testDeleteFile_FolderIsEmpty() throws IOException {
         Path tempPath = Files.createTempDirectory("foo");
         File tempDirectory = tempPath.toFile();
@@ -138,7 +133,7 @@ public class FileUtilsTest {
         tempDirectory.deleteOnExit();
     }
 
-    @org.junit.Test
+    @Test
     public void testDeleteFile_FolderHasFiles() throws IOException {
         Path tempPath = Files.createTempDirectory("foo");
         File tempDirectory = tempPath.toFile();
@@ -147,9 +142,38 @@ public class FileUtilsTest {
         tempDirectory.deleteOnExit();
     }
 
-    @org.junit.Test
+    @Test
     public void testDeleteFile_StringIsNull() throws IOException {
         String filename = "/tmp/_doesNotExist_" + Math.random();
         FileUtils.deleteFile(filename);
+    }
+    
+    @Test (expected = IOException.class)
+    public void testDeleteFile_cannotDelete() throws IOException {
+        File exceptionalFile = mock(File.class);
+        when(exceptionalFile.exists()).thenReturn(true);
+        when(exceptionalFile.isDirectory()).thenReturn(false);
+        when(exceptionalFile.delete()).thenReturn(false);
+        when(exceptionalFile.getCanonicalPath()).thenReturn("does/not/exist");
+        
+        FileUtils.deleteFile(exceptionalFile);
+    }
+    
+    @Test
+    public void testGetLineCount_null() throws IOException {
+        System.out.println("getLineCount");
+        assertEquals(0, FileUtils.getLineCount(null));
+    }
+    
+    @Test
+    public void testGetLineCount_fileDoesNotExist() throws IOException {
+        System.out.println("getLineCount");
+        assertEquals(0, FileUtils.getLineCount(new File("does/not/exist")));
+    }
+    
+    @Test
+    public void testGetLineCount() throws IOException {
+        System.out.println("getLineCount");
+        assertEquals(12, FileUtils.getLineCount(exampleContentFile));
     }
 }
