@@ -91,19 +91,6 @@ public class TestUtils {
         }
     }
 
-    public static boolean deleteDir(File dir) {
-        if (dir.exists()) {
-            for (File file : dir.listFiles()) {
-                if (file.isDirectory()) {
-                    deleteDir(file);
-                } else {
-                    file.delete();
-                }
-            }
-        }
-        return dir.delete();
-    }
-
     //TODO: remove this, and upgrade code to use Files.createTempDirectory() when we upgrade to a JRE >= 1.7
     public static File createTempDirectory() throws IOException {
         final File temp;

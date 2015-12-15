@@ -37,7 +37,7 @@ import java.util.logging.Logger;
 
 import javax.crypto.Cipher;
 import javax.xml.bind.DatatypeConverter;
-import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 
 public class PrivateKeyDecrypter extends AbstractDecrypter {
 

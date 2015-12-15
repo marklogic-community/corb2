@@ -37,13 +37,13 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.marklogic.developer.Utilities;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ContentSourceFactory;
 import com.marklogic.xcc.SecurityOptions;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
-import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import com.marklogic.developer.corb.util.StringUtils;
 
 public abstract class AbstractManager {
 	public static final String VERSION = "2.2";
@@ -296,7 +296,7 @@ public abstract class AbstractManager {
                 argsToLog.add(argument);
             }
         }
-		LOG.log(Level.INFO, "runtime arguments = {0}", Utilities.join(argsToLog, " "));
+		LOG.log(Level.INFO, "runtime arguments = {0}", StringUtils.join(argsToLog, " "));
 	}
     
 }

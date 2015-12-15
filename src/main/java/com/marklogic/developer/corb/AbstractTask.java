@@ -41,7 +41,7 @@ import com.marklogic.xcc.types.XdmItem;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 
 /**
  * 

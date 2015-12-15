@@ -47,7 +47,11 @@ import org.junit.runners.Suite;
     PrivateKeyDecrypterTest.class,
     TaskFactoryTest.class,
     TrustAnyoneSSLConfigTest.class,
-    TwoWaySSLConfigTest.class
+    TwoWaySSLConfigTest.class,
+    com.marklogic.developer.corb.util.DateUtilsTest.class,
+    com.marklogic.developer.corb.util.FileUtilsTest.class,
+    com.marklogic.developer.corb.util.IOUtilsTest.class,
+    com.marklogic.developer.corb.util.StringUtilsTest.class
 })
 public class TestAll {
 

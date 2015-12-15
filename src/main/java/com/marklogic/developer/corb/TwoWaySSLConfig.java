@@ -35,7 +35,7 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
-import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 
 public class TwoWaySSLConfig extends AbstractSSLConfig {
 

@@ -26,7 +26,6 @@ import static org.junit.Assert.*;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import static com.marklogic.developer.corb.TestUtils.clearFile;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
-import static com.marklogic.developer.corb.TestUtils.deleteDir;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ContentSourceFactory;
@@ -49,6 +48,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import org.apache.commons.io.FileUtils;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
@@ -453,7 +453,7 @@ public class ManagerTest {
      */
     @After
     public void tearDown() throws Exception {
-        deleteDir(new File(ManagerTest.EXPORT_FILE_DIR));
+        FileUtils.deleteDirectory(new File(ManagerTest.EXPORT_FILE_DIR));
         clearSystemProperties();
     }
 

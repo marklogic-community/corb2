@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 
 import com.marklogic.xcc.ContentSource;
 import java.util.logging.Level;
-import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 
 public class FileUrisLoader implements UrisLoader {
 

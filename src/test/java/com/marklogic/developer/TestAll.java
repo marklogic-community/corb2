@@ -33,8 +33,7 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-	com.marklogic.developer.corb.TestAll.class,
-    UtilitiesTest.class
+	com.marklogic.developer.corb.TestAll.class
 })
 public class TestAll {
 

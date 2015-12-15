@@ -36,8 +36,8 @@ import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import com.google.code.externalsorting.ExternalSort;
-import com.marklogic.developer.corb.io.FileUtils;
-import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
+import com.marklogic.developer.corb.util.FileUtils;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation

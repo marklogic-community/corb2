@@ -52,7 +52,7 @@ import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.types.XdmItem;
 import java.util.HashMap;
 import java.util.Map;
-import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 
 /**
  * @author Michael Blakeley, MarkLogic Corporation
