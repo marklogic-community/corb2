@@ -21,8 +21,9 @@ package com.marklogic.developer.corb;
 import java.util.Properties;
 
 import com.marklogic.xcc.ContentSource;
+import java.io.Closeable;
 
-public interface UrisLoader {
+public interface UrisLoader extends Closeable {
 
 	void setOptions(TransformOptions options);
 
@@ -42,5 +43,4 @@ public interface UrisLoader {
 
 	String next() throws CorbException;
 
-	void close();
 }
