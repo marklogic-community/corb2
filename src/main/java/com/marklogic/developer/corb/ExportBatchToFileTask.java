@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import com.marklogic.xcc.ResultSequence;
+import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
 
 public class ExportBatchToFileTask extends ExportToFileTask {
 
@@ -74,7 +75,7 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 				}
 				writer.flush();
 			} finally {
-				if (writer != null) { writer.close(); }
+                closeQuietly(writer);
 			}
 		}
 	}

@@ -35,6 +35,7 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
 
 public class TwoWaySSLConfig extends AbstractSSLConfig {
 
@@ -110,9 +111,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
                     LOG.severe("Error loading ssl properties file");
                     throw new RuntimeException(e);
                 } finally {
-                    if (is != null) {
-                        is.close();
-                    }
+                    closeQuietly(is);
                 }
             } else {
                 throw new IllegalStateException("Unable to load " + securityFileName);
@@ -158,9 +157,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
                 keystoreInputStream = new FileInputStream(sslkeyStore);
                 clientKeyStore.load(keystoreInputStream, sslkeyStorePasswordChars);
             } finally {
-                if (keystoreInputStream != null) {
-                    keystoreInputStream.close();
-                }
+                closeQuietly(keystoreInputStream);
             }
             char[] sslkeyPasswordChars = sslkeyPassword != null ? sslkeyPassword.toCharArray() : null;
             // using SunX509 format

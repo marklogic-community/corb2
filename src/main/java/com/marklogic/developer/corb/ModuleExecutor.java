@@ -42,9 +42,10 @@ import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
+import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
 
 /**
- * This class replaces RunXQuery.  It can run both XQuery and Javascript and when built, doesn't wrap the 
+ * This class replaces RunXQuery.  It can run both XQuery and JavaScript and when built, doesn't wrap the 
  * XCC connection jar as RunXQuery does.
  * @author matthew.heckel MarkLogic Corportation
  *
@@ -307,9 +308,7 @@ public class ModuleExecutor extends AbstractManager{
 			}
 			writer.flush();
 		} finally {
-			if (writer != null) {
-				writer.close();
-			}
+            closeQuietly(writer);
 		}
 	}
 

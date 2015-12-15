@@ -41,6 +41,7 @@ import com.marklogic.xcc.types.XdmItem;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
 
 /**
  * 
@@ -382,24 +383,9 @@ public abstract class AbstractTask implements Task {
 			} catch(Exception exc) {
 				LOG.log(Level.SEVERE, "Problem writing uris to ERROR-FILE-NAME",exc);
 			} finally {
-				try {
-					if (writer != null) { writer.close(); }
-				} catch(Exception exc){}
+                closeQuietly(writer);
 			}
 		}
 	}
 	
-	protected int getLineCount(File file) throws IOException{
-		if(file != null && file.exists()){
-			LineNumberReader lnr = null;
-			try {
-				lnr = new LineNumberReader(new FileReader(file));
-				lnr.skip(Long.MAX_VALUE);
-				return lnr.getLineNumber();
-			} finally {
-				if (lnr != null) { lnr.close(); }
-			}
-		}
-		return 0;
-	}
 }

@@ -27,6 +27,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.createTempDirectory;
+import com.marklogic.developer.corb.io.FileUtils;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -340,7 +341,7 @@ public class PostBatchUpdateFileTaskTest {
         file.deleteOnExit();
         file.createNewFile();
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
-        instance.moveFile(file, file);
+        FileUtils.moveFile(file, file);
     }
 
 

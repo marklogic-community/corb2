@@ -18,6 +18,8 @@
  */
 package com.marklogic.developer;
 
+import com.marklogic.developer.corb.io.FileUtils;
+import com.marklogic.developer.corb.io.IOUtils;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -267,7 +269,7 @@ public class UtilitiesTest {
         System.out.println("copy");
 
         File out = File.createTempFile("copiedFile", "txt");
-        Utilities.copy(exampleContentFile, out);
+        FileUtils.copy(exampleContentFile, out);
         String result = null;
         BufferedReader reader;
         try { 
@@ -286,14 +288,14 @@ public class UtilitiesTest {
         InputStream in = null;
         File out = File.createTempFile("copiedFile", "txt");
         out.deleteOnExit();
-        Utilities.copy(in, new FileOutputStream(out));
+        FileUtils.copy(in, new FileOutputStream(out));
     }
     
      @org.junit.Test (expected = IOException.class)
     public void testCopy_InputStream_null() throws Exception {
         System.out.println("copy");
         InputStream in = new FileInputStream(exampleContentFile);
-        Utilities.copy(in, null);
+        FileUtils.copy(in, null);
     }
     
     /**
@@ -306,7 +308,7 @@ public class UtilitiesTest {
         Reader in = new FileReader(exampleContentFile);
         OutputStream out = new ByteArrayOutputStream();
 
-        long result = Utilities.copy(in, out);
+        long result = FileUtils.copy(in, out);
         assertEquals(exampleContent.length(), result);
     }
 
@@ -314,14 +316,14 @@ public class UtilitiesTest {
     public void testCopy_ReaderIsNull_OutputStream() throws IOException {
         Reader in = null;
         OutputStream out = new ByteArrayOutputStream();
-        long result = Utilities.copy(in, out);
+        long result = FileUtils.copy(in, out);
     }
     
     @org.junit.Test (expected = IOException.class)
     public void testCopy_Reader_OutputStreamIsNull() throws IOException {
         Reader in = new FileReader(exampleContentFile);
         OutputStream out = null;
-        long result = Utilities.copy(in, out);
+        long result = FileUtils.copy(in, out);
     }
     
     /**
@@ -334,7 +336,7 @@ public class UtilitiesTest {
         String inFilePath = exampleContentFile.getAbsolutePath();
         File destFile = File.createTempFile("output", "txt");
         String outFilePath = destFile.getAbsolutePath();
-        Utilities.copy(inFilePath, outFilePath);
+        FileUtils.copy(inFilePath, outFilePath);
         BufferedReader reader;
         String result = null;
         try {
@@ -354,14 +356,14 @@ public class UtilitiesTest {
     public void testDeleteFile_File() throws Exception {
         System.out.println("deleteFile");
         File file = File.createTempFile("originalFile", "txt");
-        Utilities.deleteFile(file);
+        FileUtils.deleteFile(file);
         assertFalse(file.exists());
     }
 
     @org.junit.Test
     public void testDeleteFile_FileIsNull() throws IOException {
         File file = new File("/tmp/_doesNotExit_" + Math.random());
-        Utilities.deleteFile(file);
+        FileUtils.deleteFile(file);
         file.deleteOnExit();
     }
     
@@ -369,7 +371,7 @@ public class UtilitiesTest {
     public void testDeleteFile_FolderIsEmpty() throws IOException {
         Path tempPath = Files.createTempDirectory("foo");
         File tempDirectory = tempPath.toFile();
-        Utilities.deleteFile(tempPath.toFile());
+        FileUtils.deleteFile(tempPath.toFile());
         tempDirectory.deleteOnExit();
     }
     
@@ -378,14 +380,14 @@ public class UtilitiesTest {
         Path tempPath = Files.createTempDirectory("foo");
         File tempDirectory = tempPath.toFile();
         File.createTempFile("deleteFile", "bar", tempDirectory);
-        Utilities.deleteFile(tempDirectory);
+        FileUtils.deleteFile(tempDirectory);
         tempDirectory.deleteOnExit();
     }
     
     @org.junit.Test
     public void testDeleteFile_StringIsNull() throws IOException {
         String filename = "/tmp/_doesNotExist_" + Math.random();
-        Utilities.deleteFile(filename);
+        FileUtils.deleteFile(filename);
     }
     
     /**
@@ -463,7 +465,7 @@ public class UtilitiesTest {
         System.out.println("cat");
 
         Reader reader = new FileReader(exampleContentFile);
-        String result = Utilities.cat(reader);
+        String result = IOUtils.cat(reader);
         assertEquals(exampleContent, result);
     }
 
@@ -476,7 +478,7 @@ public class UtilitiesTest {
         System.out.println("cat");
 
         InputStream is = new FileInputStream(exampleContentFile);
-        byte[] result = Utilities.cat(is);
+        byte[] result = IOUtils.cat(is);
         assertArrayEquals(exampleContent.getBytes(), result);
     }
 
@@ -491,7 +493,7 @@ public class UtilitiesTest {
         InputStream is;
         try {
             is = new FileInputStream(exampleContentFile);
-            result = Utilities.getSize(is);
+            result = FileUtils.getSize(is);
             
         } catch (Exception ex) {}
         assertEquals(exampleContent.length(), result);
@@ -506,7 +508,7 @@ public class UtilitiesTest {
         System.out.println("getSize");
 
         Reader reader = new FileReader(exampleContentFile);
-        long result = Utilities.getSize(reader);
+        long result = FileUtils.getSize(reader);
         assertEquals(exampleContent.length(), result);
     }
 
@@ -518,7 +520,7 @@ public class UtilitiesTest {
     public void testGetBytes() throws Exception {
         System.out.println("getBytes");
 
-        byte[] result = Utilities.getBytes(exampleContentFile);
+        byte[] result = FileUtils.getBytes(exampleContentFile);
         assertArrayEquals(exampleContent.getBytes(), result);
     }
 

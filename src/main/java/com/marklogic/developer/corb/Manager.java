@@ -52,6 +52,7 @@ import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.types.XdmItem;
 import java.util.HashMap;
 import java.util.Map;
+import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
 
 /**
  * @author Michael Blakeley, MarkLogic Corporation
@@ -659,10 +660,8 @@ public class Manager extends AbstractManager{
 
 			LOG.log(Level.INFO, "received {0}/{1}", new Object[] { count, total });
 			// done with result set - close session to close everything
-			if (null != urisLoader) {
-				urisLoader.close();
-			}
-
+            closeQuietly(urisLoader);
+            
 			if (count < total) {
 				LOG.log(Level.INFO,"Resetting total uri count to {0}. Ignore if URIs are loaded from a file that contains blank lines.", count);
 				monitor.setTaskCount(total = count);
@@ -711,9 +710,7 @@ public class Manager extends AbstractManager{
 			stop();
 			throw exc;
 		} finally {
-			if (null != urisLoader) {
-				urisLoader.close();
-			}
+            closeQuietly(urisLoader);
 		}
 
 		if (total == count) {

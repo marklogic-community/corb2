@@ -19,7 +19,6 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
-import com.marklogic.developer.corb.Manager.CallerBlocksPolicy;
 import java.io.File;
 import java.io.FileReader;
 import org.junit.*;

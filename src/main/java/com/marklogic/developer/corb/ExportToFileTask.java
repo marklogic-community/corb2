@@ -22,7 +22,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
+import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
 import com.marklogic.xcc.ResultSequence;
 
 /**
@@ -48,9 +48,7 @@ public class ExportToFileTask extends AbstractTask {
 			}
 			writer.flush();
 		} finally {
-			if (writer != null) {
-				writer.close();
-			}
+            closeQuietly(writer);
 		}
 	}
 

@@ -36,6 +36,8 @@ import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import com.google.code.externalsorting.ExternalSort;
+import com.marklogic.developer.corb.io.FileUtils;
+import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
@@ -62,36 +64,21 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
                 writer.write(NEWLINE);
                 writer.flush();
             } finally {
-                if (writer != null) {
-                    writer.close();
-                }
-            }
-        }
-    }
-
-    protected void moveFile(File source, File dest) {
-        if (!source.getAbsolutePath().equals(dest.getAbsolutePath())) {
-            if (source.exists()) {
-                if (dest.exists()) {
-                    dest.delete();
-                }
-                source.renameTo(dest);
+                closeQuietly(writer);
             }
         }
     }
     
-    protected void moveFile(String source, String dest) throws IOException {
-        File srcFile = new File(exportDir, source);
-        File destFile = new File(exportDir, dest);
-        moveFile(srcFile, destFile);
+    protected void moveFile(String srcFilename, String destFilename) throws IOException {
+        File srcFile = new File(exportDir, srcFilename);
+        File destFile = new File(exportDir, destFilename);
+        FileUtils.moveFile(srcFile, destFile);
     }
-
+    
     protected void moveFile() throws IOException {
-        String partFileName = getPartFileName();
-        String finalFileName = getFileName();
-        moveFile(partFileName, finalFileName);
+        moveFile(getPartFileName(), getFileName());
     }
-
+       
     protected void compressFile() throws IOException {
         if ("true".equalsIgnoreCase(getProperty("EXPORT_FILE_AS_ZIP"))) {
             String outFileName = getFileName();
@@ -107,9 +94,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             
             try {
                 if (outFile.exists()) {
-                    if (zipFile.exists()) {
-                        zipFile.delete();
-                    }
+                    FileUtils.deleteFile(zipFile);
 
                     fos = new FileOutputStream(zipFile);
                     zos = new ZipOutputStream(fos);
@@ -126,29 +111,20 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
                             zos.write(buffer, 0, len);
                         }
                     } finally {
-                        if (fis != null) {
-                            fis.close();
-                        }
+                        closeQuietly(fis);
                     }
                     zos.closeEntry();
                     zos.flush();
                 }
             } finally {
-                if (zos != null) {
-                    zos.close();
-                }
-             
-                if (fos != null) {
-                    fos.close();
-                }
+                closeQuietly(zos);
+                closeQuietly(fos);
             }
             // move the file if required
             moveFile(partZipFileName, outZipFileName);
 
             // now that we have everything, delete the uncompressed output file
-            if (outFile.exists()) {
-                outFile.delete();
-            }
+            FileUtils.deleteFile(outFile);
         }
     }
 
@@ -205,15 +181,11 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             reader.close();
             writer.close();      
         } finally {
-            if (reader != null) {
-                reader.close();
-            }
-            if (writer != null) {
-                writer.close();
-            }
+            closeQuietly(reader);
+            closeQuietly(writer);
         }
     }
-    
+
     @Override
     public String[] call() throws Exception {
         try {

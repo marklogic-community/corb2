@@ -18,10 +18,12 @@
  */
 package com.marklogic.developer.corb;
 
+import com.marklogic.developer.corb.io.FileUtils;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
@@ -39,9 +41,7 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 
 	private void deleteFileIfExists() throws IOException {
 		File batchFile = new File(exportDir, getPartFileName());
-		if (batchFile.exists()) {
-			batchFile.delete();
-		}
+        FileUtils.deleteFile(batchFile);
 	}
 
 	protected void writeTopContent() throws IOException {
@@ -55,14 +55,14 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 				writer.write(NEWLINE);
 				writer.flush();
 			} finally {
-				if (writer != null) { writer.close(); }
+                closeQuietly(writer);
 			}
 		}
 	}
 	
 	private void addLineCountToProps() throws IOException{
-		int ct = getLineCount(new File(exportDir, getPartFileName()));
-		if(this.properties != null && ct > 0){
+		int ct = FileUtils.getLineCount(new File(exportDir, getPartFileName()));
+		if (this.properties != null && ct > 0) {
 			this.properties.setProperty("EXPORT-FILE-HEADER-LINE-COUNT", String.valueOf(ct));
 		}
 	}

@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -88,13 +89,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                         throw new IllegalStateException("Unable to find serial number on Windows");
                     }
                 } finally {
-                    if (br != null) {
-                        try {
-                            br.close();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
+                    closeOrThrowRuntime(br);
                 }
             }
         },
@@ -122,13 +117,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 } finally {
-                    if (br != null) {
-                        try {
-                            br.close();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
+                    closeOrThrowRuntime(br);
                 }
             }
         },
@@ -157,13 +146,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                 } catch (IOException e) {
                     throw new RuntimeException("Required to have lshal command installed on linux machine", e);
                 } finally {
-                    if (br != null) {
-                        try {
-                            br.close();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
+                    closeOrThrowRuntime(br);
                 }
             }
         },
@@ -175,7 +158,17 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         };
 
         public abstract byte[] getSN();
-
+        
+        private static void closeOrThrowRuntime(Closeable obj) {
+            if (obj != null) {
+                try {
+                    obj.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        
         private static BufferedReader read(String command) {
             OutputStream os = null;
             InputStream is = null;

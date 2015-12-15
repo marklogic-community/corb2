@@ -37,6 +37,7 @@ import java.util.logging.Logger;
 
 import javax.crypto.Cipher;
 import javax.xml.bind.DatatypeConverter;
+import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
 
 public class PrivateKeyDecrypter extends AbstractDecrypter {
 
@@ -105,9 +106,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 			} catch (Exception exc) {
 				LOG.log(Level.SEVERE, "Problem initializing PrivateKeyDecrypter", exc);
 			} finally {
-				if (is != null) {
-					is.close();
-				}
+                closeQuietly(is);
 			}
 		} else {
 			LOG.severe("PRIVATE-KEY-FILE property must be defined");
@@ -187,9 +186,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 			fos.close();
 			System.out.println("Generated public key: " + publicKeyPathName);
 		} finally {
-			if (fos != null) {
-				fos.close();
-			}
+            closeQuietly(fos);
 		}
 	}
 
@@ -219,8 +216,8 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 			cipher.init(Cipher.ENCRYPT_MODE, KeyFactory.getInstance(algorithm).generatePublic(x509EncodedKeySpec));
 			String encryptedText = DatatypeConverter.printBase64Binary(cipher.doFinal(clearText.getBytes("UTF-8")));
 			System.out.println("Input: " + clearText + "\nOutput: " + encryptedText);
-		} finally{
-			if (fis != null) { fis.close(); }
+		} finally {
+            closeQuietly(fis);
 		}
 	}
 

@@ -43,6 +43,7 @@ import com.marklogic.xcc.ContentSourceFactory;
 import com.marklogic.xcc.SecurityOptions;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
+import static com.marklogic.developer.corb.io.IOUtils.closeQuietly;
 
 public abstract class AbstractManager {
 	public static final String VERSION = "2.2";
@@ -89,18 +90,14 @@ public abstract class AbstractManager {
 							fis = new FileInputStream(f);
 							props.load(fis);
 						} finally {
-							if (null != fis) {
-								fis.close();
-							}
+                            closeQuietly(fis);
 						}
 					} else if (excIfNotFound) {
 						throw new IllegalStateException("Unable to load properties file " + filename);
 					}
 				}
 			} finally {
-				if (null != is) {
-					is.close();
-				}
+                closeQuietly(is);
 			}
 		}
 		return props;
@@ -137,21 +134,9 @@ public abstract class AbstractManager {
 		} catch (IOException exc) {
 			throw new IllegalStateException("Problem reading adhoc query module " + module, exc);
 		} finally {
-			try {
-				if (writer != null) {
-					writer.close();
-				}
-			} catch (Exception exc) {}
-			try {
-				if (reader != null) {
-					reader.close();
-				}
-			} catch (Exception exc) {}
-			try {
-				if (is != null) {
-					is.close();
-				}
-			} catch (Exception exc) {}
+			closeQuietly(writer);
+			closeQuietly(reader);
+            closeQuietly(is);
 		}
 	}
 	
