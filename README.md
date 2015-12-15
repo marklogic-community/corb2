@@ -10,20 +10,20 @@ Corb v2.2.0 or later requires marklogic-xcc-8.0.*.jar or later to run. Please no
 
 To build corb using ant, please specify java.library.user folder in the build.properties file and place marklogic-xcc-8.0.*.jar in this folder. Please update build.xml for building corb with a later version of xcc jar.  
 
-Corb uses java logger. To customize logging, please specify logging configuration file using java system argument  
+CoRB uses java logger. To customize logging, please specify logging configuration file using java system argument  
 `-Djava.util.logging.config.file=/path/to/logging.properties`
 
-### Running Corb
-The entry point is the main method in the com.marklogic.developer.corb.Manager class. Corb requires marklogic xcc jar in the classpath, preferably the version that corresponds to marklogic server version, which can be downloaded from https://developer.marklogic.com/products/xcc (This version is tested with xcc 8.0.* talking to Marklogic 7 and 8). Use java 1.7 or later.
+### Running CoRB
+The entry point is the main method in the com.marklogic.developer.corb.Manager class. CoRB requires marklogic xcc jar in the classpath, preferably the version that corresponds to marklogic server version, which can be downloaded from https://developer.marklogic.com/products/xcc (This version is tested with xcc 8.0.* talking to Marklogic 7 and 8). Use java 1.7 or later.
 
-Corb needs one or more of the following parameters as (If specified in more than one place command line parameter takes precedence over java system property which take precedence over myjob.properties)
+CoRB needs one or more of the following parameters as (If specified in more than one place command line parameter takes precedence over java system property which take precedence over myjob.properties)
 
 1. command-line parameters
 2. Java system properties ex: `-DXCC-CONNECTION-URI=xcc://user:password@localhost:8202`
 3. As properties file in the class path specified using `-DOPTIONS-FILE=myjob.properties`. Relative and full file system paths are also supported.
 
 > Note: Any or all of the properties can be specified as java system properties or key value pairs in properties file.  
-> Note: Corb exit codes `0` - successful, `0` - nothing to process (ref: EXIT-CODE-NO-URIS), `1` - initialization or connection error and `2` - execution error
+> Note: CoRB exit codes `0` - successful, `0` - nothing to process (ref: EXIT-CODE-NO-URIS), `1` - initialization or connection error and `2` - execution error
 
 ### Options  
 * **XCC-CONNECTION-URI** (Connection string to MarkLogic XDBC Server)
@@ -63,13 +63,13 @@ Corb needs one or more of the following parameters as (If specified in more than
 * **EXPORT_FILE_AS_ZIP** (if true, PostBatchUpdateFileTask compresses the output file as a zip file)
 * **URIS-REPLACE-PATTERN** (one or more replace patterns for URIs - Used by java to truncate the length of URIs on the client side, typically to reduce java heap size in very large batch jobs, as the CoRB java client holds all the URIS in memory while processing is in progress. If truncated, XQUERY-MODULE needs to reconstruct the URI before trying to do `fn:doc()` to fetch the document. Usage: `URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2,...)`  
   **Example:** 
-  `URIS-REPLACE-PATTERN=/com/marklogic/sample/,,.xml,`  (Replace /com/marklogic/sample/ and .xml with empty strings. So, Corb client only need to cache the id '1234' instead of the entire URI /com/marklogic/sample/1234.xml. In the transform XQUERY-MODULE, we need to do `let $URI := fn:concat("/com/marklogic/sample/",$URI,".xml")`)
+  `URIS-REPLACE-PATTERN=/com/marklogic/sample/,,.xml,`  (Replace /com/marklogic/sample/ and .xml with empty strings. So, CoRB client only need to cache the id '1234' instead of the entire URI /com/marklogic/sample/1234.xml. In the transform XQUERY-MODULE, we need to do `let $URI := fn:concat("/com/marklogic/sample/",$URI,".xml")`)
 * **XCC-CONNECTION-RETRY-LIMIT** (Number attempts to connect to ML before giving up - default is 3)
 * **XCC-CONNECTION-RETRY-INTERVAL** (in seconds - Time interval in seconds between retry attempts - default is 60)  
 * **BATCH-URI-DELIM** (Use if default delimiter `';'` cannot be used to join multiple URIS when BATCH-SIZE is greater than 1.)   
-* **FAIL-ON-ERROR** (Default is true. If false, corb job will not fail and exit if the transform module throws xquery error. This option will not handle repeated connection failures)  
-* **ERROR-FILE-NAME** (Used when FAIL-ON-ERROR is false. If specifiedf true, removes duplicates from , the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to seperate URI and error message)  
-* **EXPORT-FILE-REMOVE-DUPLICATES** (If `true`, duplicate lines from EXPORT-FILE-NAME will be removed. If `true|sorted`, lines will be sorted. If `true|ordered`, lines will not be reordered after removing duplicates.)  
+* **FAIL-ON-ERROR** (Default is true. If false, CoRB job will not fail and exit if the transform module throws an XQuery error. This option will not handle repeated connection failures)  
+* **ERROR-FILE-NAME** (Used when FAIL-ON-ERROR is false. If specified true, removes duplicates from, the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to seperate URI and error message)  
+* **EXPORT-FILE-SORT** (If `ascending` or 'descending', lines will be sorted. If `|distinct` is specified after the sort direction, duplicate lines from EXPORT-FILE-NAME will be removed. i.e. `ascending|distinct` or `descending|distinct`)  
 * **MAX_OPTS_FROM_MODULE** (Default 10. Max number of custom inputs from the URIS-MODULE to other modules)  
 * **EXIT-CODE-NO-URIS** (Default 0. Returns this exit code when there is nothing to process.)  
 
@@ -109,7 +109,7 @@ INIT-MODULE, URIS-MODULE, PROCESS-MODULE, PRE-BATCH-MODULE and POST-BATCH-MODULE
 
 **Examples:**  
 `PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC` (adhoc-pre-batch.xqy must be on the classpath or in the current directory)  
-`PROCESS-MODULE=/path/to/file/adhoc-transform-module.xqy|ADHOC` (xquery module file with full path in the file system)  
+`PROCESS-MODULE=/path/to/file/adhoc-transform-module.xqy|ADHOC` (XQuery module file with full path in the file system)  
 `URIS-MODULE=adhoc-uris.sjs|ADHOC` (Adhoc JavaScript module in the classpath or current directory)
 
 ### JavaScript Modules
@@ -146,10 +146,10 @@ Generate keys and encrypt XCC URL or password using one of the options below.
 
 **Java Crypt**  
 * Use the PrivateKeyDecrypter class inside the corb jar with the gen-keys option to generate a key.  
-  `java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024`  
+  `java -cp marklogic-corb-2.2.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024`  
   > Note: if not specified, default algorithm: RSA, default key-length: 1024
 * Use the PrivateKeyDecrypter class inside the corb jar with the encrypt option to encrypt the clear text such as an xcc URL or password.  
-  `java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA`  
+  `java -cp marklogic-corb-2.2.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA`  
   > Note: if not specified, default algorithm: RSA
 
 **RSA keys**  
@@ -181,13 +181,13 @@ jasypt.password=passphrase
 HostKeyDecrypter uses internal server identifiers to generate a private key unique to the host server. It then uses that private key as input to AES-258 encryption algorithm. Due to the use of AES-258, it requires JCE Unlimited Strength Jurisdiction Policy Files. Note: certain server identifiers used may change in cases of driver installation or if underlying hardware changes. In such cases, passwords will need to be regenerated. Encrypted passwords will be always be unique to the server they are generated on.
 
 Encrypt the password as follows:  
-`java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.HostKeyDecrypter encrypt clearText`  
+`java -cp marklogic-corb-2.2.*.jar com.marklogic.developer.corb.HostKeyDecrypter encrypt clearText`  
 
 To test if server is properly configured to use the HostKeyDecrypter:  
-`java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.HostKeyDecrypter test`  
+`java -cp marklogic-corb-2.2.*.jar com.marklogic.developer.corb.HostKeyDecrypter test`  
 
 ### SSL Support
-CORB2 provides support for SSL over XCC. As a prerequisite to enabling CORB2 SSL support, the XDBC server must be configured to use SSL. It is necessary to specify XCC-CONNECTION-URI property with a protocol of 'xccs'. To configure a particular type of SSL configuration use the following property:
+CoRB2 provides support for SSL over XCC. As a prerequisite to enabling CoRB2 SSL support, the XDBC server must be configured to use SSL. It is necessary to specify XCC-CONNECTION-URI property with a protocol of 'xccs'. To configure a particular type of SSL configuration use the following property:
 
 * **SSL-CONFIG-CLASS** (Must implement `com.marklogic.developer.corb.SSLConfig`)    
   * `com.marklogic.developer.corb.TrustAnyoneSSLConfig` (Included)  
@@ -210,7 +210,7 @@ TwoWaySSLConfig is more complete and configurable implementation of the SSLConte
 ### Usage
 #### Usage 1 (Command line options):
 ```
-java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar 
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.2.1.jar 
         com.marklogic.developer.corb.Manager 
         XCC-CONNECTION-URI 
         [COLLECTION-NAME [PROCESS-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT 
@@ -221,7 +221,7 @@ java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar
 
 #### Usage 2 (Java system properties specifying options):
 ```
-java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar 
+java -server -cp .:marklogic-xcc-8.0.1.jar:marklogic-corb-2.2.1.jar 
         -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ] 
         -DPROCESS-MODULE=module-name.xqy -DTHREAD-COUNT=10 
         -DURIS-MODULE=get-uris.xqy 
@@ -232,14 +232,14 @@ java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar
 
 #### Usage 3 (Properties file specifying options):
 ```
-java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar 
+java -server -cp .:marklogic-xcc-8.0.1.jar:marklogic-corb-2.2.1.jar 
         -DOPTIONS-FILE=myjob.properties com.marklogic.developer.corb.Manager
 ```
 > looks for myjob.properties file in classpath
 
 #### Usage 4 (Combination of properties file with java system properties and command line options):
 ```
-java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.1.2.jar 
+java -server -cp .:marklogic-xcc-8.0.1.jar:marklogic-corb-2.2.1.jar 
         -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10 
         com.marklogic.developer.corb.Manager XCC-CONNECTION-URI
 ```
@@ -315,7 +315,7 @@ PRE-BATCH-MODULE=pre-batch.xqy
 POST-BATCH-MODULE=post-batch.xqy   
 ```
 
-##### sample 8 - adhoc tasks (xquery modules live local to filesystem where corb is located. Any xquery module can be adhoc)
+##### sample 8 - adhoc tasks (XQuery modules live local to filesystem where CoRB is located. Any XQuery module can be adhoc)
 ```
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  

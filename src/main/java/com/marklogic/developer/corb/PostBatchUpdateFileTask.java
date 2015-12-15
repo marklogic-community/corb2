@@ -23,35 +23,30 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import com.google.code.externalsorting.ExternalSort;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  */
 public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     public static final String DISTINCT_FILE_SUFFIX = ".distinct";
+    protected static final String SORT_DIRECTION = "(?i)^(a|de)sc.*";
+    protected static final String DESCENDING = "(?i)^desc.*";
+    protected static final String DISTINCT = "(?i).*\\|(distinct|uniq).*";
     private static final Logger LOG = Logger.getLogger(PostBatchUpdateFileTask.class.getName());
+    
     protected String getBottomContent() {
         return getProperty("EXPORT-FILE-BOTTOM-CONTENT");
     }
@@ -157,9 +152,10 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
         }
     }
 
-    private void removeDuplicatesAndSort() throws IOException {
-        String removeDuplicates = getProperty("EXPORT-FILE-REMOVE-DUPLICATES");
-        if (removeDuplicates == null || !removeDuplicates.toLowerCase().startsWith("true")) {
+    private void sortAndRemoveDuplicates() throws IOException {
+        String sort = getProperty("EXPORT-FILE-SORT");
+
+        if (sort == null || !sort.matches(SORT_DIRECTION)) {
             return;
         }
 
@@ -172,75 +168,24 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
         if (headerLineCount < 0) {
             headerLineCount = 0;
         }
+        
         File sortedFile = new File(exportDir, getPartFileName());
+        File tempFileStore = partFile.getParentFile();
         Comparator comparator = ExternalSort.defaultcomparator;
-
-        Set<String> lines = null;
-        if (removeDuplicates.toLowerCase().startsWith("true|sort") && removeDuplicates.toLowerCase().contains("descend")) {
+        if (sort.matches(DESCENDING)) {
             comparator = Collections.reverseOrder();
-        } else if (removeDuplicates.toLowerCase().startsWith("true|order")) {
-            lines = new LinkedHashSet<String>(10000);      
-        } 
-       	
-        if (lines == null) {
-            removeDuplicatesAndSortExternal(partFile, comparator, headerLineCount, sortedFile);
-        } else {
-            try {
-                removeDuplicatesPreserveOrder(partFile, headerLineCount, sortedFile);
-            } catch (NoSuchAlgorithmException ex) {
-                LOG.log(Level.SEVERE, "Unable to instantiate SHA-256 Message digest.", ex);
-                removeDuplicatesAndSortInMemory(partFile, lines, headerLineCount, sortedFile);
-            }
-        } 
-    }
-
-    protected void removeDuplicatesPreserveOrder(File inputFile, int headerLineCount, File outputFile) throws IOException, NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        HashSet<ByteBuffer> uniqueLineHashes = new HashSet<ByteBuffer>(10000);
-        byte[] hashCode = null;
-        BufferedWriter writer = null;
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(inputFile));
-            writer = new BufferedWriter(new FileWriter(outputFile, false));
-            String line;
-            int currentLine = 0;
-            while ((line = reader.readLine()) != null) {
-                if (currentLine < headerLineCount) {
-                    writer.write(line); 
-                    writer.newLine();
-                } else {
-                    hashCode = digest.digest(line.getBytes(StandardCharsets.UTF_8));
-                    if (uniqueLineHashes.add(ByteBuffer.wrap(hashCode))) {
-                        writer.write(line);
-                        writer.newLine();
-                    }
-                }
-                currentLine++;
-            }
-            writer.flush();
-            reader.close();
-            writer.close(); 
-        } finally {
-            if (reader != null) {
-                reader.close();
-            }
-            if (writer != null) {
-                writer.close();
-            }
         }
-    }
-    
-    protected void removeDuplicatesAndSortExternal(File inputFile, Comparator comparator, int headerLineCount, File outputFile) throws IOException {
-        File tempFileStore = inputFile.getParentFile();
+        boolean distinct = sort.matches(DISTINCT);
+        
         Charset charset = Charset.defaultCharset();
         boolean useGzip = false;
+        
+        List<File> fragments = ExternalSort.sortInBatch(partFile, comparator, ExternalSort.DEFAULTMAXTEMPFILES, charset, tempFileStore, distinct, headerLineCount, useGzip);
+        LOG.log(Level.INFO, "Created {0} temp files for sort and dedup", fragments.size());
+          
+        copyHeaderIntoFile(partFile, headerLineCount, sortedFile);
         boolean append = true;
-        boolean distinct = true;
-        List<File> fragments = ExternalSort.sortInBatch(inputFile, comparator, ExternalSort.DEFAULTMAXTEMPFILES, charset, tempFileStore, distinct, headerLineCount, useGzip);
-        LOG.log(Level.INFO, "Created {0} temp files", fragments.size());
-        copyHeaderIntoFile(inputFile, headerLineCount, outputFile);
-        ExternalSort.mergeSortedFiles(fragments, outputFile, comparator, charset, distinct, append, useGzip);
+        ExternalSort.mergeSortedFiles(fragments, sortedFile, comparator, charset, distinct, append, useGzip);
     }
 
     protected void copyHeaderIntoFile(File inputFile, int headerLineCount, File outputFile) throws IOException {
@@ -269,54 +214,11 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
         }
     }
     
-    protected void removeDuplicatesAndSortInMemory(File inputFile, Set<String> lines, int headerLineCount, File sortedFile) throws FileNotFoundException, IOException {
-        LOG.log(Level.WARNING, "Performing deduplication in-memory. Content may exceed available resources.");
-        List<String> headerLines = new ArrayList<String>(headerLineCount);
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(inputFile));
-            String line;
-            int ct = 0;
-            while ((line = reader.readLine()) != null) {
-                if (ct < headerLineCount){
-                    headerLines.add(line);
-                } else {
-                    lines.add(line);
-                }
-                ct++;
-            }
-        } finally {
-            if (reader != null) {
-                reader.close();
-            }
-        }
-
-        BufferedWriter writer = null;
-        try {
-            writer = new BufferedWriter(new FileWriter(sortedFile));
-            for (String header : headerLines) {
-                writer.write(header);
-                writer.newLine();
-            }
-            headerLines.clear();
-            for (String unique : lines) {
-                writer.write(unique);
-                writer.newLine();
-            }
-            writer.flush();
-        } finally {
-            if (writer != null) {
-                writer.close();
-            }
-        }
-        lines.clear();
-    }
-    
     @Override
     public String[] call() throws Exception {
         try {
             invokeModule();
-            removeDuplicatesAndSort();
+            sortAndRemoveDuplicates();
             writeBottomContent();
             moveFile();
             compressFile();
