@@ -53,6 +53,8 @@ import com.marklogic.xcc.types.XdmItem;
 import java.util.HashMap;
 import java.util.Map;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 
 /**
  * @author Michael Blakeley, MarkLogic Corporation
@@ -563,9 +565,9 @@ public class Manager extends AbstractManager{
 
 	private UrisLoader getUriLoader() throws InstantiationException, IllegalAccessException {
 		UrisLoader loader = null;
-		if (options.getUrisModule() != null && options.getUrisModule().trim().length() > 0) {
+		if (isNotBlank(options.getUrisModule())) {
 			loader = new QueryUrisLoader();
-		} else if (options.getUrisFile() != null && options.getUrisFile().trim().length() > 0) {
+		} else if (isNotBlank(options.getUrisFile())) {
 			loader = new FileUrisLoader();
 		} else if (options.getUrisLoaderClass() != null) {
 			loader = options.getUrisLoaderClass().newInstance();
@@ -629,7 +631,7 @@ public class Manager extends AbstractManager{
 					throw new ArrayIndexOutOfBoundsException("received more than " + total + " results: " + uri);
 				}
 
-				if (uri == null || uri.trim().length() == 0) {
+				if (isBlank(uri)) {
 					continue;
 				}
 

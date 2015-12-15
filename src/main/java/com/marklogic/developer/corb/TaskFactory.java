@@ -20,6 +20,7 @@ package com.marklogic.developer.corb;
 
 import java.util.HashMap;
 import java.util.Map;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
@@ -161,7 +162,7 @@ public class TaskFactory {
 
 		if (task instanceof ExportBatchToFileTask) {
 			String fileName = ((ExportBatchToFileTask) task).getFileName();
-			if (fileName == null || fileName.trim().length() == 0) {
+			if (isBlank(fileName)) {
 				throw new IllegalArgumentException("No file name for ExportBatchToFileTask");
 			}
 		}

@@ -21,7 +21,8 @@ package com.marklogic.developer.corb;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
-
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 import com.marklogic.xcc.SecurityOptions;
 
 /**
@@ -67,9 +68,9 @@ public abstract class AbstractSSLConfig implements SSLConfig{
 	
 	protected String getProperty(String key){
 		String val = System.getProperty(key);
-		if (properties != null && (val == null || val.trim().length() == 0)) {
+		if (properties != null && isBlank(val)) {
 			val = properties.getProperty(key);
 		}
-		return val != null ? val.trim() : val;
+		return trim(val);
 	}
 }

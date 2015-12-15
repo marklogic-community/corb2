@@ -42,6 +42,7 @@ import com.marklogic.xcc.types.XdmItem;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 /**
  * 
@@ -346,7 +347,7 @@ public abstract class AbstractTask implements Task {
     protected int getIntProperty(String key) {
         int intVal = -1;
 		String value = getProperty(key);
-		if (value != null && value.length() > 0) {
+		if (isNotEmpty(value)) {
 			try {
 				intVal = Integer.parseInt(value);
 			} catch (Exception exc) {
@@ -373,7 +374,7 @@ public abstract class AbstractTask implements Task {
 				writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, errorFileName), true));
         for (String uri : uris) {
             writer.write(uri.getBytes());
-            if (message != null && message.length() > 0) {
+            if (isNotEmpty(message)) {
                 writer.write(delim.getBytes());
                 writer.write(message.getBytes());
             }       

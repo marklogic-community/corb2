@@ -44,6 +44,9 @@ import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import com.marklogic.developer.corb.util.StringUtils;
+import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 public abstract class AbstractManager {
 	public static final String VERSION = "2.2";
@@ -74,7 +77,8 @@ public abstract class AbstractManager {
 	}
 
 	protected static Properties loadPropertiesFile(String filename, boolean excIfNotFound, Properties props) throws IOException {
-		if (filename != null && (filename = filename.trim()).length() > 0) {
+        filename = trim(filename);
+		if (isNotBlank(filename)) {
 			InputStream is = null;
 			try {
 				is = Manager.class.getResourceAsStream("/" + filename);
@@ -246,11 +250,11 @@ public abstract class AbstractManager {
      * @return the trimmed property value
      */
 	protected String getOption(String argVal, String propName) {
-		if (argVal != null && argVal.trim().length() > 0) {
+		if (isNotBlank(argVal)) {
 			return argVal.trim();
-		} else if (System.getProperty(propName) != null && System.getProperty(propName).trim().length() > 0) {
+		} else if (isNotBlank(System.getProperty(propName))) {
 			return System.getProperty(propName).trim();
-		} else if (this.properties.containsKey(propName) && this.properties.getProperty(propName).trim().length() > 0) {
+		} else if (this.properties.containsKey(propName) && isNotBlank(this.properties.getProperty(propName))) {
 			String val = this.properties.getProperty(propName).trim();
 			this.properties.remove(propName); //remove from properties file as we would like to keep the properties file simple. 
 			return val;

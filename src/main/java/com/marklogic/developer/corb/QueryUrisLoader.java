@@ -32,6 +32,7 @@ import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import java.util.logging.Level;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 public class QueryUrisLoader implements UrisLoader {
 	private static final int DEFAULT_MAX_OPTS_FROM_MODULE = 10;
@@ -237,7 +238,7 @@ public class QueryUrisLoader implements UrisLoader {
 		int max = DEFAULT_MAX_OPTS_FROM_MODULE;
 		try {
 			String maxStr = getProperty("MAX_OPTS_FROM_MODULE");
-			if (maxStr != null && maxStr.length() > 0) {
+			if (isNotEmpty(maxStr)) {
 				max = Integer.parseInt(maxStr);
 			}
 		} catch(Exception exc){}

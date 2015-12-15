@@ -36,6 +36,8 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 public class TwoWaySSLConfig extends AbstractSSLConfig {
 
@@ -55,7 +57,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
     public String[] getEnabledCipherSuites() {
         if (properties != null) {
             String cipherSuites = properties.getProperty(SSL_CIPHER_SUITES);
-            if (cipherSuites != null && !cipherSuites.isEmpty()) {
+            if (isNotEmpty(cipherSuites)) {
                 String[] cipherSuitesList = cipherSuites.split(",");
                 LOG.log(Level.INFO, "Using cipher suites: {0}", cipherSuitesList);
                 return cipherSuitesList;
@@ -71,7 +73,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
     public String[] getEnabledProtocols() {
         if (properties != null) {
             String enabledProtocols = properties.getProperty(SSL_ENABLED_PROTOCOLS);
-            if (enabledProtocols != null && !enabledProtocols.isEmpty()) {
+            if (isNotEmpty(enabledProtocols)) {
                 String[] enabledProtocolsList = enabledProtocols.split(",");
                 LOG.log(Level.INFO, "Using enabled protocols: {0}", enabledProtocolsList);
                 return enabledProtocolsList;
@@ -82,7 +84,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
 
     private String getRequiredProperty(String propertyName) {
         String property = getProperty(propertyName);
-        if (property != null && property.length() != 0) {
+        if (isNotEmpty(property)) {
             return property;
         } else {
             throw new IllegalStateException("Property " + propertyName + " is not provided and is required");
@@ -96,7 +98,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
      */
     protected void loadPropertiesFile() throws IOException {
         String securityFileName = getProperty(SSL_PROPERTIES_FILE);
-        if (securityFileName != null && securityFileName.trim().length() != 0) {
+        if (isNotBlank(securityFileName)) {
             File f = new File(securityFileName);
             if (f.exists() && !f.isDirectory()) {
                 LOG.log(Level.INFO, "Loading SSL configuration file {0} from filesystem", securityFileName);

@@ -43,6 +43,8 @@ import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 /**
  * This class replaces RunXQuery.  It can run both XQuery and JavaScript and when built, doesn't wrap the 
@@ -280,10 +282,10 @@ public class ModuleExecutor extends AbstractManager{
 	
 	public String getProperty(String key) {
 		String val = System.getProperty(key);
-		if (val == null || val.trim().length() == 0) {
+		if (isBlank(val)) {
 			val = properties.getProperty(key);
 		}
-		return val != null ? val.trim() : val;
+		return trim(val);
 	}
 
 	private void writeToFile(ResultSequence seq) throws IOException{

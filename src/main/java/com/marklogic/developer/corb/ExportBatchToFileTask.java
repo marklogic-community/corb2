@@ -25,6 +25,9 @@ import java.io.IOException;
 
 import com.marklogic.xcc.ResultSequence;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 public class ExportBatchToFileTask extends ExportToFileTask {
 
@@ -33,13 +36,13 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 	@Override
 	protected String getFileName() {
 		String fileName = getProperty("EXPORT-FILE-NAME");
-		if (fileName == null || fileName.length() == 0) {
-			String batchRef = getProperty(Manager.URIS_BATCH_REF);
-			if (batchRef != null && (batchRef = batchRef.trim()).length() > 0) {
+		if (isEmpty(fileName)) {
+			String batchRef = trim(getProperty(Manager.URIS_BATCH_REF));
+			if (isNotEmpty(batchRef)) {
 				fileName = batchRef.substring(batchRef.lastIndexOf('/') + 1);
 			}
 		}
-		if (fileName == null || fileName.length() == 0) {
+		if (isEmpty(fileName)) {
 			throw new NullPointerException("Missing EXPORT-FILE-NAME or URIS_BATCH_REF property");
 		}
 		return fileName;
@@ -47,7 +50,7 @@ public class ExportBatchToFileTask extends ExportToFileTask {
     
     protected String getPartExtension() {
         String partExt = getProperty("EXPORT-FILE-PART-EXT");
-        if (partExt == null || partExt.length() == 0) {
+        if (isEmpty(partExt)) {
             partExt = ".part";
         }
         if (!partExt.startsWith(".")) {

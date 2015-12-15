@@ -41,6 +41,7 @@ import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.jndi.ContentSourceBean;
 import static com.marklogic.developer.corb.TestUtils.clearFile;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import com.marklogic.developer.corb.util.StringUtils;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
 import java.util.logging.Level;
@@ -129,11 +130,11 @@ public class ModuleExecutorTest {
     }
 
     protected String getOption(String argVal, String propName, Properties properties) {
-        if (argVal != null && argVal.trim().length() > 0) {
+        if (StringUtils.isNotBlank(argVal)) {
             return argVal.trim();
-        } else if (System.getProperty(propName) != null && System.getProperty(propName).trim().length() > 0) {
+        } else if (StringUtils.isNotBlank(System.getProperty(propName))) {
             return System.getProperty(propName).trim();
-        } else if (properties.containsKey(propName) && properties.getProperty(propName).trim().length() > 0) {
+        } else if (StringUtils.isNotBlank(properties.getProperty(propName))) {
             String val = properties.getProperty(propName).trim();
             return val;
         }

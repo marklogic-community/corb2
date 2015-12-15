@@ -149,5 +149,59 @@ public class StringUtils {
         }
         return sb.toString();
     }
+
+    /**
+     * Checks if a CharSequence is null or empty ("")
+     * @param value
+     * @return true if the value is null or empty
+     */
+    public static boolean isEmpty(final CharSequence value) {
+        return value == null || value.length() == 0;
+    }
+
+    /**
+     * Checks if a CharSequence is not null or empty ("")
+     * @param value
+     * @return 
+     */
+    public static boolean isNotEmpty(final CharSequence value) {
+        return !isEmpty(value);
+    }
+
+    /**
+     * Checks if a CharSequence is null or whitespace-only characters
+     * @param value
+     * @return 
+     */
+    public static boolean isBlank(final CharSequence value) {
+        int length;
+        if (value == null || (length = value.length()) == 0) {
+            return true;
+        }
+        for (int i = 0; i < length; i++) {
+            if (Character.isWhitespace(value.charAt(i)) == false) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    /**
+     * Checks if a CharSequence is not null and not whitespace-only characters
+     * @param value
+     * @return 
+     */
+    public static boolean isNotBlank(final CharSequence value) {
+        return !isBlank(value);
+    }
+    
+    /**
+     * Removes control characters (char <= 32) from both ends of the string. If null, returns null.
+     * @param value
+     * @return 
+     */
+    public static String trim(final String value){
+        return value == null ? null : value.trim();
+    }
     
 }
