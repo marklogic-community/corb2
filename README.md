@@ -1,4 +1,4 @@
-Version: 2.2.0
+Version: 2.2.1
 
 ### User Guide
 This document provides a comprehensive overview of CoRB2.  For additional information, please refer to CoRB2 online [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc).  This document also covers the less robust [RunXQuery Tool](#runXQuery-readme) which can be used when only a single staged query is necessary.  The RunXQuery Tool is provided as part of the CoRB2 distribution.
@@ -6,7 +6,7 @@ This document provides a comprehensive overview of CoRB2.  For additional inform
 ### Downloads
 Please download latest release from https://github.com/marklogic/corb2/releases.  
 
-Corb v2.2.0 or later requires marklogic-xcc-8.0.*.jar or later to run. Please note that xcc 8 is backwards compatible up to MarkLogic 5. Also, please use java 1.7 or later for running corb.
+CoRB v2.2.0 or later requires marklogic-xcc-8.0.*.jar or later to run. Please note that xcc 8 is backwards compatible up to MarkLogic 5. Also, please use java 1.7 or later for running corb.
 
 To build corb using ant, please specify java.library.user folder in the build.properties file and place marklogic-xcc-8.0.*.jar in this folder. Please update build.xml for building corb with a later version of xcc jar.  
 
@@ -22,7 +22,8 @@ CoRB needs one or more of the following parameters as (If specified in more than
 2. Java system properties ex: `-DXCC-CONNECTION-URI=xcc://user:password@localhost:8202`
 3. As properties file in the class path specified using `-DOPTIONS-FILE=myjob.properties`. Relative and full file system paths are also supported.
 
-> Note: Any or all of the properties can be specified as java system properties or key value pairs in properties file.  
+> Note: Any or all of the properties can be specified as java system properties or key value pairs in properties file.
+ 
 > Note: CoRB exit codes `0` - successful, `0` - nothing to process (ref: EXIT-CODE-NO-URIS), `1` - initialization or connection error and `2` - execution error
 
 ### Options  
