@@ -21,9 +21,6 @@ package com.marklogic.developer.corb;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.LineNumberReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -54,7 +51,8 @@ public abstract class AbstractTask implements Task {
 	
 	protected static final String TRUE = "true";
 	protected static final String FALSE = "false";
-	protected static final byte[] NEWLINE = "\n".getBytes();
+	protected static final byte[] NEWLINE = 
+			System.getProperty("line.separator") != null ? System.getProperty("line.separator").getBytes() : "\n".getBytes();
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
 	protected ContentSource cs;

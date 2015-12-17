@@ -116,18 +116,6 @@ public class ExportBatchToFileTaskTest {
     }
 
     @Test
-    public void testGetPartFileName_emptyExtension() {
-        System.out.println("getPartFileName");
-        Properties props = new Properties();
-        props.setProperty("URIS_BATCH_REF", "foo");
-        props.setProperty("EXPORT-FILE-PART-EXT", "");
-        ExportBatchToFileTask instance = new ExportBatchToFileTask();
-        instance.properties = props;
-        String result = instance.getPartFileName();
-        assertEquals("foo.part", result);
-    }
-
-    @Test
     public void testGetPartFileName_withExtension() {
         System.out.println("getPartFileName");
         Properties props = new Properties();

@@ -38,6 +38,7 @@ import java.util.zip.ZipOutputStream;
 import com.google.code.externalsorting.ExternalSort;
 import com.marklogic.developer.corb.util.FileUtils;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
@@ -48,6 +49,68 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     protected static final String DESCENDING = "(?i)^desc.*";
     protected static final String DISTINCT = "(?i).*\\|(distinct|uniq).*";
     private static final Logger LOG = Logger.getLogger(PostBatchUpdateFileTask.class.getName());
+    
+    
+    protected void sortAndRemoveDuplicates() throws IOException {
+      String sort = getProperty("EXPORT-FILE-SORT");
+
+      if (sort == null || !sort.matches(SORT_DIRECTION)) {
+          return;
+      }
+
+      File origFile = new File(exportDir, getPartFileName());
+      if (!origFile.exists()) {
+          return;
+      }
+      
+      int headerLineCount = getIntProperty("EXPORT-FILE-HEADER-LINE-COUNT");
+      if (headerLineCount < 0) {
+          headerLineCount = 0;
+      }
+           
+      File sortedFile = new File(exportDir, getPartFileName() + getPartExt());
+      File tempFileStore = origFile.getParentFile();
+      Comparator comparator = ExternalSort.defaultcomparator;
+      if (sort.matches(DESCENDING)) {
+          comparator = Collections.reverseOrder();
+      }
+      boolean distinct = sort.matches(DISTINCT);
+      
+      Charset charset = Charset.defaultCharset();
+      boolean useGzip = false;
+      
+      List<File> fragments = ExternalSort.sortInBatch(origFile, comparator, ExternalSort.DEFAULTMAXTEMPFILES, charset, tempFileStore, distinct, headerLineCount, useGzip);
+      LOG.log(Level.INFO, "Created {0} temp files for sort and dedup", fragments.size());
+        
+      copyHeaderIntoFile(origFile, headerLineCount, sortedFile);
+      boolean append = true;
+      ExternalSort.mergeSortedFiles(fragments, sortedFile, comparator, charset, distinct, append, useGzip);
+      
+      FileUtils.moveFile(sortedFile, origFile);
+  }
+
+  protected void copyHeaderIntoFile(File inputFile, int headerLineCount, File outputFile) throws IOException {
+      BufferedWriter writer = null;
+      BufferedReader reader = null;
+      try {
+          reader = new BufferedReader(new FileReader(inputFile));
+          writer = new BufferedWriter(new FileWriter(outputFile, false));
+          String line;
+          int currentLine = 0;
+          while ((line = reader.readLine()) != null && currentLine < headerLineCount) {
+              writer.write(line); 
+              writer.newLine();
+              currentLine++;
+          }
+          writer.flush();
+          reader.close();
+          writer.close();      
+      } finally {
+          closeQuietly(reader);
+          closeQuietly(writer);
+      }
+  }
+
     
     protected String getBottomContent() {
         return getProperty("EXPORT-FILE-BOTTOM-CONTENT");
@@ -78,12 +141,22 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     protected void moveFile() throws IOException {
         moveFile(getPartFileName(), getFileName());
     }
+    
+    protected String getPartExt(){
+    	String partExt = getProperty("EXPORT-FILE-PART-EXT");
+      if(isEmpty(partExt)){
+      	partExt = ".part";
+      }else if (!partExt.startsWith(".")) {
+				partExt = "." + partExt;
+			}
+      return partExt;
+    }
        
     protected void compressFile() throws IOException {
         if ("true".equalsIgnoreCase(getProperty("EXPORT_FILE_AS_ZIP"))) {
             String outFileName = getFileName();
             String outZipFileName = outFileName + ".zip";
-            String partExt = getPartExtension();
+            String partExt = getPartExt();
             String partZipFileName = outZipFileName + partExt;
 
             File outFile = new File(exportDir, outFileName);
@@ -128,69 +201,11 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
         }
     }
 
-    private void sortAndRemoveDuplicates() throws IOException {
-        String sort = getProperty("EXPORT-FILE-SORT");
-
-        if (sort == null || !sort.matches(SORT_DIRECTION)) {
-            return;
-        }
-
-        File partFile = new File(exportDir, getFileName());
-        if (!partFile.exists()) {
-            return;
-        }
-        
-        int headerLineCount = getIntProperty("EXPORT-FILE-HEADER-LINE-COUNT");
-        if (headerLineCount < 0) {
-            headerLineCount = 0;
-        }
-        
-        File sortedFile = new File(exportDir, getPartFileName());
-        File tempFileStore = partFile.getParentFile();
-        Comparator comparator = ExternalSort.defaultcomparator;
-        if (sort.matches(DESCENDING)) {
-            comparator = Collections.reverseOrder();
-        }
-        boolean distinct = sort.matches(DISTINCT);
-        
-        Charset charset = Charset.defaultCharset();
-        boolean useGzip = false;
-        
-        List<File> fragments = ExternalSort.sortInBatch(partFile, comparator, ExternalSort.DEFAULTMAXTEMPFILES, charset, tempFileStore, distinct, headerLineCount, useGzip);
-        LOG.log(Level.INFO, "Created {0} temp files for sort and dedup", fragments.size());
-          
-        copyHeaderIntoFile(partFile, headerLineCount, sortedFile);
-        boolean append = true;
-        ExternalSort.mergeSortedFiles(fragments, sortedFile, comparator, charset, distinct, append, useGzip);
-    }
-
-    protected void copyHeaderIntoFile(File inputFile, int headerLineCount, File outputFile) throws IOException {
-        BufferedWriter writer = null;
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(inputFile));
-            writer = new BufferedWriter(new FileWriter(outputFile, false));
-            String line;
-            int currentLine = 0;
-            while ((line = reader.readLine()) != null && currentLine < headerLineCount) {
-                writer.write(line); 
-                writer.newLine();
-                currentLine++;
-            }
-            writer.flush();
-            reader.close();
-            writer.close();      
-        } finally {
-            closeQuietly(reader);
-            closeQuietly(writer);
-        }
-    }
-
     @Override
     public String[] call() throws Exception {
         try {
+          	sortAndRemoveDuplicates();
             invokeModule();
-            sortAndRemoveDuplicates();
             writeBottomContent();
             moveFile();
             compressFile();
