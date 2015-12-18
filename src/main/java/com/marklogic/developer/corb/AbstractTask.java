@@ -31,7 +31,9 @@ import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
+import com.marklogic.xcc.exceptions.QueryException;
 import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.exceptions.RetryableQueryException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
@@ -230,11 +232,9 @@ public abstract class AbstractTask implements Task {
 			Thread.yield();// try to avoid thread starvation
 
 			return inputUris;
-		} catch (ServerConnectionException exc){
-            return handleRequestException(exc);
-        } catch (RequestException exc) {
-          return handleRequestException(exc);  
-        } catch (Exception exc) {
+		} catch (RequestException exc) {
+      return handleRequestException(exc);  
+    } catch (Exception exc) {
 			throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
 		} finally {
 			if (null != session && !session.isClosed()) {
@@ -249,35 +249,38 @@ public abstract class AbstractTask implements Task {
 		}
 	}
 	
-  protected String[] handleRequestException(ServerConnectionException exc) throws CorbException {
-      int retryLimit = this.getConnectRetryLimit();
+  protected String[] handleRequestException(RequestException exc) throws CorbException {
+    String name = exc.getClass().getSimpleName();    
+    if(exc instanceof ServerConnectionException || 
+    		exc instanceof RetryableQueryException || 
+    		(exc instanceof QueryException && ((QueryException)exc).isRetryable())) {
+    	int retryLimit = this.getConnectRetryLimit();
       int retryInterval = this.getConnectRetryInterval();
       if (connectRetryCount < retryLimit) {
           connectRetryCount++;
-          LOG.log(Level.SEVERE,
-                  "Connection failed to Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
+          LOG.log(Level.WARNING,
+                  "Encountered " + name + " from Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
                   new Object[]{connectRetryCount, retryInterval, exc.getMessage(), asString(inputUris)});
           try {
-              Thread.sleep(retryInterval * 1000L);
+          	Thread.sleep(retryInterval * 1000L);
           } catch (Exception exc2) {
           }
           return invokeModule();
-      } else {
+      } else if(exc instanceof ServerConnectionException || failOnError){	
           throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
-      }
-  }
-
-  protected String[] handleRequestException(RequestException requestException) throws CorbException {
-    String name = requestException.getClass().getSimpleName();
-    String exceptionType = name.replace("Request", "").replace("Exception", "").toLowerCase();
-    
-    System.out.println(exceptionType);
-    if (failOnError) {
-        throw new CorbException(requestException.getMessage() + " at URI: " + asString(inputUris), requestException);
-    } else {
-        LOG.log(Level.WARNING, "failOnError is is false. Encountered " + exceptionType + " exception at URI: " + asString(inputUris), requestException);
-        writeToErrorFile(inputUris, requestException.getMessage());
+      }else{
+      	LOG.log(Level.WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
+        writeToErrorFile(inputUris, exc.getMessage());
         return inputUris;
+      }
+    }else{   
+	    if (failOnError) {
+	        throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
+	    } else {
+	        LOG.log(Level.WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
+	        writeToErrorFile(inputUris, exc.getMessage());
+	        return inputUris;
+	    }
     }
   }
     

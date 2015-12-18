@@ -172,8 +172,8 @@ public class Monitor implements Runnable {
     protected static String getProgressMessage(long completed, long taskCount, double tps, double curTps, int threads) {
         String etc = getEstimatedTimeCompletion(taskCount, completed, tps);
         return completed + "/" + taskCount + ", " + 
-                formatThreadsPerSecond(tps) + " tps(avg), " + 
-                formatThreadsPerSecond(curTps) + " tps(cur), " +
+                formatTransactionsPerSecond(tps) + " tps(avg), " + 
+                formatTransactionsPerSecond(curTps) + " tps(cur), " +
                 "ETC " + etc + ", " + 
                 threads + " active threads.";
     }
@@ -191,7 +191,7 @@ public class Monitor implements Runnable {
      * @param n
      * @return 
      */
-    protected static String formatThreadsPerSecond(Number n) {
+    protected static String formatTransactionsPerSecond(Number n) {
         NumberFormat format = DecimalFormat.getInstance();
         format.setRoundingMode(RoundingMode.HALF_UP);
         format.setMinimumFractionDigits(0);
