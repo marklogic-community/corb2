@@ -64,8 +64,7 @@ public abstract class AbstractManager {
 	protected ContentSource contentSource;
 	
 	private static final Logger LOG = Logger.getLogger(AbstractManager.class.getSimpleName());
-
-	
+    
 	public static Properties loadPropertiesFile(String filename) throws IOException {
 		return loadPropertiesFile(filename, true);
 	}
@@ -163,7 +162,7 @@ public abstract class AbstractManager {
 	
 	public void initPropertiesFromOptionsFile() throws IOException{	
 		String propsFileName = System.getProperty("OPTIONS-FILE");
-		loadPropertiesFile(propsFileName,true,this.properties);
+		loadPropertiesFile(propsFileName, true, this.properties);
 	}
 	
 	public void init(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException{			

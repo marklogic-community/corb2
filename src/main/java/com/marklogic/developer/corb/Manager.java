@@ -102,9 +102,12 @@ public class Manager extends AbstractManager{
 				throw new RejectedExecutionException(e);
 			}
 		}
-
 	}
 	
+    public Manager(){
+		
+	}
+    
 	/**
 	 * @param args
 	 */
@@ -119,21 +122,17 @@ public class Manager extends AbstractManager{
 		//now we can start corb. 
 		try {
 			int count = tm.run();
-			if (tm.execError){
+			if (tm.execError) {
 				System.exit(2);
 			} else if (count == 0) {
 				System.exit(EXIT_CODE_NO_URIS);
 			} else {
 				System.exit(0);
 			}
-		} catch(Exception exc){
+		} catch(Exception exc) {
 			LOG.log(Level.SEVERE, "Error while running CORB", exc);
 			System.exit(2);
 		}
-	}
-
-	public Manager(){
-		
 	}
 	
     @Override

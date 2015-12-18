@@ -55,7 +55,7 @@ CoRB needs one or more of the following parameters as (If specified in more than
   `declare variable URI as xs:string exernal;`  
   `let $all-uris := fn:tokenize($URI,";")`  
 * **DECRYPTER** (Must implement `com.marklogic.developer.corb.Decrypter`. Encryptable options include XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and XCC-DBNAME)  
-* **SSL-CONFIG-CLASS** (A java class that must implement `com.marklogic.developer.corb.SSLConfig`. If not specified, Corb defaults to `com.marklogic.developer.corb.TrustAnyoneSSLConfig` for `xccs` connections)  
+* **SSL-CONFIG-CLASS** (A java class that must implement `com.marklogic.developer.corb.SSLConfig`. If not specified, CoRB defaults to `com.marklogic.developer.corb.TrustAnyoneSSLConfig` for `xccs` connections)  
 
 ### Additional options
 * **EXPORT-FILE-PART-EXT** (ex: .tmp - if specified, com.marklogic.developer.corb.PreBatchUpdateFileTask adds this temporary extension to the export file name to indicate EXPORT-FILE-NAME is being actively modified. To remove this temporary extension after EXPORT-FILE-NAME is complete, `com.marklogic.developer.corb.PostBatchUpdateFileTask` must be specified as POST-BATCH-TASK.)
@@ -71,8 +71,9 @@ CoRB needs one or more of the following parameters as (If specified in more than
 * **QUERY-RETRY-INTERVAL** (in seconds - Time interval in seconds between re-query attempts - default is 15)  
 * **BATCH-URI-DELIM** (Use if default delimiter `';'` cannot be used to join multiple URIS when BATCH-SIZE is greater than 1.)   
 * **FAIL-ON-ERROR** (Default is true. If false, CoRB job will not fail and exit if the transform module throws an XQuery error. This option will not handle repeated connection failures)  
-* **ERROR-FILE-NAME** (Used when FAIL-ON-ERROR is false. If specified true, removes duplicates from, the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to seperate URI and error message)  
+* **ERROR-FILE-NAME** (Used when FAIL-ON-ERROR is false. If specified true, removes duplicates from, the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to separate URI and error message)  
 * **EXPORT-FILE-SORT** (If `ascending` or 'descending', lines will be sorted. If `|distinct` is specified after the sort direction, duplicate lines from EXPORT-FILE-NAME will be removed. i.e. `ascending|distinct` or `descending|distinct`)  
+* **EXPORT-FILE-SORT-COMPARATOR** (A java class that must implement `java.util.Comparator`. If specified, CoRB will use this class for sorting in place of ascending or descending string comparator even if a value was specified for EXPORT-FILE-SORT.)
 * **MAX_OPTS_FROM_MODULE** (Default 10. Max number of custom inputs from the URIS-MODULE to other modules)  
 * **EXIT-CODE-NO-URIS** (Default 0. Returns this exit code when there is nothing to process.)  
 

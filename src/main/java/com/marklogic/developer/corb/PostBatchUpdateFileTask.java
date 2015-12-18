@@ -38,7 +38,9 @@ import java.util.zip.ZipOutputStream;
 import com.google.code.externalsorting.ExternalSort;
 import com.marklogic.developer.corb.util.FileUtils;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
@@ -47,18 +49,21 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     public static final String DISTINCT_FILE_SUFFIX = ".distinct";
     protected static final String SORT_DIRECTION = "(?i)^(a|de)sc.*";
     protected static final String DESCENDING = "(?i)^desc.*";
-    protected static final String DISTINCT = "(?i).*\\|(distinct|uniq).*";
+    protected static final String DISTINCT = "(?i).*(distinct|uniq).*";
     private static final Logger LOG = Logger.getLogger(PostBatchUpdateFileTask.class.getName());
      
-    protected void sortAndRemoveDuplicates() throws IOException {
-        String sort = getProperty("EXPORT-FILE-SORT");
-
-        if (sort == null || !sort.matches(SORT_DIRECTION)) {
-            return;
-        }
-
-        File origFile = new File(exportDir, getPartFileName());
-        if (!origFile.exists()) {
+    protected void sortAndRemoveDuplicates() {
+    	File origFile = new File(exportDir, getPartFileName());
+      if (!origFile.exists()) {
+          return;
+      }
+      
+      try {
+    		String sort = getProperty("EXPORT-FILE-SORT");
+        String comparatorCls = getProperty("EXPORT-FILE-SORT-COMPARATOR");
+        
+        //You must either specify asc/desc or provide your own comparator
+        if ((sort == null || !sort.matches(SORT_DIRECTION)) && isBlank(comparatorCls)) {
             return;
         }
 
@@ -69,11 +74,17 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 
         File sortedFile = new File(exportDir, getPartFileName() + getPartExt());
         File tempFileStore = origFile.getParentFile();
+        
         Comparator comparator = ExternalSort.defaultcomparator;
-        if (sort.matches(DESCENDING)) {
-            comparator = Collections.reverseOrder();
+        if (isNotBlank(comparatorCls)) {
+            comparator = getComparatorCls(comparatorCls).newInstance();
+        } else {  
+            if (sort.matches(DESCENDING)) {
+                comparator = Collections.reverseOrder();
+            }
         }
-        boolean distinct = sort.matches(DISTINCT);
+        
+        boolean distinct = isBlank(sort) ? false : sort.matches(DISTINCT);
 
         Charset charset = Charset.defaultCharset();
         boolean useGzip = false;
@@ -86,8 +97,21 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
         ExternalSort.mergeSortedFiles(fragments, sortedFile, comparator, charset, distinct, append, useGzip);
 
         FileUtils.moveFile(sortedFile, origFile);
+      }catch(Exception exc){
+      	LOG.log(Level.WARNING,"Unexpected error while sorting the report file "+origFile.getPath()+". The file can still be sorted locally after the job is finished.", exc);
+      }
     }
-
+    
+    protected Class<? extends Comparator> getComparatorCls(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+        Class<?> cls = Class.forName(className);
+        if (Comparator.class.isAssignableFrom(cls)) {
+            cls.newInstance(); // sanity check
+            return cls.asSubclass(Comparator.class);
+        } else {
+            throw new IllegalArgumentException("Comparator must be of type java.util.Comparator");
+        }
+    }
+    
     protected void copyHeaderIntoFile(File inputFile, int headerLineCount, File outputFile) throws IOException {
         BufferedWriter writer = null;
         BufferedReader reader = null;

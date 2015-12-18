@@ -33,6 +33,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -277,6 +278,73 @@ public class PostBatchUpdateFileTaskTest {
         assertEquals(splitAndAppendNewline("BEGIN,letter,a,b,d,z,END"), result);
     }
 
+    @Test
+    public void testCall_removeDuplicatesAndSort_customComparator() throws Exception {
+       testCustomComparator(null, "b,z...,d....,d....,a.....");
+    }
+    
+    @Test
+    public void testCall_removeDuplicatesAndSort_customComparator_distinct() throws Exception {
+        testCustomComparator("distinct", "b,z...,d....,a.....");
+    }
+    
+    @Test
+    public void testCall_removeDuplicatesAndSort_customComparator_badClass() throws Exception {
+        testCustomComparator("distinct", "z...,d....,d....,a.....,b", "java.lang.String");
+    }
+    
+    @Test 
+    public void testCall_removeDuplicatesAndSort_noSortOrDedup_distinctOnly() throws Exception {
+        testCustomComparator("distinct", "z...,d....,d....,a.....,b", null);
+    }
+    
+    @Test 
+    public void testCall_removeDuplicatesAndSort_noSortOrDedup_blankSort() throws Exception {
+        testCustomComparator(" ", "z...,d....,d....,a.....,b", null);
+    }
+    
+    public void testCustomComparator(String sortProperty, String expected) throws Exception {
+        testCustomComparator(sortProperty, expected, "com.marklogic.developer.corb.PostBatchUpdateFileTaskTest$StringLengthComparator");
+    }
+    
+    public void testCustomComparator(String sortProperty, String expected, String comparator) throws Exception {
+        System.out.println("call");
+        File file = File.createTempFile("moveFile", "txt");
+        file.deleteOnExit();
+        FileWriter writer = new FileWriter(file, true);
+        writer.append("z...\n");
+        writer.append("d....\n");
+        writer.append("d....\n");
+        writer.append("a.....\n");
+        writer.append("b\n");
+        writer.flush();
+        writer.close();
+
+        Properties props = new Properties();
+        if (comparator != null) {
+            props.setProperty("EXPORT-FILE-SORT-COMPARATOR", comparator);
+        }
+        if (sortProperty != null) {
+            props.setProperty("EXPORT-FILE-SORT", sortProperty);
+        }
+        String result = testRemoveDuplicatesAndSort(file, props);
+        assertEquals(splitAndAppendNewline(expected), result);
+    }
+    
+    public static class StringLengthComparator implements Comparator<String> {
+
+        @Override
+        public int compare(String o1, String o2) {
+            if (o1.length() > o2.length()) {
+                return 1;
+            } else if (o1.length() < o2.length()) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
+    }
+    
     @Test
     public void testCall_removeDuplicatesAndSort_descendingDistinct() throws Exception {
         System.out.println("call");
