@@ -52,17 +52,18 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     protected static final String DISTINCT = "(?i).*(distinct|uniq).*";
     private static final Logger LOG = Logger.getLogger(PostBatchUpdateFileTask.class.getName());
      
-    protected void sortAndRemoveDuplicates() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-        String sort = getProperty("EXPORT-FILE-SORT");
+    protected void sortAndRemoveDuplicates() {
+    	File origFile = new File(exportDir, getPartFileName());
+      if (!origFile.exists()) {
+          return;
+      }
+      
+      try {
+    		String sort = getProperty("EXPORT-FILE-SORT");
         String comparatorCls = getProperty("EXPORT-FILE-SORT-COMPARATOR");
         
         //You must either specify asc/desc or provide your own comparator
         if ((sort == null || !sort.matches(SORT_DIRECTION)) && isBlank(comparatorCls)) {
-            return;
-        }
-
-        File origFile = new File(exportDir, getPartFileName());
-        if (!origFile.exists()) {
             return;
         }
 
@@ -96,6 +97,9 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
         ExternalSort.mergeSortedFiles(fragments, sortedFile, comparator, charset, distinct, append, useGzip);
 
         FileUtils.moveFile(sortedFile, origFile);
+      }catch(Exception exc){
+      	LOG.log(Level.WARNING,"Unexpected error while sorting the report file "+origFile.getPath()+". The file can still be sorted locally after the job is finished.", exc);
+      }
     }
     
     protected Class<? extends Comparator> getComparatorCls(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {

@@ -288,9 +288,9 @@ public class PostBatchUpdateFileTaskTest {
         testCustomComparator("distinct", "b,z...,d....,a.....");
     }
     
-    @Test (expected = IllegalArgumentException.class)
+    @Test
     public void testCall_removeDuplicatesAndSort_customComparator_badClass() throws Exception {
-        testCustomComparator("distinct", "b,z...,d....,a.....", "java.lang.String");
+        testCustomComparator("distinct", "z...,d....,d....,a.....,b", "java.lang.String");
     }
     
     @Test 
