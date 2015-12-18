@@ -65,7 +65,7 @@ public class TwoWaySSLConfigTest {
         System.out.println("getEnabledCipherSuites");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         String[] result = instance.getEnabledCipherSuites();
-        assertNull(result);
+        assertEquals(0, result.length);
     }
     
     @Test
@@ -74,7 +74,7 @@ public class TwoWaySSLConfigTest {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.setProperties(new Properties());
         String[] result = instance.getEnabledCipherSuites();
-        assertNull(result);
+        assertEquals(0, result.length);
     }
     
     @Test
@@ -98,7 +98,7 @@ public class TwoWaySSLConfigTest {
         System.out.println("getEnabledProtocols");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         String[] result = instance.getEnabledProtocols();
-        assertNull(result);
+        assertEquals(0, result.length);
     }
 
     @Test
@@ -107,7 +107,7 @@ public class TwoWaySSLConfigTest {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.setProperties(new Properties());
         String[] result = instance.getEnabledProtocols();
-        assertNull(result);
+        assertEquals(0, result.length);
     }
     
     @Test

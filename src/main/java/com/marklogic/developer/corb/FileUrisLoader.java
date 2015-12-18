@@ -27,6 +27,9 @@ import java.util.logging.Logger;
 
 import com.marklogic.xcc.ContentSource;
 import java.util.logging.Level;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 public class FileUrisLoader implements UrisLoader {
 
@@ -81,7 +84,7 @@ public class FileUrisLoader implements UrisLoader {
 				lnr.skip(Long.MAX_VALUE);
 				total = lnr.getLineNumber() + 1;
 			} finally {
-				if (lnr != null) { lnr.close(); }
+                closeQuietly(lnr);
 			}
 
 			FileReader fr = new FileReader(fileName);
@@ -103,8 +106,8 @@ public class FileUrisLoader implements UrisLoader {
 	}
 
 	private String readNextLine() throws IOException {
-		String line = br.readLine();
-		if (line != null && (line = line.trim()).length() == 0) {
+		String line = trim(br.readLine());
+		if (line != null && isBlank(line)) {
 			line = readNextLine();
 		}
 		return line;

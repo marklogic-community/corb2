@@ -10,7 +10,7 @@ through the process.
  
 ## <a name="question"></a> Got a Question or Problem?
 
-If you have questions about how to use Corb, please ask on StackOverflow, 
+If you have questions about how to use Corb, please ask on <a href="https://stackoverflow.com">StackOverflow</a>, 
 tagging your questions with "marklogic".
 
 ## <a name="issue"></a> Found an Issue?
@@ -26,7 +26,7 @@ first create a new issue and discuss it with one of our project maintainers.
 ## <a name="submit"></a> Submission Guidelines
 
 ### Submitting an Issue
-Before you submit your issue search the archive, chech whether your question 
+Before you submit your issue search the archive, check whether your question 
 was already answered.
 
 If your issue appears to be a bug, and hasn't been reported, open a new issue.

@@ -19,7 +19,6 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
-import com.marklogic.developer.corb.Manager.CallerBlocksPolicy;
 import java.io.File;
 import java.io.FileReader;
 import org.junit.*;
@@ -27,7 +26,6 @@ import static org.junit.Assert.*;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import static com.marklogic.developer.corb.TestUtils.clearFile;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
-import static com.marklogic.developer.corb.TestUtils.deleteDir;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ContentSourceFactory;
@@ -50,6 +48,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import org.apache.commons.io.FileUtils;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
@@ -454,7 +453,7 @@ public class ManagerTest {
      */
     @After
     public void tearDown() throws Exception {
-        deleteDir(new File(ManagerTest.EXPORT_FILE_DIR));
+        FileUtils.deleteDirectory(new File(ManagerTest.EXPORT_FILE_DIR));
         clearSystemProperties();
     }
 
@@ -473,8 +472,8 @@ public class ManagerTest {
     public void testRejectedExecution_npe() {
         Runnable r = mock(Runnable.class);
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
-        Manager manager = new Manager();
-        RejectedExecutionHandler cbp = manager.new CallerBlocksPolicy();
+ 
+        RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
         cbp.rejectedExecution(r, threadPool);
     }
 
@@ -484,8 +483,8 @@ public class ManagerTest {
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
         BlockingQueue queue = mock(BlockingQueue.class);
         when(threadPool.getQueue()).thenReturn(queue).thenThrow(new NullPointerException());
-        Manager manager = new Manager();
-        RejectedExecutionHandler cbp = manager.new CallerBlocksPolicy();
+      
+        RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
         cbp.rejectedExecution(r, threadPool);
 
     }
@@ -494,11 +493,10 @@ public class ManagerTest {
     public void testRejectedExecution_rejectedExecution() {
         Runnable r = mock(Runnable.class);
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
-        BlockingQueue queue = mock(BlockingQueue.class);
+
         when(threadPool.getQueue()).thenThrow(new InterruptedException());
         threadPool.getQueue();
-        Manager manager = new Manager();
-        RejectedExecutionHandler cbp = manager.new CallerBlocksPolicy();
+        RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
         cbp.rejectedExecution(r, threadPool);
     }
 
@@ -509,8 +507,7 @@ public class ManagerTest {
         BlockingQueue queue = mock(BlockingQueue.class);
         when(threadPool.getQueue()).thenReturn(queue).thenThrow(new NullPointerException());
 
-        Manager manager = new Manager();
-        RejectedExecutionHandler cbp = manager.new CallerBlocksPolicy();
+        RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
         cbp.rejectedExecution(r, threadPool);
         cbp.rejectedExecution(r, threadPool);
         List<LogRecord> records = testLogger.getLogRecords();

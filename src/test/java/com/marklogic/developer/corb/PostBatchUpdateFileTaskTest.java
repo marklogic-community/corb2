@@ -27,11 +27,15 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.createTempDirectory;
+import com.marklogic.developer.corb.util.FileUtils;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -102,7 +106,7 @@ public class PostBatchUpdateFileTaskTest {
 
         instance.writeBottomContent();
 
-        File outputFile = new File(tempDir, filename);
+        File outputFile = new File(tempDir, instance.getPartFileName());
         String outputText = TestUtils.readFile(outputFile);
         assertEquals(expextedResult, outputText);
     }
@@ -182,7 +186,7 @@ public class PostBatchUpdateFileTaskTest {
         output.deleteOnExit();
         assertTrue(output.exists());
     }
-    
+
     @Test
     public void testCompressFile_outputFileDoesNotExist() throws Exception {
         System.out.println("compressFile");
@@ -227,53 +231,87 @@ public class PostBatchUpdateFileTaskTest {
      * Test of call method, of class PostBatchUpdateFileTask.
      */
     @Test
-    public void testCall_removeDuplicatesAndSort_true() throws Exception {
+    public void testCall_removeDuplicatesAndSort_ascUniq() throws Exception {
         System.out.println("call");
-        String result = testRemoveDuplicatesAndSort("true");
+        Properties props = new Properties();
+        props.setProperty("EXPORT-FILE-SORT", "asc|uniq");
+        String result = testRemoveDuplicatesAndSort(props);
         List<String> tokens = Arrays.asList(result.split("\n"));
-        assertEquals(4,tokens.size());
-        for (String next : new String[]{"a","b","d","z"}) {
-        	assertTrue(tokens.contains(next));
+        assertEquals(4, tokens.size());
+        for (String next : new String[]{"a", "b", "d", "z"}) {
+            assertTrue(tokens.contains(next));
         }
     }
-    
+
     @Test
-    public void testCall_removeDuplicatesAndSort_trueSort() throws Exception {
+    public void testCall_removeDuplicatesAndSort_ASCENDING() throws Exception {
         System.out.println("call");
-        String result = testRemoveDuplicatesAndSort("true|sort");
+        Properties props = new Properties();
+        props.setProperty("EXPORT-FILE-SORT", "ASCENDING|distinct");
+        String result = testRemoveDuplicatesAndSort(props);
         assertEquals(splitAndAppendNewline("a,b,d,z"), result);
     }
-    
+
     @Test
-    public void testCall_removeDuplicatesAndSort_trueOrdered() throws Exception {
+    public void testCall_removeDuplicatesAndSort_trueSort_withHeaderAndFooter() throws Exception {
         System.out.println("call");
-        String result = testRemoveDuplicatesAndSort("true|ordered");
-        assertEquals(splitAndAppendNewline("z,d,a,b"), result);
+        String header = "BEGIN\nletter\n";
+        File file = File.createTempFile("moveFile", "txt");
+        file.deleteOnExit();
+        FileWriter writer = new FileWriter(file, true);
+        writer.append(header);
+        writer.append("z\n");
+        writer.append("d\n");
+        writer.append("d\n");
+        writer.append("a\n");
+        writer.append("b\n");
+        writer.flush();
+        writer.close();
+
+        Properties props = new Properties();
+        props.setProperty("EXPORT-FILE-TOP-CONTENT", header);
+        props.setProperty("EXPORT-FILE-HEADER-LINE-COUNT", "2");
+        props.setProperty("EXPORT-FILE-SORT", "ascending|distinct");
+        props.setProperty("EXPORT-FILE-BOTTOM-CONTENT", "END");
+        String result = testRemoveDuplicatesAndSort(file, props);
+        assertEquals(splitAndAppendNewline("BEGIN,letter,a,b,d,z,END"), result);
     }
-    
+
     @Test
-    public void testCall_removeDuplicatesAndSort_false() throws Exception {
+    public void testCall_removeDuplicatesAndSort_descendingDistinct() throws Exception {
         System.out.println("call");
-        String result = testRemoveDuplicatesAndSort("false");
+        Properties props = new Properties();
+        props.setProperty("EXPORT-FILE-SORT", "desc|distinct");
+        String result = testRemoveDuplicatesAndSort(props);
+        assertEquals(splitAndAppendNewline("z,d,b,a"), result);
+    }
+
+    @Test
+    public void testCall_removeDuplicatesAndSort_invalidValue() throws Exception {
+        System.out.println("call");
+        Properties props = new Properties();
+        props.setProperty("EXPORT-FILE-SORT", "false");
+        String result = testRemoveDuplicatesAndSort(props);
         assertEquals(splitAndAppendNewline("z,d,d,a,b"), result);
     }
 
     private String splitAndAppendNewline(String values) {
-        String result = "";
+        StringBuilder sb = new StringBuilder();
 
-        for (String value: values.split(",")) {
-            result += value + "\n";
+        for (String value : values.split(",")) {
+            sb.append(value)
+                    .append("\n");
         }
-        return result;
+        return sb.toString();
     }
-    
+
     @Test
     public void testCall_removeDuplicatesAndSort_emptyFile_extensionWithoutDot() throws Exception {
         File file = File.createTempFile("moveFile", "txt");
         file.deleteOnExit();
         file.createNewFile();
         Properties props = new Properties();
-        props.setProperty("EXPORT-FILE-REMOVE-DUPLICATES", "true");
+        props.setProperty("EXPORT-FILE-SORT", "true");
         props.setProperty("EXPORT-FILE-NAME", file.toString());
         props.setProperty("EXPORT-FILE-PART-EXT", "pt");
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
@@ -281,14 +319,14 @@ public class PostBatchUpdateFileTaskTest {
         String[] result = instance.call();
         assertTrue(file.length() == 0);
     }
-    
+
     @Test
     public void testCall_removeDuplicatesAndSort_emptyFile_emptyExtension() throws Exception {
         File file = File.createTempFile("moveFile", "txt");
         file.deleteOnExit();
         file.createNewFile();
         Properties props = new Properties();
-        props.setProperty("EXPORT-FILE-REMOVE-DUPLICATES", "true");
+        props.setProperty("EXPORT-FILE-SORT", "true");
         props.setProperty("EXPORT-FILE-NAME", file.toString());
         props.setProperty("EXPORT-FILE-PART-EXT", "");
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
@@ -296,9 +334,18 @@ public class PostBatchUpdateFileTaskTest {
         String[] result = instance.call();
         assertTrue(file.length() == 0);
     }
-    
-    private String testRemoveDuplicatesAndSort(String exportFileRemoveDuplicates) throws IOException, Exception {
-        System.out.println("call");
+
+    @Test
+    public void testMoveFile() throws IOException {
+        File file = File.createTempFile("moveFile", "txt");
+        file.deleteOnExit();
+        file.createNewFile();
+        PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+        FileUtils.moveFile(file, file);
+    }
+
+
+    private String testRemoveDuplicatesAndSort(Properties props) throws IOException, Exception {
         File file = File.createTempFile("moveFile", "txt");
         file.deleteOnExit();
         FileWriter writer = new FileWriter(file, true);
@@ -308,24 +355,27 @@ public class PostBatchUpdateFileTaskTest {
         writer.append("a\n");
         writer.append("b\n");
         writer.close();
-        
-        Properties props = new Properties();
+        return testRemoveDuplicatesAndSort(file, props);
+    }
+
+    private String testRemoveDuplicatesAndSort(File fileToSort, Properties props) throws IOException, Exception {
+        System.out.println("call");
+
         props.setProperty("EXPORT_FILE_AS_ZIP", "false");
-        props.setProperty("EXPORT-FILE-NAME", file.toString());
-        props.setProperty("EXPORT-FILE-REMOVE-DUPLICATES", exportFileRemoveDuplicates);
-        
+        props.setProperty("EXPORT-FILE-NAME", fileToSort.toString());
+
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
         instance.properties = props;
         String[] result = instance.call();
-        File output = new File(file.toString());
+        File output = new File(fileToSort.toString());
         output.deleteOnExit();
         return TestUtils.readFile(output);
     }
-    
-    @Test (expected = NullPointerException.class)
+
+    @Test(expected = NullPointerException.class)
     public void testCall() throws Exception {
         System.out.println("call");
-        
+
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
         String[] result = instance.call();
     }

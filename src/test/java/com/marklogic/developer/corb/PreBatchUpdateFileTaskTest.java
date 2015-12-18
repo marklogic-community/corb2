@@ -109,7 +109,8 @@ public class PreBatchUpdateFileTaskTest {
         instance.properties = props;
         instance.exportDir = tempDir.toString();
         instance.writeTopContent();
-        assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(tempFile));
+        File partFile = new File(tempDir, instance.getPartFileName());
+        assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(partFile));
     }
 
     /**
@@ -137,7 +138,9 @@ public class PreBatchUpdateFileTaskTest {
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.properties = props;
         instance.exportDir = tempDir.toString();
+        File partFile = new File(tempDir, instance.getPartFileName());
         instance.call();
-        assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(tempFile));
+        
+        assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(partFile));
     }
 }

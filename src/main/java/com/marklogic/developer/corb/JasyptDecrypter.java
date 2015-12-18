@@ -23,6 +23,8 @@ import java.lang.reflect.Method;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 
 public class JasyptDecrypter extends AbstractDecrypter {
 
@@ -35,17 +37,17 @@ public class JasyptDecrypter extends AbstractDecrypter {
 	@Override
 	protected void init_decrypter() throws IOException, ClassNotFoundException {
 		String decryptPropsFile = getProperty("JASYPT-PROPERTIES-FILE");
-		if (decryptPropsFile == null || decryptPropsFile.trim().length() == 0) {
+		if (decryptPropsFile == null || isBlank(decryptPropsFile)) {
 			decryptPropsFile = "jasypt.properties";
 		}
 		jaspytProperties = AbstractManager.loadPropertiesFile(decryptPropsFile, false);
 
 		String algorithm = jaspytProperties.getProperty("jasypt.algorithm");
-		if (algorithm == null || algorithm.trim().length() == 0) {
+		if (isBlank(algorithm)) {
 			algorithm = "PBEWithMD5AndTripleDES"; // select a secure algorithm as default
 		}
 		String passphrase = jaspytProperties.getProperty("jasypt.password");
-		if (passphrase != null && passphrase.trim().length() > 0) {
+		if (isNotBlank(passphrase)) {
 			try {
 				decrypterCls = Class.forName("org.jasypt.encryption.pbe.StandardPBEStringEncryptor");
 				decrypter = decrypterCls.newInstance();

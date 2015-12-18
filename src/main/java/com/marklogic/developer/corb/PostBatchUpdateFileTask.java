@@ -27,211 +27,189 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.nio.charset.Charset;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.Comparator;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import com.google.code.externalsorting.ExternalSort;
+import com.marklogic.developer.corb.util.FileUtils;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  */
 public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
+    public static final String DISTINCT_FILE_SUFFIX = ".distinct";
+    protected static final String SORT_DIRECTION = "(?i)^(a|de)sc.*";
+    protected static final String DESCENDING = "(?i)^desc.*";
+    protected static final String DISTINCT = "(?i).*\\|(distinct|uniq).*";
+    private static final Logger LOG = Logger.getLogger(PostBatchUpdateFileTask.class.getName());
+     
+    protected void sortAndRemoveDuplicates() throws IOException {
+        String sort = getProperty("EXPORT-FILE-SORT");
 
-	protected String getBottomContent() {
-		return getProperty("EXPORT-FILE-BOTTOM-CONTENT");
-	}
+        if (sort == null || !sort.matches(SORT_DIRECTION)) {
+            return;
+        }
 
-	protected void writeBottomContent() throws IOException {
-		String bottomContent = getBottomContent();
-		bottomContent = bottomContent != null ? bottomContent.trim() : "";
-		if (bottomContent.length() > 0) {
-			BufferedOutputStream writer = null;
-			try {
-				writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, getPartFileName()), true));
-				writer.write(bottomContent.getBytes());
-				writer.write(NEWLINE);
-				writer.flush();
-			} finally {
-				if (writer != null) { writer.close(); }
-			}
-		}
-	}
+        File origFile = new File(exportDir, getPartFileName());
+        if (!origFile.exists()) {
+            return;
+        }
 
-	protected void moveFile(String source, String dest) throws IOException {
-		if (!source.equals(dest)) {
-			File srcFile = new File(exportDir, source);
-            if (srcFile.exists()) {
-				File destFile = new File(exportDir, dest);
-				if (destFile.exists()) {
-					destFile.delete();
-				}
-				srcFile.renameTo(destFile);
-			}
-		}
-	}
+        int headerLineCount = getIntProperty("EXPORT-FILE-HEADER-LINE-COUNT");
+        if (headerLineCount < 0) {
+            headerLineCount = 0;
+        }
 
-	protected void moveFile() throws IOException {
-		String partFileName = getPartFileName();
-		String finalFileName = getFileName();
-		moveFile(partFileName, finalFileName);
-	}
+        File sortedFile = new File(exportDir, getPartFileName() + getPartExt());
+        File tempFileStore = origFile.getParentFile();
+        Comparator comparator = ExternalSort.defaultcomparator;
+        if (sort.matches(DESCENDING)) {
+            comparator = Collections.reverseOrder();
+        }
+        boolean distinct = sort.matches(DISTINCT);
 
-	protected void compressFile() throws IOException {
-		if ("true".equalsIgnoreCase(getProperty("EXPORT_FILE_AS_ZIP"))) {
-			String outFileName = getFileName();
-			String outZipFileName = outFileName + ".zip";
+        Charset charset = Charset.defaultCharset();
+        boolean useGzip = false;
 
-			String partZipFileName = outZipFileName;
-			String partExt = getProperty("EXPORT-FILE-PART-EXT");
-			if (partExt != null && partExt.length() > 0) {
-				if (!partExt.startsWith(".")) {
-					partExt = "." + partExt;
-				}
-				partZipFileName = outZipFileName + partExt;
-			}
+        List<File> fragments = ExternalSort.sortInBatch(origFile, comparator, ExternalSort.DEFAULTMAXTEMPFILES, charset, tempFileStore, distinct, headerLineCount, useGzip);
+        LOG.log(Level.INFO, "Created {0} temp files for sort and dedup", fragments.size());
 
-			File outFile = new File(exportDir, outFileName);
-			File zipFile = new File(exportDir, partZipFileName);
+        copyHeaderIntoFile(origFile, headerLineCount, sortedFile);
+        boolean append = true;
+        ExternalSort.mergeSortedFiles(fragments, sortedFile, comparator, charset, distinct, append, useGzip);
 
-			ZipOutputStream zos = null;
-			FileOutputStream fos = null;
-			FileInputStream fis = null;
+        FileUtils.moveFile(sortedFile, origFile);
+    }
 
-			try {
-				if (outFile.exists()) {
-					if (zipFile.exists()) {
-						zipFile.delete();
-					}
+    protected void copyHeaderIntoFile(File inputFile, int headerLineCount, File outputFile) throws IOException {
+        BufferedWriter writer = null;
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(inputFile));
+            writer = new BufferedWriter(new FileWriter(outputFile, false));
+            String line;
+            int currentLine = 0;
+            while ((line = reader.readLine()) != null && currentLine < headerLineCount) {
+                writer.write(line);
+                writer.newLine();
+                currentLine++;
+            }
+            writer.flush();
+            reader.close();
+            writer.close();
+        } finally {
+            closeQuietly(reader);
+            closeQuietly(writer);
+        }
+    }
 
-					fos = new FileOutputStream(zipFile);
-					zos = new ZipOutputStream(fos);
+    protected String getBottomContent() {
+        return getProperty("EXPORT-FILE-BOTTOM-CONTENT");
+    }
 
-					ZipEntry ze = new ZipEntry(outFileName);
-					zos.putNextEntry(ze);
-
-					byte[] buffer = new byte[2048];
-					fis = new FileInputStream(outFile);
-					int len;
-					while ((len = fis.read(buffer)) > 0) {
-						zos.write(buffer, 0, len);
-					}
-
-					zos.closeEntry();
-					zos.flush();
-				}
-			} finally {
-				if (zos != null) {
-					zos.close();
-				}
-				if (fis != null) {
-					fis.close();
-				}
-				if (fos != null) {
-					fos.close();
-				}
-			}
-			// move the file if required
-			moveFile(partZipFileName, outZipFileName);
-
-			// now that we have everything, delete the uncompressed output file
-			if (outFile.exists()) {
-				outFile.delete();
-			}
-		}
-	}
-	
-	private void removeDuplicatesAndSort() throws IOException{
-		String removeDuplicates = getProperty("EXPORT-FILE-REMOVE-DUPLICATES");
-		if (removeDuplicates == null || !removeDuplicates.toLowerCase().startsWith("true")) { return; }
-		
-		String outFileName = getFileName();
-		File outFile = new File(exportDir, outFileName);
-		if (!outFile.exists()) { return; }
-		
-		Set<String> lines = null;
-		if (removeDuplicates.toLowerCase().startsWith("true|sort")) {
-			if(removeDuplicates.toLowerCase().contains("descend")){
-				lines = new TreeSet<String>(Collections.reverseOrder());
-			}else{
-				lines = new TreeSet<String>();
-			}
-		} else if (removeDuplicates.toLowerCase().startsWith("true|order")) {
-			lines = new LinkedHashSet<String>(10000);
-		} else {
-			lines = new HashSet<String>(10000);
-		}
-		
-		int headLineCt = 0;
-		String headLineCtStr = getProperty("EXPORT-FILE-HEADER-LINE-COUNT");
-		if(headLineCtStr != null){
-			try {
-				headLineCt = Integer.parseInt(headLineCtStr);
-			} catch(Exception exc){ headLineCt = 0; }
-		}
-		
-		ArrayList<String> header = new ArrayList<String>(headLineCt);
-		BufferedReader reader = null;
-		try {
-			reader = new BufferedReader(new FileReader(outFile));	    
-	    String line;
-	    int ct = 0;
-	    while ((line = reader.readLine()) != null) {
-	    	if (ct < headLineCt){
-	    		header.add(line);
-	    	}else{
-	    		lines.add(line);
-	    	}
-	    	ct++;
-	    }
-		} finally {
-			if (reader != null) { reader.close(); }
-		}
-		
-		String partExt = getProperty("EXPORT-FILE-PART-EXT");
-		if (partExt == null || partExt.length() == 0) {
-			partExt=".part";
-		}
-		if (!partExt.startsWith(".")) {
-			partExt = "." + partExt;
-		}
-		String partFileName = outFileName+partExt;
+    protected void writeBottomContent() throws IOException {
+        String bottomContent = getBottomContent();
+        bottomContent = bottomContent != null ? bottomContent.trim() : "";
+        if (bottomContent.length() > 0) {
+            BufferedOutputStream writer = null;
+            try {
+                writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, getPartFileName()), true));
+                writer.write(bottomContent.getBytes());
+                writer.write(NEWLINE);
+                writer.flush();
+            } finally {
+                closeQuietly(writer);
+            }
+        }
+    }
     
-    BufferedWriter writer = null;
-    try {
-    	writer = new BufferedWriter(new FileWriter(new File(exportDir, partFileName)));
-    	for (String line : header) {
-        writer.write(line);
-        writer.newLine();
-    	}
-    	
-    	for (String unique : lines) {
-	        writer.write(unique);
-	        writer.newLine();
-	    }
-	    writer.flush();
-    } finally {
-    	if (writer != null) { writer.close(); }
-    }    
-    lines.clear();
+    protected void moveFile(String srcFilename, String destFilename) throws IOException {
+        File srcFile = new File(exportDir, srcFilename);
+        File destFile = new File(exportDir, destFilename);
+        FileUtils.moveFile(srcFile, destFile);
+    }
     
-    moveFile(partFileName, outFileName);
-	}
+    protected void moveFile() throws IOException {
+        moveFile(getPartFileName(), getFileName());
+    }
+    
+    protected String getPartExt() {
+        String partExt = getProperty("EXPORT-FILE-PART-EXT");
+        if (isEmpty(partExt)) {
+            partExt = ".part";
+        } else if (!partExt.startsWith(".")) {
+            partExt = "." + partExt;
+        }
+        return partExt;
+    }
+       
+    protected void compressFile() throws IOException {
+        if ("true".equalsIgnoreCase(getProperty("EXPORT_FILE_AS_ZIP"))) {
+            String outFileName = getFileName();
+            String outZipFileName = outFileName + ".zip";
+            String partExt = getPartExt();
+            String partZipFileName = outZipFileName + partExt;
 
-	@Override
-	public String[] call() throws Exception {
-		try {
-			invokeModule();
-			writeBottomContent();
-			moveFile();
-			removeDuplicatesAndSort();
-			compressFile();
-			return new String[0];
-		} finally {
-			cleanup();
-		}
-	}
+            File outFile = new File(exportDir, outFileName);
+            File zipFile = new File(exportDir, partZipFileName);
+
+            ZipOutputStream zos = null;
+            FileOutputStream fos = null;
+            
+            try {
+                if (outFile.exists()) {
+                    FileUtils.deleteFile(zipFile);
+
+                    fos = new FileOutputStream(zipFile);
+                    zos = new ZipOutputStream(fos);
+
+                    ZipEntry ze = new ZipEntry(outFileName);
+                    zos.putNextEntry(ze);
+
+                    byte[] buffer = new byte[2048];
+                    FileInputStream fis = null; 
+                    try {
+                        fis = new FileInputStream(outFile);
+                        int len;
+                        while ((len = fis.read(buffer)) > 0) {
+                            zos.write(buffer, 0, len);
+                        }
+                    } finally {
+                        closeQuietly(fis);
+                    }
+                    zos.closeEntry();
+                    zos.flush();
+                }
+            } finally {
+                closeQuietly(zos);
+                closeQuietly(fos);
+            }
+            // move the file if required
+            moveFile(partZipFileName, outZipFileName);
+
+            // now that we have everything, delete the uncompressed output file
+            FileUtils.deleteFile(outFile);
+        }
+    }
+
+    @Override
+    public String[] call() throws Exception {
+        try {
+          	sortAndRemoveDuplicates();
+            invokeModule();
+            writeBottomContent();
+            moveFile();
+            compressFile();
+            return new String[0];
+        } finally {
+            cleanup();
+        }
+    }
 }

@@ -21,26 +21,26 @@ package com.marklogic.developer.corb;
 import java.util.Properties;
 
 import com.marklogic.xcc.ContentSource;
+import java.io.Closeable;
 
-public interface UrisLoader {
+public interface UrisLoader extends Closeable {
 
-	public void setOptions(TransformOptions options);
+	void setOptions(TransformOptions options);
 
-	public void setContentSource(ContentSource cs);
+	void setContentSource(ContentSource cs);
 
-	public void setCollection(String collection);
+	void setCollection(String collection);
 
-	public void setProperties(Properties properties);
+	void setProperties(Properties properties);
 
-	public void open() throws CorbException;
+	void open() throws CorbException;
 
-	public String getBatchRef();
+	String getBatchRef();
 
-	public int getTotalCount();
+	int getTotalCount();
 
-	public boolean hasNext() throws CorbException;
+	boolean hasNext() throws CorbException;
 
-	public String next() throws CorbException;
+	String next() throws CorbException;
 
-	public void close();
 }

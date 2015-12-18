@@ -52,6 +52,9 @@ import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.types.XdmItem;
 import java.util.HashMap;
 import java.util.Map;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 
 /**
  * @author Michael Blakeley, MarkLogic Corporation
@@ -62,6 +65,7 @@ public class Manager extends AbstractManager{
 	protected static final String NAME = Manager.class.getName();
 	
 	public static final String URIS_BATCH_REF = "URIS_BATCH_REF";
+    
 	public static final String DEFAULT_BATCH_URI_DELIM = ";";
 	
 	private ThreadPoolExecutor pool;
@@ -73,7 +77,7 @@ public class Manager extends AbstractManager{
 	private static int EXIT_CODE_NO_URIS = 0;
 	private static final Logger LOG = Logger.getLogger(Manager.class.getSimpleName());
 		
-	public class CallerBlocksPolicy implements RejectedExecutionHandler {
+	public static class CallerBlocksPolicy implements RejectedExecutionHandler {
 
 		private BlockingQueue<Runnable> queue;
 
@@ -103,11 +107,6 @@ public class Manager extends AbstractManager{
 	
 	/**
 	 * @param args
-	 * @throws URISyntaxException
-	 * @throws IOException
-	 * @throws ClassNotFoundException
-	 * @throws IllegalAccessException
-	 * @throws InstantiationException
 	 */
 	public static void main(String[] args) {
 		Manager tm = new Manager();
@@ -167,7 +166,7 @@ public class Manager extends AbstractManager{
 		//This is relavant for unit tests only. clear the static map so it gets re-initialized for fresh run
 		if (AbstractTask.MODULE_PROPS != null) { AbstractTask.MODULE_PROPS.clear(); }
 		
-		String val = getOption(null, "EXIT-CODE-NO-URIS");
+		String val = getOption("EXIT-CODE-NO-URIS");
 		if (val != null) { 
 			try {
 				EXIT_CODE_NO_URIS = Integer.parseInt(val); 
@@ -194,20 +193,20 @@ public class Manager extends AbstractManager{
 		String exportFileName = getOption(args.length > 14 ? args[14] : null, "EXPORT-FILE-NAME");
 		String urisFile = getOption(args.length > 15 ? args[15] : null, "URIS-FILE");
 		
-		String urisLoader = getOption(null, "URIS-LOADER");
+		String urisLoader = getOption("URIS-LOADER");
 		if (urisLoader != null) { options.setUrisLoaderClass(getUrisLoaderCls(urisLoader)); }
 		
-		String initModule = getOption(null, "INIT-MODULE");
-		String initTask = getOption(null, "INIT-TASK");
+		String initModule = getOption("INIT-MODULE");
+		String initTask = getOption("INIT-TASK");
 		
-		String batchSize = getOption(null, "BATCH-SIZE");
-		String failOnError = getOption(null, "FAIL-ON-ERROR");
-		String errorFileName = getOption(null, "ERROR-FILE-NAME");
+		String batchSize = getOption("BATCH-SIZE");
+		String failOnError = getOption("FAIL-ON-ERROR");
+		String errorFileName = getOption("ERROR-FILE-NAME");
 		
         //Check legacy properties keys, for backwards compatability
-		if (processModule == null) { processModule = getOption(null, "XQUERY-MODULE"); }
-		if (preBatchModule == null) { preBatchModule = getOption(null, "PRE-BATCH-XQUERY-MODULE"); }
-        if (postBatchModule == null) { postBatchModule = getOption(null, "POST-BATCH-XQUERY-MODULE"); }
+		if (processModule == null) { processModule = getOption("XQUERY-MODULE"); }
+		if (preBatchModule == null) { preBatchModule = getOption("PRE-BATCH-XQUERY-MODULE"); }
+        if (postBatchModule == null) { postBatchModule = getOption("POST-BATCH-XQUERY-MODULE"); }
 		
 		if (moduleRoot != null) { options.setModuleRoot(moduleRoot); }
 		if (processModule != null) { options.setProcessModule(processModule); }
@@ -268,29 +267,28 @@ public class Manager extends AbstractManager{
 		}
 
 		// delete the export file if it exists
-		if (exportFileName != null) {
-			File exportFile = new File(exportFileDir, exportFileName);
-			if (exportFile.exists()) {
-				exportFile.delete();
-			}
-		}
-		
-		if (errorFileName != null) {
-			File errorFile = new File(exportFileDir, errorFileName);
-			if (errorFile.exists()) {
-				errorFile.delete();
-			}
-		}
+		deleteFileIfExists(exportFileDir, exportFileName);
+		deleteFileIfExists(exportFileDir, errorFileName);
 		
 		normalizeLegacyProperties();
 	}
 	
+    protected boolean deleteFileIfExists(String directory, String filename) {
+        if (filename != null) {
+			File file = new File(directory, filename);
+			if (file.exists()) {
+				return file.delete();
+			}
+		}
+        return false;
+    }
+    
     protected void normalizeLegacyProperties() {
         //fix map keys for backward compatibility
         if (this.properties != null) {
             this.properties.putAll(getNormalizedProperties(this.properties));
         }
-        
+        //System properties override properties file properties
         Properties props = getNormalizedProperties(System.getProperties());
         for (Map.Entry entry : props.entrySet()) {
             System.setProperty(entry.getKey().toString(), entry.getValue().toString());
@@ -325,8 +323,7 @@ public class Manager extends AbstractManager{
                 } else if (!properties.containsKey(normalizedCustomInputKey) && 
                         key.startsWith(legacyKeyPrefix) && value != null) {
                     normalizedProperties.setProperty(normalizedCustomInputKey, value);
-                }
-                
+                }             
             }
         }
         
@@ -533,7 +530,7 @@ public class Manager extends AbstractManager{
 		logProperties();
 	}
 	
-	protected void logProperties(){
+	protected void logProperties() {
 		for (Entry<Object, Object> e : properties.entrySet()) {
 			if (e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
 				LOG.log(Level.INFO, "Loaded property {0}={1}", new Object[] { e.getKey(), e.getValue() });
@@ -568,9 +565,9 @@ public class Manager extends AbstractManager{
 
 	private UrisLoader getUriLoader() throws InstantiationException, IllegalAccessException {
 		UrisLoader loader = null;
-		if (options.getUrisModule() != null && options.getUrisModule().trim().length() > 0) {
+		if (isNotBlank(options.getUrisModule())) {
 			loader = new QueryUrisLoader();
-		} else if (options.getUrisFile() != null && options.getUrisFile().trim().length() > 0) {
+		} else if (isNotBlank(options.getUrisFile())) {
 			loader = new FileUrisLoader();
 		} else if (options.getUrisLoaderClass() != null) {
 			loader = options.getUrisLoaderClass().newInstance();
@@ -634,7 +631,7 @@ public class Manager extends AbstractManager{
 					throw new ArrayIndexOutOfBoundsException("received more than " + total + " results: " + uri);
 				}
 
-				if (uri == null || uri.trim().length() == 0) {
+				if (isBlank(uri)) {
 					continue;
 				}
 
@@ -643,7 +640,7 @@ public class Manager extends AbstractManager{
 				// all uris in queue as quickly as possible
 				if (isFirst) {
 					isFirst = false;
-					completionService.submit(tf.newProcessTask(new String[] { uri },options.isFailOnError()));
+					completionService.submit(tf.newProcessTask(new String[] { uri }, options.isFailOnError()));
 					urisArray[count] = null;
 					LOG.log(Level.INFO, "received first uri: {0}", uri);
 				} else {
@@ -661,15 +658,12 @@ public class Manager extends AbstractManager{
 					}
 					lastMessageMillis = System.currentTimeMillis();
 				}
-
 			}
 
 			LOG.log(Level.INFO, "received {0}/{1}", new Object[] { count, total });
 			// done with result set - close session to close everything
-			if (null != urisLoader) {
-				urisLoader.close();
-			}
-
+            closeQuietly(urisLoader);
+            
 			if (count < total) {
 				LOG.log(Level.INFO,"Resetting total uri count to {0}. Ignore if URIs are loaded from a file that contains blank lines.", count);
 				monitor.setTaskCount(total = count);
@@ -718,9 +712,7 @@ public class Manager extends AbstractManager{
 			stop();
 			throw exc;
 		} finally {
-			if (null != urisLoader) {
-				urisLoader.close();
-			}
+            closeQuietly(urisLoader);
 		}
 
 		if (total == count) {

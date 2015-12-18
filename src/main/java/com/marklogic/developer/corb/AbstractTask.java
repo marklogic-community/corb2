@@ -21,9 +21,6 @@ package com.marklogic.developer.corb;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.LineNumberReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -34,13 +31,17 @@ import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
+import com.marklogic.xcc.exceptions.QueryException;
 import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.exceptions.RetryableQueryException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 /**
  * 
@@ -52,7 +53,8 @@ public abstract class AbstractTask implements Task {
 	
 	protected static final String TRUE = "true";
 	protected static final String FALSE = "false";
-	protected static final byte[] NEWLINE = "\n".getBytes();
+	protected static final byte[] NEWLINE = 
+			System.getProperty("line.separator") != null ? System.getProperty("line.separator").getBytes() : "\n".getBytes();
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
 	protected ContentSource cs;
@@ -69,8 +71,11 @@ public abstract class AbstractTask implements Task {
 	private static final Object SYNC_OBJ = new Object();
 	protected static final Map<String, Set<String>> MODULE_PROPS = new HashMap<String, Set<String>>();
 
-	protected static final int DEFAULT_RETRY_LIMIT = 3;
-	protected static final int DEFAULT_RETRY_INTERVAL = 60;
+	protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
+	protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
+	
+	protected static final int DEFAULT_QUERY_RETRY_LIMIT = 2;
+	protected static final int DEFAULT_QUERY_RETRY_INTERVAL = 15;
 
 	protected int connectRetryCount = 0;
 	
@@ -110,7 +115,7 @@ public abstract class AbstractTask implements Task {
 
 	@Override
 	public void setInputURI(String[] inputUri) {
-		this.inputUris = inputUri;
+		this.inputUris = inputUri != null ? inputUri.clone() : new String[]{};
 	}
 	
     @Override
@@ -131,6 +136,7 @@ public abstract class AbstractTask implements Task {
 		return cs.newSession();
 	}
 	
+    @Override
 	public String[] call() throws Exception {
 		try {
 			return invokeModule();
@@ -229,11 +235,9 @@ public abstract class AbstractTask implements Task {
 			Thread.yield();// try to avoid thread starvation
 
 			return inputUris;
-		} catch (ServerConnectionException exc){
-            return handleRequestException(exc);
-        } catch (RequestException exc) {
-          return handleRequestException(exc);  
-        } catch (Exception exc) {
+		} catch (RequestException exc) {
+      return handleRequestException(exc);  
+    } catch (Exception exc) {
 			throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
 		} finally {
 			if (null != session && !session.isClosed()) {
@@ -248,35 +252,38 @@ public abstract class AbstractTask implements Task {
 		}
 	}
 	
-  protected String[] handleRequestException(ServerConnectionException exc) throws CorbException {
-      int retryLimit = this.getConnectRetryLimit();
-      int retryInterval = this.getConnectRetryInterval();
+  protected String[] handleRequestException(RequestException exc) throws CorbException {
+    String name = exc.getClass().getSimpleName();    
+    if(exc instanceof ServerConnectionException || 
+    		exc instanceof RetryableQueryException || 
+    		(exc instanceof QueryException && ((QueryException)exc).isRetryable())) {
+    	int retryLimit = exc instanceof ServerConnectionException ? this.getConnectRetryLimit() : this.getQueryRetryLimit();
+      int retryInterval = exc instanceof ServerConnectionException ? this.getConnectRetryInterval() : this.getQueryRetryInterval();
       if (connectRetryCount < retryLimit) {
           connectRetryCount++;
-          LOG.log(Level.SEVERE,
-                  "Connection failed to Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
+          LOG.log(Level.WARNING,
+                  "Encountered " + name + " from Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
                   new Object[]{connectRetryCount, retryInterval, exc.getMessage(), asString(inputUris)});
           try {
-              Thread.sleep(retryInterval * 1000L);
+          	Thread.sleep(retryInterval * 1000L);
           } catch (Exception exc2) {
           }
           return invokeModule();
-      } else {
+      } else if(exc instanceof ServerConnectionException || failOnError){	
           throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
-      }
-  }
-
-  protected String[] handleRequestException(RequestException requestException) throws CorbException {
-    String name = requestException.getClass().getSimpleName();
-    String exceptionType = name.replace("Request", "").replace("Exception", "").toLowerCase();
-    
-    System.out.println(exceptionType);
-    if (failOnError) {
-        throw new CorbException(requestException.getMessage() + " at URI: " + asString(inputUris), requestException);
-    } else {
-        LOG.log(Level.WARNING, "failOnError is is false. Encountered " + exceptionType + " exception at URI: " + asString(inputUris), requestException);
-        writeToErrorFile(inputUris, requestException.getMessage());
+      }else{
+      	LOG.log(Level.WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
+        writeToErrorFile(inputUris, exc.getMessage());
         return inputUris;
+      }
+    }else{   
+	    if (failOnError) {
+	        throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
+	    } else {
+	        LOG.log(Level.WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
+	        writeToErrorFile(inputUris, exc.getMessage());
+	        return inputUris;
+	    }
     }
   }
     
@@ -328,12 +335,22 @@ public abstract class AbstractTask implements Task {
 
 	private int getConnectRetryLimit() {
 		int connectRetryLimit = getIntProperty("XCC-CONNECTION-RETRY-LIMIT");
-		return connectRetryLimit < 0 ? DEFAULT_RETRY_LIMIT : connectRetryLimit;
+		return connectRetryLimit < 0 ? DEFAULT_CONNECTION_RETRY_LIMIT : connectRetryLimit;
 	}
 
 	private int getConnectRetryInterval() {
 		int connectRetryInterval = getIntProperty("XCC-CONNECTION-RETRY-INTERVAL");
-		return connectRetryInterval < 0 ? DEFAULT_RETRY_INTERVAL : connectRetryInterval;
+		return connectRetryInterval < 0 ? DEFAULT_CONNECTION_RETRY_INTERVAL : connectRetryInterval;
+	}
+	
+	private int getQueryRetryLimit() {
+		int queryRetryLimit = getIntProperty("QUERY-RETRY-LIMIT");
+		return queryRetryLimit < 0 ? DEFAULT_QUERY_RETRY_LIMIT : queryRetryLimit;
+	}
+
+	private int getQueryRetryInterval() {
+		int queryRetryInterval = getIntProperty("QUERY-RETRY-INTERVAL");
+		return queryRetryInterval < 0 ? DEFAULT_QUERY_RETRY_INTERVAL : queryRetryInterval;
 	}
 	
     /**
@@ -342,14 +359,16 @@ public abstract class AbstractTask implements Task {
     * @return The requested value (<code>-1</code> if not found or could not parse value as int).
     */
     protected int getIntProperty(String key) {
-    	int intVal = -1;
-      String value = getProperty(key);
-      if (value != null && value.length() > 0) {
-      	try {
-      		intVal = Integer.parseInt(value);
-      	} catch (Exception exc) {}
-      }
-      return intVal;
+        int intVal = -1;
+		String value = getProperty(key);
+		if (isNotEmpty(value)) {
+			try {
+				intVal = Integer.parseInt(value);
+			} catch (Exception exc) {
+                LOG.log(Level.WARNING, "Unable to parese ''{0}'' value ''{1}'' as an int", new Object[]{key, value});
+			}
+		}
+        return intVal;
     }
     
 	private void writeToErrorFile(String[] uris, String message){
@@ -369,7 +388,7 @@ public abstract class AbstractTask implements Task {
 				writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, errorFileName), true));
         for (String uri : uris) {
             writer.write(uri.getBytes());
-            if (message != null && message.length() > 0) {
+            if (isNotEmpty(message)) {
                 writer.write(delim.getBytes());
                 writer.write(message.getBytes());
             }       
@@ -379,24 +398,9 @@ public abstract class AbstractTask implements Task {
 			} catch(Exception exc) {
 				LOG.log(Level.SEVERE, "Problem writing uris to ERROR-FILE-NAME",exc);
 			} finally {
-				try {
-					if (writer != null) { writer.close(); }
-				} catch(Exception exc){}
+                closeQuietly(writer);
 			}
 		}
 	}
 	
-	protected int getLineCount(File file) throws IOException{
-		if(file != null && file.exists()){
-			LineNumberReader lnr = null;
-			try {
-				lnr = new LineNumberReader(new FileReader(file));
-				lnr.skip(Long.MAX_VALUE);
-				return lnr.getLineNumber();
-			} finally {
-				if (lnr != null) { lnr.close(); }
-			}
-		}
-		return 0;
-	}
 }

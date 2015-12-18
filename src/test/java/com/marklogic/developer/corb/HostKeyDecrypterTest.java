@@ -90,6 +90,19 @@ public class HostKeyDecrypterTest {
         assertTrue(Arrays.equals(expected, result));
     }
 
+    @Test
+    public void testGetOperatingSystemType() {
+        System.out.println("getOperatingSystemType");
+        assertEquals(HostKeyDecrypter.OSType.Mac, HostKeyDecrypter.getOperatingSystemType("Darwin"));
+        assertEquals(HostKeyDecrypter.OSType.Windows, HostKeyDecrypter.getOperatingSystemType("Windows 95"));
+        assertEquals(HostKeyDecrypter.OSType.Windows, HostKeyDecrypter.getOperatingSystemType("windows xp"));
+        assertEquals(HostKeyDecrypter.OSType.Linux, HostKeyDecrypter.getOperatingSystemType("unix"));
+        assertEquals(HostKeyDecrypter.OSType.Linux, HostKeyDecrypter.getOperatingSystemType("Red Had Linux"));
+        assertEquals(HostKeyDecrypter.OSType.Linux, HostKeyDecrypter.getOperatingSystemType("AIX/OS2"));
+        assertEquals(HostKeyDecrypter.OSType.Other, HostKeyDecrypter.getOperatingSystemType("ReactOS"));
+        assertEquals(HostKeyDecrypter.OSType.Other, HostKeyDecrypter.getOperatingSystemType(null));
+    }
+    
     /**
      * Test of main method, of class HostKeyDecrypter.
      */
@@ -97,6 +110,13 @@ public class HostKeyDecrypterTest {
     public void testMain_usage_nullArgs() throws Exception {
         System.out.println("main");
         String[] args = null;
+        HostKeyDecrypter.main(args);
+    }
+    
+    @Test
+    public void testMain_usage_decryptWithoutValue() throws Exception {
+        System.out.println("main");
+        String[] args = {"encrypt"};
         HostKeyDecrypter.main(args);
     }
     

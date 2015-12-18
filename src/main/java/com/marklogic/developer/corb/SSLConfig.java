@@ -27,10 +27,10 @@ import javax.net.ssl.SSLContext;
 import com.marklogic.xcc.SecurityOptions;
 
 public interface SSLConfig {
-	public void setProperties(Properties props);
-	public void setDecrypter(Decrypter decrypter);
-	public String[] getEnabledCipherSuites();
-	public String[] getEnabledProtocols();
-	public SSLContext getSSLContext() throws NoSuchAlgorithmException, KeyManagementException;
-	public SecurityOptions getSecurityOptions() throws NoSuchAlgorithmException, KeyManagementException;
+	void setProperties(Properties props);
+	void setDecrypter(Decrypter decrypter);
+	String[] getEnabledCipherSuites();
+	String[] getEnabledProtocols();
+	SSLContext getSSLContext() throws NoSuchAlgorithmException, KeyManagementException;
+	SecurityOptions getSecurityOptions() throws NoSuchAlgorithmException, KeyManagementException;
 }

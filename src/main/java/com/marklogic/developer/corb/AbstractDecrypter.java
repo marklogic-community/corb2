@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 public abstract class AbstractDecrypter implements Decrypter{
 
@@ -60,9 +62,9 @@ public abstract class AbstractDecrypter implements Decrypter{
 
     protected String getProperty(String key) {
         String val = System.getProperty(key);
-        if ((val == null || val.trim().length() == 0) && properties != null) {
+        if (isBlank(val) && properties != null) {
             val = properties.getProperty(key);
         }
-        return val != null ? val.trim() : val;
+        return trim(val);
     }
 }

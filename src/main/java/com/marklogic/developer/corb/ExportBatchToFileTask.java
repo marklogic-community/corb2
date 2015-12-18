@@ -24,6 +24,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import com.marklogic.xcc.ResultSequence;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 public class ExportBatchToFileTask extends ExportToFileTask {
 
@@ -32,30 +36,32 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 	@Override
 	protected String getFileName() {
 		String fileName = getProperty("EXPORT-FILE-NAME");
-		if (fileName == null || fileName.length() == 0) {
-			String batchRef = getProperty(Manager.URIS_BATCH_REF);
-			if (batchRef != null && (batchRef = batchRef.trim()).length() > 0) {
+		if (isEmpty(fileName)) {
+			String batchRef = trim(getProperty(Manager.URIS_BATCH_REF));
+			if (isNotEmpty(batchRef)) {
 				fileName = batchRef.substring(batchRef.lastIndexOf('/') + 1);
 			}
 		}
-		if (fileName == null || fileName.length() == 0) {
+		if (isEmpty(fileName)) {
 			throw new NullPointerException("Missing EXPORT-FILE-NAME or URIS_BATCH_REF property");
 		}
 		return fileName;
 	}
-
-    protected String getPartFileName() {
-        String fileName = getFileName();
-        String partExt = getProperty("EXPORT-FILE-PART-EXT");
-        if (partExt != null && partExt.length() > 0) {
-            if (!partExt.startsWith(".")) {
-                partExt = "." + partExt;
-            }
-            fileName += partExt;
-        }
-        return fileName;
-    }
-
+	
+	protected String getPartFileName() {
+		String fileName = getFileName();
+		if (isNotEmpty(fileName)) {
+			String partExt = getProperty("EXPORT-FILE-PART-EXT");
+			if (isNotEmpty(partExt)) {
+				if (!partExt.startsWith(".")) {
+					partExt = "." + partExt;
+				}
+				fileName = fileName + partExt;
+			}
+		}
+		return fileName;
+	}
+	      
 	@Override
 	protected void writeToFile(ResultSequence seq) throws IOException {
 		if (seq == null || !seq.hasNext()) {
@@ -71,7 +77,7 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 				}
 				writer.flush();
 			} finally {
-				if (writer != null) { writer.close(); }
+                closeQuietly(writer);
 			}
 		}
 	}

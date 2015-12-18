@@ -37,6 +37,10 @@ import java.util.logging.Logger;
 
 import javax.crypto.Cipher;
 import javax.xml.bind.DatatypeConverter;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 public class PrivateKeyDecrypter extends AbstractDecrypter {
 
@@ -69,12 +73,12 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 	@Override
 	protected void init_decrypter() throws IOException, ClassNotFoundException {
 		algorithm = getProperty("PRIVATE-KEY-ALGORITHM");
-		if (algorithm == null || algorithm.trim().length() == 0) {
+		if (isBlank(algorithm)) {
 			algorithm = "RSA";
 		}
 
-		String filename = getProperty("PRIVATE-KEY-FILE");
-		if (filename != null && (filename = filename.trim()).length() > 0) {
+		String filename = trim(getProperty("PRIVATE-KEY-FILE"));
+		if (isNotBlank(filename)) {
 			InputStream is = null;
 			try {
 				is = Manager.class.getResourceAsStream("/" + filename);
@@ -105,9 +109,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 			} catch (Exception exc) {
 				LOG.log(Level.SEVERE, "Problem initializing PrivateKeyDecrypter", exc);
 			} finally {
-				if (is != null) {
-					is.close();
-				}
+                closeQuietly(is);
 			}
 		} else {
 			LOG.severe("PRIVATE-KEY-FILE property must be defined");
@@ -152,16 +154,16 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 		String privateKeyPathName = null;
 		String publicKeyPathName = null;
 
-		if (args.length > 1 && args[1].trim().length() > 0) {
+		if (args.length > 1 && isNotBlank(args[1])) {
 			privateKeyPathName = args[1].trim();
 		}
-		if (args.length > 2 && args[2].trim().length() > 0) {
+		if (args.length > 2 && isNotBlank(args[2])) {
 			publicKeyPathName = args[2].trim();
 		}
-		if (args.length > 3 && args[3].trim().length() > 0) {
+		if (args.length > 3 && isNotBlank(args[3])) {
 			algorithm = args[3].trim();
 		}
-		if (args.length > 4 && args[4].trim().length() > 0) {
+		if (args.length > 4 && isNotBlank(args[4])) {
 			length = Integer.parseInt(args[4].trim());
 		}
 		if (privateKeyPathName == null || publicKeyPathName == null) {
@@ -187,9 +189,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 			fos.close();
 			System.out.println("Generated public key: " + publicKeyPathName);
 		} finally {
-			if (fos != null) {
-				fos.close();
-			}
+            closeQuietly(fos);
 		}
 	}
 
@@ -197,13 +197,13 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 		String algorithm = "RSA";
 		String publicKeyPathName = null;
 		String clearText = null;
-		if (args.length > 1 && args[1].trim().length() > 0) {
+		if (args.length > 1 && isNotBlank(args[1])) {
 			publicKeyPathName = args[1].trim();
 		}
-		if (args.length > 2 && args[2].trim().length() > 0) {
+		if (args.length > 2 && isNotBlank(args[2])) {
 			clearText = args[2].trim();
 		}
-		if (args.length > 3 && args[3].trim().length() > 0) {
+		if (args.length > 3 && isNotBlank(args[3])) {
 			algorithm = args[3].trim();
 		}
 		if (publicKeyPathName == null || clearText == null) {
@@ -219,8 +219,8 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 			cipher.init(Cipher.ENCRYPT_MODE, KeyFactory.getInstance(algorithm).generatePublic(x509EncodedKeySpec));
 			String encryptedText = DatatypeConverter.printBase64Binary(cipher.doFinal(clearText.getBytes("UTF-8")));
 			System.out.println("Input: " + clearText + "\nOutput: " + encryptedText);
-		} finally{
-			if (fis != null) { fis.close(); }
+		} finally {
+            closeQuietly(fis);
 		}
 	}
 
