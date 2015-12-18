@@ -71,8 +71,11 @@ public abstract class AbstractTask implements Task {
 	private static final Object SYNC_OBJ = new Object();
 	protected static final Map<String, Set<String>> MODULE_PROPS = new HashMap<String, Set<String>>();
 
-	protected static final int DEFAULT_RETRY_LIMIT = 3;
-	protected static final int DEFAULT_RETRY_INTERVAL = 60;
+	protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
+	protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
+	
+	protected static final int DEFAULT_QUERY_RETRY_LIMIT = 2;
+	protected static final int DEFAULT_QUERY_RETRY_INTERVAL = 15;
 
 	protected int connectRetryCount = 0;
 	
@@ -254,8 +257,8 @@ public abstract class AbstractTask implements Task {
     if(exc instanceof ServerConnectionException || 
     		exc instanceof RetryableQueryException || 
     		(exc instanceof QueryException && ((QueryException)exc).isRetryable())) {
-    	int retryLimit = this.getConnectRetryLimit();
-      int retryInterval = this.getConnectRetryInterval();
+    	int retryLimit = exc instanceof ServerConnectionException ? this.getConnectRetryLimit() : this.getQueryRetryLimit();
+      int retryInterval = exc instanceof ServerConnectionException ? this.getConnectRetryInterval() : this.getQueryRetryInterval();
       if (connectRetryCount < retryLimit) {
           connectRetryCount++;
           LOG.log(Level.WARNING,
@@ -332,12 +335,22 @@ public abstract class AbstractTask implements Task {
 
 	private int getConnectRetryLimit() {
 		int connectRetryLimit = getIntProperty("XCC-CONNECTION-RETRY-LIMIT");
-		return connectRetryLimit < 0 ? DEFAULT_RETRY_LIMIT : connectRetryLimit;
+		return connectRetryLimit < 0 ? DEFAULT_CONNECTION_RETRY_LIMIT : connectRetryLimit;
 	}
 
 	private int getConnectRetryInterval() {
 		int connectRetryInterval = getIntProperty("XCC-CONNECTION-RETRY-INTERVAL");
-		return connectRetryInterval < 0 ? DEFAULT_RETRY_INTERVAL : connectRetryInterval;
+		return connectRetryInterval < 0 ? DEFAULT_CONNECTION_RETRY_INTERVAL : connectRetryInterval;
+	}
+	
+	private int getQueryRetryLimit() {
+		int queryRetryLimit = getIntProperty("QUERY-RETRY-LIMIT");
+		return queryRetryLimit < 0 ? DEFAULT_QUERY_RETRY_LIMIT : queryRetryLimit;
+	}
+
+	private int getQueryRetryInterval() {
+		int queryRetryInterval = getIntProperty("QUERY-RETRY-INTERVAL");
+		return queryRetryInterval < 0 ? DEFAULT_QUERY_RETRY_INTERVAL : queryRetryInterval;
 	}
 	
     /**
