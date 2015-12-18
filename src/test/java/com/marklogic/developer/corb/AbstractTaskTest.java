@@ -28,6 +28,7 @@ import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.RequestPermissionException;
 import com.marklogic.xcc.exceptions.RequestServerException;
+import com.marklogic.xcc.exceptions.RetryableXQueryException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
@@ -48,6 +49,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 /**
  *
@@ -173,7 +175,7 @@ public class AbstractTaskTest {
         instance.setInputURI(null);
         assertNotNull(instance.inputUris);
     }
-    
+
     /**
      * Test of setFailOnError method, of class AbstractTask.
      */
@@ -264,63 +266,39 @@ public class AbstractTaskTest {
 
     @Test
     public void testInvokeModule_RequestServerException() throws Exception {
-        System.out.println("invokeModule");
-        AbstractTask instance = new AbstractTaskImpl();
-        instance.moduleUri = "module.xqy";
-        instance.adhocQuery = "adhoc.xqy";
-        instance.inputUris = new String[]{"foo", "bar", "baz"};
-        ContentSource cs = mock(ContentSource.class);
-        Session session = mock(Session.class);
-        ModuleInvoke request = mock(ModuleInvoke.class);
-        ResultSequence seq = mock(ResultSequence.class);
         RequestServerException ex = mock(RequestServerException.class);
-        when(cs.newSession()).thenReturn(session);
-        when(session.newModuleInvoke(anyString())).thenReturn(request);
-        when(request.setNewStringVariable(anyString(), anyString())).thenReturn(null);
-
-        when(session.submitRequest(request)).thenThrow(ex);
-        when(ex.getMessage()).thenReturn("ERROR1").thenReturn("").thenReturn(null);
-        instance.cs = cs;
-        instance.moduleType = "foo";
-        Properties props = new Properties();
-        File exportDir = TestUtils.createTempDirectory();
-        String errorFilename = "AbstractTaskInvokeModule.err";
-        props.setProperty("foo.bar", "baz");
-        props.setProperty("foo.baz", "boo");
-        props.setProperty("BATCH-URI-DELIM", "");
-        props.setProperty("ERROR-FILE-NAME", errorFilename);
-        instance.properties = props;
-        instance.exportDir = exportDir.getAbsolutePath();
-        instance.setFailOnError(false);
-        instance.inputUris = new String[]{"uri1", "uri2", "uri3"};
-        String[] result = instance.invokeModule();
-        assertEquals(3, result.length);
-        assertTrue(instance.MODULE_PROPS.get("foo").contains("foo.bar"));
-        assertTrue(instance.MODULE_PROPS.get("foo").contains("foo.baz"));
-        File errorFile = new File(exportDir.getAbsolutePath(), errorFilename);
-        errorFile.deleteOnExit();
-        assertTrue(errorFile.exists());
+        testException(ex);
     }
 
     @Test(expected = CorbException.class)
     public void testInvokeModule_ServerConnectionException() throws Exception {
+        ServerConnectionException ex = mock(ServerConnectionException.class);
+        testException(ex);
+    }
+
+    @Test(expected = CorbException.class)
+    public void testInvokeModule_RetryableException() throws Exception {
+        RequestServerException ex = mock(RetryableXQueryException.class);
+        testException(ex);
+    }
+
+    private void testException(Exception ex) throws Exception {
         System.out.println("invokeModule");
         AbstractTask instance = new AbstractTaskImpl();
         instance.moduleUri = "module.xqy";
         instance.adhocQuery = "adhoc.xqy";
         instance.inputUris = new String[]{"foo", "bar", "baz"};
-
         ContentSource cs = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke request = mock(ModuleInvoke.class);
         ResultSequence seq = mock(ResultSequence.class);
-        ServerConnectionException ex = mock(ServerConnectionException.class);
+
         when(cs.newSession()).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(request);
         when(request.setNewStringVariable(anyString(), anyString())).thenReturn(null);
-        when(session.submitRequest(request)).thenThrow(ex);
-        when(ex.getMessage()).thenReturn("ERROR1").thenReturn("").thenReturn(null);
 
+        when(session.submitRequest(request)).thenThrow(ex);
+        when(ex.getMessage()).thenReturn("ERROR1").thenReturn("ERROR2").thenReturn("ERROR3").thenReturn("Final Error Message");
         instance.cs = cs;
         instance.moduleType = "foo";
         Properties props = new Properties();
