@@ -67,6 +67,8 @@ CoRB needs one or more of the following parameters as (If specified in more than
   `URIS-REPLACE-PATTERN=/com/marklogic/sample/,,.xml,`  (Replace /com/marklogic/sample/ and .xml with empty strings. So, CoRB client only need to cache the id '1234' instead of the entire URI /com/marklogic/sample/1234.xml. In the transform XQUERY-MODULE, we need to do `let $URI := fn:concat("/com/marklogic/sample/",$URI,".xml")`)
 * **XCC-CONNECTION-RETRY-LIMIT** (Number attempts to connect to ML before giving up - default is 3)
 * **XCC-CONNECTION-RETRY-INTERVAL** (in seconds - Time interval in seconds between retry attempts - default is 60)  
+* **QUERY-RETRY-LIMIT** (Number of re-query attempts before giving up - default is 2)
+* **QUERY-RETRY-INTERVAL** (in seconds - Time interval in seconds between re-query attempts - default is 15)  
 * **BATCH-URI-DELIM** (Use if default delimiter `';'` cannot be used to join multiple URIS when BATCH-SIZE is greater than 1.)   
 * **FAIL-ON-ERROR** (Default is true. If false, CoRB job will not fail and exit if the transform module throws an XQuery error. This option will not handle repeated connection failures)  
 * **ERROR-FILE-NAME** (Used when FAIL-ON-ERROR is false. If specified true, removes duplicates from, the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to seperate URI and error message)  

@@ -71,8 +71,11 @@ public abstract class AbstractTask implements Task {
 	private static final Object SYNC_OBJ = new Object();
 	protected static final Map<String, Set<String>> MODULE_PROPS = new HashMap<String, Set<String>>();
 
-	protected static final int DEFAULT_RETRY_LIMIT = 3;
-	protected static final int DEFAULT_RETRY_INTERVAL = 60;
+	protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
+	protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
+	
+	protected static final int DEFAULT_QUERY_RETRY_LIMIT = 2;
+	protected static final int DEFAULT_QUERY_RETRY_INTERVAL = 15;
 
 	protected int connectRetryCount = 0;
 	
@@ -249,37 +252,38 @@ public abstract class AbstractTask implements Task {
 		}
 	}
 	
-    protected String[] handleRequestException(RequestException exc) throws CorbException {
-        String name = exc.getClass().getSimpleName();
-        if (exc instanceof ServerConnectionException
-                || exc instanceof RetryableQueryException
-                || (exc instanceof QueryException && ((QueryException) exc).isRetryable())) {
-            int retryLimit = this.getConnectRetryLimit();
-            int retryInterval = this.getConnectRetryInterval();
-            if (connectRetryCount < retryLimit) {
-                connectRetryCount++;
-                LOG.log(Level.WARNING,
-                        "Encountered " + name + " from Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
-                        new Object[]{connectRetryCount, retryInterval, exc.getMessage(), asString(inputUris)});
-                try {
-                    Thread.sleep(retryInterval * 1000L);
-                } catch (Exception exc2) {
-                }
-                return invokeModule();
-            } else if (exc instanceof ServerConnectionException || failOnError) {
-                throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
-            } else {
-                LOG.log(Level.WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
-                writeToErrorFile(inputUris, exc.getMessage());
-                return inputUris;
-            }
-        } else if (failOnError) {
-            throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
-        } else {
-            LOG.log(Level.WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
-            writeToErrorFile(inputUris, exc.getMessage());
-            return inputUris;
-        }
+  protected String[] handleRequestException(RequestException exc) throws CorbException {
+    String name = exc.getClass().getSimpleName();    
+    if(exc instanceof ServerConnectionException || 
+    		exc instanceof RetryableQueryException || 
+    		(exc instanceof QueryException && ((QueryException)exc).isRetryable())) {
+    	int retryLimit = exc instanceof ServerConnectionException ? this.getConnectRetryLimit() : this.getQueryRetryLimit();
+      int retryInterval = exc instanceof ServerConnectionException ? this.getConnectRetryInterval() : this.getQueryRetryInterval();
+      if (connectRetryCount < retryLimit) {
+          connectRetryCount++;
+          LOG.log(Level.WARNING,
+                  "Encountered " + name + " from Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
+                  new Object[]{connectRetryCount, retryInterval, exc.getMessage(), asString(inputUris)});
+          try {
+          	Thread.sleep(retryInterval * 1000L);
+          } catch (Exception exc2) {
+          }
+          return invokeModule();
+      } else if(exc instanceof ServerConnectionException || failOnError){	
+          throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
+      }else{
+      	LOG.log(Level.WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
+        writeToErrorFile(inputUris, exc.getMessage());
+        return inputUris;
+      }
+    }else{   
+	    if (failOnError) {
+	        throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
+	    } else {
+	        LOG.log(Level.WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
+	        writeToErrorFile(inputUris, exc.getMessage());
+	        return inputUris;
+	    }
     }
     
   protected String asString(String[] uris) {
@@ -330,12 +334,22 @@ public abstract class AbstractTask implements Task {
 
 	private int getConnectRetryLimit() {
 		int connectRetryLimit = getIntProperty("XCC-CONNECTION-RETRY-LIMIT");
-		return connectRetryLimit < 0 ? DEFAULT_RETRY_LIMIT : connectRetryLimit;
+		return connectRetryLimit < 0 ? DEFAULT_CONNECTION_RETRY_LIMIT : connectRetryLimit;
 	}
 
 	private int getConnectRetryInterval() {
 		int connectRetryInterval = getIntProperty("XCC-CONNECTION-RETRY-INTERVAL");
-		return connectRetryInterval < 0 ? DEFAULT_RETRY_INTERVAL : connectRetryInterval;
+		return connectRetryInterval < 0 ? DEFAULT_CONNECTION_RETRY_INTERVAL : connectRetryInterval;
+	}
+	
+	private int getQueryRetryLimit() {
+		int queryRetryLimit = getIntProperty("QUERY-RETRY-LIMIT");
+		return queryRetryLimit < 0 ? DEFAULT_QUERY_RETRY_LIMIT : queryRetryLimit;
+	}
+
+	private int getQueryRetryInterval() {
+		int queryRetryInterval = getIntProperty("QUERY-RETRY-INTERVAL");
+		return queryRetryInterval < 0 ? DEFAULT_QUERY_RETRY_INTERVAL : queryRetryInterval;
 	}
 	
     /**
