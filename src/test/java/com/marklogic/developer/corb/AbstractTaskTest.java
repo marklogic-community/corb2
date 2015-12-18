@@ -25,11 +25,16 @@ import com.marklogic.xcc.ModuleInvoke;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
+import com.marklogic.xcc.exceptions.QueryException;
+import com.marklogic.xcc.exceptions.QueryStackFrame;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.RequestPermissionException;
 import com.marklogic.xcc.exceptions.RequestServerException;
+import com.marklogic.xcc.exceptions.RetryableJavaScriptException;
+import com.marklogic.xcc.exceptions.RetryableQueryException;
 import com.marklogic.xcc.exceptions.RetryableXQueryException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
+import com.marklogic.xcc.exceptions.XQueryException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
 import java.io.File;
@@ -265,65 +270,6 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testInvokeModule_RequestServerException() throws Exception {
-        RequestServerException ex = mock(RequestServerException.class);
-        testException(ex);
-    }
-
-    @Test(expected = CorbException.class)
-    public void testInvokeModule_ServerConnectionException() throws Exception {
-        ServerConnectionException ex = mock(ServerConnectionException.class);
-        testException(ex);
-    }
-
-    @Test
-    public void testInvokeModule_RetryableException() throws Exception {
-        RequestServerException ex = mock(RetryableXQueryException.class);
-        testException(ex);
-    }
-
-    private void testException(Exception ex) throws Exception {
-        System.out.println("invokeModule");
-        AbstractTask instance = new AbstractTaskImpl();
-        instance.moduleUri = "module.xqy";
-        instance.adhocQuery = "adhoc.xqy";
-        instance.inputUris = new String[]{"foo", "bar", "baz"};
-        ContentSource cs = mock(ContentSource.class);
-        Session session = mock(Session.class);
-        ModuleInvoke request = mock(ModuleInvoke.class);
-        ResultSequence seq = mock(ResultSequence.class);
-
-        when(cs.newSession()).thenReturn(session);
-        when(session.newModuleInvoke(anyString())).thenReturn(request);
-        when(request.setNewStringVariable(anyString(), anyString())).thenReturn(null);
-
-        when(session.submitRequest(request)).thenThrow(ex);
-        when(ex.getMessage()).thenReturn("ERROR1").thenReturn("ERROR2").thenReturn("ERROR3").thenReturn("Final Error Message");
-        instance.cs = cs;
-        instance.moduleType = "foo";
-        Properties props = new Properties();
-        File exportDir = TestUtils.createTempDirectory();
-        String errorFilename = "AbstractTaskInvokeModule.err";
-        props.setProperty("foo.bar", "baz");
-        props.setProperty("foo.baz", "boo");
-        props.setProperty("BATCH-URI-DELIM", "");
-        props.setProperty("ERROR-FILE-NAME", errorFilename);
-        props.setProperty("XCC-CONNECTION-RETRY-INTERVAL", "1");
-        props.setProperty("XCC-CONNECTION-RETRY-LIMIT", "2");
-        instance.properties = props;
-        instance.exportDir = exportDir.getAbsolutePath();
-        instance.setFailOnError(false);
-        instance.inputUris = new String[]{"uri1", "uri2", "uri3"};
-        String[] result = instance.invokeModule();
-        assertEquals(3, result.length);
-        assertTrue(instance.MODULE_PROPS.get("foo").contains("foo.bar"));
-        assertTrue(instance.MODULE_PROPS.get("foo").contains("foo.baz"));
-        File errorFile = new File(exportDir.getAbsolutePath(), errorFilename);
-        errorFile.deleteOnExit();
-        assertTrue(errorFile.exists());
-    }
-
-    @Test
     public void testGetIntProperty() {
         System.out.println("getIntProperty");
         Properties props = new Properties();
@@ -336,6 +282,27 @@ public class AbstractTaskTest {
         assertEquals(2, instance.getIntProperty("two"));
         assertEquals(-1, instance.getIntProperty("three"));
         assertEquals(-1, instance.getIntProperty("four"));
+    }
+
+    @Test
+    public void testInvokeModule_RetryableXQueryException() throws Exception {
+        Request req = mock(Request.class);
+        RetryableXQueryException retryableException = new RetryableXQueryException(req, "code", "401", "1.0-ml", "something bad happened", "", "", true, new String[0], new QueryStackFrame[0]);
+        testHandleRequestException("RetryableXQueryException", retryableException, false, 2);
+    }
+
+    @Test
+    public void testInvokeModule_XQueryException() throws Exception {
+        Request req = mock(Request.class);
+        XQueryException xqueryException = new XQueryException(req, "code", "401", "1.0-ml", "something bad happened", "", "", true, new String[0], new QueryStackFrame[0]);
+        testHandleRequestException("XQueryException", xqueryException, false, 2);
+    }
+
+    @Test
+    public void testInvokeModule_RetryableJavaScriptException() throws Exception {
+        Request req = mock(Request.class);
+        RetryableJavaScriptException retryableException = new RetryableJavaScriptException(req, "code", "401", "something bad happened", "", "", true, new String[0], new QueryStackFrame[0]);
+        testHandleRequestException("RetryableJavaScriptException", retryableException, false, 2);
     }
 
     @Test
@@ -407,28 +374,32 @@ public class AbstractTaskTest {
         if (delim != null) {
             instance.properties.setProperty("BATCH-URI-DELIM", delim);
         }
-        
+
         instance.properties.setProperty("XCC-CONNECTION-RETRY-INTERVAL", "1");
-        instance.properties.setProperty("XCC-CONNECTION-RETRY-LIMIT", ""+retryLimit);
-        
+        instance.properties.setProperty("XCC-CONNECTION-RETRY-LIMIT", "" + retryLimit);
+
         instance.properties.setProperty("QUERY-RETRY-INTERVAL", "1");
-        instance.properties.setProperty("QUERY-RETRY-LIMIT", ""+retryLimit);
-        
+        instance.properties.setProperty("QUERY-RETRY-LIMIT", "" + retryLimit);
+
         instance.handleRequestException(exception);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.WARNING, records.get(0).getLevel());
-        if(exception instanceof RequestServerException || exception instanceof RequestPermissionException){
-        	assertEquals("failOnError is false. Encountered " + type + " at URI: " + instance.asString(uris), records.get(0).getMessage());
-        }else if(exception instanceof ServerConnectionException){
-        	System.err.println(records.get(0).getMessage());
-        	assertTrue(records.get(0).getMessage().startsWith("Encountered "+type+" from Marklogic Server. Retrying attempt"));
+        if ((exception instanceof RequestServerException
+                && !(exception instanceof RetryableQueryException)
+                && !(exception instanceof QueryException && ((QueryException) exception).isRetryable()))
+                || exception instanceof RequestPermissionException) {
+            assertEquals("failOnError is false. Encountered " + type + " at URI: " + instance.asString(uris), records.get(0).getMessage());
+
+        } else if (exception instanceof ServerConnectionException) {
+            System.err.println(records.get(0).getMessage());
+            assertTrue(records.get(0).getMessage().startsWith("Encountered " + type + " from Marklogic Server. Retrying attempt"));
         }
     }
 
     public File testWriteToError(String[] uris, String delim, File exportDir, String errorFilename, String message) throws CorbException, IOException {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException(message, req);
-        testHandleRequestException("RequestServerException", serverException, false, uris, delim, exportDir, errorFilename,1);
+        testHandleRequestException("RequestServerException", serverException, false, uris, delim, exportDir, errorFilename, 1);
         File file = null;
         try {
             file = new File(exportDir, errorFilename);
