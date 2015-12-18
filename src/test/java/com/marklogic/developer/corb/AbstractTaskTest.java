@@ -276,7 +276,7 @@ public class AbstractTaskTest {
         testException(ex);
     }
 
-    @Test(expected = CorbException.class)
+    @Test
     public void testInvokeModule_RetryableException() throws Exception {
         RequestServerException ex = mock(RetryableXQueryException.class);
         testException(ex);

@@ -249,40 +249,38 @@ public abstract class AbstractTask implements Task {
 		}
 	}
 	
-  protected String[] handleRequestException(RequestException exc) throws CorbException {
-    String name = exc.getClass().getSimpleName();    
-    if(exc instanceof ServerConnectionException || 
-    		exc instanceof RetryableQueryException || 
-    		(exc instanceof QueryException && ((QueryException)exc).isRetryable())) {
-    	int retryLimit = this.getConnectRetryLimit();
-      int retryInterval = this.getConnectRetryInterval();
-      if (connectRetryCount < retryLimit) {
-          connectRetryCount++;
-          LOG.log(Level.WARNING,
-                  "Encountered " + name + " from Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
-                  new Object[]{connectRetryCount, retryInterval, exc.getMessage(), asString(inputUris)});
-          try {
-          	Thread.sleep(retryInterval * 1000L);
-          } catch (Exception exc2) {
-          }
-          return invokeModule();
-      } else if(exc instanceof ServerConnectionException || failOnError){	
-          throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
-      }else{
-      	LOG.log(Level.WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
-        writeToErrorFile(inputUris, exc.getMessage());
-        return inputUris;
-      }
-    }else{   
-	    if (failOnError) {
-	        throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
-	    } else {
-	        LOG.log(Level.WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
-	        writeToErrorFile(inputUris, exc.getMessage());
-	        return inputUris;
-	    }
+    protected String[] handleRequestException(RequestException exc) throws CorbException {
+        String name = exc.getClass().getSimpleName();
+        if (exc instanceof ServerConnectionException
+                || exc instanceof RetryableQueryException
+                || (exc instanceof QueryException && ((QueryException) exc).isRetryable())) {
+            int retryLimit = this.getConnectRetryLimit();
+            int retryInterval = this.getConnectRetryInterval();
+            if (connectRetryCount < retryLimit) {
+                connectRetryCount++;
+                LOG.log(Level.WARNING,
+                        "Encountered " + name + " from Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
+                        new Object[]{connectRetryCount, retryInterval, exc.getMessage(), asString(inputUris)});
+                try {
+                    Thread.sleep(retryInterval * 1000L);
+                } catch (Exception exc2) {
+                }
+                return invokeModule();
+            } else if (exc instanceof ServerConnectionException || failOnError) {
+                throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
+            } else {
+                LOG.log(Level.WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
+                writeToErrorFile(inputUris, exc.getMessage());
+                return inputUris;
+            }
+        } else if (failOnError) {
+            throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
+        } else {
+            LOG.log(Level.WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
+            writeToErrorFile(inputUris, exc.getMessage());
+            return inputUris;
+        }
     }
-  }
     
   protected String asString(String[] uris) {
     if (uris == null || uris.length == 0) {
