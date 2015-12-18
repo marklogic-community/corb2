@@ -364,56 +364,56 @@ public class AbstractTaskTest {
     public void testHandleRequestException_RequestServerException() throws CorbException, IOException {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException("something bad happened", req);
-        testHandleRequestException("server", serverException, false);
+        testHandleRequestException("RequestServerException", serverException, false, 2);
     }
 
     @Test(expected = CorbException.class)
     public void testHandleRequestException_RequestServerException_fail() throws CorbException, IOException {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException("something bad happened", req);
-        testHandleRequestException("server", serverException, true);
+        testHandleRequestException("RequestServerException", serverException, true, 2);
     }
 
     @Test
     public void testHandleRequestException_RequestPermissionException() throws CorbException, IOException {
         Request req = mock(Request.class);
         RequestPermissionException serverException = new RequestPermissionException("something bad happened", req, "admin");
-        testHandleRequestException("permission", serverException, false);
+        testHandleRequestException("RequestPermissionException", serverException, false, 2);
     }
 
     @Test(expected = CorbException.class)
     public void testHandleRequestException_RequestPermissionException_fail() throws CorbException, IOException {
         Request req = mock(Request.class);
         RequestPermissionException serverException = new RequestPermissionException("something bad happened", req, "admin");
-        testHandleRequestException("permission", serverException, true);
+        testHandleRequestException("RequestPermissionException", serverException, true, 2);
     }
 
     @Test
     public void testHandleRequestException_ServerConnectionException() throws CorbException, IOException {
         Request req = mock(Request.class);
         ServerConnectionException serverException = new ServerConnectionException("something bad happened", req);
-        testHandleRequestException("serverconnection", serverException, false);
+        testHandleRequestException("ServerConnectionException", serverException, false, 2);
     }
 
     @Test(expected = CorbException.class)
     public void testHandleRequestException_ServerConnectionException_fail() throws CorbException, IOException {
         Request req = mock(Request.class);
         ServerConnectionException serverException = new ServerConnectionException("something bad happened", req);
-        testHandleRequestException("serverconnection", serverException, true);
+        testHandleRequestException("ServerConnectionException", serverException, true, 0);
     }
 
-    public void testHandleRequestException(String type, RequestException exception, boolean fail) throws CorbException, IOException {
+    public void testHandleRequestException(String type, RequestException exception, boolean fail, int retryLimit) throws CorbException, IOException {
         String[] uris = new String[]{"uri1"};
-        testHandleRequestException(type, exception, fail, uris);
+        testHandleRequestException(type, exception, fail, uris, retryLimit);
     }
 
-    public void testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris) throws CorbException, IOException {
+    public void testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, int retryLimit) throws CorbException, IOException {
         File exportDir = TestUtils.createTempDirectory();
         File exportFile = File.createTempFile("error", ".err", exportDir);
-        testHandleRequestException(type, exception, fail, uris, null, exportDir, exportFile.getName());
+        testHandleRequestException(type, exception, fail, uris, null, exportDir, exportFile.getName(), retryLimit);
     }
 
-    public void testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, String delim, File exportDir, String errorFilename) throws CorbException, IOException {
+    public void testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, String delim, File exportDir, String errorFilename, int retryLimit) throws CorbException, IOException {
         System.out.println("handleRequestException");
         if (exportDir == null) {
             exportDir = TestUtils.createTempDirectory();
@@ -429,16 +429,25 @@ public class AbstractTaskTest {
         if (delim != null) {
             instance.properties.setProperty("BATCH-URI-DELIM", delim);
         }
+        
+        instance.properties.setProperty("XCC-CONNECTION-RETRY-INTERVAL", "1");
+        instance.properties.setProperty("XCC-CONNECTION-RETRY-LIMIT", ""+retryLimit);
+        
         instance.handleRequestException(exception);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.WARNING, records.get(0).getLevel());
-        assertEquals("failOnError is is false. Encountered " + type + " exception at URI: " + instance.asString(uris), records.get(0).getMessage());
+        if(exception instanceof RequestServerException || exception instanceof RequestPermissionException){
+        	assertEquals("failOnError is false. Encountered " + type + " at URI: " + instance.asString(uris), records.get(0).getMessage());
+        }else if(exception instanceof ServerConnectionException){
+        	System.err.println(records.get(0).getMessage());
+        	assertTrue(records.get(0).getMessage().startsWith("Encountered "+type+" from Marklogic Server. Retrying attempt"));
+        }
     }
 
     public File testWriteToError(String[] uris, String delim, File exportDir, String errorFilename, String message) throws CorbException, IOException {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException(message, req);
-        testHandleRequestException("server", serverException, false, uris, delim, exportDir, errorFilename);
+        testHandleRequestException("RequestServerException", serverException, false, uris, delim, exportDir, errorFilename,1);
         File file = null;
         try {
             file = new File(exportDir, errorFilename);

@@ -129,16 +129,16 @@ public class MonitorTest {
 
     @Test
     public void testFormat() {
-        assertEquals("1", Monitor.formatThreadsPerSecond(1));
-        assertEquals("0.9", Monitor.formatThreadsPerSecond(0.9));
-        assertEquals("0.95", Monitor.formatThreadsPerSecond(0.95));
-        assertEquals("0.95", Monitor.formatThreadsPerSecond(0.955));
-        assertEquals("0.96", Monitor.formatThreadsPerSecond(0.9559));
-        assertEquals("0.01", Monitor.formatThreadsPerSecond(0.01));
-        assertEquals("0.01", Monitor.formatThreadsPerSecond(0.014));
-        assertEquals("100", Monitor.formatThreadsPerSecond(100.00));
-        assertEquals("1,000", Monitor.formatThreadsPerSecond(1000));
-        assertEquals("100", Monitor.formatThreadsPerSecond(100.1234));
-        assertEquals("100", Monitor.formatThreadsPerSecond(100.999));
+        assertEquals("1", Monitor.formatTransactionsPerSecond(1));
+        assertEquals("0.9", Monitor.formatTransactionsPerSecond(0.9));
+        assertEquals("0.95", Monitor.formatTransactionsPerSecond(0.95));
+        assertEquals("0.96", Monitor.formatTransactionsPerSecond(0.955));
+        assertEquals("0.96", Monitor.formatTransactionsPerSecond(0.9559));
+        assertEquals("0.01", Monitor.formatTransactionsPerSecond(0.01));
+        assertEquals("0.01", Monitor.formatTransactionsPerSecond(0.014));
+        assertEquals("100", Monitor.formatTransactionsPerSecond(100.00));
+        assertEquals("1,000", Monitor.formatTransactionsPerSecond(1000));
+        assertEquals("100", Monitor.formatTransactionsPerSecond(100.1234));
+        assertEquals("100", Monitor.formatTransactionsPerSecond(100.999));
     }
 }
