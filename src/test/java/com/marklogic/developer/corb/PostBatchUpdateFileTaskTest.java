@@ -293,6 +293,16 @@ public class PostBatchUpdateFileTaskTest {
         testCustomComparator("distinct", "b,z...,d....,a.....", "java.lang.String");
     }
     
+    @Test 
+    public void testCall_removeDuplicatesAndSort_noSortOrDedup_distinctOnly() throws Exception {
+        testCustomComparator("distinct", "z...,d....,d....,a.....,b", null);
+    }
+    
+    @Test 
+    public void testCall_removeDuplicatesAndSort_noSortOrDedup_blankSort() throws Exception {
+        testCustomComparator(" ", "z...,d....,d....,a.....,b", null);
+    }
+    
     public void testCustomComparator(String sortProperty, String expected) throws Exception {
         testCustomComparator(sortProperty, expected, "com.marklogic.developer.corb.PostBatchUpdateFileTaskTest$StringLengthComparator");
     }
@@ -311,13 +321,16 @@ public class PostBatchUpdateFileTaskTest {
         writer.close();
 
         Properties props = new Properties();
-        props.setProperty("EXPORT-FILE-SORT-COMPARATOR", comparator);
+        if (comparator != null) {
+            props.setProperty("EXPORT-FILE-SORT-COMPARATOR", comparator);
+        }
         if (sortProperty != null) {
             props.setProperty("EXPORT-FILE-SORT", sortProperty);
         }
         String result = testRemoveDuplicatesAndSort(file, props);
         assertEquals(splitAndAppendNewline(expected), result);
     }
+    
     public static class StringLengthComparator implements Comparator<String> {
 
         @Override
