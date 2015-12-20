@@ -265,7 +265,7 @@ public class StringUtilsTest {
         System.out.println("dumpHex");
         String result = StringUtils.dumpHex("abcd", "does not exist");
     }
-    
+
     @Test
     public void testIsBlank() {
         System.out.println("isBlank");
@@ -274,16 +274,40 @@ public class StringUtilsTest {
         assertTrue(StringUtils.isBlank(" \n"));
         assertTrue(StringUtils.isBlank(null));
     }
-    
+
     @Test
     public void testTrim() {
         System.out.println("trim");
         assertEquals("foo", StringUtils.trim("  foo  "));
     }
-    
+
+    @Test
+    public void testTrim_blank() {
+        System.out.println("trim");
+        assertEquals("", StringUtils.trim("    "));
+    }
+
     @Test
     public void testTrim_null() {
         System.out.println("trim");
         assertNull(StringUtils.trim(null));
+    }
+
+    @Test
+    public void testTrimToEmpty() {
+        System.out.println("trimToEmpty");
+        assertEquals("foo", StringUtils.trimToEmpty("  foo  "));
+    }
+
+    @Test
+    public void testTrimToEmpty_null() {
+        System.out.println("trimToEmpty");
+        assertEquals("", StringUtils.trimToEmpty(null));
+    }
+
+    @Test
+    public void testTrimToEmpty_blank() {
+        System.out.println("trimToEmpty");
+        assertEquals("", StringUtils.trimToEmpty("   "));
     }
 }

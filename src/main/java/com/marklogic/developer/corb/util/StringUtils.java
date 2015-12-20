@@ -30,6 +30,8 @@ import java.util.Iterator;
  */
 public class StringUtils {
 
+    public static final String EMPTY = "";
+
     private StringUtils() {
     }
 
@@ -205,9 +207,20 @@ public class StringUtils {
     /**
      * Removes control characters (char <= 32) from both ends of the string. If
      * null, returns null. @param value @return
+     * @param value
+     * @return the trimmed string, or {@code null} if null String input
      */
     public static String trim(final String value) {
         return value == null ? null : value.trim();
     }
 
+    /**
+     * Removes control characters (char <= 32) from both ends of the string. If
+     * null, returns null. @param value @return
+     * @param value
+     * @return the trimmed String or an empty String if {@code null} input
+     */
+    public static String trimToEmpty(final String value) {
+        return value == null ? EMPTY : value.trim();
+    }
 }

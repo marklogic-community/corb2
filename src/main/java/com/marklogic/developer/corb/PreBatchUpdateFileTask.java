@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.trimToEmpty;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
@@ -46,8 +48,8 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 
 	protected void writeTopContent() throws IOException {
 		String topContent = getTopContent();
-		topContent = topContent != null ? topContent.trim() : "";
-		if (topContent.length() > 0) {
+		topContent = trimToEmpty(topContent);
+		if (isNotEmpty(topContent)) {
 			BufferedOutputStream writer = null;
 			try {
 				writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, getPartFileName())));

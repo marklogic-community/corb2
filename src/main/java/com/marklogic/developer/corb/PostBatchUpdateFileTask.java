@@ -41,6 +41,8 @@ import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.trimToEmpty;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
@@ -138,8 +140,8 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 
     protected void writeBottomContent() throws IOException {
         String bottomContent = getBottomContent();
-        bottomContent = bottomContent != null ? bottomContent.trim() : "";
-        if (bottomContent.length() > 0) {
+        bottomContent = trimToEmpty(bottomContent);
+        if (isNotEmpty(bottomContent)) {
             BufferedOutputStream writer = null;
             try {
                 writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, getPartFileName()), true));
