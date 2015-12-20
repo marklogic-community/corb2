@@ -132,7 +132,7 @@ public class MonitorTest {
         assertEquals("1", Monitor.formatTransactionsPerSecond(1));
         assertEquals("0.9", Monitor.formatTransactionsPerSecond(0.9));
         assertEquals("0.95", Monitor.formatTransactionsPerSecond(0.95));
-        assertEquals("0.96", Monitor.formatTransactionsPerSecond(0.955));
+        assertEquals("0.96", Monitor.formatTransactionsPerSecond(0.956));
         assertEquals("0.96", Monitor.formatTransactionsPerSecond(0.9559));
         assertEquals("0.01", Monitor.formatTransactionsPerSecond(0.01));
         assertEquals("0.01", Monitor.formatTransactionsPerSecond(0.014));
