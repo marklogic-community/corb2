@@ -380,25 +380,25 @@ public abstract class AbstractTask implements Task {
 			delim = Manager.DEFAULT_BATCH_URI_DELIM;
 		}
 		
-		synchronized(ERROR_SYNC_OBJ){
-			BufferedOutputStream writer = null;
-			try {
-				writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, errorFileName), true));
-        for (String uri : uris) {
-            writer.write(uri.getBytes());
-            if (isNotEmpty(message)) {
-                writer.write(delim.getBytes());
-                writer.write(message.getBytes());
-            }       
-            writer.write(NEWLINE);
-        }
-        writer.flush();
-			} catch(Exception exc) {
-				LOG.log(Level.SEVERE, "Problem writing uris to ERROR-FILE-NAME",exc);
-			} finally {
+        synchronized (ERROR_SYNC_OBJ) {
+            BufferedOutputStream writer = null;
+            try {
+                writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, errorFileName), true));
+                for (String uri : uris) {
+                    writer.write(uri.getBytes());
+                    if (isNotEmpty(message)) {
+                        writer.write(delim.getBytes());
+                        writer.write(message.getBytes());
+                    }
+                    writer.write(NEWLINE);
+                }
+                writer.flush();
+            } catch (Exception exc) {
+                LOG.log(Level.SEVERE, "Problem writing uris to ERROR-FILE-NAME", exc);
+            } finally {
                 closeQuietly(writer);
-			}
-		}
+            }
+        }
 	}
 	
 }
