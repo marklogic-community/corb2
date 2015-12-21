@@ -31,7 +31,9 @@ import java.util.Iterator;
 public class StringUtils {
 
     public static final String EMPTY = "";
-
+    private static final String ADHOC_PATTERN = "(?i).*\\|ADHOC";
+    private static final String JAVASCRIPT_MODULE_FILENAME_PATTERN = "(?i).*\\.s?js(\\|ADHOC)?$";
+    
     private StringUtils() {
     }
 
@@ -135,7 +137,19 @@ public class StringUtils {
     public static String buildModulePath(Package modulePackage, String name) {
         return "/" + modulePackage.getName().replace('.', '/') + "/" + name + (name.endsWith(".xqy") ? "" : ".xqy");
     }
+    
+    public static String buildModulePath(String root, String module) {
+        if (!root.endsWith("/")) {
+            root += "/";
+        }
 
+        if (module.startsWith("/") && module.length() > 1) {
+            module = module.substring(1);
+        }
+
+        return root + module;
+    }
+    
     /**
      * @param value
      * @param encoding
@@ -222,5 +236,13 @@ public class StringUtils {
      */
     public static String trimToEmpty(final String value) {
         return value == null ? EMPTY : value.trim();
+    }
+    
+    public static boolean isAdhoc(final String value) {
+        return (value != null && value.matches(ADHOC_PATTERN));
+    }
+    
+    public static boolean isJavaScriptModule(final String value) {
+        return (value != null && value.matches(JAVASCRIPT_MODULE_FILENAME_PATTERN));
     }
 }

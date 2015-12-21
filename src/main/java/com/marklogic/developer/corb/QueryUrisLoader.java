@@ -32,6 +32,9 @@ import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import java.util.logging.Level;
+import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
+import static com.marklogic.developer.corb.util.StringUtils.isAdhoc;
+import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 public class QueryUrisLoader implements UrisLoader {
@@ -104,30 +107,21 @@ public class QueryUrisLoader implements UrisLoader {
 
 			session = cs.newSession();
 			Request req = null;
-			
-			if (options.getUrisModule().toUpperCase().endsWith("|ADHOC")) {
-				String queryPath = options.getUrisModule().substring(0, options.getUrisModule().indexOf('|'));
+			String urisModule = options.getUrisModule();
+			if (isAdhoc(urisModule)) {
+				String queryPath = urisModule.substring(0, urisModule.indexOf('|'));
 				String adhocQuery = AbstractManager.getAdhocQuery(queryPath);
 				if (adhocQuery == null || (adhocQuery.length() == 0)) {
 					throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
 				}
 				LOG.log(Level.INFO, "invoking adhoc uris module {0}", queryPath);
 				req = session.newAdhocQuery(adhocQuery);
-				if (queryPath.toUpperCase().endsWith(".SJS") || queryPath.toUpperCase().endsWith(".JS")) {
+				if (isJavaScriptModule(queryPath)) {
 					opts.setQueryLanguage("javascript");
 				}
 			} else {
 				String root = options.getModuleRoot();
-				if (!root.endsWith("/")) {
-					root += "/";
-				}
-
-				String module = options.getUrisModule();
-				if (module.startsWith("/") && module.length() > 1) {
-					module = module.substring(1);
-				}
-
-				String modulePath = root + module;
+				String modulePath = buildModulePath(root, urisModule);
 				LOG.log(Level.INFO, "invoking uris module {0}", modulePath);
 				req = session.newModuleInvoke(modulePath);
 			}

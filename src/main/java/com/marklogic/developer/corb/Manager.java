@@ -53,7 +53,9 @@ import com.marklogic.xcc.types.XdmItem;
 import java.util.HashMap;
 import java.util.Map;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 
 /**
@@ -431,7 +433,7 @@ public class Manager extends AbstractManager{
 		ContentCreateOptions opts = ContentCreateOptions.newTextInstance();
 		try {
 			for (String resourceModule : resourceModules) {
-				if (resourceModule == null || resourceModule.toUpperCase().endsWith("|ADHOC")) {
+				if (isAdhoc(resourceModule)) {
 					continue;
 				}
 

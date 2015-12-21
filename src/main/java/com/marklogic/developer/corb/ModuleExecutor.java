@@ -43,7 +43,10 @@ import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
+import static com.marklogic.developer.corb.util.StringUtils.isAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 /**
@@ -230,29 +233,21 @@ public class ModuleExecutor extends AbstractManager{
             Request req = null;
             List<String> propertyNames = new ArrayList<String>(properties.stringPropertyNames());
             propertyNames.addAll(System.getProperties().stringPropertyNames());
-
-            if (options.getProcessModule().toUpperCase().endsWith("|ADHOC")) {
-                String queryPath = options.getProcessModule().substring(0, options.getProcessModule().indexOf('|'));
-
+            String processModule = options.getProcessModule();
+            if (isAdhoc(processModule)) {
+                String queryPath = processModule.substring(0, processModule.indexOf('|'));
                 String adhocQuery = getAdhocQuery(queryPath);
                 if (adhocQuery == null || (adhocQuery.length() == 0)) {
                     throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
                 }
                 LOG.log(Level.INFO, "invoking adhoc process module {0}", queryPath);
                 req = session.newAdhocQuery(adhocQuery);
-                if (queryPath.toUpperCase().endsWith(".SJS") || queryPath.toUpperCase().endsWith(".JS")) {
+                if (isJavaScriptModule(queryPath)) {
                     opts.setQueryLanguage("javascript");
                 }
             } else {
                 String root = options.getModuleRoot();
-                if (!root.endsWith("/")) {
-                    root += "/";
-                }
-                String module = options.getProcessModule();
-                if (module.startsWith("/") && module.length() > 1) {
-                    module = module.substring(1);
-                }
-                String modulePath = root + module;
+                String modulePath = buildModulePath(root, processModule);
                 LOG.log(Level.INFO, "invoking module {0}", modulePath);
                 req = session.newModuleInvoke(modulePath);
             }

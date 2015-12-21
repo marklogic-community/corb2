@@ -68,21 +68,21 @@ public class StringUtilsTest {
     /**
      * Test of getPathExtension method, of class Utilities.
      */
-    @org.junit.Test
+    @Test
     public void testGetPathExtension() {
         System.out.println("getPathExtension");
         String result = StringUtils.getPathExtension("dir/dir/filename.csv");
         assertEquals("csv", result);
     }
 
-    @org.junit.Test
+    @Test
     public void testGetPathExtension_multipleDotsInPath() {
         System.out.println("getPathExtension");
         String result = StringUtils.getPathExtension("dir/dir/file.name.csv.txt");
         assertEquals("txt", result);
     }
 
-    @org.junit.Test
+    @Test
     public void testGetPathExtension_noExtension() {
         System.out.println("getPathExtension");
         String path = "dir/dir/filename";
@@ -93,7 +93,7 @@ public class StringUtilsTest {
     /**
      * Test of join method, of class Utilities.
      */
-    @org.junit.Test
+    @Test
     public void testJoin_List_String() {
         System.out.println("join");
         List items = Arrays.asList(new String[]{"a", "b", "c"});
@@ -101,7 +101,7 @@ public class StringUtilsTest {
         assertEquals("a,b,c", result);
     }
 
-    @org.junit.Test
+    @Test
     public void testJoin_List_StringIsNull() {
         System.out.println("join");
         List items = null;
@@ -109,7 +109,7 @@ public class StringUtilsTest {
         assertEquals(null, result);
     }
 
-    @org.junit.Test
+    @Test
     public void testJoin_emptyList() {
         System.out.println("join");
         List<String> items = new ArrayList<String>();
@@ -120,7 +120,7 @@ public class StringUtilsTest {
     /**
      * Test of join method, of class Utilities.
      */
-    @org.junit.Test
+    @Test
     public void testJoin_ObjectArr_String() {
         System.out.println("join");
         Object[] items = new Object[2];
@@ -131,7 +131,7 @@ public class StringUtilsTest {
         assertEquals("2|foo", result);
     }
 
-    @org.junit.Test(expected = NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void testJoin_ObjectArr_StringIsNull() {
         System.out.println("join");
         Object[] items = null;
@@ -142,7 +142,7 @@ public class StringUtilsTest {
     /**
      * Test of join method, of class Utilities.
      */
-    @org.junit.Test
+    @Test
     public void testJoin_StringArr_String() {
         System.out.println("join");
         String[] items = new String[]{"a", "b", "c"};
@@ -151,7 +151,7 @@ public class StringUtilsTest {
         assertEquals("a,b,c", result);
     }
 
-    @org.junit.Test(expected = NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void testJoin_StringArr_StringIsNull() {
         System.out.println("join");
         String[] items = null;
@@ -162,14 +162,14 @@ public class StringUtilsTest {
     /**
      * Test of escapeXml method, of class Utilities.
      */
-    @org.junit.Test
+    @Test
     public void testEscapeXml() {
         System.out.println("escapeXml");
         String result = StringUtils.escapeXml("<b>this & that</b>");
         assertEquals("&lt;b&gt;this &amp; that&lt;/b&gt;", result);
     }
 
-    @org.junit.Test
+    @Test
     public void testEscapeXml_null() {
         System.out.println("escapeXml");
         String result = StringUtils.escapeXml(null);
@@ -179,7 +179,7 @@ public class StringUtilsTest {
     /**
      * Test of stringToBoolean method, of class Utilities.
      */
-    @org.junit.Test
+    @Test
     public void testStringToBoolean_String() {
         System.out.println("stringToBoolean");
         assertFalse(StringUtils.stringToBoolean(""));
@@ -193,7 +193,7 @@ public class StringUtilsTest {
         assertFalse(StringUtils.stringToBoolean(null));
     }
 
-    @org.junit.Test
+    @Test
     public void testStringToBoolean_String_true() {
         System.out.println("stringToBoolean");
         assertTrue(StringUtils.stringToBoolean("true"));
@@ -206,7 +206,7 @@ public class StringUtilsTest {
     /**
      * Test of stringToBoolean method, of class Utilities.
      */
-    @org.junit.Test
+    @Test
     public void testStringToBoolean_String_boolean() {
         System.out.println("stringToBoolean");
         assertFalse(StringUtils.stringToBoolean(null, false));
@@ -216,7 +216,7 @@ public class StringUtilsTest {
     /**
      * Test of buildModulePath method, of class Utilities.
      */
-    @org.junit.Test
+    @Test
     public void testBuildModulePath_Class() {
         System.out.println("buildModulePath");
         String result = StringUtils.buildModulePath(String.class);
@@ -226,7 +226,7 @@ public class StringUtilsTest {
     /**
      * Test of buildModulePath method, of class Utilities.
      */
-    @org.junit.Test
+    @Test
     public void testBuildModulePath_Package_String() {
         System.out.println("buildModulePath");
         Package modulePackage = Package.getPackage("com.marklogic.developer.corb.util");
@@ -234,7 +234,7 @@ public class StringUtilsTest {
         assertEquals("/com/marklogic/developer/corb/util/Utilities.xqy", result);
     }
 
-    @org.junit.Test
+    @Test
     public void testBuildModulePath_Package_String_withSuffix() {
         System.out.println("buildModulePath");
         Package _package = Package.getPackage("com.marklogic.developer.corb.util");
@@ -242,25 +242,36 @@ public class StringUtilsTest {
         assertEquals("/com/marklogic/developer/corb/util/Utilities.xqy", result);
     }
 
+    @Test
+    public void testBuildModulePath() {
+        System.out.println("buildModulePath");
+        assertEquals("/Utilities.xqy", StringUtils.buildModulePath("/", "/Utilities.xqy"));
+        assertEquals("/Utilities.xqy", StringUtils.buildModulePath("/", "Utilities.xqy"));
+        assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo", "Utilities.xqy"));
+        assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo", "/Utilities.xqy"));
+        assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo/", "Utilities.xqy"));
+        assertEquals("/foo//", StringUtils.buildModulePath("/foo/", "/"));
+    }
+    
     /**
      * Test of dumpHex method, of class Utilities.
      *
      * @throws java.lang.Exception
      */
-    @org.junit.Test
+    @Test
     public void testDumpHex() throws Exception {
         System.out.println("dumpHex");
         String result = StringUtils.dumpHex("abcd", "UTF-8");
         assertEquals("61 62 63 64", result);
     }
 
-    @org.junit.Test(expected = NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void testDumpHex_null() throws Exception {
         System.out.println("dumpHex");
         String result = StringUtils.dumpHex(null, "UTF-8");
     }
 
-    @org.junit.Test(expected = UnsupportedEncodingException.class)
+    @Test(expected = UnsupportedEncodingException.class)
     public void testDumpHex_unsupportedEncoding() throws Exception {
         System.out.println("dumpHex");
         String result = StringUtils.dumpHex("abcd", "does not exist");
@@ -309,5 +320,46 @@ public class StringUtilsTest {
     public void testTrimToEmpty_blank() {
         System.out.println("trimToEmpty");
         assertEquals("", StringUtils.trimToEmpty("   "));
+    }
+
+    @Test
+    public void testIsAdhoc() {
+        System.out.println("isAdhoc");
+        assertTrue(StringUtils.isAdhoc("/myModule.xqy|ADHOC"));
+        assertTrue(StringUtils.isAdhoc("/myModule.xqy|adhoc"));
+    }
+
+    @Test
+    public void testIsAdhoc_doesNotMatch() {
+        System.out.println("isAdhoc");
+        assertFalse(StringUtils.isAdhoc("/myModule.xqy"));
+        assertFalse(StringUtils.isAdhoc("adhoc.xqy"));
+        assertFalse(StringUtils.isAdhoc("/myModule.xqy|adhoc "));
+    }
+
+    @Test
+    public void testIsJavaScriptModule() {
+        System.out.println("isJavaScriptModule");
+        assertTrue(StringUtils.isJavaScriptModule("/myModule.js"));
+        assertTrue(StringUtils.isJavaScriptModule("/myModule.sjs"));
+        assertTrue(StringUtils.isJavaScriptModule("/myModule.JS"));
+        assertTrue(StringUtils.isJavaScriptModule("/myModule.SJS"));
+        assertTrue(StringUtils.isJavaScriptModule("/myModule.js|adhoc"));
+        assertTrue(StringUtils.isJavaScriptModule("/myModule.JS|ADHOC"));
+        assertTrue(StringUtils.isJavaScriptModule("/myModule.JS|ADHOC"));
+        assertTrue(StringUtils.isJavaScriptModule("/myModule.sjs|adhoc"));
+        assertTrue(StringUtils.isJavaScriptModule("/myModule.sjs|ADHOC"));     
+    }
+
+    @Test
+    public void testIsJavaScript_doesNotMatch() {
+        System.out.println("isJavaScriptModule");
+        assertFalse(StringUtils.isJavaScriptModule(null));
+        assertFalse(StringUtils.isJavaScriptModule(""));
+        assertFalse(StringUtils.isJavaScriptModule("/myModule.xqy"));
+        assertFalse(StringUtils.isJavaScriptModule("adhoc.xqy|ADHOC"));
+        assertFalse(StringUtils.isJavaScriptModule("/myModule.js.xqy"));
+        assertFalse(StringUtils.isJavaScriptModule("/myModule.js.xqy|ADHOC"));
+        assertFalse(StringUtils.isJavaScriptModule("/myModule.jsx"));
     }
 }
