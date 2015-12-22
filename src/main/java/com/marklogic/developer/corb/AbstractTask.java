@@ -42,6 +42,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 /**
  * 
@@ -318,7 +319,7 @@ public abstract class AbstractTask implements Task {
 		if (val == null && properties != null) {
 			val = properties.getProperty(key);
 		}
-		return val != null ? val.trim() : null;
+		return trim(val);
 	}
 
 	protected byte[] getValueAsBytes(XdmItem item) {
