@@ -77,7 +77,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             File sortedFile = new File(exportDir, getPartFileName() + getPartExt());
             File tempFileStore = origFile.getParentFile();
 
-            Comparator comparator = ExternalSort.defaultcomparator;
+            Comparator<String> comparator = ExternalSort.defaultcomparator;
             if (isNotBlank(comparatorCls)) {
                 comparator = getComparatorCls(comparatorCls).newInstance();
             } else if (sort.matches(DESCENDING)) {
