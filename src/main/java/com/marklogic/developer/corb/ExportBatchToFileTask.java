@@ -56,7 +56,7 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 				if (!partExt.startsWith(".")) {
 					partExt = "." + partExt;
 				}
-				fileName = fileName + partExt;
+				fileName += partExt;
 			}
 		}
 		return fileName;
