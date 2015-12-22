@@ -18,7 +18,6 @@
  */
 package com.marklogic.developer.corb.util;
 
-import com.marklogic.developer.corb.util.IOUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
