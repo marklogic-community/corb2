@@ -42,6 +42,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 
 /**
  * Class that uses a private key associate with a particular host Key is
@@ -71,9 +72,10 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                 StringBuilder sb = new StringBuilder();
                 BufferedReader br = null;
                 boolean isSN = false;
+                Scanner sc = null;
                 try {
                     br = read("wmic bios get serialnumber");
-                    Scanner sc = new Scanner(br);
+                    sc = new Scanner(br);
                     while (sc.hasNext()) {
                         String next = sc.next();
                         if ("SerialNumber".equals(next) || isSN) {
@@ -87,8 +89,9 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                         return sn.getBytes();
                     } else {
                         throw new IllegalStateException("Unable to find serial number on Windows");
-                    }
+                    }   
                 } finally {
+                	closeQuietly(sc);
                     closeOrThrowRuntime(br);
                 }
             }
