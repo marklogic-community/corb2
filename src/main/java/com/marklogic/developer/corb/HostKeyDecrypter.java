@@ -42,7 +42,6 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 
 /**
  * Class that uses a private key associate with a particular host Key is
@@ -91,8 +90,8 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                         throw new IllegalStateException("Unable to find serial number on Windows");
                     }   
                 } finally {
-                	closeQuietly(sc);
-                    closeOrThrowRuntime(br);
+                	try{sc.close();}catch(Exception exc){}
+                  closeOrThrowRuntime(br);
                 }
             }
         },
