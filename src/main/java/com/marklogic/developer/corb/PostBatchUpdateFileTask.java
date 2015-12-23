@@ -102,11 +102,12 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
         }
     }
     
-    protected Class<? extends Comparator> getComparatorCls(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    @SuppressWarnings("unchecked")
+		protected Class<? extends Comparator<String>> getComparatorCls(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         Class<?> cls = Class.forName(className);
         if (Comparator.class.isAssignableFrom(cls)) {
             cls.newInstance(); // sanity check
-            return cls.asSubclass(Comparator.class);
+            return (Class<? extends Comparator<String>>) cls.asSubclass(Comparator.class);
         } else {
             throw new IllegalArgumentException("Comparator must be of type java.util.Comparator");
         }
