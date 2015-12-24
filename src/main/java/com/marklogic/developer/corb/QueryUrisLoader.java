@@ -18,12 +18,18 @@
  */
 package com.marklogic.developer.corb;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
-
+import static com.marklogic.developer.corb.Options.MAX_OPTS_FROM_MODULE;
+import static com.marklogic.developer.corb.Options.POST_BATCH_MODULE;
+import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
+import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
+import static com.marklogic.developer.corb.Options.URIS_MODULE;
+import static com.marklogic.developer.corb.Options.URIS_REPLACE_PATTERN;
+import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
+import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
+import static com.marklogic.developer.corb.util.StringUtils.isAdhoc;
+import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
@@ -31,15 +37,19 @@ import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
-import static com.marklogic.developer.corb.util.StringUtils.isAdhoc;
-import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
-import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 public class QueryUrisLoader implements UrisLoader {
 	private static final int DEFAULT_MAX_OPTS_FROM_MODULE = 10;
-	private static final Pattern MODULE_CUSTOM_INPUT = Pattern.compile("(PRE-BATCH-MODULE|PROCESS-MODULE|XQUERY-MODULE|POST-BATCH-MODULE)\\.[A-Za-z0-9]+=[A-Za-z0-9]+");
+	private static final Pattern MODULE_CUSTOM_INPUT = Pattern.compile("(" + 
+            PRE_BATCH_MODULE + "|" + PROCESS_MODULE + "|" + XQUERY_MODULE + "|" + POST_BATCH_MODULE +
+            ")\\.[A-Za-z0-9]+=[A-Za-z0-9]+");
 	
 	TransformOptions options;
 	ContentSource cs;
@@ -87,8 +97,8 @@ public class QueryUrisLoader implements UrisLoader {
         }
 		propertyNames.addAll(System.getProperties().stringPropertyNames());
 
-		if (propertyNames.contains("URIS-REPLACE-PATTERN")) {
-			String urisReplacePattern = getProperty("URIS-REPLACE-PATTERN");
+		if (propertyNames.contains(URIS_REPLACE_PATTERN)) {
+			String urisReplacePattern = getProperty(URIS_REPLACE_PATTERN);
 			if (urisReplacePattern != null && urisReplacePattern.length() > 0) {
 				replacements = urisReplacePattern.split(",", -1);
 				if (replacements.length % 2 != 0) {
@@ -133,8 +143,8 @@ public class QueryUrisLoader implements UrisLoader {
 
 			// custom inputs
 			for (String propName : propertyNames) {
-				if (propName.startsWith("URIS-MODULE.")) {
-					String varName = propName.substring("URIS-MODULE.".length());
+				if (propName.startsWith(URIS_MODULE + ".")) {
+					String varName = propName.substring((URIS_MODULE + ".").length());
 					String value = getProperty(propName);
 					if (value != null) {
 						req.setNewStringVariable(varName, value);
@@ -152,7 +162,7 @@ public class QueryUrisLoader implements UrisLoader {
 				String value = next.getItem().asString();
 				if (MODULE_CUSTOM_INPUT.matcher(value).matches()) {
 					int idx = value.indexOf('=');
-					properties.put(value.substring(0, idx).replace("XQUERY-MODULE.", "PROCESS-MODULE."), value.substring(idx+1));
+					properties.put(value.substring(0, idx).replace(XQUERY_MODULE + ".", PROCESS_MODULE + "."), value.substring(idx+1));
 				} else {
 					batchRef = value;
 				}
@@ -225,13 +235,13 @@ public class QueryUrisLoader implements UrisLoader {
 		if (val == null && properties != null) {
 			val = properties.getProperty(key);
 		}
-		return val != null ? val.trim() : val;
+		return trim(val);
 	}
 	
 	private int getMaxOptionsFromModule(){
 		int max = DEFAULT_MAX_OPTS_FROM_MODULE;
 		try {
-			String maxStr = getProperty("MAX_OPTS_FROM_MODULE");
+			String maxStr = getProperty(MAX_OPTS_FROM_MODULE);
 			if (isNotEmpty(maxStr)) {
 				max = Integer.parseInt(maxStr);
 			}

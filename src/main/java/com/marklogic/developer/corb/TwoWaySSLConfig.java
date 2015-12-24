@@ -18,6 +18,9 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -29,26 +32,22 @@ import java.text.MessageFormat;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
-import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
-import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 public class TwoWaySSLConfig extends AbstractSSLConfig {
 
     private static final Logger LOG = Logger.getLogger(TwoWaySSLConfig.class.getSimpleName());
-    public static final String SSL_CIPHER_SUITES = "SSL-CIPHER-SUITES";
-    public static final String SSL_ENABLED_PROTOCOLS = "SSL-ENABLED-PROTOCOLS";
-    public static final String SSL_KEYSTORE = "SSL-KEYSTORE";
-    public static final String SSL_KEY_PASSWORD = "SSL-KEY-PASSWORD";
-    public static final String SSL_KEYSTORE_PASSWORD = "SSL-KEYSTORE-PASSWORD";
-    public static final String SSL_KEYSTORE_TYPE = "SSL-KEYSTORE-TYPE";
-    public static final String SSL_PROPERTIES_FILE = "SSL-PROPERTIES-FILE";
+    public static final String SSL_CIPHER_SUITES = com.marklogic.developer.corb.Options.SSL_CIPHER_SUITES;
+    public static final String SSL_ENABLED_PROTOCOLS = com.marklogic.developer.corb.Options.SSL_ENABLED_PROTOCOLS;
+    public static final String SSL_KEYSTORE = com.marklogic.developer.corb.Options.SSL_KEYSTORE;
+    public static final String SSL_KEY_PASSWORD = com.marklogic.developer.corb.Options.SSL_KEY_PASSWORD;
+    public static final String SSL_KEYSTORE_PASSWORD = com.marklogic.developer.corb.Options.SSL_KEYSTORE_PASSWORD;
+    public static final String SSL_KEYSTORE_TYPE = com.marklogic.developer.corb.Options.SSL_KEYSTORE_TYPE;
+    public static final String SSL_PROPERTIES_FILE = com.marklogic.developer.corb.Options.SSL_PROPERTIES_FILE;
 
     /**
      * @return acceptable list of cipher suites

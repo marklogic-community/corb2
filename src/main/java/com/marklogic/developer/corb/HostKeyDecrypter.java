@@ -18,6 +18,7 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
@@ -35,14 +36,12 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Locale;
 import java.util.Scanner;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 
 /**
  * Class that uses a private key associate with a particular host Key is

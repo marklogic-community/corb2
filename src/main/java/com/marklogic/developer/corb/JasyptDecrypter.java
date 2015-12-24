@@ -18,13 +18,14 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Options.JASYPT_PROPERTIES_FILE;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 
 public class JasyptDecrypter extends AbstractDecrypter {
 
@@ -36,7 +37,7 @@ public class JasyptDecrypter extends AbstractDecrypter {
 
 	@Override
 	protected void init_decrypter() throws IOException, ClassNotFoundException {
-		String decryptPropsFile = getProperty("JASYPT-PROPERTIES-FILE");
+		String decryptPropsFile = getProperty(JASYPT_PROPERTIES_FILE);
 		if (decryptPropsFile == null || isBlank(decryptPropsFile)) {
 			decryptPropsFile = "jasypt.properties";
 		}

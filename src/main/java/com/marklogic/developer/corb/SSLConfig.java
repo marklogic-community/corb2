@@ -18,13 +18,11 @@
  */
 package com.marklogic.developer.corb;
 
+import com.marklogic.xcc.SecurityOptions;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
-
 import javax.net.ssl.SSLContext;
-
-import com.marklogic.xcc.SecurityOptions;
 
 public interface SSLConfig {
 	void setProperties(Properties props);

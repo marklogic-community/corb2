@@ -18,12 +18,12 @@
  */
 package com.marklogic.developer.corb;
 
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Properties;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 import com.marklogic.xcc.SecurityOptions;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Properties;
 
 /**
  * AbstractSSLOptions has 3 abstract methods:

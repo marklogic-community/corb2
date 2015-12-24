@@ -18,17 +18,17 @@
  */
 package com.marklogic.developer.corb.util;
 
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
-import java.io.ByteArrayOutputStream;
-import java.io.FileReader;
 import java.io.LineNumberReader;
+import java.io.OutputStream;
 
 /**
  *

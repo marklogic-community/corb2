@@ -18,6 +18,29 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Options.EXPORT_FILE_DIR;
+import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
+import static com.marklogic.developer.corb.Options.MODULES_DATABASE;
+import static com.marklogic.developer.corb.Options.MODULE_ROOT;
+import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
+import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
+import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
+import static com.marklogic.developer.corb.util.StringUtils.isAdhoc;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
+import com.marklogic.xcc.AdhocQuery;
+import com.marklogic.xcc.Request;
+import com.marklogic.xcc.RequestOptions;
+import com.marklogic.xcc.ResultItem;
+import com.marklogic.xcc.ResultSequence;
+import com.marklogic.xcc.Session;
+import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.exceptions.XccConfigException;
+import com.marklogic.xcc.types.XdmBinary;
+import com.marklogic.xcc.types.XdmItem;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,23 +54,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import com.marklogic.xcc.AdhocQuery;
-import com.marklogic.xcc.Request;
-import com.marklogic.xcc.RequestOptions;
-import com.marklogic.xcc.ResultItem;
-import com.marklogic.xcc.ResultSequence;
-import com.marklogic.xcc.Session;
-import com.marklogic.xcc.exceptions.RequestException;
-import com.marklogic.xcc.exceptions.XccConfigException;
-import com.marklogic.xcc.types.XdmBinary;
-import com.marklogic.xcc.types.XdmItem;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
-import static com.marklogic.developer.corb.util.StringUtils.isAdhoc;
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 /**
  * This class replaces RunXQuery.  It can run both XQuery and JavaScript and when built, doesn't wrap the 
@@ -124,25 +131,25 @@ public class ModuleExecutor extends AbstractManager{
 	}
 	
 	protected void initOptions(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
-		String processModule = getOption(args.length > 1 ? args[1] : null,"PROCESS-MODULE");
-		String moduleRoot = getOption(args.length > 2 ? args[2] : null,"MODULE-ROOT");
-		String modulesDatabase = getOption(args.length > 3 ? args[3] : null,"MODULES-DATABASE");
-		String exportFileDir = getOption(args.length > 4 ? args[4] : null,"EXPORT-FILE-DIR");
-		String exportFileName = getOption(args.length > 5 ? args[5] : null,"EXPORT-FILE-NAME");
+		String processModule = getOption(args.length > 1 ? args[1] : null, PROCESS_MODULE);
+		String moduleRoot = getOption(args.length > 2 ? args[2] : null, MODULE_ROOT);
+		String modulesDatabase = getOption(args.length > 3 ? args[3] : null, MODULES_DATABASE);
+		String exportFileDir = getOption(args.length > 4 ? args[4] : null, EXPORT_FILE_DIR);
+		String exportFileName = getOption(args.length > 5 ? args[5] : null, EXPORT_FILE_NAME);
 				
 		if (moduleRoot != null) { options.setModuleRoot(moduleRoot); }
 		if (processModule != null) { options.setProcessModule(processModule); }
 		if (modulesDatabase != null) { options.setModulesDatabase(modulesDatabase); }
 		//TODO: normalize XQUERY-MODULE properties
 		if (null == options.getProcessModule()) {
-			throw new NullPointerException("PROCESS-MODULE must be specified");
+			throw new NullPointerException(PROCESS_MODULE + " must be specified");
 		}
 		
-		if (!this.properties.containsKey("EXPORT-FILE-DIR") && exportFileDir != null) {
-			this.properties.put("EXPORT-FILE-DIR", exportFileDir);
+		if (!this.properties.containsKey(EXPORT_FILE_DIR) && exportFileDir != null) {
+			this.properties.put(EXPORT_FILE_DIR, exportFileDir);
 		}
-		if (!this.properties.containsKey("EXPORT-FILE-NAME") && exportFileName != null) {
-			this.properties.put("EXPORT-FILE-NAME", exportFileName);
+		if (!this.properties.containsKey(EXPORT_FILE_NAME) && exportFileName != null) {
+			this.properties.put(EXPORT_FILE_NAME, exportFileName);
 		}
 		
 		if (exportFileDir != null) {
@@ -173,13 +180,13 @@ public class ModuleExecutor extends AbstractManager{
 				+ " process-module [module-root [modules-database [ export-file-name ] ] ]");
 		err.println("\nusage 2:");
 		err.println("\t"
-				+ "-DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ]"
-				+ " -DPROCESS-MODULE=module-name.xqy"
+				+ "-D" + XCC_CONNECTION_URI + "=xcc://user:password@host:port/[ database ]"
+				+ " -D" + PROCESS_MODULE + "=module-name.xqy"
 				+ " -D... " + NAME);
 		err.println("\nusage 3:");
-		err.println("\t" + "-DOPTIONS-FILE=myjob.properties " + NAME);
+		err.println("\t" + "-D" + OPTIONS_FILE + "=myjob.properties " + NAME);
 		err.println("\nusage 4:");
-		err.println("\t" + "-DOPTIONS-FILE=myjob.properties " + NAME
+		err.println("\t" + "-D" + OPTIONS_FILE + "=myjob.properties " + NAME
 				+ " xcc://user:password@host:port/[ database ]");
 	}
 
@@ -254,8 +261,8 @@ public class ModuleExecutor extends AbstractManager{
 
             // custom inputs
             for (String propName : propertyNames) {
-                if (propName.startsWith("PROCESS-MODULE.")) {
-                    String varName = propName.substring("PROCESS-MODULE.".length());
+                if (propName.startsWith(PROCESS_MODULE + ".")) {
+                    String varName = propName.substring((PROCESS_MODULE + ".").length());
                     String value = getProperty(propName);
                     if (value != null) {
                         req.setNewStringVariable(varName, value);
@@ -277,7 +284,7 @@ public class ModuleExecutor extends AbstractManager{
 	
 	public String getProperty(String key) {
 		String val = System.getProperty(key);
-		if (isBlank(val)) {
+		if (isBlank(val) && properties != null) {
 			val = properties.getProperty(key);
 		}
 		return trim(val);
@@ -287,8 +294,8 @@ public class ModuleExecutor extends AbstractManager{
 		if (seq == null || !seq.hasNext()) {
 			return;
         }
-		String fileDir = getProperty("EXPORT-FILE-DIR");
-		String fileName = getProperty("EXPORT-FILE-NAME");
+		String fileDir = getProperty(EXPORT_FILE_DIR);
+		String fileName = getProperty(EXPORT_FILE_NAME);
 		if (fileName == null || fileName.length() == 0) {
 			return;
 		}

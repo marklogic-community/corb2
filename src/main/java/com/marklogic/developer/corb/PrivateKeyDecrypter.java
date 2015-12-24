@@ -18,6 +18,12 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Options.PRIVATE_KEY_ALGORITHM;
+import static com.marklogic.developer.corb.Options.PRIVATE_KEY_FILE;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,16 +40,12 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.crypto.Cipher;
 import javax.xml.bind.DatatypeConverter;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 public class PrivateKeyDecrypter extends AbstractDecrypter {
 
+    private static final String DEFAULT_ALGORITHM = "RSA";
 	private String algorithm = null;
 	// option 1 - generate keys with java
 	// java -cp marklogic-corb-2.1.*.jar
@@ -72,12 +74,12 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 
 	@Override
 	protected void init_decrypter() throws IOException, ClassNotFoundException {
-		algorithm = getProperty("PRIVATE-KEY-ALGORITHM");
+		algorithm = getProperty(PRIVATE_KEY_ALGORITHM);
 		if (isBlank(algorithm)) {
-			algorithm = "RSA";
+			algorithm = DEFAULT_ALGORITHM;
 		}
 
-		String filename = trim(getProperty("PRIVATE-KEY-FILE"));
+		String filename = trim(getProperty(PRIVATE_KEY_FILE));
 		if (isNotBlank(filename)) {
 			InputStream is = null;
 			try {
@@ -112,7 +114,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
                 closeQuietly(is);
 			}
 		} else {
-			LOG.severe("PRIVATE-KEY-FILE property must be defined");
+			LOG.severe(PRIVATE_KEY_FILE + " property must be defined");
 		}
 	}
 
@@ -149,7 +151,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 	private static final String usage2 = "Encrypt (Note: default algorithm: RSA):\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA";
 
 	private static void generateKeys(String... args) throws Exception {
-		String algorithm = "RSA";
+		String algorithm = DEFAULT_ALGORITHM;
 		int length = 1024;
 		String privateKeyPathName = null;
 		String publicKeyPathName = null;
@@ -194,7 +196,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 	}
 
 	private static void encrypt(String... args) throws Exception {
-		String algorithm = "RSA";
+		String algorithm = DEFAULT_ALGORITHM;
 		String publicKeyPathName = null;
 		String clearText = null;
 		if (args.length > 1 && isNotBlank(args[1])) {

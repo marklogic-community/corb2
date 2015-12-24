@@ -18,14 +18,20 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
+import static com.marklogic.developer.corb.Options.XCC_DBNAME;
+import static com.marklogic.developer.corb.Options.XCC_HOSTNAME;
+import static com.marklogic.developer.corb.Options.XCC_PASSWORD;
+import static com.marklogic.developer.corb.Options.XCC_PORT;
+import static com.marklogic.developer.corb.Options.XCC_USERNAME;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
 
-public abstract class AbstractDecrypter implements Decrypter{
+public abstract class AbstractDecrypter implements Decrypter {
 
     protected transient Properties properties = null;
     protected static final Pattern ENCRYPTED_VALUE_REGEX = Pattern.compile("^ENC\\((.*)\\)$");
@@ -40,10 +46,11 @@ public abstract class AbstractDecrypter implements Decrypter{
     @Override
     public String getConnectionURI(String uri, String username, String password, String host, String port, String dbname) {
         if (uri != null) {
-            return decrypt("XCC-CONNECTION-URI", uri);
+            return decrypt(XCC_CONNECTION_URI, uri);
         } else {
-            return "xcc://" + decrypt("XCC-USERNAME", username) + ":" + decrypt("XCC-PASSWORD", password) + "@"
-                    + decrypt("XCC-HOSTNAME", host) + ":" + decrypt("XCC-PORT", port) + (dbname != null ? "/" + decrypt("XCC-DBNAME", dbname) : "");
+            return "xcc://" + decrypt(XCC_USERNAME, username) + ":" + decrypt(XCC_PASSWORD, password) + "@"
+                    + decrypt(XCC_HOSTNAME, host) + ":" + decrypt(XCC_PORT, port)
+                    + (dbname != null ? "/" + decrypt(XCC_DBNAME, dbname) : "");
         }
     }
 

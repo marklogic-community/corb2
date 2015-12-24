@@ -18,18 +18,18 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Options.URIS_REPLACE_PATTERN;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
+import com.marklogic.xcc.ContentSource;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.Properties;
-import java.util.logging.Logger;
-
-import com.marklogic.xcc.ContentSource;
 import java.util.logging.Level;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
+import java.util.logging.Logger;
 
 public class FileUrisLoader implements UrisLoader {
 
@@ -68,8 +68,8 @@ public class FileUrisLoader implements UrisLoader {
 	@Override
 	public void open() throws CorbException {
         
-		if (properties != null && properties.containsKey("URIS-REPLACE-PATTERN")) {
-			String pattern = properties.getProperty("URIS-REPLACE-PATTERN").trim();
+		if (properties != null && properties.containsKey(URIS_REPLACE_PATTERN)) {
+			String pattern = properties.getProperty(URIS_REPLACE_PATTERN).trim();
 			replacements = pattern.split(",", -1);
 			if (replacements.length % 2 != 0) {
 				throw new IllegalArgumentException("Invalid replacement pattern " + pattern);
@@ -167,7 +167,6 @@ public class FileUrisLoader implements UrisLoader {
 		cs = null;
 		collection = null;
 		properties = null;
-		replacements = null;
-        
+		replacements = null; 
 	}
 }

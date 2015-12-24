@@ -18,12 +18,18 @@
  */
 package com.marklogic.developer.corb;
 
-import java.util.HashMap;
-import java.util.Map;
+import static com.marklogic.developer.corb.Options.INIT_MODULE;
+import static com.marklogic.developer.corb.Options.POST_BATCH_MODULE;
+import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
+import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 import static com.marklogic.developer.corb.util.StringUtils.isAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
+import java.util.HashMap;
+import java.util.Map;
+import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
+
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
@@ -58,7 +64,7 @@ public class TaskFactory {
         }
         try {
             Task task = options.getProcessTaskClass() == null ? new Transform() : options.getProcessTaskClass().newInstance();
-            setupTask(task, "PROCESS-MODULE", options.getProcessModule(), uris, failOnError);
+            setupTask(task, PROCESS_MODULE, options.getProcessModule(), uris, failOnError);
             return task;
         } catch (Exception exc) {
             throw new IllegalArgumentException(exc.getMessage(), exc);
@@ -75,7 +81,7 @@ public class TaskFactory {
         }
         try {
             Task task = options.getPreBatchTaskClass() == null ? new Transform() : options.getPreBatchTaskClass().newInstance();
-            setupTask(task, "PRE-BATCH-MODULE", options.getPreBatchModule(), new String[0]);
+            setupTask(task, PRE_BATCH_MODULE, options.getPreBatchModule(), new String[0]);
             return task;
         } catch (Exception exc) {
             throw new IllegalArgumentException(exc.getMessage(), exc);
@@ -92,7 +98,7 @@ public class TaskFactory {
         }
         try {
             Task task = options.getPostBatchTaskClass() == null ? new Transform() : options.getPostBatchTaskClass().newInstance();
-            setupTask(task, "POST-BATCH-MODULE", options.getPostBatchModule(), new String[0]);
+            setupTask(task, POST_BATCH_MODULE, options.getPostBatchModule(), new String[0]);
             return task;
         } catch (Exception exc) {
             throw new IllegalArgumentException(exc.getMessage(), exc);
@@ -109,7 +115,7 @@ public class TaskFactory {
         }
         try {
             Task task = options.getInitTaskClass() == null ? new Transform() : options.getInitTaskClass().newInstance();
-            setupTask(task, "INIT-MODULE", options.getInitModule(), new String[0]);
+            setupTask(task, INIT_MODULE, options.getInitModule(), new String[0]);
             return task;
         } catch (Exception exc) {
             throw new IllegalArgumentException(exc.getMessage(), exc);

@@ -18,15 +18,15 @@
  */
 package com.marklogic.developer.corb;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
+import static com.marklogic.developer.corb.Options.BATCH_URI_DELIM;
+import static com.marklogic.developer.corb.Options.ERROR_FILE_NAME;
+import static com.marklogic.developer.corb.Options.QUERY_RETRY_INTERVAL;
+import static com.marklogic.developer.corb.Options.QUERY_RETRY_LIMIT;
+import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_INTERVAL;
+import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultSequence;
@@ -37,12 +37,16 @@ import com.marklogic.xcc.exceptions.RetryableQueryException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
-
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
-import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 /**
  * 
@@ -54,6 +58,7 @@ public abstract class AbstractTask implements Task {
 	
 	protected static final String TRUE = "true";
 	protected static final String FALSE = "false";
+    private static final String URI = "URI";
 	protected static final byte[] NEWLINE = 
 			System.getProperty("line.separator") != null ? System.getProperty("line.separator").getBytes() : "\n".getBytes();
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
@@ -193,9 +198,9 @@ public abstract class AbstractTask implements Task {
 
 			if (inputUris != null && inputUris.length > 0) {
 				if (inputUris.length == 1) {
-					request.setNewStringVariable("URI", inputUris[0]);
+					request.setNewStringVariable(URI, inputUris[0]);
 				} else {
-					String delim = getProperty("BATCH-URI-DELIM");
+					String delim = getProperty(BATCH_URI_DELIM);
 					if (delim == null || delim.length() == 0) {
 						delim = Manager.DEFAULT_BATCH_URI_DELIM;
 					}
@@ -206,7 +211,7 @@ public abstract class AbstractTask implements Task {
 						}
 						buff.append(uri);
 					}
-					request.setNewStringVariable("URI", buff.toString());
+					request.setNewStringVariable(URI, buff.toString());
 				}
 			}
 
@@ -333,22 +338,22 @@ public abstract class AbstractTask implements Task {
 	}
 
 	private int getConnectRetryLimit() {
-		int connectRetryLimit = getIntProperty("XCC-CONNECTION-RETRY-LIMIT");
+		int connectRetryLimit = getIntProperty(XCC_CONNECTION_RETRY_LIMIT);
 		return connectRetryLimit < 0 ? DEFAULT_CONNECTION_RETRY_LIMIT : connectRetryLimit;
 	}
 
 	private int getConnectRetryInterval() {
-		int connectRetryInterval = getIntProperty("XCC-CONNECTION-RETRY-INTERVAL");
+		int connectRetryInterval = getIntProperty(XCC_CONNECTION_RETRY_INTERVAL);
 		return connectRetryInterval < 0 ? DEFAULT_CONNECTION_RETRY_INTERVAL : connectRetryInterval;
 	}
 	
 	private int getQueryRetryLimit() {
-		int queryRetryLimit = getIntProperty("QUERY-RETRY-LIMIT");
+		int queryRetryLimit = getIntProperty(QUERY_RETRY_LIMIT);
 		return queryRetryLimit < 0 ? DEFAULT_QUERY_RETRY_LIMIT : queryRetryLimit;
 	}
 
 	private int getQueryRetryInterval() {
-		int queryRetryInterval = getIntProperty("QUERY-RETRY-INTERVAL");
+		int queryRetryInterval = getIntProperty(QUERY_RETRY_INTERVAL);
 		return queryRetryInterval < 0 ? DEFAULT_QUERY_RETRY_INTERVAL : queryRetryInterval;
 	}
 	
@@ -373,10 +378,10 @@ public abstract class AbstractTask implements Task {
 	private void writeToErrorFile(String[] uris, String message){
 		if (uris == null || uris.length == 0) { return; }
 		
-		String errorFileName = getProperty("ERROR-FILE-NAME");
+		String errorFileName = getProperty(ERROR_FILE_NAME);
 		if (errorFileName == null || errorFileName.length() == 0) { return; }
 		
-		String delim = getProperty("BATCH-URI-DELIM");
+		String delim = getProperty(BATCH_URI_DELIM);
 		if (delim == null || delim.length() == 0) {
 			delim = Manager.DEFAULT_BATCH_URI_DELIM;
 		}
@@ -395,11 +400,10 @@ public abstract class AbstractTask implements Task {
                 }
                 writer.flush();
             } catch (Exception exc) {
-                LOG.log(Level.SEVERE, "Problem writing uris to ERROR-FILE-NAME", exc);
+                LOG.log(Level.SEVERE, "Problem writing uris to " + ERROR_FILE_NAME, exc);
             } finally {
                 closeQuietly(writer);
             }
         }
 	}
-	
 }
