@@ -18,13 +18,9 @@
  */
 package com.marklogic.developer.corb.util;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -96,7 +92,7 @@ public class StringUtilsTest {
     @Test
     public void testJoin_List_String() {
         System.out.println("join");
-        List items = Arrays.asList(new String[]{"a", "b", "c"});
+        List<String> items = Arrays.asList(new String[]{"a", "b", "c"});
         String result = StringUtils.join(items, ",");
         assertEquals("a,b,c", result);
     }
@@ -104,7 +100,7 @@ public class StringUtilsTest {
     @Test
     public void testJoin_List_StringIsNull() {
         System.out.println("join");
-        List items = null;
+        List<String> items = null;
         String result = StringUtils.join(items, ",");
         assertEquals(null, result);
     }
@@ -156,7 +152,7 @@ public class StringUtilsTest {
         System.out.println("join");
         String[] items = null;
         String delim = ",";
-        String result = StringUtils.join(items, delim);
+        StringUtils.join(items, delim);
     }
 
     /**
@@ -268,13 +264,13 @@ public class StringUtilsTest {
     @Test(expected = NullPointerException.class)
     public void testDumpHex_null() throws Exception {
         System.out.println("dumpHex");
-        String result = StringUtils.dumpHex(null, "UTF-8");
+        StringUtils.dumpHex(null, "UTF-8");
     }
 
     @Test(expected = UnsupportedEncodingException.class)
     public void testDumpHex_unsupportedEncoding() throws Exception {
         System.out.println("dumpHex");
-        String result = StringUtils.dumpHex("abcd", "does not exist");
+        StringUtils.dumpHex("abcd", "does not exist");
     }
 
     @Test

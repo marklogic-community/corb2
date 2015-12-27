@@ -27,16 +27,12 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.createTempDirectory;
-import com.marklogic.developer.corb.util.FileUtils;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  *
@@ -384,7 +380,7 @@ public class PostBatchUpdateFileTaskTest {
         props.setProperty("EXPORT-FILE-PART-EXT", "pt");
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
         instance.properties = props;
-        String[] result = instance.call();
+        instance.call();
         assertTrue(file.length() == 0);
     }
 
@@ -399,19 +395,9 @@ public class PostBatchUpdateFileTaskTest {
         props.setProperty("EXPORT-FILE-PART-EXT", "");
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
         instance.properties = props;
-        String[] result = instance.call();
+        instance.call();
         assertTrue(file.length() == 0);
     }
-
-    @Test
-    public void testMoveFile() throws IOException {
-        File file = File.createTempFile("moveFile", "txt");
-        file.deleteOnExit();
-        file.createNewFile();
-        PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
-        FileUtils.moveFile(file, file);
-    }
-
 
     private String testRemoveDuplicatesAndSort(Properties props) throws IOException, Exception {
         File file = File.createTempFile("moveFile", "txt");
@@ -434,7 +420,7 @@ public class PostBatchUpdateFileTaskTest {
 
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
         instance.properties = props;
-        String[] result = instance.call();
+        instance.call();
         File output = new File(fileToSort.toString());
         output.deleteOnExit();
         return TestUtils.readFile(output);
@@ -445,7 +431,7 @@ public class PostBatchUpdateFileTaskTest {
         System.out.println("call");
 
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
-        String[] result = instance.call();
+        instance.call();
     }
 
     private File createSampleFile() throws IOException {

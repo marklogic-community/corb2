@@ -101,7 +101,7 @@ public class ExportToFileTaskTest {
      * Test of writeToFile method, of class ExportToFileTask.
      */
     @Test
-    public void testWriteToFile() throws Exception {
+    public void testWriteToFile_nullSequence() throws Exception {
         System.out.println("writeToFile");
         ResultSequence seq = null;
         ExportToFileTask instance = new ExportToFileTask();
@@ -110,6 +110,7 @@ public class ExportToFileTaskTest {
         instance.setInputURI(uri);
         instance.writeToFile(seq);
         File file = new File(instance.exportDir, instance.getFileName());
+        assertFalse(file.exists());
         file.delete();
     }
     
@@ -182,7 +183,7 @@ public class ExportToFileTaskTest {
     public void testCall() throws Exception {
         System.out.println("call");
         ExportToFileTask instance = new ExportToFileTask();
-        String[] result = instance.call();
+        instance.call();
     }
 
 }

@@ -32,7 +32,6 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import org.mockito.exceptions.base.MockitoException;
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
@@ -175,5 +174,14 @@ public class FileUtilsTest {
     public void testGetLineCount() throws IOException {
         System.out.println("getLineCount");
         assertEquals(12, FileUtils.getLineCount(exampleContentFile));
+    }
+    
+    @Test
+    public void testMoveFile() throws IOException {
+        File file = File.createTempFile("moveFile", "txt");
+        file.deleteOnExit();
+        file.createNewFile();
+        FileUtils.moveFile(file, file);
+        assertTrue(file.exists());
     }
 }

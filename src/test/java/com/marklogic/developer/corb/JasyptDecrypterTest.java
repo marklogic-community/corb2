@@ -33,9 +33,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  *
@@ -90,8 +87,8 @@ public class JasyptDecrypterTest {
         instance.init_decrypter();
         List<LogRecord> records = testLogger.getLogRecords();
         //TODO figure out why executing this method (or all tests for this class one time) succeeds, but when suite is executing and runs multiple times, gets indexOutOfBounds for Records
-        //assertEquals(Level.SEVERE, records.get(0).getLevel());
-        //assertEquals("Unable to initialize jasypt decrypter. Couldn't find jasypt.password", records.get(0).getMessage());
+        assertEquals(Level.SEVERE, records.get(0).getLevel());
+        assertEquals("Unable to initialize jasypt decrypter. Couldn't find jasypt.password", records.get(0).getMessage());
     }
 
     @Test
@@ -103,7 +100,7 @@ public class JasyptDecrypterTest {
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.properties = props;
         instance.init_decrypter();
-        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals("corbencrypt", instance.jaspytProperties.getProperty("jasypt.password"));
     }
 
     @Test
@@ -115,14 +112,14 @@ public class JasyptDecrypterTest {
         blankProps.setProperty("jasypt.passphrase", "  ");
         File blankPropsFile = File.createTempFile("temp", ".properties");
         blankPropsFile.deleteOnExit();
-        blankProps.store(new FileOutputStream(blankPropsFile), "");
+        FileOutputStream outputStream = new FileOutputStream(blankPropsFile);
+        blankProps.store(outputStream, "");
         Properties props = new Properties();
         props.setProperty("JASYPT-PROPERTIES-FILE", blankPropsFile.getAbsolutePath());
 
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.properties = props;
         instance.init_decrypter();
-        List<LogRecord> records = testLogger.getLogRecords();
     }
 
     @Test
@@ -132,7 +129,9 @@ public class JasyptDecrypterTest {
         Properties emptyProps = new Properties();
         File emptyFile = File.createTempFile("temp", ".properties");
         emptyFile.deleteOnExit();
-        emptyProps.store(new FileOutputStream(emptyFile), "");
+        FileOutputStream outputStream = new FileOutputStream(emptyFile);
+        emptyProps.store(outputStream, "");
+        outputStream.close();
         Properties props = new Properties();
         props.setProperty("JASYPT-PROPERTIES-FILE", emptyFile.getAbsolutePath());
 
@@ -140,6 +139,8 @@ public class JasyptDecrypterTest {
         instance.properties = props;
         instance.init_decrypter();
         List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(Level.SEVERE, records.get(0).getLevel());
+        assertEquals("Unable to initialize jasypt decrypter. Couldn't find jasypt.password", records.get(0).getMessage());
     }
 
     @Test
@@ -151,7 +152,7 @@ public class JasyptDecrypterTest {
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.properties = props;
         instance.init_decrypter();
-        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals("corbencrypt", instance.jaspytProperties.getProperty("jasypt.password"));
     }
 
     /**
@@ -176,7 +177,7 @@ public class JasyptDecrypterTest {
         String value = "";
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.decrypter = new String();
-        String result = instance.doDecrypt(property, value);
+        instance.doDecrypt(property, value);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.INFO, records.get(0).getLevel());
         assertEquals("Cannot decrypt {0}. Ignore if clear text.", records.get(0).getMessage());

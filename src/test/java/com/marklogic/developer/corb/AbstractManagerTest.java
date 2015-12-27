@@ -108,7 +108,7 @@ public class AbstractManagerTest {
     @Test(expected = IllegalStateException.class)
     public void testLoadPropertiesFile_String_boolean_MissingFileThrowsException() throws Exception {
         System.out.println("loadPropertiesFile");
-        Properties result = AbstractManager.loadPropertiesFile(invalidFilePath, true);
+        AbstractManager.loadPropertiesFile(invalidFilePath, true);
     }
 
     /**
@@ -150,7 +150,7 @@ public class AbstractManagerTest {
         System.out.println("loadPropertiesFile");
         Properties props = new Properties();
         props.setProperty("key", "value");
-        Properties result = AbstractManager.loadPropertiesFile(invalidFilePath, true, props);
+        AbstractManager.loadPropertiesFile(invalidFilePath, true, props);
     }
 
     @Test
@@ -169,7 +169,7 @@ public class AbstractManagerTest {
         System.out.println("loadPropertiesFile");
         Properties props = new Properties();
         props.setProperty("key", "value");
-        Properties result = AbstractManager.loadPropertiesFile(propertiesFileDir, true, props);
+        AbstractManager.loadPropertiesFile(propertiesFileDir, true, props);
     }
 
     /**
@@ -178,25 +178,25 @@ public class AbstractManagerTest {
     @Test(expected = IllegalStateException.class)
     public void testGetAdhocQuery_missingFile() {
         System.out.println("getAdhocQuery");
-        String result = AbstractManager.getAdhocQuery(invalidFilePath);
+        AbstractManager.getAdhocQuery(invalidFilePath);
     }
 
     @Test(expected = NullPointerException.class)
     public void testGetAdhocQuery_null() {
         System.out.println("getAdhocQuery");
-        String result = AbstractManager.getAdhocQuery(null);
+        AbstractManager.getAdhocQuery(null);
     }
 
     @Test(expected = IllegalStateException.class)
     public void testGetAdhocQuery_emptyString() {
         System.out.println("getAdhocQuery");
-        String result = AbstractManager.getAdhocQuery("");
+        AbstractManager.getAdhocQuery("");
     }
 
     @Test(expected = IllegalStateException.class)
     public void testGetAdhocQuery_blankString() {
         System.out.println("getAdhocQuery");
-        String result = AbstractManager.getAdhocQuery("    ");
+        AbstractManager.getAdhocQuery("    ");
     }
 
     @Test
@@ -216,7 +216,7 @@ public class AbstractManagerTest {
     @Test(expected = IllegalStateException.class)
     public void testGetAdhocQuery_fromDir() {
         System.out.println("getAdhocQuery");
-        String result = AbstractManager.getAdhocQuery(propertiesFileDir);
+        AbstractManager.getAdhocQuery(propertiesFileDir);
     }
 
     /**
@@ -421,9 +421,7 @@ public class AbstractManagerTest {
         String argVal = "";
         String propName = "";
         AbstractManager instance = new AbstractManagerImpl();
-        String expResult = "";
-        String result = instance.getOption(argVal, propName);
-
+        instance.getOption(argVal, propName);
     }
 
     /**

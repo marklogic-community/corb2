@@ -26,7 +26,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -87,7 +86,7 @@ public class ExportBatchToFileTaskTest {
         props.setProperty("EXPORT-FILE-NAME", "");
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
-        String result = instance.getFileName();
+        instance.getFileName();
     }
 
     @Test(expected = NullPointerException.class)
@@ -97,7 +96,7 @@ public class ExportBatchToFileTaskTest {
         props.setProperty("URIS_BATCH_REF", "");
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
-        String result = instance.getFileName();
+        instance.getFileName();
     }
 
     /**

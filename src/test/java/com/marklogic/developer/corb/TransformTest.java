@@ -70,7 +70,6 @@ public class TransformTest {
     public void testCall() throws Exception {
         System.out.println("call");
         Transform instance = new Transform();
-        String[] expResult = null;
         String[] result = instance.call();
         assertNull(result);
     }

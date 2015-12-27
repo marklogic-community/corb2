@@ -263,9 +263,9 @@ public class AbstractTaskTest {
         instance.properties = props;
 
         instance.inputUris = new String[]{"uri1", "uri2"};
-        String[] result = instance.invokeModule();
-        assertTrue(instance.MODULE_PROPS.get("foo").contains("foo.bar"));
-        assertTrue(instance.MODULE_PROPS.get("foo").contains("foo.baz"));
+        instance.invokeModule();
+        assertTrue(AbstractTask.MODULE_PROPS.get("foo").contains("foo.bar"));
+        assertTrue(AbstractTask.MODULE_PROPS.get("foo").contains("foo.baz"));
     }
 
     @Test
@@ -428,7 +428,6 @@ public class AbstractTaskTest {
         String delim = null;
         String message = null;
         File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
-
         assertFalse(errorFile.exists());
     }
 
@@ -623,13 +622,12 @@ public class AbstractTaskTest {
     public void testGetValueAsBytes_default() {
         System.out.println("getValueAsBytes");
         XdmItem item = null;
-        String value = "foo";
         AbstractTask instance = new AbstractTaskImpl();
         byte[] result = instance.getValueAsBytes(item);
         Assert.assertArrayEquals(new byte[]{}, result);
     }
 
-    public class AbstractTaskImpl extends AbstractTask {
+    private static class AbstractTaskImpl extends AbstractTask {
 
         @Override
         public String processResult(ResultSequence seq) throws CorbException {

@@ -457,17 +457,6 @@ public class ManagerTest {
         clearSystemProperties();
     }
 
-    /**
-     * Launch the test.
-     *
-     * @param args the command line arguments
-     *
-     * @generatedBy CodePro at 9/18/15 10:51 AM
-     */
-    public static void main(String[] args) {
-        new org.junit.runner.JUnitCore().run(ManagerTest.class);
-    }
-
     @Test(expected = NullPointerException.class)
     public void testRejectedExecution_npe() {
         Runnable r = mock(Runnable.class);
@@ -481,12 +470,12 @@ public class ManagerTest {
     public void testRejectedExecution() {
         Runnable r = mock(Runnable.class);
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
-        BlockingQueue queue = mock(BlockingQueue.class);
+        @SuppressWarnings("unchecked")
+		BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         when(threadPool.getQueue()).thenReturn(queue).thenThrow(new NullPointerException());
       
         RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
         cbp.rejectedExecution(r, threadPool);
-
     }
 
     @Test(expected = MockitoException.class)
@@ -504,7 +493,8 @@ public class ManagerTest {
     public void testRejectedExecution_warningIsTrueAndQueIsNotNull() {
         Runnable r = mock(Runnable.class);
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
-        BlockingQueue queue = mock(BlockingQueue.class);
+        @SuppressWarnings("unchecked")
+		BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         when(threadPool.getQueue()).thenReturn(queue).thenThrow(new NullPointerException());
 
         RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
@@ -1034,7 +1024,7 @@ public class ManagerTest {
         System.out.println("getUrisLoaderCls");
         String className = "does.not.Exist";
         Manager instance = new Manager();
-        Class<? extends UrisLoader> result = instance.getUrisLoaderCls(className);
+        instance.getUrisLoaderCls(className);
     }
 
     /**
@@ -1057,7 +1047,7 @@ public class ManagerTest {
     public void testRun_missingURIS_MODULE_FILE_AND_LOADER() throws Exception {
         System.out.println("run");
         Manager instance = new Manager();
-        int result = instance.run();
+        instance.run();
     }
 
     @Test(expected = NullPointerException.class)
@@ -1065,17 +1055,16 @@ public class ManagerTest {
         System.out.println("run");
         Manager instance = new Manager();
         instance.options.setUrisModule("someFile.xqy");
-        int result = instance.run();
+        instance.run();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testRun_getURILoader_withURIS_MODULE_invalidCollection() throws Exception {
         System.out.println("run");
         Manager instance = new Manager();
-        Properties props = new Properties();
         instance.contentSource = ContentSourceFactory.newContentSource(new URI(XCC_CONNECTION_URI));
         instance.options.setUrisModule("someFile.xqy");
-        int result = instance.run();
+        instance.run();
     }
 
     @Test
@@ -1102,7 +1091,7 @@ public class ManagerTest {
         instance.contentSource = contentSource;
         instance.collection = "Modules";
         instance.options.setUrisModule("someFile.xqy");
-        int result = instance.run();
+        instance.run();
     }
 
     /**

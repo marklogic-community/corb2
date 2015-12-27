@@ -30,9 +30,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  *
@@ -69,6 +67,7 @@ public class FileUrisLoaderTest {
         FileUrisLoader instance = new FileUrisLoader();
         instance.setOptions(options);
         assertNull(instance.options);
+        instance.close();
     }
 
     @Test
@@ -78,6 +77,7 @@ public class FileUrisLoaderTest {
         FileUrisLoader instance = new FileUrisLoader();
         instance.setOptions(options);
         assertEquals(options, instance.options);
+        instance.close();
     }
 
     /**
@@ -90,6 +90,7 @@ public class FileUrisLoaderTest {
         FileUrisLoader instance = new FileUrisLoader();
         instance.setContentSource(cs);
         assertNull(instance.cs);
+        instance.close();
     }
 
     /**
@@ -102,6 +103,7 @@ public class FileUrisLoaderTest {
         FileUrisLoader instance = new FileUrisLoader();
         instance.setCollection(collection);
         assertNull(instance.collection);
+        instance.close();
     }
 
     @Test
@@ -111,6 +113,7 @@ public class FileUrisLoaderTest {
         FileUrisLoader instance = new FileUrisLoader();
         instance.setCollection(collection);
         assertEquals(collection, instance.collection);
+        instance.close();
     }
 
     /**
@@ -123,6 +126,7 @@ public class FileUrisLoaderTest {
         FileUrisLoader instance = new FileUrisLoader();
         instance.setProperties(properties);
         assertNull(instance.properties);
+        instance.close();
     }
 
     @Test
@@ -132,6 +136,7 @@ public class FileUrisLoaderTest {
         FileUrisLoader instance = new FileUrisLoader();
         instance.setProperties(properties);
         assertEquals(properties, instance.properties);
+        instance.close();
     }
 
     /**
@@ -164,11 +169,11 @@ public class FileUrisLoaderTest {
         props.setProperty("URIS-REPLACE-PATTERN", "object-id-2,test,unevenPattern");
         instance.properties = props;
         instance.options = options;
-        instance.open();
-        assertNotNull(instance.br);
-        assertEquals("object-id-1", instance.next());
-        assertEquals("test", instance.next());
-        instance.close();
+        try {
+            instance.open();
+        } finally {
+            instance.close();
+        }
     }
 
     @Test(expected = CorbException.class)
@@ -178,8 +183,11 @@ public class FileUrisLoaderTest {
         TransformOptions options = new TransformOptions();
         options.setUrisFile("does/not/exist");
         instance.options = options;
-        instance.open();
-        assertNotNull(instance.br);
+        try {
+            instance.open();
+        } finally {
+            instance.close();
+        }
     }
 
     /**
@@ -190,6 +198,7 @@ public class FileUrisLoaderTest {
         System.out.println("getBatchRef");
         FileUrisLoader instance = new FileUrisLoader();
         assertNull(instance.getBatchRef());
+        instance.close();
     }
 
     /**
@@ -200,6 +209,7 @@ public class FileUrisLoaderTest {
         System.out.println("getTotalCount");
         FileUrisLoader instance = new FileUrisLoader();
         assertEquals(0, instance.getTotalCount());
+        instance.close();
     }
 
     @Test
@@ -211,6 +221,7 @@ public class FileUrisLoaderTest {
         instance.options = options;
         instance.open();
         assertEquals(8, instance.getTotalCount());
+        instance.close();
     }
 
     /**
@@ -220,7 +231,11 @@ public class FileUrisLoaderTest {
     public void testHasNext_throwException() throws Exception {
         System.out.println("hasNext");
         FileUrisLoader instance = new FileUrisLoader();
-        boolean result = instance.hasNext();
+        try {
+            instance.hasNext();
+        } finally {
+            instance.close();
+        }
     }
 
     @Test
@@ -237,6 +252,7 @@ public class FileUrisLoaderTest {
         }
         //Verify that hasNext() does not advance the buffered reader to the next line
         assertTrue(instance.hasNext());
+        instance.close();
     }
 
     /**
@@ -256,6 +272,7 @@ public class FileUrisLoaderTest {
         }
         assertFalse(instance.hasNext());
         assertNull(instance.next());
+        instance.close();
     }
 
     @Test
@@ -271,11 +288,12 @@ public class FileUrisLoaderTest {
         options.setUrisFile(file.getAbsolutePath());
         instance.options = options;
         instance.open();
-        
+
         assertEquals("foo", instance.next());
         assertEquals("bar", instance.next());
         assertFalse(instance.hasNext());
         assertNull(instance.next());
+        instance.close();
     }
 
     /**
@@ -288,6 +306,7 @@ public class FileUrisLoaderTest {
         instance.br = mock(BufferedReader.class);
         instance.close();
         assertNull(instance.br);
+        instance.close();
     }
 
     /**
@@ -305,7 +324,7 @@ public class FileUrisLoaderTest {
         instance.properties = new Properties();
         instance.replacements = new String[]{};
         instance.total = 100;
-
+        instance.close();
         instance.cleanup();
         assertNull(instance.br);
         assertNull(instance.collection);

@@ -35,8 +35,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  *
@@ -99,7 +97,7 @@ public class IOUtilsTest {
         assertTrue(true); //did not throw IOException
     }
     
-      @org.junit.Test (expected = IOException.class)
+      @Test (expected = IOException.class)
     public void testCopy_null_InputStream() throws Exception {
         System.out.println("copy");
         InputStream in = null;
@@ -108,7 +106,7 @@ public class IOUtilsTest {
         IOUtils.copy(in, new FileOutputStream(out));
     }
     
-     @org.junit.Test (expected = IOException.class)
+     @Test (expected = IOException.class)
     public void testCopy_InputStream_null() throws Exception {
         System.out.println("copy");
         InputStream in = new FileInputStream(exampleContentFile);
@@ -119,7 +117,7 @@ public class IOUtilsTest {
      * Test of copy method, of class Utilities.
      * @throws java.lang.Exception
      */
-    @org.junit.Test
+    @Test
     public void testCopy_Reader_OutputStream() throws Exception {
         System.out.println("copy");
         Reader in = new FileReader(exampleContentFile);
@@ -129,25 +127,25 @@ public class IOUtilsTest {
         assertEquals(exampleContent.length(), result);
     }
 
-    @org.junit.Test (expected = IOException.class)
+    @Test (expected = IOException.class)
     public void testCopy_ReaderIsNull_OutputStream() throws IOException {
         Reader in = null;
         OutputStream out = new ByteArrayOutputStream();
-        long result = IOUtils.copy(in, out);
+        IOUtils.copy(in, out);
     }
     
-    @org.junit.Test (expected = IOException.class)
+    @Test (expected = IOException.class)
     public void testCopy_Reader_OutputStreamIsNull() throws IOException {
         Reader in = new FileReader(exampleContentFile);
         OutputStream out = null;
-        long result = IOUtils.copy(in, out);
+        IOUtils.copy(in, out);
     }
     
     /**
      * Test of cat method, of class Utilities.
      * @throws java.lang.Exception
      */
-    @org.junit.Test
+    @Test
     public void testCat_Reader() throws Exception {
         System.out.println("cat");
 
@@ -160,7 +158,7 @@ public class IOUtilsTest {
      * Test of cat method, of class Utilities.
      * @throws java.lang.Exception
      */
-    @org.junit.Test
+    @Test
     public void testCat_InputStream() throws Exception {
         System.out.println("cat");
 
@@ -173,15 +171,14 @@ public class IOUtilsTest {
      * Test of getSize method, of class Utilities.
      * @throws java.lang.Exception
      */
-    @org.junit.Test
+    @Test
     public void testGetSize_InputStream() throws Exception {
         System.out.println("getSize");
         long result = -1;
         InputStream is;
         try {
             is = new FileInputStream(exampleContentFile);
-            result = IOUtils.getSize(is);
-            
+            result = IOUtils.getSize(is);    
         } catch (Exception ex) {}
         assertEquals(exampleContent.length(), result);
     }
@@ -190,10 +187,9 @@ public class IOUtilsTest {
      * Test of getSize method, of class Utilities.
      * @throws java.lang.Exception
      */
-    @org.junit.Test
+    @Test
     public void testGetSize_Reader() throws Exception {
         System.out.println("getSize");
-
         Reader reader = new FileReader(exampleContentFile);
         long result = IOUtils.getSize(reader);
         assertEquals(exampleContent.length(), result);
@@ -203,10 +199,9 @@ public class IOUtilsTest {
      * Test of getBytes method, of class Utilities.
      * @throws java.lang.Exception
      */
-    @org.junit.Test
+    @Test
     public void testGetBytes() throws Exception {
         System.out.println("getBytes");
-
         byte[] result = FileUtils.getBytes(exampleContentFile);
         assertArrayEquals(exampleContent.getBytes(), result);
     }

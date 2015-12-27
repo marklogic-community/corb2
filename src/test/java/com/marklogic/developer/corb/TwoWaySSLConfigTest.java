@@ -169,7 +169,7 @@ public class TwoWaySSLConfigTest {
     public void testGetSSLContext_NoProperties() throws Exception {
         System.out.println("getSSLContext");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
-        SSLContext context = instance.getSSLContext();
+        instance.getSSLContext();
     }
    
     @Test

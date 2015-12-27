@@ -55,7 +55,6 @@ import java.util.Map;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.isAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 
 /**
@@ -291,8 +290,8 @@ public class Manager extends AbstractManager{
         }
         //System properties override properties file properties
         Properties props = getNormalizedProperties(System.getProperties());
-        for (Map.Entry entry : props.entrySet()) {
-            System.setProperty(entry.getKey().toString(), entry.getValue().toString());
+        for (final String name : props.stringPropertyNames()) {
+            System.setProperty(name, props.getProperty(name));
         }
     }
     

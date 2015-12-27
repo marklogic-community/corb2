@@ -103,7 +103,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     }
     
     @SuppressWarnings("unchecked")
-		protected Class<? extends Comparator<String>> getComparatorCls(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+	protected Class<? extends Comparator<String>> getComparatorCls(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         Class<?> cls = Class.forName(className);
         if (Comparator.class.isAssignableFrom(cls)) {
             cls.newInstance(); // sanity check

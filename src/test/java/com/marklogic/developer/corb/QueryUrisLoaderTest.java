@@ -74,9 +74,12 @@ public class QueryUrisLoaderTest {
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         when(contentSource.newSession()).thenReturn(session);
-
         instance.cs = contentSource;
-        instance.open();
+        try {
+            instance.open();
+        } finally {
+            instance.close();
+        }
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -90,7 +93,11 @@ public class QueryUrisLoaderTest {
         props.setProperty("URIS-REPLACE-PATTERN", "foo");
         instance.properties = props;
         instance.cs = contentSource;
-        instance.open();
+        try {
+            instance.open();
+        } finally {
+            instance.close();
+        }
     }
 
     @Test(expected = CorbException.class)
@@ -121,7 +128,11 @@ public class QueryUrisLoaderTest {
         instance.properties = props;
         instance.cs = contentSource;
         instance.options = transformOptions;
-        instance.open();
+        try {
+            instance.open();
+        } finally {
+            instance.close();
+        }
     }
 
     @Test(expected = IllegalStateException.class)
@@ -135,7 +146,11 @@ public class QueryUrisLoaderTest {
         transformOptions.setUrisModule("|ADHOC");
         instance.options = transformOptions;
         instance.cs = contentSource;
-        instance.open();
+        try {
+            instance.open();
+        } finally {
+            instance.close();
+        }
     }
 
     @Test(expected = IllegalStateException.class)
@@ -148,16 +163,21 @@ public class QueryUrisLoaderTest {
         TransformOptions transformOptions = new TransformOptions();
         File file = File.createTempFile("adhoc", "xqy");
         file.deleteOnExit();
-        transformOptions.setUrisModule(file.getAbsolutePath()+"|ADHOC");
+        transformOptions.setUrisModule(file.getAbsolutePath() + "|ADHOC");
         instance.options = transformOptions;
         instance.cs = contentSource;
-        instance.open();
+
+        try {
+            instance.open();
+        } finally {
+            instance.close();
+        }
     }
-    
+
     @Test
     public void testOpen() throws Exception {
         System.out.println("open");
-        
+
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         AdhocQuery request = mock(AdhocQuery.class);
@@ -177,11 +197,12 @@ public class QueryUrisLoaderTest {
         File file = File.createTempFile("adhoc", ".js");
         file.deleteOnExit();
         FileWriter writer = new FileWriter(file, true);
-        writer.append("var foo;").close();
-        transformOptions.setUrisModule(file.getAbsolutePath()+"|ADHOC");
+        writer.append("var foo;");
+        writer.close();
+        transformOptions.setUrisModule(file.getAbsolutePath() + "|ADHOC");
         Properties props = new Properties();
         props.setProperty("URIS-MODULE.foo", "bar");
-        
+
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.properties = props;
         instance.options = transformOptions;
@@ -190,8 +211,9 @@ public class QueryUrisLoaderTest {
         instance.open();
         assertEquals(1, instance.total);
         assertEquals("bar", instance.properties.getProperty("PROCESS-MODULE.foo"));
+        instance.close();
     }
-    
+
     @Test(expected = IllegalStateException.class)
     public void testOpen_badAdhocFilenameIsEmpty() throws Exception {
         System.out.println("open");
@@ -203,7 +225,11 @@ public class QueryUrisLoaderTest {
         transformOptions.setUrisModule("  |ADHOC");
         instance.options = transformOptions;
         instance.cs = contentSource;
-        instance.open();
+        try {
+            instance.open();
+        } finally {
+            instance.close();
+        }
     }
 
     @Test(expected = IllegalStateException.class)
@@ -220,8 +246,11 @@ public class QueryUrisLoaderTest {
         instance.properties = props;
         instance.options = transformOptions;
         instance.cs = contentSource;
-        instance.open();
-        assertEquals(1, instance.properties.size());
+        try {
+            instance.open();
+        } finally {
+            instance.close();
+        }
     }
 
     @Test(expected = IllegalStateException.class)
@@ -238,10 +267,13 @@ public class QueryUrisLoaderTest {
         instance.properties = props;
         instance.options = transformOptions;
         instance.cs = contentSource;
-        instance.open();
-        assertEquals(1, instance.properties.size());
+        try {
+            instance.open();
+        } finally {
+            instance.close();
+        }
     }
-    
+
     /**
      * Test of getBatchRef method, of class QueryUrisLoader.
      */
@@ -250,6 +282,7 @@ public class QueryUrisLoaderTest {
         System.out.println("getBatchRef");
         QueryUrisLoader instance = new QueryUrisLoader();
         String result = instance.getBatchRef();
+        instance.close();
         assertNull(result);
     }
 
@@ -261,6 +294,7 @@ public class QueryUrisLoaderTest {
         System.out.println("getTotalCount");
         QueryUrisLoader instance = new QueryUrisLoader();
         int result = instance.getTotalCount();
+        instance.close();
         assertEquals(0, result);
     }
 
@@ -272,6 +306,7 @@ public class QueryUrisLoaderTest {
         System.out.println("hasNext");
         QueryUrisLoader instance = new QueryUrisLoader();
         boolean result = instance.hasNext();
+        instance.close();
         assertFalse(result);
     }
 
@@ -283,6 +318,7 @@ public class QueryUrisLoaderTest {
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.res = resultSequence;
         boolean result = instance.hasNext();
+        instance.close();
         assertTrue(result);
     }
 
@@ -294,6 +330,7 @@ public class QueryUrisLoaderTest {
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.res = resultSequence;
         boolean result = instance.hasNext();
+        instance.close();
         assertFalse(result);
     }
 
@@ -311,6 +348,7 @@ public class QueryUrisLoaderTest {
         instance.res = resultSequence;
         instance.replacements = new String[]{"_", ",", "-", "\n"};
         String result = instance.next();
+        instance.close();
         assertEquals("foo,bar,baz\n1,2,3", result);
     }
 
@@ -349,6 +387,7 @@ public class QueryUrisLoaderTest {
         instance.batchRef = "bar";
         instance.replacements = new String[]{};
         instance.cleanup();
+        instance.close();
         assertNull(instance.options);
         assertNull(instance.cs);
         assertNull(instance.collection);
@@ -366,6 +405,7 @@ public class QueryUrisLoaderTest {
         String key = "foo";
         QueryUrisLoader instance = new QueryUrisLoader();
         String result = instance.getProperty(key);
+        instance.close();
         assertNull(result);
     }
 
@@ -376,6 +416,7 @@ public class QueryUrisLoaderTest {
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.properties = new Properties();
         String result = instance.getProperty(key);
+        instance.close();
         assertNull(result);
     }
 
@@ -389,6 +430,7 @@ public class QueryUrisLoaderTest {
         props.setProperty(key, value);
         instance.properties = props;
         String result = instance.getProperty(key);
+        instance.close();
         assertEquals(value, result);
     }
 }

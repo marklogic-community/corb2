@@ -219,12 +219,14 @@ public class AbstractDecrypterTest {
         assertEquals(expResult, result);
     }
 
-    public class AbstractDecrypterImpl extends AbstractDecrypter {
+    private static class AbstractDecrypterImpl extends AbstractDecrypter {
 
+        @Override
         public void init_decrypter() throws IOException, ClassNotFoundException {
 
         }
 
+        @Override
         public String doDecrypt(String property, String value) {
             return value.toUpperCase();
         }

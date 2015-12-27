@@ -90,8 +90,8 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                         throw new IllegalStateException("Unable to find serial number on Windows");
                     }   
                 } finally {
-                	try{sc.close();}catch(Exception exc){}
-                  closeOrThrowRuntime(br);
+                    if (sc != null) { sc.close(); } //Scanner doesn't implement Closable in 1.6
+                    closeOrThrowRuntime(br);
                 }
             }
         },

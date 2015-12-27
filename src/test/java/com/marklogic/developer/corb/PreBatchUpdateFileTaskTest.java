@@ -120,7 +120,7 @@ public class PreBatchUpdateFileTaskTest {
     public void testCall_npe() throws Exception {
         System.out.println("call");
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
-        String[] result = instance.call();
+        instance.call();
     }
     
         @Test
