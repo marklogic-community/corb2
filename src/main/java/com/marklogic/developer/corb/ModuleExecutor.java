@@ -46,6 +46,7 @@ import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 import static com.marklogic.developer.corb.util.StringUtils.isAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 
@@ -289,7 +290,7 @@ public class ModuleExecutor extends AbstractManager{
         }
 		String fileDir = getProperty("EXPORT-FILE-DIR");
 		String fileName = getProperty("EXPORT-FILE-NAME");
-		if (fileName == null || fileName.length() == 0) {
+		if (isEmpty(fileName)) {
 			return;
 		}
 		LOG.info("Writing output to file");
