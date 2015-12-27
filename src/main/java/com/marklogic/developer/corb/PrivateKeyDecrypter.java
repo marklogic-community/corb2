@@ -145,8 +145,8 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 		return dValue == null ? value : dValue.trim();
 	}
 
-	private static final String usage1 = "Generate Keys (Note: default algorithm: RSA, default key-length: 1024):\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024";
-	private static final String usage2 = "Encrypt (Note: default algorithm: RSA):\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA";
+	private static final String GEN_KEYS_USAGE = "Generate Keys (Note: default algorithm: RSA, default key-length: 1024):\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024";
+	private static final String ENCRYPT_USAGE = "Encrypt (Note: default algorithm: RSA):\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA";
 
 	private static void generateKeys(String... args) throws Exception {
 		String algorithm = "RSA";
@@ -167,7 +167,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 			length = Integer.parseInt(args[4].trim());
 		}
 		if (privateKeyPathName == null || publicKeyPathName == null) {
-			System.err.println(usage1);
+			System.err.println(GEN_KEYS_USAGE);
 			return;
 		}
 
@@ -207,7 +207,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 			algorithm = args[3].trim();
 		}
 		if (publicKeyPathName == null || clearText == null) {
-			System.err.println(usage2);
+			System.err.println(ENCRYPT_USAGE);
 			return;
 		}
 		
@@ -232,7 +232,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 		} else if (method.equals("encrypt")) {
 			encrypt(args);
 		} else {
-			System.out.println(usage1 + "\n" + usage2);
+			System.out.println(GEN_KEYS_USAGE + "\n" + ENCRYPT_USAGE);
 		}
 	}
 }
