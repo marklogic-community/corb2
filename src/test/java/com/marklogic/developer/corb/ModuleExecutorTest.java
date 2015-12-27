@@ -482,7 +482,7 @@ public class ModuleExecutorTest {
     public void setUp()
             throws Exception {
         clearSystemProperties();
-        Logger logger = Logger.getLogger(ModuleExecutor.class.getCanonicalName());
+        Logger logger = Logger.getLogger(ModuleExecutor.class.getName());
         logger.addHandler(testLogger);
     }
 

@@ -73,7 +73,7 @@ public class AbstractManagerTest {
 
     @Before
     public void setUp() throws FileNotFoundException {
-        Logger logger = Logger.getLogger(AbstractManager.class.getSimpleName());
+        Logger logger = Logger.getLogger(AbstractManager.class.getName());
         logger.addHandler(testLogger);
         clearSystemProperties();
         String text = TestUtils.readFile(selectorFilePath);

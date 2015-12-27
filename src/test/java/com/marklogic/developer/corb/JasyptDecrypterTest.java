@@ -56,7 +56,7 @@ public class JasyptDecrypterTest {
     @Before
     public void setUp() {
         clearSystemProperties();
-        Logger logger = Logger.getLogger(JasyptDecrypter.class.getSimpleName());
+        Logger logger = Logger.getLogger(JasyptDecrypter.class.getName());
         logger.addHandler(testLogger);
     }
 

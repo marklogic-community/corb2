@@ -41,7 +41,7 @@ import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 public class TwoWaySSLConfig extends AbstractSSLConfig {
 
-    private static final Logger LOG = Logger.getLogger(TwoWaySSLConfig.class.getSimpleName());
+    private static final Logger LOG = Logger.getLogger(TwoWaySSLConfig.class.getName());
     public static final String SSL_CIPHER_SUITES = "SSL-CIPHER-SUITES";
     public static final String SSL_ENABLED_PROTOCOLS = "SSL-ENABLED-PROTOCOLS";
     public static final String SSL_KEYSTORE = "SSL-KEYSTORE";

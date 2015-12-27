@@ -43,7 +43,7 @@ public class FileUrisLoader implements UrisLoader {
 
 	String[] replacements = new String[0];
 
-	protected static final Logger LOG = Logger.getLogger(FileUrisLoader.class.getSimpleName());
+	protected static final Logger LOG = Logger.getLogger(FileUrisLoader.class.getName());
 
 	@Override
 	public void setOptions(TransformOptions options) {

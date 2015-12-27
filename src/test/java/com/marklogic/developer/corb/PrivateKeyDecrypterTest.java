@@ -61,7 +61,7 @@ public class PrivateKeyDecrypterTest {
     @Before
     public void setUp() {
         clearSystemProperties();
-        Logger logger = Logger.getLogger(PrivateKeyDecrypter.class.getSimpleName());
+        Logger logger = Logger.getLogger(PrivateKeyDecrypter.class.getName());
         logger.addHandler(testLogger);
     }
 

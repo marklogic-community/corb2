@@ -54,7 +54,7 @@ public class QueryUrisLoader implements UrisLoader {
 
 	String[] replacements = new String[0];
 
-	private static final Logger LOG = Logger.getLogger(QueryUrisLoader.class.getSimpleName());
+	private static final Logger LOG = Logger.getLogger(QueryUrisLoader.class.getName());
 
 	public QueryUrisLoader() {
 	}

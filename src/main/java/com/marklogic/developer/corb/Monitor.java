@@ -37,7 +37,7 @@ import java.util.logging.Logger;
 public class Monitor implements Runnable {
 
     protected static final int SLEEP_MILLIS = 500;
-    protected static final Logger LOG = Logger.getLogger(Monitor.class.getSimpleName());
+    protected static final Logger LOG = Logger.getLogger(Monitor.class.getName());
 
     private final CompletionService<String[]> cs;
     private long lastProgress = 0;

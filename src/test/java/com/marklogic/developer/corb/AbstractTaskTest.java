@@ -77,7 +77,7 @@ public class AbstractTaskTest {
     @Before
     public void setUp() {
         clearSystemProperties();
-        Logger logger = Logger.getLogger(AbstractTask.class.getSimpleName());
+        Logger logger = Logger.getLogger(AbstractTask.class.getName());
         logger.addHandler(testLogger);
     }
 

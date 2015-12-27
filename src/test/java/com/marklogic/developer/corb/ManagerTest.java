@@ -438,7 +438,7 @@ public class ManagerTest {
     public void setUp()
             throws Exception {
         clearSystemProperties();
-        Logger logger = Logger.getLogger(Manager.class.getSimpleName());
+        Logger logger = Logger.getLogger(Manager.class.getName());
         logger.addHandler(testLogger);
         File tempDir = TestUtils.createTempDirectory();
         EXPORT_FILE_DIR = tempDir.toString();

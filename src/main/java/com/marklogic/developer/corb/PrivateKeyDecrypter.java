@@ -68,7 +68,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 	// base64
 	private PrivateKey privateKey = null;
 
-	protected static final Logger LOG = Logger.getLogger(PrivateKeyDecrypter.class.getSimpleName());
+	protected static final Logger LOG = Logger.getLogger(PrivateKeyDecrypter.class.getName());
 
 	@Override
 	protected void init_decrypter() throws IOException, ClassNotFoundException {

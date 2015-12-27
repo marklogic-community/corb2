@@ -66,7 +66,7 @@ public class ModuleExecutor extends AbstractManager{
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 	protected static final byte[] NEWLINE = "\n".getBytes();
 
-	protected static final Logger LOG = Logger.getLogger(ModuleExecutor.class.getCanonicalName());
+	protected static final Logger LOG = Logger.getLogger(ModuleExecutor.class.getName());
 
 	/**
 	 * @param args

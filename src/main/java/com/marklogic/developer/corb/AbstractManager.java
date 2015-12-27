@@ -63,7 +63,7 @@ public abstract class AbstractManager {
 	protected TransformOptions options = new TransformOptions();;
 	protected ContentSource contentSource;
 	
-	private static final Logger LOG = Logger.getLogger(AbstractManager.class.getSimpleName());
+	private static final Logger LOG = Logger.getLogger(AbstractManager.class.getName());
     
 	public static Properties loadPropertiesFile(String filename) throws IOException {
 		return loadPropertiesFile(filename, true);

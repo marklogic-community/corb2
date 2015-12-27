@@ -83,7 +83,7 @@ public abstract class AbstractTask implements Task {
 
     protected boolean failOnError = true;
 
-    private static final Logger LOG = Logger.getLogger(AbstractTask.class.getSimpleName());
+    private static final Logger LOG = Logger.getLogger(AbstractTask.class.getName());
 
     @Override
     public void setContentSource(ContentSource cs) {
