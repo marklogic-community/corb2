@@ -40,7 +40,7 @@ import javax.net.ssl.TrustManagerFactory;
 
 public class TwoWaySSLConfig extends AbstractSSLConfig {
 
-    private static final Logger LOG = Logger.getLogger(TwoWaySSLConfig.class.getSimpleName());
+    private static final Logger LOG = Logger.getLogger(TwoWaySSLConfig.class.getName());
     public static final String SSL_CIPHER_SUITES = com.marklogic.developer.corb.Options.SSL_CIPHER_SUITES;
     public static final String SSL_ENABLED_PROTOCOLS = com.marklogic.developer.corb.Options.SSL_ENABLED_PROTOCOLS;
     public static final String SSL_KEYSTORE = com.marklogic.developer.corb.Options.SSL_KEYSTORE;

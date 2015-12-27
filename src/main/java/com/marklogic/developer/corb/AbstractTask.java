@@ -20,10 +20,6 @@ package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.BATCH_URI_DELIM;
 import static com.marklogic.developer.corb.Options.ERROR_FILE_NAME;
-import static com.marklogic.developer.corb.Options.QUERY_RETRY_INTERVAL;
-import static com.marklogic.developer.corb.Options.QUERY_RETRY_LIMIT;
-import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_INTERVAL;
-import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
@@ -87,7 +83,7 @@ public abstract class AbstractTask implements Task {
 	
 	protected boolean failOnError = true; 
 
-	private static final Logger LOG = Logger.getLogger(AbstractTask.class.getSimpleName());
+	private static final Logger LOG = Logger.getLogger(AbstractTask.class.getName());
 
 	@Override
 	public void setContentSource(ContentSource cs) {
