@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 	// base64
 	private PrivateKey privateKey = null;
 
-	protected static final Logger LOG = Logger.getLogger(PrivateKeyDecrypter.class.getSimpleName());
+	protected static final Logger LOG = Logger.getLogger(PrivateKeyDecrypter.class.getName());
 
 	@Override
 	protected void init_decrypter() throws IOException, ClassNotFoundException {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -169,7 +169,7 @@ public class TwoWaySSLConfigTest {
     public void testGetSSLContext_NoProperties() throws Exception {
         System.out.println("getSSLContext");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
-        SSLContext context = instance.getSSLContext();
+        instance.getSSLContext();
     }
    
     @Test

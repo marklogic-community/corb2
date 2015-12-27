@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,7 +71,7 @@ public abstract class AbstractManager {
 	protected TransformOptions options = new TransformOptions();;
 	protected ContentSource contentSource;
 	
-	private static final Logger LOG = Logger.getLogger(AbstractManager.class.getSimpleName());
+	private static final Logger LOG = Logger.getLogger(AbstractManager.class.getName());
     
 	public static Properties loadPropertiesFile(String filename) throws IOException {
 		return loadPropertiesFile(filename, true);

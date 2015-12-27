@@ -1,5 +1,5 @@
 /*
-  * * Copyright 2005-2015 MarkLogic Corporation
+  * * Copyright (c) 2004-2015 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -86,7 +86,7 @@ public class ExportBatchToFileTaskTest {
         props.setProperty("EXPORT-FILE-NAME", "");
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
-        String result = instance.getFileName();
+        instance.getFileName();
     }
 
     @Test(expected = NullPointerException.class)
@@ -96,7 +96,7 @@ public class ExportBatchToFileTaskTest {
         props.setProperty("URIS_BATCH_REF", "");
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
-        String result = instance.getFileName();
+        instance.getFileName();
     }
 
     /**

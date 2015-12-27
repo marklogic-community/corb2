@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ public class ModuleExecutor extends AbstractManager{
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 	protected static final byte[] NEWLINE = "\n".getBytes();
 
-	protected static final Logger LOG = Logger.getLogger(ModuleExecutor.class.getCanonicalName());
+	protected static final Logger LOG = Logger.getLogger(ModuleExecutor.class.getName());
 
 	/**
 	 * @param args

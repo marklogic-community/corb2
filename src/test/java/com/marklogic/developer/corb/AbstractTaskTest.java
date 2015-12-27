@@ -1,5 +1,5 @@
 /*
- * * Copyright 2005-2015 MarkLogic Corporation
+ * * Copyright (c) 2004-2015 MarkLogic Corporation
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ public class AbstractTaskTest {
     @Before
     public void setUp() {
         clearSystemProperties();
-        Logger logger = Logger.getLogger(AbstractTask.class.getSimpleName());
+        Logger logger = Logger.getLogger(AbstractTask.class.getName());
         logger.addHandler(testLogger);
     }
 
@@ -263,9 +263,9 @@ public class AbstractTaskTest {
         instance.properties = props;
 
         instance.inputUris = new String[]{"uri1", "uri2"};
-        String[] result = instance.invokeModule();
-        assertTrue(instance.MODULE_PROPS.get("foo").contains("foo.bar"));
-        assertTrue(instance.MODULE_PROPS.get("foo").contains("foo.baz"));
+        instance.invokeModule();
+        assertTrue(AbstractTask.MODULE_PROPS.get("foo").contains("foo.bar"));
+        assertTrue(AbstractTask.MODULE_PROPS.get("foo").contains("foo.baz"));
     }
 
     @Test
@@ -428,7 +428,6 @@ public class AbstractTaskTest {
         String delim = null;
         String message = null;
         File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
-
         assertFalse(errorFile.exists());
     }
 
@@ -623,13 +622,12 @@ public class AbstractTaskTest {
     public void testGetValueAsBytes_default() {
         System.out.println("getValueAsBytes");
         XdmItem item = null;
-        String value = "foo";
         AbstractTask instance = new AbstractTaskImpl();
         byte[] result = instance.getValueAsBytes(item);
         Assert.assertArrayEquals(new byte[]{}, result);
     }
 
-    public class AbstractTaskImpl extends AbstractTask {
+    private static class AbstractTaskImpl extends AbstractTask {
 
         @Override
         public String processResult(ResultSequence seq) throws CorbException {

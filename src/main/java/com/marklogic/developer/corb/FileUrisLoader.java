@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ public class FileUrisLoader implements UrisLoader {
 
 	String[] replacements = new String[0];
 
-	protected static final Logger LOG = Logger.getLogger(FileUrisLoader.class.getSimpleName());
+	protected static final Logger LOG = Logger.getLogger(FileUrisLoader.class.getName());
 
 	@Override
 	public void setOptions(TransformOptions options) {

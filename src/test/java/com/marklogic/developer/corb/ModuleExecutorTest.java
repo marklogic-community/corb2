@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,11 +43,8 @@ import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import com.marklogic.developer.corb.util.StringUtils;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
-import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -81,11 +77,7 @@ public class ModuleExecutorTest {
     public void testModuleExecutor_1()
             throws Exception {
         clearSystemProperties();
-        Properties props = getProperties();
-        URI connectionUri = new URI(props.getProperty("XCC-CONNECTION-URI"));
-
         ModuleExecutor result = new ModuleExecutor();
-
         assertNotNull(result);
     }
 
@@ -490,7 +482,7 @@ public class ModuleExecutorTest {
     public void setUp()
             throws Exception {
         clearSystemProperties();
-        Logger logger = Logger.getLogger(ModuleExecutor.class.getCanonicalName());
+        Logger logger = Logger.getLogger(ModuleExecutor.class.getName());
         logger.addHandler(testLogger);
     }
 
@@ -528,7 +520,7 @@ public class ModuleExecutorTest {
         File propFile = new File(propFileLocation);
         URL url = null;
         try {
-            url = propFile.toURL();
+            url = propFile.toURI().toURL();
         } catch (MalformedURLException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

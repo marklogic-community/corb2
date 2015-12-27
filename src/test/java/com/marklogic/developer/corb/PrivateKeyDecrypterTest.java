@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ public class PrivateKeyDecrypterTest {
     @Before
     public void setUp() {
         clearSystemProperties();
-        Logger logger = Logger.getLogger(PrivateKeyDecrypter.class.getSimpleName());
+        Logger logger = Logger.getLogger(PrivateKeyDecrypter.class.getName());
         logger.addHandler(testLogger);
     }
 

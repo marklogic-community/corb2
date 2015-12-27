@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -365,8 +365,8 @@ public class Manager extends AbstractManager {
         }
         //System properties override properties file properties
         Properties props = getNormalizedProperties(System.getProperties());
-        for (Map.Entry entry : props.entrySet()) {
-            System.setProperty(entry.getKey().toString(), entry.getValue().toString());
+        for (final String name : props.stringPropertyNames()) {
+            System.setProperty(name, props.getProperty(name));
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -90,7 +90,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                         throw new IllegalStateException("Unable to find serial number on Windows");
                     }   
                 } finally {
-                	closeQuietly(sc);
+                    if (sc != null) { sc.close(); } //Scanner doesn't implement Closable in 1.6
                     closeOrThrowRuntime(br);
                 }
             }

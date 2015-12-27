@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 public interface Decrypter {
-	public void init(Properties properties) throws IOException, ClassNotFoundException;
-	public String getConnectionURI(String uri, String username, String password, String host, String port, String dbname);
-	public String decrypt(String property, String value);
+	void init(Properties properties) throws IOException, ClassNotFoundException;
+	String getConnectionURI(String uri, String username, String password, String host, String port, String dbname);
+	String decrypt(String property, String value);
 }

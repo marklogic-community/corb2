@@ -1,5 +1,5 @@
 /*
- * * Copyright 2005-2015 MarkLogic Corporation
+ * * Copyright (c) 2004-2015 MarkLogic Corporation
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ public class TaskFactoryTest {
         System.out.println("newProcessTask");
         String[] uris = null;
         TaskFactory instance = new TaskFactory(null);
-        Task result = instance.newProcessTask(uris);
+        instance.newProcessTask(uris);
     }
 
     @Test(expected = NullPointerException.class)
@@ -69,7 +69,7 @@ public class TaskFactoryTest {
         String[] uris = null;
         Manager manager = new Manager();
         TaskFactory instance = new TaskFactory(manager);
-        Task result = instance.newProcessTask(uris);
+        instance.newProcessTask(uris);
     }
 
     @Test(expected = NullPointerException.class)
@@ -79,7 +79,7 @@ public class TaskFactoryTest {
         Manager manager = new Manager();
         manager.options.setProcessModule("module");
         TaskFactory instance = new TaskFactory(manager);
-        Task result = instance.newProcessTask(uris);
+        instance.newProcessTask(uris);
     }
 
     @Test(expected = NullPointerException.class)
@@ -90,8 +90,7 @@ public class TaskFactoryTest {
         manager.options.setProcessModule("module");
         manager.contentSource = mock(ContentSource.class);
         TaskFactory instance = new TaskFactory(manager);
-        Task result = instance.newProcessTask(uris);
-
+        instance.newProcessTask(uris);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -103,7 +102,7 @@ public class TaskFactoryTest {
         manager.options.setProcessModule("module");
         manager.contentSource = mock(ContentSource.class);
         TaskFactory instance = new TaskFactory(manager);
-        Task result = instance.newProcessTask(uris);
+        instance.newProcessTask(uris);
     }
 
     @Test(expected = NullPointerException.class)
@@ -115,7 +114,7 @@ public class TaskFactoryTest {
         manager.contentSource = mock(ContentSource.class);
 
         TaskFactory instance = new TaskFactory(manager);
-        Task result = instance.newProcessTask(uris);
+        instance.newProcessTask(uris);
     }
 
     @Test
@@ -231,7 +230,7 @@ public class TaskFactoryTest {
         Manager manager = new Manager();
         manager.options.setPreBatchModule("foo");
         TaskFactory instance = new TaskFactory(manager);
-        Task result = instance.newPreBatchTask();
+        instance.newPreBatchTask();
     }
 
     /**
@@ -252,7 +251,7 @@ public class TaskFactoryTest {
         Manager manager = new Manager();
         manager.options.setPostBatchTaskClass(ExportBatchToFileTask.class);
         TaskFactory instance = new TaskFactory(null);
-        Task result = instance.newPostBatchTask();
+        instance.newPostBatchTask();
     }
 
     @Test(expected = NullPointerException.class)
@@ -305,7 +304,7 @@ public class TaskFactoryTest {
         Manager manager = new Manager();
         manager.options.setInitTaskClass(ExportBatchToFileTask.class);
         TaskFactory instance = new TaskFactory(manager);
-        Task result = instance.newInitTask();
+        instance.newInitTask();
     }
 
     @Test(expected = NullPointerException.class)
@@ -314,7 +313,7 @@ public class TaskFactoryTest {
         Manager manager = new Manager();
         manager.options.setInitModule("foo");
         TaskFactory instance = new TaskFactory(manager);
-        Task result = instance.newInitTask();
+        instance.newInitTask();
     }
 
     @Test(expected = NullPointerException.class)
@@ -324,7 +323,7 @@ public class TaskFactoryTest {
         manager.options.setInitTaskClass(ExportBatchToFileTask.class);
         manager.options.setInitModule("foo");
         TaskFactory instance = new TaskFactory(manager);
-        Task result = instance.newInitTask();
+        instance.newInitTask();
     }
 
     @Test(expected = NullPointerException.class)
@@ -333,7 +332,7 @@ public class TaskFactoryTest {
         Manager manager = new Manager();
         manager.options.setInitModule("foo");
         TaskFactory instance = new TaskFactory(manager);
-        Task result = instance.newInitTask();
+        instance.newInitTask();
     }
 
     @Test
