@@ -28,7 +28,6 @@ import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import java.util.HashMap;
 import java.util.Map;
-import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 
 
 /**
