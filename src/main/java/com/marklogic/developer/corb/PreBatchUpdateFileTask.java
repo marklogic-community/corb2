@@ -18,14 +18,16 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Options.EXPORT_FILE_HEADER_LINE_COUNT;
+import static com.marklogic.developer.corb.Options.EXPORT_FILE_TOP_CONTENT;
 import com.marklogic.developer.corb.util.FileUtils;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.trimToEmpty;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
-import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
-import static com.marklogic.developer.corb.util.StringUtils.trimToEmpty;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
@@ -33,7 +35,7 @@ import static com.marklogic.developer.corb.util.StringUtils.trimToEmpty;
 public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 
 	protected String getTopContent() {
-		String topContent = getProperty("EXPORT-FILE-TOP-CONTENT");
+		String topContent = getProperty(EXPORT_FILE_TOP_CONTENT);
 		String batchRef = getProperty(Manager.URIS_BATCH_REF);
 		if (topContent != null && batchRef != null) {
 			topContent = topContent.replace("@" + Manager.URIS_BATCH_REF, batchRef);
@@ -65,7 +67,7 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 	private void addLineCountToProps() throws IOException{
 		int ct = FileUtils.getLineCount(new File(exportDir, getPartFileName()));
 		if (this.properties != null && ct > 0) {
-			this.properties.setProperty("EXPORT-FILE-HEADER-LINE-COUNT", String.valueOf(ct));
+			this.properties.setProperty(EXPORT_FILE_HEADER_LINE_COUNT, String.valueOf(ct));
 		}
 	}
 

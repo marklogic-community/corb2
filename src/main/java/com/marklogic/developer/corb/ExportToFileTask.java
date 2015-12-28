@@ -18,12 +18,12 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import com.marklogic.xcc.ResultSequence;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
-import com.marklogic.xcc.ResultSequence;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation

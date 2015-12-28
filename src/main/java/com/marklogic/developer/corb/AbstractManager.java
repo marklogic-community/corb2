@@ -18,6 +18,24 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Options.DECRYPTER;
+import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
+import static com.marklogic.developer.corb.Options.SSL_CONFIG_CLASS;
+import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
+import static com.marklogic.developer.corb.Options.XCC_DBNAME;
+import static com.marklogic.developer.corb.Options.XCC_HOSTNAME;
+import static com.marklogic.developer.corb.Options.XCC_PASSWORD;
+import static com.marklogic.developer.corb.Options.XCC_PORT;
+import static com.marklogic.developer.corb.Options.XCC_USERNAME;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import com.marklogic.developer.corb.util.StringUtils;
+import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
+import com.marklogic.xcc.ContentSource;
+import com.marklogic.xcc.ContentSourceFactory;
+import com.marklogic.xcc.SecurityOptions;
+import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.exceptions.XccConfigException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -36,16 +54,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import com.marklogic.xcc.ContentSource;
-import com.marklogic.xcc.ContentSourceFactory;
-import com.marklogic.xcc.SecurityOptions;
-import com.marklogic.xcc.exceptions.RequestException;
-import com.marklogic.xcc.exceptions.XccConfigException;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
-import com.marklogic.developer.corb.util.StringUtils;
-import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 public abstract class AbstractManager {
 	public static final String VERSION = "2.2.1";
@@ -161,7 +169,7 @@ public abstract class AbstractManager {
 	}
 	
 	public void initPropertiesFromOptionsFile() throws IOException{	
-		String propsFileName = System.getProperty("OPTIONS-FILE");
+		String propsFileName = System.getProperty(OPTIONS_FILE);
 		loadPropertiesFile(propsFileName, true, this.properties);
 	}
 	
@@ -179,7 +187,7 @@ public abstract class AbstractManager {
 	 * @throws IllegalAccessException
 	 */
 	protected void initDecrypter() throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
-		String decrypterClassName = getOption("DECRYPTER");
+		String decrypterClassName = getOption(DECRYPTER);
 		if (decrypterClassName != null) {
 			Class<?> decrypterCls = Class.forName(decrypterClassName);
 			if (Decrypter.class.isAssignableFrom(decrypterCls)) {
@@ -194,7 +202,7 @@ public abstract class AbstractManager {
 	}
 	
 	protected void initSSLConfig() throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException{
-		String sslConfigClassName = getOption("SSL-CONFIG-CLASS");
+		String sslConfigClassName = getOption(SSL_CONFIG_CLASS);
 		if (sslConfigClassName != null) {
 			Class<?> decrypterCls = Class.forName(sslConfigClassName);
 			if (SSLConfig.class.isAssignableFrom(decrypterCls)) {
@@ -210,15 +218,17 @@ public abstract class AbstractManager {
 	}
 	
 	protected void initURI(String uriArg) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException, URISyntaxException{
-		String uriAsString = getOption(uriArg, "XCC-CONNECTION-URI");
-		String username = getOption("XCC-USERNAME");
-		String password = getOption("XCC-PASSWORD");
-		String host = getOption("XCC-HOSTNAME");
-		String port = getOption("XCC-PORT");
-		String dbname = getOption("XCC-DBNAME");
+		String uriAsString = getOption(uriArg, XCC_CONNECTION_URI);
+		String username = getOption(XCC_USERNAME);
+		String password = getOption(XCC_PASSWORD);
+		String host = getOption(XCC_HOSTNAME);
+		String port = getOption(XCC_PORT);
+		String dbname = getOption(XCC_DBNAME);
 
 		if (uriAsString == null && (username == null || password == null || host == null || port == null)) {
-			LOG.severe("XCC-CONNECTION-URI or XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME and XCC-PORT must be specified");
+			LOG.severe(XCC_CONNECTION_URI + " or " + 
+                    XCC_USERNAME + ", " + XCC_PASSWORD + ", " + XCC_HOSTNAME + 
+                    " and " + XCC_PORT + " must be specified");
 			usage();
 			System.exit(1);
 		}
@@ -226,7 +236,7 @@ public abstract class AbstractManager {
 		if (this.decrypter != null) {
 			uriAsString = this.decrypter.getConnectionURI(uriAsString, username, password, host, port, dbname);
 		} else if (uriAsString == null) {
-			uriAsString = "xcc://" + username + ":" + password + "@" + host + ":" + port+ (dbname != null ? "/" + dbname : "");
+			uriAsString = "xcc://" + username + ":" + password + "@" + host + ":" + port + (dbname != null ? "/" + dbname : "");
 		}
 		
 		this.connectionUri = new URI(uriAsString);
