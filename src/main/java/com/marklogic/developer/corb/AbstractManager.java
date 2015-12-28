@@ -236,7 +236,7 @@ public abstract class AbstractManager {
 		if (this.decrypter != null) {
 			uriAsString = this.decrypter.getConnectionURI(uriAsString, username, password, host, port, dbname);
 		} else if (uriAsString == null) {
-			uriAsString = "xcc://" + username + ":" + password + "@" + host + ":" + port+ (dbname != null ? "/" + dbname : "");
+			uriAsString = "xcc://" + username + ":" + password + "@" + host + ":" + port + (dbname != null ? "/" + dbname : "");
 		}
 		
 		this.connectionUri = new URI(uriAsString);
