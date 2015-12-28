@@ -194,7 +194,7 @@ public abstract class AbstractManager {
 				this.decrypter = (Decrypter) decrypterCls.newInstance();
 				decrypter.init(this.properties);
 			} else {
-				throw new IllegalArgumentException("DECRYPTER must be of type com.marklogic.developer.corb.Decrypter");
+				throw new IllegalArgumentException(DECRYPTER + " must be of type com.marklogic.developer.corb.Decrypter");
 			}
 		} else {
 			this.decrypter = null;
