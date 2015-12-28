@@ -18,7 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
