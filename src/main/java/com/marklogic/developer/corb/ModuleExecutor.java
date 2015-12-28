@@ -75,15 +75,8 @@ public class ModuleExecutor extends AbstractManager{
 
 	/**
 	 * @param args
-	 * @throws URISyntaxException
-	 * @throws IOException
-	 * @throws ClassNotFoundException
-	 * @throws IllegalAccessException
-	 * @throws InstantiationException
 	 */
-	public static void main(String[] args) throws URISyntaxException,
-			IOException, ClassNotFoundException, InstantiationException,
-			IllegalAccessException, Exception {
+	public static void main(String[] args) {
 		ModuleExecutor moduleExecutor = new ModuleExecutor();
 		try {
 			moduleExecutor.init(args);
@@ -129,7 +122,7 @@ public class ModuleExecutor extends AbstractManager{
 		registerStatusInfo();
 	}
 	
-	protected void initOptions(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException{
+	protected void initOptions(String[] args) {
 		String processModule = getOption(args.length > 1 ? args[1] : null, PROCESS_MODULE);
 		String moduleRoot = getOption(args.length > 2 ? args[2] : null, MODULE_ROOT);
 		String modulesDatabase = getOption(args.length > 3 ? args[3] : null, MODULES_DATABASE);

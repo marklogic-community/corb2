@@ -93,9 +93,8 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
     /**
      * loads properties file and adds it to properties
      *
-     * @throws IOException
      */
-    protected void loadPropertiesFile() throws IOException {
+    protected void loadPropertiesFile() {
         String securityFileName = getProperty(SSL_PROPERTIES_FILE);
         if (isNotBlank(securityFileName)) {
             File f = new File(securityFileName);
@@ -109,7 +108,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
                     }
                     properties.load(is);
                 } catch (IOException e) {
-                    LOG.severe("Error loading ssl properties file");
+                    LOG.severe(MessageFormat.format("Error loading ssl properties file {0}", SSL_PROPERTIES_FILE));
                     throw new RuntimeException(e);
                 } finally {
                     closeQuietly(is);
@@ -124,12 +123,8 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
 
     @Override
     public SSLContext getSSLContext() throws NoSuchAlgorithmException, KeyManagementException {
-        try {
-            loadPropertiesFile();
-        } catch (IOException e1) {
-            LOG.severe(MessageFormat.format("Error loading {0}", SSL_PROPERTIES_FILE));
-            throw new RuntimeException(e1);
-        }
+
+        loadPropertiesFile();
 
         String sslkeyStore = getRequiredProperty(SSL_KEYSTORE);
         String sslkeyStorePassword = getRequiredProperty(SSL_KEYSTORE_PASSWORD);

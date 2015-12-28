@@ -201,7 +201,7 @@ public abstract class AbstractManager {
 		}
 	}
 	
-	protected void initSSLConfig() throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException{
+	protected void initSSLConfig() throws ClassNotFoundException, InstantiationException, IllegalAccessException {
 		String sslConfigClassName = getOption(SSL_CONFIG_CLASS);
 		if (sslConfigClassName != null) {
 			Class<?> decrypterCls = Class.forName(sslConfigClassName);
@@ -217,7 +217,7 @@ public abstract class AbstractManager {
 		sslConfig.setDecrypter(this.decrypter);
 	}
 	
-	protected void initURI(String uriArg) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException, URISyntaxException{
+	protected void initURI(String uriArg) throws URISyntaxException {
 		String uriAsString = getOption(uriArg, XCC_CONNECTION_URI);
 		String username = getOption(XCC_USERNAME);
 		String password = getOption(XCC_PASSWORD);
