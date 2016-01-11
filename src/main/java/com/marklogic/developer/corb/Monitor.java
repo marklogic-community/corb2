@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import java.util.logging.Logger;
 public class Monitor implements Runnable {
 
     protected static final int SLEEP_MILLIS = 500;
-    protected static final Logger LOG = Logger.getLogger(Monitor.class.getSimpleName());
+    protected static final Logger LOG = Logger.getLogger(Monitor.class.getName());
 
     private final CompletionService<String[]> cs;
     private long lastProgress = 0;

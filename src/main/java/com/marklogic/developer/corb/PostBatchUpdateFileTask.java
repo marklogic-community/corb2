@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,20 @@
  */
 package com.marklogic.developer.corb;
 
+import com.google.code.externalsorting.ExternalSort;
+import static com.marklogic.developer.corb.Options.EXPORT_FILE_AS_ZIP;
+import static com.marklogic.developer.corb.Options.EXPORT_FILE_BOTTOM_CONTENT;
+import static com.marklogic.developer.corb.Options.EXPORT_FILE_HEADER_LINE_COUNT;
+import static com.marklogic.developer.corb.Options.EXPORT_FILE_PART_EXT;
+import static com.marklogic.developer.corb.Options.EXPORT_FILE_SORT;
+import static com.marklogic.developer.corb.Options.EXPORT_FILE_SORT_COMPARATOR;
+import com.marklogic.developer.corb.util.FileUtils;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.trimToEmpty;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -35,14 +49,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import com.google.code.externalsorting.ExternalSort;
-import com.marklogic.developer.corb.util.FileUtils;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
-import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
-import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
-import static com.marklogic.developer.corb.util.StringUtils.trimToEmpty;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
@@ -61,15 +67,15 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
         }
 
         try {
-            String sort = getProperty("EXPORT-FILE-SORT");
-            String comparatorCls = getProperty("EXPORT-FILE-SORT-COMPARATOR");
+            String sort = getProperty(EXPORT_FILE_SORT);
+            String comparatorCls = getProperty(EXPORT_FILE_SORT_COMPARATOR);
 
             //You must either specify asc/desc or provide your own comparator
             if ((sort == null || !sort.matches(SORT_DIRECTION)) && isBlank(comparatorCls)) {
                 return;
             }
 
-            int headerLineCount = getIntProperty("EXPORT-FILE-HEADER-LINE-COUNT");
+            int headerLineCount = getIntProperty(EXPORT_FILE_HEADER_LINE_COUNT);
             if (headerLineCount < 0) {
                 headerLineCount = 0;
             }
@@ -77,7 +83,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             File sortedFile = new File(exportDir, getPartFileName() + getPartExt());
             File tempFileStore = origFile.getParentFile();
 
-            Comparator comparator = ExternalSort.defaultcomparator;
+            Comparator<String> comparator = ExternalSort.defaultcomparator;
             if (isNotBlank(comparatorCls)) {
                 comparator = getComparatorCls(comparatorCls).newInstance();
             } else if (sort.matches(DESCENDING)) {
@@ -102,11 +108,12 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
         }
     }
     
-    protected Class<? extends Comparator> getComparatorCls(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    @SuppressWarnings("unchecked")
+	protected Class<? extends Comparator<String>> getComparatorCls(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         Class<?> cls = Class.forName(className);
         if (Comparator.class.isAssignableFrom(cls)) {
             cls.newInstance(); // sanity check
-            return cls.asSubclass(Comparator.class);
+            return (Class<? extends Comparator<String>>) cls.asSubclass(Comparator.class);
         } else {
             throw new IllegalArgumentException("Comparator must be of type java.util.Comparator");
         }
@@ -135,7 +142,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     }
 
     protected String getBottomContent() {
-        return getProperty("EXPORT-FILE-BOTTOM-CONTENT");
+        return getProperty(EXPORT_FILE_BOTTOM_CONTENT);
     }
 
     protected void writeBottomContent() throws IOException {
@@ -165,7 +172,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     }
     
     protected String getPartExt() {
-        String partExt = getProperty("EXPORT-FILE-PART-EXT");
+        String partExt = getProperty(EXPORT_FILE_PART_EXT);
         if (isEmpty(partExt)) {
             partExt = ".part";
         } else if (!partExt.startsWith(".")) {
@@ -175,7 +182,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     }
        
     protected void compressFile() throws IOException {
-        if ("true".equalsIgnoreCase(getProperty("EXPORT_FILE_AS_ZIP"))) {
+        if ("true".equalsIgnoreCase(getProperty(EXPORT_FILE_AS_ZIP))) {
             String outFileName = getFileName();
             String outZipFileName = outFileName + ".zip";
             String partExt = getPartExt();

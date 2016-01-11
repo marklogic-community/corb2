@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,16 +18,18 @@
  */
 package com.marklogic.developer.corb;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
-import com.marklogic.xcc.ResultSequence;
+import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
+import static com.marklogic.developer.corb.Options.EXPORT_FILE_PART_EXT;
+import static com.marklogic.developer.corb.Options.URIS_BATCH_REF;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
+import com.marklogic.xcc.ResultSequence;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class ExportBatchToFileTask extends ExportToFileTask {
 
@@ -35,7 +37,7 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 
 	@Override
 	protected String getFileName() {
-		String fileName = getProperty("EXPORT-FILE-NAME");
+		String fileName = getProperty(EXPORT_FILE_NAME);
 		if (isEmpty(fileName)) {
 			String batchRef = trim(getProperty(Manager.URIS_BATCH_REF));
 			if (isNotEmpty(batchRef)) {
@@ -43,7 +45,7 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 			}
 		}
 		if (isEmpty(fileName)) {
-			throw new NullPointerException("Missing EXPORT-FILE-NAME or URIS_BATCH_REF property");
+			throw new NullPointerException("Missing " + EXPORT_FILE_NAME + " or " + URIS_BATCH_REF + " property");
 		}
 		return fileName;
 	}
@@ -51,12 +53,12 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 	protected String getPartFileName() {
 		String fileName = getFileName();
 		if (isNotEmpty(fileName)) {
-			String partExt = getProperty("EXPORT-FILE-PART-EXT");
+			String partExt = getProperty(EXPORT_FILE_PART_EXT);
 			if (isNotEmpty(partExt)) {
 				if (!partExt.startsWith(".")) {
 					partExt = "." + partExt;
 				}
-				fileName = fileName + partExt;
+				fileName += partExt;
 			}
 		}
 		return fileName;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,14 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Options.JASYPT_PROPERTIES_FILE;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 
 public class JasyptDecrypter extends AbstractDecrypter {
 
@@ -32,11 +33,11 @@ public class JasyptDecrypter extends AbstractDecrypter {
 	Class<?> decrypterCls = null;
 	Object decrypter = null;
 
-	protected static final Logger LOG = Logger.getLogger(JasyptDecrypter.class.getSimpleName());
+	protected static final Logger LOG = Logger.getLogger(JasyptDecrypter.class.getName());
 
 	@Override
 	protected void init_decrypter() throws IOException, ClassNotFoundException {
-		String decryptPropsFile = getProperty("JASYPT-PROPERTIES-FILE");
+		String decryptPropsFile = getProperty(JASYPT_PROPERTIES_FILE);
 		if (decryptPropsFile == null || isBlank(decryptPropsFile)) {
 			decryptPropsFile = "jasypt.properties";
 		}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import com.marklogic.xcc.ResultSequence;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
-import com.marklogic.xcc.ResultSequence;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation

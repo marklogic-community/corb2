@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Locale;
 import java.util.Scanner;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -71,9 +70,10 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                 StringBuilder sb = new StringBuilder();
                 BufferedReader br = null;
                 boolean isSN = false;
+                Scanner sc = null;
                 try {
                     br = read("wmic bios get serialnumber");
-                    Scanner sc = new Scanner(br);
+                    sc = new Scanner(br);
                     while (sc.hasNext()) {
                         String next = sc.next();
                         if ("SerialNumber".equals(next) || isSN) {
@@ -87,8 +87,9 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                         return sn.getBytes();
                     } else {
                         throw new IllegalStateException("Unable to find serial number on Windows");
-                    }
+                    }   
                 } finally {
+                    if (sc != null) { sc.close(); } //Scanner doesn't implement Closable in 1.6
                     closeOrThrowRuntime(br);
                 }
             }

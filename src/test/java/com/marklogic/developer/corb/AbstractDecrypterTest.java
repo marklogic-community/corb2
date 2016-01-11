@@ -1,5 +1,5 @@
 /*
- * * Copyright 2005-2015 MarkLogic Corporation
+ * * Copyright (c) 2004-2015 MarkLogic Corporation
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -219,12 +219,14 @@ public class AbstractDecrypterTest {
         assertEquals(expResult, result);
     }
 
-    public class AbstractDecrypterImpl extends AbstractDecrypter {
+    private static class AbstractDecrypterImpl extends AbstractDecrypter {
 
+        @Override
         public void init_decrypter() throws IOException, ClassNotFoundException {
 
         }
 
+        @Override
         public String doDecrypt(String property, String value) {
             return value.toUpperCase();
         }

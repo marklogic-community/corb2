@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Scanner;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -76,7 +77,10 @@ public class TestUtils {
     
     public static String readFile(File file) throws FileNotFoundException {
         // \A == The beginning of the input
-        return new Scanner(file, "UTF-8").useDelimiter("\\A").next();
+        Scanner scanner = new Scanner(file, "UTF-8");
+        String result = scanner.useDelimiter("\\A").next();
+        scanner.close();
+        return result;
     }
     
     public static void clearFile(File file) {
@@ -86,9 +90,7 @@ public class TestUtils {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        if (pw != null) {
-            pw.close();
-        }
+        IOUtils.closeQuietly(pw);
     }
 
     //TODO: remove this, and upgrade code to use Files.createTempDirectory() when we upgrade to a JRE >= 1.7

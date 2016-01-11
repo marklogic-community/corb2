@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,15 @@
  */
 package com.marklogic.developer.corb;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
+import static com.marklogic.developer.corb.Options.BATCH_URI_DELIM;
+import static com.marklogic.developer.corb.Options.ERROR_FILE_NAME;
+import static com.marklogic.developer.corb.Options.QUERY_RETRY_LIMIT;
+import static com.marklogic.developer.corb.Options.QUERY_RETRY_INTERVAL;
+import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_INTERVAL;
+import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultSequence;
@@ -37,22 +37,28 @@ import com.marklogic.xcc.exceptions.RetryableQueryException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
-
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
-import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 /**
- * 
+ *
  * @author Bhagat Bandlamudi, MarkLogic Corporation
- * 
+ *
  */
 public abstract class AbstractTask implements Task {
 	private static final Object ERROR_SYNC_OBJ = new Object();
 	
 	protected static final String TRUE = "true";
 	protected static final String FALSE = "false";
+    private static final String URI = "URI";
 	protected static final byte[] NEWLINE = 
 			System.getProperty("line.separator") != null ? System.getProperty("line.separator").getBytes() : "\n".getBytes();
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
@@ -81,7 +87,7 @@ public abstract class AbstractTask implements Task {
 	
 	protected boolean failOnError = true; 
 
-	private static final Logger LOG = Logger.getLogger(AbstractTask.class.getSimpleName());
+	private static final Logger LOG = Logger.getLogger(AbstractTask.class.getName());
 
 	@Override
 	public void setContentSource(ContentSource cs) {
@@ -119,23 +125,23 @@ public abstract class AbstractTask implements Task {
 	}
 	
     @Override
-	public void setFailOnError(boolean failOnError){
-		this.failOnError = failOnError;
-	}
-	
+    public void setFailOnError(boolean failOnError) {
+        this.failOnError = failOnError;
+    }
+
     @Override
-	public void setExportDir(String exportFileDir) {
-		this.exportDir = exportFileDir;
-	}
+    public void setExportDir(String exportFileDir) {
+        this.exportDir = exportFileDir;
+    }
 
-	public String getExportDir() {
-		return this.exportDir;
-	}
+    public String getExportDir() {
+        return this.exportDir;
+    }
 
-	public Session newSession() {
-		return cs.newSession();
-	}
-	
+    public Session newSession() {
+        return cs.newSession();
+    }
+
     @Override
 	public String[] call() throws Exception {
 		try {
@@ -192,9 +198,9 @@ public abstract class AbstractTask implements Task {
 
 			if (inputUris != null && inputUris.length > 0) {
 				if (inputUris.length == 1) {
-					request.setNewStringVariable("URI", inputUris[0]);
+					request.setNewStringVariable(URI, inputUris[0]);
 				} else {
-					String delim = getProperty("BATCH-URI-DELIM");
+					String delim = getProperty(BATCH_URI_DELIM);
 					if (delim == null || delim.length() == 0) {
 						delim = Manager.DEFAULT_BATCH_URI_DELIM;
 					}
@@ -205,7 +211,7 @@ public abstract class AbstractTask implements Task {
 						}
 						buff.append(uri);
 					}
-					request.setNewStringVariable("URI", buff.toString());
+					request.setNewStringVariable(URI, buff.toString());
 				}
 			}
 
@@ -284,102 +290,108 @@ public abstract class AbstractTask implements Task {
             return inputUris;
         }
     }
-  
-  protected String asString(String[] uris) {
-    if (uris == null || uris.length == 0) {
-    	return "";
+
+    protected String asString(String[] uris) {
+        if (uris == null || uris.length == 0) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < uris.length; i++) {
+            if (i > 0) {
+                sb.append(',');
+            }
+            sb.append(uris[i]);
+        }
+        return sb.toString();
     }
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < uris.length; i++) {
-    	if (i > 0) {
-    		sb.append(',');
-      }
-      sb.append(uris[i]);
+
+    protected abstract String processResult(ResultSequence seq) throws CorbException;
+
+    protected void cleanup() {
+        // release resources
+        cs = null;
+        moduleType = null;
+        moduleUri = null;
+        properties = null;
+        inputUris = null;
+        adhocQuery = null;
+        language = null;
+        exportDir = null;
     }
-    return sb.toString();
-  }
 
-	protected abstract String processResult(ResultSequence seq) throws CorbException;
+    public String getProperty(String key) {
+        String val = System.getProperty(key);
+        if (val == null && properties != null) {
+            val = properties.getProperty(key);
+        }
+        return trim(val);
+    }
 
-	protected void cleanup() {
-		// release resources
-		cs = null;
-		moduleType = null;
-		moduleUri = null;
-		properties = null;
-		inputUris = null;
-		adhocQuery = null;
-		language = null;
-		exportDir = null;
-	}
+    protected byte[] getValueAsBytes(XdmItem item) {
+        if (item instanceof XdmBinary) {
+            return ((XdmBinary) item).asBinaryData();
+        } else if (item != null) {
+            return item.asString().getBytes();
+        } else {
+            return EMPTY_BYTE_ARRAY;
+        }
+    }
 
-	public String getProperty(String key) {
-		String val = System.getProperty(key);
-		if (val == null && properties != null) {
-			val = properties.getProperty(key);
-		}
-		return val != null ? val.trim() : null;
-	}
+    private int getConnectRetryLimit() {
+        int connectRetryLimit = getIntProperty(XCC_CONNECTION_RETRY_LIMIT);
+        return connectRetryLimit < 0 ? DEFAULT_CONNECTION_RETRY_LIMIT : connectRetryLimit;
+    }
 
-	protected byte[] getValueAsBytes(XdmItem item) {
-		if (item instanceof XdmBinary) {
-			return ((XdmBinary) item).asBinaryData();
-		} else if (item != null) {
-			return item.asString().getBytes();
-		} else {
-			return EMPTY_BYTE_ARRAY;
-		}
-	}
+    private int getConnectRetryInterval() {
+        int connectRetryInterval = getIntProperty(XCC_CONNECTION_RETRY_INTERVAL);
+        return connectRetryInterval < 0 ? DEFAULT_CONNECTION_RETRY_INTERVAL : connectRetryInterval;
+    }
 
-	private int getConnectRetryLimit() {
-		int connectRetryLimit = getIntProperty("XCC-CONNECTION-RETRY-LIMIT");
-		return connectRetryLimit < 0 ? DEFAULT_CONNECTION_RETRY_LIMIT : connectRetryLimit;
-	}
+    private int getQueryRetryLimit() {
+        int queryRetryLimit = getIntProperty(QUERY_RETRY_LIMIT);
+        return queryRetryLimit < 0 ? DEFAULT_QUERY_RETRY_LIMIT : queryRetryLimit;
+    }
 
-	private int getConnectRetryInterval() {
-		int connectRetryInterval = getIntProperty("XCC-CONNECTION-RETRY-INTERVAL");
-		return connectRetryInterval < 0 ? DEFAULT_CONNECTION_RETRY_INTERVAL : connectRetryInterval;
-	}
-	
-	private int getQueryRetryLimit() {
-		int queryRetryLimit = getIntProperty("QUERY-RETRY-LIMIT");
-		return queryRetryLimit < 0 ? DEFAULT_QUERY_RETRY_LIMIT : queryRetryLimit;
-	}
+    private int getQueryRetryInterval() {
+        int queryRetryInterval = getIntProperty(QUERY_RETRY_INTERVAL);
+        return queryRetryInterval < 0 ? DEFAULT_QUERY_RETRY_INTERVAL : queryRetryInterval;
+    }
 
-	private int getQueryRetryInterval() {
-		int queryRetryInterval = getIntProperty("QUERY-RETRY-INTERVAL");
-		return queryRetryInterval < 0 ? DEFAULT_QUERY_RETRY_INTERVAL : queryRetryInterval;
-	}
-	
     /**
-    * Retrieves an int value.
-    * @param key The key name.
-    * @return The requested value (<code>-1</code> if not found or could not parse value as int).
-    */
+     * Retrieves an int value.
+     *
+     * @param key The key name.
+     * @return The requested value (<code>-1</code> if not found or could not
+     * parse value as int).
+     */
     protected int getIntProperty(String key) {
         int intVal = -1;
-		String value = getProperty(key);
-		if (isNotEmpty(value)) {
-			try {
-				intVal = Integer.parseInt(value);
-			} catch (Exception exc) {
-                LOG.log(Level.WARNING, "Unable to parese ''{0}'' value ''{1}'' as an int", new Object[]{key, value});
-			}
-		}
+        String value = getProperty(key);
+        if (isNotEmpty(value)) {
+            try {
+                intVal = Integer.parseInt(value);
+            } catch (Exception exc) {
+                LOG.log(Level.WARNING, "Unable to parse '{0}' value '{1}' as an int", new Object[]{key, value});
+            }
+        }
         return intVal;
     }
-    
-	private void writeToErrorFile(String[] uris, String message){
-		if (uris == null || uris.length == 0) { return; }
-		
-		String errorFileName = getProperty("ERROR-FILE-NAME");
-		if (errorFileName == null || errorFileName.length() == 0) { return; }
-		
-		String delim = getProperty("BATCH-URI-DELIM");
-		if (delim == null || delim.length() == 0) {
-			delim = Manager.DEFAULT_BATCH_URI_DELIM;
-		}
-		
+
+    private void writeToErrorFile(String[] uris, String message) {
+        if (uris == null || uris.length == 0) {
+            return;
+        }
+
+        String errorFileName = getProperty(ERROR_FILE_NAME);
+        if (errorFileName == null || errorFileName.length() == 0) {
+            return;
+        }
+
+        String delim = getProperty(BATCH_URI_DELIM);
+        if (delim == null || delim.length() == 0) {
+            delim = Manager.DEFAULT_BATCH_URI_DELIM;
+        }
+
         synchronized (ERROR_SYNC_OBJ) {
             BufferedOutputStream writer = null;
             try {
@@ -394,11 +406,11 @@ public abstract class AbstractTask implements Task {
                 }
                 writer.flush();
             } catch (Exception exc) {
-                LOG.log(Level.SEVERE, "Problem writing uris to ERROR-FILE-NAME", exc);
+                LOG.log(Level.SEVERE, "Problem writing uris to " + ERROR_FILE_NAME, exc);
             } finally {
                 closeQuietly(writer);
             }
         }
-	}
-	
+    }
+
 }

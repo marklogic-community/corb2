@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,10 @@ import java.util.Properties;
 import javax.net.ssl.SSLContext;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -169,7 +169,7 @@ public class TwoWaySSLConfigTest {
     public void testGetSSLContext_NoProperties() throws Exception {
         System.out.println("getSSLContext");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
-        SSLContext context = instance.getSSLContext();
+        instance.getSSLContext();
     }
    
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2015 MarkLogic Corporation
+ * Copyright (c) 2004-2015 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,63 +18,26 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
-import java.util.Properties;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.marklogic.xcc.ContentSource;
-import java.util.logging.Level;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
-
-public class FileUrisLoader implements UrisLoader {
-
-	TransformOptions options;
-	ContentSource cs;
-	String collection;
-	Properties properties;
+public class FileUrisLoader extends AbstractUrisLoader {
 
 	BufferedReader br = null;
-	int total = 0;
-
-	String[] replacements = new String[0];
-
-	protected static final Logger LOG = Logger.getLogger(FileUrisLoader.class.getSimpleName());
-
-	@Override
-	public void setOptions(TransformOptions options) {
-		this.options = options;
-	}
-
-	@Override
-	public void setContentSource(ContentSource cs) {
-		this.cs = cs;
-	}
-
-	@Override
-	public void setCollection(String collection) {
-		this.collection = collection;
-	}
-
-	@Override
-	public void setProperties(Properties properties) {
-		this.properties = properties;
-	}
+	String nextLine = null;
+	protected static final Logger LOG = Logger.getLogger(FileUrisLoader.class.getName());
 
 	@Override
 	public void open() throws CorbException {
         
-		if (properties != null && properties.containsKey("URIS-REPLACE-PATTERN")) {
-			String pattern = properties.getProperty("URIS-REPLACE-PATTERN").trim();
-			replacements = pattern.split(",", -1);
-			if (replacements.length % 2 != 0) {
-				throw new IllegalArgumentException("Invalid replacement pattern " + pattern);
-			}
-		}
+		parseUriReplacePatterns();
 		
 		try {
 			String fileName = options.getUrisFile();
@@ -95,16 +58,6 @@ public class FileUrisLoader implements UrisLoader {
 		}
 	}
 
-	@Override
-	public String getBatchRef() {
-		return null;
-	}
-
-	@Override
-	public int getTotalCount() {
-		return this.total;
-	}
-
 	private String readNextLine() throws IOException {
 		String line = trim(br.readLine());
 		if (line != null && isBlank(line)) {
@@ -112,8 +65,6 @@ public class FileUrisLoader implements UrisLoader {
 		}
 		return line;
 	}
-
-	String nextLine = null;
 
 	@Override
 	public boolean hasNext() throws CorbException {
@@ -160,14 +111,9 @@ public class FileUrisLoader implements UrisLoader {
 		cleanup();
 	}
 
+    @Override
 	protected void cleanup() {
-		// release
+        super.cleanup();
 		br = null;
-		options = null;
-		cs = null;
-		collection = null;
-		properties = null;
-		replacements = null;
-        
 	}
 }

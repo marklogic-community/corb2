@@ -1,5 +1,5 @@
 /*
- * * Copyright 2005-2015 MarkLogic Corporation
+ * * Copyright (c) 2004-2015 MarkLogic Corporation
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -70,7 +70,6 @@ public class TransformTest {
     public void testCall() throws Exception {
         System.out.println("call");
         Transform instance = new Transform();
-        String[] expResult = null;
         String[] result = instance.call();
         assertNull(result);
     }
