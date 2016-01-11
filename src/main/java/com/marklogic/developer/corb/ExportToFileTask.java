@@ -30,7 +30,13 @@ import com.marklogic.xcc.ResultSequence;
  */
 public class ExportToFileTask extends AbstractTask {
 	protected String getFileName() {
-		return inputUris[0].charAt(0) == '/' ? inputUris[0].substring(1) : inputUris[0];
+		String filename = inputUris[0].charAt(0) == '/' ? inputUris[0].substring(1) : inputUris[0];
+		String uriInPath = getProperty("EXPORT-FILE-URI-TO-PATH");
+		int lastIdx = filename.lastIndexOf('/');
+		if("false".equalsIgnoreCase(uriInPath) &&  lastIdx > 0 && filename.length() > (lastIdx+1)){
+			filename = filename.substring(lastIdx+1);
+		}
+		return filename;
 	}
 
 	protected void writeToFile(ResultSequence seq) throws IOException {

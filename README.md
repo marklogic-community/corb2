@@ -76,6 +76,7 @@ CoRB needs one or more of the following parameters as (If specified in more than
 * **EXPORT-FILE-SORT-COMPARATOR** (A java class that must implement `java.util.Comparator`. If specified, CoRB will use this class for sorting in place of ascending or descending string comparator even if a value was specified for EXPORT-FILE-SORT.)
 * **MAX_OPTS_FROM_MODULE** (Default 10. Max number of custom inputs from the URIS-MODULE to other modules)  
 * **EXIT-CODE-NO-URIS** (Default 0. Returns this exit code when there is nothing to process.)  
+* **EXPORT-FILE-URI-TO-PATH** (Default true. Convert doc URI to filepath)  
 
 ### Alternate XCC connection configuration
 * **XCC-USERNAME** (Required if XCC-CONNECTION-URI is not specified)
