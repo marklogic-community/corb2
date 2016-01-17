@@ -1,4 +1,9 @@
+plugins {
+    id 'java' 
+    id 'com.github.johnrengelman.shadow' version '1.2.2'
+}
 apply plugin: 'java'
+apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven-publish'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
@@ -17,6 +22,7 @@ repositories {
 
 dependencies {
     compile 'com.marklogic:marklogic-xcc:8.0.1'
+    compile 'com.google.code.externalsortinginjava:externalsortinginjava:0.1.9'
     // if you want to compile without testing comment out the lines below
     testCompile group: 'junit', name: 'junit', version: '4+'
     testCompile 'org.jasypt:jasypt:1.9.2'
@@ -29,6 +35,17 @@ test {
       events 'started','passed'
     }  
 }
+
+//disabling, because we want to incorporate externalsortingjava in uber jar and use as the artifact
+jar.enabled = false
+shadowJar {
+  dependencies {
+    include(dependency('com.google.code.externalsortinginjava:externalsortinginjava:.*'))
+  }
+  //generate same name as the jar task would
+  archiveName = "${baseName}-${version}.${extension}"
+}
+build.dependsOn(shadowJar);
 
 publishing {
     publications {
