@@ -92,7 +92,7 @@ ExportBatchToFileTask, PreBatchUpdateFileTask and PostBatchUpdateFileTask use **
 ### Custom Inputs to XQuery or JavaScript Modules
 Any property specified with prefix (with '.') **INIT-MODULE**, **URIS-MODULE**, **PRE-BATCH-MODULE**, **PROCESS-MODULE**, **POST-BATCH-MODULE** will be set as an external variable in the corresponding XQuery module (if that variable is defined as an external string variable in XQuery module). For JavaScript modules the variables need be defined as global variables.  
 
-**Examples:**
+**Custom Input Examples:**
 * `URIS-MODULE.maxLimit=1000` Expects an external string variable  _maxLimit_ in URIS-MODULE XQuery or global variable for JavaScript.  
 * `PROCESS-MODULE.startDate=2015-01-01` Expects an external string variable _startDate_ in XQUERY-MODULE XQuery or global variable for JavaScript.  
 
@@ -109,10 +109,10 @@ Appending "|ADHOC" to the name or path of a XQuery module (with .xqy extension) 
 
 **INIT-MODULE**, **URIS-MODULE**, **PROCESS-MODULE**, **PRE-BATCH-MODULE** and **POST-BATCH-MODULE** can be specified adhoc by adding prefix '|ADHOC' for XQuery or JavaScript (with .sjs or .js extension) at the end. Adhoc XQuery or JavaScript remains local to the CoRB and not deployed to MarkLogic. The XQuery or JavaScript module should be in its named file and that file should be available on the file system, including being on the java classpath for CoRB.  
 
-**Examples:**  
-`PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC` adhoc-pre-batch.xqy must be on the classpath or in the current directory.
-`PROCESS-MODULE=/path/to/file/adhoc-transform-module.xqy|ADHOC` XQuery module file with full path in the file system.  
-`URIS-MODULE=adhoc-uris.sjs|ADHOC` Adhoc JavaScript module in the classpath or current directory.
+**Adhoc Examples:**  
+* `PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC` adhoc-pre-batch.xqy must be on the classpath or in the current directory.
+* `PROCESS-MODULE=/path/to/file/adhoc-transform-module.xqy|ADHOC` XQuery module file with full path in the file system.  
+* `URIS-MODULE=adhoc-uris.sjs|ADHOC` Adhoc JavaScript module in the classpath or current directory.
 
 ### JavaScript Modules
 JavaScript modules are supported with Marklogic 8 and can be used in place of an XQuery module. However, if returning multiple values (ex: URIS-MODULE), values must be returned as a [ValueIterator](https://docs.marklogic.com/js/ValueIterator). MarkLogic JavaScript API has helper functions to convert Arrays into ValueIterator ([`xdmp.arrayValues()`](https://docs.marklogic.com/xdmp.arrayValues)) and inserting values into another ValueIterator ([`fn.insertBefore()`](https://docs.marklogic.com/fn.insertBefore)).
@@ -193,7 +193,7 @@ CoRB2 provides support for SSL over XCC. As a prerequisite to enabling CoRB2 SSL
 
 Option | Description
 ---|---
-**SSL-CONFIG-CLASS** | (Must implement `com.marklogic.developer.corb.SSLConfig`) <ul><li>`com.marklogic.developer.corb.TrustAnyoneSSLConfig` (Included)</li><li>`com.marklogic.developer.corb.TwoWaySSLConfig` (Included, supports 2-way SSL)</li></ul>
+**SSL-CONFIG-CLASS** | Must implement `com.marklogic.developer.corb.SSLConfig` <ul><li>`com.marklogic.developer.corb.TrustAnyoneSSLConfig` (Included)</li><li>`com.marklogic.developer.corb.TwoWaySSLConfig` (Included) supports 2-way SSL</li></ul>
 
 #### com.marklogic.developer.corb.TrustAnyoneSSLConfig
 TrustAnyoneSSLConfig is the default implementation of the SSLContext. It will accept any certificate presented by the MarkLogic server.
@@ -212,7 +212,7 @@ Option | Description
 **SSL-CIPHER-SUITES** | A comma separated list of acceptable cipher suites used
 
 ### Usage
-#### Usage 1 (Command line options):
+#### Usage 1 - Command line options:
 ```
 java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.2.1.jar
         com.marklogic.developer.corb.Manager
@@ -223,7 +223,7 @@ java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.2.1.jar
               [ URIS-FILE ] ] ] ] ] ] ] ] ] ] ] ] ] ] ]
 ```
 
-#### Usage 2 (Java system properties specifying options):
+#### Usage 2 - Java system properties specifying options:
 ```
 java -server -cp .:marklogic-xcc-8.0.1.jar:marklogic-corb-2.2.1.jar
         -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ]
@@ -234,21 +234,22 @@ java -server -cp .:marklogic-xcc-8.0.1.jar:marklogic-corb-2.2.1.jar
         com.marklogic.developer.corb.Manager
 ```
 
-#### Usage 3 (Properties file specifying options):
+#### Usage 3 - Properties file specifying options:
 ```
 java -server -cp .:marklogic-xcc-8.0.1.jar:marklogic-corb-2.2.1.jar
         -DOPTIONS-FILE=myjob.properties com.marklogic.developer.corb.Manager
 ```
 > looks for myjob.properties file in classpath
 
-#### Usage 4 (Combination of properties file with java system properties and command line options):
+#### Usage 4 - Combination of properties file with java system properties and command line options:
 ```
 java -server -cp .:marklogic-xcc-8.0.1.jar:marklogic-corb-2.2.1.jar
         -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10
         com.marklogic.developer.corb.Manager XCC-CONNECTION-URI
 ```
 
-###  Sample myjob.properties (Note: any of the properties below can be specified as java system property i.e. '-D' option)
+###  Sample myjob.properties
+> Note: any of the properties below can be specified as java system property i.e. '-D' option)
 
 ##### sample 1 - simple batch
 ```
@@ -319,7 +320,8 @@ PRE-BATCH-MODULE=pre-batch.xqy
 POST-BATCH-MODULE=post-batch.xqy   
 ```
 
-##### sample 8 - adhoc tasks (XQuery modules live local to filesystem where CoRB is located. Any XQuery module can be adhoc)
+##### sample 8 - adhoc tasks
+XQuery modules live local to filesystem where CoRB is located. Any XQuery module can be adhoc.
 ```
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
@@ -330,7 +332,8 @@ PROCESS-MODULE=SampleCorbJob.xqy|ADHOC
 PRE-BATCH-MODULE=/local/path/to/adhoc-pre-batch.xqy|ADHOC
 ```
 
-##### sample 9 - jasypt encryption (XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and/or XCC-DBNAME properties can be encrypted and optionally enclosed by ENC(). If JASYPT-PROPERTIES-FILE is not specified, it assumes default jasypt.properties)
+##### sample 9 - jasypt encryption
+XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and/or XCC-DBNAME properties can be encrypted and optionally enclosed by ENC(). If JASYPT-PROPERTIES-FILE is not specified, it assumes default jasypt.properties.
 ```
 XCC-CONNECTION-URI=ENC(encrypted_uri)   
 ...   
@@ -343,7 +346,8 @@ jasypt.password=foo
 jasypt.algorithm=PBEWithMD5AndTripleDES  
 ```
 
-##### sample 10 - private key encryption with java keys (XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and/or XCC-DBNAME properties can be encrypted and optionally enclosed by ENC())
+##### sample 10 - private key encryption with java keys
+XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and/or XCC-DBNAME properties can be encrypted and optionally enclosed by ENC()
 ```
 XCC-CONNECTION-URI=encrypted_uri  
 ...   
@@ -351,7 +355,8 @@ DECRYPTER=com.marklogic.developer.corb.PrivateKeyDecrypter
 PRIVATE-KEY-FILE=/path/to/key/private.key  
 PRIVATE-KEY-ALGORITHM=RSA  
 ```
-##### sample 11 - private key encryption with unix keys (XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and/or XCC-DBNAME properties can be encrypted and optionally enclosed by ENC())
+##### sample 11 - private key encryption with unix keys
+XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and/or XCC-DBNAME properties can be encrypted and optionally enclosed by ENC()
 ```
 XCC-CONNECTION-URI=encrypted_uri  
 ...
