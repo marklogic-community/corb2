@@ -1,14 +1,12 @@
 Version: 2.2.1
 
 ### User Guide
-This document provides a comprehensive overview of CoRB2.  For additional information, please refer to CoRB2 online [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc).  This document also covers the less robust [ModuleExecutor Tool](#oduleexecutor-tool) which can be used when only a single staged query is necessary.  The ModuleExecutor Tool is provided as part of the CoRB2 distribution.
+This document provides a comprehensive overview of CoRB2.  For additional information, please refer to CoRB2 online [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc).  This document also covers the less robust [ModuleExecutor Tool](#moduleexecutor-tool) which can be used when only a single staged query is necessary.  The ModuleExecutor Tool is provided as part of the CoRB2 distribution.
 
 ### Downloads
 Please download latest release from https://github.com/marklogic/corb2/releases.  
 
 CoRB v2.2.0 or later requires marklogic-xcc-8.0.*.jar or later to run. Please note that xcc 8 is backwards compatible up to MarkLogic 5. Also, please use java 1.7 or later for running corb.
-
-To build corb using ant, please specify java.library.user folder in the build.properties file and place marklogic-xcc-8.0.*.jar in this folder. Please update build.xml for building corb with a later version of xcc jar.  
 
 CoRB uses java logger. To customize logging, please specify logging configuration file using java system argument  
 `-Djava.util.logging.config.file=/path/to/logging.properties`
