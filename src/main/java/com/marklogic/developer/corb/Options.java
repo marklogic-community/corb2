@@ -39,6 +39,7 @@ public class Options {
     public static final String EXPORT_FILE_SORT = "EXPORT-FILE-SORT";
     public static final String EXPORT_FILE_SORT_COMPARATOR = "EXPORT-FILE-SORT-COMPARATOR";
     public static final String EXPORT_FILE_TOP_CONTENT = "EXPORT-FILE-TOP-CONTENT";
+    public static final String EXPORT_FILE_URI_TO_PATH = "EXPORT-FILE-URI-TO-PATH";
     public static final String FAIL_ON_ERROR = "FAIL-ON-ERROR";
     public static final String INSTALL = "INSTALL";
     public static final String INIT_MODULE = "INIT-MODULE";
