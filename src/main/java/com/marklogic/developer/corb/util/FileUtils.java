@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.LineNumberReader;
 import java.io.OutputStream;
+import java.net.URL;
 
 /**
  *
@@ -170,4 +171,21 @@ public class FileUtils {
         return 0;
     }
 
+    /**
+     * Find the file with the given name. First checking for resources on the classpath, 
+     * then constructing a new File object.
+     * @param filename
+     * @return File
+     */
+    public static File getFile(final String filename) {
+        File file;
+        ClassLoader classLoader = FileUtils.class.getClassLoader();
+        URL resource = classLoader.getResource(filename);
+        if (resource != null) {
+            file = new File(resource.getFile());
+        } else {
+            file = new File(filename);
+        }
+        return file;
+    }
 }

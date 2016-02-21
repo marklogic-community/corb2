@@ -20,6 +20,7 @@ package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.BATCH_SIZE;
 import static com.marklogic.developer.corb.Options.COLLECTION_NAME;
+import static com.marklogic.developer.corb.Options.COMMAND_FILE;
 import static com.marklogic.developer.corb.Options.ERROR_FILE_NAME;
 import static com.marklogic.developer.corb.Options.EXIT_CODE_NO_URIS;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_DIR;
@@ -46,6 +47,7 @@ import static com.marklogic.developer.corb.Options.URIS_LOADER;
 import static com.marklogic.developer.corb.Options.URIS_MODULE;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
 import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
+import com.marklogic.developer.corb.util.FileUtils;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.isAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
@@ -61,29 +63,37 @@ import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.types.XdmItem;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
-
 
 /**
  * @author Michael Blakeley, MarkLogic Corporation
@@ -98,10 +108,11 @@ public class Manager extends AbstractManager {
 
     public static final String DEFAULT_BATCH_URI_DELIM = ";";
 
-    private ThreadPoolExecutor pool;
+    private PausableThreadPoolExecutor pool;
     private Monitor monitor;
     private Thread monitorThread;
     private CompletionService<String[]> completionService;
+    private ScheduledExecutorService scheduledExecutor;
     private boolean execError = false;
 
     private static int _EXIT_CODE_NO_URIS = 0;
@@ -121,7 +132,7 @@ public class Manager extends AbstractManager {
             try {
                 // block until space becomes available
                 if (!warning) {
-                    LOG.log(Level.INFO, "queue is full: size = {0} (will only appear once)", queue.size());
+                    LOG.log(INFO, "queue is full: size = {0} (will only appear once)", queue.size());
                     warning = true;
                 }
                 queue.put(r);
@@ -146,7 +157,7 @@ public class Manager extends AbstractManager {
         try {
             tm.init(args);
         } catch (Exception exc) {
-            LOG.log(Level.SEVERE, "Error initializing CORB", exc);
+            LOG.log(SEVERE, "Error initializing CORB", exc);
             System.exit(1);
         }
         //now we can start corb. 
@@ -160,7 +171,7 @@ public class Manager extends AbstractManager {
                 System.exit(0);
             }
         } catch (Exception exc) {
-            LOG.log(Level.SEVERE, "Error while running CORB", exc);
+            LOG.log(SEVERE, "Error while running CORB", exc);
             System.exit(2);
         }
     }
@@ -204,6 +215,17 @@ public class Manager extends AbstractManager {
             } catch (Exception exc) {
                 _EXIT_CODE_NO_URIS = 0;
             }
+        }
+
+        scheduleCommandFileWatcher();
+    }
+
+    protected void scheduleCommandFileWatcher() {
+        String commandFile = getOption(COMMAND_FILE);
+        if (isNotBlank(commandFile)) {
+            scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+            CommandFileWatcher commandFileWatcher = new CommandFileWatcher(FileUtils.getFile(commandFile), this);
+            scheduledExecutor.scheduleWithFixedDelay(commandFileWatcher, 0, 1, TimeUnit.SECONDS);
         }
     }
 
@@ -434,23 +456,23 @@ public class Manager extends AbstractManager {
                 + " [ pre-batch-module [ pre-batch-task" + " [ post-batch-module  [ post-batch-task"
                 + " [ export-file-dir [ export-file-name" + " [ uris-file ] ] ] ] ] ] ] ] ] ] ] ] ]");
         err.println("\nusage 2:");
-        err.println("\t-D" + XCC_CONNECTION_URI + "=xcc://user:password@host:port/[ database ]" + 
-                " -D" + XQUERY_MODULE + "=module-name.xqy" + " -D" + THREAD_COUNT + "=10" + 
-                " -D" + URIS_MODULE + "=get-uris.xqy" + 
-                " -D" + POST_BATCH_XQUERY_MODULE + "=post-batch.xqy" + 
-                " -D... " + NAME);
+        err.println("\t-D" + XCC_CONNECTION_URI + "=xcc://user:password@host:port/[ database ]"
+                + " -D" + XQUERY_MODULE + "=module-name.xqy" + " -D" + THREAD_COUNT + "=10"
+                + " -D" + URIS_MODULE + "=get-uris.xqy"
+                + " -D" + POST_BATCH_XQUERY_MODULE + "=post-batch.xqy"
+                + " -D... " + NAME);
         err.println("\nusage 3:");
         err.println("\t" + "-D" + OPTIONS_FILE + "=myjob.properties " + NAME);
         err.println("\nusage 4:");
-        err.println("\t" + "-D" + OPTIONS_FILE +"=myjob.properties" + 
-                " -D"+ THREAD_COUNT + "=10 " + NAME
+        err.println("\t" + "-D" + OPTIONS_FILE + "=myjob.properties"
+                + " -D" + THREAD_COUNT + "=10 " + NAME
                 + " xcc://user:password@host:port/[ database ]");
     }
 
     public int run() throws Exception {
-        LOG.log(Level.INFO, "{0} starting: {1}", new Object[]{NAME, VERSION_MSG});
+        LOG.log(INFO, "{0} starting: {1}", new Object[]{NAME, VERSION_MSG});
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
-        LOG.log(Level.INFO, "maximum heap size = {0} MiB", maxMemory);
+        LOG.log(INFO, "maximum heap size = {0} MiB", maxMemory);
 
         this.execError = false; //reset execution error flag for a new run
         monitorThread = preparePool();
@@ -464,7 +486,7 @@ public class Manager extends AbstractManager {
                 } catch (InterruptedException e) {
                     // reset interrupt status and continue
                     Thread.interrupted();
-                    LOG.log(Level.SEVERE, "interrupted while waiting for monitor", e);
+                    LOG.log(SEVERE, "interrupted while waiting for monitor", e);
                 }
             }
             if (!execError && count > 0) {
@@ -473,7 +495,7 @@ public class Manager extends AbstractManager {
             }
             return count;
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, e.getMessage());
+            LOG.log(SEVERE, e.getMessage());
             stop();
             throw e;
         }
@@ -487,7 +509,7 @@ public class Manager extends AbstractManager {
         int threads = options.getThreadCount();
         // an array queue should be somewhat lighter-weight
         BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(options.getQueueSize());
-        pool = new ThreadPoolExecutor(threads, threads, 16, TimeUnit.SECONDS, workQueue, policy);
+        pool = new PausableThreadPoolExecutor(threads, threads, 16, TimeUnit.SECONDS, workQueue, policy);
         pool.prestartAllCoreThreads();
         completionService = new ExecutorCompletionService<String[]>(pool);
         monitor = new Monitor(pool, completionService, this);
@@ -503,7 +525,7 @@ public class Manager extends AbstractManager {
         String[] resourceModules = new String[]{options.getInitModule(), options.getUrisModule(),
             options.getProcessModule(), options.getPreBatchModule(), options.getPostBatchModule()};
         String modulesDatabase = options.getModulesDatabase();
-        LOG.log(Level.INFO, "checking modules, database: {0}", modulesDatabase);
+        LOG.log(INFO, "checking modules, database: {0}", modulesDatabase);
         Session session = contentSource.newSession(modulesDatabase);
         InputStream is = null;
         Content c = null;
@@ -516,7 +538,7 @@ public class Manager extends AbstractManager {
 
                 // Start by checking install flag.
                 if (!options.isDoInstall()) {
-                    LOG.log(Level.INFO, "Skipping module installation: {0}", resourceModule);
+                    LOG.log(INFO, "Skipping module installation: {0}", resourceModule);
                     continue;
                 } // Next check: if XCC is configured for the filesystem, warn
                 // user
@@ -533,7 +555,7 @@ public class Manager extends AbstractManager {
                         c = ContentFactory.newContent(moduleUri, f, opts);
                     } // finally, check package
                     else {
-                        LOG.log(Level.WARNING, "looking for {0} as resource", resourceModule);
+                        LOG.log(WARNING, "looking for {0} as resource", resourceModule);
                         String moduleUri = options.getModuleRoot() + resourceModule;
                         is = this.getClass().getResourceAsStream(resourceModule);
                         if (null == is) {
@@ -545,10 +567,10 @@ public class Manager extends AbstractManager {
                 }
             }
         } catch (IOException e) {
-            LOG.log(Level.SEVERE, "error while reading modules {0}", e.getMessage());
+            LOG.log(SEVERE, "error while reading modules {0}", e.getMessage());
             throw e;
         } catch (RequestException e) {
-            LOG.log(Level.SEVERE, "error while loading modules {0}", e.getMessage());
+            LOG.log(SEVERE, "error while loading modules {0}", e.getMessage());
             throw e;
         } finally {
             session.close();
@@ -556,7 +578,7 @@ public class Manager extends AbstractManager {
                 try {
                     is.close();
                 } catch (IOException ioe) {
-                    LOG.log(Level.SEVERE, "Couldn't close the stream", ioe);
+                    LOG.log(SEVERE, "Couldn't close the stream", ioe);
                 }
             }
         }
@@ -588,22 +610,22 @@ public class Manager extends AbstractManager {
             }
         }
 
-        LOG.log(Level.INFO, "Configured modules db: {0}", options.getModulesDatabase());
-        LOG.log(Level.INFO, "Configured modules xdbc root: {0}", options.getXDBC_ROOT());
-        LOG.log(Level.INFO, "Configured modules root: {0}", options.getModuleRoot());
-        LOG.log(Level.INFO, "Configured uri module: {0}", options.getUrisModule());
-        LOG.log(Level.INFO, "Configured uri file: {0}", options.getUrisFile());
-        LOG.log(Level.INFO, "Configured uri loader: {0}", options.getUrisLoaderClass());
-        LOG.log(Level.INFO, "Configured process module: {0}", options.getProcessModule());
-        LOG.log(Level.INFO, "Configured process task: {0}", options.getProcessTaskClass());
-        LOG.log(Level.INFO, "Configured pre batch module: {0}", options.getPreBatchModule());
-        LOG.log(Level.INFO, "Configured pre batch task: {0}", options.getPreBatchTaskClass());
-        LOG.log(Level.INFO, "Configured post batch module: {0}", options.getPostBatchModule());
-        LOG.log(Level.INFO, "Configured post batch task: {0}", options.getPostBatchTaskClass());
-        LOG.log(Level.INFO, "Configured init module: {0}", options.getInitModule());
-        LOG.log(Level.INFO, "Configured init task: {0}", options.getInitTaskClass());
-        LOG.log(Level.INFO, "Configured batch size: {0}", options.getBatchSize());
-        LOG.log(Level.INFO, "Configured failonError: {0}", options.isFailOnError());
+        LOG.log(INFO, "Configured modules db: {0}", options.getModulesDatabase());
+        LOG.log(INFO, "Configured modules xdbc root: {0}", options.getXDBC_ROOT());
+        LOG.log(INFO, "Configured modules root: {0}", options.getModuleRoot());
+        LOG.log(INFO, "Configured uri module: {0}", options.getUrisModule());
+        LOG.log(INFO, "Configured uri file: {0}", options.getUrisFile());
+        LOG.log(INFO, "Configured uri loader: {0}", options.getUrisLoaderClass());
+        LOG.log(INFO, "Configured process module: {0}", options.getProcessModule());
+        LOG.log(INFO, "Configured process task: {0}", options.getProcessTaskClass());
+        LOG.log(INFO, "Configured pre batch module: {0}", options.getPreBatchModule());
+        LOG.log(INFO, "Configured pre batch task: {0}", options.getPreBatchTaskClass());
+        LOG.log(INFO, "Configured post batch module: {0}", options.getPostBatchModule());
+        LOG.log(INFO, "Configured post batch task: {0}", options.getPostBatchTaskClass());
+        LOG.log(INFO, "Configured init module: {0}", options.getInitModule());
+        LOG.log(INFO, "Configured init task: {0}", options.getInitTaskClass());
+        LOG.log(INFO, "Configured batch size: {0}", options.getBatchSize());
+        LOG.log(INFO, "Configured failonError: {0}", options.isFailOnError());
 
         logProperties();
     }
@@ -611,7 +633,7 @@ public class Manager extends AbstractManager {
     protected void logProperties() {
         for (Entry<Object, Object> e : properties.entrySet()) {
             if (e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
-                LOG.log(Level.INFO, "Loaded property {0}={1}", new Object[]{e.getKey(), e.getValue()});
+                LOG.log(INFO, "Loaded property {0}={1}", new Object[]{e.getKey(), e.getValue()});
             }
         }
     }
@@ -673,11 +695,11 @@ public class Manager extends AbstractManager {
             urisLoader.open();
             if (urisLoader.getBatchRef() != null) {
                 properties.put(URIS_BATCH_REF, urisLoader.getBatchRef());
-                LOG.log(Level.INFO, "{0}: {1}", new Object[]{URIS_BATCH_REF, urisLoader.getBatchRef()});
+                LOG.log(INFO, "{0}: {1}", new Object[]{URIS_BATCH_REF, urisLoader.getBatchRef()});
             }
 
             total = urisLoader.getTotalCount();
-            LOG.log(Level.INFO, "expecting total {0}", total);
+            LOG.log(INFO, "expecting total {0}", total);
             if (total <= 0) {
                 LOG.info("nothing to process");
                 stop();
@@ -720,30 +742,30 @@ public class Manager extends AbstractManager {
                     isFirst = false;
                     completionService.submit(tf.newProcessTask(new String[]{uri}, options.isFailOnError()));
                     urisArray[count] = null;
-                    LOG.log(Level.INFO, "received first uri: {0}", uri);
+                    LOG.log(INFO, "received first uri: {0}", uri);
                 } else {
                     urisArray[count] = uri.toCharArray();
                 }
                 count++;
 
                 if (0 == count % 25000) {
-                    LOG.log(Level.INFO, "received {0}/{1}: {2}", new Object[]{count, total, uri});
+                    LOG.log(INFO, "received {0}/{1}: {2}", new Object[]{count, total, uri});
 
                     if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
                         LOG.warning("Slow receive!" + " Consider increasing max heap size" + " and using -XX:+UseConcMarkSweepGC");
                         freeMemory = Runtime.getRuntime().freeMemory();
-                        LOG.log(Level.INFO, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
+                        LOG.log(INFO, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
                     }
                     lastMessageMillis = System.currentTimeMillis();
                 }
             }
 
-            LOG.log(Level.INFO, "received {0}/{1}", new Object[]{count, total});
+            LOG.log(INFO, "received {0}/{1}", new Object[]{count, total});
             // done with result set - close session to close everything
             closeQuietly(urisLoader);
 
             if (count < total) {
-                LOG.log(Level.INFO, "Resetting total uri count to {0}. Ignore if URIs are loaded from a file that contains blank lines.", count);
+                LOG.log(INFO, "Resetting total uri count to {0}. Ignore if URIs are loaded from a file that contains blank lines.", count);
                 monitor.setTaskCount(total = count);
             }
 
@@ -771,18 +793,18 @@ public class Manager extends AbstractManager {
                     LOG.info(msg);
                     freeMemory = Runtime.getRuntime().freeMemory();
                     if (freeMemory < (16 * 1024 * 1024)) {
-                        LOG.log(Level.WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
+                        LOG.log(WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
                     }
                     lastMessageMillis = System.currentTimeMillis();
                 } else {
                     LOG.finest(msg);
                 }
                 if (i > total) {
-                    LOG.log(Level.WARNING, "expected {0}, got {1}", new Object[]{total, i});
+                    LOG.log(WARNING, "expected {0}, got {1}", new Object[]{total, i});
                     LOG.warning("check your uri module!");
                 }
             }
-            LOG.log(Level.INFO, "queued {0}/{1}", new Object[]{urisArray.length, total});
+            LOG.log(INFO, "queued {0}/{1}", new Object[]{urisArray.length, total});
             urisArray = null;
             pool.shutdown();
 
@@ -794,21 +816,67 @@ public class Manager extends AbstractManager {
         }
 
         if (total == count) {
-            LOG.log(Level.INFO, "queue is populated with {0} tasks", total);
+            LOG.log(INFO, "queue is populated with {0} tasks", total);
         } else {
-            LOG.log(Level.WARNING, "queue is expected to be populated with {0} tasks, but only got {1} tasks.", new Object[]{total, count});
+            LOG.log(WARNING, "queue is expected to be populated with {0} tasks, but only got {1} tasks.", new Object[]{total, count});
         }
         return count;
     }
 
+    public void setThreadCount(int threadCount) {
+        if (threadCount > 0) {
+            options.setThreadCount(threadCount);
+            if (pool != null) {
+                int currentMaxPoolSize = pool.getMaximumPoolSize();
+                try {
+                    if (threadCount < currentMaxPoolSize) {
+                        //shrink the core first then max
+                        pool.setCorePoolSize(threadCount);
+                        pool.setMaximumPoolSize(threadCount);
+                    } else {
+                        //grow max first, then core
+                        pool.setMaximumPoolSize(threadCount);
+                        pool.setCorePoolSize(threadCount);
+                    }
+                    LOG.log(INFO, "Changed {0} to {1}", new Object[]{Options.THREAD_COUNT, threadCount});
+                } catch (IllegalArgumentException ex) {
+                    LOG.log(WARNING, "Unable to change thread count", ex);
+                }
+            }
+        } else {
+            LOG.log(WARNING, Options.THREAD_COUNT + " must be a positive integer value");
+        }
+    }
+
     /**
+     * Pause execution of pool tasks
+     */
+    public void pause() {
+        if (pool != null && pool.isRunning()) {
+            LOG.info("pausing");
+            pool.pause();
+        }
+    }
+
+    /**
+     * Resume pool execution (if paused).
+     */
+    public void resume() {
+        if (pool != null && pool.isPaused()) {
+            LOG.info("resuming");
+            pool.resume();
+        }
+    }
+
+    /**
+     * Stop the thread pool and
      */
     public void stop() {
         LOG.info("cleaning up");
         if (null != pool) {
             List<Runnable> remaining = pool.shutdownNow();
             if (remaining.size() > 0) {
-                LOG.log(Level.WARNING, "thread pool was shut down with {0} pending tasks", remaining.size());
+                LOG.log(WARNING, "thread pool was shut down with {0} pending tasks", remaining.size());
             }
             pool = null;
         }
@@ -821,13 +889,82 @@ public class Manager extends AbstractManager {
     }
 
     /**
+     * Log a fatal error for the provided exception and then stop the thread
+     * pool
+     *
      * @param e
      */
     public void stop(ExecutionException e) {
         this.execError = true;
-        LOG.log(Level.SEVERE, "fatal error", e.getCause());
+        LOG.log(SEVERE, "fatal error", e.getCause());
         LOG.warning("exiting due to fatal error");
         stop();
     }
 
+    public static class CommandFileWatcher implements Runnable {
+
+        private long timeStamp;
+        private final File file;
+        private final Manager manager;
+
+        public CommandFileWatcher(File file, Manager manager) {
+            this.file = file;
+            this.timeStamp = file.lastModified();
+            this.manager = manager;
+        }
+
+        @Override
+        public final void run() {
+            if (file.exists()) {
+                long lastModified = file.lastModified();
+                if (this.timeStamp != lastModified) {
+                    this.timeStamp = lastModified;
+                    onChange(file);
+                }
+            }
+        }
+
+        public void onChange(File file) {
+            InputStream in = null;
+            try {
+                in = new FileInputStream(file);
+                Properties props = new Properties();
+                props.load(in);
+
+                Set<String> keys = props.stringPropertyNames();
+                if (containsIgnoreCase(keys, "PAUSE")) {
+                    manager.pause();
+                } else if (containsIgnoreCase(keys, "RESUME")) {
+                    manager.resume();
+                } else if (containsIgnoreCase(keys, "STOP")) {
+                    manager.stop();
+                }
+
+                if (props.containsKey(THREAD_COUNT)) {
+                    try {
+                        int threadCount = Integer.parseInt(props.getProperty(THREAD_COUNT));
+                        manager.setThreadCount(threadCount);
+                    } catch (NumberFormatException e) {
+                        LOG.log(WARNING, "Unable to parse " + THREAD_COUNT + ": {0}", props.getProperty(THREAD_COUNT));
+                    }
+                }
+
+            } catch (IOException e) {
+                LOG.log(WARNING, MessageFormat.format("Unable to load {0}", COMMAND_FILE), e);
+            } finally {
+                closeQuietly(in);
+            }
+        }
+
+        public static boolean containsIgnoreCase(Collection<String> l, String s) {
+            Iterator<String> it = l.iterator();
+            while (it.hasNext()) {
+                if (it.next().equalsIgnoreCase(s)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+    
 }

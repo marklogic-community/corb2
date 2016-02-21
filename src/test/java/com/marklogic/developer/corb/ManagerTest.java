@@ -37,14 +37,19 @@ import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.types.XdmItem;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -461,7 +466,7 @@ public class ManagerTest {
     public void testRejectedExecution_npe() {
         Runnable r = mock(Runnable.class);
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
- 
+
         RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
         cbp.rejectedExecution(r, threadPool);
     }
@@ -471,9 +476,9 @@ public class ManagerTest {
         Runnable r = mock(Runnable.class);
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
         @SuppressWarnings("unchecked")
-		BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
+        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         when(threadPool.getQueue()).thenReturn(queue).thenThrow(new NullPointerException());
-      
+
         RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
         cbp.rejectedExecution(r, threadPool);
     }
@@ -494,7 +499,7 @@ public class ManagerTest {
         Runnable r = mock(Runnable.class);
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
         @SuppressWarnings("unchecked")
-		BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
+        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         when(threadPool.getQueue()).thenReturn(queue).thenThrow(new NullPointerException());
 
         RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
@@ -1190,7 +1195,173 @@ public class ManagerTest {
         assertEquals(Level.SEVERE, records.get(0).getLevel());
         assertEquals("fatal error", records.get(0).getMessage());
     }
-    
+
+    @Test
+    public void testCommandFilePause() throws IOException, Exception {
+        System.out.println("pause/resume test");
+        clearSystemProperties();
+        File exportFile = new File(EXPORT_FILE_DIR, EXPORT_FILE_NAME);
+        exportFile.deleteOnExit();
+
+        File commandFile = new File(EXPORT_FILE_DIR, Math.random() + ".txt");
+        commandFile.deleteOnExit();
+        System.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
+        System.setProperty(Options.URIS_FILE, URIS_FILE);
+        System.setProperty(Options.THREAD_COUNT, "1");
+        System.setProperty(Options.PROCESS_MODULE, "src/test/resources/transformSlow.xqy|ADHOC");
+        System.setProperty(Options.PROCESS_TASK, PROCESS_TASK);
+        System.setProperty(Options.EXPORT_FILE_NAME, EXPORT_FILE_NAME);
+        System.setProperty(Options.EXPORT_FILE_DIR, EXPORT_FILE_DIR);
+        System.setProperty(Options.COMMAND_FILE, commandFile.getAbsolutePath());
+
+        Manager instance = new Manager();
+        instance.init(new String[0]);
+
+        Runnable pause = new Runnable() {
+            @Override
+            public void run() {
+                File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
+                try {
+                    commandFile.createNewFile();
+                    FileUtils.write(commandFile, "pause");
+                } catch (IOException ex) {
+                    Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        };
+        Runnable resume = new Runnable() {
+            @Override
+            public void run() {
+                ArrayList<String> lines = new ArrayList<String>();
+                lines.add("RESUME");
+                lines.add(Options.THREAD_COUNT + "=6");
+                File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
+                try {
+                    FileUtils.writeLines(commandFile, lines);
+                } catch (IOException ex) {
+                    Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        };
+        ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
+        service.schedule(pause, 1, TimeUnit.SECONDS);
+        service.schedule(resume, 5, TimeUnit.SECONDS);
+
+        instance.run();
+
+        int lineCount = FileUtils.readLines(exportFile).size();
+        assertEquals(8, lineCount);
+        List<LogRecord> records = testLogger.getLogRecords();
+
+        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "pausing")));
+        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "resuming")));
+    }
+
+    @Test
+    public void testCommandFileStop() throws IOException, Exception {
+        System.out.println("pause/resume test");
+        clearSystemProperties();
+        File exportFile = new File(EXPORT_FILE_DIR, EXPORT_FILE_NAME);
+        exportFile.deleteOnExit();
+
+        File commandFile = new File(EXPORT_FILE_DIR, Math.random() + ".txt");
+        commandFile.deleteOnExit();
+        System.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
+        System.setProperty(Options.URIS_FILE, URIS_FILE);
+        System.setProperty(Options.THREAD_COUNT, "1");
+        System.setProperty(Options.PROCESS_MODULE, "src/test/resources/transformSlow.xqy|ADHOC");
+        System.setProperty(Options.PROCESS_TASK, PROCESS_TASK);
+        System.setProperty(Options.EXPORT_FILE_NAME, EXPORT_FILE_NAME);
+        System.setProperty(Options.EXPORT_FILE_DIR, EXPORT_FILE_DIR);
+        System.setProperty(Options.COMMAND_FILE, commandFile.getAbsolutePath());
+
+        Manager instance = new Manager();
+        instance.init(new String[0]);
+
+        Runnable stop = new Runnable() {
+            @Override
+            public void run() {
+                File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
+                try {
+                    commandFile.createNewFile();
+                    FileUtils.write(commandFile, "STOP");
+                } catch (IOException ex) {
+                    Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        };
+
+        ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
+        service.schedule(stop, 1, TimeUnit.SECONDS);
+
+        instance.run();
+        int lineCount = FileUtils.readLines(exportFile).size();
+        assertNotEquals(8, lineCount);
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "cleaning up")));
+    }
+
+    @Test
+    public void testCommandFileLowerThreads() throws IOException, Exception {
+        System.out.println("lower THREAD-COUNT test");
+        clearSystemProperties();
+        File exportFile = new File(EXPORT_FILE_DIR, EXPORT_FILE_NAME);
+        exportFile.deleteOnExit();
+
+        File commandFile = new File(EXPORT_FILE_DIR, Math.random() + ".txt");
+        commandFile.deleteOnExit();
+        System.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
+        System.setProperty(Options.URIS_FILE, URIS_FILE);
+        System.setProperty(Options.THREAD_COUNT, "4");
+        System.setProperty(Options.PROCESS_MODULE, "src/test/resources/transformSlow.xqy|ADHOC");
+        System.setProperty(Options.PROCESS_TASK, PROCESS_TASK);
+        System.setProperty(Options.EXPORT_FILE_NAME, EXPORT_FILE_NAME);
+        System.setProperty(Options.EXPORT_FILE_DIR, EXPORT_FILE_DIR);
+        System.setProperty(Options.COMMAND_FILE, commandFile.getAbsolutePath());
+
+        Manager instance = new Manager();
+        instance.init(new String[0]);
+
+        Runnable adjustThreads = new Runnable() {
+            @Override
+            public void run() {
+                File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
+                try {
+                    commandFile.createNewFile();
+                    FileUtils.write(commandFile, Options.THREAD_COUNT + "=1");
+                } catch (IOException ex) {
+                    Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        };
+
+        ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
+        service.schedule(adjustThreads, 1, TimeUnit.SECONDS);
+
+        instance.run();
+        int lineCount = FileUtils.readLines(exportFile).size();
+        assertEquals(8, lineCount);
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "Changed {0} to {1}")));
+
+    }
+
+    @Test
+    public void testSetThreadCount() {
+        Manager instance = new Manager();
+        instance.setThreadCount(2);
+        assertEquals(2, instance.options.getThreadCount());
+    }
+
+    @Test
+    public void testSetThreadCount_invalidValue() {
+        Manager instance = new Manager();
+        instance.setThreadCount(-5);
+        assertEquals(1, instance.options.getThreadCount());
+        instance.setThreadCount(0);
+        assertEquals(1, instance.options.getThreadCount());
+    }
+
     public String[] getDefaultArgs() {
         String[] args = {XCC_CONNECTION_URI,
             COLLECTION_NAME,
@@ -1209,5 +1380,15 @@ public class ManagerTest {
             EXPORT_FILE_NAME,
             URIS_FILE};
         return args;
+    }
+
+    public boolean containsLogRecord(List<LogRecord> logRecords, LogRecord logRecord) {
+        for (LogRecord record : logRecords) {
+            if (record.getLevel().equals(logRecord.getLevel())
+                    && record.getMessage().equals(logRecord.getMessage())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -18,13 +18,13 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Options.COMMAND_FILE;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,7 +36,6 @@ import java.util.logging.Logger;
  */
 public class Monitor implements Runnable {
 
-    protected static final int SLEEP_MILLIS = 500;
     protected static final Logger LOG = Logger.getLogger(Monitor.class.getName());
 
     private final CompletionService<String[]> cs;
@@ -45,7 +44,7 @@ public class Monitor implements Runnable {
     private final Manager manager;
     private String[] lastUris;
     private long taskCount;
-    private final ThreadPoolExecutor pool;
+    private final PausableThreadPoolExecutor pool;
     private boolean shutdownNow = false;
     protected long completed = 0;
     private long prevCompleted = 0;
@@ -56,7 +55,7 @@ public class Monitor implements Runnable {
      * @param cs
      * @param manager
      */
-    public Monitor(ThreadPoolExecutor pool, CompletionService<String[]> cs, Manager manager) {
+    public Monitor(PausableThreadPoolExecutor pool, CompletionService<String[]> cs, Manager manager) {
         this.pool = pool;
         this.cs = cs;
         this.manager = manager;
@@ -93,7 +92,7 @@ public class Monitor implements Runnable {
         while (!shutdownNow) {
             // try to avoid thread starvation
             Thread.yield();
-
+               
             future = cs.poll(TransformOptions.PROGRESS_INTERVAL_MS, TimeUnit.MILLISECONDS);
             if (null != future) {
                 // record result, or throw exception
@@ -103,7 +102,7 @@ public class Monitor implements Runnable {
             }
 
             showProgress();
-
+            
             if (completed >= taskCount) {
                 if (pool.getActiveCount() > 0 || (pool.getTaskCount() - pool.getCompletedTaskCount()) > 0) {
                     LOG.log(Level.SEVERE, "Thread pool is still active with all the tasks completed and received. We shouldn't see this message.");
@@ -118,9 +117,12 @@ public class Monitor implements Runnable {
         LOG.log(Level.INFO, "completed all tasks {0}/{1}", new Object[]{completed, taskCount});
     }
 
-    private long showProgress() {
+    private long showProgress() throws InterruptedException {
         long current = System.currentTimeMillis();
         if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
+            if (pool.isPaused()) {
+                 LOG.log(Level.INFO, "CoRB2 has been paused. Resume execution by changing the state in the command file " + manager.getOption(COMMAND_FILE) + " to RESUME");
+            }
             LOG.log(Level.INFO, "completed {0}", getProgressMessage(completed));
             lastProgress = current;
 

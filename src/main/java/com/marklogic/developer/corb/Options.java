@@ -27,6 +27,7 @@ public class Options {
     public static final String BATCH_SIZE = "BATCH-SIZE";
     public static final String BATCH_URI_DELIM = "BATCH-URI-DELIM";
     public static final String COLLECTION_NAME = "COLLECTION-NAME";
+    public static final String COMMAND_FILE = "COMMAND-FILE";
     public static final String DECRYPTER = "DECRYPTER";
     public static final String ERROR_FILE_NAME = "ERROR-FILE-NAME";
     public static final String EXIT_CODE_NO_URIS = "EXIT-CODE-NO-URIS";

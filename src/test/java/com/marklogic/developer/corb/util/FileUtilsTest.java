@@ -32,16 +32,16 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class FileUtilsTest {
 
-    
     final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
     final String exampleContent;
-    
+
     public FileUtilsTest() throws IOException {
         exampleContent = IOUtils.cat(new FileReader(exampleContentFile));
     }
@@ -84,7 +84,7 @@ public class FileUtilsTest {
         FileUtils.copy(exampleContentFile, out);
 
         Assert.assertArrayEquals(FileUtils.getBytes(exampleContentFile), FileUtils.getBytes(out));
-        
+
     }
 
     /**
@@ -100,8 +100,8 @@ public class FileUtilsTest {
         destFile.deleteOnExit();
         String outFilePath = destFile.getAbsolutePath();
         FileUtils.copy(inFilePath, outFilePath);
-  
-        Assert.assertArrayEquals(FileUtils.getBytes(exampleContentFile), FileUtils.getBytes(destFile));      
+
+        Assert.assertArrayEquals(FileUtils.getBytes(exampleContentFile), FileUtils.getBytes(destFile));
     }
 
     /**
@@ -146,36 +146,36 @@ public class FileUtilsTest {
         String filename = "/tmp/_doesNotExist_" + Math.random();
         FileUtils.deleteFile(filename);
     }
-    
-    @Test (expected = IOException.class)
+
+    @Test(expected = IOException.class)
     public void testDeleteFile_cannotDelete() throws IOException {
         File exceptionalFile = mock(File.class);
         when(exceptionalFile.exists()).thenReturn(true);
         when(exceptionalFile.isDirectory()).thenReturn(false);
         when(exceptionalFile.delete()).thenReturn(false);
         when(exceptionalFile.getCanonicalPath()).thenReturn("does/not/exist");
-        
+
         FileUtils.deleteFile(exceptionalFile);
     }
-    
+
     @Test
     public void testGetLineCount_null() throws IOException {
         System.out.println("getLineCount");
         assertEquals(0, FileUtils.getLineCount(null));
     }
-    
+
     @Test
     public void testGetLineCount_fileDoesNotExist() throws IOException {
         System.out.println("getLineCount");
         assertEquals(0, FileUtils.getLineCount(new File("does/not/exist")));
     }
-    
+
     @Test
     public void testGetLineCount() throws IOException {
         System.out.println("getLineCount");
         assertEquals(12, FileUtils.getLineCount(exampleContentFile));
     }
-    
+
     @Test
     public void testMoveFile() throws IOException {
         File file = File.createTempFile("moveFile", "txt");
@@ -183,5 +183,28 @@ public class FileUtilsTest {
         file.createNewFile();
         FileUtils.moveFile(file, file);
         assertTrue(file.exists());
+    }
+
+    @Test
+    public void testGetFile_fromClasspath() {
+        File file = FileUtils.getFile("doesNotExist");
+        assertFalse(file.exists());
+        file = FileUtils.getFile("selector.xqy");
+        assertTrue(file.exists());
+    }
+
+    @Test
+    public void testGetFile_absolutePath() throws IOException {
+        File file = File.createTempFile("getFile", "txt");
+        file.deleteOnExit();
+        file.createNewFile();
+        File retrievedFile = FileUtils.getFile(file.getAbsolutePath());
+        assertTrue(retrievedFile.exists());
+    }
+
+    @Test
+    public void testGetFile_doesNotExist() {
+        File file = FileUtils.getFile("doesNotExist");
+        assertFalse(file.exists());
     }
 }
