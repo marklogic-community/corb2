@@ -212,7 +212,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         } catch (Exception e) {
             new RuntimeException("Unabled to decrypt property:" + property, e);
         }
-        return decryptedText;
+        return decryptedText == null ? value : decryptedText;
     }
 
     /**
