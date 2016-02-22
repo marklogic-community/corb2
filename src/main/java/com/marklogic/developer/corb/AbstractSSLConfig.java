@@ -56,11 +56,11 @@ public abstract class AbstractSSLConfig implements SSLConfig{
 	public SecurityOptions getSecurityOptions() throws NoSuchAlgorithmException, KeyManagementException {
 		SecurityOptions securityOptions = new SecurityOptions(getSSLContext());
 		String[] enabledCipherSuites = getEnabledCipherSuites();
-		if (enabledCipherSuites != null) {
+		if (enabledCipherSuites != null && enabledCipherSuites.length > 0) {
 			securityOptions.setEnabledCipherSuites(enabledCipherSuites);
 		}
 		String[] enabledProtocols = getEnabledProtocols();
-		if (enabledProtocols != null) {
+		if (enabledProtocols != null && enabledProtocols.length > 0) {
 			securityOptions.setEnabledProtocols(enabledProtocols);
 		}
 		return securityOptions;
