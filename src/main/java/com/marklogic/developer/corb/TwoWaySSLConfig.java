@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import java.io.File;
@@ -128,7 +129,10 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
 
         String sslkeyStore = getRequiredProperty(SSL_KEYSTORE);
         String sslkeyStorePassword = getRequiredProperty(SSL_KEYSTORE_PASSWORD);
-        String sslkeyPassword = getRequiredProperty(SSL_KEY_PASSWORD);
+        String sslkeyPassword = getProperty(SSL_KEY_PASSWORD);
+        if (isBlank(sslkeyPassword)) {
+            sslkeyPassword = sslkeyStorePassword;
+        }
         String sslkeyStoreType = getRequiredProperty(SSL_KEYSTORE_TYPE);
         // decrypting password values
         if (decrypter != null) {
