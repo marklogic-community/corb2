@@ -49,6 +49,7 @@ import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
 import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
 import com.marklogic.developer.corb.util.FileUtils;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import com.marklogic.developer.corb.util.NumberUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
@@ -71,14 +72,11 @@ import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletionService;
@@ -207,15 +205,8 @@ public class Manager extends AbstractManager {
         if (AbstractTask.MODULE_PROPS != null) {
             AbstractTask.MODULE_PROPS.clear();
         }
-
-        String val = getOption(EXIT_CODE_NO_URIS);
-        if (val != null) {
-            try {
-                _EXIT_CODE_NO_URIS = Integer.parseInt(val);
-            } catch (Exception exc) {
-                _EXIT_CODE_NO_URIS = 0;
-            }
-        }
+        
+        _EXIT_CODE_NO_URIS = NumberUtils.toInt(getOption(EXIT_CODE_NO_URIS));
 
         scheduleCommandFileWatcher();
     }
@@ -225,7 +216,8 @@ public class Manager extends AbstractManager {
         if (isNotBlank(commandFile)) {
             scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
             CommandFileWatcher commandFileWatcher = new CommandFileWatcher(FileUtils.getFile(commandFile), this);
-            scheduledExecutor.scheduleWithFixedDelay(commandFileWatcher, 0, 1, TimeUnit.SECONDS);
+            int pollInterval = NumberUtils.toInt(getOption(Options.COMMAND_FILE_POLL_INTERVAL), 1);
+            scheduledExecutor.scheduleWithFixedDelay(commandFileWatcher, 0, pollInterval, TimeUnit.SECONDS);
         }
     }
 
@@ -928,24 +920,22 @@ public class Manager extends AbstractManager {
             InputStream in = null;
             try {
                 in = new FileInputStream(file);
-                Properties props = new Properties();
-                props.load(in);
+                Properties commandFile = new Properties();
+                commandFile.load(in);
 
-                Set<String> keys = props.stringPropertyNames();
-                if (containsIgnoreCase(keys, "PAUSE")) {
+                String command = commandFile.getProperty(Options.COMMAND);
+                if ("PAUSE".equalsIgnoreCase(command)) {
                     manager.pause();
-                } else if (containsIgnoreCase(keys, "RESUME")) {
+                } else if ("RESUME".equalsIgnoreCase(command)) {
                     manager.resume();
-                } else if (containsIgnoreCase(keys, "STOP")) {
+                } else if ("STOP".equalsIgnoreCase(command)) {
                     manager.stop();
                 }
 
-                if (props.containsKey(THREAD_COUNT)) {
-                    try {
-                        int threadCount = Integer.parseInt(props.getProperty(THREAD_COUNT));
+                if (commandFile.containsKey(THREAD_COUNT)) {
+                    int threadCount = NumberUtils.toInt(commandFile.getProperty(THREAD_COUNT));
+                    if (threadCount > 0) {
                         manager.setThreadCount(threadCount);
-                    } catch (NumberFormatException e) {
-                        LOG.log(WARNING, "Unable to parse " + THREAD_COUNT + ": {0}", props.getProperty(THREAD_COUNT));
                     }
                 }
 
@@ -954,16 +944,6 @@ public class Manager extends AbstractManager {
             } finally {
                 closeQuietly(in);
             }
-        }
-
-        public static boolean containsIgnoreCase(Collection<String> l, String s) {
-            Iterator<String> it = l.iterator();
-            while (it.hasNext()) {
-                if (it.next().equalsIgnoreCase(s)) {
-                    return true;
-                }
-            }
-            return false;
         }
     }
     

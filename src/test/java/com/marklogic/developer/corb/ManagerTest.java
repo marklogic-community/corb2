@@ -37,6 +37,7 @@ import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.types.XdmItem;
 import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
@@ -1220,10 +1221,14 @@ public class ManagerTest {
         Runnable pause = new Runnable() {
             @Override
             public void run() {
+                Properties props = new Properties();
+                props.put(Options.COMMAND, "pause");
                 File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
                 try {
                     commandFile.createNewFile();
-                    FileUtils.write(commandFile, "pause");
+                    FileOutputStream fos = new FileOutputStream(commandFile);
+                    props.store(fos, null);
+                    fos.close();
                 } catch (IOException ex) {
                     Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -1232,12 +1237,14 @@ public class ManagerTest {
         Runnable resume = new Runnable() {
             @Override
             public void run() {
-                ArrayList<String> lines = new ArrayList<String>();
-                lines.add("RESUME");
-                lines.add(Options.THREAD_COUNT + "=6");
+                Properties props = new Properties();
+                props.put(Options.COMMAND, "RESUME");
+                props.put(Options.THREAD_COUNT, "6");
                 File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
                 try {
-                    FileUtils.writeLines(commandFile, lines);
+                    FileOutputStream fos = new FileOutputStream(commandFile);
+                    props.store(fos, null);
+                    fos.close();
                 } catch (IOException ex) {
                     Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -1259,7 +1266,7 @@ public class ManagerTest {
 
     @Test
     public void testCommandFileStop() throws IOException, Exception {
-        System.out.println("pause/resume test");
+        System.out.println("stop test");
         clearSystemProperties();
         File exportFile = new File(EXPORT_FILE_DIR, EXPORT_FILE_NAME);
         exportFile.deleteOnExit();
@@ -1281,10 +1288,14 @@ public class ManagerTest {
         Runnable stop = new Runnable() {
             @Override
             public void run() {
+                Properties props = new Properties();
+                props.put(Options.COMMAND, "STOP");
                 File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
                 try {
                     commandFile.createNewFile();
-                    FileUtils.write(commandFile, "STOP");
+                    FileOutputStream fos = new FileOutputStream(commandFile);
+                    props.store(fos, null);
+                    fos.close();
                 } catch (IOException ex) {
                     Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -1328,7 +1339,11 @@ public class ManagerTest {
                 File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
                 try {
                     commandFile.createNewFile();
-                    FileUtils.write(commandFile, Options.THREAD_COUNT + "=1");
+                    Properties props = new Properties();
+                    props.put(Options.THREAD_COUNT, 1);
+                    FileOutputStream fos = new FileOutputStream(commandFile);
+                    props.store(fos, null);
+                    fos.close();
                 } catch (IOException ex) {
                     Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
                 }
