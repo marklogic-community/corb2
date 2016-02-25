@@ -20,7 +20,7 @@ CoRB needs options specified through one or more of the following mechanisms:
 2. Java system properties ex: `-DXCC-CONNECTION-URI=xcc://user:password@localhost:8202`
 3. As properties file in the class path specified using `-DOPTIONS-FILE=myjob.properties`. Relative and full file system paths are also supported.
 
-If specified in more than one place, a command line parameter takes precedence over a java system property, which take precedence over a property from the **OPTIONS_FILE** properties file.
+If specified in more than one place, a command line parameter takes precedence over a java system property, which take precedence over a property from the **OPTIONS-FILE** properties file.
 
 > Note: Any or all of the properties can be specified as java system properties or key value pairs in properties file.
 
@@ -71,7 +71,11 @@ Option | Description
 **EXPORT-FILE-SORT-COMPARATOR** | A java class that must implement `java.util.Comparator`. If specified, CoRB will use this class for sorting in place of ascending or descending string comparator even if a value was specified for **EXPORT-FILE-SORT**.
 **MAX_OPTS_FROM_MODULE** | Default is 10. Max number of custom inputs from the URIS-MODULE to other modules.
 **EXIT-CODE-NO-URIS** | Default is 0. Returns this exit code when there is nothing to process.
-**EXPORT-FILE-URI-TO-PATH** | Default is true. Whether to convert doc URI to a filepath.  
+**EXPORT-FILE-URI-TO-PATH** | Default is true. Whether to convert doc URI to a filepath.
+**OPTIONS-FILE** | A properties file containing any of the CoRB2 options. Relative and full file system paths are supported.
+**COMMAND-FILE** | A properties file used to configure **COMMAND** and **THREAD-COUNT** while CoRB2 is running. For instance, to temporarily pause execution, or to lower the number of threads in order to throttle execution.
+**COMMAND-FILE-POLL-INTERVAL** | Default is 1. The regular interval (seconds) in which the existence of the **COMMAND-FILE** is tested can be controlled by using this property.
+**COMMAND** | Pause, resume, and stop the execution of CoRB2. Possible commands include: PAUSE, RESUME, and STOP.
 
 ### Alternate XCC connection configuration
 Option | Description
