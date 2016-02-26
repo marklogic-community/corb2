@@ -22,7 +22,6 @@ import static com.marklogic.developer.corb.Options.BATCH_SIZE;
 import static com.marklogic.developer.corb.Options.COLLECTION_NAME;
 import static com.marklogic.developer.corb.Options.COMMAND_FILE;
 import static com.marklogic.developer.corb.Options.ERROR_FILE_NAME;
-import static com.marklogic.developer.corb.Options.EXIT_CODE_NO_URIS;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_DIR;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_PART_EXT;
@@ -113,7 +112,10 @@ public class Manager extends AbstractManager {
     private ScheduledExecutorService scheduledExecutor;
     private boolean execError = false;
 
-    private static int _EXIT_CODE_NO_URIS = 0;
+    private static final int EXIT_CODE_SUCCESS = 0;
+    private static final int EXIT_CODE_INIT_ERROR = 1;
+    private static final int EXIT_CODE_PROCESSING_ERROR = 2;
+    private static int EXIT_CODE_NO_URIS = 0;
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
 
     public static class CallerBlocksPolicy implements RejectedExecutionHandler {
@@ -156,21 +158,21 @@ public class Manager extends AbstractManager {
             tm.init(args);
         } catch (Exception exc) {
             LOG.log(SEVERE, "Error initializing CORB", exc);
-            System.exit(1);
+            System.exit(EXIT_CODE_INIT_ERROR);
         }
         //now we can start corb. 
         try {
             int count = tm.run();
             if (tm.execError) {
-                System.exit(2);
+                System.exit(EXIT_CODE_PROCESSING_ERROR);
             } else if (count == 0) {
-                System.exit(_EXIT_CODE_NO_URIS);
+                System.exit(EXIT_CODE_NO_URIS);
             } else {
-                System.exit(0);
+                System.exit(EXIT_CODE_SUCCESS);
             }
         } catch (Exception exc) {
             LOG.log(SEVERE, "Error while running CORB", exc);
-            System.exit(2);
+            System.exit(EXIT_CODE_PROCESSING_ERROR);
         }
     }
 
@@ -206,7 +208,7 @@ public class Manager extends AbstractManager {
             AbstractTask.MODULE_PROPS.clear();
         }
         
-        _EXIT_CODE_NO_URIS = NumberUtils.toInt(getOption(EXIT_CODE_NO_URIS));
+        EXIT_CODE_NO_URIS = NumberUtils.toInt(getOption(Options.EXIT_CODE_NO_URIS));
 
         scheduleCommandFileWatcher();
     }
