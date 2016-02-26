@@ -45,7 +45,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
     private static final int DEFAULT_MAX_OPTS_FROM_MODULE = 10;
     private static final Pattern MODULE_CUSTOM_INPUT = Pattern.compile("("
             + PRE_BATCH_MODULE + "|" + PROCESS_MODULE + "|" + XQUERY_MODULE + "|" + POST_BATCH_MODULE
-            + ")\\.[A-Za-z0-9]+=[A-Za-z0-9]+");
+            + ")\\.[A-Za-z0-9]+=.*");
 
     Session session;
     ResultSequence res;
