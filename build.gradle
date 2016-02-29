@@ -1,22 +1,26 @@
-apply plugin: 'java'
-apply plugin: 'maven-publish'
-apply plugin: 'eclipse'
-apply plugin: 'idea'
-apply plugin: 'jacoco'
+plugins {
+  id "java"
+  id "maven-publish"
+  id "eclipse"
+  id "idea"
+  id "jacoco"
+  id "com.jfrog.bintray" version "1.5"
+}
 
 sourceCompatibility = '1.6'
 targetCompatibility = '1.6'
 
 repositories {
+    jcenter()
     maven { url 'http://developer.marklogic.com/maven2/' }
-    mavenCentral()
     flatDir {
       dirs 'src/test/resources/'
     }
 }
 
 dependencies {
-    compile 'com.marklogic:marklogic-xcc:8.0.1'
+    compile 'com.marklogic:marklogic-xcc:8.0.4'
+    
     // if you want to compile without testing comment out the lines below
     testCompile group: 'junit', name: 'junit', version: '4+'
     testCompile 'org.jasypt:jasypt:1.9.2'
@@ -30,11 +34,44 @@ test {
     }  
 }
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+  description = "Create a JAR of source files; required by bintray for publishing"
+  classifier 'sources' 
+  from sourceSets.main.allJava
+}
+
 publishing {
-    publications {
-        mainJava(MavenPublication) { from components.java }
+  publications {
+    mainJava(MavenPublication) {
+      from components.java
     }
-    repositories {
-        maven { url publishUrl }
+    sourcesJava(MavenPublication) {
+      from components.java
+      artifact sourcesJar
     }
+  }
+}
+
+/*
+ * In order to publish to bintray, you need an account. Once you have that account, set myBintrayUser and myBintrayKey
+ * to your username and key. You can do that in the project gradle.properties file, but it's better to do so in your
+ * ~/.gradle/gradle.properties file. Once you do that, you can run "gradle -i bintray" to publish it to bintray. The
+ * 2.2.1 release of corb2 is currently available there, so you can use this task for publishing future versions.
+ */
+if (project.hasProperty("myBintrayUser")) {
+  bintray {
+    user = myBintrayUser
+    key = myBintrayKey
+    publications = ['mainJava', 'sourcesJava']
+    pkg {
+      repo = 'maven'
+      name = project.name
+      licenses = ['Apache-2.0']
+      vcsUrl = 'https://github.com/marklogic/corb2.git'
+      version {
+        name = "2.2.1"
+        released = new Date()
+      }
+    }
+  }
 }
