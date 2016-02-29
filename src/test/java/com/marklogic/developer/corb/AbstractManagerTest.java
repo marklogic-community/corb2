@@ -26,6 +26,7 @@ import com.marklogic.xcc.exceptions.XccConfigException;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.util.List;
@@ -42,6 +43,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Rule;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
+import static org.mockito.Mockito.mock;
 
 /**
  *
@@ -416,7 +418,7 @@ public class AbstractManagerTest {
      * Test of getOption method, of class AbstractManager.
      */
     @Test(expected = IllegalArgumentException.class)
-    public void testGetOption() {
+    public void testGetOption_emptyName() {
         System.out.println("getOption");
         String argVal = "";
         String propName = "";
@@ -424,13 +426,54 @@ public class AbstractManagerTest {
         instance.getOption(argVal, propName);
     }
 
+    @Test
+    public void testGetOption() {
+        System.out.println("getOption");
+        String key = "foo";
+        String val = "bar";
+        AbstractManager instance = new AbstractManagerImpl();
+        instance.properties.setProperty(key, val);
+        assertEquals(val, instance.getOption(key));
+        assertEquals(0, instance.properties.size());
+    }
+
+    @Test
+    public void testGetOption_paddedValue() {
+        System.out.println("getOption");
+        String key = "foo";
+        String val = "bar  ";
+        AbstractManager instance = new AbstractManagerImpl();
+        instance.properties.setProperty(key, val);
+        assertEquals(val.trim(), instance.getOption(key));
+        assertEquals(0, instance.properties.size());
+    }
+
     /**
      * Test of prepareContentSource method, of class AbstractManager.
      */
     @Test(expected = NullPointerException.class)
-    public void testPrepareContentSource() throws Exception {
+    public void testPrepareContentSource_null() throws Exception {
         System.out.println("prepareContentSource");
         AbstractManager instance = new AbstractManagerImpl();
+        instance.prepareContentSource();
+    }
+
+    @Test
+    public void testPrepareContentSource_SecureXCC() throws Exception {
+        System.out.println("prepareContentSource");
+        AbstractManager instance = new AbstractManagerImpl();
+        instance.connectionUri = new URI("xccs://user:pass@localhost:8001");
+        instance.sslConfig = mock(SSLConfig.class);
+        instance.prepareContentSource();
+        assertNotNull(instance.contentSource);
+    }
+
+    @Test(expected = XccConfigException.class)
+    public void testPrepareContentSource_noScheme() throws Exception {
+        System.out.println("prepareContentSource");
+        AbstractManager instance = new AbstractManagerImpl();
+        instance.connectionUri = new URI("//user:pass@localhost:8001");
+        instance.sslConfig = mock(SSLConfig.class);
         instance.prepareContentSource();
     }
 

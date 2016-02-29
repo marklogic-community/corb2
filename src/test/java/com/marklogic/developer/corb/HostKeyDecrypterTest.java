@@ -32,23 +32,23 @@ import static org.junit.Assert.*;
  * @author Mads Hanse, MarkLogic Corporation
  */
 public class HostKeyDecrypterTest {
-    
+
     public HostKeyDecrypterTest() {
     }
-    
+
     @BeforeClass
     public static void setUpClass() {
     }
-    
+
     @AfterClass
     public static void tearDownClass() {
     }
-    
+
     @Before
     public void setUp() {
         clearSystemProperties();
     }
-    
+
     @After
     public void tearDown() {
         clearSystemProperties();
@@ -63,18 +63,18 @@ public class HostKeyDecrypterTest {
         HostKeyDecrypter instance = new HostKeyDecrypter();
         instance.init_decrypter();
     }
-    
+
     /**
      * Test of xor method, of class HostKeyDecrypter.
      */
     @Test
     public void testXor() {
         System.out.println("xor");
-        byte[] byteOne =   {1,0,1,0,1};
-        byte[] byteTwo =   {1,1,0,0};
-        byte[] expResult = {0,1,1,0,1};
+        byte[] byteOne = {1, 0, 1, 0, 1};
+        byte[] byteTwo = {1, 1, 0, 0};
+        byte[] expResult = {0, 1, 1, 0, 1};
         byte[] result = HostKeyDecrypter.xor(byteOne, byteTwo);
-        assertTrue(Arrays.equals(expResult,result));
+        assertTrue(Arrays.equals(expResult, result));
     }
 
     /**
@@ -84,7 +84,7 @@ public class HostKeyDecrypterTest {
     public void testGetSHA256Hash() throws Exception {
         System.out.println("getSHA256Hash");
         byte[] expected = {-75, -44, 4, 92, 63, 70, 111, -87, 31, -30, -52, 106, -66, 121, 35, 42, 26, 87, -51, -15, 4, -9, -94, 110, 113, 110, 10, 30, 39, -119, -33, 120};
-        byte[] input = {'A','B','C'};
+        byte[] input = {'A', 'B', 'C'};
         byte[] result = HostKeyDecrypter.getSHA256Hash(input);
         System.out.println(Arrays.toString(result));
         assertTrue(Arrays.equals(expected, result));
@@ -102,7 +102,7 @@ public class HostKeyDecrypterTest {
         assertEquals(HostKeyDecrypter.OSType.Other, HostKeyDecrypter.getOperatingSystemType("ReactOS"));
         assertEquals(HostKeyDecrypter.OSType.Other, HostKeyDecrypter.getOperatingSystemType(null));
     }
-    
+
     /**
      * Test of main method, of class HostKeyDecrypter.
      */
@@ -112,14 +112,14 @@ public class HostKeyDecrypterTest {
         String[] args = null;
         HostKeyDecrypter.main(args);
     }
-    
+
     @Test
     public void testMain_usage_decryptWithoutValue() throws Exception {
         System.out.println("main");
         String[] args = {"encrypt"};
         HostKeyDecrypter.main(args);
     }
-    
+
     @Test
     public void testMain_usage_unrecognizedMethod() throws Exception {
         System.out.println("main");
@@ -127,6 +127,14 @@ public class HostKeyDecrypterTest {
         HostKeyDecrypter.main(args);
     }
     
+    @Test
+    public void testDoDecrypt() {
+        HostKeyDecrypter decrypter = new HostKeyDecrypter();
+        String value = "bar";
+        String result = decrypter.decrypt("foo", value);
+        assertEquals(value, result);
+    }
+
     /* Illegal key size thrown if JCE is not loaded
     
     @Test
@@ -142,5 +150,5 @@ public class HostKeyDecrypterTest {
         String[] args = {"test"};
         HostKeyDecrypter.main(args);
     }
-    */
+     */
 }

@@ -18,13 +18,21 @@
  */
 package com.marklogic.developer.corb;
 
+import com.marklogic.developer.TestHandler;
 import static com.marklogic.developer.corb.Monitor.getProgressMessage;
+import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
+import java.util.List;
+import java.util.concurrent.CompletionService;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  *
@@ -33,6 +41,7 @@ import static org.junit.Assert.*;
 public class MonitorTest {
 
     private static final double DOUBLE_DELTA = 0.0;
+    private final TestHandler testLogger = new TestHandler();
 
     public MonitorTest() {
     }
@@ -51,6 +60,16 @@ public class MonitorTest {
 
     @After
     public void tearDown() {
+    }
+
+    @Test
+    public void testRun_whenPaused() {
+        PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
+        when(pool.isPaused()).thenReturn(true);
+        Monitor instance = new Monitor(pool, mock(CompletionService.class), mock(Manager.class));
+        instance.run();
+        List<LogRecord> records = testLogger.getLogRecords();
+        containsLogRecord(records, new LogRecord(Level.INFO, "CoRB2 has been paused. Resume execution by changing the state in the command file null to RESUME"));
     }
 
     /**
