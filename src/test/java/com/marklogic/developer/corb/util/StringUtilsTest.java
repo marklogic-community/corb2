@@ -344,7 +344,11 @@ public class StringUtilsTest {
         assertTrue(StringUtils.isJavaScriptModule("/myModule.JS|ADHOC"));
         assertTrue(StringUtils.isJavaScriptModule("/myModule.JS|ADHOC"));
         assertTrue(StringUtils.isJavaScriptModule("/myModule.sjs|adhoc"));
-        assertTrue(StringUtils.isJavaScriptModule("/myModule.sjs|ADHOC"));     
+        assertTrue(StringUtils.isJavaScriptModule("/myModule.sjs|ADHOC"));
+        assertTrue(StringUtils.isJavaScriptModule("INLINE-JAVASCRIPT|var foo = 1; return foo;"));
+        assertTrue(StringUtils.isJavaScriptModule("INLINE-JAVASCRIPT|var foo = 1; return foo;|ADHOC"));
+        assertTrue(StringUtils.isJavaScriptModule("INLINE-JavaScript|var foo = 1; return foo;"));
+        assertTrue(StringUtils.isJavaScriptModule("inline-JavaScript|var foo = 1; return foo;"));
     }
 
     @Test
@@ -357,5 +361,89 @@ public class StringUtilsTest {
         assertFalse(StringUtils.isJavaScriptModule("/myModule.js.xqy"));
         assertFalse(StringUtils.isJavaScriptModule("/myModule.js.xqy|ADHOC"));
         assertFalse(StringUtils.isJavaScriptModule("/myModule.jsx"));
+        assertFalse(StringUtils.isJavaScriptModule("INLINE-XQUERY|for $i in (1 to 5) return $i"));
+        assertFalse(StringUtils.isJavaScriptModule("INLINE-XQUERY|var foo = 1; return foo;|ADHOC"));  
+    }
+
+    /**
+     * Test of isInlineModule method, of class StringUtils.
+     */
+    @Test
+    public void testIsInlineModule() {
+        System.out.println("isInlineModule");
+        String code = "var i = 0; return i;";
+        assertTrue(StringUtils.isInlineModule("INLINE-JAVASCRIPT|" + code));
+        assertTrue(StringUtils.isInlineModule("INLINE-XQUERY|" + code));
+        assertTrue(StringUtils.isInlineModule("INLINE-JavaScript|" + code));
+        assertTrue(StringUtils.isInlineModule("INLINE-xquery|" + code));
+        assertTrue(StringUtils.isInlineModule("INLINE-JAVASCRIPT|" + code + "|ADHOC"));
+        assertTrue(StringUtils.isInlineModule("INLINE-XQUERY|" + code + "|ADHOC"));
+    }
+
+    @Test
+    public void testIsInlineModule_false() {
+        System.out.println("isInlineModule");
+        String code = "var i = 0; return i;";
+        assertFalse(StringUtils.isInlineModule("INLINE-JAVASCRIPT" + code)); //missing the |
+        assertFalse(StringUtils.isInlineModule("INLINE-RUBY|" + code)); //wrong language
+    }
+    
+    /**
+     * Test of inlineModuleLanguage method, of class StringUtils.
+     */
+    @Test
+    public void testInlineModuleLanguage_JAVASCRIPT() {
+        System.out.println("inlineModuleLanguage");
+        String code = "var i = 0; return i;";
+        String value = "INLINE-JAVASCRIPT|" + code + "|ADHOC";
+        String result = StringUtils.inlineModuleLanguage(value);
+        assertEquals("JAVASCRIPT", result);
+    }
+
+    @Test
+    public void testInlineModuleLanguage_XQUERY() {
+        System.out.println("inlineModuleLanguage");
+        String code = "for $i in (1 to 10) return $i";
+        String value = "INLINE-XQUERY|" + code;
+        String result = StringUtils.inlineModuleLanguage(value);
+        assertEquals("XQUERY", result);
+    }
+    
+    @Test
+    public void testInlineModuleLanguage_null() {
+        System.out.println("inlineModuleLanguage");
+        String result = StringUtils.inlineModuleLanguage(null);
+        assertEquals("", result);
+    }
+    
+    /**
+     * Test of inlineModuleCode method, of class StringUtils.
+     */
+    @Test
+    public void testInlineModuleCode() {
+        System.out.println("inlineModuleCode");
+        String code = "var i = 0; return i;";
+        String value = "INLINE-JAVASCRIPT|" + code + "|ADHOC";
+        
+        String result = StringUtils.getInlineModuleCode(value);
+        assertEquals(code, result);
+    }
+    
+    @Test
+    public void testInlineModuleCode_badLanguage() {
+        System.out.println("inlineModuleCode");
+        String code = "for $i in (1 to 10) return $i";
+        String value = "INLINE-JAVA|" + code + "|ADHOC";
+        
+        String result = StringUtils.getInlineModuleCode(value);
+        assertNotEquals(code, result);
+    }
+    
+    @Test
+    public void testInlineModuleCode_null() {
+        System.out.println("inlineModuleCode");
+        
+        String result = StringUtils.getInlineModuleCode(null);
+        assertEquals("", result);
     }
 }

@@ -22,7 +22,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.Scanner;
+import java.util.logging.LogRecord;
 import org.apache.commons.io.IOUtils;
 
 /**
@@ -70,11 +72,11 @@ public class TestUtils {
         System.clearProperty("ERROR-FILE-NAME");
         System.clearProperty("FAIL-ON-ERROR");
     }
-    
+
     public static String readFile(String filePath) throws FileNotFoundException {
         return readFile(new File(filePath));
     }
-    
+
     public static String readFile(File file) throws FileNotFoundException {
         // \A == The beginning of the input
         Scanner scanner = new Scanner(file, "UTF-8");
@@ -82,7 +84,7 @@ public class TestUtils {
         scanner.close();
         return result;
     }
-    
+
     public static void clearFile(File file) {
         PrintWriter pw = null;
         try {
@@ -105,5 +107,14 @@ public class TestUtils {
         }
         return temp;
     }
-    
+
+    public static boolean containsLogRecord(List<LogRecord> logRecords, LogRecord logRecord) {
+        for (LogRecord record : logRecords) {
+            if (record.getLevel().equals(logRecord.getLevel())
+                    && record.getMessage().equals(logRecord.getMessage())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

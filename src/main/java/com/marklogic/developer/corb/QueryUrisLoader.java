@@ -24,7 +24,11 @@ import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.URIS_MODULE;
 import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
-import static com.marklogic.developer.corb.util.StringUtils.isAdhoc;
+import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
+import static com.marklogic.developer.corb.util.StringUtils.getInlineModuleCode;
+import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
+import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import com.marklogic.xcc.Request;
@@ -38,7 +42,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 
 public class QueryUrisLoader extends AbstractUrisLoader {
 
@@ -75,15 +78,24 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             session = cs.newSession();
             Request req = null;
             String urisModule = options.getUrisModule();
-            if (isAdhoc(urisModule)) {
-                String queryPath = urisModule.substring(0, urisModule.indexOf('|'));
-                String adhocQuery = AbstractManager.getAdhocQuery(queryPath);
-                if (adhocQuery == null || (adhocQuery.length() == 0)) {
-                    throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
+            if (isInlineOrAdhoc(urisModule)) {
+                String adhocQuery;
+                if (isInlineModule(urisModule)) {
+                    adhocQuery = getInlineModuleCode(urisModule);
+                    if (isEmpty(adhocQuery)) {
+                        throw new IllegalStateException("Unable to read inline module");
+                    }
+                    LOG.log(Level.INFO, "invoking inline uris module");
+                } else {
+                    String queryPath = urisModule.substring(0, urisModule.indexOf('|'));
+                    adhocQuery = AbstractManager.getAdhocQuery(queryPath);
+                    if (isEmpty(adhocQuery)) {
+                        throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
+                    }
+                    LOG.log(Level.INFO, "invoking adhoc uris module {0}", queryPath);
                 }
-                LOG.log(Level.INFO, "invoking adhoc uris module {0}", queryPath);
                 req = session.newAdhocQuery(adhocQuery);
-                if (isJavaScriptModule(queryPath)) {
+                if (isJavaScriptModule(urisModule)) {
                     opts.setQueryLanguage("javascript");
                 }
             } else {
@@ -167,7 +179,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         cleanup();
     }
 
-    private int getMaxOptionsFromModule() {
+    protected int getMaxOptionsFromModule() {
         int max = DEFAULT_MAX_OPTS_FROM_MODULE;
         String maxStr = getProperty(MAX_OPTS_FROM_MODULE);
         if (isNotEmpty(maxStr)) {

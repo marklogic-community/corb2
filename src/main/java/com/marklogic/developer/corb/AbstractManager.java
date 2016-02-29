@@ -71,6 +71,10 @@ public abstract class AbstractManager {
 	protected TransformOptions options = new TransformOptions();;
 	protected ContentSource contentSource;
 	
+    protected static final int EXIT_CODE_SUCCESS = 0;
+    protected static final int EXIT_CODE_INIT_ERROR = 1;
+    protected static final int EXIT_CODE_PROCESSING_ERROR = 2;
+
 	private static final Logger LOG = Logger.getLogger(AbstractManager.class.getName());
     
 	public static Properties loadPropertiesFile(String filename) throws IOException {
@@ -230,7 +234,7 @@ public abstract class AbstractManager {
                     XCC_USERNAME + ", " + XCC_PASSWORD + ", " + XCC_HOSTNAME + 
                     " and " + XCC_PORT + " must be specified");
 			usage();
-			System.exit(1);
+			System.exit(EXIT_CODE_INIT_ERROR);
 		}
 		
 		if (this.decrypter != null) {

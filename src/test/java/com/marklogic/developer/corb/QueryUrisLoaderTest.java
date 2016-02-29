@@ -124,6 +124,76 @@ public class QueryUrisLoaderTest {
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule("/module");
         transformOptions.setModuleRoot("/root");
+        instance.collection = "";
+        instance.properties = props;
+        instance.cs = contentSource;
+        instance.options = transformOptions;
+        try {
+            instance.open();
+        } finally {
+            instance.close();
+        }
+    }
+
+    @Test(expected = CorbException.class)
+    public void testOpen_inlineUriModule() throws Exception {
+        System.out.println("open");
+        QueryUrisLoader instance = new QueryUrisLoader();
+        ContentSource contentSource = mock(ContentSource.class);
+        Session session = mock(Session.class);
+        AdhocQuery request = mock(AdhocQuery.class);
+        XdmVariable var = mock(XdmVariable.class);
+        ResultSequence seq = mock(ResultSequence.class);
+        ResultItem item = mock(ResultItem.class);
+        XdmItem xdmItem = mock(XdmItem.class);
+
+        when(contentSource.newSession()).thenReturn(session);
+        when(session.newAdhocQuery(anyString())).thenReturn(request);
+        when(request.setNewStringVariable(anyString(), anyString())).thenReturn(var).thenReturn(var).thenReturn(var);
+        when(session.submitRequest(request)).thenReturn(seq);
+        when(seq.next()).thenReturn(item);
+        when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
+        when(xdmItem.asString()).thenReturn("none").thenReturn("none");
+        Properties props = new Properties();
+        props.setProperty("URIS-REPLACE-PATTERN", "foo,");
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setUrisModule("INLINE-XQUERY|for $i in (1 to 5) return $i || '.xml'");
+        transformOptions.setModuleRoot("/root");
+        instance.collection = "";
+        instance.properties = props;
+        instance.cs = contentSource;
+        instance.options = transformOptions;
+        try {
+            instance.open();
+        } finally {
+            instance.close();
+        }
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testOpen_noCodeInInline() throws Exception {
+        System.out.println("open");
+        QueryUrisLoader instance = new QueryUrisLoader();
+        ContentSource contentSource = mock(ContentSource.class);
+        Session session = mock(Session.class);
+        ModuleInvoke request = mock(ModuleInvoke.class);
+        XdmVariable var = mock(XdmVariable.class);
+        ResultSequence seq = mock(ResultSequence.class);
+        ResultItem item = mock(ResultItem.class);
+        XdmItem xdmItem = mock(XdmItem.class);
+
+        when(contentSource.newSession()).thenReturn(session);
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+        when(request.setNewStringVariable(anyString(), anyString())).thenReturn(var).thenReturn(var).thenReturn(var);
+        when(session.submitRequest(request)).thenReturn(seq);
+        when(seq.next()).thenReturn(item);
+        when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
+        when(xdmItem.asString()).thenReturn("none").thenReturn("none");
+        Properties props = new Properties();
+        props.setProperty("URIS-REPLACE-PATTERN", "foo,");
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setUrisModule("INLINE-XQUERY|");
+        transformOptions.setModuleRoot("/root");
 
         instance.properties = props;
         instance.cs = contentSource;
@@ -432,5 +502,29 @@ public class QueryUrisLoaderTest {
         String result = instance.getProperty(key);
         instance.close();
         assertEquals(value, result);
+    }
+
+    @Test
+    public void testGetMaxOptionsFromModule() {
+        QueryUrisLoader instance = new QueryUrisLoader();
+        assertEquals(10, instance.getMaxOptionsFromModule());
+    }
+
+    @Test
+    public void testGetMaxOptionsFromModule_validValue() {
+        QueryUrisLoader instance = new QueryUrisLoader();
+        Properties props = new Properties();
+        props.setProperty(Options.MAX_OPTS_FROM_MODULE, "42");
+        instance.setProperties(props);
+        assertEquals(42, instance.getMaxOptionsFromModule());
+    }
+
+    @Test
+    public void testGetMaxOptionsFromModule_invalidValue() {
+        QueryUrisLoader instance = new QueryUrisLoader();
+        Properties props = new Properties();
+        props.setProperty(Options.MAX_OPTS_FROM_MODULE, "eleven");
+        instance.setProperties(props);
+        assertEquals(10, instance.getMaxOptionsFromModule());
     }
 }

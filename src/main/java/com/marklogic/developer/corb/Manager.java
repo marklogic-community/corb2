@@ -49,8 +49,8 @@ import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
 import com.marklogic.developer.corb.util.FileUtils;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import com.marklogic.developer.corb.util.NumberUtils;
-import static com.marklogic.developer.corb.util.StringUtils.isAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.Content;
@@ -112,10 +112,7 @@ public class Manager extends AbstractManager {
     private ScheduledExecutorService scheduledExecutor;
     private boolean execError = false;
 
-    private static final int EXIT_CODE_SUCCESS = 0;
-    private static final int EXIT_CODE_INIT_ERROR = 1;
-    private static final int EXIT_CODE_PROCESSING_ERROR = 2;
-    private static int EXIT_CODE_NO_URIS = 0;
+    protected static int EXIT_CODE_NO_URIS = 0;
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
 
     public static class CallerBlocksPolicy implements RejectedExecutionHandler {
@@ -526,7 +523,7 @@ public class Manager extends AbstractManager {
         ContentCreateOptions opts = ContentCreateOptions.newTextInstance();
         try {
             for (String resourceModule : resourceModules) {
-                if (isAdhoc(resourceModule)) {
+                if (resourceModule == null || isInlineOrAdhoc(resourceModule)) {
                     continue;
                 }
 

@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import static com.marklogic.developer.corb.TestUtils.clearFile;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ContentSourceFactory;
@@ -41,7 +42,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
@@ -942,6 +942,35 @@ public class ManagerTest {
     }
 
     @Test
+    public void testInitOptions_InstallWithBlankModules() throws Exception {
+        System.out.println("init");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[4] = "src/test/resources/selector.xqy";
+        args[6] = "";
+        args[7] = "true";
+        String loader = "com.marklogic.developer.corb.FileUrisLoader";
+        Properties props = new Properties();
+        Manager instance = new Manager();
+        instance.options.setModulesDatabase("");
+        instance.init(args, props);
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertTrue(containsLogRecord(records, new LogRecord(Level.WARNING, "XCC configured for the filesystem: please install modules manually")));
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testInitOptions_InstallWithMissingModule() throws Exception {
+        System.out.println("init");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[4] = "src/test/resources/doesNotExist.xqy";
+        args[7] = "true";
+        Properties props = new Properties();
+        Manager instance = new Manager();
+        instance.init(args, props);
+    }
+
+    @Test
     public void testNormalizeLegacyProperties_whenPropertiesIsNull() {
         System.out.println("normalizeLegacyProperties");
         Manager manager = new Manager();
@@ -1340,7 +1369,7 @@ public class ManagerTest {
                 try {
                     commandFile.createNewFile();
                     Properties props = new Properties();
-                    props.put(Options.THREAD_COUNT, 1);
+                    props.put(Options.THREAD_COUNT, "1");
                     FileOutputStream fos = new FileOutputStream(commandFile);
                     props.store(fos, null);
                     fos.close();
@@ -1395,15 +1424,5 @@ public class ManagerTest {
             EXPORT_FILE_NAME,
             URIS_FILE};
         return args;
-    }
-
-    public boolean containsLogRecord(List<LogRecord> logRecords, LogRecord logRecord) {
-        for (LogRecord record : logRecords) {
-            if (record.getLevel().equals(logRecord.getLevel())
-                    && record.getMessage().equals(logRecord.getMessage())) {
-                return true;
-            }
-        }
-        return false;
     }
 }

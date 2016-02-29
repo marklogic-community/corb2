@@ -19,6 +19,9 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.xcc.ContentSource;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -351,6 +354,45 @@ public class TaskFactoryTest {
         System.out.println("newPreBatchTask");
         Manager manager = new Manager();
 
+        manager.options.setInitTaskClass(ExportBatchToFileTask.class);
+        manager.contentSource = mock(ContentSource.class);
+        TaskFactory instance = new TaskFactory(manager);
+        Task result = instance.newInitTask();
+        assertNotNull(result);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testNewInitTask_emptyModule() throws IOException {
+        System.out.println("newPreBatchTask");
+        Manager manager = new Manager();
+        File emptyModule = File.createTempFile("testNewInitTask", "txt");
+        emptyModule.createNewFile();
+        emptyModule.deleteOnExit();
+        manager.options.setInitModule(emptyModule.getAbsolutePath() + "|ADHOC");
+        manager.options.setInitTaskClass(ExportBatchToFileTask.class);
+        manager.contentSource = mock(ContentSource.class);
+        TaskFactory instance = new TaskFactory(manager);
+        Task result = instance.newInitTask();
+        assertNotNull(result);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testNewInitTask_inline() {
+        System.out.println("newPreBatchTask");
+        Manager manager = new Manager();
+        manager.options.setInitModule("INLINE-XQUERY|for $i in (1 to 5) $i");
+        manager.options.setInitTaskClass(ExportBatchToFileTask.class);
+        manager.contentSource = mock(ContentSource.class);
+        TaskFactory instance = new TaskFactory(manager);
+        Task result = instance.newInitTask();
+        assertNotNull(result);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testNewInitTask_inline_isEmpty() {
+        System.out.println("newPreBatchTask");
+        Manager manager = new Manager();
+        manager.options.setInitModule("INLINE-JAVASCRIPT|");
         manager.options.setInitTaskClass(ExportBatchToFileTask.class);
         manager.contentSource = mock(ContentSource.class);
         TaskFactory instance = new TaskFactory(manager);

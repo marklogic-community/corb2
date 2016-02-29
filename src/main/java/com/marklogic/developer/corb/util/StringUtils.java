@@ -22,6 +22,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author mike.blakeley@marklogic.com
@@ -33,7 +35,10 @@ public class StringUtils {
     public static final String EMPTY = "";
     private static final String ADHOC_PATTERN = "(?i).*\\|ADHOC";
     private static final String JAVASCRIPT_MODULE_FILENAME_PATTERN = "(?i).*\\.s?js(\\|ADHOC)?$";
-    
+    private static final String INLINE_MODULE_PATTERN = "(?i)INLINE-(JAVASCRIPT|XQUERY)\\|(.*?)(\\|ADHOC)?$";
+
+    private static final Pattern COMPILED_INLINE_MODULE_PATTERN = Pattern.compile(INLINE_MODULE_PATTERN);
+
     private StringUtils() {
     }
 
@@ -137,7 +142,7 @@ public class StringUtils {
     public static String buildModulePath(Package modulePackage, String name) {
         return "/" + modulePackage.getName().replace('.', '/') + "/" + name + (name.endsWith(".xqy") ? "" : ".xqy");
     }
-    
+
     public static String buildModulePath(String root, String module) {
         if (!root.endsWith("/")) {
             root += "/";
@@ -149,7 +154,7 @@ public class StringUtils {
 
         return root + module;
     }
-    
+
     /**
      * @param value
      * @param encoding
@@ -220,9 +225,11 @@ public class StringUtils {
 
     /**
      * Removes control characters (char <= 32) from both ends of the string. If
-     * null, returns null. @param value @return
-     * @param value
-     * @return the trimmed string, or {@code null} if null String input
+     * null, returns null. @param value @return @param value @return the trimmed
+     * string, or {@code null} if null String
+     *
+     * i
+     * nput
      */
     public static String trim(final String value) {
         return value == null ? null : value.trim();
@@ -230,19 +237,53 @@ public class StringUtils {
 
     /**
      * Removes control characters (char <= 32) from both ends of the string. If
-     * null, returns null. @param value @return
+     * null, returns null. @param value @return @param value @return the trimmed
+     * String or an empty String if {@code nul
+     *
      * @param value
-     * @return the trimmed String or an empty String if {@code null} input
+     * @return 
      */
     public static String trimToEmpty(final String value) {
         return value == null ? EMPTY : value.trim();
     }
-    
+
     public static boolean isAdhoc(final String value) {
         return (value != null && value.matches(ADHOC_PATTERN));
     }
-    
+
     public static boolean isJavaScriptModule(final String value) {
-        return (value != null && value.matches(JAVASCRIPT_MODULE_FILENAME_PATTERN));
+        return (value != null
+                && (value.matches(JAVASCRIPT_MODULE_FILENAME_PATTERN)
+                    || inlineModuleLanguage(value).equalsIgnoreCase("javascript")));
+    }
+
+    public static boolean isInlineModule(final String value) {
+        return (value != null && value.matches(INLINE_MODULE_PATTERN));
+    }
+
+    public static boolean isInlineOrAdhoc(final String value) {
+        return StringUtils.isInlineModule(value) || isAdhoc(value);
+    }
+    
+    public static String inlineModuleLanguage(final String value) {
+        String language = "";
+        if (isInlineModule(value)) {
+            Matcher m = COMPILED_INLINE_MODULE_PATTERN.matcher(value);
+            if (m.find()) {
+                language = m.group(1);
+            }
+        }
+        return language;
+    }
+
+    public static String getInlineModuleCode(final String value) {
+        String code = "";
+        if (isInlineModule(value)) {
+            Matcher m = COMPILED_INLINE_MODULE_PATTERN.matcher(value);
+            if (m.find()) {
+                code = m.group(2);
+            }
+        }
+        return code;
     }
 }

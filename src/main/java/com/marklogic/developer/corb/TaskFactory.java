@@ -22,13 +22,15 @@ import static com.marklogic.developer.corb.Options.INIT_MODULE;
 import static com.marklogic.developer.corb.Options.POST_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
-import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
-import static com.marklogic.developer.corb.util.StringUtils.isAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
+import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import java.util.HashMap;
 import java.util.Map;
-
+import static com.marklogic.developer.corb.util.StringUtils.getInlineModuleCode;
+import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
@@ -127,15 +129,23 @@ public class TaskFactory {
 
     private void setupTask(Task task, String moduleType, String module, String[] uris, boolean failOnError) {
         if (module != null) {
-            if (isAdhoc(module)) {
-                String adhocQuery = moduleToAdhocQueryMap.get(module);
-                if (adhocQuery == null) {
-                    String modulePath = module.substring(0, module.indexOf('|'));
-                    adhocQuery = AbstractManager.getAdhocQuery(modulePath);
-                    if (adhocQuery == null || (adhocQuery.length() == 0)) {
-                        throw new IllegalStateException("Unable to read adhoc query " + module + " from classpath or filesystem");
+            if (isInlineOrAdhoc(module)) {
+                String adhocQuery;
+                if (isInlineModule(module)) {
+                    adhocQuery = getInlineModuleCode(module);
+                    if (isEmpty(adhocQuery)) {
+                        throw new IllegalStateException("Unable to read adhoc query " + module);
                     }
-                    moduleToAdhocQueryMap.put(module, adhocQuery);
+                } else {
+                    adhocQuery = moduleToAdhocQueryMap.get(module);
+                    if (adhocQuery == null) {
+                        String modulePath = module.substring(0, module.indexOf('|'));
+                        adhocQuery = AbstractManager.getAdhocQuery(modulePath);
+                        if (isEmpty(adhocQuery)) {
+                            throw new IllegalStateException("Unable to read adhoc query " + module + " from classpath or filesystem");
+                        }
+                        moduleToAdhocQueryMap.put(module, adhocQuery);
+                    }
                 }
                 task.setAdhocQuery(adhocQuery);
             } else {

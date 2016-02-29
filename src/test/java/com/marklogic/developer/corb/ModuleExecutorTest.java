@@ -431,6 +431,7 @@ public class ModuleExecutorTest {
         System.setProperty("PROCESS-MODULE", PROCESS_MODULE);
         System.setProperty("DECRYPTER", "com.marklogic.developer.corb.JasyptDecrypter");
         System.setProperty("JASYPT-PROPERTIES-FILE", "src/test/resources/jasypt.properties");
+        System.setProperty("PROCESS-MODULE.foo", "bar");
         System.setProperty("EXPORT-FILE-NAME", EXPORT_FILE_NAME);
 
         ModuleExecutor executor = new ModuleExecutor();
@@ -442,6 +443,67 @@ public class ModuleExecutorTest {
         boolean fileExists = report.exists();
         clearFile(report);
         assertTrue(fileExists);
+    }
+
+        @Test
+    public void testRun_main() throws Exception {
+        clearSystemProperties();
+        String[] args = {};
+        System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+        System.setProperty("PROCESS-MODULE", "INLINE-JAVASCRIPT|var uri = '/a/b/c'; uri;");
+        System.setProperty("EXPORT-FILE-NAME", EXPORT_FILE_NAME);
+        exit.expectSystemExit();
+        ModuleExecutor.main(args);
+
+        String result = TestUtils.readFile(new File(EXPORT_FILE_NAME));
+        assertEquals("/a/b/c\n", result);
+    }
+    
+    @Test
+    public void testRun_inline() throws Exception {
+        clearSystemProperties();
+        String[] args = {};
+        System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+        System.setProperty("PROCESS-MODULE", "INLINE-JAVASCRIPT|var uri = '/a/b/c'; uri;");
+        System.setProperty("EXPORT-FILE-NAME", EXPORT_FILE_NAME);
+        ModuleExecutor executor = new ModuleExecutor();
+        executor.init(args);
+        executor.run();
+
+        String reportPath = executor.getProperty("EXPORT-FILE-NAME");
+        File report = new File(reportPath);
+        boolean fileExists = report.exists();
+
+        assertTrue(fileExists);
+        String result = TestUtils.readFile(report);
+        assertEquals("/a/b/c\n", result);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testRun_inlineEmpty() throws Exception {
+        clearSystemProperties();
+        String[] args = {};
+        System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+        System.setProperty("PROCESS-MODULE", "INLINE-XQUERY|");
+        System.setProperty("EXPORT-FILE-NAME", EXPORT_FILE_NAME);
+        ModuleExecutor executor = new ModuleExecutor();
+        executor.init(args);
+        executor.run();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testRun_adhocIsEmpty() throws Exception {
+        File emptyModule = File.createTempFile("emptyModule", "txt");
+        emptyModule.createNewFile();
+        emptyModule.deleteOnExit();
+        clearSystemProperties();
+        String[] args = {};
+        System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+        System.setProperty("PROCESS-MODULE", emptyModule.getAbsolutePath() + "|ADHOC");
+        System.setProperty("EXPORT-FILE-NAME", EXPORT_FILE_NAME);
+        ModuleExecutor executor = new ModuleExecutor();
+        executor.init(args);
+        executor.run();
     }
 
     /**
@@ -711,7 +773,7 @@ public class ModuleExecutorTest {
         byte[] result = instance.getValueAsBytes(item);
         assertArrayEquals(expected.getBytes(), result);
     }
-    
+
     @Test
     public void testGetValueAsBytes_null() {
         System.out.println("getValueAsBytes");
