@@ -6,7 +6,7 @@ This document provides a comprehensive overview of CoRB2.  For additional inform
 ### Downloads
 Please download latest release from https://github.com/marklogic/corb2/releases.  
 
-CoRB v2.2.0 or later requires marklogic-xcc-8.0.*.jar or later to run. Please note that xcc 8 is backwards compatible up to MarkLogic 5. Also, please use java 1.7 or later for running corb.
+Corb v2.2.0 or later requires [marklogic-xcc-8.0.*.jar or later](https://developer.marklogic.com/products/xcc) to run. Please note that xcc 8 is backwards compatible up to MarkLogic 5. Also, please use java 1.7 or later for running CoRB.
 
 CoRB uses java logger. To customize logging, please specify logging configuration file using java system argument  
 `-Djava.util.logging.config.file=/path/to/logging.properties`
@@ -381,10 +381,10 @@ PROCESS-MODULE=extract.sjs|ADHOC
 ```
 
 ### ModuleExecutor Tool
+ 
+Sometimes, a two or more staged CoRB job with both a selector and transform isn't necessary to get the job done. Sometimes, only a single query needs to be executed and the output captured to file.  Maybe even to execute only a single query with no output captured?  In these cases, the ModuleExecutor Tool can be used to quickly and efficiently execute your XQuery or JavaScript files.
 
-Sometimes, a two or more staged CoRB job isn't necessary to get the job done.  Sometimes, only a single query needs to be executed and the output captured to file.  Maybe only a single query with no output captured?  In these cases, the ModuleExecutor Tool can be used to quickly and efficiently execute your XQuery or JavaScript files.
-
-Like CoRB, with Version 8 or higher of the MarkLogic XCC Connection Jar in your classpath, the ModuleExecutor Tool can run JavaScript queries against a MarkLogic 8 server.  We know, bad name for the tool but what can we say, old habits die hard!
+Like CoRB, with Version 8 or higher of the MarkLogic XCC Connection Jar in your classpath, the ModuleExecutor Tool can run JavaScript queries against a MarkLogic8 server.  
 
 So how does the ModuleExecutor Tool differ from CoRB?  The key differences are:
 
@@ -403,8 +403,8 @@ That's it.  Doesn't seem like a lot but it actually limits its functionality sig
   - command line -D properties
   - a properties file
   - a combination of any of these
-
-So how do you use it?   For convenience, it can be configured using the same techniques as CoRB provides and using the same parameter names. The big difference is that there are far fewer parameters needed and there is a different class used for its execution (com.marklogic.developer.corb.RunXQueryManager).
+  
+So how do you use it?   For convenience, it can be configured using the same techniques as CoRB provides and using the same parameter names. The big difference is that there are far fewer parameters needed and there is a different class used for its execution (com.marklogic.developer.corb.ModuleExecutor).
 
 The following parameters are supported and can be used in the same ways as described above for CoRB:
 

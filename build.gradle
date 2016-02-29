@@ -1,27 +1,26 @@
 plugins {
     id 'java' 
     id 'com.github.johnrengelman.shadow' version '1.2.2'
+    id "maven-publish"
+    id "eclipse"
+    id "idea"
+    id "jacoco"
+    id "com.jfrog.bintray" version "1.5"
 }
-apply plugin: 'java'
-apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'maven-publish'
-apply plugin: 'eclipse'
-apply plugin: 'idea'
-apply plugin: 'jacoco'
 
 sourceCompatibility = '1.6'
 targetCompatibility = '1.6'
 
 repositories {
+    jcenter()
     maven { url 'http://developer.marklogic.com/maven2/' }
-    mavenCentral()
     flatDir {
-      dirs 'src/test/resources/'
+        dirs 'src/test/resources/'
     }
 }
 
 dependencies {
-    compile 'com.marklogic:marklogic-xcc:8.0.1'
+    compile 'com.marklogic:marklogic-xcc:8.0.4'
     compile 'com.google.code.externalsortinginjava:externalsortinginjava:0.1.9'
     // if you want to compile without testing comment out the lines below
     testCompile group: 'junit', name: 'junit', version: '4+'
@@ -32,26 +31,59 @@ dependencies {
 
 test {
     testLogging {
-      events 'started','passed'
+        events 'started','passed'
     }  
 }
 
 //disabling, because we want to incorporate externalsortingjava in uber jar and use as the artifact
 jar.enabled = false
 shadowJar {
-  dependencies {
-    include(dependency('com.google.code.externalsortinginjava:externalsortinginjava:.*'))
-  }
-  //generate same name as the jar task would
-  archiveName = "${baseName}-${version}.${extension}"
+    dependencies {
+        include(dependency('com.google.code.externalsortinginjava:externalsortinginjava:.*'))
+    }
+    //generate same name as the jar task would
+    archiveName = "${baseName}-${version}.${extension}"
 }
 build.dependsOn(shadowJar);
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    description = "Create a JAR of source files; required by bintray for publishing"
+    classifier 'sources' 
+    from sourceSets.main.allJava
+}
+
 publishing {
     publications {
-        mainJava(MavenPublication) { from components.java }
+        mainJava(MavenPublication) {
+            from components.java
+        }
+        sourcesJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+        }
     }
-    repositories {
-        maven { url publishUrl }
+}
+
+/*
+ * In order to publish to bintray, you need an account. Once you have that account, set myBintrayUser and myBintrayKey
+ * to your username and key. You can do that in the project gradle.properties file, but it's better to do so in your
+ * ~/.gradle/gradle.properties file. Once you do that, you can run "gradle -i bintray" to publish it to bintray. The
+ * 2.2.1 release of corb2 is currently available there, so you can use this task for publishing future versions.
+ */
+if (project.hasProperty("myBintrayUser")) {
+    bintray {
+        user = myBintrayUser
+        key = myBintrayKey
+        publications = ['mainJava', 'sourcesJava']
+        pkg {
+            repo = 'maven'
+            name = project.name
+            licenses = ['Apache-2.0']
+            vcsUrl = 'https://github.com/marklogic/corb2.git'
+            version {
+                name = project.version
+                released = new Date()
+            }
+        }
     }
 }
