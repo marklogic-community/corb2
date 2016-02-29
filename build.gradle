@@ -69,7 +69,7 @@ if (project.hasProperty("myBintrayUser")) {
       licenses = ['Apache-2.0']
       vcsUrl = 'https://github.com/marklogic/corb2.git'
       version {
-        name = "2.2.1"
+        name = project.version
         released = new Date()
       }
     }
