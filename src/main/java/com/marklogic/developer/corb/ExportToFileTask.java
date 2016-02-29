@@ -34,7 +34,7 @@ public class ExportToFileTask extends AbstractTask {
 		String filename = inputUris[0].charAt(0) == '/' ? inputUris[0].substring(1) : inputUris[0];
 		String uriInPath = getProperty(EXPORT_FILE_URI_TO_PATH);
 		int lastIdx = filename.lastIndexOf('/');
-		if ("false".equalsIgnoreCase(uriInPath) &&  lastIdx > 0 && filename.length() > (lastIdx+1)) {
+		if ("false".equalsIgnoreCase(uriInPath) && lastIdx > 0 && filename.length() > (lastIdx+1)) {
 			filename = filename.substring(lastIdx+1);
 		}
 		return filename;
