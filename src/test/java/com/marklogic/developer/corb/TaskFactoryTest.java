@@ -21,7 +21,6 @@ package com.marklogic.developer.corb;
 import com.marklogic.xcc.ContentSource;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
