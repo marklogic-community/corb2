@@ -504,7 +504,7 @@ public class Manager extends AbstractManager {
         pool.prestartAllCoreThreads();
         completionService = new ExecutorCompletionService<String[]>(pool);
         monitor = new Monitor(pool, completionService, this);
-        Thread thread = new Thread(monitor);
+        Thread thread = new Thread(monitor, "monitor");
         return thread;
     }
 
