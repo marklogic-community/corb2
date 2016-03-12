@@ -38,7 +38,7 @@ mvn package -Dmaven.test.skip=true
 ### Running CoRB
 The entry point is the main method in the `com.marklogic.developer.corb.Manager` class. CoRB requires the MarkLogic XCC JAR in the classpath, 
 preferably the version that corresponds to the MarkLogic server version, which can be downloaded from https://developer.marklogic.com/products/xcc. 
-This version has been tested with XCC 8.0.* talking to Marklogic 7 and 8. Use java 1.6 or later.
+This version has been tested with XCC 8.0.* talking to Marklogic 7 and 8. Use Java 1.6 or later.
 
 CoRB needs options specified through one or more of the following mechanisms:
 
@@ -135,11 +135,11 @@ return ("PROCESS-MODULE.foo=bar","POST-BATCH-MODULE.alpha=10",fn:count($uris),$u
 ```
 
 ### Adhoc Modules
-Appending "|ADHOC" to the name or path of a XQuery module (with .xqy extension) or JavaScript (with .sjs or .js extension) module will cause the module to be read from the file system and executed in MarkLogic without being uploaded to Modules database. This simplifies running CoRB jobs by not requiring deployment of any code to MarkLogic, and makes the set of CoRB2 files and configuration more self contained.   
+Appending `|ADHOC` to the name or path of a XQuery module (with .xqy extension) or JavaScript (with .sjs or .js extension) module will cause the module to be read from the file system and executed in MarkLogic without being uploaded to Modules database. This simplifies running CoRB jobs by not requiring deployment of any code to MarkLogic, and makes the set of CoRB2 files and configuration more self contained.   
 
-**INIT-MODULE**, **URIS-MODULE**, **PROCESS-MODULE**, **PRE-BATCH-MODULE** and **POST-BATCH-MODULE** can be specified adhoc by adding the suffix '|ADHOC' for XQuery or JavaScript (with .sjs or .js extension) at the end. Adhoc XQuery or JavaScript remains local to the CoRB and is not deployed to MarkLogic. The XQuery or JavaScript module should be in its named file and that file should be available on the file system, including being on the java classpath for CoRB. 
+**INIT-MODULE**, **URIS-MODULE**, **PROCESS-MODULE**, **PRE-BATCH-MODULE** and **POST-BATCH-MODULE** can be specified adhoc by adding the suffix `|ADHOC` for XQuery or JavaScript (with .sjs or .js extension) at the end. Adhoc XQuery or JavaScript remains local to the CoRB and is not deployed to MarkLogic. The XQuery or JavaScript module should be in its named file and that file should be available on the file system, including being on the java classpath for CoRB. 
 
-**Adhoc Examples:**  
+##### Adhoc Examples:
 * `PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC` adhoc-pre-batch.xqy must be on the classpath or in the current directory.
 * `PROCESS-MODULE=/path/to/file/adhoc-transform-module.xqy|ADHOC` XQuery module file with full path in the file system.  
 * `URIS-MODULE=adhoc-uris.sjs|ADHOC` Adhoc JavaScript module in the classpath or current directory.
@@ -147,7 +147,7 @@ Appending "|ADHOC" to the name or path of a XQuery module (with .xqy extension) 
 #### Inline Adhoc Modules
 It is also possible to set a module option with inline code blocks, rather than a file path. This can be done by prepending either `INLINE-XQUERY|` or `INLINE-JAVASCRIPT|` to the option value, followed by the XQuery or JavaScript code to execute. Inline code blocks are executed as "adhoc" modules and are not uploaded to the Modules database. The `|ADHOC` suffix is optional for inline code blocks.
 
-**Inline Adhoc Example:
+##### Inline Adhoc Example:
 * `URIS-MODULE=INLINE-XQUERY|xquery version '1.0-ml'; let $uris := collection('foo') return (count($uris), $uris)`
 
 ### JavaScript Modules
@@ -183,7 +183,7 @@ PrivateKeyDecrypter automatically detects if the text is encrypted. Unencrypted 
 
 Generate keys and encrypt XCC URL or password using one of the options below.   
 
-**Java Crypt**  
+####Java Crypt
 * Use the PrivateKeyDecrypter class inside the CoRB JAR with the gen-keys option to generate a key.  
   `java -cp marklogic-corb-2.3.0.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024`  
   > Note: if not specified, default algorithm: RSA, default key-length: 1024
@@ -191,13 +191,13 @@ Generate keys and encrypt XCC URL or password using one of the options below.
   `java -cp marklogic-corb-2.3.0.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA`  
   > Note: if not specified, default algorithm: RSA
 
-**RSA keys**  
+####RSA keys 
 * `openssl genrsa -out private.pem 1024` Generate a private key in PEM format
 * `openssl pkcs8 -topk8 -nocrypt -in private.pem -out private.pkcs8.key` Create a PRIVATE-KEY-FILE in PKCS8 standard for java
 * `openssl rsa -in private.pem -pubout > public.key`  Extract public key
 * `echo "uri or password" | openssl rsautl -encrypt -pubin -inkey public.key | base64` Encrypt URI or password. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx)
 
-**ssh-keygen**  
+####ssh-keygen  
 * `ssh-keygen` ex:key as id_rsa after selecting a passphrase
 * `openssl pkcs8 -topk8 -nocrypt -in id_rsa -out id_rsa.pkcs8.key` (asks for passphrase)
 * `openssl rsa -in id_rsa -pubout > public.key` (asks for passphrase)
