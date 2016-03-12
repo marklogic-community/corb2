@@ -82,7 +82,6 @@ public class FileUtilsTest {
         FileUtils.copy(exampleContentFile, out);
 
         Assert.assertArrayEquals(FileUtils.getBytes(exampleContentFile), FileUtils.getBytes(out));
-
     }
 
     /**
@@ -118,29 +117,35 @@ public class FileUtilsTest {
     @Test
     public void testDeleteFile_FileIsNull() throws IOException {
         File file = new File("/tmp/_doesNotExit_" + Math.random());
-        FileUtils.deleteFile(file);
         file.deleteOnExit();
+        FileUtils.deleteFile(file);
+        assertFalse(file.exists());
     }
 
     @Test
     public void testDeleteFile_FolderIsEmpty() throws IOException {
         File tempDirectory = createTempDirectory();
-        FileUtils.deleteFile(tempDirectory);
         tempDirectory.deleteOnExit();
+        FileUtils.deleteFile(tempDirectory);
+        assertFalse(tempDirectory.exists());
     }
 
     @Test
     public void testDeleteFile_FolderHasFiles() throws IOException {
         File tempDirectory = createTempDirectory();
-        File.createTempFile("deleteFile", "bar", tempDirectory);
-        FileUtils.deleteFile(tempDirectory);
+        File tempFile = File.createTempFile("deleteFile", "bar", tempDirectory);
         tempDirectory.deleteOnExit();
+        tempFile.deleteOnExit();
+        FileUtils.deleteFile(tempDirectory);
+        assertFalse(tempFile.exists());
+        assertFalse(tempDirectory.exists());
     }
 
     @Test
     public void testDeleteFile_StringIsNull() throws IOException {
         String filename = "/tmp/_doesNotExist_" + Math.random();
         FileUtils.deleteFile(filename);
+        assertFalse(new File(filename).exists());
     }
 
     @Test(expected = IOException.class)
