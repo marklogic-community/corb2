@@ -21,8 +21,6 @@ package com.marklogic.developer.corb.util;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -126,16 +124,14 @@ public class FileUtilsTest {
 
     @Test
     public void testDeleteFile_FolderIsEmpty() throws IOException {
-        Path tempPath = Files.createTempDirectory("foo");
-        File tempDirectory = tempPath.toFile();
-        FileUtils.deleteFile(tempPath.toFile());
+        File tempDirectory = createTempDirectory();
+        FileUtils.deleteFile(tempDirectory);
         tempDirectory.deleteOnExit();
     }
 
     @Test
     public void testDeleteFile_FolderHasFiles() throws IOException {
-        Path tempPath = Files.createTempDirectory("foo");
-        File tempDirectory = tempPath.toFile();
+        File tempDirectory = createTempDirectory();
         File.createTempFile("deleteFile", "bar", tempDirectory);
         FileUtils.deleteFile(tempDirectory);
         tempDirectory.deleteOnExit();
@@ -206,5 +202,23 @@ public class FileUtilsTest {
     public void testGetFile_doesNotExist() {
         File file = FileUtils.getFile("doesNotExist");
         assertFalse(file.exists());
+    }
+
+    //TODO remove when we upgrade to JRE 1.7+
+    public static File createTempDirectory()
+            throws IOException {
+        final File temp;
+
+        temp = File.createTempFile("temp", Long.toString(System.nanoTime()));
+
+        if (!(temp.delete())) {
+            throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
+        }
+
+        if (!(temp.mkdir())) {
+            throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
+        }
+
+        return (temp);
     }
 }
