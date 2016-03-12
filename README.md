@@ -1,4 +1,4 @@
-Version: 2.2.1
+Version: 2.3.0
 
 ### User Guide
 This document provides a comprehensive overview of CoRB2.  For additional information, please refer to CoRB2 online [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc).  This document also covers the less robust [ModuleExecutor Tool](#moduleexecutor-tool) which can be used when only a single staged query is necessary.  The ModuleExecutor Tool is provided as part of the CoRB2 distribution.
@@ -151,10 +151,10 @@ Generate keys and encrypt XCC URL or password using one of the options below.
 
 **Java Crypt**  
 * Use the PrivateKeyDecrypter class inside the corb jar with the gen-keys option to generate a key.  
-  `java -cp marklogic-corb-2.2.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024`  
+  `java -cp marklogic-corb-2.3.0.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024`  
   > Note: if not specified, default algorithm: RSA, default key-length: 1024
 * Use the PrivateKeyDecrypter class inside the corb jar with the encrypt option to encrypt the clear text such as an xcc URL or password.  
-  `java -cp marklogic-corb-2.2.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA`  
+  `java -cp marklogic-corb-2.3.0.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA`  
   > Note: if not specified, default algorithm: RSA
 
 **RSA keys**  
@@ -187,10 +187,10 @@ HostKeyDecrypter uses internal server identifiers to generate a private key uniq
 > Note: certain server identifiers used may change in cases of driver installation or if underlying hardware changes. In such cases, passwords will need to be regenerated. Encrypted passwords will be always be unique to the server they are generated on.
 
 Encrypt the password as follows:  
-`java -cp marklogic-corb-2.2.*.jar com.marklogic.developer.corb.HostKeyDecrypter encrypt clearText`  
+`java -cp marklogic-corb-2.3.0.jar com.marklogic.developer.corb.HostKeyDecrypter encrypt clearText`  
 
 To test if server is properly configured to use the HostKeyDecrypter:  
-`java -cp marklogic-corb-2.2.*.jar com.marklogic.developer.corb.HostKeyDecrypter test`  
+`java -cp marklogic-corb-2.3.0.jar com.marklogic.developer.corb.HostKeyDecrypter test`  
 
 ### SSL Support
 CoRB2 provides support for SSL over XCC. As a prerequisite to enabling CoRB2 SSL support, the XDBC server must be configured to use SSL. It is necessary to specify **XCC-CONNECTION-URI** property with a protocol of 'xccs'. To configure a particular type of SSL configuration use the following property:
@@ -218,7 +218,7 @@ Option | Description
 ### Usage
 #### Usage 1 - Command line options:
 ```
-java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.2.1.jar
+java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.3.0.jar
         com.marklogic.developer.corb.Manager
         XCC-CONNECTION-URI
         [COLLECTION-NAME [PROCESS-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT
@@ -229,7 +229,7 @@ java -server -cp .:marklogic-xcc-6.0.2.jar:marklogic-corb-2.2.1.jar
 
 #### Usage 2 - Java system properties specifying options:
 ```
-java -server -cp .:marklogic-xcc-8.0.1.jar:marklogic-corb-2.2.1.jar
+java -server -cp .:marklogic-xcc-8.0.1.jar:marklogic-corb-2.3.0.jar
         -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ]
         -DPROCESS-MODULE=module-name.xqy -DTHREAD-COUNT=10
         -DURIS-MODULE=get-uris.xqy
@@ -240,14 +240,14 @@ java -server -cp .:marklogic-xcc-8.0.1.jar:marklogic-corb-2.2.1.jar
 
 #### Usage 3 - Properties file specifying options:
 ```
-java -server -cp .:marklogic-xcc-8.0.1.jar:marklogic-corb-2.2.1.jar
+java -server -cp .:marklogic-xcc-8.0.1.jar:marklogic-corb-2.3.0.jar
         -DOPTIONS-FILE=myjob.properties com.marklogic.developer.corb.Manager
 ```
 > looks for myjob.properties file in classpath
 
 #### Usage 4 - Combination of properties file with java system properties and command line options:
 ```
-java -server -cp .:marklogic-xcc-8.0.1.jar:marklogic-corb-2.2.1.jar
+java -server -cp .:marklogic-xcc-8.0.1.jar:marklogic-corb-2.3.0.jar
         -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10
         com.marklogic.developer.corb.Manager XCC-CONNECTION-URI
 ```
