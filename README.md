@@ -1,18 +1,44 @@
 Version: 2.3.0
 
 ### User Guide
-This document provides a comprehensive overview of CoRB2.  For additional information, please refer to CoRB2 online [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc).  This document also covers the less robust [ModuleExecutor Tool](#moduleexecutor-tool) which can be used when only a single staged query is necessary.  The ModuleExecutor Tool is provided as part of the CoRB2 distribution.
+This document provides a comprehensive overview of CoRB2. For additional information, please refer to the CoRB2 [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc). This document also covers the less robust [ModuleExecutor Tool](#moduleexecutor-tool), which can be used when only a single staged query is necessary. The ModuleExecutor Tool is provided as part of the CoRB2 distribution.
 
 ### Downloads
-Please download latest release from https://github.com/marklogic/corb2/releases.  
+Download latest release from https://github.com/marklogic/corb2/releases.  
 
-Corb v2.2.0 or later requires [marklogic-xcc-8.0.*.jar or later](https://developer.marklogic.com/products/xcc) to run. Please note that xcc 8 is backwards compatible up to MarkLogic 5. Also, please use java 1.7 or later for running CoRB.
+Corb v2.2.0 or later requires [marklogic-xcc-8.0.*.jar or later](https://developer.marklogic.com/products/xcc) to run. Please note that marklogic-xcc 8 is backwards compatible up to MarkLogic 5 and runs on Java 1.6 or later.
 
-CoRB uses java logger. To customize logging, please specify logging configuration file using java system argument  
+CoRB uses Java logger. To customize logging, specify a logging configuration file using Java system argument  
 `-Djava.util.logging.config.file=/path/to/logging.properties`
 
+### Building CoRB
+You can build CoRB in the same way as any Gradle project:
+
+1. Clone the corb2 repository on your machine.
+2. Execute a Gradle build in the directory containing the build.gradle file.
+
+```
+./gradlew build
+```
+
+You might want to skip the tests until you have configured a test database 
+(some of the unit tests are more integration tests that require a live MarkLogic database):
+
+```
+./gradlew build -x test
+```
+
+#### Building CoRB with Maven
+CoRB also has a Maven pom.xml and can be built with standard Maven commands
+
+```
+mvn package -Dmaven.test.skip=true
+```
+
 ### Running CoRB
-The entry point is the main method in the `com.marklogic.developer.corb.Manager` class. CoRB requires MarkLogic XCC jar in the classpath, preferably the version that corresponds to the MarkLogic server version, which can be downloaded from https://developer.marklogic.com/products/xcc. This version has been tested with XCC 8.0.* talking to Marklogic 7 and 8. Use java 1.7 or later.
+The entry point is the main method in the `com.marklogic.developer.corb.Manager` class. CoRB requires the MarkLogic XCC JAR in the classpath, 
+preferably the version that corresponds to the MarkLogic server version, which can be downloaded from https://developer.marklogic.com/products/xcc. 
+This version has been tested with XCC 8.0.* talking to Marklogic 7 and 8. Use java 1.6 or later.
 
 CoRB needs options specified through one or more of the following mechanisms:
 
@@ -20,9 +46,9 @@ CoRB needs options specified through one or more of the following mechanisms:
 2. Java system properties ex: `-DXCC-CONNECTION-URI=xcc://user:password@localhost:8202`
 3. As properties file in the class path specified using `-DOPTIONS-FILE=myjob.properties`. Relative and full file system paths are also supported.
 
-If specified in more than one place, a command line parameter takes precedence over a java system property, which take precedence over a property from the **OPTIONS-FILE** properties file.
+If specified in more than one place, a command line parameter takes precedence over a Java system property, which take precedence over a property from the **OPTIONS-FILE** properties file.
 
-> Note: Any or all of the properties can be specified as java system properties or key value pairs in properties file.
+> Note: Any or all of the properties can be specified as Java system properties or key value pairs in properties file.
 
 > Note: CoRB exit codes `0` - successful, `0` - nothing to process (ref: EXIT-CODE-NO-URIS), `1` - initialization or connection error and `2` - execution error
 
@@ -111,12 +137,18 @@ return ("PROCESS-MODULE.foo=bar","POST-BATCH-MODULE.alpha=10",fn:count($uris),$u
 ### Adhoc Modules
 Appending "|ADHOC" to the name or path of a XQuery module (with .xqy extension) or JavaScript (with .sjs or .js extension) module will cause the module to be read from the file system and executed in MarkLogic without being uploaded to Modules database. This simplifies running CoRB jobs by not requiring deployment of any code to MarkLogic, and makes the set of CoRB2 files and configuration more self contained.   
 
-**INIT-MODULE**, **URIS-MODULE**, **PROCESS-MODULE**, **PRE-BATCH-MODULE** and **POST-BATCH-MODULE** can be specified adhoc by adding prefix '|ADHOC' for XQuery or JavaScript (with .sjs or .js extension) at the end. Adhoc XQuery or JavaScript remains local to the CoRB and not deployed to MarkLogic. The XQuery or JavaScript module should be in its named file and that file should be available on the file system, including being on the java classpath for CoRB.  
+**INIT-MODULE**, **URIS-MODULE**, **PROCESS-MODULE**, **PRE-BATCH-MODULE** and **POST-BATCH-MODULE** can be specified adhoc by adding the suffix '|ADHOC' for XQuery or JavaScript (with .sjs or .js extension) at the end. Adhoc XQuery or JavaScript remains local to the CoRB and is not deployed to MarkLogic. The XQuery or JavaScript module should be in its named file and that file should be available on the file system, including being on the java classpath for CoRB. 
 
 **Adhoc Examples:**  
 * `PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC` adhoc-pre-batch.xqy must be on the classpath or in the current directory.
 * `PROCESS-MODULE=/path/to/file/adhoc-transform-module.xqy|ADHOC` XQuery module file with full path in the file system.  
 * `URIS-MODULE=adhoc-uris.sjs|ADHOC` Adhoc JavaScript module in the classpath or current directory.
+
+#### Inline Adhoc Modules
+It is also possible to set a module option with inline code blocks, rather than a file path. This can be done by prepending either `INLINE-XQUERY|` or `INLINE-JAVASCRIPT|` to the option value, followed by the XQuery or JavaScript code to execute. Inline code blocks are executed as "adhoc" modules and are not uploaded to the Modules database. The `|ADHOC` suffix is optional for inline code blocks.
+
+**Inline Adhoc Example:
+* `URIS-MODULE=INLINE-XQUERY|xquery version '1.0-ml'; let $uris := collection('foo') return (count($uris), $uris)`
 
 ### JavaScript Modules
 JavaScript modules are supported with Marklogic 8 and can be used in place of an XQuery module. However, if returning multiple values (ex: URIS-MODULE), values must be returned as a [ValueIterator](https://docs.marklogic.com/js/ValueIterator). MarkLogic JavaScript API has helper functions to convert Arrays into ValueIterator ([`xdmp.arrayValues()`](https://docs.marklogic.com/xdmp.arrayValues)) and inserting values into another ValueIterator ([`fn.insertBefore()`](https://docs.marklogic.com/fn.insertBefore)).
@@ -124,15 +156,17 @@ JavaScript modules are supported with Marklogic 8 and can be used in place of an
 JavaScript module must have an .sjs file extension when deployed to Modules database. However, adhoc JavaScript modules support both .sjs or .js file extensions.
 
 For example, a simple URIS-MODULE may look like this:
+```
+var uris = cts.uris()
+fn.insertBefore(uris,0,uris.count)
+```
 
-    var uris = cts.uris()
-    fn.insertBefore(uris,0,uris.count)
+To return URIS\_BATCH\_REF, we can do the following:
+```
+fn.insertBefore(fn.insertBefore(uris,0,uris.count),0,"batch\-ref")
+```
 
-To return URIS\_BATCH\_REF, we can do the following   
-
-    fn.insertBefore(fn.insertBefore(uris,0,uris.count),0,"batch\-ref")
-
-> Note: Do not use single quotes with in (adhoc) JavaScript modules. If you must use a single quote, escape it with a quote (ex: ''text'')
+> Note: Do not use single quotes within (adhoc) JavaScript modules. If you must use a single quote, escape it with a quote (ex: ''text'')
 
 ### Encryption
 It is often required to protect the database connection string or password from unauthorized access. So, CoRB optionally supports encryption of the entire XCC URL or any parts of the XCC URL (if individually specified), such as **XCC-PASSWORD**.
@@ -150,10 +184,10 @@ PrivateKeyDecrypter automatically detects if the text is encrypted. Unencrypted 
 Generate keys and encrypt XCC URL or password using one of the options below.   
 
 **Java Crypt**  
-* Use the PrivateKeyDecrypter class inside the corb jar with the gen-keys option to generate a key.  
+* Use the PrivateKeyDecrypter class inside the CoRB JAR with the gen-keys option to generate a key.  
   `java -cp marklogic-corb-2.3.0.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024`  
   > Note: if not specified, default algorithm: RSA, default key-length: 1024
-* Use the PrivateKeyDecrypter class inside the corb jar with the encrypt option to encrypt the clear text such as an xcc URL or password.  
+* Use the PrivateKeyDecrypter class inside the CoRB JAR with the encrypt option to encrypt the clear text such as an xcc URL or password.  
   `java -cp marklogic-corb-2.3.0.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA`  
   > Note: if not specified, default algorithm: RSA
 
@@ -384,7 +418,7 @@ PROCESS-MODULE=extract.sjs|ADHOC
  
 Sometimes, a two or more staged CoRB job with both a selector and transform isn't necessary to get the job done. Sometimes, only a single query needs to be executed and the output captured to file.  Maybe even to execute only a single query with no output captured?  In these cases, the ModuleExecutor Tool can be used to quickly and efficiently execute your XQuery or JavaScript files.
 
-Like CoRB, with Version 8 or higher of the MarkLogic XCC Connection Jar in your classpath, the ModuleExecutor Tool can run JavaScript queries against a MarkLogic8 server.  
+Like CoRB, with Version 8 or higher of the MarkLogic XCC Connection JAR in your classpath, the ModuleExecutor Tool can run JavaScript queries against a MarkLogic8 server.  
 
 So how does the ModuleExecutor Tool differ from CoRB?  The key differences are:
 
