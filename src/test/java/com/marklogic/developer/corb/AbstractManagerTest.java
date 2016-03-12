@@ -287,11 +287,11 @@ public class AbstractManagerTest {
      * Test of initDecrypter method, of class AbstractManager.
      */
     @Test
-    public void testInitDecrypter() throws Exception {
+    public void testInitDecrypter_noDecrypterConfigured() throws Exception {
         System.out.println("initDecrypter");
         AbstractManager instance = new AbstractManagerImpl();
         instance.initDecrypter();
-
+        assertNull(instance.decrypter);
     }
 
     @Test
@@ -300,6 +300,7 @@ public class AbstractManagerTest {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty("DECRYPTER", "com.marklogic.developer.corb.JasyptDecrypter");
         instance.initDecrypter();
+        assertTrue(instance.decrypter instanceof com.marklogic.developer.corb.JasyptDecrypter);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -318,6 +319,7 @@ public class AbstractManagerTest {
         System.out.println("initSSLConfig");
         AbstractManager instance = new AbstractManagerImpl();
         instance.initSSLConfig();
+        assertNotNull(instance.sslConfig);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -341,7 +343,7 @@ public class AbstractManagerTest {
     }
 
     @Test
-    public void testInitURI_URI_withValues() throws Exception {
+    public void testInitURI_argsTakePrecedenceOverProperties() throws Exception {
         System.out.println("initURI");
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty("XCC-USERNAME", "username");
@@ -349,14 +351,26 @@ public class AbstractManagerTest {
         instance.properties.setProperty("XCC-HOSTNAME", "localhost");
         instance.properties.setProperty("XCC-PORT", "80");
         instance.initURI("xcc://foo:bar@localhost:8008/baz");
+        assertEquals("xcc://foo:bar@localhost:8008/baz", instance.connectionUri.toString());
     }
 
     @Test
-    public void testInitURI_invalidURI() throws Exception {
+    public void testInitURI_asSystemPropertyOnly() throws Exception {
         System.out.println("initURI");
-        String uriArg = "http://www.marklogic.com";
+        AbstractManager instance = new AbstractManagerImpl();
+        System.setProperty("XCC-CONNECTION-URI", "xcc://foo:bar@localhost:8008/baz");
+        instance.initURI(null);
+        System.clearProperty("XCC-CONNECTION-URI");
+        assertEquals("xcc://foo:bar@localhost:8008/baz", instance.connectionUri.toString());
+    }
+
+    @Test
+    public void testInitURI_invalidXCCURI() throws Exception {
+        System.out.println("initURI");
+        String uriArg = "www.marklogic.com";
         AbstractManager instance = new AbstractManagerImpl();
         instance.initURI(uriArg);
+        assertEquals("www.marklogic.com", instance.connectionUri.toString());
     }
 
     @Test
@@ -376,6 +390,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty("XCC-HOSTNAME", "localhost");
         instance.properties.setProperty("XCC-PORT", "80");
         instance.initURI(null);
+        assertEquals("xcc://username:password@localhost:80", instance.connectionUri.toString());
     }
 
     @Test
