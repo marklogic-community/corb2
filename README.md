@@ -21,7 +21,7 @@ You can build CoRB in the same way as any Gradle project:
 ./gradlew build
 ```
 
-You might want to skip the tests until you have configured a test database 
+You might want to skip the tests until you have configured a test database
 (some of the unit tests are more integration tests that require a live MarkLogic database):
 
 ```
@@ -36,8 +36,8 @@ mvn package -Dmaven.test.skip=true
 ```
 
 ### Running CoRB
-The entry point is the main method in the `com.marklogic.developer.corb.Manager` class. CoRB requires the MarkLogic XCC JAR in the classpath, 
-preferably the version that corresponds to the MarkLogic server version, which can be downloaded from https://developer.marklogic.com/products/xcc. 
+The entry point is the main method in the `com.marklogic.developer.corb.Manager` class. CoRB requires the MarkLogic XCC JAR in the classpath,
+preferably the version that corresponds to the MarkLogic server version, which can be downloaded from https://developer.marklogic.com/products/xcc.
 This version has been tested with XCC 8.0.* talking to Marklogic 7 and 8. Use Java 1.6 or later.
 
 CoRB needs options specified through one or more of the following mechanisms:
@@ -49,6 +49,7 @@ CoRB needs options specified through one or more of the following mechanisms:
 If specified in more than one place, a command line parameter takes precedence over a Java system property, which take precedence over a property from the **OPTIONS-FILE** properties file.
 
 > Note: Any or all of the properties can be specified as Java system properties or key value pairs in properties file.
+
 
 > Note: CoRB exit codes `0` - successful, `0` - nothing to process (ref: EXIT-CODE-NO-URIS), `1` - initialization or connection error and `2` - execution error
 
@@ -122,13 +123,13 @@ ExportBatchToFileTask, PreBatchUpdateFileTask and PostBatchUpdateFileTask use **
 ### Custom Inputs to XQuery or JavaScript Modules
 Any property specified with prefix (with '.') **INIT-MODULE**, **URIS-MODULE**, **PRE-BATCH-MODULE**, **PROCESS-MODULE**, **POST-BATCH-MODULE** will be set as an external variable in the corresponding XQuery module (if that variable is defined as an external string variable in XQuery module). For JavaScript modules the variables need be defined as global variables.  
 
-**Custom Input Examples:**
+#### Custom Input Examples:
 * `URIS-MODULE.maxLimit=1000` Expects an external string variable  _maxLimit_ in URIS-MODULE XQuery or global variable for JavaScript.  
 * `PROCESS-MODULE.startDate=2015-01-01` Expects an external string variable _startDate_ in XQUERY-MODULE XQuery or global variable for JavaScript.  
 
 Alternatively, **URIS-MODULE** can pass custom inputs to **PRE-BATCH-MODULE**, **PROCESS-MODULE**, **POST-BATCH-MODULE** by returning one or more of the property values in above format before the count the of URIs. If the **URIS-MODULE** needs **URIS\_BATCH\_REF** (above) as well, it needs to be just before the URIs count.  
 
-**Example:**
+#### Custom Input From URIS-MODULE Example:
 ```
 let $uris := cts:uris()
 return ("PROCESS-MODULE.foo=bar","POST-BATCH-MODULE.alpha=10",fn:count($uris),$uris)
@@ -137,7 +138,7 @@ return ("PROCESS-MODULE.foo=bar","POST-BATCH-MODULE.alpha=10",fn:count($uris),$u
 ### Adhoc Modules
 Appending `|ADHOC` to the name or path of a XQuery module (with .xqy extension) or JavaScript (with .sjs or .js extension) module will cause the module to be read from the file system and executed in MarkLogic without being uploaded to Modules database. This simplifies running CoRB jobs by not requiring deployment of any code to MarkLogic, and makes the set of CoRB2 files and configuration more self contained.   
 
-**INIT-MODULE**, **URIS-MODULE**, **PROCESS-MODULE**, **PRE-BATCH-MODULE** and **POST-BATCH-MODULE** can be specified adhoc by adding the suffix `|ADHOC` for XQuery or JavaScript (with .sjs or .js extension) at the end. Adhoc XQuery or JavaScript remains local to the CoRB and is not deployed to MarkLogic. The XQuery or JavaScript module should be in its named file and that file should be available on the file system, including being on the java classpath for CoRB. 
+**INIT-MODULE**, **URIS-MODULE**, **PROCESS-MODULE**, **PRE-BATCH-MODULE** and **POST-BATCH-MODULE** can be specified adhoc by adding the suffix `|ADHOC` for XQuery or JavaScript (with .sjs or .js extension) at the end. Adhoc XQuery or JavaScript remains local to the CoRB and is not deployed to MarkLogic. The XQuery or JavaScript module should be in its named file and that file should be available on the file system, including being on the java classpath for CoRB.
 
 ##### Adhoc Examples:
 * `PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC` adhoc-pre-batch.xqy must be on the classpath or in the current directory.
@@ -183,21 +184,21 @@ PrivateKeyDecrypter automatically detects if the text is encrypted. Unencrypted 
 
 Generate keys and encrypt XCC URL or password using one of the options below.   
 
-####Java Crypt
+#### Java Crypt
 * Use the PrivateKeyDecrypter class inside the CoRB JAR with the gen-keys option to generate a key.  
   `java -cp marklogic-corb-2.3.0.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024`  
-  > Note: if not specified, default algorithm: RSA, default key-length: 1024
+> Note: if not specified, default algorithm: RSA, default key-length: 1024
 * Use the PrivateKeyDecrypter class inside the CoRB JAR with the encrypt option to encrypt the clear text such as an xcc URL or password.  
   `java -cp marklogic-corb-2.3.0.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA`  
-  > Note: if not specified, default algorithm: RSA
+> Note: if not specified, default algorithm: RSA
 
-####RSA keys 
+#### RSA keys
 * `openssl genrsa -out private.pem 1024` Generate a private key in PEM format
 * `openssl pkcs8 -topk8 -nocrypt -in private.pem -out private.pkcs8.key` Create a PRIVATE-KEY-FILE in PKCS8 standard for java
 * `openssl rsa -in private.pem -pubout > public.key`  Extract public key
 * `echo "uri or password" | openssl rsautl -encrypt -pubin -inkey public.key | base64` Encrypt URI or password. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx)
 
-####ssh-keygen  
+#### ssh-keygen  
 * `ssh-keygen` ex:key as id_rsa after selecting a passphrase
 * `openssl pkcs8 -topk8 -nocrypt -in id_rsa -out id_rsa.pkcs8.key` (asks for passphrase)
 * `openssl rsa -in id_rsa -pubout > public.key` (asks for passphrase)
@@ -415,7 +416,7 @@ PROCESS-MODULE=extract.sjs|ADHOC
 ```
 
 ### ModuleExecutor Tool
- 
+
 Sometimes, a two or more staged CoRB job with both a selector and transform isn't necessary to get the job done. Sometimes, only a single query needs to be executed and the output captured to file.  Maybe even to execute only a single query with no output captured?  In these cases, the ModuleExecutor Tool can be used to quickly and efficiently execute your XQuery or JavaScript files.
 
 Like CoRB, with Version 8 or higher of the MarkLogic XCC Connection JAR in your classpath, the ModuleExecutor Tool can run JavaScript queries against a MarkLogic8 server.  
@@ -437,7 +438,7 @@ That's it.  Doesn't seem like a lot but it actually limits its functionality sig
   - command line -D properties
   - a properties file
   - a combination of any of these
-  
+
 So how do you use it?   For convenience, it can be configured using the same techniques as CoRB provides and using the same parameter names. The big difference is that there are far fewer parameters needed and there is a different class used for its execution (com.marklogic.developer.corb.ModuleExecutor).
 
 The following parameters are supported and can be used in the same ways as described above for CoRB:
