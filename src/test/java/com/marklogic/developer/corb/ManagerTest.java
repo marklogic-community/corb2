@@ -27,6 +27,7 @@ import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import static com.marklogic.developer.corb.TestUtils.clearFile;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
+import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ContentSourceFactory;
@@ -54,7 +55,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import org.apache.commons.io.FileUtils;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
@@ -459,7 +459,7 @@ public class ManagerTest {
      */
     @After
     public void tearDown() throws Exception {
-        FileUtils.deleteDirectory(new File(ManagerTest.EXPORT_FILE_DIR));
+        FileUtils.deleteFile(new File(ManagerTest.EXPORT_FILE_DIR));
         clearSystemProperties();
     }
 
@@ -1285,7 +1285,7 @@ public class ManagerTest {
 
         instance.run();
 
-        int lineCount = FileUtils.readLines(exportFile).size();
+        int lineCount = FileUtils.getLineCount(exportFile);
         assertEquals(8, lineCount);
         List<LogRecord> records = testLogger.getLogRecords();
 
@@ -1335,7 +1335,7 @@ public class ManagerTest {
         service.schedule(stop, 1, TimeUnit.SECONDS);
 
         instance.run();
-        int lineCount = FileUtils.readLines(exportFile).size();
+        int lineCount = FileUtils.getLineCount(exportFile);
         assertNotEquals(8, lineCount);
         List<LogRecord> records = testLogger.getLogRecords();
         assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "cleaning up")));
@@ -1383,7 +1383,7 @@ public class ManagerTest {
         service.schedule(adjustThreads, 1, TimeUnit.SECONDS);
 
         instance.run();
-        int lineCount = FileUtils.readLines(exportFile).size();
+        int lineCount = FileUtils.getLineCount(exportFile);
         assertEquals(8, lineCount);
         List<LogRecord> records = testLogger.getLogRecords();
         assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "Changed {0} to {1}")));

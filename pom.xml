@@ -47,7 +47,7 @@
         <dependency>
             <groupId>com.github.stefanbirkner</groupId>
             <artifactId>system-rules</artifactId>
-            <version>1.13.0</version>
+            <version>1.16.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -59,13 +59,13 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
-            <version>1.8.4</version>
+            <version>1.10.19</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.marklogic</groupId>
             <artifactId>marklogic-xcc</artifactId>
-            <version>8.0.1</version>
+            <version>8.0.4.2</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.externalsortinginjava</groupId>
@@ -79,7 +79,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.3</version>
+                <version>3.5.1</version>
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>
@@ -118,7 +118,7 @@
                     <dependency>
                         <groupId>org.ow2.asm</groupId>
                         <artifactId>asm</artifactId>
-                        <version>5.0.3</version>
+                        <version>5.0.4</version>
                     </dependency>
                 </dependencies>
             </plugin>

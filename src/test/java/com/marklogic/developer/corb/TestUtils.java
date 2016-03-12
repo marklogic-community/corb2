@@ -18,6 +18,7 @@
  */
 package com.marklogic.developer.corb;
 
+import com.marklogic.developer.corb.util.IOUtils;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -25,7 +26,6 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Scanner;
 import java.util.logging.LogRecord;
-import org.apache.commons.io.IOUtils;
 
 /**
  *
