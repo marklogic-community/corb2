@@ -121,7 +121,7 @@ public class Monitor implements Runnable {
         long current = System.currentTimeMillis();
         if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
             if (pool.isPaused()) {
-                 LOG.log(Level.INFO, "CoRB2 has been paused. Resume execution by changing the state in the command file " + manager.getOption(COMMAND_FILE) + " to RESUME");
+                 LOG.log(Level.INFO, "CoRB2 has been paused. Resume execution by changing the " + Options.COMMAND + " option in the command file " + manager.getOption(COMMAND_FILE) + " to RESUME");
             }
             LOG.log(Level.INFO, "completed {0}", getProgressMessage(completed));
             lastProgress = current;

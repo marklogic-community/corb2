@@ -1294,6 +1294,71 @@ public class ManagerTest {
     }
 
     @Test
+    public void testCommandFilePause_resumeWhenCommandFileChangedAndNoCommand() throws IOException, Exception {
+        System.out.println("pause/resume test");
+        clearSystemProperties();
+        File exportFile = new File(EXPORT_FILE_DIR, EXPORT_FILE_NAME);
+        exportFile.deleteOnExit();
+
+        File commandFile = new File(EXPORT_FILE_DIR, Math.random() + ".txt");
+        commandFile.deleteOnExit();
+        System.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
+        System.setProperty(Options.URIS_FILE, URIS_FILE);
+        System.setProperty(Options.THREAD_COUNT, "1");
+        System.setProperty(Options.PROCESS_MODULE, "src/test/resources/transformSlow.xqy|ADHOC");
+        System.setProperty(Options.PROCESS_TASK, PROCESS_TASK);
+        System.setProperty(Options.EXPORT_FILE_NAME, EXPORT_FILE_NAME);
+        System.setProperty(Options.EXPORT_FILE_DIR, EXPORT_FILE_DIR);
+        System.setProperty(Options.COMMAND_FILE, commandFile.getAbsolutePath());
+
+        Manager instance = new Manager();
+        instance.init(new String[0]);
+
+        Runnable pause = new Runnable() {
+            @Override
+            public void run() {
+                Properties props = new Properties();
+                props.put(Options.COMMAND, "pause");
+                File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
+                try {
+                    commandFile.createNewFile();
+                    FileOutputStream fos = new FileOutputStream(commandFile);
+                    props.store(fos, null);
+                    fos.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        };
+        Runnable resume = new Runnable() {
+            @Override
+            public void run() {
+                Properties props = new Properties();
+                File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
+                try {
+                    FileOutputStream fos = new FileOutputStream(commandFile);
+                    props.store(fos, null);
+                    fos.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        };
+        ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
+        service.schedule(pause, 1, TimeUnit.SECONDS);
+        service.schedule(resume, 4, TimeUnit.SECONDS);
+
+        instance.run();
+
+        int lineCount = FileUtils.getLineCount(exportFile);
+        assertEquals(8, lineCount);
+        List<LogRecord> records = testLogger.getLogRecords();
+
+        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "pausing")));
+        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "resuming")));
+    }
+
+    @Test
     public void testCommandFileStop() throws IOException, Exception {
         System.out.println("stop test");
         clearSystemProperties();

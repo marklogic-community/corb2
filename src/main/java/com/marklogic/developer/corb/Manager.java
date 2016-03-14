@@ -216,7 +216,7 @@ public class Manager extends AbstractManager {
             scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
             CommandFileWatcher commandFileWatcher = new CommandFileWatcher(FileUtils.getFile(commandFile), this);
             int pollInterval = NumberUtils.toInt(getOption(Options.COMMAND_FILE_POLL_INTERVAL), 1);
-            scheduledExecutor.scheduleWithFixedDelay(commandFileWatcher, 0, pollInterval, TimeUnit.SECONDS);
+            scheduledExecutor.scheduleWithFixedDelay(commandFileWatcher, pollInterval, pollInterval, TimeUnit.SECONDS);
         }
     }
 
@@ -743,7 +743,7 @@ public class Manager extends AbstractManager {
                     LOG.log(INFO, "received {0}/{1}: {2}", new Object[]{count, total, uri});
 
                     if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
-                        LOG.warning("Slow receive!" + " Consider increasing max heap size" + " and using -XX:+UseConcMarkSweepGC");
+                        LOG.warning("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
                         freeMemory = Runtime.getRuntime().freeMemory();
                         LOG.log(INFO, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
                     }
@@ -816,22 +816,24 @@ public class Manager extends AbstractManager {
 
     public void setThreadCount(int threadCount) {
         if (threadCount > 0) {
-            options.setThreadCount(threadCount);
-            if (pool != null) {
-                int currentMaxPoolSize = pool.getMaximumPoolSize();
-                try {
-                    if (threadCount < currentMaxPoolSize) {
-                        //shrink the core first then max
-                        pool.setCorePoolSize(threadCount);
-                        pool.setMaximumPoolSize(threadCount);
-                    } else {
-                        //grow max first, then core
-                        pool.setMaximumPoolSize(threadCount);
-                        pool.setCorePoolSize(threadCount);
+            if (threadCount != options.getThreadCount()) {
+                options.setThreadCount(threadCount);
+                if (pool != null) {
+                    int currentMaxPoolSize = pool.getMaximumPoolSize();
+                    try {
+                        if (threadCount < currentMaxPoolSize) {
+                            //shrink the core first then max
+                            pool.setCorePoolSize(threadCount);
+                            pool.setMaximumPoolSize(threadCount);
+                        } else {
+                            //grow max first, then core
+                            pool.setMaximumPoolSize(threadCount);
+                            pool.setCorePoolSize(threadCount);
+                        }
+                        LOG.log(INFO, "Changed {0} to {1}", new Object[]{Options.THREAD_COUNT, threadCount});
+                    } catch (IllegalArgumentException ex) {
+                        LOG.log(WARNING, "Unable to change thread count", ex);
                     }
-                    LOG.log(INFO, "Changed {0} to {1}", new Object[]{Options.THREAD_COUNT, threadCount});
-                } catch (IllegalArgumentException ex) {
-                    LOG.log(WARNING, "Unable to change thread count", ex);
                 }
             }
         } else {
@@ -865,6 +867,9 @@ public class Manager extends AbstractManager {
     public void stop() {
         LOG.info("cleaning up");
         if (null != pool) {
+            if (pool.isPaused()) {
+                pool.resume();
+            }
             List<Runnable> remaining = pool.shutdownNow();
             if (remaining.size() > 0) {
                 LOG.log(WARNING, "thread pool was shut down with {0} pending tasks", remaining.size());
@@ -900,7 +905,7 @@ public class Manager extends AbstractManager {
 
         public CommandFileWatcher(File file, Manager manager) {
             this.file = file;
-            this.timeStamp = file.lastModified();
+            this.timeStamp = -1;
             this.manager = manager;
         }
 
@@ -925,10 +930,10 @@ public class Manager extends AbstractManager {
                 String command = commandFile.getProperty(Options.COMMAND);
                 if ("PAUSE".equalsIgnoreCase(command)) {
                     manager.pause();
-                } else if ("RESUME".equalsIgnoreCase(command)) {
-                    manager.resume();
                 } else if ("STOP".equalsIgnoreCase(command)) {
                     manager.stop();
+                } else {
+                    manager.resume();
                 }
 
                 if (commandFile.containsKey(THREAD_COUNT)) {

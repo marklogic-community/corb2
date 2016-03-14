@@ -102,7 +102,7 @@ Option | Description
 **OPTIONS-FILE** | A properties file containing any of the CoRB2 options. Relative and full file system paths are supported.
 **COMMAND-FILE** | A properties file used to configure **COMMAND** and **THREAD-COUNT** while CoRB2 is running. For instance, to temporarily pause execution, or to lower the number of threads in order to throttle execution.
 **COMMAND-FILE-POLL-INTERVAL** | Default is 1. The regular interval (seconds) in which the existence of the **COMMAND-FILE** is tested can be controlled by using this property.
-**COMMAND** | Pause, resume, and stop the execution of CoRB2. Possible commands include: PAUSE, RESUME, and STOP.
+**COMMAND** | Pause, resume, and stop the execution of CoRB2. Possible commands include: PAUSE, RESUME, and STOP. If the **COMMAND-FILE** is modified and either there is no **COMMAND** or an invalid value is specified, then execution will RESUME.
 
 ### Alternate XCC connection configuration
 Option | Description
