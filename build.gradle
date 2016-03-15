@@ -78,7 +78,12 @@ if (project.hasProperty("myBintrayUser")) {
             repo = 'maven'
             name = project.name
             licenses = ['Apache-2.0']
+            userOrg = 'marklogic'
+            websiteUrl = 'https://github.com/marklogic/corb2'
+            issueTrackerUrl = 'https://github.com/marklogic/corb2/issues'
             vcsUrl = 'https://github.com/marklogic/corb2.git'
+            githubRepo = 'marklogic/corb2' 
+            githubReleaseNotesFile = 'README.md'
             version {
                 name = project.version
                 released = new Date()
