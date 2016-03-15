@@ -110,9 +110,13 @@ public class Manager extends AbstractManager {
     private Thread monitorThread;
     private CompletionService<String[]> completionService;
     private ScheduledExecutorService scheduledExecutor;
+    
     private boolean execError = false;
-
-    protected static int EXIT_CODE_NO_URIS = 0;
+    private boolean stopCommand = false;
+    
+    protected static int EXIT_CODE_NO_URIS = EXIT_CODE_SUCCESS;
+    protected static final int EXIT_CODE_STOP_COMMAND = 3;
+    
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
 
     public static class CallerBlocksPolicy implements RejectedExecutionHandler {
@@ -150,18 +154,20 @@ public class Manager extends AbstractManager {
      * @param args
      */
     public static void main(String[] args) {
-        Manager tm = new Manager();
+        Manager manager = new Manager();
         try {
-            tm.init(args);
+            manager.init(args);
         } catch (Exception exc) {
             LOG.log(SEVERE, "Error initializing CORB", exc);
             System.exit(EXIT_CODE_INIT_ERROR);
         }
         //now we can start corb. 
         try {
-            int count = tm.run();
-            if (tm.execError) {
+            int count = manager.run();
+            if (manager.execError) {
                 System.exit(EXIT_CODE_PROCESSING_ERROR);
+            } else if (manager.stopCommand){
+                System.exit(EXIT_CODE_STOP_COMMAND);
             } else if (count == 0) {
                 System.exit(EXIT_CODE_NO_URIS);
             } else {
@@ -862,7 +868,7 @@ public class Manager extends AbstractManager {
     }
 
     /**
-     * Stop the thread pool and
+     * Stop the thread pool
      */
     public void stop() {
         LOG.info("cleaning up");
@@ -931,6 +937,7 @@ public class Manager extends AbstractManager {
                 if ("PAUSE".equalsIgnoreCase(command)) {
                     manager.pause();
                 } else if ("STOP".equalsIgnoreCase(command)) {
+                    manager.stopCommand = true;
                     manager.stop();
                 } else {
                     manager.resume();
