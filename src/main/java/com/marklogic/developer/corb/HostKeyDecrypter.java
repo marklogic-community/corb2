@@ -87,9 +87,11 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                         return sn.getBytes();
                     } else {
                         throw new IllegalStateException("Unable to find serial number on Windows");
-                    }   
+                    }
                 } finally {
-                    if (sc != null) { sc.close(); } //Scanner doesn't implement Closable in 1.6
+                    if (sc != null) {
+                        sc.close();
+                    } //Scanner doesn't implement Closable in 1.6
                     closeOrThrowRuntime(br);
                 }
             }
@@ -159,7 +161,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         };
 
         public abstract byte[] getSN();
-        
+
         private static void closeOrThrowRuntime(Closeable obj) {
             if (obj != null) {
                 try {
@@ -169,11 +171,8 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                 }
             }
         }
-        
-        private static BufferedReader read(String command) {
-            OutputStream os = null;
-            InputStream is = null;
 
+        private static BufferedReader read(String command) {
             Runtime runtime = Runtime.getRuntime();
             Process process = null;
             try {
@@ -182,15 +181,13 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                 throw new RuntimeException(e);
             }
 
-            os = process.getOutputStream();
-            is = process.getInputStream();
-
+            OutputStream os = process.getOutputStream();
             try {
                 os.close();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-
+            InputStream is = process.getInputStream();
             return new BufferedReader(new InputStreamReader(is));
         }
     }
