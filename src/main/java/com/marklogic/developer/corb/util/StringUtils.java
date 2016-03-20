@@ -198,7 +198,8 @@ public class StringUtils {
      * Checks if a CharSequence is null or whitespace-only characters
      *
      * @param value
-     * @return
+     * @return {@code true} if the value is null, empty, or whitespace-only 
+     * characters; {@code false} otherwise.
      */
     public static boolean isBlank(final CharSequence value) {
         int length;
@@ -228,8 +229,8 @@ public class StringUtils {
      * null, returns null. @param value @return @param value @return the trimmed
      * string, or {@code null} if null String
      *
-     * i
-     * nput
+     * @param value
+     * @return
      */
     public static String trim(final String value) {
         return value == null ? null : value.trim();
