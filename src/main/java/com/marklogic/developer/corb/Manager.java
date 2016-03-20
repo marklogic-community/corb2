@@ -583,7 +583,7 @@ public class Manager extends AbstractManager {
 
     protected void registerStatusInfo() {
         Session session = contentSource.newSession();
-        AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_0_9_ML + DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
+        AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML + DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
                 + "let $status := \n" + " xdmp:server-status(xdmp:host(), xdmp:server())\n"
                 + "let $modules := $status/mlss:modules\n"
                 + "let $root := $status/mlss:root\n"
