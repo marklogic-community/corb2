@@ -123,7 +123,7 @@ public class Monitor implements Runnable {
         long current = System.currentTimeMillis();
         if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
             if (pool.isPaused()) {
-                 LOG.log(INFO, "CoRB2 has been paused. Resume execution by changing the " + Options.COMMAND + " option in the command file " + manager.getOption(COMMAND_FILE) + " to RESUME");
+                 LOG.log(INFO, "CoRB2 has been paused. Resume execution by changing the " + Options.COMMAND + " option in the command file {0} to RESUME", manager.getOption(COMMAND_FILE));
             }
             LOG.log(INFO, "completed {0}", getProgressMessage(completed));
             lastProgress = current;
