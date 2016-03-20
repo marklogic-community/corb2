@@ -18,6 +18,7 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.AbstractManager.getAdhocQuery;
 import static com.marklogic.developer.corb.Options.INIT_MODULE;
 import static com.marklogic.developer.corb.Options.POST_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
@@ -140,7 +141,7 @@ public class TaskFactory {
                     adhocQuery = moduleToAdhocQueryMap.get(module);
                     if (adhocQuery == null) {
                         String modulePath = module.substring(0, module.indexOf('|'));
-                        adhocQuery = AbstractManager.getAdhocQuery(modulePath);
+                        adhocQuery = getAdhocQuery(modulePath);
                         if (isEmpty(adhocQuery)) {
                             throw new IllegalStateException("Unable to read adhoc query " + module + " from classpath or filesystem");
                         }
