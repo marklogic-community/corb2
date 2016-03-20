@@ -18,6 +18,8 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Manager.DEFAULT_BATCH_URI_DELIM;
+import static com.marklogic.developer.corb.Manager.URIS_BATCH_REF;
 import static com.marklogic.developer.corb.Options.BATCH_URI_DELIM;
 import static com.marklogic.developer.corb.Options.ERROR_FILE_NAME;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_LIMIT;
@@ -45,7 +47,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Level;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 
 /**
@@ -202,7 +205,7 @@ public abstract class AbstractTask implements Task {
 				} else {
 					String delim = getProperty(BATCH_URI_DELIM);
 					if (delim == null || delim.length() == 0) {
-						delim = Manager.DEFAULT_BATCH_URI_DELIM;
+						delim = DEFAULT_BATCH_URI_DELIM;
 					}
 					StringBuffer buff = new StringBuffer();
 					for (String uri : inputUris) {
@@ -215,8 +218,8 @@ public abstract class AbstractTask implements Task {
 				}
 			}
 
-			if (properties != null && properties.containsKey(Manager.URIS_BATCH_REF)) {
-				request.setNewStringVariable(Manager.URIS_BATCH_REF, properties.getProperty(Manager.URIS_BATCH_REF));
+			if (properties != null && properties.containsKey(URIS_BATCH_REF)) {
+				request.setNewStringVariable(URIS_BATCH_REF, properties.getProperty(URIS_BATCH_REF));
 			}
 
 			for (String propName : modulePropNames) {
@@ -267,7 +270,7 @@ public abstract class AbstractTask implements Task {
             int retryInterval = exc instanceof ServerConnectionException ? this.getConnectRetryInterval() : this.getQueryRetryInterval();
             if (connectRetryCount < retryLimit) {
                 connectRetryCount++;
-                LOG.log(Level.WARNING,
+                LOG.log(WARNING,
                         "Encountered " + name + " from Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
                         new Object[]{connectRetryCount, retryInterval, exc.getMessage(), asString(inputUris)});
                 try {
@@ -278,14 +281,14 @@ public abstract class AbstractTask implements Task {
             } else if (exc instanceof ServerConnectionException || failOnError) {
                 throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
             } else {
-                LOG.log(Level.WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
+                LOG.log(WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
                 writeToErrorFile(inputUris, exc.getMessage());
                 return inputUris;
             }
         } else if (failOnError) {
             throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
         } else {
-            LOG.log(Level.WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
+            LOG.log(WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
             writeToErrorFile(inputUris, exc.getMessage());
             return inputUris;
         }
@@ -371,7 +374,7 @@ public abstract class AbstractTask implements Task {
             try {
                 intVal = Integer.parseInt(value);
             } catch (Exception exc) {
-                LOG.log(Level.WARNING, "Unable to parse '{0}' value '{1}' as an int", new Object[]{key, value});
+                LOG.log(WARNING, "Unable to parse '{0}' value '{1}' as an int", new Object[]{key, value});
             }
         }
         return intVal;
@@ -406,7 +409,7 @@ public abstract class AbstractTask implements Task {
                 }
                 writer.flush();
             } catch (Exception exc) {
-                LOG.log(Level.SEVERE, "Problem writing uris to " + ERROR_FILE_NAME, exc);
+                LOG.log(SEVERE, "Problem writing uris to " + ERROR_FILE_NAME, exc);
             } finally {
                 closeQuietly(writer);
             }

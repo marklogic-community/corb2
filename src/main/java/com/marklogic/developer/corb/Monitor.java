@@ -26,7 +26,9 @@ import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 
 /**
@@ -79,15 +81,15 @@ public class Monitor implements Runnable {
         } catch (InterruptedException e) {
             // reset interrupt status and exit
             Thread.interrupted();
-            LOG.log(Level.SEVERE, "interrupted: exiting", e);
+            LOG.log(SEVERE, "interrupted: exiting", e);
         } catch (CorbException e) {
-            LOG.log(Level.SEVERE, "Unexpected error", e);
+            LOG.log(SEVERE, "Unexpected error", e);
         }
     }
 
     private void monitorResults() throws InterruptedException, ExecutionException, CorbException {
         // fast-fail as soon as we see any exceptions
-        LOG.log(Level.INFO, "monitoring {0} tasks", taskCount);
+        LOG.log(INFO, "monitoring {0} tasks", taskCount);
         Future<String[]> future = null;
         while (!shutdownNow) {
             // try to avoid thread starvation
@@ -105,31 +107,31 @@ public class Monitor implements Runnable {
             
             if (completed >= taskCount) {
                 if (pool.getActiveCount() > 0 || (pool.getTaskCount() - pool.getCompletedTaskCount()) > 0) {
-                    LOG.log(Level.SEVERE, "Thread pool is still active with all the tasks completed and received. We shouldn't see this message.");
+                    LOG.log(SEVERE, "Thread pool is still active with all the tasks completed and received. We shouldn't see this message.");
                 }
                 break;
             } else if (future == null && pool.getActiveCount() == 0) {
-                LOG.log(Level.WARNING, "No active tasks found with {0} tasks remains to be completed", (taskCount - completed));
+                LOG.log(WARNING, "No active tasks found with {0} tasks remains to be completed", (taskCount - completed));
             }
         }
         LOG.info("waiting for pool to terminate");
         pool.awaitTermination(1, TimeUnit.SECONDS);
-        LOG.log(Level.INFO, "completed all tasks {0}/{1}", new Object[]{completed, taskCount});
+        LOG.log(INFO, "completed all tasks {0}/{1}", new Object[]{completed, taskCount});
     }
 
     private long showProgress() throws InterruptedException {
         long current = System.currentTimeMillis();
         if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
             if (pool.isPaused()) {
-                 LOG.log(Level.INFO, "CoRB2 has been paused. Resume execution by changing the " + Options.COMMAND + " option in the command file " + manager.getOption(COMMAND_FILE) + " to RESUME");
+                 LOG.log(INFO, "CoRB2 has been paused. Resume execution by changing the " + Options.COMMAND + " option in the command file " + manager.getOption(COMMAND_FILE) + " to RESUME");
             }
-            LOG.log(Level.INFO, "completed {0}", getProgressMessage(completed));
+            LOG.log(INFO, "completed {0}", getProgressMessage(completed));
             lastProgress = current;
 
             // check for low memory
             long freeMemory = Runtime.getRuntime().freeMemory();
             if (freeMemory < (16 * 1024 * 1024)) {
-                LOG.log(Level.WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
+                LOG.log(WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
             }
         }
         return lastProgress;

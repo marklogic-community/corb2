@@ -25,7 +25,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
-import java.util.logging.Level;
+import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
 
 public class FileUrisLoader extends AbstractUrisLoader {
@@ -105,7 +105,7 @@ public class FileUrisLoader extends AbstractUrisLoader {
 				br.close();
 				br = null;
 			} catch (Exception exc) {
-				LOG.log(Level.SEVERE, "while closing uris file reader", exc);
+				LOG.log(SEVERE, "while closing uris file reader", exc);
 			}
 		}
 		cleanup();

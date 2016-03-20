@@ -54,9 +54,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.logging.Level;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
-
 
 /**
  * This class replaces RunXQuery. It can run both XQuery and JavaScript and when
@@ -86,7 +86,7 @@ public class ModuleExecutor extends AbstractManager {
         try {
             moduleExecutor.init(args);
         } catch (Exception exc) {
-            LOG.log(Level.SEVERE, "Error initializing ModuleExecutor", exc);
+            LOG.log(SEVERE, "Error initializing ModuleExecutor", exc);
             System.exit(EXIT_CODE_INIT_ERROR);
         }
         //now we can start corb. 
@@ -94,7 +94,7 @@ public class ModuleExecutor extends AbstractManager {
             moduleExecutor.run();
             System.exit(EXIT_CODE_SUCCESS);
         } catch (Exception exc) {
-            LOG.log(Level.SEVERE, "Error while running CORB", exc);
+            LOG.log(SEVERE, "Error while running CORB", exc);
             System.exit(EXIT_CODE_PROCESSING_ERROR);
         }
     }
@@ -195,7 +195,7 @@ public class ModuleExecutor extends AbstractManager {
 
     private void registerStatusInfo() {
         Session session = contentSource.newSession();
-        AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_0_9_ML
+        AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML
                 + DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
                 + "let $status := \n"
                 + " xdmp:server-status(xdmp:host(), xdmp:server())\n"
@@ -220,21 +220,21 @@ public class ModuleExecutor extends AbstractManager {
                 options.setXDBC_ROOT(item.asString());
             }
         }
-        LOG.log(Level.INFO, "Configured modules db: {0}", options.getModulesDatabase());
-        LOG.log(Level.INFO, "Configured modules root: {0}", options.getModuleRoot());
-        LOG.log(Level.INFO, "Configured process module: {0}", options.getProcessModule());
+        LOG.log(INFO, "Configured modules db: {0}", options.getModulesDatabase());
+        LOG.log(INFO, "Configured modules root: {0}", options.getModuleRoot());
+        LOG.log(INFO, "Configured process module: {0}", options.getProcessModule());
 
         for (Entry<Object, Object> e : properties.entrySet()) {
             if (e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
-                LOG.log(Level.INFO, "Loaded property {0}={1}", new Object[]{e.getKey(), e.getValue()});
+                LOG.log(INFO, "Loaded property {0}={1}", new Object[]{e.getKey(), e.getValue()});
             }
         }
     }
 
     public void run() throws Exception {
-        LOG.log(Level.INFO, "{0} starting: {1}", new Object[]{NAME, VERSION_MSG});
+        LOG.log(INFO, "{0} starting: {1}", new Object[]{NAME, VERSION_MSG});
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
-        LOG.log(Level.INFO, "maximum heap size = {0} MiB", maxMemory);
+        LOG.log(INFO, "maximum heap size = {0} MiB", maxMemory);
 
         try {
             RequestOptions opts = new RequestOptions();
@@ -251,14 +251,14 @@ public class ModuleExecutor extends AbstractManager {
                     if (isBlank(adhocQuery)) {
                         throw new IllegalStateException("Unable to read inline query ");
                     }
-                    LOG.log(Level.INFO, "invoking inline process module");
+                    LOG.log(INFO, "invoking inline process module");
                 } else {
                     String queryPath = processModule.substring(0, processModule.indexOf('|'));
                     adhocQuery = getAdhocQuery(queryPath);
                     if (isBlank(adhocQuery)) {
                         throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
                     }
-                    LOG.log(Level.INFO, "invoking adhoc process module {0}", queryPath);
+                    LOG.log(INFO, "invoking adhoc process module {0}", queryPath);
                 }
                 req = session.newAdhocQuery(adhocQuery);
                 if (isJavaScriptModule(processModule)) {
@@ -267,7 +267,7 @@ public class ModuleExecutor extends AbstractManager {
             } else {
                 String root = options.getModuleRoot();
                 String modulePath = buildModulePath(root, processModule);
-                LOG.log(Level.INFO, "invoking module {0}", modulePath);
+                LOG.log(INFO, "invoking module {0}", modulePath);
                 req = session.newModuleInvoke(modulePath);
             }
 
@@ -289,7 +289,7 @@ public class ModuleExecutor extends AbstractManager {
 
             LOG.info("Done");
         } catch (Exception exc) {
-            LOG.log(Level.SEVERE, exc.getMessage());
+            LOG.severe(exc.getMessage());
             throw exc;
         }
     }

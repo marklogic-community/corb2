@@ -39,7 +39,8 @@ import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -72,7 +73,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             opts.setCacheResult(false);
             // this should be a noop, but xqsync does it
             opts.setResultBufferSize(0);
-            LOG.log(Level.INFO, "buffer size = {0}, caching = {1}",
+            LOG.log(INFO, "buffer size = {0}, caching = {1}",
                     new Object[]{opts.getResultBufferSize(), opts.getCacheResult()});
 
             session = cs.newSession();
@@ -85,14 +86,14 @@ public class QueryUrisLoader extends AbstractUrisLoader {
                     if (isEmpty(adhocQuery)) {
                         throw new IllegalStateException("Unable to read inline module");
                     }
-                    LOG.log(Level.INFO, "invoking inline uris module");
+                    LOG.log(INFO, "invoking inline uris module");
                 } else {
                     String queryPath = urisModule.substring(0, urisModule.indexOf('|'));
                     adhocQuery = AbstractManager.getAdhocQuery(queryPath);
                     if (isEmpty(adhocQuery)) {
                         throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
                     }
-                    LOG.log(Level.INFO, "invoking adhoc uris module {0}", queryPath);
+                    LOG.log(INFO, "invoking adhoc uris module {0}", queryPath);
                 }
                 req = session.newAdhocQuery(adhocQuery);
                 if (isJavaScriptModule(urisModule)) {
@@ -101,7 +102,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             } else {
                 String root = options.getModuleRoot();
                 String modulePath = buildModulePath(root, urisModule);
-                LOG.log(Level.INFO, "invoking uris module {0}", modulePath);
+                LOG.log(INFO, "invoking uris module {0}", modulePath);
                 req = session.newModuleInvoke(modulePath);
             }
             // NOTE: collection will be treated as a CWSV
@@ -186,7 +187,8 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             try {
                 max = Integer.parseInt(maxStr);
             } catch (NumberFormatException ex) {
-                LOG.log(Level.WARNING, "Unable to parse MaxOptionsFromModule value: {0}, using default value: {1}", new Object[]{maxStr, DEFAULT_MAX_OPTS_FROM_MODULE});
+                LOG.log(WARNING, "Unable to parse MaxOptionsFromModule value: {0}, using default value: {1}", 
+                        new Object[]{maxStr, DEFAULT_MAX_OPTS_FROM_MODULE});
             }
         }
         return max;

@@ -38,7 +38,8 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.logging.Level;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
 import javax.crypto.Cipher;
 import javax.xml.bind.DatatypeConverter;
@@ -85,11 +86,11 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 			try {
 				is = Manager.class.getResourceAsStream("/" + filename);
 				if (is != null) {
-					LOG.log(Level.INFO, "Loading private key file {0} from classpath", filename);
+					LOG.log(INFO, "Loading private key file {0} from classpath", filename);
 				} else {
 					File f = new File(filename);
 					if (f.exists() && !f.isDirectory()) {
-						LOG.log(Level.INFO, "Loading private key file {0} from filesystem", filename);
+						LOG.log(INFO, "Loading private key file {0} from filesystem", filename);
 						is = new FileInputStream(f);
 					} else {
 						throw new IllegalStateException("Unable to load " + filename);
@@ -109,7 +110,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 					privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(DatatypeConverter.parseBase64Binary(keyAsString)));
 				}
 			} catch (Exception exc) {
-				LOG.log(Level.SEVERE, "Problem initializing PrivateKeyDecrypter", exc);
+				LOG.log(SEVERE, "Problem initializing PrivateKeyDecrypter", exc);
 			} finally {
                 closeQuietly(is);
 			}
@@ -141,7 +142,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 				cipher.init(Cipher.DECRYPT_MODE, privateKey);
 				dValue = new String(cipher.doFinal(DatatypeConverter.parseBase64Binary(value)));
 			} catch (Exception exc) {
-				LOG.log(Level.INFO, "Cannot decrypt {0}. Ignore if clear text.", property);
+				LOG.log(INFO, "Cannot decrypt {0}. Ignore if clear text.", property);
 			}
 		}
 		return dValue == null ? value : dValue.trim();

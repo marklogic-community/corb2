@@ -52,7 +52,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Level;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
 
 public abstract class AbstractManager {
@@ -60,7 +61,7 @@ public abstract class AbstractManager {
 	
 	protected static final String VERSION_MSG = "version " + VERSION + " on " + System.getProperty("java.version") + " ("+ System.getProperty("java.runtime.name") + ")";
 	protected static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server'\n";
-	protected static final String XQUERY_VERSION_0_9_ML = "xquery version \"0.9-ml\"\n";
+	protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\"\n";
 	
 	protected Decrypter decrypter;
 	protected SSLConfig sslConfig;
@@ -93,12 +94,12 @@ public abstract class AbstractManager {
 			try {
 				is = Manager.class.getResourceAsStream("/" + filename);
 				if (is != null) {
-					LOG.log(Level.INFO, "Loading {0} from classpath", filename);
+					LOG.log(INFO, "Loading {0} from classpath", filename);
 					props.load(is);
 				} else {
 					File f = new File(filename);
 					if (f.exists() && !f.isDirectory()) {
-						LOG.log(Level.INFO, "Loading {0} from filesystem", filename);
+						LOG.log(INFO, "Loading {0} from filesystem", filename);
 						FileInputStream fis = null;
 						try {
 							fis = new FileInputStream(f);
@@ -282,13 +283,13 @@ public abstract class AbstractManager {
 			contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
 					: ContentSourceFactory.newContentSource(connectionUri);
 		} catch (XccConfigException e) {
-			LOG.log(Level.SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly.{0}", e.getMessage());
+			LOG.log(SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly.{0}", e.getMessage());
 			throw e;
 		} catch (KeyManagementException e) {
-			LOG.log(Level.SEVERE, "Problem creating content source with ssl. {0}", e.getMessage());
+			LOG.log(SEVERE, "Problem creating content source with ssl. {0}", e.getMessage());
 			throw e;
 		} catch (NoSuchAlgorithmException e) {
-			LOG.log(Level.SEVERE, "Problem creating content source with ssl. {0}", e.getMessage());
+			LOG.log(SEVERE, "Problem creating content source with ssl. {0}", e.getMessage());
 			throw e;
 		}
 	}
@@ -312,7 +313,7 @@ public abstract class AbstractManager {
                 argsToLog.add(argument);
             }
         }
-		LOG.log(Level.INFO, "runtime arguments = {0}", StringUtils.join(argsToLog, " "));
+		LOG.log(INFO, "runtime arguments = {0}", StringUtils.join(argsToLog, " "));
 	}
     
 }
