@@ -25,10 +25,6 @@ package com.marklogic.developer.corb;
  * @author Praveen Venkata
  */
 
-import static com.marklogic.developer.corb.util.StringUtils.trim;
-import com.marklogic.xcc.ContentSource;
-import java.util.Properties;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -55,57 +51,22 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 
-public class FileUrisXMLLoader implements UrisLoader {
+public class FileUrisXMLLoader extends AbstractUrisLoader {
 
 	protected static final Logger LOG = Logger.getLogger(FileUrisXMLLoader.class.getName());
-	TransformOptions options;
-	ContentSource cs;
-	String collection;
-	Properties properties;
-	int total = 0;
-	String batchRef = null;
 	String nextNode = null;
 	Iterator<Node> nodeIterator = null;
 	Document doc = null;
 	Map<Integer,Node> nodeMap = null;
 
 	@Override
-	public void setOptions(TransformOptions options) {
-		this.options = options;
-	}
-
-	@Override
-	public void setContentSource(ContentSource cs) {
-		this.cs = cs;
-	}
-
-	@Override
-	public void setCollection(String collection) {
-		this.collection = collection;
-	}
-
-	@Override
-	public void setProperties(Properties properties) {
-		this.properties = properties;
-	}
-
-	@Override
-	public String getBatchRef() {
-		return batchRef;
-	}
-
-	@Override
-	public int getTotalCount() {
-		return this.total;
-	}
-
-	@Override
 	public void open() throws CorbException {
 
 		try {
 			String fileName = getProperty("XML-FILE");
-			String xpathRootNode = getProperty("XML-ROOT-NODE");
+			String xpathRootNode = getProperty("XML-NODE");
 
 
 			File fXmlFile = new File(fileName);
@@ -129,7 +90,7 @@ public class FileUrisXMLLoader implements UrisLoader {
 				nodeList = (NodeList) result;
 			}
 
-			nodeMap = new ConcurrentHashMap<>();
+			nodeMap = new ConcurrentHashMap();
 
 			for (int i = 0; i < nodeList.getLength(); i++) {
 				Node node = nodeList.item(i);
@@ -161,13 +122,6 @@ public class FileUrisXMLLoader implements UrisLoader {
 		return sw.toString();
 	}
 
-	public String getProperty(String key) {
-		String val = System.getProperty(key);
-		if (val == null && properties != null) {
-			val = properties.getProperty(key);
-		}
-		return trim(val);
-	}
 
 	private String readNextNode() throws IOException, CorbException {
 		if(nodeIterator.hasNext()) {
@@ -214,11 +168,13 @@ public class FileUrisXMLLoader implements UrisLoader {
 
 	@Override
 	public void close() {
-		if (nodeMap != null) {
+		if (doc != null) {
 			LOG.info("closing xml file reader");
 			try {
+
 				doc = null;
-				nodeMap.clear();
+                if(nodeMap != null)
+				    nodeMap.clear();
 
 			} catch (Exception exc) {
 				LOG.log(Level.SEVERE, "while closing xml file reader", exc);

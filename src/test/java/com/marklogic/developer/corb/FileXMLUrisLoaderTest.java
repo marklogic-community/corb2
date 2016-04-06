@@ -19,22 +19,22 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.xcc.ContentSource;
+import org.junit.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.traversal.NodeIterator;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
 import java.util.Properties;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 /**
  *
- * @author Mads Hansen, MarkLogic Corporation
+ * @author Praveen Venkata
  */
 public class FileXMLUrisLoaderTest {
 
@@ -58,13 +58,13 @@ public class FileXMLUrisLoaderTest {
     }
 
     /**
-     * Test of setOptions method, of class FileUrisLoader.
+     * Test of setOptions method, of class FileUrisXMLLoader.
      */
     @Test
     public void testSetOptions_null() {
         System.out.println("setOptions");
         TransformOptions options = null;
-        FileUrisLoader instance = new FileUrisLoader();
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.setOptions(options);
         assertNull(instance.options);
         instance.close();
@@ -74,33 +74,33 @@ public class FileXMLUrisLoaderTest {
     public void testSetOptions() {
         System.out.println("setOptions");
         TransformOptions options = mock(TransformOptions.class);
-        FileUrisLoader instance = new FileUrisLoader();
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.setOptions(options);
         assertEquals(options, instance.options);
         instance.close();
     }
 
     /**
-     * Test of setContentSource method, of class FileUrisLoader.
+     * Test of setContentSource method, of class FileUrisXMLLoader.
      */
     @Test
     public void testSetContentSource_null() {
         System.out.println("setContentSource");
         ContentSource cs = null;
-        FileUrisLoader instance = new FileUrisLoader();
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.setContentSource(cs);
         assertNull(instance.cs);
         instance.close();
     }
 
     /**
-     * Test of setCollection method, of class FileUrisLoader.
+     * Test of setCollection method, of class FileUrisXMLLoader.
      */
     @Test
     public void testSetCollection_null() {
         System.out.println("setCollection");
         String collection = null;
-        FileUrisLoader instance = new FileUrisLoader();
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.setCollection(collection);
         assertNull(instance.collection);
         instance.close();
@@ -110,20 +110,20 @@ public class FileXMLUrisLoaderTest {
     public void testSetCollection() {
         System.out.println("setCollection");
         String collection = "foo";
-        FileUrisLoader instance = new FileUrisLoader();
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.setCollection(collection);
         assertEquals(collection, instance.collection);
         instance.close();
     }
 
     /**
-     * Test of setProperties method, of class FileUrisLoader.
+     * Test of setProperties method, of class FileUrisXMLLoader.
      */
     @Test
     public void testSetProperties_null() {
         System.out.println("setProperties");
         Properties properties = null;
-        FileUrisLoader instance = new FileUrisLoader();
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.setProperties(properties);
         assertNull(instance.properties);
         instance.close();
@@ -133,56 +133,41 @@ public class FileXMLUrisLoaderTest {
     public void testSetProperties_properties() {
         System.out.println("setProperties");
         Properties properties = new Properties();
-        FileUrisLoader instance = new FileUrisLoader();
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.setProperties(properties);
         assertEquals(properties, instance.properties);
         instance.close();
     }
 
     /**
-     * Test of open method, of class FileUrisLoader.
+     * Test of open method, of class FileUrisXMLLoader.
      */
     @Test
     public void testOpen() throws Exception {
         System.out.println("open");
-        FileUrisLoader instance = new FileUrisLoader();
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
         TransformOptions options = new TransformOptions();
-        options.setUrisFile("src/test/resources/uris-file.txt");
         Properties props = new Properties();
-        props.setProperty("URIS-REPLACE-PATTERN", "object-id-2,test");
+        props.setProperty("URIS-LOADER","com.marklogic.developer.corb.FileUrisXMLLoader");
+        props.setProperty("XML-FILE","src/test/resources/xml-file.xml");
+        props.setProperty("XML-NODE", "/root/a");
         instance.properties = props;
         instance.options = options;
         instance.open();
-        assertNotNull(instance.br);
-        assertEquals("object-id-1", instance.next());
-        assertEquals("test", instance.next());
+        assertNotNull(instance.nodeIterator);
+        assertEquals("<a>test1</a>", instance.next());
+        assertEquals("<a>test2</a>", instance.next());
         instance.close();
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testOpen_invalidReplacePattern() throws Exception {
-        System.out.println("open");
-        FileUrisLoader instance = new FileUrisLoader();
-        TransformOptions options = new TransformOptions();
-        options.setUrisFile("src/test/resources/uris-file.txt");
-        Properties props = new Properties();
-        props.setProperty("URIS-REPLACE-PATTERN", "object-id-2,test,unevenPattern");
-        instance.properties = props;
-        instance.options = options;
-        try {
-            instance.open();
-        } finally {
-            instance.close();
-        }
     }
 
     @Test(expected = CorbException.class)
     public void testOpen_fileDoesNotExist() throws Exception {
         System.out.println("open");
-        FileUrisLoader instance = new FileUrisLoader();
-        TransformOptions options = new TransformOptions();
-        options.setUrisFile("does/not/exist");
-        instance.options = options;
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
+        Properties props = new Properties();
+        props.setProperty("URIS-LOADER","com.marklogic.developer.corb.FileUrisXMLLoader");
+        props.setProperty("XML-FILE","does/not/exit.xml");
+        instance.properties = props;
         try {
             instance.open();
         } finally {
@@ -191,23 +176,23 @@ public class FileXMLUrisLoaderTest {
     }
 
     /**
-     * Test of getBatchRef method, of class FileUrisLoader.
+     * Test of getBatchRef method, of class FileUrisXMLLoader.
      */
     @Test
     public void testGetBatchRef() {
         System.out.println("getBatchRef");
-        FileUrisLoader instance = new FileUrisLoader();
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
         assertNull(instance.getBatchRef());
         instance.close();
     }
 
     /**
-     * Test of getTotalCount method, of class FileUrisLoader.
+     * Test of getTotalCount method, of class FileUrisXMLLoader.
      */
     @Test
     public void testGetTotalCount_defaultValue() {
         System.out.println("getTotalCount");
-        FileUrisLoader instance = new FileUrisLoader();
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
         assertEquals(0, instance.getTotalCount());
         instance.close();
     }
@@ -215,22 +200,24 @@ public class FileXMLUrisLoaderTest {
     @Test
     public void testGetTotalCount() throws CorbException {
         System.out.println("getTotalCount");
-        FileUrisLoader instance = new FileUrisLoader();
-        TransformOptions options = new TransformOptions();
-        options.setUrisFile("src/test/resources/uris-file.txt");
-        instance.options = options;
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
+        Properties props = new Properties();
+        props.setProperty("URIS-LOADER","com.marklogic.developer.corb.FileUrisXMLLoader");
+        props.setProperty("XML-FILE","src/test/resources/xml-file.xml");
+        props.setProperty("XML-NODE", "/root/a");
+        instance.properties = props;
         instance.open();
-        assertEquals(8, instance.getTotalCount());
+        assertEquals(3, instance.getTotalCount());
         instance.close();
     }
 
     /**
-     * Test of hasNext method, of class FileUrisLoader.
+     * Test of hasNext method, of class FileUrisXMLLoader.
      */
     @Test(expected = CorbException.class)
     public void testHasNext_throwException() throws Exception {
         System.out.println("hasNext");
-        FileUrisLoader instance = new FileUrisLoader();
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
         try {
             instance.hasNext();
         } finally {
@@ -241,10 +228,11 @@ public class FileXMLUrisLoaderTest {
     @Test
     public void testHasNext() throws Exception {
         System.out.println("hasNext");
-        FileUrisLoader instance = new FileUrisLoader();
-        TransformOptions options = new TransformOptions();
-        options.setUrisFile("src/test/resources/uris-file.txt");
-        instance.options = options;
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
+        Properties props = new Properties();
+        props.setProperty("URIS-LOADER","com.marklogic.developer.corb.FileUrisXMLLoader");
+        props.setProperty("XML-FILE","src/test/resources/xml-file.xml");
+        instance.properties = props;
         instance.open();
 
         for (int i = 0; i < instance.getTotalCount(); i++) {
@@ -256,15 +244,17 @@ public class FileXMLUrisLoaderTest {
     }
 
     /**
-     * Test of next method, of class FileUrisLoader.
+     * Test of next method, of class FileUrisXMLLoader.
      */
     @Test
     public void testNext() throws Exception {
         System.out.println("next");
-        FileUrisLoader instance = new FileUrisLoader();
-        TransformOptions options = new TransformOptions();
-        options.setUrisFile("src/test/resources/uris-file.txt");
-        instance.options = options;
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
+        Properties props = new Properties();
+        props.setProperty("URIS-LOADER","com.marklogic.developer.corb.FileUrisXMLLoader");
+        props.setProperty("XML-FILE","src/test/resources/xml-file.xml");
+        props.setProperty("XML-NODE", "/root/a");
+        instance.properties = props;
         instance.open();
         //Verify that hasNext() does not advance the buffered reader to the next line
         for (int i = 0; i < instance.getTotalCount(); i++) {
@@ -275,65 +265,42 @@ public class FileXMLUrisLoaderTest {
         instance.close();
     }
 
-    @Test
-    public void testNext_withEmptyLine() throws Exception {
-        System.out.println("next");
-        FileUrisLoader instance = new FileUrisLoader();
-        TransformOptions options = new TransformOptions();
-        File file = File.createTempFile("temp", ".txt");
-        file.deleteOnExit();
-        Writer writer = new FileWriter(file);
-        writer.append("foo\n\nbar");
-        writer.close();
-        options.setUrisFile(file.getAbsolutePath());
-        instance.options = options;
-        instance.open();
-
-        assertEquals("foo", instance.next());
-        assertEquals("bar", instance.next());
-        assertFalse(instance.hasNext());
-        assertNull(instance.next());
-        instance.close();
-    }
 
     /**
-     * Test of close method, of class FileUrisLoader.
+     * Test of close method, of class FileUrisXMLLoader.
      */
     @Test
     public void testClose() {
         System.out.println("close");
-        FileUrisLoader instance = new FileUrisLoader();
-        instance.br = mock(BufferedReader.class);
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
+        instance.doc = mock(Document.class);
         instance.close();
-        assertNull(instance.br);
+        assertNull(instance.doc);
         instance.close();
     }
 
     /**
-     * Test of cleanup method, of class FileUrisLoader.
+     * Test of cleanup method, of class FileUrisXMLLoader.
      */
     @Test
     public void testCleanup() {
         System.out.println("cleanup");
-        FileUrisLoader instance = new FileUrisLoader();
-        instance.br = mock(BufferedReader.class);
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
+        instance.doc = mock(Document.class);
         instance.collection = "foo";
         instance.cs = mock(ContentSource.class);
-        instance.nextLine = "foo";
+        instance.nextNode = "<test>testData</test>";
         instance.options = new TransformOptions();
         instance.properties = new Properties();
         instance.replacements = new String[]{};
         instance.total = 100;
         instance.close();
         instance.cleanup();
-        assertNull(instance.br);
+        assertNull(instance.doc);
         assertNull(instance.collection);
         assertNull(instance.cs);
         assertNull(instance.options);
         assertNull(instance.replacements);
-        // TODO should these  be reset?
-        //assertNull(instance.nextLine);
-        //assertNull(instance.total);
     }
 
 }
