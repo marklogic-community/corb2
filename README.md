@@ -65,6 +65,7 @@ Option | Description
 **INSTALL** | Whether to install the Modules in the Modules database. Specify 'true' or '1' for installation. Default is false.
 **URIS-MODULE** | URI selector module written in XQuery or JavaScript. Expected to return a sequence containing the uris count followed by all the uris. Optionally, it can also return an arbitrary string as a first item in this sequence - refer to **URIS\_BATCH\_REF** section below. XQuery and JavaScript modules need to have .xqy and .sjs extensions respectively. JavaScript modules must return a [ValueIterator](https://docs.marklogic.com/js/ValueIterator).
 **URIS-FILE** | If defined instead of **URIS-MODULE**, URIs will be loaded from the file located on the client. There should only be one URI per line. This path may be relative or absolute. For example, a file containing a list of document identifiers can be used as a **URIS-FILE** and the **XQUERY-MODULE** can query for the document based on this document identifier.
+**XML-FILE** | In order to use this option a class `com.marklogic.developer.corb.FileUrisXMLLoader` has to be specified in the **URIS-LOADER** option. If defined instead of **URIS-MODULE**, XML nodes will be used as URIs from the file located on the client. This path may be relative or absolute. Another option can be specified along with this **XML-NODE** which is an xpath to the nodes which can be processed. For example, a file containing a list of nodes wrapped by a parent can be used as a **XML-FILE** and the **XQUERY-MODULE** can unquote the URI string as node to do further processing with the node.
 **URIS-LOADER** | Java class that implements `com.marklogic.developer.corb.UrisLoader`. A custom class to load URIs instead of built-in loaders for **URIS-MODULE** or **URIS-FILE** options.
 **PROCESS-TASK** | <div>Java Class that implements `com.marklogic.developer.corb.Task` or extends `com.marklogic.developer.corb.AbstractTask`. Typically, it can talk to **XQUERY-MODULE** and the do additional processing locally such save a returned value.  <ul><li> `com.marklogic.developer.corb.ExportBatchToFileTask` Generates _**a single file**_, typically used for reports. Writes the data returned by the **XQUERY-MODULE** to a single file specified by **EXPORT-FILE-NAME**. All returned values from entire CoRB will be streamed into the single file. If **EXPORT-FILE-NAME** is not specified, CoRB uses **URIS\_BATCH\_REF** returned by **URIS-MODULE** as the file name.  <li> `com.marklogic.developer.corb.ExportToFileTask` Generates _**multiple files**_. Saves the documents returned by each invocation of **PROCESS-MODULE** to a separate local file within **EXPORT-FILE-DIR** where the file name for each document will be the based on the URI.</ul>
 **PRE-BATCH-MODULE** | An XQuery or JavaScript module which, if specified, will be run before batch processing starts. XQuery and JavaScript modules need to have `.xqy` and `.sjs` extensions respectively.
@@ -324,7 +325,19 @@ URIS-FILE=input-uris.csv
 PROCESS-MODULE=SampleCorbJob.xqy  
 ```
 
-##### sample 4 - report, generates a single file with data from processing each URI
+##### sample 4 - simple batch with XML-FILE (in place of URIS-MODULE)
+```
+XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
+THREAD-COUNT=10  
+MODULE-ROOT=/temp/  
+MODULES-DATABASE=MY-Modules-DB   
+XML-FILE=input.xml  
+XML-NODE=/rootNode/childNode
+URIS-LOADER=com.marklogic.developer.corb.FileUrisXMLLoader
+PROCESS-MODULE=SampleCorbJob.xqy  
+```
+
+##### sample 5 - report, generates a single file with data from processing each URI
 ```
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
@@ -335,19 +348,19 @@ PROCESS-TASK=com.marklogic.developer.corb.ExportBatchToFileTask
 EXPORT-FILE-NAME=/local/path/to/exportmyfile.csv   
 ```
 
-##### sample 5 - report with header, add following to sample 4.
+##### sample 6 - report with header, add following to sample 4.
 ```
 PRE-BATCH-TASK=com.marklogic.developer.corb.PreBatchUpdateFileTask  
 EXPORT-FILE-TOP-CONTENT=col1,col2,col3  
 ```
 
-##### sample 6 - dynamic headers, assuming pre-batch-header.xqy module returns the header row, add the following to sample 4.
+##### sample 7 - dynamic headers, assuming pre-batch-header.xqy module returns the header row, add the following to sample 4.
 ```   
 PRE-BATCH-MODULE=pre-batch-header.xqy  
 PRE-BATCH-TASK=com.marklogic.developer.corb.PreBatchUpdateFileTask   
 ```
 
-##### sample 7 - pre and post batch hooks
+##### sample 8 - pre and post batch hooks
 ```
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
@@ -359,7 +372,7 @@ PRE-BATCH-MODULE=pre-batch.xqy
 POST-BATCH-MODULE=post-batch.xqy   
 ```
 
-##### sample 8 - adhoc tasks
+##### sample 9 - adhoc tasks
 XQuery modules live local to filesystem where CoRB is located. Any XQuery module can be adhoc.
 ```
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
@@ -371,7 +384,7 @@ PROCESS-MODULE=SampleCorbJob.xqy|ADHOC
 PRE-BATCH-MODULE=/local/path/to/adhoc-pre-batch.xqy|ADHOC
 ```
 
-##### sample 9 - jasypt encryption
+##### sample 10 - jasypt encryption
 XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and/or XCC-DBNAME properties can be encrypted and optionally enclosed by ENC(). If JASYPT-PROPERTIES-FILE is not specified, it assumes default jasypt.properties.
 ```
 XCC-CONNECTION-URI=ENC(encrypted_uri)   
@@ -385,7 +398,7 @@ jasypt.password=foo
 jasypt.algorithm=PBEWithMD5AndTripleDES  
 ```
 
-##### sample 10 - private key encryption with java keys
+##### sample 11 - private key encryption with java keys
 XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and/or XCC-DBNAME properties can be encrypted and optionally enclosed by ENC()
 ```
 XCC-CONNECTION-URI=encrypted_uri  
@@ -394,7 +407,7 @@ DECRYPTER=com.marklogic.developer.corb.PrivateKeyDecrypter
 PRIVATE-KEY-FILE=/path/to/key/private.key  
 PRIVATE-KEY-ALGORITHM=RSA  
 ```
-##### sample 11 - private key encryption with unix keys
+##### sample 12 - private key encryption with unix keys
 XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and/or XCC-DBNAME properties can be encrypted and optionally enclosed by ENC()
 ```
 XCC-CONNECTION-URI=encrypted_uri  
@@ -402,14 +415,14 @@ XCC-CONNECTION-URI=encrypted_uri
 DECRYPTER=com.marklogic.developer.corb.PrivateKeyDecrypter  
 PRIVATE-KEY-FILE=/path/to/rsa/key/rivate.pkcs8.key  
 ```
-##### sample 12 - JavaScript modules deployed to modules database
+##### sample 13 - JavaScript modules deployed to modules database
 ```
 MODULE-ROOT=/temp/  
 MODULES-DATABASE=MY-Modules-DB  
 URIS-MODULE=get-uris.sjs  
 PROCESS-MODULE=transform.sjs  
 ```
-##### sample 13 - Adhoc JavaScript modules
+##### sample 14 - Adhoc JavaScript modules
 ```
 URIS-MODULE=get-uris.sjs|ADHOC  
 PROCESS-MODULE=extract.sjs|ADHOC
