@@ -62,7 +62,7 @@ import static org.mockito.Mockito.when;
 public class AbstractTaskTest {
 
     private final TestHandler testLogger = new TestHandler();
-
+    private static final Logger logger = Logger.getLogger(AbstractTask.class.getName());
     public AbstractTaskTest() {
     }
 
@@ -76,8 +76,7 @@ public class AbstractTaskTest {
 
     @Before
     public void setUp() {
-        clearSystemProperties();
-        Logger logger = Logger.getLogger(AbstractTask.class.getName());
+        clearSystemProperties();     
         logger.addHandler(testLogger);
     }
 
@@ -361,6 +360,7 @@ public class AbstractTaskTest {
         System.out.println("handleRequestException");
         if (exportDir == null) {
             exportDir = TestUtils.createTempDirectory();
+            exportDir.deleteOnExit();
         }
         AbstractTask instance = new AbstractTaskImpl();
         instance.failOnError = fail;
@@ -382,11 +382,13 @@ public class AbstractTaskTest {
 
         instance.handleRequestException(exception);
         List<LogRecord> records = testLogger.getLogRecords();
+        System.out.println("logrecords " + records.size());
         assertEquals(Level.WARNING, records.get(0).getLevel());
         if ((exception instanceof RequestServerException
                 && !(exception instanceof RetryableQueryException)
                 && !(exception instanceof QueryException && ((QueryException) exception).isRetryable()))
                 || exception instanceof RequestPermissionException) {
+            
             assertEquals("failOnError is false. Encountered " + type + " at URI: " + instance.asString(uris), records.get(0).getMessage());
 
         } else if (exception instanceof ServerConnectionException) {
@@ -412,6 +414,7 @@ public class AbstractTaskTest {
     public void testWriteToErrorFile_nullUris() throws CorbException, IOException {
         String[] uris = null;
         File exportDir = TestUtils.createTempDirectory();
+        exportDir.deleteOnExit();
         String filename = "testWriteToErrorFile_nullUris.error";
         String delim = null;
         String message = null;
@@ -424,6 +427,7 @@ public class AbstractTaskTest {
     public void testWriteToErrorFile_emptyUris() throws CorbException, IOException {
         String[] uris = new String[]{};
         File exportDir = TestUtils.createTempDirectory();
+        exportDir.deleteOnExit();
         String filename = "testWriteToErrorFile_emptyUris.error";
         String delim = null;
         String message = null;
@@ -435,6 +439,7 @@ public class AbstractTaskTest {
     public void testWriteToErrorFile_nullErrorFilename() throws CorbException, IOException {
         String[] uris = new String[]{"uri1"};
         File exportDir = TestUtils.createTempDirectory();
+        exportDir.deleteOnExit();
         String filename = null;
         String delim = null;
         String message = "ERROR";
@@ -446,6 +451,7 @@ public class AbstractTaskTest {
     public void testWriteToErrorFile_emptyErrorFilename() throws CorbException, IOException {
         String[] uris = new String[]{"uri1"};
         File exportDir = TestUtils.createTempDirectory();
+        exportDir.deleteOnExit();
         String filename = "";
         String delim = null;
         String message = "ERROR";
@@ -458,6 +464,7 @@ public class AbstractTaskTest {
     public void testWriteToErrorFile_nullBatchUridelim() throws CorbException, IOException {
         String[] uris = new String[]{"uri1"};
         File exportDir = TestUtils.createTempDirectory();
+        exportDir.deleteOnExit();
         String filename = "testWriteToErrorFile_nullBatchUridelim.err";
         String delim = null;
         String message = "ERROR";
@@ -469,6 +476,7 @@ public class AbstractTaskTest {
     public void testWriteToErrorFile_emptyBatchUridelim() throws CorbException, IOException {
         String[] uris = new String[]{"uri1"};
         File exportDir = TestUtils.createTempDirectory();
+        exportDir.deleteOnExit();
         String filename = "testWriteToErrorFile_emptyBatchUridelim.err";
         String delim = null;
         String message = "ERROR";
