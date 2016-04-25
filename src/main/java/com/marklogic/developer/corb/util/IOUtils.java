@@ -41,6 +41,7 @@ public class IOUtils {
      * @return
      * @throws IOException
      */
+    @Deprecated
     public static String cat(Reader r) throws IOException {
         StringBuilder rv = new StringBuilder();
         int size;
@@ -56,6 +57,7 @@ public class IOUtils {
      * @return
      * @throws IOException
      */
+    @Deprecated
     public static byte[] cat(InputStream is) throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream(BUFFER_SIZE);
         copy(is, bos);
@@ -136,6 +138,7 @@ public class IOUtils {
      * @return
      * @throws IOException
      */
+    @Deprecated
     public static long getSize(InputStream is) throws IOException {
         long size = 0;
         int b = 0;
@@ -147,11 +150,12 @@ public class IOUtils {
     }
 
     /**
-     *
+     * 
      * @param r
      * @return
      * @throws IOException
      */
+    @Deprecated
     public static long getSize(Reader r) throws IOException {
         long size = 0;
         int b = 0;
@@ -162,6 +166,22 @@ public class IOUtils {
         return size;
     }
 
+    /**
+     * Tests whether the <code>InputStream</code> is a directory. A Directory
+     * will be a ByteArrayInputStream and a File will be a BufferedInputStream.
+     *
+     * @param is
+     * @return <code>true</code> if the InputStream class is
+     * ByteArrayInputStream
+     */
+    public static final boolean isDirectory(InputStream is) {
+        return is.getClass().getSimpleName().equals("ByteArrayInputStream");
+    }
+
+    /**
+     * Null-safe close operation of a <code>Closeable</code> object. 
+     * @param obj Closable object to be closed.
+     */
     public static void closeQuietly(Closeable obj) {
         if (obj != null) {
             try {

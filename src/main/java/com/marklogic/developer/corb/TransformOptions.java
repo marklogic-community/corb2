@@ -18,6 +18,8 @@
  */
 package com.marklogic.developer.corb;
 
+import java.io.File;
+
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * @author Colleen Whitney, colleen.whitney@marklogic.com
@@ -63,7 +65,8 @@ public class TransformOptions {
 
 	private int threadCount = 1;
 	private int batchSize = 1;
-
+    private int urisQueueMaxInMemorySize = 250000;
+    private File urisQueueTempDir = null;
 	private boolean doInstall = false;
 
 	private boolean failOnError = true;
@@ -317,6 +320,7 @@ public class TransformOptions {
 	}
 
 	/**
+     * The size of the ThreadPool work queue
 	 * @return
 	 */
 	public int getQueueSize() {
@@ -330,4 +334,20 @@ public class TransformOptions {
 	public boolean isFailOnError() {
 		return this.failOnError;
 	}
+    
+    public void setUrisQueueMaxInMemorySize(int size) {
+        this.urisQueueMaxInMemorySize = size;
+    }
+    
+    public int getUrisQueueMaxInMemorySize() {
+        return this.urisQueueMaxInMemorySize;
+    }
+    
+    public void setUrisQueueTempDir(File directory) {
+        this.urisQueueTempDir = directory;
+    }
+    
+    public File getUrisQueueTempDir() {
+        return this.urisQueueTempDir;
+    }
 }

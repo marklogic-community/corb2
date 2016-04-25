@@ -33,7 +33,7 @@ public class Options {
     public static final String DECRYPTER = "DECRYPTER";
     public static final String ERROR_FILE_NAME = "ERROR-FILE-NAME";
     public static final String EXIT_CODE_NO_URIS = "EXIT-CODE-NO-URIS";
-    public static final String EXPORT_FILE_AS_ZIP = "EXPORT_FILE_AS_ZIP"; //TODO:  evaluate why this property uses underscores
+    public static final String EXPORT_FILE_AS_ZIP = "EXPORT_FILE_AS_ZIP"; 
     public static final String EXPORT_FILE_BOTTOM_CONTENT = "EXPORT-FILE-BOTTOM-CONTENT";
     public static final String EXPORT_FILE_DIR = "EXPORT-FILE-DIR";
     public static final String EXPORT_FILE_HEADER_LINE_COUNT = "EXPORT-FILE-HEADER-LINE-COUNT";
@@ -48,7 +48,7 @@ public class Options {
     public static final String INIT_TASK = "INIT-TASK";
     public static final String INSTALL = "INSTALL";
     public static final String JASYPT_PROPERTIES_FILE = "JASYPT-PROPERTIES-FILE";
-    public static final String MAX_OPTS_FROM_MODULE = "MAX_OPTS_FROM_MODULE"; //TODO: evaluate why this property uses underscores
+    public static final String MAX_OPTS_FROM_MODULE = "MAX_OPTS_FROM_MODULE"; 
     public static final String MODULES_DATABASE = "MODULES-DATABASE";
     public static final String MODULE_ROOT = "MODULE-ROOT";
     public static final String OPTIONS_FILE = "OPTIONS-FILE";
@@ -73,10 +73,12 @@ public class Options {
     public static final String SSL_KEYSTORE_TYPE = "SSL-KEYSTORE-TYPE";
     public static final String SSL_PROPERTIES_FILE = "SSL-PROPERTIES-FILE";
     public static final String THREAD_COUNT = "THREAD-COUNT";
-    public static final String URIS_BATCH_REF = "URIS_BATCH_REF"; //TODO:  evaluate why this property uses underscores
+    public static final String URIS_BATCH_REF = "URIS_BATCH_REF"; 
     public static final String URIS_FILE = "URIS-FILE";
     public static final String URIS_LOADER = "URIS-LOADER";
     public static final String URIS_MODULE = "URIS-MODULE";
+    public static final String URIS_QUEUE_TEMP_DIR = "URIS-QUEUE-TEMP-DIR";
+    public static final String URIS_QUEUE_MAX_IN_MEMORY_SIZE = "URIS-QUEUE-MAX-IN-MEMORY-SIZE";
     public static final String URIS_REPLACE_PATTERN = "URIS-REPLACE-PATTERN";
     public static final String XCC_CONNECTION_RETRY_LIMIT = "XCC-CONNECTION-RETRY-LIMIT";
     public static final String XCC_CONNECTION_RETRY_INTERVAL = "XCC-CONNECTION-RETRY-INTERVAL";

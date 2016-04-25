@@ -21,12 +21,6 @@ package com.marklogic.developer.corb;
 import com.marklogic.xcc.ContentSource;
 import org.junit.*;
 import org.w3c.dom.Document;
-import org.w3c.dom.traversal.NodeIterator;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.Writer;
 import java.util.Properties;
 
 import static org.junit.Assert.*;

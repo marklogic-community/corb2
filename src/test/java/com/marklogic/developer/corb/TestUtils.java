@@ -71,6 +71,9 @@ public class TestUtils {
         System.clearProperty("EXPORT-FILE-PART-EXT");
         System.clearProperty("ERROR-FILE-NAME");
         System.clearProperty("FAIL-ON-ERROR");
+        System.clearProperty("URIS-QUEUE-MAX-IN-MEMORY-SIZE");
+        System.clearProperty("URIS-QUEUE-TEMP-DIR");
+        System.clearProperty("URIS-MODULE.count");
     }
 
     public static String readFile(String filePath) throws FileNotFoundException {

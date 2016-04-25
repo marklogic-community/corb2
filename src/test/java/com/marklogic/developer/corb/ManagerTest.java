@@ -172,6 +172,43 @@ public class ManagerTest {
         exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
         Manager.main(args);
     }
+    
+    @Test
+    public void testManagerUsingSysProps_largeUrisList()
+            throws Exception {
+        clearSystemProperties();
+        int uriCount = 1000;
+        System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+        System.setProperty("COLLECTION-NAME", COLLECTION_NAME);
+        System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
+        System.setProperty("THREAD-COUNT", "20");
+        System.setProperty("URIS-MODULE", "src/test/resources/selectorLargeList.xqy|ADHOC");
+        System.setProperty("URIS-MODULE.count", String.valueOf(uriCount));
+        System.setProperty("MODULE-ROOT", MODULES_ROOT);
+        System.setProperty("MODULES-DATABASE", MODULES_DATABASE);
+        System.setProperty("INSTALL", "false");
+        System.setProperty("PROCESS-TASK", PROCESS_TASK);
+        System.setProperty("PRE-BATCH-MODULE", PRE_BATCH_MODULE);
+        System.setProperty("PRE-BATCH-TASK", PRE_BATCH_TASK);
+        System.setProperty("POST-BATCH-MODULE", POST_BATCH_MODULE);
+        System.setProperty("POST-BATCH-TASK", POST_BATCH_TASK);
+        System.setProperty("EXPORT-FILE-DIR", EXPORT_FILE_DIR);
+        System.setProperty("EXPORT-FILE-NAME", "testManagerUsingSysProps.txt");
+        System.setProperty("URIS-QUEUE-MAX-IN-MEMORY-SIZE", "10");
+        System.setProperty("URIS-QUEUE-TEMP-DIR", "/var/tmp");
+        String[] args = {};
+  
+        Manager manager = new Manager();
+        manager.init(args);
+        manager.run();
+        
+        File report = new File(EXPORT_FILE_DIR + "/testManagerUsingSysProps.txt");
+        report.deleteOnExit();
+        
+        int lineCount = FileUtils.getLineCount(report);
+        assertEquals(uriCount+2, lineCount);
+        System.clearProperty("URIS-MODULE.count");
+    }
 
     /**
      * Functional test for the Manager using a properties file.
@@ -1179,7 +1216,7 @@ public class ManagerTest {
 
         assertEquals(xccRootValue, instance.options.getXDBC_ROOT());
         List<LogRecord> records = testLogger.getLogRecords();
-        assertEquals(16, records.size());
+        assertEquals(18, records.size());
     }
 
     @Test(expected = NullPointerException.class)

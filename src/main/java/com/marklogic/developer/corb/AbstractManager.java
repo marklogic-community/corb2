@@ -28,6 +28,7 @@ import static com.marklogic.developer.corb.Options.XCC_PASSWORD;
 import static com.marklogic.developer.corb.Options.XCC_PORT;
 import static com.marklogic.developer.corb.Options.XCC_USERNAME;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.IOUtils.isDirectory;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
@@ -57,7 +58,7 @@ import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
 
 public abstract class AbstractManager {
-	public static final String VERSION = "2.3.0";
+	public static final String VERSION = "2.3.1-SNAPSHOT";
 	
 	protected static final String VERSION_MSG = "version " + VERSION + " on " + System.getProperty("java.version") + " ("+ System.getProperty("java.runtime.name") + ")";
 	protected static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server'\n";
@@ -155,16 +156,6 @@ public abstract class AbstractManager {
 		}
 	}
 	
-    /**
-     * Tests whether the <code>InputStream</code> is a directory. 
-     * A Directory will be a ByteArrayInputStream and a File will be a BufferedInputStream.
-     * @param is
-     * @return <code>true</code> if the InputStream class is ByteArrayInputStream
-     */
-    protected static final boolean isDirectory(InputStream is) {
-        return is.getClass().getSimpleName().equals("ByteArrayInputStream");
-    }
-    
 	public Properties getProperties() {
 		return this.properties;
 	}
@@ -307,7 +298,7 @@ public abstract class AbstractManager {
 	protected void logRuntimeArgs(){
 		RuntimeMXBean runtimemxBean = ManagementFactory.getRuntimeMXBean();
 		List<String> arguments = runtimemxBean.getInputArguments();
-		List<String> argsToLog = new ArrayList<String>();
+		List<String> argsToLog = new ArrayList<String>(arguments.size());
         for (String argument : arguments) {
             if (!argument.startsWith("-DXCC")) {
                 argsToLog.add(argument);

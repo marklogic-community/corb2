@@ -29,6 +29,8 @@ import static com.marklogic.developer.corb.Options.FAIL_ON_ERROR;
 import static com.marklogic.developer.corb.Options.INIT_MODULE;
 import static com.marklogic.developer.corb.Options.INIT_TASK;
 import static com.marklogic.developer.corb.Options.INSTALL;
+import static com.marklogic.developer.corb.Options.URIS_QUEUE_MAX_IN_MEMORY_SIZE;
+import static com.marklogic.developer.corb.Options.URIS_QUEUE_TEMP_DIR;
 import static com.marklogic.developer.corb.Options.MODULES_DATABASE;
 import static com.marklogic.developer.corb.Options.MODULE_ROOT;
 import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
@@ -50,6 +52,7 @@ import com.marklogic.developer.corb.util.FileUtils;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import com.marklogic.developer.corb.util.NumberUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import com.marklogic.xcc.AdhocQuery;
@@ -76,6 +79,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletionService;
@@ -100,9 +104,8 @@ import java.util.logging.Logger;
 public class Manager extends AbstractManager {
 
     protected static final String NAME = Manager.class.getName();
-
+    
     public static final String URIS_BATCH_REF = com.marklogic.developer.corb.Options.URIS_BATCH_REF;
-
     public static final String DEFAULT_BATCH_URI_DELIM = ";";
 
     private PausableThreadPoolExecutor pool;
@@ -110,13 +113,13 @@ public class Manager extends AbstractManager {
     private Thread monitorThread;
     private CompletionService<String[]> completionService;
     private ScheduledExecutorService scheduledExecutor;
-    
+
     private boolean execError = false;
     private boolean stopCommand = false;
-    
+    private long lastMessageMillis;
     protected static int EXIT_CODE_NO_URIS = EXIT_CODE_SUCCESS;
     protected static final int EXIT_CODE_STOP_COMMAND = 3;
-    
+
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
 
     public static class CallerBlocksPolicy implements RejectedExecutionHandler {
@@ -166,7 +169,7 @@ public class Manager extends AbstractManager {
             int count = manager.run();
             if (manager.execError) {
                 System.exit(EXIT_CODE_PROCESSING_ERROR);
-            } else if (manager.stopCommand){
+            } else if (manager.stopCommand) {
                 System.exit(EXIT_CODE_STOP_COMMAND);
             } else if (count == 0) {
                 System.exit(EXIT_CODE_NO_URIS);
@@ -210,7 +213,7 @@ public class Manager extends AbstractManager {
         if (AbstractTask.MODULE_PROPS != null) {
             AbstractTask.MODULE_PROPS.clear();
         }
-        
+
         EXIT_CODE_NO_URIS = NumberUtils.toInt(getOption(Options.EXIT_CODE_NO_URIS));
 
         scheduleCommandFileWatcher();
@@ -254,7 +257,9 @@ public class Manager extends AbstractManager {
         String batchSize = getOption(BATCH_SIZE);
         String failOnError = getOption(FAIL_ON_ERROR);
         String errorFileName = getOption(ERROR_FILE_NAME);
-
+        String urisQueueMaxInMemorySize = getOption(URIS_QUEUE_MAX_IN_MEMORY_SIZE);
+        String urisQueueTempDir = getOption(URIS_QUEUE_TEMP_DIR);
+        
         //Check legacy properties keys, for backwards compatability
         if (processModule == null) {
             processModule = getOption(XQUERY_MODULE);
@@ -293,7 +298,9 @@ public class Manager extends AbstractManager {
         if (failOnError != null && (failOnError.equalsIgnoreCase("false"))) {
             options.setFailOnError(false);
         }
-
+        if (urisQueueMaxInMemorySize != null) {
+            options.setUrisQueueMaxInMemorySize(Integer.parseInt(urisQueueMaxInMemorySize));
+        }
         if (!this.properties.containsKey(EXPORT_FILE_DIR) && exportFileDir != null) {
             this.properties.put(EXPORT_FILE_DIR, exportFileDir);
         }
@@ -360,6 +367,15 @@ public class Manager extends AbstractManager {
             }
         }
 
+        if (urisQueueTempDir != null) {
+            File dirFile = new File(urisQueueTempDir);
+            if (dirFile.exists() && dirFile.canWrite()) {
+                options.setUrisQueueTempDir(dirFile);
+            } else {
+                throw new IllegalArgumentException("Cannot write to queue temp directory " + urisQueueTempDir);
+            }
+        }
+        
         // delete the export file if it exists
         deleteFileIfExists(exportFileDir, exportFileName);
         deleteFileIfExists(exportFileDir, errorFileName);
@@ -396,7 +412,7 @@ public class Manager extends AbstractManager {
         }
 
         //key=Current Property, value=Legacy Property
-        Map<String, String> legacyProperties = new HashMap<String, String>();
+        Map<String, String> legacyProperties = new HashMap<String, String>(3);
         legacyProperties.put(PROCESS_MODULE, XQUERY_MODULE);
         legacyProperties.put(PRE_BATCH_MODULE, PRE_BATCH_XQUERY_MODULE);
         legacyProperties.put(POST_BATCH_MODULE, POST_BATCH_XQUERY_MODULE);
@@ -623,7 +639,8 @@ public class Manager extends AbstractManager {
         LOG.log(INFO, "Configured init task: {0}", options.getInitTaskClass());
         LOG.log(INFO, "Configured batch size: {0}", options.getBatchSize());
         LOG.log(INFO, "Configured failonError: {0}", options.isFailOnError());
-
+        LOG.log(INFO, "Configured URIs queue max in-memory size: {0}", options.getUrisQueueMaxInMemorySize());
+        LOG.log(INFO, "Configured URIs queue temp dir: {0}", options.getUrisQueueTempDir());
         logProperties();
     }
 
@@ -681,13 +698,13 @@ public class Manager extends AbstractManager {
 
     private int populateQueue() throws Exception {
         LOG.info("populating queue");
-        TaskFactory tf = new TaskFactory(this);
+        TaskFactory taskFactory = new TaskFactory(this);
         UrisLoader urisLoader = getUriLoader();
         int total = -1;
-        int count = 0;
+        int urisCount = 0;
         try {
             // run init task
-            runInitTask(tf);
+            runInitTask(taskFactory);
 
             urisLoader.open();
             if (urisLoader.getBatchRef() != null) {
@@ -704,105 +721,43 @@ public class Manager extends AbstractManager {
             }
 
             // run pre-batch task, if present.
-            runPreBatchTask(tf);
+            runPreBatchTask(taskFactory);
 
             // now start process tasks
             monitor.setTaskCount(total);
             monitorThread.start();
 
-            // this may return millions of items:
-            // try to be memory-efficient
-            long lastMessageMillis = System.currentTimeMillis();
-            long freeMemory;
-            boolean isFirst = true;
-            // char primitives use less memory than strings
-            // arrays use less memory than lists or queues
-            char[][] urisArray = new char[total][];
+            Queue<String> urisQueue = enqueue(urisLoader, taskFactory);
+            urisCount = urisQueue.size() + 1;
+            
+            if (urisCount < total) {
+                LOG.log(INFO, "Resetting total uri count to {0}. Ignore if URIs are loaded from a file that contains blank lines.", urisCount);
+                monitor.setTaskCount(total = urisCount);
+            }
 
             String uri;
-            count = 0;
-            while (urisLoader.hasNext() && null != pool) {
-                uri = urisLoader.next();
-
-                if (count >= urisArray.length) {
-                    throw new ArrayIndexOutOfBoundsException("received more than " + total + " results: " + uri);
-                }
-
-                if (isBlank(uri)) {
-                    continue;
-                }
-
-                // we want to test the work module immediately,
-                // but we also want to ensure that
-                // all uris in queue as quickly as possible
-                if (isFirst) {
-                    isFirst = false;
-                    completionService.submit(tf.newProcessTask(new String[]{uri}, options.isFailOnError()));
-                    urisArray[count] = null;
-                    LOG.log(INFO, "received first uri: {0}", uri);
-                } else {
-                    urisArray[count] = uri.toCharArray();
-                }
-                count++;
-
-                if (0 == count % 25000) {
-                    LOG.log(INFO, "received {0}/{1}: {2}", new Object[]{count, total, uri});
-
-                    if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
-                        LOG.warning("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
-                        freeMemory = Runtime.getRuntime().freeMemory();
-                        LOG.log(INFO, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
-                    }
-                    lastMessageMillis = System.currentTimeMillis();
-                }
-            }
-
-            LOG.log(INFO, "received {0}/{1}", new Object[]{count, total});
-            // done with result set - close session to close everything
-            closeQuietly(urisLoader);
-
-            if (count < total) {
-                LOG.log(INFO, "Resetting total uri count to {0}. Ignore if URIs are loaded from a file that contains blank lines.", count);
-                monitor.setTaskCount(total = count);
-            }
-
-            // start with 1 not 0 because we already queued result 0
-            List<String> ulist = new ArrayList<String>(options.getBatchSize());
-            for (int i = 1; i < urisArray.length; i++) {
+            List<String> uriBatch = new ArrayList<String>(options.getBatchSize());
+            
+            // start with 1 not 0 because we already queued result 0 when populating the urisQueue (in order to fail-fast)
+            for (int i = 1; i < urisCount; i++) {
                 // check pool occasionally, for fast-fail
                 if (null == pool) {
                     break;
                 }
-                if (urisArray[i] == null || urisArray[i].length == 0) {
+                
+                uri = urisQueue.remove();
+                if (isEmpty(uri)) {
                     continue;
                 }
-
-                uri = new String(urisArray[i]);
-                ulist.add(uri);
-                urisArray[i] = null;
-                if (ulist.size() >= options.getBatchSize() || i >= (urisArray.length - 1)) {
-                    String[] uris = ulist.toArray(new String[ulist.size()]);
-                    ulist.clear();
-                    completionService.submit(tf.newProcessTask(uris, options.isFailOnError()));
-                }
-                String msg = "queued " + i + "/" + total + ": " + uri;
-                if (0 == i % 50000) {
-                    LOG.info(msg);
-                    freeMemory = Runtime.getRuntime().freeMemory();
-                    if (freeMemory < (16 * 1024 * 1024)) {
-                        LOG.log(WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
-                    }
-                    lastMessageMillis = System.currentTimeMillis();
-                } else {
-                    LOG.finest(msg);
-                }
-                if (i > total) {
-                    LOG.log(WARNING, "expected {0}, got {1}", new Object[]{total, i});
-                    LOG.warning("check your uri module!");
+                
+                uriBatch.add(uri);
+                if (uriBatch.size() >= options.getBatchSize() || i >=  urisCount -1) {
+                    String[] uris = uriBatch.toArray(new String[uriBatch.size()]);
+                    uriBatch.clear();
+                    completionService.submit(taskFactory.newProcessTask(uris, options.isFailOnError()));
                 }
             }
-            LOG.log(INFO, "queued {0}/{1}", new Object[]{urisArray.length, total});
-            urisArray = null;
+            
             pool.shutdown();
 
         } catch (Exception exc) {
@@ -812,12 +767,67 @@ public class Manager extends AbstractManager {
             closeQuietly(urisLoader);
         }
 
-        if (total == count) {
-            LOG.log(INFO, "queue is populated with {0} tasks", total);
-        } else {
-            LOG.log(WARNING, "queue is expected to be populated with {0} tasks, but only got {1} tasks.", new Object[]{total, count});
+        return urisCount;
+    }
+
+    void logQueueStatus(int currentIndex, String uri, int total) {
+        if (0 == currentIndex % 50000) {
+            long freeMemory = Runtime.getRuntime().freeMemory();
+            if (freeMemory < (16 * 1024 * 1024)) {
+                LOG.log(WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
+            }
+            lastMessageMillis = System.currentTimeMillis();
         }
-        return count;
+        if (0 == currentIndex % 25000) {
+            LOG.log(INFO, "queued {0}/{1}: {2}", new Object[]{currentIndex, total, uri});
+        }
+        if (currentIndex > total) {
+            LOG.log(WARNING, "expected {0}, got {1}", new Object[]{total, currentIndex});
+            LOG.warning("check your uri module!");
+        }
+    }
+
+    protected Queue<String> enqueue(UrisLoader urisLoader, TaskFactory taskFactory) throws CorbException {
+        lastMessageMillis = System.currentTimeMillis();
+        int count = 0;
+        boolean isFirst = true;
+        
+        Queue<String> queue = new DiskQueue<String>(options.getUrisQueueMaxInMemorySize(), options.getUrisQueueTempDir());
+        
+        String uri;
+        while (urisLoader.hasNext() && null != pool) {
+            uri = urisLoader.next();
+
+            if (count >= urisLoader.getTotalCount()) {
+                throw new ArrayIndexOutOfBoundsException("received more than " + urisLoader.getTotalCount() + " results: " + uri);
+            }
+
+            if (isBlank(uri)) {
+                continue;
+            }
+
+            // we want to test the work module immediately,
+            // but we also want to ensure that all uris enqueue as quickly as possible
+            if (isFirst) {
+                isFirst = false;
+                completionService.submit(taskFactory.newProcessTask(new String[]{uri}, options.isFailOnError()));
+                LOG.log(INFO, "received first uri: {0}", uri);
+            } else {
+                queue.add(uri);  
+            }
+            logQueueStatus(count, uri, urisLoader.getTotalCount());
+            count++;
+        }
+        
+        if (urisLoader.getTotalCount() == count ) {
+            LOG.log(INFO, "queue is populated with {0} tasks", urisLoader.getTotalCount());
+        } else {
+            LOG.log(WARNING, "queue is expected to be populated with {0} tasks, but only got {1} tasks.", new Object[]{urisLoader.getTotalCount(), count});
+        }
+
+        // done with result set - close session to close everything
+        closeQuietly(urisLoader);
+        return queue;
     }
 
     public void setThreadCount(int threadCount) {
@@ -957,5 +967,5 @@ public class Manager extends AbstractManager {
             }
         }
     }
-    
+
 }
