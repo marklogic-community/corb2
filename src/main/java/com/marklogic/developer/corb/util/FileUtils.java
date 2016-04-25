@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb.util;
 
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.util.IOUtils.BUFFER_SIZE;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,19 +33,19 @@ import java.io.OutputStream;
 import java.net.URL;
 
 /**
- *
+ * Common file manipulation utilities
+ * 
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class FileUtils {
-
-    public static final int BUFFER_SIZE = IOUtils.BUFFER_SIZE;
 
     private FileUtils() {
     }
 
     /**
-     *
-     * @param file
+     * Delete a file.
+     * 
+     * @param file The file to be deleted.
      * @throws IOException
      */
     public static void deleteFile(File file) throws IOException {
@@ -74,7 +75,8 @@ public class FileUtils {
     }
 
     /**
-     * @param path
+     * Delete a file.
+     * @param path Path to the file to be deleted.
      * @throws IOException
      */
     public static void deleteFile(String path) throws IOException {
@@ -82,8 +84,9 @@ public class FileUtils {
     }
 
     /**
+     * Read the <code>byte[]</code> of a file.
      * @param contentFile
-     * @return
+     * @return 
      * @throws IOException
      */
     public static byte[] getBytes(File contentFile) throws IOException {
@@ -108,8 +111,10 @@ public class FileUtils {
     }
 
     /**
-     * @param source
-     * @param destination
+     * Copy a file to a new location.
+     *
+     * @param source A file to copy.
+     * @param destination The new file where it should be copied to.
      * @throws IOException
      */
     public static void copy(final File source, final File destination) throws IOException {
@@ -127,8 +132,10 @@ public class FileUtils {
     }
 
     /**
-     * @param sourceFilePath
-     * @param destinationFilePath
+     * Copy a file to a new location.
+     *
+     * @param sourceFilePath Path to the existing file.
+     * @param destinationFilePath Path where the file should be copied to.
      * @throws IOException
      * @throws FileNotFoundException
      */
@@ -146,6 +153,13 @@ public class FileUtils {
         }
     }
 
+    /**
+     * Moves a file. If the destination already exists, deletes before moving
+     * source.
+     *
+     * @param source The file to be moved.
+     * @param dest The destination file.
+     */
     public static void moveFile(final File source, final File dest) {
         if (!source.getAbsolutePath().equals(dest.getAbsolutePath())) {
             if (source.exists()) {
@@ -157,6 +171,14 @@ public class FileUtils {
         }
     }
 
+    /**
+     * Determine how many lines are in the file. Returns 0 if the file is null
+     * or does not exist.
+     *
+     * @param file
+     * @return
+     * @throws IOException
+     */
     public static int getLineCount(final File file) throws IOException {
         if (file != null && file.exists()) {
             LineNumberReader lnr = null;
@@ -172,8 +194,9 @@ public class FileUtils {
     }
 
     /**
-     * Find the file with the given name. First checking for resources on the classpath, 
-     * then constructing a new File object.
+     * Find the file with the given name. First checking for resources on the
+     * classpath, then constructing a new File object.
+     *
      * @param filename
      * @return File
      */
