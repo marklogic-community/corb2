@@ -21,7 +21,6 @@ package com.marklogic.developer.corb;
 import com.marklogic.developer.TestHandler;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.security.InvalidParameterException;
 import java.text.MessageFormat;
 import java.util.List;
@@ -90,7 +89,7 @@ public class DiskQueueTest {
     
      @Test(expected = InvalidParameterException.class)
     public void testDiskQueue_tempDirDoesNotExist() throws IOException {
-        File tmpFile = Files.createTempDirectory("test").toFile();
+        File tmpFile = TestUtils.createTempDirectory();
         tmpFile.delete();
         Queue<String> instance = new DiskQueue<String>(0, tmpFile);
     }
