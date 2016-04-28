@@ -21,6 +21,8 @@ package com.marklogic.developer.corb;
 import com.marklogic.xcc.ContentSource;
 import org.junit.*;
 import org.w3c.dom.Document;
+
+import java.util.ArrayList;
 import java.util.Properties;
 
 import static org.junit.Assert.*;
@@ -149,8 +151,12 @@ public class FileXMLUrisLoaderTest {
         instance.options = options;
         instance.open();
         assertNotNull(instance.nodeIterator);
-        assertEquals("<a>test1</a>", instance.next());
-        assertEquals("<a>test2</a>", instance.next());
+        ArrayList<String> nodes = new ArrayList<String>();
+        nodes.add(instance.next());
+        nodes.add(instance.next());
+        nodes.add(instance.next());
+        assertTrue(nodes.contains("<a>test1</a>"));
+        assertTrue(nodes.contains("<a>test2</a>"));
         instance.close();
     }
 

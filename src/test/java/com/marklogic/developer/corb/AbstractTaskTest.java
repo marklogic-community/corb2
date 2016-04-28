@@ -314,7 +314,7 @@ public class AbstractTaskTest {
     public void testHandleRequestException_RequestServerException_fail() throws CorbException, IOException {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException("something bad happened", req);
-        testHandleRequestException("RequestServerException", serverException, true, 2);
+        testHandleRequestException("RequestServerException", serverException, true, 0);
     }
 
     @Test
@@ -384,23 +384,18 @@ public class AbstractTaskTest {
         List<LogRecord> records = testLogger.getLogRecords();
         System.out.println("logrecords " + records.size());
         assertEquals(Level.WARNING, records.get(0).getLevel());
-        if ((exception instanceof RequestServerException
-                && !(exception instanceof RetryableQueryException)
-                && !(exception instanceof QueryException && ((QueryException) exception).isRetryable()))
-                || exception instanceof RequestPermissionException) {
-            
-            assertEquals("failOnError is false. Encountered " + type + " at URI: " + instance.asString(uris), records.get(0).getMessage());
-
-        } else if (exception instanceof ServerConnectionException) {
+        if (exception instanceof ServerConnectionException || (exception instanceof RequestServerException && retryLimit > 0)) {
             System.err.println(records.get(0).getMessage());
             assertTrue(records.get(0).getMessage().startsWith("Encountered " + type + " from Marklogic Server. Retrying attempt"));
+        }else{
+        		assertEquals("failOnError is false. Encountered " + type + " at URI: " + instance.asString(uris), records.get(0).getMessage());
         }
     }
 
     public File testWriteToError(String[] uris, String delim, File exportDir, String errorFilename, String message) throws CorbException, IOException {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException(message, req);
-        testHandleRequestException("RequestServerException", serverException, false, uris, delim, exportDir, errorFilename, 1);
+        testHandleRequestException("RequestServerException", serverException, false, uris, delim, exportDir, errorFilename, 0);
         File file = null;
         try {
             file = new File(exportDir, errorFilename);

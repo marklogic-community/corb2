@@ -35,6 +35,7 @@ import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.QueryException;
 import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.exceptions.RequestServerException;
 import com.marklogic.xcc.exceptions.RetryableQueryException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmBinary;
@@ -83,10 +84,10 @@ public abstract class AbstractTask implements Task {
 	protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
 	protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
 	
-	protected static final int DEFAULT_QUERY_RETRY_LIMIT = 2;
-	protected static final int DEFAULT_QUERY_RETRY_INTERVAL = 15;
+	protected static final int DEFAULT_QUERY_RETRY_LIMIT = 1;
+	protected static final int DEFAULT_QUERY_RETRY_INTERVAL = 30;
 
-	protected int connectRetryCount = 0;
+	protected int retryCount = 0;
 	
 	protected boolean failOnError = true; 
 
@@ -234,7 +235,7 @@ public abstract class AbstractTask implements Task {
 
 			Thread.yield();// try to avoid thread starvation
 			seq = session.submitRequest(request);
-			connectRetryCount = 0;
+			retryCount = 0;
 			// no need to hold on to the session as results will be cached.
 			session.close();
 			Thread.yield();// try to avoid thread starvation
@@ -263,20 +264,17 @@ public abstract class AbstractTask implements Task {
 	
     protected String[] handleRequestException(RequestException exc) throws CorbException {
         String name = exc.getClass().getSimpleName();
-        if (exc instanceof ServerConnectionException
-                || exc instanceof RetryableQueryException
-                || (exc instanceof QueryException && ((QueryException) exc).isRetryable())) {
+        if (exc instanceof ServerConnectionException || exc instanceof RequestServerException) {
             int retryLimit = exc instanceof ServerConnectionException ? this.getConnectRetryLimit() : this.getQueryRetryLimit();
             int retryInterval = exc instanceof ServerConnectionException ? this.getConnectRetryInterval() : this.getQueryRetryInterval();
-            if (connectRetryCount < retryLimit) {
-                connectRetryCount++;
+            if (retryCount < retryLimit) {
+            		retryCount++;
                 LOG.log(WARNING,
                         "Encountered " + name + " from Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
-                        new Object[]{connectRetryCount, retryInterval, exc.getMessage(), asString(inputUris)});
+                        new Object[]{retryCount, retryInterval, exc.getMessage(), asString(inputUris)});
                 try {
                     Thread.sleep(retryInterval * 1000L);
-                } catch (Exception exc2) {
-                }
+                } catch (Exception exc2) {}
                 return invokeModule();
             } else if (exc instanceof ServerConnectionException || failOnError) {
                 throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);

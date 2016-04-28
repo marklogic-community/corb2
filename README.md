@@ -90,8 +90,8 @@ Option | Description
 **URIS-REPLACE-PATTERN** | One or more replace patterns for URIs - Used by java to truncate the length of URIs on the client side, typically to reduce java heap size in very large batch jobs, as the CoRB java client holds all the URIS in memory while processing is in progress. If truncated, XQUERY-MODULE needs to reconstruct the URI before trying to do `fn:doc()` to fetch the document. <br/>Usage: `URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2,...)`<br/>**Example:**<br/>`URIS-REPLACE-PATTERN=/com/marklogic/sample/,,.xml,` - Replace /com/marklogic/sample/ and .xml with empty strings. So, CoRB client only needs to cache the id '1234' instead of the entire URI /com/marklogic/sample/1234.xml. In the transform **XQUERY-MODULE**, we need to do `let $URI := fn:concat("/com/marklogic/sample/",$URI,".xml")`
 **XCC-CONNECTION-RETRY-LIMIT** | Number attempts to connect to ML before giving up. Default is 3
 **XCC-CONNECTION-RETRY-INTERVAL** | Time interval, in seconds, between retry attempts. Default is 60.
-**QUERY-RETRY-LIMIT** | Number of re-query attempts before giving up. Default is 2.
-**QUERY-RETRY-INTERVAL** | Time interval, in seconds, between re-query attempts. Default is 15.
+**QUERY-RETRY-LIMIT** | Number of re-query attempts before giving up. Default is 1.
+**QUERY-RETRY-INTERVAL** | Time interval, in seconds, between re-query attempts. Default is 30.
 **BATCH-URI-DELIM** | Use if default delimiter `';'` cannot be used to join multiple URIS when **BATCH-SIZE** is greater than 1.
 **FAIL-ON-ERROR** | Boolean value indicating whether the CoRB job should fail and exit if a transform module throws an error. Default is true. This option will not handle repeated connection failures.
 **ERROR-FILE-NAME** | Used when FAIL-ON-ERROR is false. If specified true, removes duplicates from, the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to separate URI and error message.
