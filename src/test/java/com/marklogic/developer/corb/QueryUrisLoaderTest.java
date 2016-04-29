@@ -21,13 +21,16 @@ package com.marklogic.developer.corb;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ModuleInvoke;
+import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
+import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.types.XdmItem;
 import com.marklogic.xcc.types.XdmVariable;
 import java.io.File;
 import java.io.FileWriter;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -380,13 +383,32 @@ public class QueryUrisLoaderTest {
         assertFalse(result);
     }
 
-    @Test
-    public void testHasNext_resultSequenceHasNext() throws Exception {
+    @Test 
+    public void testHasNext_resultSequenceHasNext() throws CorbException, RequestException {
         System.out.println("hasNext");
+        ContentSource contentSource = mock(ContentSource.class);
+        Session session = mock(Session.class);
+        ModuleInvoke request = mock(ModuleInvoke.class);
         ResultSequence resultSequence = mock(ResultSequence.class);
-        when(resultSequence.hasNext()).thenReturn(true);
+        ResultItem resultItem = mock(ResultItem.class);
+        XdmItem xdmItem = mock(XdmItem.class);
+        
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+        when(contentSource.newSession()).thenReturn(session);
+        when(xdmItem.asString()).thenReturn("0");
+        when(resultItem.getItem()).thenReturn(xdmItem);
+        when(resultItem.asString()).thenReturn("0");
+        when(resultSequence.next()).thenReturn(resultItem);
+        when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
+        when(session.submitRequest(request)).thenReturn(resultSequence);
+        
         QueryUrisLoader instance = new QueryUrisLoader();
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setUrisModule("foo");
+        instance.options = transformOptions;
+        instance.cs = contentSource;
         instance.res = resultSequence;
+        instance.open();
         boolean result = instance.hasNext();
         instance.close();
         assertTrue(result);
@@ -410,18 +432,42 @@ public class QueryUrisLoaderTest {
     @Test
     public void testNext() throws Exception {
         System.out.println("next");
+                ContentSource contentSource = mock(ContentSource.class);
+        Session session = mock(Session.class);
+        ModuleInvoke request = mock(ModuleInvoke.class);
         ResultSequence resultSequence = mock(ResultSequence.class);
-        ResultItem item = mock(ResultItem.class);
-        when(resultSequence.next()).thenReturn(item);
-        when(item.asString()).thenReturn("foo_bar_baz-1_2_3");
+        ResultItem resultItem = mock(ResultItem.class);
+        XdmItem xdmItem = mock(XdmItem.class);
+        
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+        when(contentSource.newSession()).thenReturn(session);
+        when(xdmItem.asString()).thenReturn("0");
+        when(resultItem.getItem()).thenReturn(xdmItem);
+        when(resultItem.asString()).thenReturn("foo_bar_baz-1_2_3");
+        when(resultSequence.next()).thenReturn(resultItem).thenReturn(resultItem).thenReturn(resultItem).thenReturn(resultItem);
+        when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
+        when(session.submitRequest(request)).thenReturn(resultSequence);
+
         QueryUrisLoader instance = new QueryUrisLoader();
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setUrisModule("foo");
+        instance.options = transformOptions;
+        instance.cs = contentSource;
         instance.res = resultSequence;
         instance.replacements = new String[]{"_", ",", "-", "\n"};
+        instance.open();
         String result = instance.next();
         instance.close();
         assertEquals("foo,bar,baz\n1,2,3", result);
     }
 
+    @Test (expected = NoSuchElementException.class)
+    public void testNext_noQueue() throws Exception {
+        System.out.println("next");
+        
+        QueryUrisLoader instance = new QueryUrisLoader();
+        instance.next();
+    }
     /**
      * Test of close method, of class QueryUrisLoader.
      */

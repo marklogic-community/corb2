@@ -54,12 +54,12 @@ public class AbstractManagerTest {
     @Rule
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
     private final TestHandler testLogger = new TestHandler();
-    private String propertiesFilename = "helloWorld.properties";
-    private String propertiesFileDir = "src/test/resources/";
-    private String propertiesFilePath = propertiesFileDir + "/" + propertiesFilename;
-    private String invalidFilePath = "does/not/exist";
-    private String selectorFilename = "selector.xqy";
-    private String selectorFilePath = "src/test/resources/" + selectorFilename;
+    private final String propertiesFilename = "helloWorld.properties";
+    private final String propertiesFileDir = "src/test/resources/";
+    private final String propertiesFilePath = propertiesFileDir + "/" + propertiesFilename;
+    private final String invalidFilePath = "does/not/exist";
+    private final String selectorFilename = "selector.xqy";
+    private final String selectorFilePath = "src/test/resources/" + selectorFilename;
     private String selectorAsText;
 
     public AbstractManagerTest() {

@@ -104,7 +104,7 @@ import java.util.logging.Logger;
 public class Manager extends AbstractManager {
 
     protected static final String NAME = Manager.class.getName();
-    
+
     public static final String URIS_BATCH_REF = com.marklogic.developer.corb.Options.URIS_BATCH_REF;
     public static final String DEFAULT_BATCH_URI_DELIM = ";";
 
@@ -116,7 +116,7 @@ public class Manager extends AbstractManager {
 
     private boolean execError = false;
     private boolean stopCommand = false;
-    private long lastMessageMillis;
+    
     protected static int EXIT_CODE_NO_URIS = EXIT_CODE_SUCCESS;
     protected static final int EXIT_CODE_STOP_COMMAND = 3;
 
@@ -259,7 +259,7 @@ public class Manager extends AbstractManager {
         String errorFileName = getOption(ERROR_FILE_NAME);
         String urisQueueMaxInMemorySize = getOption(URIS_QUEUE_MAX_IN_MEMORY_SIZE);
         String urisQueueTempDir = getOption(URIS_QUEUE_TEMP_DIR);
-        
+
         //Check legacy properties keys, for backwards compatability
         if (processModule == null) {
             processModule = getOption(XQUERY_MODULE);
@@ -375,7 +375,7 @@ public class Manager extends AbstractManager {
                 throw new IllegalArgumentException("Cannot write to queue temp directory " + urisQueueTempDir);
             }
         }
-        
+
         // delete the export file if it exists
         deleteFileIfExists(exportFileDir, exportFileName);
         deleteFileIfExists(exportFileDir, errorFileName);
@@ -700,7 +700,7 @@ public class Manager extends AbstractManager {
         LOG.info("populating queue");
         TaskFactory taskFactory = new TaskFactory(this);
         UrisLoader urisLoader = getUriLoader();
-        int total = -1;
+        int expectedTotalCount = -1;
         int urisCount = 0;
         try {
             // run init task
@@ -712,9 +712,9 @@ public class Manager extends AbstractManager {
                 LOG.log(INFO, "{0}: {1}", new Object[]{URIS_BATCH_REF, urisLoader.getBatchRef()});
             }
 
-            total = urisLoader.getTotalCount();
-            LOG.log(INFO, "expecting total {0}", total);
-            if (total <= 0) {
+            expectedTotalCount = urisLoader.getTotalCount();
+            LOG.log(INFO, "expecting total {0}", expectedTotalCount);
+            if (expectedTotalCount <= 0) {
                 LOG.info("nothing to process");
                 stop();
                 return 0;
@@ -724,40 +724,44 @@ public class Manager extends AbstractManager {
             runPreBatchTask(taskFactory);
 
             // now start process tasks
-            monitor.setTaskCount(total);
+            monitor.setTaskCount(expectedTotalCount);
             monitorThread.start();
-
-            Queue<String> urisQueue = enqueue(urisLoader, taskFactory);
-            urisCount = urisQueue.size() + 1;
-            
-            if (urisCount < total) {
-                LOG.log(INFO, "Resetting total uri count to {0}. Ignore if URIs are loaded from a file that contains blank lines.", urisCount);
-                monitor.setTaskCount(total = urisCount);
-            }
 
             String uri;
             List<String> uriBatch = new ArrayList<String>(options.getBatchSize());
-            
-            // start with 1 not 0 because we already queued result 0 when populating the urisQueue (in order to fail-fast)
-            for (int i = 1; i < urisCount; i++) {
+
+            while (urisLoader.hasNext()) {
                 // check pool occasionally, for fast-fail
                 if (null == pool) {
                     break;
                 }
                 
-                uri = urisQueue.remove();
+                uri = urisLoader.next();
                 if (isEmpty(uri)) {
                     continue;
                 }
                 
+                if (urisCount >= expectedTotalCount) {
+                    throw new ArrayIndexOutOfBoundsException("received more than " + expectedTotalCount + " results: " + uri);
+                }
+                                
                 uriBatch.add(uri);
-                if (uriBatch.size() >= options.getBatchSize() || i >=  urisCount -1) {
+                
+                if (uriBatch.size() >= options.getBatchSize() || urisCount >= expectedTotalCount) {
                     String[] uris = uriBatch.toArray(new String[uriBatch.size()]);
                     uriBatch.clear();
                     completionService.submit(taskFactory.newProcessTask(uris, options.isFailOnError()));
                 }
+                
+                urisCount++;
             }
-            
+
+            if (urisCount == expectedTotalCount) {
+                LOG.log(INFO, "queue is populated with {0} tasks", urisCount);
+            } else {
+                LOG.log(WARNING, "queue is expected to be populated with {0} tasks, but only got {1} tasks.", new Object[]{expectedTotalCount, urisCount});
+            }
+                
             pool.shutdown();
 
         } catch (Exception exc) {
@@ -768,66 +772,6 @@ public class Manager extends AbstractManager {
         }
 
         return urisCount;
-    }
-
-    void logQueueStatus(int currentIndex, String uri, int total) {
-        if (0 == currentIndex % 50000) {
-            long freeMemory = Runtime.getRuntime().freeMemory();
-            if (freeMemory < (16 * 1024 * 1024)) {
-                LOG.log(WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
-            }
-            lastMessageMillis = System.currentTimeMillis();
-        }
-        if (0 == currentIndex % 25000) {
-            LOG.log(INFO, "queued {0}/{1}: {2}", new Object[]{currentIndex, total, uri});
-        }
-        if (currentIndex > total) {
-            LOG.log(WARNING, "expected {0}, got {1}", new Object[]{total, currentIndex});
-            LOG.warning("check your uri module!");
-        }
-    }
-
-    protected Queue<String> enqueue(UrisLoader urisLoader, TaskFactory taskFactory) throws CorbException {
-        lastMessageMillis = System.currentTimeMillis();
-        int count = 0;
-        boolean isFirst = true;
-        
-        Queue<String> queue = new DiskQueue<String>(options.getUrisQueueMaxInMemorySize(), options.getUrisQueueTempDir());
-        
-        String uri;
-        while (urisLoader.hasNext() && null != pool) {
-            uri = urisLoader.next();
-
-            if (count >= urisLoader.getTotalCount()) {
-                throw new ArrayIndexOutOfBoundsException("received more than " + urisLoader.getTotalCount() + " results: " + uri);
-            }
-
-            if (isBlank(uri)) {
-                continue;
-            }
-
-            // we want to test the work module immediately,
-            // but we also want to ensure that all uris enqueue as quickly as possible
-            if (isFirst) {
-                isFirst = false;
-                completionService.submit(taskFactory.newProcessTask(new String[]{uri}, options.isFailOnError()));
-                LOG.log(INFO, "received first uri: {0}", uri);
-            } else {
-                queue.add(uri);  
-            }
-            logQueueStatus(count, uri, urisLoader.getTotalCount());
-            count++;
-        }
-        
-        if (urisLoader.getTotalCount() == count ) {
-            LOG.log(INFO, "queue is populated with {0} tasks", urisLoader.getTotalCount());
-        } else {
-            LOG.log(WARNING, "queue is expected to be populated with {0} tasks, but only got {1} tasks.", new Object[]{urisLoader.getTotalCount(), count});
-        }
-
-        // done with result set - close session to close everything
-        closeQuietly(urisLoader);
-        return queue;
     }
 
     public void setThreadCount(int threadCount) {

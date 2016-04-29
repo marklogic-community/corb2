@@ -39,6 +39,8 @@ import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Queue;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
@@ -50,7 +52,9 @@ public class QueryUrisLoader extends AbstractUrisLoader {
     private static final Pattern MODULE_CUSTOM_INPUT = Pattern.compile("("
             + PRE_BATCH_MODULE + "|" + PROCESS_MODULE + "|" + XQUERY_MODULE + "|" + POST_BATCH_MODULE
             + ")\\.[A-Za-z0-9]+=.*");
-
+    private Queue<String> queue;
+    private long lastMessageMillis;
+    
     Session session;
     ResultSequence res;
 
@@ -66,6 +70,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             propertyNames.addAll(properties.stringPropertyNames());
         }
         propertyNames.addAll(System.getProperties().stringPropertyNames());
+
         parseUriReplacePatterns();
 
         try {
@@ -144,19 +149,48 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             } catch (NumberFormatException exc) {
                 throw new CorbException("Uris module " + options.getUrisModule() + " does not return total URI count");
             }
+
+            queue = getQueue();
+            
+            int i = 0;
+            String uri;
+            while (res != null && res.hasNext()) {
+                uri = res.next().asString();
+                if (queue.isEmpty()) {
+                    LOG.log(INFO, "received first uri: {0}", uri);
+                }
+                queue.add(uri);
+                logQueueStatus(i, uri, total);
+                i++;
+            }
+
         } catch (RequestException exc) {
             throw new CorbException("While invoking Uris Module", exc);
+        } finally {
+            closeRequestAndSession();
         }
+    }
+
+    /**
+     *
+     * @return Queue
+     */
+    protected Queue<String> getQueue() {
+        //TODO: create method to either instantiate DiskQueue or ArrayQueue, depending on properties
+        return new DiskQueue<String>(options.getUrisQueueMaxInMemorySize(), options.getUrisQueueTempDir());
     }
 
     @Override
     public boolean hasNext() throws CorbException {
-        return res != null && res.hasNext();
+        return queue != null && !queue.isEmpty();
     }
 
     @Override
     public String next() throws CorbException {
-        String next = res.next().asString();
+        if (queue == null) {
+            throw new NoSuchElementException();
+        }
+        String next = queue.remove();
         for (int i = 0; i < replacements.length - 1; i += 2) {
             next = next.replaceAll(replacements[i], replacements[i + 1]);
         }
@@ -165,6 +199,15 @@ public class QueryUrisLoader extends AbstractUrisLoader {
 
     @Override
     public void close() {
+        closeRequestAndSession();
+        if (queue != null) {
+            queue.clear();
+            queue = null;
+        }
+        cleanup();
+    }
+
+    private void closeRequestAndSession() {
         if (session != null) {
             LOG.info("closing uris session");
             try {
@@ -177,7 +220,6 @@ public class QueryUrisLoader extends AbstractUrisLoader {
                 session = null;
             }
         }
-        cleanup();
     }
 
     protected int getMaxOptionsFromModule() {
@@ -187,10 +229,27 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             try {
                 max = Integer.parseInt(maxStr);
             } catch (NumberFormatException ex) {
-                LOG.log(WARNING, "Unable to parse MaxOptionsFromModule value: {0}, using default value: {1}", 
+                LOG.log(WARNING, "Unable to parse MaxOptionsFromModule value: {0}, using default value: {1}",
                         new Object[]{maxStr, DEFAULT_MAX_OPTS_FROM_MODULE});
             }
         }
         return max;
+    }
+
+    void logQueueStatus(int currentIndex, String uri, int total) {
+        if (0 == currentIndex % 50000) {
+            long freeMemory = Runtime.getRuntime().freeMemory();
+            if (freeMemory < (16 * 1024 * 1024)) {
+                LOG.log(WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
+            }
+            lastMessageMillis = System.currentTimeMillis();
+        }
+        if (0 == currentIndex % 25000) {
+            LOG.log(INFO, "queued {0}/{1}: {2}", new Object[]{currentIndex, total, uri});
+        }
+        if (currentIndex > total) {
+            LOG.log(WARNING, "expected {0}, got {1}", new Object[]{total, currentIndex});
+            LOG.warning("check your uri module!");
+        }
     }
 }

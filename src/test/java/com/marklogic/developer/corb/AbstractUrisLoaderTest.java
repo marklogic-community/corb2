@@ -193,7 +193,7 @@ public class AbstractUrisLoaderTest {
         instance.parseUriReplacePatterns();
     }
 
-    public class AbstractUrisLoaderImpl extends AbstractUrisLoader {
+    public static class AbstractUrisLoaderImpl extends AbstractUrisLoader {
 
         @Override
         public String next() {
