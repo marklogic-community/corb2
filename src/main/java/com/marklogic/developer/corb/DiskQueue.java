@@ -80,8 +80,8 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
     private File fileQueue;
 
     /**
-     * Construct a disk-backed queue that keeps at most <code>maxInMemorySize</code> 
-     * elements in memory.
+     * Construct a disk-backed queue that keeps at most
+     * <code>maxInMemorySize</code> elements in memory.
      *
      * @param maxInMemorySize Maximum number of elements to keep in memory.
      */
@@ -90,8 +90,8 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
     }
 
     /**
-     * Construct a disk-backed queue that keeps at most <code>maxInMemorySize</code> 
-     * elements in memory.
+     * Construct a disk-backed queue that keeps at most
+     * <code>maxInMemorySize</code> elements in memory.
      *
      * @param maxInMemorySize Maximum number of elements to keep in memory.
      * @param tempDir Directory where queue temporary files will be written to.
@@ -101,8 +101,8 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
     }
 
     /**
-     * Construct a disk-backed queue that keeps at most <code>maxInMemorySize</code> 
-     * elements in memory. 
+     * Construct a disk-backed queue that keeps at most
+     * <code>maxInMemorySize</code> elements in memory.
      *
      * @param maxInMemorySize Maximum number of elements to keep in memory.
      * @param comparator
@@ -112,8 +112,8 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
     }
 
     /**
-     * Construct a disk-backed queue that keeps at most <code>maxInMemorySize</code> 
-     * elements in memory. 
+     * Construct a disk-backed queue that keeps at most
+     * <code>maxInMemorySize</code> elements in memory.
      *
      * @param maxInMemorySize Maximum number of elements to keep in memory.
      * @param tempDir Directory where queue temporary files will be written to.
@@ -123,9 +123,10 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
         if (maxInMemorySize < 1) {
             throw new InvalidParameterException(DiskQueue.class.getSimpleName() + " max in-memory size must be at least one");
         }
-        if (tempDir != null && (!tempDir.isDirectory() || !tempDir.exists())) {
-            throw new InvalidParameterException(DiskQueue.class.getSimpleName() + " temporary directory must exist");
+        if (tempDir != null && !(tempDir.exists() && tempDir.isDirectory() && tempDir.canWrite())) {
+            throw new InvalidParameterException(DiskQueue.class.getSimpleName() + " temporary directory must exist and be writable");
         }
+        
         this.tempDir = tempDir;
         memoryQueue = new MemoryQueue<E>(maxInMemorySize, comparator);
         refillMemoryRatio = DEFAULT_REFILL_RATIO;
@@ -172,6 +173,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
     private void openFile() throws IOException {
         if (fileQueue == null) {
             fileQueue = File.createTempFile(DiskQueue.class.getSimpleName() + "-backingstore-", null, tempDir);
+            fileQueue.deleteOnExit();
             LOG.log(Level.INFO, "created backing store {0}", fileQueue.getAbsolutePath());
             fileOut = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(fileQueue)));
 
@@ -254,11 +256,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
         }
 
         // See if we have one saved element from the previous read request
-        if (cachedElement != null) {
-            if (!memoryQueue.offer(cachedElement)) {
-                throw new RuntimeException("Unexpected error - can't offer to an empty queue");
-            }
-
+        if (cachedElement != null && memoryQueue.offer(cachedElement)) {
             cachedElement = null;
         }
 
