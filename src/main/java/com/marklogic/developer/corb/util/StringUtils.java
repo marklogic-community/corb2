@@ -207,7 +207,7 @@ public class StringUtils {
             return true;
         }
         for (int i = 0; i < length; i++) {
-            if (Character.isWhitespace(value.charAt(i)) == false) {
+            if (!Character.isWhitespace(value.charAt(i))) {
                 return false;
             }
         }
