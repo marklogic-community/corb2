@@ -82,13 +82,12 @@ public class IOUtils {
         int len = 0;
         byte[] buf = new byte[BUFFER_SIZE];
         int available = inputStream.available();
-        // System.err.println("DEBUG: " + _in + ": available " + available);
+
         while ((len = inputStream.read(buf, 0, BUFFER_SIZE)) > -1) {
             outputStream.write(buf, 0, len);
             totalBytes += len;
-            // System.err.println("DEBUG: " + _out + ": wrote " + len);
         }
-        // System.err.println("DEBUG: " + _in + ": last read " + len);
+
         // caller MUST close the stream for us
         outputStream.flush();
         // check to see if we copied enough data
