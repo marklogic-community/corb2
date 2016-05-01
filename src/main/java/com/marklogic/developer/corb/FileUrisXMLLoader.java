@@ -16,18 +16,16 @@
  * The use of the Apache License does not indicate that this project is
  * affiliated with the Apache Software Foundation.
  */
-
-
 package com.marklogic.developer.corb;
 
 /**
  *
  * @author Praveen Venkata
  */
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import static com.marklogic.developer.corb.Options.XML_FILE;
+import static com.marklogic.developer.corb.Options.XML_NODE;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -50,137 +48,136 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class FileUrisXMLLoader extends AbstractUrisLoader {
 
-	protected static final Logger LOG = Logger.getLogger(FileUrisXMLLoader.class.getName());
-	String nextNode = null;
-	Iterator<Node> nodeIterator = null;
-	Document doc = null;
-	Map<Integer,Node> nodeMap = null;
+    protected static final Logger LOG = Logger.getLogger(FileUrisXMLLoader.class.getName());
+    String nextNode = null;
+    Iterator<Node> nodeIterator = null;
+    Document doc = null;
+    Map<Integer, Node> nodeMap = null;
+    TransformerFactory transformerFactory = null;
+    
+    @Override
+    public void open() throws CorbException {
 
-	@Override
-	public void open() throws CorbException {
+        try {
+            String fileName = getProperty(XML_FILE);
+            String xpathRootNode = getProperty(XML_NODE);
 
-		try {
-			String fileName = getProperty("XML-FILE");
-			String xpathRootNode = getProperty("XML-NODE");
+            File fXmlFile = new File(fileName);
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            doc = dBuilder.parse(fXmlFile);
 
+            //Get Child nodes for parent node which is a wrapper node
+            NodeList nodeList = null;
 
-			File fXmlFile = new File(fileName);
-			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-			doc = dBuilder.parse(fXmlFile);
+            if (xpathRootNode == null) {
+                nodeList = doc.getChildNodes().item(0).getChildNodes();
+            } else {
+                XPathFactory factory = XPathFactory.newInstance();
+                //using this factory to create an XPath object:
+                XPath xpath = factory.newXPath();
 
-			//Get Child nodes for parent node which is a wrapper node
-			NodeList nodeList = null;
+                // XPath Query for showing all nodes value
+                XPathExpression expr = xpath.compile(xpathRootNode);
+                Object result = expr.evaluate(doc, XPathConstants.NODESET);
+                nodeList = (NodeList) result;
+            }
 
-			if(xpathRootNode == null){
-				nodeList = doc.getChildNodes().item(0).getChildNodes();
-			} else {
-				XPathFactory factory = XPathFactory.newInstance();
-				//using this factory to create an XPath object:
-				XPath xpath = factory.newXPath();
+            nodeMap = new ConcurrentHashMap();
 
-				// XPath Query for showing all nodes value
-				XPathExpression expr = xpath.compile(xpathRootNode);
-				Object result = expr.evaluate(doc, XPathConstants.NODESET);
-				nodeList = (NodeList) result;
-			}
+            for (int i = 0; i < nodeList.getLength(); i++) {
+                Node node = nodeList.item(i);
+                if (node.getNodeType() == Node.ELEMENT_NODE) {
+                    nodeMap.put(i, node);
+                }
+            }
 
-			nodeMap = new ConcurrentHashMap();
+            total = nodeMap.size();
 
-			for (int i = 0; i < nodeList.getLength(); i++) {
-				Node node = nodeList.item(i);
-				if (node.getNodeType() == Node.ELEMENT_NODE) {
+            nodeIterator = nodeMap.values().iterator();
 
-					nodeMap.put(i,node);
-				}
-			}
+        } catch (Exception exc) {
+            throw new CorbException("Problem loading data from xml file ", exc);
+        }
+    }
 
-			total = nodeMap.size();
+    private String nodeToString(Node node) throws CorbException {
+        StringWriter sw = new StringWriter();
+        try {
+            //Creating a transformerFactory is expensive, only do it once
+            if (transformerFactory == null) {
+                transformerFactory = TransformerFactory.newInstance();
+            }
+            Transformer t = transformerFactory.newTransformer();
+            t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+            t.setOutputProperty(OutputKeys.INDENT, "yes");
+            t.transform(new DOMSource(node), new StreamResult(sw));
+        } catch (TransformerException te) {
+            throw new CorbException("nodeToString Transformer Exception", te);
+        }
+        return sw.toString();
+    }
 
-			nodeIterator = nodeMap.values().iterator();
+    private String readNextNode() throws IOException, CorbException {
+        if (nodeIterator.hasNext()) {
+            Node nextNode = nodeIterator.next();
+            String line = trim(nodeToString(nextNode));
+            if (line != null && isBlank(line)) {
+                line = readNextNode();
+            }
+            return line;
+        }
+        return null;
+    }
 
-		} catch (Exception exc) {
-			throw new CorbException("Problem loading data from xml file " , exc);
-		}
-	}
+    @Override
+    public boolean hasNext() throws CorbException {
+        if (nextNode == null) {
+            try {
+                nextNode = readNextNode();
+            } catch (Exception exc) {
+                throw new CorbException("Problem while reading the xml file");
+            }
+        }
+        return nextNode != null;
+    }
 
-	private String nodeToString(Node node) throws CorbException {
-		StringWriter sw = new StringWriter();
-		try {
-			Transformer t = TransformerFactory.newInstance().newTransformer();
-			t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-			t.setOutputProperty(OutputKeys.INDENT, "yes");
-			t.transform(new DOMSource(node), new StreamResult(sw));
-		} catch (TransformerException te) {
-			throw new CorbException("nodeToString Transformer Exception", te);
-		}
-		return sw.toString();
-	}
+    @Override
+    public String next() throws CorbException {
+        String node;
+        if (nextNode != null) {
+            node = nextNode;
+            nextNode = null;
+        } else {
+            try {
+                node = readNextNode();
+            } catch (Exception exc) {
+                throw new CorbException("Problem while reading the xml file");
+            }
+        }
 
+        return node;
+    }
 
-	private String readNextNode() throws IOException, CorbException {
-		if(nodeIterator.hasNext()) {
-
-			Node nextNode = nodeIterator.next();
-			String line = trim(nodeToString(nextNode));
-			if (line != null && isBlank(line)) {
-				line = readNextNode();
-			}
-			return line;
-		}
-		return null;
-
-	}
-
-	@Override
-	public boolean hasNext() throws CorbException {
-		if (nextNode == null) {
-			try {
-				nextNode = readNextNode();
-			} catch (Exception exc) {
-				throw new CorbException("Problem while reading the xml file");
-			}
-		}
-		return nextNode != null;
-	}
-
-	@Override
-	public String next() throws CorbException {
-		String node;
-		if (nextNode != null) {
-			node = nextNode;
-			nextNode = null;
-		} else {
-			try {
-				node = readNextNode();
-			} catch (Exception exc) {
-				throw new CorbException("Problem while reading the xml file");
-			}
-		}
-
-		return node;
-	}
-
-	@Override
-	public void close() {
-		if (doc != null) {
-			LOG.info("closing xml file reader");
-			try {
-
-				doc = null;
-                if(nodeMap != null)
-				    nodeMap.clear();
-
-			} catch (Exception exc) {
-				LOG.log(Level.SEVERE, "while closing xml file reader", exc);
-			}
-		}
-	}
-
+    @Override
+    public void close() {
+        if (doc != null) {
+            LOG.info("closing xml file reader");
+            try {
+                doc = null;
+                if (nodeMap != null) {
+                    nodeMap.clear();
+                }
+            } catch (Exception exc) {
+                LOG.log(Level.SEVERE, "while closing xml file reader", exc);
+            }
+        }
+    }
 
 }
