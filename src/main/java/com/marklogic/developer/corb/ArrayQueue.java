@@ -69,7 +69,7 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
         if (element == null) {
             throw new NullPointerException();
         }
-        if (count == queue.length) {
+        if (count >= queue.length) {
             return false;
         } else {
             insert(element);

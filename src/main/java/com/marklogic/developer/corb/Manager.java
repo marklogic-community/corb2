@@ -739,16 +739,11 @@ public class Manager extends AbstractManager {
                 
                 uri = urisLoader.next();
                 if (isEmpty(uri)) {
-                    continue;
+                  continue;
                 }
-                
-                if (urisCount >= expectedTotalCount) {
-                    throw new ArrayIndexOutOfBoundsException("received more than " + expectedTotalCount + " results: " + uri);
-                }
-                                
                 uriBatch.add(uri);
                 
-                if (uriBatch.size() >= options.getBatchSize() || urisCount >= expectedTotalCount) {
+                if (uriBatch.size() >= options.getBatchSize() || urisCount >= expectedTotalCount || !urisLoader.hasNext()) {
                     String[] uris = uriBatch.toArray(new String[uriBatch.size()]);
                     uriBatch.clear();
                     completionService.submit(taskFactory.newProcessTask(uris, options.isFailOnError()));
@@ -760,7 +755,8 @@ public class Manager extends AbstractManager {
             if (urisCount == expectedTotalCount) {
                 LOG.log(INFO, "queue is populated with {0} tasks", urisCount);
             } else {
-                LOG.log(WARNING, "queue is expected to be populated with {0} tasks, but only got {1} tasks.", new Object[]{expectedTotalCount, urisCount});
+                LOG.log(WARNING, "queue is expected to be populated with {0} tasks, but got {1} tasks.", new Object[]{expectedTotalCount, urisCount});
+                monitor.setTaskCount(urisCount);
             }
                 
             pool.shutdown();

@@ -26,6 +26,7 @@ import static com.marklogic.developer.corb.Options.URIS_MODULE;
 import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
 import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 import static com.marklogic.developer.corb.util.StringUtils.getInlineModuleCode;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
@@ -41,6 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
@@ -156,10 +158,24 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             String uri;
             while (res != null && res.hasNext()) {
                 uri = res.next().asString();
+                if (isBlank(uri)) {
+                  continue;
+                }
+                
+                for (int rc = 0; rc < replacements.length - 1; rc += 2) {
+                  uri = uri.replaceAll(replacements[rc], replacements[rc + 1]);
+                }
+                
                 if (queue.isEmpty()) {
                     LOG.log(INFO, "received first uri: {0}", uri);
                 }
-                queue.add(uri);
+                
+                if(!queue.add(uri)){
+                	LOG.log(SEVERE,"Unabled to add uri {0} to queue. Received uris {1} which is more than expected {2}",new Object[]{uri,(i+1),total});
+                }else if(i >= total){
+                	LOG.log(WARNING,"Received uri {0} at index {1} which is more than expected {2}",new Object[]{uri,(i+1),total});
+                }
+                
                 logQueueStatus(i, uri, total);
                 i++;
             }
@@ -191,11 +207,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         if (queue == null) {
             throw new NoSuchElementException();
         }
-        String next = queue.remove();
-        for (int i = 0; i < replacements.length - 1; i += 2) {
-            next = next.replaceAll(replacements[i], replacements[i + 1]);
-        }
-        return next;
+        return queue.remove();
     }
 
     @Override
