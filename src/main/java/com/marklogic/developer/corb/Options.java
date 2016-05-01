@@ -31,6 +31,9 @@ public class Options {
     public static final String COMMAND_FILE = "COMMAND-FILE";
     public static final String COMMAND_FILE_POLL_INTERVAL = "COMMAND-FILE-POLL-INTERVAL";
     public static final String DECRYPTER = "DECRYPTER";
+    public static final String DISK_QUEUE = "DISK-QUEUE";
+    public static final String DISK_QUEUE_TEMP_DIR = "URIS-QUEUE-TEMP-DIR";
+    public static final String DISK_QUEUE_MAX_IN_MEMORY_SIZE = "URIS-QUEUE-MAX-IN-MEMORY-SIZE";
     public static final String ERROR_FILE_NAME = "ERROR-FILE-NAME";
     public static final String EXIT_CODE_NO_URIS = "EXIT-CODE-NO-URIS";
     public static final String EXPORT_FILE_AS_ZIP = "EXPORT_FILE_AS_ZIP"; 
@@ -77,8 +80,6 @@ public class Options {
     public static final String URIS_FILE = "URIS-FILE";
     public static final String URIS_LOADER = "URIS-LOADER";
     public static final String URIS_MODULE = "URIS-MODULE";
-    public static final String URIS_QUEUE_TEMP_DIR = "URIS-QUEUE-TEMP-DIR";
-    public static final String URIS_QUEUE_MAX_IN_MEMORY_SIZE = "URIS-QUEUE-MAX-IN-MEMORY-SIZE";
     public static final String URIS_REPLACE_PATTERN = "URIS-REPLACE-PATTERN";
     public static final String XCC_CONNECTION_RETRY_LIMIT = "XCC-CONNECTION-RETRY-LIMIT";
     public static final String XCC_CONNECTION_RETRY_INTERVAL = "XCC-CONNECTION-RETRY-INTERVAL";

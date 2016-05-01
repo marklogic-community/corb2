@@ -266,7 +266,7 @@ public abstract class AbstractTask implements Task {
             int retryLimit = exc instanceof ServerConnectionException ? this.getConnectRetryLimit() : this.getQueryRetryLimit();
             int retryInterval = exc instanceof ServerConnectionException ? this.getConnectRetryInterval() : this.getQueryRetryInterval();
             if (retryCount < retryLimit) {
-            		retryCount++;
+            	retryCount++;
                 LOG.log(WARNING,
                         "Encountered " + name + " from Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
                         new Object[]{retryCount, retryInterval, exc.getMessage(), asString(inputUris)});

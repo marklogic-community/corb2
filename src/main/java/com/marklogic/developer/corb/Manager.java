@@ -21,6 +21,9 @@ package com.marklogic.developer.corb;
 import static com.marklogic.developer.corb.Options.BATCH_SIZE;
 import static com.marklogic.developer.corb.Options.COLLECTION_NAME;
 import static com.marklogic.developer.corb.Options.COMMAND_FILE;
+import static com.marklogic.developer.corb.Options.DISK_QUEUE;
+import static com.marklogic.developer.corb.Options.DISK_QUEUE_TEMP_DIR;
+import static com.marklogic.developer.corb.Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE;
 import static com.marklogic.developer.corb.Options.ERROR_FILE_NAME;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_DIR;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
@@ -29,8 +32,6 @@ import static com.marklogic.developer.corb.Options.FAIL_ON_ERROR;
 import static com.marklogic.developer.corb.Options.INIT_MODULE;
 import static com.marklogic.developer.corb.Options.INIT_TASK;
 import static com.marklogic.developer.corb.Options.INSTALL;
-import static com.marklogic.developer.corb.Options.URIS_QUEUE_MAX_IN_MEMORY_SIZE;
-import static com.marklogic.developer.corb.Options.URIS_QUEUE_TEMP_DIR;
 import static com.marklogic.developer.corb.Options.MODULES_DATABASE;
 import static com.marklogic.developer.corb.Options.MODULE_ROOT;
 import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
@@ -51,10 +52,10 @@ import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
 import com.marklogic.developer.corb.util.FileUtils;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import com.marklogic.developer.corb.util.NumberUtils;
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
+import static com.marklogic.developer.corb.util.StringUtils.stringToBoolean;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentCreateOptions;
@@ -79,7 +80,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletionService;
@@ -257,8 +257,10 @@ public class Manager extends AbstractManager {
         String batchSize = getOption(BATCH_SIZE);
         String failOnError = getOption(FAIL_ON_ERROR);
         String errorFileName = getOption(ERROR_FILE_NAME);
-        String urisQueueMaxInMemorySize = getOption(URIS_QUEUE_MAX_IN_MEMORY_SIZE);
-        String urisQueueTempDir = getOption(URIS_QUEUE_TEMP_DIR);
+        
+        options.setUseDiskQueue(stringToBoolean(getOption(DISK_QUEUE)));
+        String diskQueueMaxInMemorySize = getOption(DISK_QUEUE_MAX_IN_MEMORY_SIZE);
+        String diskQueueTempDir = getOption(DISK_QUEUE_TEMP_DIR);
 
         //Check legacy properties keys, for backwards compatability
         if (processModule == null) {
@@ -270,7 +272,6 @@ public class Manager extends AbstractManager {
         if (postBatchModule == null) {
             postBatchModule = getOption(POST_BATCH_XQUERY_MODULE);
         }
-
         if (moduleRoot != null) {
             options.setModuleRoot(moduleRoot);
         }
@@ -297,9 +298,9 @@ public class Manager extends AbstractManager {
         }
         if (failOnError != null && (failOnError.equalsIgnoreCase("false"))) {
             options.setFailOnError(false);
-        }
-        if (urisQueueMaxInMemorySize != null) {
-            options.setUrisQueueMaxInMemorySize(Integer.parseInt(urisQueueMaxInMemorySize));
+        }      
+        if (diskQueueMaxInMemorySize != null) {
+            options.setDiskQueueMaxInMemorySize(Integer.parseInt(diskQueueMaxInMemorySize));
         }
         if (!this.properties.containsKey(EXPORT_FILE_DIR) && exportFileDir != null) {
             this.properties.put(EXPORT_FILE_DIR, exportFileDir);
@@ -367,12 +368,12 @@ public class Manager extends AbstractManager {
             }
         }
 
-        if (urisQueueTempDir != null) {
-            File dirFile = new File(urisQueueTempDir);
+        if (diskQueueTempDir != null) {
+            File dirFile = new File(diskQueueTempDir);
             if (dirFile.exists() && dirFile.canWrite()) {
-                options.setUrisQueueTempDir(dirFile);
+                options.setDiskQueueTempDir(dirFile);
             } else {
-                throw new IllegalArgumentException("Cannot write to queue temp directory " + urisQueueTempDir);
+                throw new IllegalArgumentException("Cannot write to queue temp directory " + diskQueueTempDir);
             }
         }
 
@@ -639,8 +640,8 @@ public class Manager extends AbstractManager {
         LOG.log(INFO, "Configured init task: {0}", options.getInitTaskClass());
         LOG.log(INFO, "Configured batch size: {0}", options.getBatchSize());
         LOG.log(INFO, "Configured failonError: {0}", options.isFailOnError());
-        LOG.log(INFO, "Configured URIs queue max in-memory size: {0}", options.getUrisQueueMaxInMemorySize());
-        LOG.log(INFO, "Configured URIs queue temp dir: {0}", options.getUrisQueueTempDir());
+        LOG.log(INFO, "Configured URIs queue max in-memory size: {0}", options.getDiskQueueMaxInMemorySize());
+        LOG.log(INFO, "Configured URIs queue temp dir: {0}", options.getDiskQueueTempDir());
         logProperties();
     }
 

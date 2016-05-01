@@ -104,8 +104,9 @@ Option | Description
 **COMMAND-FILE** | A properties file used to configure **COMMAND** and **THREAD-COUNT** while CoRB2 is running. For instance, to temporarily pause execution, or to lower the number of threads in order to throttle execution.
 **COMMAND-FILE-POLL-INTERVAL** | Default is 1. The regular interval (seconds) in which the existence of the **COMMAND-FILE** is tested can be controlled by using this property.
 **COMMAND** | Pause, resume, and stop the execution of CoRB2. Possible commands include: PAUSE, RESUME, and STOP. If the **COMMAND-FILE** is modified and either there is no **COMMAND** or an invalid value is specified, then execution will RESUME.
-**URIS-QUEUE-MAX-IN-MEMORY-SIZE** | The maximum number of URIs to hold in memory before spilling over to disk. Default is 250,000.
-**URIS-QUEUE-TEMP-DIR** | The directory where the URIs queue can write to disk when the maximum in-memory items has been exceeded. Default behavior is to use java.io.tmpdir. 
+**DISK-QUEUE** | Boolean value indicating whether the CoRB job should spill to disk when a maximum number of URIs have been loaded in memory, in order to control memory consumption and avoid Out of Memory exceptions for extremely large URIs.
+**DISK-QUEUE-MAX-IN-MEMORY-SIZE** | The maximum number of URIs to hold in memory before spilling over to disk. Default is 250,000.
+**DISK-QUEUE-TEMP-DIR** | The directory where the URIs queue can write to disk when the maximum in-memory items has been exceeded. Default behavior is to use java.io.tmpdir. 
 
 ### Alternate XCC connection configuration
 Option | Description

@@ -395,9 +395,9 @@ public class QueryUrisLoaderTest {
         
         when(session.newModuleInvoke(anyString())).thenReturn(request);
         when(contentSource.newSession()).thenReturn(session);
-        when(xdmItem.asString()).thenReturn("0");
+        when(xdmItem.asString()).thenReturn("1");
         when(resultItem.getItem()).thenReturn(xdmItem);
-        when(resultItem.asString()).thenReturn("0");
+        when(resultItem.asString()).thenReturn("1");
         when(resultSequence.next()).thenReturn(resultItem);
         when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
         when(session.submitRequest(request)).thenReturn(resultSequence);
@@ -441,7 +441,7 @@ public class QueryUrisLoaderTest {
         
         when(session.newModuleInvoke(anyString())).thenReturn(request);
         when(contentSource.newSession()).thenReturn(session);
-        when(xdmItem.asString()).thenReturn("0");
+        when(xdmItem.asString()).thenReturn("1");
         when(resultItem.getItem()).thenReturn(xdmItem);
         when(resultItem.asString()).thenReturn("foo_bar_baz-1_2_3");
         when(resultSequence.next()).thenReturn(resultItem).thenReturn(resultItem).thenReturn(resultItem).thenReturn(resultItem);

@@ -171,13 +171,14 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         }
     }
 
-    /**
-     *
-     * @return Queue
-     */
     protected Queue<String> getQueue() {
-        //TODO: create method to either instantiate DiskQueue or ArrayQueue, depending on properties
-        return new DiskQueue<String>(options.getUrisQueueMaxInMemorySize(), options.getUrisQueueTempDir());
+        Queue<String> queue;
+        if (options.shouldUseDiskQueue()) {
+            queue = new DiskQueue<String>(options.getDiskQueueMaxInMemorySize(), options.getDiskQueueTempDir());
+        } else {
+            queue = new ArrayQueue<String>(total);
+        }
+        return queue;
     }
 
     @Override

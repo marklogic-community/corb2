@@ -65,8 +65,9 @@ public class TransformOptions {
 
 	private int threadCount = 1;
 	private int batchSize = 1;
-    private int urisQueueMaxInMemorySize = 250000;
-    private File urisQueueTempDir = null;
+    private boolean useDiskQueue = false;
+    private int diskQueueMaxInMemorySize = 250000;
+    private File diskQueueTempDir = null;
 	private boolean doInstall = false;
 
 	private boolean failOnError = true;
@@ -335,19 +336,27 @@ public class TransformOptions {
 		return this.failOnError;
 	}
     
-    public void setUrisQueueMaxInMemorySize(int size) {
-        this.urisQueueMaxInMemorySize = size;
+    public void setUseDiskQueue(boolean useDiskQueue) {
+        this.useDiskQueue = useDiskQueue;
     }
     
-    public int getUrisQueueMaxInMemorySize() {
-        return this.urisQueueMaxInMemorySize;
+    public boolean shouldUseDiskQueue() {
+        return this.useDiskQueue;
     }
     
-    public void setUrisQueueTempDir(File directory) {
-        this.urisQueueTempDir = directory;
+    public void setDiskQueueMaxInMemorySize(int size) {
+        this.diskQueueMaxInMemorySize = size;
     }
     
-    public File getUrisQueueTempDir() {
-        return this.urisQueueTempDir;
+    public int getDiskQueueMaxInMemorySize() {
+        return this.diskQueueMaxInMemorySize;
+    }
+    
+    public void setDiskQueueTempDir(File directory) {
+        this.diskQueueTempDir = directory;
+    }
+    
+    public File getDiskQueueTempDir() {
+        return this.diskQueueTempDir;
     }
 }
