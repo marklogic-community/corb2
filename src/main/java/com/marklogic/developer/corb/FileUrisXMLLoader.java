@@ -77,6 +77,7 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
             NodeList nodeList = null;
 
             if (xpathRootNode == null) {
+                //default processing will select child elements
                 nodeList = doc.getChildNodes().item(0).getChildNodes();
             } else {
                 XPathFactory factory = XPathFactory.newInstance();
@@ -90,12 +91,13 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
             }
 
             nodeMap = new ConcurrentHashMap();
-
+            
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Node node = nodeList.item(i);
-                if (node.getNodeType() == Node.ELEMENT_NODE) {
-                    nodeMap.put(i, node);
+                if (xpathRootNode == null && node.getNodeType() != Node.ELEMENT_NODE) {
+                    continue; //default processing without an XPath selects only /*
                 }
+                nodeMap.put(i, node);           
             }
 
             total = nodeMap.size();
@@ -127,8 +129,14 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
     private String readNextNode() throws IOException, CorbException {
         if (nodeIterator.hasNext()) {
             Node nextNode = nodeIterator.next();
-            String line = trim(nodeToString(nextNode));
-            if (line != null && isBlank(line)) {
+            short nextNodeType = nextNode.getNodeType();
+            String line = null;
+            if (nextNodeType == Node.ELEMENT_NODE || nextNodeType == Node.DOCUMENT_NODE) {
+                line = trim(nodeToString(nextNode));
+            } else {
+                line = nextNode.getNodeValue();
+            }
+            if (isBlank(line)) {
                 line = readNextNode();
             }
             return line;
