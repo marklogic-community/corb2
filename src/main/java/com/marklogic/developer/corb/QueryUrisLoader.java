@@ -54,7 +54,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             + ")\\.[A-Za-z0-9]+=.*");
     private Queue<String> queue;
     private long lastMessageMillis;
-    
+
     Session session;
     ResultSequence res;
 
@@ -151,13 +151,17 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             }
 
             queue = getQueue();
-            
+
             int i = 0;
             String uri;
             while (res != null && res.hasNext()) {
                 uri = res.next().asString();
                 if (queue.isEmpty()) {
                     LOG.log(INFO, "received first uri: {0}", uri);
+                }
+                //apply replacements (if any) - can be helpful in reducing in-memory footprint for ArrayQueue
+                for (int j = 0; j < replacements.length - 1; j += 2) {
+                    uri = uri.replaceAll(replacements[j], replacements[j + 1]);
                 }
                 queue.add(uri);
                 logQueueStatus(i, uri, total);
@@ -191,11 +195,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         if (queue == null) {
             throw new NoSuchElementException();
         }
-        String next = queue.remove();
-        for (int i = 0; i < replacements.length - 1; i += 2) {
-            next = next.replaceAll(replacements[i], replacements[i + 1]);
-        }
-        return next;
+        return queue.remove();
     }
 
     @Override
