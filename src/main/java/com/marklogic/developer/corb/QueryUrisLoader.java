@@ -162,10 +162,6 @@ public class QueryUrisLoader extends AbstractUrisLoader {
                   continue;
                 }
                 
-                for (int rc = 0; rc < replacements.length - 1; rc += 2) {
-                  uri = uri.replaceAll(replacements[rc], replacements[rc + 1]);
-                }
-                
                 if (queue.isEmpty()) {
                     LOG.log(INFO, "received first uri: {0}", uri);
                 }
