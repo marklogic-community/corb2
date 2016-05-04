@@ -156,23 +156,6 @@ public class StringUtilsTest {
     }
 
     /**
-     * Test of escapeXml method, of class Utilities.
-     */
-    @Test
-    public void testEscapeXml() {
-        System.out.println("escapeXml");
-        String result = StringUtils.escapeXml("<b>this & that</b>");
-        assertEquals("&lt;b&gt;this &amp; that&lt;/b&gt;", result);
-    }
-
-    @Test
-    public void testEscapeXml_null() {
-        System.out.println("escapeXml");
-        String result = StringUtils.escapeXml(null);
-        assertEquals("", result);
-    }
-
-    /**
      * Test of stringToBoolean method, of class Utilities.
      */
     @Test

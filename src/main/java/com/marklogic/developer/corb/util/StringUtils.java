@@ -22,11 +22,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,20 +42,6 @@ public class StringUtils {
     private static final Pattern COMPILED_INLINE_MODULE_PATTERN = Pattern.compile(INLINE_MODULE_PATTERN);
 
     private StringUtils() {
-    }
-
-    /**
-     * Replace all occurrences of the following characters [&, <, >] with their
-     * corresponding entities.
-     *
-     * @param str
-     * @return
-     */
-    public static String escapeXml(String str) {
-        if (str == null) {
-            return "";
-        }
-        return str.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
     }
 
     /**

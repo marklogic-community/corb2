@@ -19,17 +19,10 @@
 package com.marklogic.developer.corb.util;
 
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
-import static com.marklogic.developer.corb.util.IOUtils.BUFFER_SIZE;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.LineNumberReader;
-import java.io.OutputStream;
 import java.net.URL;
 
 /**
@@ -81,76 +74,6 @@ public class FileUtils {
      */
     public static void deleteFile(String path) throws IOException {
         deleteFile(new File(path));
-    }
-
-    /**
-     * Read the <code>byte[]</code> of a file.
-     * @param contentFile
-     * @return 
-     * @throws IOException
-     */
-    public static byte[] getBytes(File contentFile) throws IOException {
-        InputStream is = null;
-        ByteArrayOutputStream os = null;
-        byte[] buf = new byte[BUFFER_SIZE];
-        int read;
-        try {
-            is = new FileInputStream(contentFile);
-            try {
-                os = new ByteArrayOutputStream();
-                while ((read = is.read(buf)) > 0) {
-                    os.write(buf, 0, read);
-                }
-                return os.toByteArray();
-            } finally {
-                closeQuietly(os);
-            }
-        } finally {
-            closeQuietly(is);
-        }
-    }
-
-    /**
-     * Copy a file to a new location.
-     *
-     * @param source A file to copy.
-     * @param destination The new file where it should be copied to.
-     * @throws IOException
-     */
-    public static void copy(final File source, final File destination) throws IOException {
-        InputStream inputStream = new FileInputStream(source);
-        try {
-            OutputStream outputStream = new FileOutputStream(destination);
-            try {
-                IOUtils.copy(inputStream, outputStream);
-            } finally {
-                closeQuietly(inputStream);
-            }
-        } finally {
-            closeQuietly(inputStream);
-        }
-    }
-
-    /**
-     * Copy a file to a new location.
-     *
-     * @param sourceFilePath Path to the existing file.
-     * @param destinationFilePath Path where the file should be copied to.
-     * @throws IOException
-     * @throws FileNotFoundException
-     */
-    public static void copy(final String sourceFilePath, final String destinationFilePath) throws FileNotFoundException, IOException {
-        InputStream inputStream = new FileInputStream(sourceFilePath);
-        try {
-            OutputStream outputStream = new FileOutputStream(destinationFilePath);
-            try {
-                IOUtils.copy(inputStream, outputStream);
-            } finally {
-                closeQuietly(outputStream);
-            }
-        } finally {
-            closeQuietly(inputStream);
-        }
     }
 
     /**
