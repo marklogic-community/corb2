@@ -43,7 +43,7 @@ public class FileUtils {
     }
 
     /**
-     * Delete a file.
+     * Delete a file or folder and all of it's contents.
      * 
      * @param file The file to be deleted.
      * @throws IOException
