@@ -1,5 +1,8 @@
 <root>
-    <a>test1</a>
-    <a>test2</a>
-    <a>test3</a>
+    <!--http://test.com/test1.html-->
+    <a href="test1.html">test1</a>
+    <?PITarget http://test.com/test2.html?>
+    <a href="test2.html">test2</a>
+    <a href="test3.html">test3</a>
+    <a href=""><!----></a>
 </root>

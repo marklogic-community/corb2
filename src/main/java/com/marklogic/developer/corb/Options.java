@@ -89,5 +89,7 @@ public class Options {
     public static final String XCC_PASSWORD = "XCC-PASSWORD";
     public static final String XCC_PORT = "XCC-PORT";
     public static final String XCC_USERNAME = "XCC-USERNAME";
+    public static final String XML_FILE = "XML-FILE";
+    public static final String XML_NODE = "XML-NODE";
     public static final String XQUERY_MODULE = "XQUERY-MODULE"; //Deprecated in favor of PROCESS_MODULE
 }

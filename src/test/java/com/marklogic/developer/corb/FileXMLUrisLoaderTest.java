@@ -135,39 +135,190 @@ public class FileXMLUrisLoaderTest {
         instance.close();
     }
 
+    private FileUrisXMLLoader getDefaultFileUrisXMLLoader() {
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
+        TransformOptions options = new TransformOptions();
+        Properties props = new Properties();
+        props.setProperty("URIS-LOADER", "com.marklogic.developer.corb.FileUrisXMLLoader");
+        props.setProperty("XML-FILE", "src/test/resources/xml-file.xml");
+        props.setProperty("XML-NODE", "/root/a");
+        instance.properties = props;
+        instance.options = options;
+        return instance;
+    }
+
     /**
      * Test of open method, of class FileUrisXMLLoader.
      */
     @Test
     public void testOpen() throws Exception {
         System.out.println("open");
-        FileUrisXMLLoader instance = new FileUrisXMLLoader();
-        TransformOptions options = new TransformOptions();
-        Properties props = new Properties();
-        props.setProperty("URIS-LOADER","com.marklogic.developer.corb.FileUrisXMLLoader");
-        props.setProperty("XML-FILE","src/test/resources/xml-file.xml");
-        props.setProperty("XML-NODE", "/root/a");
-        instance.properties = props;
-        instance.options = options;
+        FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.open();
         assertNotNull(instance.nodeIterator);
         ArrayList<String> nodes = new ArrayList<String>();
-        nodes.add(instance.next());
-        nodes.add(instance.next());
-        nodes.add(instance.next());
-        assertTrue(nodes.contains("<a>test1</a>"));
-        assertTrue(nodes.contains("<a>test2</a>"));
+        while (instance.hasNext()) {
+            nodes.add(instance.next());
+        }
+        instance.close();
+        assertEquals(4, nodes.size());
+        assertTrue(nodes.contains("<a href=\"test1.html\">test1</a>"));
+        assertTrue(nodes.contains("<a href=\"test2.html\">test2</a>"));
+        assertTrue(nodes.contains("<a href=\"test3.html\">test3</a>"));
+        assertTrue(nodes.contains("<a href=\"\">\n<!---->\n</a>")); //indent options result in extra carriage returns
+    }
+
+    @Test
+    public void testOpenWithoutXPath() throws Exception {
+        System.out.println("open");
+        FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
+        instance.properties.remove(Options.XML_NODE);
+
+        instance.open();
+        assertNotNull(instance.nodeIterator);
+        ArrayList<String> nodes = new ArrayList<String>();
+        while (instance.hasNext()) {
+            nodes.add(instance.next());
+        }
+        instance.close();
+        assertEquals(4, nodes.size());
+        assertTrue(nodes.contains("<a href=\"test1.html\">test1</a>"));
+        assertTrue(nodes.contains("<a href=\"test2.html\">test2</a>"));
+        assertTrue(nodes.contains("<a href=\"test3.html\">test3</a>"));
+        assertTrue(nodes.contains("<a href=\"\">\n<!---->\n</a>")); //indent options result in extra carriage returns
+    }
+
+    @Test
+    public void testSelectRootNode() throws Exception {
+        System.out.println("open");
+        FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
+        instance.properties.setProperty(Options.XML_NODE, "/");
+
+        instance.open();
+        assertNotNull(instance.nodeIterator);
+        ArrayList<String> nodes = new ArrayList<String>();
+        while (instance.hasNext()) {
+            nodes.add(instance.next());
+        }
+        instance.close();
+        assertEquals(1, nodes.size());
+    }
+
+    @Test
+    public void testSelectDocumentElement() throws Exception {
+        System.out.println("open");
+        FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
+        instance.properties.setProperty(Options.XML_NODE, "/*");
+
+        instance.open();
+        assertNotNull(instance.nodeIterator);
+        ArrayList<String> nodes = new ArrayList<String>();
+        while (instance.hasNext()) {
+            nodes.add(instance.next());
+        }
+        instance.close();
+        assertEquals(1, nodes.size());
+    }
+
+    @Test
+    public void testSelectAttributes() throws Exception {
+        System.out.println("open");
+        FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
+        instance.properties.setProperty("XML-NODE", "/root/a/@*");
+        instance.open();
+        assertNotNull(instance.nodeIterator);
+        ArrayList<String> nodes = new ArrayList<String>();
+        while (instance.hasNext()) {
+            nodes.add(instance.next());
+        }
+        instance.close();
+
+        assertEquals(3, nodes.size());
+        assertTrue(nodes.contains("test1.html"));
+        assertTrue(nodes.contains("test2.html"));
+        assertTrue(nodes.contains("test3.html"));
+    }
+
+    @Test
+    public void testSelectTextNodes() throws Exception {
+        System.out.println("open");
+        FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
+        instance.properties.setProperty("XML-NODE", "/root/a/text()");
+        instance.open();
+        assertNotNull(instance.nodeIterator);
+        ArrayList<String> nodes = new ArrayList<String>();
+        while (instance.hasNext()) {
+            nodes.add(instance.next());
+        }
+        instance.close();
+        assertEquals(3, nodes.size());
+        assertTrue(nodes.contains("test1"));
+        assertTrue(nodes.contains("test2"));
+        assertTrue(nodes.contains("test3"));
+    }
+
+    @Test
+    public void testSelectComments() throws Exception {
+        System.out.println("open");
+        FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
+        instance.properties.setProperty("XML-NODE", "//comment()");
+        instance.open();
+        assertNotNull(instance.nodeIterator);
+        ArrayList<String> nodes = new ArrayList<String>();
+        while (instance.hasNext()) {
+            nodes.add(instance.next());
+        }
+        assertEquals(1, nodes.size());
+        assertTrue(nodes.contains("http://test.com/test1.html"));
+        instance.close();
+    }
+
+    @Test
+    public void testSelectProcessingInstructions() throws Exception {
+        System.out.println("open");
+        FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
+        instance.properties.setProperty(Options.XML_NODE, "//processing-instruction()");
+        instance.open();
+        assertNotNull(instance.nodeIterator);
+        ArrayList<String> nodes = new ArrayList<String>();
+        while (instance.hasNext()) {
+            nodes.add(instance.next());
+        }
+        assertEquals(1, nodes.size());
+        assertTrue(nodes.contains("http://test.com/test2.html"));
+        instance.close();
+    }
+
+    @Test
+    public void testSelectWithUnion() throws Exception {
+        System.out.println("open");
+        FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
+        instance.properties.setProperty("XML-NODE", "//comment() | //@* | /*/*/text()");
+        instance.open();
+        assertNotNull(instance.nodeIterator);
+        ArrayList<String> nodes = new ArrayList<String>();
+        while (instance.hasNext()) {
+            nodes.add(instance.next());
+        }
+        assertEquals(7, nodes.size());
+        //comment()
+        assertTrue(nodes.contains("http://test.com/test1.html"));
+        //@*
+        assertTrue(nodes.contains("test1.html"));
+        assertTrue(nodes.contains("test2.html"));
+        assertTrue(nodes.contains("test3.html"));
+        //text()
+        assertTrue(nodes.contains("test1"));
+        assertTrue(nodes.contains("test2"));
+        assertTrue(nodes.contains("test3"));
         instance.close();
     }
 
     @Test(expected = CorbException.class)
     public void testOpen_fileDoesNotExist() throws Exception {
         System.out.println("open");
-        FileUrisXMLLoader instance = new FileUrisXMLLoader();
-        Properties props = new Properties();
-        props.setProperty("URIS-LOADER","com.marklogic.developer.corb.FileUrisXMLLoader");
-        props.setProperty("XML-FILE","does/not/exit.xml");
-        instance.properties = props;
+        FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
+        instance.properties.setProperty("XML-FILE", "does/not/exit.xml");
         try {
             instance.open();
         } finally {
@@ -200,14 +351,9 @@ public class FileXMLUrisLoaderTest {
     @Test
     public void testGetTotalCount() throws CorbException {
         System.out.println("getTotalCount");
-        FileUrisXMLLoader instance = new FileUrisXMLLoader();
-        Properties props = new Properties();
-        props.setProperty("URIS-LOADER","com.marklogic.developer.corb.FileUrisXMLLoader");
-        props.setProperty("XML-FILE","src/test/resources/xml-file.xml");
-        props.setProperty("XML-NODE", "/root/a");
-        instance.properties = props;
+        FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.open();
-        assertEquals(3, instance.getTotalCount());
+        assertEquals(4, instance.getTotalCount());
         instance.close();
     }
 
@@ -228,11 +374,8 @@ public class FileXMLUrisLoaderTest {
     @Test
     public void testHasNext() throws Exception {
         System.out.println("hasNext");
-        FileUrisXMLLoader instance = new FileUrisXMLLoader();
-        Properties props = new Properties();
-        props.setProperty("URIS-LOADER","com.marklogic.developer.corb.FileUrisXMLLoader");
-        props.setProperty("XML-FILE","src/test/resources/xml-file.xml");
-        instance.properties = props;
+        FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
+        instance.properties.remove(Options.XML_NODE);
         instance.open();
 
         for (int i = 0; i < instance.getTotalCount(); i++) {
@@ -249,12 +392,7 @@ public class FileXMLUrisLoaderTest {
     @Test
     public void testNext() throws Exception {
         System.out.println("next");
-        FileUrisXMLLoader instance = new FileUrisXMLLoader();
-        Properties props = new Properties();
-        props.setProperty("URIS-LOADER","com.marklogic.developer.corb.FileUrisXMLLoader");
-        props.setProperty("XML-FILE","src/test/resources/xml-file.xml");
-        props.setProperty("XML-NODE", "/root/a");
-        instance.properties = props;
+        FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.open();
         //Verify that hasNext() does not advance the buffered reader to the next line
         for (int i = 0; i < instance.getTotalCount(); i++) {
@@ -264,7 +402,6 @@ public class FileXMLUrisLoaderTest {
         assertNull(instance.next());
         instance.close();
     }
-
 
     /**
      * Test of close method, of class FileUrisXMLLoader.

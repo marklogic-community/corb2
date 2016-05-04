@@ -21,7 +21,6 @@ package com.marklogic.developer.corb;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ModuleInvoke;
-import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
@@ -383,7 +382,7 @@ public class QueryUrisLoaderTest {
         assertFalse(result);
     }
 
-    @Test 
+    @Test
     public void testHasNext_resultSequenceHasNext() throws CorbException, RequestException {
         System.out.println("hasNext");
         ContentSource contentSource = mock(ContentSource.class);
@@ -392,7 +391,7 @@ public class QueryUrisLoaderTest {
         ResultSequence resultSequence = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         XdmItem xdmItem = mock(XdmItem.class);
-        
+
         when(session.newModuleInvoke(anyString())).thenReturn(request);
         when(contentSource.newSession()).thenReturn(session);
         when(xdmItem.asString()).thenReturn("1");
@@ -401,7 +400,7 @@ public class QueryUrisLoaderTest {
         when(resultSequence.next()).thenReturn(resultItem);
         when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
         when(session.submitRequest(request)).thenReturn(resultSequence);
-        
+
         QueryUrisLoader instance = new QueryUrisLoader();
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule("foo");
@@ -432,13 +431,13 @@ public class QueryUrisLoaderTest {
     @Test
     public void testNext() throws Exception {
         System.out.println("next");
-                ContentSource contentSource = mock(ContentSource.class);
+        ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke request = mock(ModuleInvoke.class);
         ResultSequence resultSequence = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         XdmItem xdmItem = mock(XdmItem.class);
-        
+
         when(session.newModuleInvoke(anyString())).thenReturn(request);
         when(contentSource.newSession()).thenReturn(session);
         when(xdmItem.asString()).thenReturn("1");
@@ -461,13 +460,14 @@ public class QueryUrisLoaderTest {
         assertEquals("foo,bar,baz\n1,2,3", result);
     }
 
-    @Test (expected = NoSuchElementException.class)
+    @Test(expected = NoSuchElementException.class)
     public void testNext_noQueue() throws Exception {
         System.out.println("next");
-        
+
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.next();
     }
+
     /**
      * Test of close method, of class QueryUrisLoader.
      */
