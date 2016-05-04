@@ -32,8 +32,8 @@ public class Options {
     public static final String COMMAND_FILE_POLL_INTERVAL = "COMMAND-FILE-POLL-INTERVAL";
     public static final String DECRYPTER = "DECRYPTER";
     public static final String DISK_QUEUE = "DISK-QUEUE";
-    public static final String DISK_QUEUE_TEMP_DIR = "URIS-QUEUE-TEMP-DIR";
-    public static final String DISK_QUEUE_MAX_IN_MEMORY_SIZE = "URIS-QUEUE-MAX-IN-MEMORY-SIZE";
+    public static final String DISK_QUEUE_TEMP_DIR = "DISK-QUEUE-TEMP-DIR";
+    public static final String DISK_QUEUE_MAX_IN_MEMORY_SIZE = "DISK-QUEUE-MAX-IN-MEMORY-SIZE";
     public static final String ERROR_FILE_NAME = "ERROR-FILE-NAME";
     public static final String EXIT_CODE_NO_URIS = "EXIT-CODE-NO-URIS";
     public static final String EXPORT_FILE_AS_ZIP = "EXPORT_FILE_AS_ZIP"; 
