@@ -93,6 +93,7 @@ Option | Description
 **XCC-CONNECTION-RETRY-INTERVAL** | Time interval, in seconds, between retry attempts. Default is 60.
 **QUERY-RETRY-LIMIT** | Number of re-query attempts before giving up. Default is 1.
 **QUERY-RETRY-INTERVAL** | Time interval, in seconds, between re-query attempts. Default is 30.
+**QUERY_RETRY_ERROR_CODES** | A comma separated list of MarkLogic error codes for which a QueryException should be retried.
 **BATCH-URI-DELIM** | Use if default delimiter `';'` cannot be used to join multiple URIS when **BATCH-SIZE** is greater than 1.
 **FAIL-ON-ERROR** | Boolean value indicating whether the CoRB job should fail and exit if a transform module throws an error. Default is true. This option will not handle repeated connection failures.
 **ERROR-FILE-NAME** | Used when FAIL-ON-ERROR is false. If specified true, removes duplicates from, the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to separate URI and error message.

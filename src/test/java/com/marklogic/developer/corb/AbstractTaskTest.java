@@ -63,6 +63,7 @@ public class AbstractTaskTest {
 
     private final TestHandler testLogger = new TestHandler();
     private static final Logger logger = Logger.getLogger(AbstractTask.class.getName());
+
     public AbstractTaskTest() {
     }
 
@@ -76,7 +77,7 @@ public class AbstractTaskTest {
 
     @Before
     public void setUp() {
-        clearSystemProperties();     
+        clearSystemProperties();
         logger.addHandler(testLogger);
     }
 
@@ -344,7 +345,54 @@ public class AbstractTaskTest {
         ServerConnectionException serverException = new ServerConnectionException("something bad happened", req);
         testHandleRequestException("ServerConnectionException", serverException, true, 0);
     }
-
+@Test
+    public void testShouldRetryNotRetryableQueryExceptionCSVwithSpaces(){
+        
+        Request req = mock(Request.class);
+        AbstractTask instance = new AbstractTaskImpl();
+        instance.properties= new Properties();
+        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "foo, SVC-EXTIME, XDMP-EXTIME, bar");
+        XQueryException exception = new XQueryException(req, "SVC-EXTIME", "401", "1.0-ml", "timeout", "", "", false, new String[0], new QueryStackFrame[0]);
+        assertTrue(instance.shouldRetry(exception));
+    }
+    @Test
+    public void testShouldRetryNotRetryableQueryException(){
+        
+        Request req = mock(Request.class);
+        AbstractTask instance = new AbstractTaskImpl();
+        instance.properties= new Properties();
+        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
+        XQueryException exception = new XQueryException(req, "SVC-EXTIME", "401", "1.0-ml", "timeout", "", "", false, new String[0], new QueryStackFrame[0]);
+        
+        assertFalse(instance.shouldRetry(exception));
+        
+        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-EXTIME,XDMP-EXTIME");
+      
+        assertTrue(instance.shouldRetry(exception));
+        
+        instance.properties.remove(Options.QUERY_RETRY_ERROR_CODES);
+      
+        assertFalse(instance.shouldRetry(exception)); //no match on code(and no exception attempting to split null)
+    }
+    
+    @Test
+    public void testShouldRetryRetryableQueryException(){
+        
+        Request req = mock(Request.class);
+        AbstractTask instance = new AbstractTaskImpl();
+        instance.properties= new Properties();
+        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
+        XQueryException exception = new XQueryException(req, "SVC-EXTIME", "401", "1.0-ml", "timeout", "", "", true, new String[0], new QueryStackFrame[0]);
+ 
+        assertTrue(instance.shouldRetry(exception)); //since it's retryable, doesn't matter if code matches
+        
+        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-EXTIME,XDMP-EXTIME");
+        assertTrue(instance.shouldRetry(exception)); //is retryable and the code matches
+        
+        instance.properties.remove(Options.QUERY_RETRY_ERROR_CODES);
+        assertTrue(instance.shouldRetry(exception)); 
+    }
+    
     public void testHandleRequestException(String type, RequestException exception, boolean fail, int retryLimit) throws CorbException, IOException {
         String[] uris = new String[]{"uri1"};
         testHandleRequestException(type, exception, fail, uris, retryLimit);
@@ -384,11 +432,8 @@ public class AbstractTaskTest {
         List<LogRecord> records = testLogger.getLogRecords();
         System.out.println("logrecords " + records.size());
         assertEquals(Level.WARNING, records.get(0).getLevel());
-        if (exception instanceof ServerConnectionException || (exception instanceof RequestServerException && retryLimit > 0)) {
-            System.err.println(records.get(0).getMessage());
-            assertTrue(records.get(0).getMessage().startsWith("Encountered " + type + " from Marklogic Server. Retrying attempt"));
-        }else{
-        		assertEquals("failOnError is false. Encountered " + type + " at URI: " + instance.asString(uris), records.get(0).getMessage());
+        if (!(instance.shouldRetry(exception))) {
+            assertEquals("failOnError is false. Encountered " + type + " at URI: " + instance.asString(uris), records.get(0).getMessage());
         }
     }
 
@@ -401,7 +446,6 @@ public class AbstractTaskTest {
             file = new File(exportDir, errorFilename);
         } catch (Exception e) {
         }
-
         return file;
     }
 

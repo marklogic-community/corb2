@@ -19,9 +19,14 @@
 package com.marklogic.developer.corb.util;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -76,7 +81,7 @@ public class StringUtils {
         if (str == null) {
             return defaultValue;
         }
-        String lcStr = str.toLowerCase();
+        String lcStr = str.trim().toLowerCase();
         return !(str.equals("") || str.equals("0") || lcStr.equals("f") || lcStr.equals("false") || lcStr.equals("n") || lcStr.equals("no"));
     }
 
@@ -224,6 +229,29 @@ public class StringUtils {
         return !isBlank(value);
     }
 
+    /**
+     * Splits the provided value into an Array using the specified regex.
+     * @param value
+     * @param regex
+     * @return An Array of String, an empty Array if the value is null.
+     */
+    public static String[] split(final String value, String regex) {
+        return value == null ? new String[0] : value.split(regex);
+    }
+    
+    /**
+     * Split a CSV and return List of values
+     * @param value
+     * @return 
+     */
+    public static List<String> commaSeparatedValuesToList(String value) {
+        List<String> values = new ArrayList<String>();    
+        for (String item : split(value, ",")) {
+            values.add(item.trim());
+        }
+        return values;
+    }
+    
     /**
      * Removes control characters (char <= 32) from both ends of the string. If
      * null, returns null. @param value @return @param value @return the trimmed
