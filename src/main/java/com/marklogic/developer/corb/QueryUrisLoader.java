@@ -170,9 +170,9 @@ public class QueryUrisLoader extends AbstractUrisLoader {
                     uri = uri.replaceAll(replacements[j], replacements[j + 1]);
                 }
                 
-                if(!queue.add(uri)){
+                if (!queue.add(uri)) {
                 	LOG.log(SEVERE,"Unabled to add uri {0} to queue. Received uris {1} which is more than expected {2}",new Object[]{uri,(i+1),total});
-                }else if(i >= total){
+                } else if (i >= total) {
                 	LOG.log(WARNING,"Received uri {0} at index {1} which is more than expected {2}",new Object[]{uri,(i+1),total});
                 }
                 
