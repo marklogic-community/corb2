@@ -37,6 +37,7 @@ import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.QueryException;
 import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.exceptions.RequestPermissionException;
 import com.marklogic.xcc.exceptions.RetryableQueryException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmBinary;
@@ -268,15 +269,20 @@ public abstract class AbstractTask implements Task {
     protected boolean shouldRetry(RequestException requestException) {
         return requestException instanceof ServerConnectionException || 
                requestException instanceof RetryableQueryException || 
+               requestException instanceof RequestPermissionException && shouldRetry((RequestPermissionException) requestException) ||
                requestException instanceof QueryException && shouldRetry((QueryException) requestException);
     }
-
+    
     protected boolean shouldRetry(QueryException queryException) {
         String errorCode = queryException.getCode();
         List<String> retryableErrorCodes = commaSeparatedValuesToList(getProperty(QUERY_RETRY_ERROR_CODES));
         return queryException.isRetryable() || retryableErrorCodes.contains(errorCode);
     }
-
+    
+    protected boolean shouldRetry(RequestPermissionException requestPermissionException) {
+        return requestPermissionException.isRetryAdvised();
+    }
+    
     protected String[] handleRequestException(RequestException requestException) throws CorbException {
         String name = requestException.getClass().getSimpleName();
 

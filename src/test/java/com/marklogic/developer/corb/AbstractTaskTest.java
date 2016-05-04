@@ -393,6 +393,21 @@ public class AbstractTaskTest {
         assertTrue(instance.shouldRetry(exception)); 
     }
     
+        
+    @Test
+    public void testShouldRetryRequestPermissionException(){
+        
+        Request req = mock(Request.class);
+        AbstractTask instance = new AbstractTaskImpl();
+        instance.properties= new Properties();
+        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
+        RequestPermissionException exception = new RequestPermissionException("denied!", req, "user-name", false);
+        assertFalse(instance.shouldRetry(exception));  
+        
+        exception = new RequestPermissionException("denied!", req, "user-name", true);
+        assertTrue(instance.shouldRetry(exception)); 
+    }
+    
     public void testHandleRequestException(String type, RequestException exception, boolean fail, int retryLimit) throws CorbException, IOException {
         String[] uris = new String[]{"uri1"};
         testHandleRequestException(type, exception, fail, uris, retryLimit);
