@@ -173,7 +173,7 @@ public class ManagerTest {
         exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
         Manager.main(args);
     }
-    
+
     @Test
     public void testManagerUsingSysProps_largeUrisList()
             throws Exception {
@@ -198,16 +198,16 @@ public class ManagerTest {
         System.setProperty("URIS-QUEUE-MAX-IN-MEMORY-SIZE", "10");
         System.setProperty("URIS-QUEUE-TEMP-DIR", "/var/tmp");
         String[] args = {};
-  
+
         Manager manager = new Manager();
         manager.init(args);
         manager.run();
-        
+
         File report = new File(EXPORT_FILE_DIR + "/testManagerUsingSysProps.txt");
         report.deleteOnExit();
-        
+
         int lineCount = FileUtils.getLineCount(report);
-        assertEquals(uriCount+2, lineCount);
+        assertEquals(uriCount + 2, lineCount);
         System.clearProperty("URIS-MODULE.count");
     }
 
@@ -721,13 +721,74 @@ public class ManagerTest {
         System.out.println("initOptions");
         clearSystemProperties();
         String[] args = getDefaultArgs();
-        args[2] = "";
+        args[2] = "";//process-module
 
         Properties props = new Properties();
         props.setProperty("PROCESS-MODULE", PROCESS_MODULE);
         Manager instance = new Manager();
         instance.init(args, props);
         assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
+    }
+
+    @Test
+    public void testInitOptions_setInstall_property_true() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[7] = "true";//install
+        Properties props = new Properties();
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertEquals(true, instance.options.isDoInstall());
+    }
+
+    @Test
+    public void testInitOptions_setInstall_property_one() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[7] = "1";//install
+        Properties props = new Properties();
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertTrue(instance.options.isDoInstall());
+    }
+
+    @Test
+    public void testInitOptions_setInstall_property_maybe() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[7] = "maybe";//install
+        Properties props = new Properties();
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertFalse(instance.options.isDoInstall());
+    }
+
+    @Test
+    public void testInitOptions_setDISK_QUEUE_MAX_IN_MEMORY_SIZE_property() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+
+        Properties props = new Properties();
+        props.setProperty("DISK-QUEUE-MAX-IN-MEMORY-SIZE", "10");
+        Manager instance = new Manager();
+        instance.init(args, props);
+        assertEquals(10, instance.options.getDiskQueueMaxInMemorySize());
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void testInitOptions_setDISK_QUEUE_MAX_IN_MEMORY_SIZE_property_NaN() throws Exception {
+        System.out.println("initOptions");
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+
+        Properties props = new Properties();
+        props.setProperty("DISK-QUEUE-MAX-IN-MEMORY-SIZE", "ten");
+        Manager instance = new Manager();
+        instance.init(args, props);
     }
 
     @Test
@@ -1508,6 +1569,14 @@ public class ManagerTest {
     @Test
     public void testSetThreadCount() {
         Manager instance = new Manager();
+        instance.setThreadCount(2);
+        assertEquals(2, instance.options.getThreadCount());
+    }
+
+    @Test
+    public void testSetThreadCountTwice() {
+        Manager instance = new Manager();
+        instance.setThreadCount(2);
         instance.setThreadCount(2);
         assertEquals(2, instance.options.getThreadCount());
     }
