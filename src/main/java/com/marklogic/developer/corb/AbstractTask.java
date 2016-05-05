@@ -212,7 +212,7 @@ public abstract class AbstractTask implements Task {
                     if (delim == null || delim.length() == 0) {
                         delim = DEFAULT_BATCH_URI_DELIM;
                     }
-                    StringBuffer buff = new StringBuffer();
+                    StringBuilder buff = new StringBuilder();
                     for (String uri : inputUris) {
                         if (buff.length() > 0) {
                             buff.append(delim);
