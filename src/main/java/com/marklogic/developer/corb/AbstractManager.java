@@ -61,8 +61,8 @@ public abstract class AbstractManager {
 	public static final String VERSION = "2.3.1";
 	
 	protected static final String VERSION_MSG = "version " + VERSION + " on " + System.getProperty("java.version") + " ("+ System.getProperty("java.runtime.name") + ")";
-	protected static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server'\n";
-	protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\"\n";
+	protected static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server';\n";
+	protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\";\n";
 	
 	protected Decrypter decrypter;
 	protected SSLConfig sslConfig;
