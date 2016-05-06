@@ -77,7 +77,7 @@ public class PausableThreadPoolExecutorTest {
         instance.resume();
 
         assertFalse(instance.isPaused());
-        assertTrue(instance.isPaused());
+        assertTrue(instance.isRunning());
     }
 
 }
