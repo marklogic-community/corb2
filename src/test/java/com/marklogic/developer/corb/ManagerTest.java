@@ -1278,7 +1278,7 @@ public class ManagerTest {
 
         assertEquals(xccRootValue, instance.options.getXDBC_ROOT());
         List<LogRecord> records = testLogger.getLogRecords();
-        assertEquals(18, records.size());
+        assertEquals(19, records.size());
     }
 
     @Test(expected = NullPointerException.class)

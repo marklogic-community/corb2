@@ -638,6 +638,7 @@ public class Manager extends AbstractManager {
         LOG.log(INFO, "Configured post batch task: {0}", options.getPostBatchTaskClass());
         LOG.log(INFO, "Configured init module: {0}", options.getInitModule());
         LOG.log(INFO, "Configured init task: {0}", options.getInitTaskClass());
+        LOG.log(INFO, "Configured thread count: {0}", options.getThreadCount());
         LOG.log(INFO, "Configured batch size: {0}", options.getBatchSize());
         LOG.log(INFO, "Configured failonError: {0}", options.isFailOnError());
         LOG.log(INFO, "Configured URIs queue max in-memory size: {0}", options.getDiskQueueMaxInMemorySize());
