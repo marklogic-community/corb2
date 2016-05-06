@@ -25,6 +25,7 @@ import static com.marklogic.developer.corb.Options.ERROR_FILE_NAME;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_LIMIT;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_INTERVAL;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_CODES;
+import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_MESSAGE;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_INTERVAL;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
@@ -267,22 +268,34 @@ public abstract class AbstractTask implements Task {
     }
 
     protected boolean shouldRetry(RequestException requestException) {
-        return requestException instanceof ServerConnectionException || 
-               requestException instanceof RetryableQueryException || 
-               requestException instanceof RequestPermissionException && shouldRetry((RequestPermissionException) requestException) ||
-               requestException instanceof QueryException && shouldRetry((QueryException) requestException);
+        return requestException instanceof ServerConnectionException
+                || requestException instanceof RetryableQueryException
+                || requestException instanceof RequestPermissionException && shouldRetry((RequestPermissionException) requestException)
+                || requestException instanceof QueryException && shouldRetry((QueryException) requestException)
+                || hasRetryableMessage(requestException);
     }
-    
+
+    protected boolean hasRetryableMessage(RequestException requestException) {
+        String message = requestException.getMessage();
+        List<String> retryableMessages = commaSeparatedValuesToList(getProperty(QUERY_RETRY_ERROR_MESSAGE));
+        for (String messageFragment : retryableMessages) {
+            if (message.contains(messageFragment)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     protected boolean shouldRetry(QueryException queryException) {
         String errorCode = queryException.getCode();
         List<String> retryableErrorCodes = commaSeparatedValuesToList(getProperty(QUERY_RETRY_ERROR_CODES));
         return queryException.isRetryable() || retryableErrorCodes.contains(errorCode);
     }
-    
+
     protected boolean shouldRetry(RequestPermissionException requestPermissionException) {
         return requestPermissionException.isRetryAdvised();
     }
-    
+
     protected String[] handleRequestException(RequestException requestException) throws CorbException {
         String name = requestException.getClass().getSimpleName();
 
@@ -296,7 +309,8 @@ public abstract class AbstractTask implements Task {
                         new Object[]{retryCount, retryInterval, requestException.getMessage(), asString(inputUris)});
                 try {
                     Thread.sleep(retryInterval * 1000L);
-                } catch (Exception ex) {}
+                } catch (Exception ex) {
+                }
                 return invokeModule();
             } else if (requestException instanceof ServerConnectionException || failOnError) {
                 throw new CorbException(requestException.getMessage() + " at URI: " + asString(inputUris), requestException);

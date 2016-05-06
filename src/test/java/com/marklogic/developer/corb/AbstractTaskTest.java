@@ -25,13 +25,11 @@ import com.marklogic.xcc.ModuleInvoke;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
-import com.marklogic.xcc.exceptions.QueryException;
 import com.marklogic.xcc.exceptions.QueryStackFrame;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.RequestPermissionException;
 import com.marklogic.xcc.exceptions.RequestServerException;
 import com.marklogic.xcc.exceptions.RetryableJavaScriptException;
-import com.marklogic.xcc.exceptions.RetryableQueryException;
 import com.marklogic.xcc.exceptions.RetryableXQueryException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.exceptions.XQueryException;
@@ -345,69 +343,83 @@ public class AbstractTaskTest {
         ServerConnectionException serverException = new ServerConnectionException("something bad happened", req);
         testHandleRequestException("ServerConnectionException", serverException, true, 0);
     }
-@Test
-    public void testShouldRetryNotRetryableQueryExceptionCSVwithSpaces(){
-        
+
+    @Test
+    public void testShouldRetryNotRetryableQueryExceptionCSVwithSpaces() {
+
         Request req = mock(Request.class);
         AbstractTask instance = new AbstractTaskImpl();
-        instance.properties= new Properties();
+        instance.properties = new Properties();
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "foo, SVC-EXTIME, XDMP-EXTIME, bar");
         XQueryException exception = new XQueryException(req, "SVC-EXTIME", "401", "1.0-ml", "timeout", "", "", false, new String[0], new QueryStackFrame[0]);
         assertTrue(instance.shouldRetry(exception));
     }
+
     @Test
-    public void testShouldRetryNotRetryableQueryException(){
-        
+    public void testShouldRetryNotRetryableQueryException() {
+
         Request req = mock(Request.class);
         AbstractTask instance = new AbstractTaskImpl();
-        instance.properties= new Properties();
+        instance.properties = new Properties();
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
         XQueryException exception = new XQueryException(req, "SVC-EXTIME", "401", "1.0-ml", "timeout", "", "", false, new String[0], new QueryStackFrame[0]);
-        
+
         assertFalse(instance.shouldRetry(exception));
-        
+
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-EXTIME,XDMP-EXTIME");
-      
+
         assertTrue(instance.shouldRetry(exception));
-        
+
         instance.properties.remove(Options.QUERY_RETRY_ERROR_CODES);
-      
+
         assertFalse(instance.shouldRetry(exception)); //no match on code(and no exception attempting to split null)
     }
-    
+
     @Test
-    public void testShouldRetryRetryableQueryException(){
-        
+    public void testShouldRetryRetryableQueryException() {
+
         Request req = mock(Request.class);
         AbstractTask instance = new AbstractTaskImpl();
-        instance.properties= new Properties();
+        instance.properties = new Properties();
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
         XQueryException exception = new XQueryException(req, "SVC-EXTIME", "401", "1.0-ml", "timeout", "", "", true, new String[0], new QueryStackFrame[0]);
- 
+
         assertTrue(instance.shouldRetry(exception)); //since it's retryable, doesn't matter if code matches
-        
+
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-EXTIME,XDMP-EXTIME");
         assertTrue(instance.shouldRetry(exception)); //is retryable and the code matches
-        
+
         instance.properties.remove(Options.QUERY_RETRY_ERROR_CODES);
-        assertTrue(instance.shouldRetry(exception)); 
+        assertTrue(instance.shouldRetry(exception));
     }
-    
-        
+
     @Test
-    public void testShouldRetryRequestPermissionException(){
-        
+    public void testShouldRetryRequestPermissionException() {
+
         Request req = mock(Request.class);
         AbstractTask instance = new AbstractTaskImpl();
-        instance.properties= new Properties();
+        instance.properties = new Properties();
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
         RequestPermissionException exception = new RequestPermissionException("denied!", req, "user-name", false);
-        assertFalse(instance.shouldRetry(exception));  
-        
+        assertFalse(instance.shouldRetry(exception));
+
         exception = new RequestPermissionException("denied!", req, "user-name", true);
-        assertTrue(instance.shouldRetry(exception)); 
+        assertTrue(instance.shouldRetry(exception));
     }
-    
+
+    @Test
+    public void testHasRetryableMessage() {
+        Request req = mock(Request.class);
+        AbstractTask instance = new AbstractTaskImpl();
+        instance.properties = new Properties();
+        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_MESSAGE, "FOO,Authentication failure for user,BAR");
+        RequestPermissionException exception = new RequestPermissionException("denied!", req, "user-name", false);
+        assertFalse(instance.hasRetryableMessage(exception));
+
+        exception = new RequestPermissionException("Authentication failure for user 'user-name'", req, "user-name", false);
+        assertTrue(instance.hasRetryableMessage(exception));
+    }
+
     public void testHandleRequestException(String type, RequestException exception, boolean fail, int retryLimit) throws CorbException, IOException {
         String[] uris = new String[]{"uri1"};
         testHandleRequestException(type, exception, fail, uris, retryLimit);

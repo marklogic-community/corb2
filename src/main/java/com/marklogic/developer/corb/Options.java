@@ -66,6 +66,7 @@ public class Options {
     public static final String PROCESS_MODULE = "PROCESS-MODULE";
     public static final String PROCESS_TASK = "PROCESS-TASK";
     public static final String QUERY_RETRY_ERROR_CODES = "QUERY-RETRY-ERROR-CODES";
+    public static final String QUERY_RETRY_ERROR_MESSAGE = "QUERY-RETRY-ERROR-MESSAGE";
     public static final String QUERY_RETRY_INTERVAL = "QUERY-RETRY-INTERVAL";
     public static final String QUERY_RETRY_LIMIT = "QUERY-RETRY-LIMIT";
     public static final String SSL_CIPHER_SUITES = "SSL-CIPHER-SUITES";
