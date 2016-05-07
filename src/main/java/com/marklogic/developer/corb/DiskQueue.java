@@ -36,7 +36,6 @@ import java.security.InvalidParameterException;
 import java.text.MessageFormat;
 import java.util.AbstractQueue;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -86,8 +85,9 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
      * @param maxInMemorySize Maximum number of elements to keep in memory.
      */
     public DiskQueue(int maxInMemorySize) {
-        this(maxInMemorySize, null, new DefaultComparator());
+        this(maxInMemorySize, null);
     }
+
 
     /**
      * Construct a disk-backed queue that keeps at most
@@ -95,31 +95,9 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
      *
      * @param maxInMemorySize Maximum number of elements to keep in memory.
      * @param tempDir Directory where queue temporary files will be written to.
+     * @param comparator
      */
     public DiskQueue(int maxInMemorySize, File tempDir) {
-        this(maxInMemorySize, tempDir, new DefaultComparator());
-    }
-
-    /**
-     * Construct a disk-backed queue that keeps at most
-     * <code>maxInMemorySize</code> elements in memory.
-     *
-     * @param maxInMemorySize Maximum number of elements to keep in memory.
-     * @param comparator
-     */
-    public DiskQueue(int maxInMemorySize, Comparator<? super E> comparator) {
-        this(maxInMemorySize, null, comparator);
-    }
-
-    /**
-     * Construct a disk-backed queue that keeps at most
-     * <code>maxInMemorySize</code> elements in memory.
-     *
-     * @param maxInMemorySize Maximum number of elements to keep in memory.
-     * @param tempDir Directory where queue temporary files will be written to.
-     * @param comparator
-     */
-    public DiskQueue(int maxInMemorySize, File tempDir, Comparator<? super E> comparator) {
         if (maxInMemorySize < 1) {
             throw new InvalidParameterException(DiskQueue.class.getSimpleName() + " max in-memory size must be at least one");
         }
@@ -128,7 +106,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
         }
         
         this.tempDir = tempDir;
-        memoryQueue = new MemoryQueue<E>(maxInMemorySize, comparator);
+        memoryQueue = new MemoryQueue<E>(maxInMemorySize);
         refillMemoryRatio = DEFAULT_REFILL_RATIO;
     }
 
@@ -293,25 +271,13 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
         }
     }
 
-    private static class DefaultComparator<T extends Comparable<? super T>> implements Comparator<T>, Serializable {
-
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public int compare(T o1, T o2) {
-            return o1.compareTo(o2);
-        }
-    }
-
     private static class MemoryQueue<E> extends AbstractQueue<E> {
 
         private final List<E> queue;
-        private final Comparator<? super E> comparator;
         private final int capacity;
 
-        public MemoryQueue(int capacity, Comparator<? super E> comparator) {
+        public MemoryQueue(int capacity) {
             this.capacity = capacity;
-            this.comparator = comparator;
             queue = new ArrayList<E>(capacity);
         }
 
@@ -346,7 +312,6 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
             if (queue.isEmpty()) {
                 return null;
             } else {
-                sort();
                 return queue.get(0);
             }
         }
@@ -356,35 +321,13 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
             if (queue.isEmpty()) {
                 return null;
             } else {
-                sort();
                 return queue.remove(0);
             }
         }
 
         @Override
         public E remove() {
-            sort();
             return queue.remove(0);
-        }
-
-        private void sort() {
-            // Find the lowest element, and if it's not the first element,
-            // swap it into place.
-            E lowestEntry = null;
-            int lowestIndex = -1;
-            for (int i = 0; i < queue.size(); i++) {
-                if ((lowestEntry == null)
-                        || (comparator.compare(lowestEntry, queue.get(i)) > 0)) {
-                    lowestIndex = i;
-                    lowestEntry = queue.get(i);
-                }
-            }
-
-            if ((lowestEntry != null) && (lowestIndex != 0)) {
-                E higherEntry = queue.get(0);
-                queue.set(0, lowestEntry);
-                queue.set(lowestIndex, higherEntry);
-            }
         }
     }
 

@@ -94,12 +94,6 @@ public class DiskQueueTest {
         Queue<String> instance = new DiskQueue<String>(0, tmpFile);
     }
 
-
-    @Test
-    public void testDiskQueue_customComparator() throws IOException {
-        Queue<String> instance = new DiskQueue<String>(1, String.CASE_INSENSITIVE_ORDER);
-    }
-
     @Test
     public void testDiskQueue_finalizeWhileOpen() throws IOException, Throwable {
         DiskQueue<String> instance = new DiskQueue<String>(1);

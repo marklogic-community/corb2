@@ -52,7 +52,7 @@ import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
 import com.marklogic.developer.corb.util.FileUtils;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import com.marklogic.developer.corb.util.NumberUtils;
-import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.stringToBoolean;
@@ -739,7 +739,7 @@ public class Manager extends AbstractManager {
                 }
                 
                 uri = urisLoader.next();
-                if (isEmpty(uri)) {
+                if (isBlank(uri)) {
                   continue;
                 }
                 uriBatch.add(uri);
