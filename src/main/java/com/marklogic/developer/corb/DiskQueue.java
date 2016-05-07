@@ -24,13 +24,12 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.corb.util.IOUtils;
-import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.security.InvalidParameterException;
 import java.text.MessageFormat;
@@ -51,7 +50,7 @@ import java.util.logging.Logger;
  *
  * @param <E>
  */
-public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
+public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
 
     private static final Logger LOG = Logger.getLogger(DiskQueue.class.getName());
 
@@ -69,13 +68,13 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
 
     private File tempDir;
 
-    private ObjectOutputStream fileOut;
-    private ObjectInputStream fileIn;
+    private BufferedWriter fileOut;
+    private BufferedReader fileIn;
 
     // When moving elements from disk to memory, we don't know whether the memory 
     // queue has space until the offer is rejected. So rather than trying to push 
     // back an element into the file, just cache it in cachedElement.
-    private E cachedElement;
+    private String cachedElement;
     private File fileQueue;
 
     /**
@@ -153,17 +152,17 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
             fileQueue = File.createTempFile(DiskQueue.class.getSimpleName() + "-backingstore-", null, tempDir);
             fileQueue.deleteOnExit();
             LOG.log(Level.INFO, "created backing store {0}", fileQueue.getAbsolutePath());
-            fileOut = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(fileQueue)));
+            fileOut = new BufferedWriter(new FileWriter(fileQueue));
 
             // Flush output file, so there's something written when we open the input stream.
             fileOut.flush();
 
-            fileIn = new ObjectInputStream(new FileInputStream(fileQueue));
+            fileIn = new BufferedReader(new FileReader(fileQueue));
         }
     }
 
     @Override
-    public Iterator<E> iterator() {
+    public Iterator<String> iterator() {
         throw new RuntimeException(MessageFormat.format("Iterator is not supported for {0}", DiskQueue.class.getSimpleName()));
     }
 
@@ -173,7 +172,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
     }
 
     @Override
-    public boolean offer(E element) {
+    public boolean offer(String element) {
         if (element == null) {
             throw new NullPointerException("Element cannot be null for AbstractQueue");
         }
@@ -182,12 +181,9 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
         if ((fileQueue != null) || !memoryQueue.offer(element)) {
             try {
                 openFile();
-                fileOut.writeObject(element);
+                fileOut.write(element);
+                fileOut.newLine();
                 fileElementCount += 1;
-
-                // Release memory ref to <element>, since we don't have any back-references from
-                // it to other serialized objects.
-                fileOut.reset();
             } catch (IOException e) {
                 LOG.severe(MessageFormat.format("Error writing to {0} backing store", DiskQueue.class.getSimpleName()));
                 return false;
@@ -198,19 +194,19 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
     }
 
     @Override
-    public E peek() {
+    public String peek() {
         loadMemoryQueue();
         return memoryQueue.peek();
     }
 
     @Override
-    public E remove() {
+    public String remove() {
         loadMemoryQueue();
         return memoryQueue.remove();
     }
 
     @Override
-    public E poll() {
+    public String poll() {
         loadMemoryQueue();
         return memoryQueue.poll();
     }
@@ -247,7 +243,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
 
                 while (fileElementCount > 0) {
                     @SuppressWarnings("unchecked")
-                    E nextFileElement = (E) fileIn.readObject();
+                    String nextFileElement = fileIn.readLine();
                     fileElementCount -= 1;
 
                     if (!memoryQueue.offer(nextFileElement)) {
@@ -265,24 +261,22 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
                 // once this works just fine)
             } catch (IOException e) {
                 LOG.severe(MessageFormat.format("Error reading from {0} backing store", DiskQueue.class.getSimpleName()));
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException("Unexpected error - can't find class for object in backing store");
             }
         }
     }
 
-    private static class MemoryQueue<E> extends AbstractQueue<E> {
+    private static class MemoryQueue<E> extends AbstractQueue<String> {
 
-        private final List<E> queue;
+        private final List<String> queue;
         private final int capacity;
 
         public MemoryQueue(int capacity) {
             this.capacity = capacity;
-            queue = new ArrayList<E>(capacity);
+            queue = new ArrayList<String>(capacity);
         }
 
         @Override
-        public Iterator<E> iterator() {
+        public Iterator<String> iterator() {
             return queue.iterator();
         }
 
@@ -296,7 +290,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
         }
 
         @Override
-        public boolean offer(E o) {
+        public boolean offer(String o) {
             if (o == null) {
                 throw new NullPointerException();
             } else if (queue.size() >= capacity) {
@@ -308,7 +302,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
         }
 
         @Override
-        public E peek() {
+        public String peek() {
             if (queue.isEmpty()) {
                 return null;
             } else {
@@ -317,7 +311,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
         }
 
         @Override
-        public E poll() {
+        public String poll() {
             if (queue.isEmpty()) {
                 return null;
             } else {
@@ -326,7 +320,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<E> {
         }
 
         @Override
-        public E remove() {
+        public String remove() {
             return queue.remove(0);
         }
     }
