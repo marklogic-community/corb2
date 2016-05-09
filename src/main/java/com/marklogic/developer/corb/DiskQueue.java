@@ -39,6 +39,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import com.marklogic.developer.corb.util.StringUtils;
 
 /**
  * A queue that writes extra elements to disk, and reads them in as needed.
@@ -246,7 +247,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
                     String nextFileElement = fileIn.readLine();
                     fileElementCount -= 1;
 
-                    if (!memoryQueue.offer(nextFileElement)) {
+                    if (!StringUtils.isEmpty(nextFileElement) && !memoryQueue.offer(nextFileElement)) {
                         //memory queue is full. Cache this entry and jump out
                         cachedElement = nextFileElement;
                         return;
