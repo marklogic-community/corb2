@@ -44,8 +44,8 @@ import javax.xml.bind.DatatypeConverter;
 
 /**
  * Class that uses a private key associate with a particular host Key is
- * calculated based on SHA-256 hash of internal server ids Also has endpoint to
- * encrypt plaintext passwords
+ * calculated based on SHA-256 hash of internal server ids. 
+ * Also has and endpoint to encrypt plaintext passwords
  *
  * @author Richard Kennedy
  */
@@ -55,8 +55,10 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     private static final byte[] DEFAULT_BYTES = {45, 32, 67, 34, 67, 23, 21, 45, 7, 89, 3, 27, 39, 62, 15};
     private static final byte[] HARD_CODED_BYTES = {120, 26, 58, 29, 43, 77, 95, 103, 29, 86, 97, 105, 52, 16, 42, 63, 37, 100, 45, 109, 108, 79, 75, 71, 11, 46, 36, 62, 124, 12, 7, 127};
     // currently only usage is encrypt
-    private static final String USAGE = "Encrypt:\n java -cp marklogic-corb-2.2.*.jar com.marklogic.developer.corb.HostKeyDecrypter encrypt clearText\n"
-            + "Test:\n java -cp marklogic-corb-2.2.*.jar com.marklogic.developer.corb.HostKeyDecrypter test";
+    private static final String USAGE = "Encrypt:\n "
+            + "java -cp marklogic-corb-" + AbstractManager.VERSION + ".jar com.marklogic.developer.corb.HostKeyDecrypter encrypt clearText\n"
+            + "Test:\n "
+            + "java -cp marklogic-corb-" + AbstractManager.VERSION + ".jar com.marklogic.developer.corb.HostKeyDecrypter test";
 
     protected enum OSType {
         Windows {
@@ -317,7 +319,9 @@ public class HostKeyDecrypter extends AbstractDecrypter {
      * @throws SocketException
      * @throws UnknownHostException
      */
-    public static String encrypt(String plaintext) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, UnknownHostException, SocketException {
+    public static String encrypt(String plaintext) 
+            throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, 
+            IllegalBlockSizeException, BadPaddingException, UnknownHostException, SocketException {
         // secret key based off of internal private key
         byte[] encryptionPrivateKey = getPrivateKey();
         Key key = new SecretKeySpec(encryptionPrivateKey, "AES");
@@ -333,7 +337,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
      * decrypts encrypted password using private key internal to host and AES
      * 256 algorithm and returns plaintext password
      *
-     * @param String encryptedtext
+     * @param String encrypted text
      * @author Richard Kennedy
      * @throws NoSuchPaddingException
      * @throws NoSuchAlgorithmException
