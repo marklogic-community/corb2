@@ -57,11 +57,11 @@ public class TrustAnyoneSSLConfig extends AbstractSSLConfig{
 
 	@Override
 	public String[] getEnabledCipherSuites() {
-		return null;
+		return new String[0];
 	}
 
 	@Override
 	public String[] getEnabledProtocols() {
-		return null;
+		return new String[0];
 	}
 }

@@ -31,22 +31,22 @@ import static org.junit.Assert.*;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class TrustAnyoneSSLConfigTest {
-    
+
     public TrustAnyoneSSLConfigTest() {
     }
-    
+
     @BeforeClass
     public static void setUpClass() {
     }
-    
+
     @AfterClass
     public static void tearDownClass() {
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     @After
     public void tearDown() {
     }
@@ -70,7 +70,8 @@ public class TrustAnyoneSSLConfigTest {
         System.out.println("getEnabledCipherSuites");
         TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
         String[] result = instance.getEnabledCipherSuites();
-        assertNull(result);
+        assertNotNull(result);
+        assertEquals(0, result.length);
     }
 
     /**
@@ -81,7 +82,8 @@ public class TrustAnyoneSSLConfigTest {
         System.out.println("getEnabledProtocols");
         TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
         String[] result = instance.getEnabledProtocols();
-        assertNull(result);
+        assertNotNull(result);
+        assertEquals(0, result.length);
     }
 
 }
