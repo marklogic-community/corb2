@@ -178,11 +178,11 @@ public class ManagerTest {
     public void testManagerUsingSysProps_largeUrisList()
             throws Exception {
         clearSystemProperties();
-        int uriCount = 1000;
+        int uriCount = 100;
         System.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
         System.setProperty("COLLECTION-NAME", COLLECTION_NAME);
         System.setProperty("XQUERY-MODULE", XQUERY_MODULE);
-        System.setProperty("THREAD-COUNT", "20");
+        System.setProperty("THREAD-COUNT", "4");
         System.setProperty("URIS-MODULE", "src/test/resources/selectorLargeList.xqy|ADHOC");
         System.setProperty("URIS-MODULE.count", String.valueOf(uriCount));
         System.setProperty("MODULE-ROOT", MODULES_ROOT);
