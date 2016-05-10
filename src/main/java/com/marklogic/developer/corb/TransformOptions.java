@@ -29,46 +29,40 @@ import java.io.File;
 public class TransformOptions {
 
 	public static final int SLEEP_TIME_MS = 500;
-
 	public static final long PROGRESS_INTERVAL_MS = 60 * SLEEP_TIME_MS;
-
 	public static final String NAME = TransformOptions.class.getName();
-
 	private static final String SLASH = "/";
-
 	public static final String COLLECTION_TYPE = "COLLECTION";
-
 	public static final String DIRECTORY_TYPE = "DIRECTORY";
-
 	public static final String QUERY_TYPE = "QUERY";
 
-	private String processModule = null;
-	private Class<? extends Task> processTaskCls = null;
+	private String processModule;
+	private Class<? extends Task> processTaskCls;
 
-	private String preBatchModule = null;
-	private Class<? extends Task> preBatchTaskCls = null;
+	private String preBatchModule;
+	private Class<? extends Task> preBatchTaskCls;
 
-	private String postBatchModule = null;
-	private Class<? extends Task> postBatchTaskCls = null;
+	private String postBatchModule;
+	private Class<? extends Task> postBatchTaskCls;
 
-	private String initModule = null;
-	private Class<? extends Task> initTaskCls = null;
+	private String initModule;
+	private Class<? extends Task> initTaskCls;
 
-	private String exportFileDir = null;
+	private String exportFileDir;
 
 	// Defaults for optional arguments
 	private String moduleRoot = SLASH;
 
-	private String urisModule = null;
-	private String urisFile = null;
-	private Class<? extends UrisLoader> urisLoaderCls = null;
+	private String urisModule;
+	private String urisFile;
+	private Class<? extends UrisLoader> urisLoaderCls;
 
 	private int threadCount = 1;
 	private int batchSize = 1;
-    private boolean useDiskQueue = false;
+    private boolean useDiskQueue;
     private int diskQueueMaxInMemorySize = 100000;
-    private File diskQueueTempDir = null;
-	private boolean doInstall = false;
+    private File diskQueueTempDir;
+	private boolean doInstall;
 
 	private boolean failOnError = true;
 

@@ -584,7 +584,6 @@ public class ModuleExecutorTest {
         try {
             url = propFile.toURI().toURL();
         } catch (MalformedURLException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         return loadProperties(url);

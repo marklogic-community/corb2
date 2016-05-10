@@ -36,7 +36,7 @@ public abstract class AbstractUrisLoader implements UrisLoader {
     Properties properties;
     int total = 0;
     String[] replacements = new String[0];
-    String batchRef = null;
+    String batchRef;
 
     @Override
     public void setOptions(TransformOptions options) {

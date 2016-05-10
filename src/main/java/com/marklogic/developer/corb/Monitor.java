@@ -47,7 +47,7 @@ public class Monitor implements Runnable {
     private String[] lastUris;
     private long taskCount;
     private final PausableThreadPoolExecutor pool;
-    private boolean shutdownNow = false;
+    private boolean shutdownNow;
     protected long completed = 0;
     private long prevCompleted = 0;
     private long prevMillis = 0;
@@ -90,7 +90,7 @@ public class Monitor implements Runnable {
     private void monitorResults() throws InterruptedException, ExecutionException, CorbException {
         // fast-fail as soon as we see any exceptions
         LOG.log(INFO, "monitoring {0} tasks", taskCount);
-        Future<String[]> future = null;
+        Future<String[]> future;
         while (!shutdownNow) {
             // try to avoid thread starvation
             Thread.yield();

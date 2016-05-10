@@ -426,7 +426,7 @@ public class FileXMLUrisLoaderTest {
         instance.doc = mock(Document.class);
         instance.collection = "foo";
         instance.cs = mock(ContentSource.class);
-        instance.nextNode = "<test>testData</test>";
+        instance.nextUri = "<test>testData</test>";
         instance.options = new TransformOptions();
         instance.properties = new Properties();
         instance.replacements = new String[]{};

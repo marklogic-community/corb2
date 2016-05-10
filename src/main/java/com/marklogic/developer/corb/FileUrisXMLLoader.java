@@ -55,12 +55,12 @@ import org.w3c.dom.NodeList;
 public class FileUrisXMLLoader extends AbstractUrisLoader {
 
     protected static final Logger LOG = Logger.getLogger(FileUrisXMLLoader.class.getName());
-    String nextNode = null;
-    Iterator<Node> nodeIterator = null;
-    Document doc = null;
-    Map<Integer, Node> nodeMap = null;
-    TransformerFactory transformerFactory = null;
-    
+    String nextUri;
+    Iterator<Node> nodeIterator;
+    Document doc;
+    Map<Integer, Node> nodeMap;
+    TransformerFactory transformerFactory;
+
     @Override
     public void open() throws CorbException {
 
@@ -74,7 +74,7 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
             doc = dBuilder.parse(fXmlFile);
 
             //Get Child nodes for parent node which is a wrapper node
-            NodeList nodeList = null;
+            NodeList nodeList;
 
             if (xpathRootNode == null) {
                 //default processing will select child elements
@@ -90,14 +90,14 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
                 nodeList = (NodeList) result;
             }
 
-            nodeMap = new ConcurrentHashMap();
-            
+            nodeMap = new ConcurrentHashMap<Integer, Node>(nodeList.getLength());
+
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Node node = nodeList.item(i);
                 if (xpathRootNode == null && node.getNodeType() != Node.ELEMENT_NODE) {
                     continue; //default processing without an XPath selects only /*
                 }
-                nodeMap.put(i, node);           
+                nodeMap.put(i, node);
             }
 
             total = nodeMap.size();
@@ -146,22 +146,22 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
 
     @Override
     public boolean hasNext() throws CorbException {
-        if (nextNode == null) {
+        if (nextUri == null) {
             try {
-                nextNode = readNextNode();
+                nextUri = readNextNode();
             } catch (Exception exc) {
                 throw new CorbException("Problem while reading the xml file");
             }
         }
-        return nextNode != null;
+        return nextUri != null;
     }
 
     @Override
     public String next() throws CorbException {
         String node;
-        if (nextNode != null) {
-            node = nextNode;
-            nextNode = null;
+        if (nextUri != null) {
+            node = nextUri;
+            nextUri = null;
         } else {
             try {
                 node = readNextNode();

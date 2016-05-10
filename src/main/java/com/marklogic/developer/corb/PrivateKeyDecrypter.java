@@ -47,7 +47,7 @@ import javax.xml.bind.DatatypeConverter;
 public class PrivateKeyDecrypter extends AbstractDecrypter {
 
     private static final String DEFAULT_ALGORITHM = "RSA";
-	private String algorithm = null;
+	private String algorithm;
 	// option 1 - generate keys with java
 	// java -cp marklogic-corb-2.1.*.jar
 	// com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys
@@ -69,7 +69,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 	// openssl rsa -in id_rsa -pubout > public.key
 	// echo "password or uri" | openssl rsautl -encrypt -pubin -inkey public.key |
 	// base64
-	private PrivateKey privateKey = null;
+	private PrivateKey privateKey;
 
 	protected static final Logger LOG = Logger.getLogger(PrivateKeyDecrypter.class.getName());
 

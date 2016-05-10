@@ -108,25 +108,25 @@ public class Manager extends AbstractManager {
     public static final String URIS_BATCH_REF = com.marklogic.developer.corb.Options.URIS_BATCH_REF;
     public static final String DEFAULT_BATCH_URI_DELIM = ";";
 
-    private PausableThreadPoolExecutor pool;
-    private Monitor monitor;
-    private Thread monitorThread;
-    private CompletionService<String[]> completionService;
-    private ScheduledExecutorService scheduledExecutor;
+    private transient PausableThreadPoolExecutor pool;
+    private transient Monitor monitor;
+    private transient Thread monitorThread;
+    private transient CompletionService<String[]> completionService;
+    private transient ScheduledExecutorService scheduledExecutor;
 
-    private boolean execError = false;
-    private boolean stopCommand = false;
+    private boolean execError;
+    private boolean stopCommand;
     
-    protected static int EXIT_CODE_NO_URIS = EXIT_CODE_SUCCESS;
+    static int EXIT_CODE_NO_URIS = EXIT_CODE_SUCCESS;
     protected static final int EXIT_CODE_STOP_COMMAND = 3;
 
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
 
     public static class CallerBlocksPolicy implements RejectedExecutionHandler {
 
-        private BlockingQueue<Runnable> queue;
+        private transient BlockingQueue<Runnable> queue;
 
-        private boolean warning = false;
+        private boolean warning;
 
         @Override
         public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
@@ -199,7 +199,7 @@ public class Manager extends AbstractManager {
         initURI(args.length > 0 ? args[0] : null);
 
         String collectionName = getOption(args.length > 1 ? args[1] : null, COLLECTION_NAME);
-        this.collection = collectionName != null ? collectionName : "";
+        this.collection = collectionName == null ? "" : collectionName;
 
         initOptions(args);
 

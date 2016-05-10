@@ -30,8 +30,8 @@ import java.util.logging.Logger;
 
 public class FileUrisLoader extends AbstractUrisLoader {
 
-	BufferedReader br = null;
-	String nextLine = null;
+	BufferedReader br;
+	String nextLine;
 	protected static final Logger LOG = Logger.getLogger(FileUrisLoader.class.getName());
 
 	@Override
