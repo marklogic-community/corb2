@@ -95,7 +95,6 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
      *
      * @param maxInMemorySize Maximum number of elements to keep in memory.
      * @param tempDir Directory where queue temporary files will be written to.
-     * @param comparator
      */
     public DiskQueue(int maxInMemorySize, File tempDir) {
         if (maxInMemorySize < 1) {
