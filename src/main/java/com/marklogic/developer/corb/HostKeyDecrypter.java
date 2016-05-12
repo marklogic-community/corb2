@@ -18,6 +18,8 @@
  */
 package com.marklogic.developer.corb;
 
+import static java.util.logging.Level.INFO;
+
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
@@ -35,6 +37,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Locale;
 import java.util.Scanner;
+import java.util.logging.Logger;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -60,6 +64,8 @@ public class HostKeyDecrypter extends AbstractDecrypter {
             + "Test:\n "
             + "java -cp marklogic-corb-" + AbstractManager.VERSION + ".jar com.marklogic.developer.corb.HostKeyDecrypter test";
 
+    protected static final Logger LOG = Logger.getLogger(HostKeyDecrypter.class.getName());
+    
     protected enum OSType {
         Windows {
             /**
@@ -198,6 +204,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     protected void init_decrypter() throws IOException, ClassNotFoundException {
         try {
             privateKey = getPrivateKey();
+            LOG.log(INFO, "Initialized HostKeyDecrypter");
         } catch (NoSuchAlgorithmException e) {
             new RuntimeException("Error constructing private key", e);
         }

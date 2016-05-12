@@ -58,6 +58,7 @@ public class JasyptDecrypter extends AbstractDecrypter {
 
                 Method setPassword = decrypterCls.getMethod("setPassword", String.class);
                 setPassword.invoke(decrypter, passphrase);
+                LOG.log(INFO, "Initialized JasyptDecrypter");
             } catch (ClassNotFoundException exc) {
                 throw exc;
             } catch (Exception exc) {
