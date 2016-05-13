@@ -52,10 +52,50 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allJava
 }
 
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+def pomConfig = {
+    name "corb"
+    description 'CORB is a Java tool designed for bulk content-reprocessing of documents stored in MarkLogic.'
+    url 'https://github.com/marklogic/corb2'
+    scm {
+        url 'https://github.com/marklogic/corb2.git'
+    }
+    licenses {
+        license {
+            name "The Apache Software License, Version 2.0"
+            url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            distribution "repo"
+        }
+    }
+    developers {
+        developer {
+            name "Bhagat Bandlamudi"
+            email "bhagat.bandlamudi@marklogic.com"
+            organization "MarkLogic"
+        }
+        developer {
+            name "Mads Hansen"
+            email "mads.hansen@marklogic.com"
+            organization "MarkLogic"
+        }
+    }
+}
+
 publishing {
     publications {
         mainJava(MavenPublication) {
             from components.java
+            artifact sourcesJar
+            artifact javadocJar
+
+            pom.withXml {
+                def root = asNode()                
+                root.children().last() + pomConfig
+            }
         }
         sourcesJava(MavenPublication) {
             from components.java
