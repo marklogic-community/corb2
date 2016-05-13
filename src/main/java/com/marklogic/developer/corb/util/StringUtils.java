@@ -236,7 +236,7 @@ public class StringUtils {
     }
     
     /**
-     * Removes control characters (char <= 32) from both ends of the string. If
+     * Removes control characters (char &lt;= 32) from both ends of the string. If
      * null, returns null. @param value @return @param value @return the trimmed
      * string, or {@code null} if null String
      *
@@ -248,9 +248,9 @@ public class StringUtils {
     }
 
     /**
-     * Removes control characters (char <= 32) from both ends of the string. If
+     * Removes control characters (char &lt;= 32) from both ends of the string. If
      * null, returns null. @param value @return @param value @return the trimmed
-     * String or an empty String if {@code nul
+     * String or an empty String if {@code null}
      *
      * @param value
      * @return 
