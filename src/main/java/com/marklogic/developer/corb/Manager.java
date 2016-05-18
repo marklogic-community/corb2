@@ -108,14 +108,14 @@ public class Manager extends AbstractManager {
     public static final String URIS_BATCH_REF = com.marklogic.developer.corb.Options.URIS_BATCH_REF;
     public static final String DEFAULT_BATCH_URI_DELIM = ";";
 
-    private transient PausableThreadPoolExecutor pool;
-    private transient Monitor monitor;
-    private transient Thread monitorThread;
-    private transient CompletionService<String[]> completionService;
-    private transient ScheduledExecutorService scheduledExecutor;
+    protected transient PausableThreadPoolExecutor pool;
+    protected transient Monitor monitor;
+    protected transient Thread monitorThread;
+    protected transient CompletionService<String[]> completionService;
+    protected transient ScheduledExecutorService scheduledExecutor;
 
-    private boolean execError;
-    private boolean stopCommand;
+    protected boolean execError;
+    protected boolean stopCommand;
     
     static int EXIT_CODE_NO_URIS = EXIT_CODE_SUCCESS;
     protected static final int EXIT_CODE_STOP_COMMAND = 3;
