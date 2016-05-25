@@ -26,6 +26,8 @@ after_success:
   - bash <(curl -s https://codecov.io/bash)
 
 addons:
+  code_climate:
+      repo_token: cc26be30d679ab745d6d2549571c31d54cbb8ef34e3986de0be49be894d58918  
   coverity_scan:
     project:
       name: "marklogic/corb2"
