@@ -19,6 +19,33 @@ repositories {
     }
 }
 
+sourceSets {
+    integrationTest {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir file('src/test/java')
+        }
+        resources.srcDir file('src/test/resources')
+    }
+    performanceTest {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir file('src/test/java')
+        }
+        resources.srcDir file('src/test/resources')
+    }
+}
+
+configurations {
+    integrationTestCompile.extendsFrom testCompile
+    integrationTestRuntime.extendsFrom testRuntime
+    
+    performanceTestCompile.extendsFrom testCompile
+    performanceTestRuntime.extendsFrom testRuntime
+}
+
 dependencies {
     compile 'com.marklogic:marklogic-xcc:8.0.5'
     compile 'com.google.code.externalsortinginjava:externalsortinginjava:0.1.9'
@@ -32,7 +59,10 @@ dependencies {
 test {
     testLogging {
         events 'started','passed'
-    }  
+    }
+    //we will run Integration and Performance tests in separate tasks
+    exclude '**/*IT.class'
+    exclude '**/*PT.class'
 }
 
 //disabling, because we want to incorporate externalsortingjava in uber jar and use as the artifact
@@ -55,6 +85,64 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from 'build/docs/javadoc'
+}
+
+task integrationTest(type: Test, dependsOn: test) {
+    testClassesDir = sourceSets.integrationTest.output.classesDir
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    filter {
+        //include all integration tests
+        includeTestsMatching "*IT"
+    }
+    testLogging {
+        events 'started','passed'
+    }
+    //If you want to ensure that integration tests are run every time when you invoke
+    //this task, uncomment the following line.
+    //outputs.upToDateWhen { false }
+    jacoco {
+        //coverage report will include both unit and integration tests
+        append = true
+        destinationFile = file("$buildDir/jacoco/test.exec")
+    }
+    //generate the Jacoco report
+    finalizedBy { tasks.integrationTestReport }  
+}
+
+task integrationTestReport(type: JacocoReport) {
+    sourceSets sourceSets.main
+    executionData integrationTest
+}
+
+task performanceTest(type: Test) {
+    testClassesDir = sourceSets.performanceTest.output.classesDir
+    classpath = sourceSets.performanceTest.runtimeClasspath
+    filter {
+        //include all performance tests
+        includeTestsMatching "*PT"
+    }
+    testLogging {
+        events 'started','passed'
+    }
+    
+    //If you want to ensure that performance tests are run every time when you invoke
+    //this task, uncomment the following line.
+    outputs.upToDateWhen { false }
+}
+
+//Ensure that the check task fails the build if there are failing integration tests.
+check.dependsOn integrationTest
+//Ensure that our unit tests are run before our integration tests
+integrationTest.mustRunAfter test
+integrationTest.onlyIf { !project.hasProperty('skipIntegrationTest') }
+//Ensure that the check task fails the build if there are failing performance tests.
+//check.dependsOn performanceTest
+//Ensure that our unit tests are run before our performance tests
+performanceTest.mustRunAfter integrationTest
+performanceTest.onlyIf { !project.hasProperty('skipPerformanceTest') }
+
+tasks.withType(Test) {
+    reports.html.destination = file("${reporting.baseDir}/${name}")
 }
 
 def pomConfig = {
