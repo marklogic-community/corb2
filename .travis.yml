@@ -11,14 +11,19 @@ jdk:
   - oraclejdk8
   - oraclejdk7
 
-script: 
-  - ./gradlew check -PskipIntegrationTest -PskipPerformanceTest
-
 env:
   global:
    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
    #   via the "travis encrypt" command using the project repo's public key
    - secure: "O3337iQ9rOOnc9fBYLAu7yoJftNHBoGqNJ/fh1usZIVGQK2Idrk4BZ4PqjEePtYJaqtBpRFqdPTVgOc/MADncfnXWvi/1G0yGQeLXmpKMT5JdIBC6NmT+A+QpDOOwwYo6TU9qKmmlh8ED5KPYxTfHkxc5IhIu0xafU/tIUj2V10="
+
+script:
+  # disable integration and performance tests, since we don't have a MarkLogic instance to use
+  - ./gradlew check jacocoTestReport -PskipIntegrationTest -PskipPerformanceTest
+
+after_success:
+  #codecov.io integration
+  - bash <(curl -s https://codecov.io/bash)
 
 addons:
   coverity_scan:
@@ -27,7 +32,7 @@ addons:
       description: "CoRB is a Java tool designed for bulk content-reprocessing of documents stored in MarkLogic."
     notification_email: mads.hansen@marklogic.com
     build_command_prepend: ""
-    build_command:   "./gradle2 build  -PskipIntegrationTest -PskipPerformanceTest -S"
+    build_command:   "./gradle2 build -PskipIntegrationTest -PskipPerformanceTest -S"
     branch_pattern: master
 
 
