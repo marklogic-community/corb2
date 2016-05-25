@@ -1,0 +1,33 @@
+language: java
+
+before_cache:
+  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+
+jdk:
+  - oraclejdk8
+  - oraclejdk7
+  - openjdk6
+
+build: gradle check -PskipIntegrationTest -PskipPerformanceTest
+
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "O3337iQ9rOOnc9fBYLAu7yoJftNHBoGqNJ/fh1usZIVGQK2Idrk4BZ4PqjEePtYJaqtBpRFqdPTVgOc/MADncfnXWvi/1G0yGQeLXmpKMT5JdIBC6NmT+A+QpDOOwwYo6TU9qKmmlh8ED5KPYxTfHkxc5IhIu0xafU/tIUj2V10="
+
+addons:
+  coverity_scan:
+    project:
+      name: "marklogic/corb2"
+      description: "CoRB is a Java tool designed for bulk content-reprocessing of documents stored in MarkLogic."
+    notification_email: mads.hansen@marklogic.com
+    build_command_prepend: ""
+    build_command:   "./gradle2 build -S"
+    branch_pattern: master
+
+
