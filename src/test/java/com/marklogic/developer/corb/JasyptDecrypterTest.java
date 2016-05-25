@@ -74,7 +74,7 @@ public class JasyptDecrypterTest {
         instance.init_decrypter();
     }
 
-    @Test
+    //@Test
     public void testInit_decrypter_badJasyptPropertiesFilePath() throws Exception {
         System.out.println("init_decrypter");
         clearSystemProperties();
@@ -146,7 +146,7 @@ public class JasyptDecrypterTest {
         assertNotNull(instance.decrypter);
     }
 
-    @Test
+    //@Test
     public void testInit_decrypter_noJasyptProperties() throws Exception {
         System.out.println("init_decrypter");
         clearSystemProperties();
