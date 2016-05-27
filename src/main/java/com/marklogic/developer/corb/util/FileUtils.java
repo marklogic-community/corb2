@@ -27,7 +27,7 @@ import java.net.URL;
 
 /**
  * Common file manipulation utilities
- * 
+ *
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class FileUtils {
@@ -37,7 +37,7 @@ public class FileUtils {
 
     /**
      * Delete a file or folder and all of it's contents.
-     * 
+     *
      * @param file The file to be deleted.
      * @throws IOException
      */
@@ -69,6 +69,7 @@ public class FileUtils {
 
     /**
      * Delete a file.
+     *
      * @param path Path to the file to be deleted.
      * @throws IOException
      */
@@ -84,13 +85,11 @@ public class FileUtils {
      * @param dest The destination file.
      */
     public static void moveFile(final File source, final File dest) {
-        if (!source.getAbsolutePath().equals(dest.getAbsolutePath())) {
-            if (source.exists()) {
-                if (dest.exists()) {
-                    dest.delete();
-                }
-                source.renameTo(dest);
+        if (!source.getAbsolutePath().equals(dest.getAbsolutePath()) && source.exists()) {
+            if (dest.exists()) {
+                dest.delete();
             }
+            source.renameTo(dest);
         }
     }
 
