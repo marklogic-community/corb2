@@ -52,22 +52,6 @@ public class FileUtilsTest {
         exampleContent = IOUtilsTest.cat(new FileReader(exampleContentFile));
     }
 
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
     /**
      * Test of getBytes method, of class FileUtils.
      */

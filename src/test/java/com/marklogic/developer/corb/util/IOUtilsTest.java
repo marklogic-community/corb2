@@ -30,10 +30,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -48,22 +44,6 @@ public class IOUtilsTest {
 
     public IOUtilsTest() throws IOException {
         exampleContent = cat(new FileReader(exampleContentFile));
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
     }
 
     /**
