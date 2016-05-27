@@ -1,9 +1,14 @@
 Version: 2.3.1
+[ ![Download](https://api.bintray.com/packages/marklogic/maven/marklogic-corb/images/download.svg) ](https://bintray.com/marklogic/maven/marklogic-corb/_latestVersion)[![Dependency Status](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed/badge.svg?style=flat)](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed)
 
+[![Build Status](https://travis-ci.org/marklogic/corb2.svg?branch=development)](https://travis-ci.org/marklogic/corb2)
+[![codecov](https://codecov.io/gh/marklogic/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic/corb2/branch/development)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/c0195f063ae34c7ea17bb4c97ab7ff2c)](https://www.codacy.com/app/mads-hansen/corb2?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marklogic/corb2&amp;utm_campaign=Badge_Grade)
 ### User Guide
 This document provides a comprehensive overview of CoRB2. For additional information, please refer to the CoRB2 [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc). This document also covers the less robust [ModuleExecutor Tool](#moduleexecutor-tool), which can be used when only a single staged query is necessary. The ModuleExecutor Tool is provided as part of the CoRB2 distribution.
 
 ### Downloads
+
 Download latest release from https://github.com/marklogic/corb2/releases.  
 
 Corb v2.2.0 or later requires [marklogic-xcc-8.0.*.jar or later](https://developer.marklogic.com/products/xcc) to run. Please note that marklogic-xcc 8 is backwards compatible up to MarkLogic 5 and runs on Java 1.6 or later.
@@ -21,18 +26,18 @@ You can build CoRB in the same way as any Gradle project:
 ./gradlew build
 ```
 
-You might want to skip the tests until you have configured a test database
-(some of the unit tests are more integration tests that require a live MarkLogic database):
+You might want to skip the integration tests until you have configured a test database
+(the integration tests that require a live MarkLogic database):
 
 ```
-./gradlew build -x test
+./gradlew build -x integrationTest
 ```
 
 #### Building CoRB with Maven
 CoRB also has a Maven pom.xml and can be built with standard Maven commands
 
 ```
-mvn package -Dmaven.test.skip=true
+mvn package
 ```
 
 ### Running CoRB
@@ -94,7 +99,7 @@ Option | Description
 **QUERY-RETRY-LIMIT** | Number of re-query attempts before giving up. Default is 2.
 **QUERY-RETRY-INTERVAL** | Time interval, in seconds, between re-query attempts. Default is 20.
 **QUERY-RETRY-ERROR-CODES** | A comma separated list of MarkLogic error codes for which a QueryException should be retried.
-**QUERY-RETRY-ERROR-MESSAGE** | A comma separated list of values that if contained in an exception message a QueryException should be retried. 
+**QUERY-RETRY-ERROR-MESSAGE** | A comma separated list of values that if contained in an exception message a QueryException should be retried.
 **BATCH-URI-DELIM** | Use if default delimiter `';'` cannot be used to join multiple URIS when **BATCH-SIZE** is greater than 1.
 **FAIL-ON-ERROR** | Boolean value indicating whether the CoRB job should fail and exit if a transform module throws an error. Default is true. This option will not handle repeated connection failures.
 **ERROR-FILE-NAME** | Used when FAIL-ON-ERROR is false. If specified true, removes duplicates from, the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to separate URI and error message.
@@ -109,7 +114,7 @@ Option | Description
 **COMMAND** | Pause, resume, and stop the execution of CoRB2. Possible commands include: PAUSE, RESUME, and STOP. If the **COMMAND-FILE** is modified and either there is no **COMMAND** or an invalid value is specified, then execution will RESUME.
 **DISK-QUEUE** | Boolean value indicating whether the CoRB job should spill to disk when a maximum number of URIs have been loaded in memory, in order to control memory consumption and avoid Out of Memory exceptions for extremely large sets of URIs.
 **DISK-QUEUE-MAX-IN-MEMORY-SIZE** | The maximum number of URIs to hold in memory before spilling over to disk. Default is 100,000.
-**DISK-QUEUE-TEMP-DIR** | The directory where the URIs queue can write to disk when the maximum in-memory items has been exceeded. Default behavior is to use java.io.tmpdir. 
+**DISK-QUEUE-TEMP-DIR** | The directory where the URIs queue can write to disk when the maximum in-memory items has been exceeded. Default behavior is to use java.io.tmpdir.
 
 ### Alternate XCC connection configuration
 Option | Description
