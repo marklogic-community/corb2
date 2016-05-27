@@ -1,11 +1,12 @@
 plugins {
     id 'java' 
     id 'com.github.johnrengelman.shadow' version '1.2.3'
-    id "maven-publish"
-    id "eclipse"
-    id "idea"
-    id "jacoco"
-    id "com.jfrog.bintray" version "1.6"
+    id 'maven-publish'
+    id 'eclipse'
+    id 'idea'
+    id 'jacoco'
+    id 'com.jfrog.bintray' version '1.6'
+    id 'com.github.kt3k.coveralls' version '2.6.3'
 }
 
 sourceCompatibility = '1.6'
@@ -87,6 +88,13 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     from 'build/docs/javadoc'
 }
 
+jacocoTestReport {
+    reports {
+        xml.enabled = true // coveralls plugin depends on xml format report
+        html.enabled = true
+    }
+}
+
 task integrationTest(type: Test, dependsOn: test) {
     testClassesDir = sourceSets.integrationTest.output.classesDir
     classpath = sourceSets.integrationTest.runtimeClasspath
@@ -130,6 +138,7 @@ task performanceTest(type: Test) {
     outputs.upToDateWhen { false }
 }
 
+check.dependsOn jacocoTestReport
 //Ensure that the check task fails the build if there are failing integration tests.
 check.dependsOn integrationTest
 //Ensure that our unit tests are run before our integration tests
@@ -143,6 +152,10 @@ performanceTest.onlyIf { !project.hasProperty('skipPerformanceTest') }
 
 tasks.withType(Test) {
     reports.html.destination = file("${reporting.baseDir}/${name}")
+}
+
+tasks.coveralls {
+  dependsOn 'check'
 }
 
 def pomConfig = {
