@@ -116,38 +116,11 @@ public class Manager extends AbstractManager {
 
     protected boolean execError;
     protected boolean stopCommand;
-    
+
     static int EXIT_CODE_NO_URIS = EXIT_CODE_SUCCESS;
     protected static final int EXIT_CODE_STOP_COMMAND = 3;
 
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
-
-    public static class CallerBlocksPolicy implements RejectedExecutionHandler {
-
-        private transient BlockingQueue<Runnable> queue;
-
-        private boolean warning;
-
-        @Override
-        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-            if (null == queue) {
-                queue = executor.getQueue();
-            }
-            try {
-                // block until space becomes available
-                if (!warning) {
-                    LOG.log(INFO, "queue is full: size = {0} (will only appear once)", queue.size());
-                    warning = true;
-                }
-                queue.put(r);
-            } catch (InterruptedException e) {
-                // reset interrupt status and exit
-                Thread.interrupted();
-                // someone is trying to interrupt us
-                throw new RejectedExecutionException(e);
-            }
-        }
-    }
 
     public Manager() {
 
@@ -257,7 +230,7 @@ public class Manager extends AbstractManager {
         String batchSize = getOption(BATCH_SIZE);
         String failOnError = getOption(FAIL_ON_ERROR);
         String errorFileName = getOption(ERROR_FILE_NAME);
-        
+
         options.setUseDiskQueue(stringToBoolean(getOption(DISK_QUEUE)));
         String diskQueueMaxInMemorySize = getOption(DISK_QUEUE_MAX_IN_MEMORY_SIZE);
         String diskQueueTempDir = getOption(DISK_QUEUE_TEMP_DIR);
@@ -298,7 +271,7 @@ public class Manager extends AbstractManager {
         }
         if (failOnError != null && (failOnError.equalsIgnoreCase("false"))) {
             options.setFailOnError(false);
-        }      
+        }
         if (diskQueueMaxInMemorySize != null) {
             options.setDiskQueueMaxInMemorySize(Integer.parseInt(diskQueueMaxInMemorySize));
         }
@@ -737,19 +710,19 @@ public class Manager extends AbstractManager {
                 if (null == pool) {
                     break;
                 }
-                
+
                 uri = urisLoader.next();
                 if (isBlank(uri)) {
-                  continue;
+                    continue;
                 }
                 uriBatch.add(uri);
-                
+
                 if (uriBatch.size() >= options.getBatchSize() || urisCount >= expectedTotalCount || !urisLoader.hasNext()) {
                     String[] uris = uriBatch.toArray(new String[uriBatch.size()]);
                     uriBatch.clear();
                     completionService.submit(taskFactory.newProcessTask(uris, options.isFailOnError()));
                 }
-                
+
                 urisCount++;
             }
 
@@ -759,7 +732,7 @@ public class Manager extends AbstractManager {
                 LOG.log(WARNING, "queue is expected to be populated with {0} tasks, but got {1} tasks.", new Object[]{expectedTotalCount, urisCount});
                 monitor.setTaskCount(urisCount);
             }
-                
+
             pool.shutdown();
 
         } catch (Exception exc) {
@@ -906,6 +879,33 @@ public class Manager extends AbstractManager {
                 LOG.log(WARNING, MessageFormat.format("Unable to load {0}", COMMAND_FILE), e);
             } finally {
                 closeQuietly(in);
+            }
+        }
+    }
+
+    public static class CallerBlocksPolicy implements RejectedExecutionHandler {
+
+        private transient BlockingQueue<Runnable> queue;
+
+        private boolean warning;
+
+        @Override
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+            if (null == queue) {
+                queue = executor.getQueue();
+            }
+            try {
+                // block until space becomes available
+                if (!warning) {
+                    LOG.log(INFO, "queue is full: size = {0} (will only appear once)", queue.size());
+                    warning = true;
+                }
+                queue.put(r);
+            } catch (InterruptedException e) {
+                // reset interrupt status and exit
+                Thread.interrupted();
+                // someone is trying to interrupt us
+                throw new RejectedExecutionException(e);
             }
         }
     }

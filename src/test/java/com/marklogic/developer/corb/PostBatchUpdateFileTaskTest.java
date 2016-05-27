@@ -327,20 +327,6 @@ public class PostBatchUpdateFileTaskTest {
         assertEquals(splitAndAppendNewline(expected), result);
     }
     
-    public static class StringLengthComparator implements Comparator<String> {
-
-        @Override
-        public int compare(String o1, String o2) {
-            if (o1.length() > o2.length()) {
-                return 1;
-            } else if (o1.length() < o2.length()) {
-                return -1;
-            } else {
-                return 0;
-            }
-        }
-    }
-    
     @Test
     public void testCall_removeDuplicatesAndSort_descendingDistinct() throws Exception {
         System.out.println("call");
@@ -449,5 +435,19 @@ public class PostBatchUpdateFileTaskTest {
 
     private File createSamplePartFile() throws IOException {
         return createSampleFile(".part");
+    }
+    
+    public static class StringLengthComparator implements Comparator<String> {
+
+        @Override
+        public int compare(String o1, String o2) {
+            if (o1.length() > o2.length()) {
+                return 1;
+            } else if (o1.length() < o2.length()) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
     }
 }
