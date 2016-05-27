@@ -450,10 +450,10 @@ public class AbstractTaskTest {
         }
 
         instance.properties.setProperty("XCC-CONNECTION-RETRY-INTERVAL", "1");
-        instance.properties.setProperty("XCC-CONNECTION-RETRY-LIMIT", "" + retryLimit);
+        instance.properties.setProperty("XCC-CONNECTION-RETRY-LIMIT", Integer.toString(retryLimit));
 
         instance.properties.setProperty("QUERY-RETRY-INTERVAL", "1");
-        instance.properties.setProperty("QUERY-RETRY-LIMIT", "" + retryLimit);
+        instance.properties.setProperty("QUERY-RETRY-LIMIT", Integer.toString(retryLimit));
 
         instance.handleRequestException(exception);
         List<LogRecord> records = testLogger.getLogRecords();
