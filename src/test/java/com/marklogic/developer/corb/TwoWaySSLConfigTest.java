@@ -20,12 +20,9 @@ package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import java.util.Properties;
-import javax.net.ssl.SSLContext;
 import org.junit.After;
-import org.junit.AfterClass;
 import static org.junit.Assert.*;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -35,17 +32,6 @@ import org.junit.Test;
 public class TwoWaySSLConfigTest {
 
     public static final String SSL_PROPERTIES = "src/test/resources/SSL.properties";
-
-    public TwoWaySSLConfigTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
 
     @Before
     public void setUp() {

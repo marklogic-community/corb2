@@ -43,10 +43,8 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.anyString;
@@ -61,17 +59,6 @@ public class AbstractTaskTest {
 
     private final TestHandler testLogger = new TestHandler();
     private static final Logger logger = Logger.getLogger(AbstractTask.class.getName());
-
-    public AbstractTaskTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
 
     @Before
     public void setUp() {

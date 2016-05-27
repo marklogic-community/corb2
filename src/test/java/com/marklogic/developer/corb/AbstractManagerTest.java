@@ -35,10 +35,8 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Rule;
@@ -61,17 +59,6 @@ public class AbstractManagerTest {
     private final String selectorFilename = "selector.xqy";
     private final String selectorFilePath = "src/test/resources/" + selectorFilename;
     private String selectorAsText;
-
-    public AbstractManagerTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
 
     @Before
     public void setUp() throws FileNotFoundException {

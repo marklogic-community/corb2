@@ -20,10 +20,6 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.xcc.ContentSource;
 import java.util.Properties;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -33,25 +29,6 @@ import static org.mockito.Mockito.mock;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class AbstractUrisLoaderTest {
-
-    public AbstractUrisLoaderTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
 
     /**
      * Test of setOptions method, of class AbstractUrisLoader.

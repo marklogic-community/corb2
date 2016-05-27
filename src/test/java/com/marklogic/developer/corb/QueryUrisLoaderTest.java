@@ -31,10 +31,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.NoSuchElementException;
 import java.util.Properties;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.anyString;
@@ -46,25 +42,6 @@ import static org.mockito.Mockito.when;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class QueryUrisLoaderTest {
-
-    public QueryUrisLoaderTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
 
     /**
      * Test of open method, of class QueryUrisLoader.

@@ -19,10 +19,6 @@
 package com.marklogic.developer.corb;
 
 import javax.net.ssl.SSLContext;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -31,25 +27,6 @@ import static org.junit.Assert.*;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class TrustAnyoneSSLConfigTest {
-
-    public TrustAnyoneSSLConfigTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
 
     /**
      * Test of getSSLContext method, of class TrustAnyoneSSLConfig.

@@ -25,10 +25,6 @@ import java.util.List;
 import java.util.concurrent.CompletionService;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -42,25 +38,6 @@ public class MonitorTest {
 
     private static final double DOUBLE_DELTA = 0.0;
     private final TestHandler testLogger = new TestHandler();
-
-    public MonitorTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
 
     @Test
     public void testRun_whenPaused() {

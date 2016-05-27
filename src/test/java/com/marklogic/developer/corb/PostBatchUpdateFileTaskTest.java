@@ -20,9 +20,7 @@ package com.marklogic.developer.corb;
 
 import java.util.Properties;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
@@ -44,17 +42,6 @@ public class PostBatchUpdateFileTaskTest {
     private String bakExt = ".bak";
     private String partExt = ".part";
     private String exampleContent = "The quick brown fox jumped over the lazy dog.";
-
-    public PostBatchUpdateFileTaskTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
 
     @Before
     public void setUp() {

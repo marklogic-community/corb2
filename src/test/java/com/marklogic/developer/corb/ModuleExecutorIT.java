@@ -18,13 +18,8 @@
  */
 package com.marklogic.developer.corb;
 
-import com.marklogic.developer.TestHandler;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import java.io.File;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Rule;
@@ -38,26 +33,6 @@ public class ModuleExecutorIT {
     
     @Rule
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
-    private final TestHandler testLogger = new TestHandler();
-    
-    public ModuleExecutorIT() {
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
-    
-    @Before
-    public void setUp() {
-    }
-    
-    @After
-    public void tearDown() {
-    }
 
     @Test
     public void testRun_main() throws Exception {

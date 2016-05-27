@@ -20,11 +20,7 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.xcc.ResultSequence;
 import java.util.Properties;
-import org.junit.After;
-import org.junit.AfterClass;
 import static org.junit.Assert.*;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -34,25 +30,6 @@ import static org.mockito.Mockito.when;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class ExportBatchToFileTaskTest {
-
-    public ExportBatchToFileTaskTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
 
     /**
      * Test of getFileName method, of class ExportBatchToFileTask.

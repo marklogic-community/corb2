@@ -34,25 +34,6 @@ import static org.mockito.Mockito.mock;
  */
 public class FileXMLUrisLoaderTest {
 
-    public FileXMLUrisLoaderTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
     /**
      * Test of setOptions method, of class FileUrisXMLLoader.
      */

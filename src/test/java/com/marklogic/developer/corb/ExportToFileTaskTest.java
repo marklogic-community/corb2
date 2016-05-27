@@ -25,9 +25,7 @@ import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.types.XdmItem;
 import java.io.File;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Rule;
@@ -43,17 +41,6 @@ public class ExportToFileTaskTest {
     
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
-    
-    public ExportToFileTaskTest() {
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
     
     @Before
     public void setUp() {

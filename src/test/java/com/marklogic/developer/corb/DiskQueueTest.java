@@ -28,10 +28,7 @@ import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -44,24 +41,9 @@ public class DiskQueueTest {
     private final TestHandler testLogger = new TestHandler();
     private static final Logger logger = Logger.getLogger(DiskQueue.class.getName());
 
-    public DiskQueueTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
     @Before
     public void setUp() {
         logger.addHandler(testLogger);
-    }
-
-    @After
-    public void tearDown() {
     }
 
     @Test(expected = InvalidParameterException.class)
