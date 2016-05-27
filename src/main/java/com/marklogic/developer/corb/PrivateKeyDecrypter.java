@@ -47,6 +47,9 @@ import javax.xml.bind.DatatypeConverter;
 public class PrivateKeyDecrypter extends AbstractDecrypter {
 
     private static final String DEFAULT_ALGORITHM = "RSA";
+    private static final String GEN_KEYS_USAGE = "Generate Keys (Note: default algorithm: RSA, default key-length: 1024):\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024";
+	private static final String ENCRYPT_USAGE = "Encrypt (Note: default algorithm: RSA):\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA";
+
 	private String algorithm;
 	// option 1 - generate keys with java
 	// java -cp marklogic-corb-2.1.*.jar
@@ -148,9 +151,6 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 		}
 		return dValue == null ? value : dValue.trim();
 	}
-
-	private static final String GEN_KEYS_USAGE = "Generate Keys (Note: default algorithm: RSA, default key-length: 1024):\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024";
-	private static final String ENCRYPT_USAGE = "Encrypt (Note: default algorithm: RSA):\n java -cp marklogic-corb-2.1.*.jar com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA";
 
 	private static void generateKeys(String... args) throws Exception {
 		String algorithm = DEFAULT_ALGORITHM;
