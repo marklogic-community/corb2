@@ -24,7 +24,7 @@ script:
 after_success:
   #codecov.io integration
   - bash <(curl -s https://codecov.io/bash)
-  - ./gradlew cobertura coveralls -PskipIntegrationTest -PskipPerformanceTest
+  - ./gradlew jacocoTestReport coveralls -PskipIntegrationTest -PskipPerformanceTest
 
 addons: 
   coverity_scan:
@@ -34,4 +34,4 @@ addons:
     notification_email: mads.hansen@marklogic.com
     build_command_prepend: ""
     build_command:   "./gradle2 build -PskipIntegrationTest -PskipPerformanceTest -S"
-    branch_pattern: development
+    branch_pattern: master
