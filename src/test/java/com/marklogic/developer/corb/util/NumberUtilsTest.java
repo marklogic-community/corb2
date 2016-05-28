@@ -32,14 +32,12 @@ public class NumberUtilsTest {
      */
     @Test
     public void testToInt_String() {
-        System.out.println("toInt");
         int result = NumberUtils.toInt("6");
         assertEquals(6, result);
     }
 
     @Test
     public void testToInt_String_invalid() {
-        System.out.println("toInt");
         int result = NumberUtils.toInt("six");
         assertEquals(0, result);
     }
@@ -49,14 +47,12 @@ public class NumberUtilsTest {
      */
     @Test
     public void testToInt_String_int() {
-        System.out.println("toInt");
         int result = NumberUtils.toInt("6", -1);
         assertEquals(6, result);
     }
     
     @Test
     public void testToInt_String_int_invalid() {
-        System.out.println("toInt");
         int result = NumberUtils.toInt("six", -1);
         assertEquals(-1, result);
     }

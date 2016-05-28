@@ -34,7 +34,6 @@ public class AbstractDecrypterTest {
      */
     @Test
     public void testInit_nullProperties() throws Exception {
-        System.out.println("init");
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         instance.init(null);
         assertNotNull(instance.properties);
@@ -42,7 +41,6 @@ public class AbstractDecrypterTest {
 
     @Test
     public void testInit() throws Exception {
-        System.out.println("init");
         Properties props = new Properties();
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         instance.init(props);
@@ -54,7 +52,6 @@ public class AbstractDecrypterTest {
      */
     @Test
     public void testGetConnectionURI() {
-        System.out.println("getConnectionURI");
         String uri = "xcc://user:pass@localhost:8003/dbname";
         String username = "";
         String password = "";
@@ -69,7 +66,6 @@ public class AbstractDecrypterTest {
 
     @Test
     public void testGetConnectionURI_constructUrl() {
-        System.out.println("getConnectionURI");
         String uri = null;
         String username = "user";
         String password = "pass";
@@ -84,7 +80,6 @@ public class AbstractDecrypterTest {
 
     @Test
     public void testGetConnectionURI_constructUrl_dbIsNull() {
-        System.out.println("getConnectionURI");
         String uri = null;
         String username = "user";
         String password = "pass";
@@ -99,7 +94,6 @@ public class AbstractDecrypterTest {
 
     @Test
     public void testGetConnectionURI_constructUrl_dbIsBlank() {
-        System.out.println("getConnectionURI");
         String uri = null;
         String username = "user";
         String password = "pass";
@@ -116,7 +110,6 @@ public class AbstractDecrypterTest {
      */
     @Test
     public void testDecrypt_notEncrypted() {
-        System.out.println("decrypt");
         String property = "prop";
         String value = "val";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
@@ -126,7 +119,6 @@ public class AbstractDecrypterTest {
 
     @Test
     public void testDecrypt_encrypted() {
-        System.out.println("decrypt");
         String property = "prop";
         String value = "ENC(val)";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
@@ -139,7 +131,6 @@ public class AbstractDecrypterTest {
      */
     @Test
     public void testDoDecrypt() {
-        System.out.println("doDecrypt");
         String property = "key";
         String value = "val";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
@@ -152,17 +143,14 @@ public class AbstractDecrypterTest {
      */
     @Test
     public void testGetProperty_nullProperties() {
-        System.out.println("getProperty");
         String key = "testProperty";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
-        String expResult = null;
         String result = instance.getProperty(key);
-        assertEquals(expResult, result);
+        assertNull(result);
     }
 
     @Test
     public void testGetProperty() throws IOException, ClassNotFoundException {
-        System.out.println("getProperty");
         String key = "testProperty";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         instance.properties = new Properties();
@@ -172,7 +160,6 @@ public class AbstractDecrypterTest {
 
     @Test
     public void testGetProperty_blankSystemProperty() throws IOException, ClassNotFoundException {
-        System.out.println("getProperty");
         String key = "testGetProperty";
         System.setProperty(key, "    ");
         AbstractDecrypter instance = new AbstractDecrypterImpl();
@@ -184,7 +171,6 @@ public class AbstractDecrypterTest {
 
     @Test
     public void testGetProperty_blankPropertiesProperty() throws IOException, ClassNotFoundException {
-        System.out.println("getProperty");
         String key = "testGetProperty";
         System.setProperty(key, "    ");
         AbstractDecrypter instance = new AbstractDecrypterImpl();

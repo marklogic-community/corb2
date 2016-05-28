@@ -51,7 +51,6 @@ public class IOUtilsTest {
      */
     @Test
     public void testCloseQuietly() throws IOException {
-        System.out.println("closeQuietly");
         Closeable obj = new StringReader("foo");
         IOUtils.closeQuietly(obj);
         assertTrue(true);
@@ -59,7 +58,6 @@ public class IOUtilsTest {
 
     @Test
     public void testCloseQuietly_throws() throws IOException {
-        System.out.println("closeQuietly");
         Closeable closeable = new Closeable() {
             @Override
             public void close() throws IOException {
@@ -72,7 +70,6 @@ public class IOUtilsTest {
 
     @Test
     public void testCloseQuietly_null() throws IOException {
-        System.out.println("closeQuietly");
         Closeable closeable = null;
         IOUtils.closeQuietly(closeable);
         assertTrue(true); //did not throw IOException
@@ -80,7 +77,6 @@ public class IOUtilsTest {
 
     @Test(expected = IOException.class)
     public void testCopy_null_InputStream() throws Exception {
-        System.out.println("copy");
         InputStream in = null;
         File out = File.createTempFile("copiedFile", "txt");
         out.deleteOnExit();
@@ -89,7 +85,6 @@ public class IOUtilsTest {
 
     @Test(expected = IOException.class)
     public void testCopy_InputStream_null() throws Exception {
-        System.out.println("copy");
         InputStream in = new FileInputStream(exampleContentFile);
         copy(in, null);
     }
@@ -101,7 +96,6 @@ public class IOUtilsTest {
      */
     @Test
     public void testCopy_Reader_OutputStream() throws Exception {
-        System.out.println("copy");
         Reader in = new FileReader(exampleContentFile);
         OutputStream out = new ByteArrayOutputStream();
 
@@ -130,8 +124,6 @@ public class IOUtilsTest {
      */
     @Test
     public void testCat_Reader() throws Exception {
-        System.out.println("cat");
-
         Reader reader = new FileReader(exampleContentFile);
         String result = cat(reader);
         assertEquals(exampleContent, result);
@@ -144,8 +136,6 @@ public class IOUtilsTest {
      */
     @Test
     public void testCat_InputStream() throws Exception {
-        System.out.println("cat");
-
         InputStream is = new FileInputStream(exampleContentFile);
         byte[] result = cat(is);
         assertArrayEquals(exampleContent.getBytes(), result);
@@ -158,7 +148,6 @@ public class IOUtilsTest {
      */
     @Test
     public void testGetSize_InputStream() throws Exception {
-        System.out.println("getSize");
         long result = -1;
         InputStream is;
         try {
@@ -176,7 +165,6 @@ public class IOUtilsTest {
      */
     @Test
     public void testGetSize_Reader() throws Exception {
-        System.out.println("getSize");
         Reader reader = new FileReader(exampleContentFile);
         long result = getSize(reader);
         assertEquals(exampleContent.length(), result);
@@ -189,7 +177,6 @@ public class IOUtilsTest {
      */
     @Test
     public void testGetBytes() throws Exception {
-        System.out.println("getBytes");
         byte[] result = FileUtilsTest.getBytes(exampleContentFile);
         assertArrayEquals(exampleContent.getBytes(), result);
     }
@@ -220,7 +207,7 @@ public class IOUtilsTest {
         return bos.toByteArray();
     }
 
-        /**
+    /**
      *
      * @param inputStream
      * @param outputStream
@@ -235,7 +222,7 @@ public class IOUtilsTest {
             throw new IOException("null OutputStream");
         }
         long totalBytes = 0;
-        int len = 0;
+        int len;
         byte[] buf = new byte[BUFFER_SIZE];
         int available = inputStream.available();
 
@@ -268,7 +255,7 @@ public class IOUtilsTest {
             throw new IOException("null OutputStream");
         }
         long totalBytes = 0;
-        int len = 0;
+        int len;
         char[] buf = new char[BUFFER_SIZE];
         byte[] bite = null;
         while ((len = source.read(buf)) > -1) {
@@ -286,7 +273,7 @@ public class IOUtilsTest {
         }
         return totalBytes;
     }
-    
+
     /**
      *
      * @param is
@@ -295,7 +282,7 @@ public class IOUtilsTest {
      */
     public static long getSize(InputStream is) throws IOException {
         long size = 0;
-        int b = 0;
+        int b;
         byte[] buf = new byte[BUFFER_SIZE];
         while ((b = is.read(buf)) > 0) {
             size += b;
@@ -311,7 +298,7 @@ public class IOUtilsTest {
      */
     public static long getSize(Reader r) throws IOException {
         long size = 0;
-        int b = 0;
+        int b;
         char[] buf = new char[BUFFER_SIZE];
         while ((b = r.read(buf)) > 0) {
             size += b;

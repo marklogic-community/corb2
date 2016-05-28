@@ -52,6 +52,7 @@ public class ManagerIT {
     @Rule
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
     private final TestHandler testLogger = new TestHandler();
+    private static final Logger logger = Logger.getLogger(Manager.class.getName());
 
     /**
      * Perform pre-test initialization.
@@ -64,7 +65,7 @@ public class ManagerIT {
     public void setUp()
             throws Exception {
         clearSystemProperties();
-        Logger logger = Logger.getLogger(Manager.class.getName());
+
         logger.addHandler(testLogger);
         File tempDir = TestUtils.createTempDirectory();
         EXPORT_FILE_DIR = tempDir.toString();
@@ -455,7 +456,6 @@ public class ManagerIT {
     //Main instantiates a new Manager, so need to move to Integration or change implementation
     @Test
     public void testMain_nullArgs() {
-        System.out.println("main");
         String[] args = null;
         exit.expectSystemExit();
         Manager.main(args);
@@ -466,7 +466,6 @@ public class ManagerIT {
 
     @Test
     public void testMain_exception() {
-        System.out.println("main");
         String[] args = ManagerTest.getDefaultArgs();
         exit.expectSystemExit();
         Manager.main(args);
@@ -477,7 +476,6 @@ public class ManagerIT {
 
     @Test
     public void testCommandFilePause() throws IOException, Exception {
-        System.out.println("pause/resume test");
         clearSystemProperties();
         File exportFile = new File(ManagerTest.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_NAME);
         exportFile.deleteOnExit();
@@ -538,7 +536,6 @@ public class ManagerIT {
 
     @Test
     public void testCommandFilePause_resumeWhenCommandFileChangedAndNoCommand() throws IOException, Exception {
-        System.out.println("pause/resume test");
         clearSystemProperties();
         File exportFile = new File(ManagerTest.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_NAME);
         exportFile.deleteOnExit();
@@ -597,7 +594,6 @@ public class ManagerIT {
 
     @Test
     public void testCommandFileStop() throws IOException, Exception {
-        System.out.println("stop test");
         clearSystemProperties();
         File exportFile = new File(ManagerTest.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_NAME);
         exportFile.deleteOnExit();
@@ -639,7 +635,6 @@ public class ManagerIT {
 
     @Test
     public void testCommandFileLowerThreads() throws IOException, Exception {
-        System.out.println("lower THREAD-COUNT test");
         clearSystemProperties();
         File exportFile = new File(ManagerTest.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_NAME);
         exportFile.deleteOnExit();

@@ -20,13 +20,16 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
 import static com.marklogic.developer.corb.Monitor.getProgressMessage;
+import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
 import java.util.List;
 import java.util.concurrent.CompletionService;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Before;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -38,6 +41,14 @@ public class MonitorTest {
 
     private static final double DOUBLE_DELTA = 0.0;
     private final TestHandler testLogger = new TestHandler();
+    private static final Logger logger = Logger.getLogger(Monitor.class.getName());
+
+    @Before
+    public void setUp()
+            throws Exception {
+        clearSystemProperties();
+        logger.addHandler(testLogger);
+    }
 
     @Test
     public void testRun_whenPaused() {
@@ -54,7 +65,6 @@ public class MonitorTest {
      */
     @Test
     public void testCalculateThreadsPerSecond_3args() {
-        System.out.println("calculateThreadsPerSecond");
         long amountCompleted = 10L;
         long previousMillis = 1000L;
         long currentMillis = 2000L;
@@ -68,7 +78,6 @@ public class MonitorTest {
      */
     @Test
     public void testCalculateThreadsPerSecond_4args() {
-        System.out.println("calculateThreadsPerSecond");
         long amountCompleted = 110L;
         long previouslyCompleted = 10L;
         long currentMillis = 2000L;
@@ -83,7 +92,6 @@ public class MonitorTest {
      */
     @Test
     public void testCalculateThreadsPerSecond_fractional() {
-        System.out.println("calculateThreadsPerSecond");
         long amountCompleted = 10L;
         long previouslyCompleted = 9L;
         long currentMillis = 3000L;

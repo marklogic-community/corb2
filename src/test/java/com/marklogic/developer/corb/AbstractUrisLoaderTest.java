@@ -35,7 +35,6 @@ public class AbstractUrisLoaderTest {
      */
     @Test
     public void testSetOptions() {
-        System.out.println("setOptions");
         TransformOptions options = new TransformOptions();
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         instance.setOptions(options);
@@ -47,7 +46,6 @@ public class AbstractUrisLoaderTest {
      */
     @Test
     public void testSetContentSource() {
-        System.out.println("setContentSource");
         ContentSource cs = mock(ContentSource.class);
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         instance.setContentSource(cs);
@@ -59,7 +57,6 @@ public class AbstractUrisLoaderTest {
      */
     @Test
     public void testSetCollection() {
-        System.out.println("setCollection");
         String collection = "foo";
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         instance.setCollection(collection);
@@ -71,7 +68,6 @@ public class AbstractUrisLoaderTest {
      */
     @Test
     public void testSetProperties() {
-        System.out.println("setProperties");
         Properties properties = new Properties();
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         instance.setProperties(properties);
@@ -83,7 +79,6 @@ public class AbstractUrisLoaderTest {
      */
     @Test
     public void testGetBatchRef() {
-        System.out.println("getBatchRef");
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         assertNull(instance.getBatchRef());
     }
@@ -93,7 +88,6 @@ public class AbstractUrisLoaderTest {
      */
     @Test
     public void testGetTotalCount() {
-        System.out.println("getTotalCount");
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         int result = instance.getTotalCount();
         assertEquals(0, result);
@@ -104,7 +98,6 @@ public class AbstractUrisLoaderTest {
      */
     @Test
     public void testGetProperty() {
-        System.out.println("getProperty");
         String key = "foo";
         String value = "bar";
         Properties props = new Properties();
@@ -117,7 +110,6 @@ public class AbstractUrisLoaderTest {
 
     @Test
     public void testGetProperty_systemPropAndNullProperties() {
-        System.out.println("getProperty");
         String key = "foo";
         String value = "bar";
         System.setProperty(key, value);
@@ -129,7 +121,6 @@ public class AbstractUrisLoaderTest {
     
     @Test
     public void testGetProperty_isNull() {
-        System.out.println("getProperty");
         String key = "foo";
         String value = "bar";
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
@@ -142,7 +133,6 @@ public class AbstractUrisLoaderTest {
      */
     @Test
     public void testCleanup() {
-        System.out.println("cleanup");
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         instance.cleanup();
     }
@@ -152,17 +142,16 @@ public class AbstractUrisLoaderTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void testParseUriReplacePatterns_uneven() {
-        System.out.println("parseUriReplacePatterns");
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         Properties props = new Properties();
         props.setProperty(Options.URIS_REPLACE_PATTERN, "foo|bar");
         instance.setProperties(props);
         instance.parseUriReplacePatterns();
+        fail();
     }
 
     @Test
     public void testParseUriReplacePatterns() {
-        System.out.println("parseUriReplacePatterns");
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         Properties props = new Properties();
         props.setProperty(Options.URIS_REPLACE_PATTERN, "foo,bar");

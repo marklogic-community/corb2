@@ -48,7 +48,6 @@ public class QueryUrisLoaderTest {
      */
     @Test(expected = NullPointerException.class)
     public void testOpen_nullPropertiesAndNullOptions() throws Exception {
-        System.out.println("open");
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -59,11 +58,11 @@ public class QueryUrisLoaderTest {
         } finally {
             instance.close();
         }
+        fail();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testOpen_withBadUrisReplacePattern() throws Exception {
-        System.out.println("open");
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -77,11 +76,11 @@ public class QueryUrisLoaderTest {
         } finally {
             instance.close();
         }
+        fail();
     }
 
     @Test(expected = CorbException.class)
     public void testOpen_badUriCount() throws Exception {
-        System.out.println("open");
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -112,11 +111,11 @@ public class QueryUrisLoaderTest {
         } finally {
             instance.close();
         }
+        fail();
     }
 
     @Test(expected = CorbException.class)
     public void testOpen_inlineUriModule() throws Exception {
-        System.out.println("open");
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -147,11 +146,11 @@ public class QueryUrisLoaderTest {
         } finally {
             instance.close();
         }
+        fail();
     }
 
     @Test(expected = IllegalStateException.class)
     public void testOpen_noCodeInInline() throws Exception {
-        System.out.println("open");
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -182,11 +181,11 @@ public class QueryUrisLoaderTest {
         } finally {
             instance.close();
         }
+        fail();
     }
 
     @Test(expected = IllegalStateException.class)
     public void testOpen_adHocIsDirectory() throws Exception {
-        System.out.println("open");
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -200,11 +199,11 @@ public class QueryUrisLoaderTest {
         } finally {
             instance.close();
         }
+        fail();
     }
 
     @Test(expected = IllegalStateException.class)
     public void testOpen_adHocIsEmpty() throws Exception {
-        System.out.println("open");
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -221,11 +220,11 @@ public class QueryUrisLoaderTest {
         } finally {
             instance.close();
         }
+        fail();
     }
 
     @Test
     public void testOpen() throws Exception {
-        System.out.println("open");
 
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -265,7 +264,6 @@ public class QueryUrisLoaderTest {
 
     @Test(expected = IllegalStateException.class)
     public void testOpen_badAdhocFilenameIsEmpty() throws Exception {
-        System.out.println("open");
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -279,11 +277,11 @@ public class QueryUrisLoaderTest {
         } finally {
             instance.close();
         }
+        fail();
     }
 
     @Test(expected = IllegalStateException.class)
     public void testOpen_maxOptsFromModuleZero() throws Exception {
-        System.out.println("open");
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -300,11 +298,11 @@ public class QueryUrisLoaderTest {
         } finally {
             instance.close();
         }
+        fail();
     }
 
     @Test(expected = IllegalStateException.class)
     public void testOpen_InvalidMaxOptsFromModuleZero() throws Exception {
-        System.out.println("open");
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -321,6 +319,7 @@ public class QueryUrisLoaderTest {
         } finally {
             instance.close();
         }
+        fail();
     }
 
     /**
@@ -328,7 +327,6 @@ public class QueryUrisLoaderTest {
      */
     @Test
     public void testGetBatchRef() {
-        System.out.println("getBatchRef");
         QueryUrisLoader instance = new QueryUrisLoader();
         String result = instance.getBatchRef();
         instance.close();
@@ -340,7 +338,6 @@ public class QueryUrisLoaderTest {
      */
     @Test
     public void testGetTotalCount() {
-        System.out.println("getTotalCount");
         QueryUrisLoader instance = new QueryUrisLoader();
         int result = instance.getTotalCount();
         instance.close();
@@ -352,7 +349,6 @@ public class QueryUrisLoaderTest {
      */
     @Test
     public void testHasNext_resultSequenceIsNull() throws Exception {
-        System.out.println("hasNext");
         QueryUrisLoader instance = new QueryUrisLoader();
         boolean result = instance.hasNext();
         instance.close();
@@ -361,7 +357,6 @@ public class QueryUrisLoaderTest {
 
     @Test
     public void testHasNext_resultSequenceHasNext() throws CorbException, RequestException {
-        System.out.println("hasNext");
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke request = mock(ModuleInvoke.class);
@@ -392,7 +387,6 @@ public class QueryUrisLoaderTest {
 
     @Test
     public void testHasNext_resultSequenceNotHasNext() throws Exception {
-        System.out.println("hasNext");
         ResultSequence resultSequence = mock(ResultSequence.class);
         when(resultSequence.hasNext()).thenReturn(false);
         QueryUrisLoader instance = new QueryUrisLoader();
@@ -407,7 +401,6 @@ public class QueryUrisLoaderTest {
      */
     @Test
     public void testNext() throws Exception {
-        System.out.println("next");
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke request = mock(ModuleInvoke.class);
@@ -439,10 +432,10 @@ public class QueryUrisLoaderTest {
 
     @Test(expected = NoSuchElementException.class)
     public void testNext_noQueue() throws Exception {
-        System.out.println("next");
 
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.next();
+        fail();
     }
 
     /**
@@ -450,14 +443,12 @@ public class QueryUrisLoaderTest {
      */
     @Test
     public void testClose_nullSession() {
-        System.out.println("close");
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.close();
     }
 
     @Test
     public void testClose() {
-        System.out.println("close");
         Session session = mock(Session.class);
 
         QueryUrisLoader instance = new QueryUrisLoader();
@@ -471,7 +462,6 @@ public class QueryUrisLoaderTest {
      */
     @Test
     public void testCleanup() {
-        System.out.println("cleanup");
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.options = new TransformOptions();
         instance.cs = mock(ContentSource.class);
@@ -494,7 +484,6 @@ public class QueryUrisLoaderTest {
      */
     @Test
     public void testGetProperty_nullProperties() {
-        System.out.println("getProperty");
         String key = "foo";
         QueryUrisLoader instance = new QueryUrisLoader();
         String result = instance.getProperty(key);
@@ -504,7 +493,6 @@ public class QueryUrisLoaderTest {
 
     @Test
     public void testGetProperty() {
-        System.out.println("getProperty");
         String key = "foo";
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.properties = new Properties();
@@ -515,7 +503,6 @@ public class QueryUrisLoaderTest {
 
     @Test
     public void testGetProperty_exists() {
-        System.out.println("getProperty");
         String key = "foo";
         String value = "bar";
         QueryUrisLoader instance = new QueryUrisLoader();

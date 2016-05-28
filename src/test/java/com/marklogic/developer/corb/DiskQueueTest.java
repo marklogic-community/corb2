@@ -49,31 +49,36 @@ public class DiskQueueTest {
     @Test(expected = InvalidParameterException.class)
     public void testDiskQueue_sizeTooSmall() {
         Queue<String> instance = new DiskQueue<String>(0);
+        fail();
     }
 
     @Test(expected = InvalidParameterException.class)
     public void testDiskQueue_tempDirNotDir() throws IOException {
         File tmpFile = File.createTempFile("tmp", "txt");
         Queue<String> instance = new DiskQueue<String>(0, tmpFile);
+        fail();
     }
 
     @Test(expected = InvalidParameterException.class)
     public void testDiskQueue_tempFileDoesNotExist() throws IOException {
         File tmpFile = new File("/does/not/exist");
         Queue<String> instance = new DiskQueue<String>(0, tmpFile);
+        fail();
     }
 
     @Test(expected = InvalidParameterException.class)
     public void testDiskQueue_tempDirIsNull() throws IOException {
         File tmpFile = null;
         Queue<String> instance = new DiskQueue<String>(0, tmpFile);
+        fail();
     }
-    
-     @Test(expected = InvalidParameterException.class)
+
+    @Test(expected = InvalidParameterException.class)
     public void testDiskQueue_tempDirDoesNotExist() throws IOException {
         File tmpFile = TestUtils.createTempDirectory();
         tmpFile.delete();
         Queue<String> instance = new DiskQueue<String>(0, tmpFile);
+        fail();
     }
 
     @Test
@@ -111,7 +116,6 @@ public class DiskQueueTest {
      */
     @Test
     public void testFinalize() throws Exception {
-        System.out.println("finalize");
         DiskQueue<String> instance = new DiskQueue<String>(1);
         try {
             instance.finalize();
@@ -125,9 +129,9 @@ public class DiskQueueTest {
      */
     @Test(expected = RuntimeException.class)
     public void testIterator() {
-        System.out.println("iterator");
         Queue<String> instance = new DiskQueue<String>(1);
         instance.iterator();
+        fail();
     }
 
     /**
@@ -135,7 +139,6 @@ public class DiskQueueTest {
      */
     @Test
     public void testSize() {
-        System.out.println("size");
         Queue<String> instance = new DiskQueue<String>(1);
         assertEquals(0, instance.size());
         instance.add("test");
@@ -148,8 +151,6 @@ public class DiskQueueTest {
      */
     @Test
     public void testOffer() {
-        System.out.println("offer");
-        Object element = null;
         Queue<String> instance = new DiskQueue<String>(1);
         boolean result = instance.offer("test1");
         assertTrue(result);
@@ -157,10 +158,9 @@ public class DiskQueueTest {
 
     @Test(expected = NullPointerException.class)
     public void testOffer_null() {
-        System.out.println("offer");
-        Object element = null;
         Queue<String> instance = new DiskQueue<String>(1);
         instance.offer(null);
+        fail();
     }
 
     /**
@@ -168,7 +168,6 @@ public class DiskQueueTest {
      */
     @Test
     public void testPeek() {
-        System.out.println("peek");
         Queue<String> instance = new DiskQueue<String>(1);
         assertNull(instance.peek());
         String item = "test";
@@ -181,7 +180,6 @@ public class DiskQueueTest {
      */
     @Test
     public void testRemove() {
-        System.out.println("remove");
         Queue<String> instance = new DiskQueue<String>(1);
         String element = "test";
         instance.add(element);
@@ -191,9 +189,9 @@ public class DiskQueueTest {
 
     @Test(expected = IndexOutOfBoundsException.class)
     public void testRemove_whenEmpty() {
-        System.out.println("remove");
         Queue<String> instance = new DiskQueue<String>(1);
         instance.remove();
+        fail();
     }
 
     /**
@@ -201,7 +199,6 @@ public class DiskQueueTest {
      */
     @Test
     public void testPoll() {
-        System.out.println("poll");
         Queue<String> instance = new DiskQueue<String>(1);
         String element = "test";
         instance.add(element);
@@ -211,7 +208,6 @@ public class DiskQueueTest {
 
     @Test
     public void testPoll_whenEmpty() {
-        System.out.println("poll");
         DiskQueue<String> instance = new DiskQueue<String>(1);
         Object result = instance.poll();
         assertNull(result);
@@ -222,7 +218,6 @@ public class DiskQueueTest {
      */
     @Test
     public void testClear() {
-        System.out.println("clear");
         Queue<String> instance = new DiskQueue<String>(1);
         instance.add("test");
         instance.clear();

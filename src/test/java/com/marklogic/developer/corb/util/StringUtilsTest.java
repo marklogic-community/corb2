@@ -33,7 +33,6 @@ public class StringUtilsTest {
 
     @Test
     public void testStringToBoolean_String_empty() {
-        System.out.println("stringToBoolean");
         boolean result = StringUtils.stringToBoolean("");
         assertFalse(result);
     }
@@ -43,21 +42,18 @@ public class StringUtilsTest {
      */
     @Test
     public void testGetPathExtension() {
-        System.out.println("getPathExtension");
         String result = StringUtils.getPathExtension("dir/dir/filename.csv");
         assertEquals("csv", result);
     }
 
     @Test
     public void testGetPathExtension_multipleDotsInPath() {
-        System.out.println("getPathExtension");
         String result = StringUtils.getPathExtension("dir/dir/file.name.csv.txt");
         assertEquals("txt", result);
     }
 
     @Test
     public void testGetPathExtension_noExtension() {
-        System.out.println("getPathExtension");
         String path = "dir/dir/filename";
         String result = StringUtils.getPathExtension("dir/dir/filename");
         assertEquals(path, result);
@@ -68,7 +64,6 @@ public class StringUtilsTest {
      */
     @Test
     public void testJoin_List_String() {
-        System.out.println("join");
         List<String> items = Arrays.asList(new String[]{"a", "b", "c"});
         String result = StringUtils.join(items, ",");
         assertEquals("a,b,c", result);
@@ -76,7 +71,6 @@ public class StringUtilsTest {
 
     @Test
     public void testJoin_List_StringIsNull() {
-        System.out.println("join");
         List<String> items = null;
         String result = StringUtils.join(items, ",");
         assertEquals(null, result);
@@ -84,7 +78,6 @@ public class StringUtilsTest {
 
     @Test
     public void testJoin_emptyList() {
-        System.out.println("join");
         List<String> items = new ArrayList<String>();
         String result = StringUtils.join(items, ",");
         assertEquals("", result);
@@ -95,7 +88,6 @@ public class StringUtilsTest {
      */
     @Test
     public void testJoin_ObjectArr_String() {
-        System.out.println("join");
         Object[] items = new Object[2];
         items[0] = 2;
         items[1] = "foo";
@@ -106,7 +98,6 @@ public class StringUtilsTest {
 
     @Test(expected = NullPointerException.class)
     public void testJoin_ObjectArr_StringIsNull() {
-        System.out.println("join");
         Object[] items = null;
         String delim = "|";
         StringUtils.join(items, delim);
@@ -117,7 +108,6 @@ public class StringUtilsTest {
      */
     @Test
     public void testJoin_StringArr_String() {
-        System.out.println("join");
         String[] items = new String[]{"a", "b", "c"};
         String delim = ",";
         String result = StringUtils.join(items, delim);
@@ -126,7 +116,6 @@ public class StringUtilsTest {
 
     @Test(expected = NullPointerException.class)
     public void testJoin_StringArr_StringIsNull() {
-        System.out.println("join");
         String[] items = null;
         String delim = ",";
         StringUtils.join(items, delim);
@@ -137,7 +126,6 @@ public class StringUtilsTest {
      */
     @Test
     public void testStringToBoolean_String() {
-        System.out.println("stringToBoolean");
         assertFalse(StringUtils.stringToBoolean(""));
         assertFalse(StringUtils.stringToBoolean("0"));
         assertFalse(StringUtils.stringToBoolean("f"));
@@ -151,7 +139,6 @@ public class StringUtilsTest {
 
     @Test
     public void testStringToBoolean_String_true() {
-        System.out.println("stringToBoolean");
         assertTrue(StringUtils.stringToBoolean("true"));
         assertTrue(StringUtils.stringToBoolean("asdf"));
         assertTrue(StringUtils.stringToBoolean("123"));
@@ -164,7 +151,6 @@ public class StringUtilsTest {
      */
     @Test
     public void testStringToBoolean_String_boolean() {
-        System.out.println("stringToBoolean");
         assertFalse(StringUtils.stringToBoolean(null, false));
         assertTrue(StringUtils.stringToBoolean(null, true));
     }
@@ -174,7 +160,6 @@ public class StringUtilsTest {
      */
     @Test
     public void testBuildModulePath_Class() {
-        System.out.println("buildModulePath");
         String result = StringUtils.buildModulePath(String.class);
         assertEquals("/java/lang/String.xqy", result);
     }
@@ -184,7 +169,6 @@ public class StringUtilsTest {
      */
     @Test
     public void testBuildModulePath_Package_String() {
-        System.out.println("buildModulePath");
         Package modulePackage = Package.getPackage("com.marklogic.developer.corb.util");
         String result = StringUtils.buildModulePath(modulePackage, "Utilities");
         assertEquals("/com/marklogic/developer/corb/util/Utilities.xqy", result);
@@ -192,7 +176,6 @@ public class StringUtilsTest {
 
     @Test
     public void testBuildModulePath_Package_String_withSuffix() {
-        System.out.println("buildModulePath");
         Package _package = Package.getPackage("com.marklogic.developer.corb.util");
         String result = StringUtils.buildModulePath(_package, "Utilities.xqy");
         assertEquals("/com/marklogic/developer/corb/util/Utilities.xqy", result);
@@ -200,7 +183,6 @@ public class StringUtilsTest {
 
     @Test
     public void testBuildModulePath() {
-        System.out.println("buildModulePath");
         assertEquals("/Utilities.xqy", StringUtils.buildModulePath("/", "/Utilities.xqy"));
         assertEquals("/Utilities.xqy", StringUtils.buildModulePath("/", "Utilities.xqy"));
         assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo", "Utilities.xqy"));
@@ -208,7 +190,7 @@ public class StringUtilsTest {
         assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo/", "Utilities.xqy"));
         assertEquals("/foo//", StringUtils.buildModulePath("/foo/", "/"));
     }
-    
+
     /**
      * Test of dumpHex method, of class Utilities.
      *
@@ -216,26 +198,24 @@ public class StringUtilsTest {
      */
     @Test
     public void testDumpHex() throws Exception {
-        System.out.println("dumpHex");
         String result = StringUtils.dumpHex("abcd", "UTF-8");
         assertEquals("61 62 63 64", result);
     }
 
     @Test(expected = NullPointerException.class)
     public void testDumpHex_null() throws Exception {
-        System.out.println("dumpHex");
         StringUtils.dumpHex(null, "UTF-8");
+        fail();
     }
 
     @Test(expected = UnsupportedEncodingException.class)
     public void testDumpHex_unsupportedEncoding() throws Exception {
-        System.out.println("dumpHex");
         StringUtils.dumpHex("abcd", "does not exist");
+        fail();
     }
 
     @Test
     public void testIsBlank() {
-        System.out.println("isBlank");
         assertTrue(StringUtils.isBlank(""));
         assertTrue(StringUtils.isBlank("  "));
         assertTrue(StringUtils.isBlank(" \n"));
@@ -244,50 +224,42 @@ public class StringUtilsTest {
 
     @Test
     public void testTrim() {
-        System.out.println("trim");
         assertEquals("foo", StringUtils.trim("  foo  "));
     }
 
     @Test
     public void testTrim_blank() {
-        System.out.println("trim");
         assertEquals("", StringUtils.trim("    "));
     }
 
     @Test
     public void testTrim_null() {
-        System.out.println("trim");
         assertNull(StringUtils.trim(null));
     }
 
     @Test
     public void testTrimToEmpty() {
-        System.out.println("trimToEmpty");
         assertEquals("foo", StringUtils.trimToEmpty("  foo  "));
     }
 
     @Test
     public void testTrimToEmpty_null() {
-        System.out.println("trimToEmpty");
         assertEquals("", StringUtils.trimToEmpty(null));
     }
 
     @Test
     public void testTrimToEmpty_blank() {
-        System.out.println("trimToEmpty");
         assertEquals("", StringUtils.trimToEmpty("   "));
     }
 
     @Test
     public void testIsAdhoc() {
-        System.out.println("isAdhoc");
         assertTrue(StringUtils.isAdhoc("/myModule.xqy|ADHOC"));
         assertTrue(StringUtils.isAdhoc("/myModule.xqy|adhoc"));
     }
 
     @Test
     public void testIsAdhoc_doesNotMatch() {
-        System.out.println("isAdhoc");
         assertFalse(StringUtils.isAdhoc("/myModule.xqy"));
         assertFalse(StringUtils.isAdhoc("adhoc.xqy"));
         assertFalse(StringUtils.isAdhoc("/myModule.xqy|adhoc "));
@@ -295,7 +267,6 @@ public class StringUtilsTest {
 
     @Test
     public void testIsJavaScriptModule() {
-        System.out.println("isJavaScriptModule");
         assertTrue(StringUtils.isJavaScriptModule("/myModule.js"));
         assertTrue(StringUtils.isJavaScriptModule("/myModule.sjs"));
         assertTrue(StringUtils.isJavaScriptModule("/myModule.JS"));
@@ -313,7 +284,6 @@ public class StringUtilsTest {
 
     @Test
     public void testIsJavaScript_doesNotMatch() {
-        System.out.println("isJavaScriptModule");
         assertFalse(StringUtils.isJavaScriptModule(null));
         assertFalse(StringUtils.isJavaScriptModule(""));
         assertFalse(StringUtils.isJavaScriptModule("/myModule.xqy"));
@@ -322,7 +292,7 @@ public class StringUtilsTest {
         assertFalse(StringUtils.isJavaScriptModule("/myModule.js.xqy|ADHOC"));
         assertFalse(StringUtils.isJavaScriptModule("/myModule.jsx"));
         assertFalse(StringUtils.isJavaScriptModule("INLINE-XQUERY|for $i in (1 to 5) return $i"));
-        assertFalse(StringUtils.isJavaScriptModule("INLINE-XQUERY|var foo = 1; return foo;|ADHOC"));  
+        assertFalse(StringUtils.isJavaScriptModule("INLINE-XQUERY|var foo = 1; return foo;|ADHOC"));
     }
 
     /**
@@ -330,7 +300,6 @@ public class StringUtilsTest {
      */
     @Test
     public void testIsInlineModule() {
-        System.out.println("isInlineModule");
         String code = "var i = 0; return i;";
         assertTrue(StringUtils.isInlineModule("INLINE-JAVASCRIPT|" + code));
         assertTrue(StringUtils.isInlineModule("INLINE-XQUERY|" + code));
@@ -342,18 +311,16 @@ public class StringUtilsTest {
 
     @Test
     public void testIsInlineModule_false() {
-        System.out.println("isInlineModule");
         String code = "var i = 0; return i;";
         assertFalse(StringUtils.isInlineModule("INLINE-JAVASCRIPT" + code)); //missing the |
         assertFalse(StringUtils.isInlineModule("INLINE-RUBY|" + code)); //wrong language
     }
-    
+
     /**
      * Test of inlineModuleLanguage method, of class StringUtils.
      */
     @Test
     public void testInlineModuleLanguage_JAVASCRIPT() {
-        System.out.println("inlineModuleLanguage");
         String code = "var i = 0; return i;";
         String value = "INLINE-JAVASCRIPT|" + code + "|ADHOC";
         String result = StringUtils.inlineModuleLanguage(value);
@@ -362,47 +329,42 @@ public class StringUtilsTest {
 
     @Test
     public void testInlineModuleLanguage_XQUERY() {
-        System.out.println("inlineModuleLanguage");
         String code = "for $i in (1 to 10) return $i";
         String value = "INLINE-XQUERY|" + code;
         String result = StringUtils.inlineModuleLanguage(value);
         assertEquals("XQUERY", result);
     }
-    
+
     @Test
     public void testInlineModuleLanguage_null() {
-        System.out.println("inlineModuleLanguage");
         String result = StringUtils.inlineModuleLanguage(null);
         assertEquals("", result);
     }
-    
+
     /**
      * Test of inlineModuleCode method, of class StringUtils.
      */
     @Test
     public void testInlineModuleCode() {
-        System.out.println("inlineModuleCode");
         String code = "var i = 0; return i;";
         String value = "INLINE-JAVASCRIPT|" + code + "|ADHOC";
-        
+
         String result = StringUtils.getInlineModuleCode(value);
         assertEquals(code, result);
     }
-    
+
     @Test
     public void testInlineModuleCode_badLanguage() {
-        System.out.println("inlineModuleCode");
         String code = "for $i in (1 to 10) return $i";
         String value = "INLINE-JAVA|" + code + "|ADHOC";
-        
+
         String result = StringUtils.getInlineModuleCode(value);
         assertNotEquals(code, result);
     }
-    
+
     @Test
     public void testInlineModuleCode_null() {
-        System.out.println("inlineModuleCode");
-        
+
         String result = StringUtils.getInlineModuleCode(null);
         assertEquals("", result);
     }

@@ -67,6 +67,7 @@ public class ManagerTest {
     @Rule
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
     private final TestHandler testLogger = new TestHandler();
+    private static final Logger logger = Logger.getLogger(Manager.class.getName());
     public static final String XCC_CONNECTION_URI = "xcc://admin:admin@localhost:2223/FFE";
     public static final String COLLECTION_NAME = "StringPassedToTheURIsModule";
     public static final String XQUERY_MODULE = "src/test/resources/transform.xqy|ADHOC";
@@ -95,7 +96,6 @@ public class ManagerTest {
     public void setUp()
             throws Exception {
         clearSystemProperties();
-        Logger logger = Logger.getLogger(Manager.class.getName());
         logger.addHandler(testLogger);
         File tempDir = TestUtils.createTempDirectory();
         EXPORT_FILE_DIR = tempDir.toString();
@@ -121,6 +121,7 @@ public class ManagerTest {
 
         RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
         cbp.rejectedExecution(r, threadPool);
+        fail();
     }
 
     @Test
@@ -144,6 +145,7 @@ public class ManagerTest {
         threadPool.getQueue();
         RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
         cbp.rejectedExecution(r, threadPool);
+        fail();
     }
 
     @Test
@@ -168,7 +170,6 @@ public class ManagerTest {
      */
     @Test
     public void testInit_nullArgs_properties() throws Exception {
-        System.out.println("init");
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
@@ -181,7 +182,6 @@ public class ManagerTest {
 
     @Test
     public void testInit_blankCollection() throws Exception {
-        System.out.println("init");
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
@@ -196,7 +196,6 @@ public class ManagerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testInit_urisFileDoesNoteExist() throws Exception {
-        System.out.println("init");
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
@@ -206,11 +205,11 @@ public class ManagerTest {
 
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
+        fail();
     }
 
     @Test
     public void testInit_nullArgs_emptyProperties() throws Exception {
-        System.out.println("init");
         String[] args = null;
         Properties props = new Properties();
         Manager instance = getMockManagerWithEmptyResults();
@@ -224,32 +223,31 @@ public class ManagerTest {
      */
     @Test(expected = NullPointerException.class)
     public void testInitOptions_nullArgs() throws Exception {
-        System.out.println("initOptions");
         String[] args = null;
         Manager instance = getMockManagerWithEmptyResults();
         instance.initOptions(args);
+        fail();
     }
 
     @Test(expected = NullPointerException.class)
     public void testInitOptions() throws Exception {
-        System.out.println("initOptions");
         String[] args = {};
         Manager instance = new Manager();
         instance.initOptions(args);
+        fail();
     }
 
     @Test(expected = NullPointerException.class)
     public void testInitOptions_withEmptyProperties() throws Exception {
-        System.out.println("initOptions");
         String[] args = null;
         Manager instance = getMockManagerWithEmptyResults();
         instance.properties = new Properties();
         instance.initOptions(args);
+        fail();
     }
 
     @Test
     public void testInitOptions_urisFileIsBlank() throws Exception {
-        System.out.println("init");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[15] = "      ";
@@ -263,7 +261,6 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_urisFileIsNull() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[15] = null;
@@ -277,7 +274,6 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_setXQUERY_MODULE_property() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[2] = null;
@@ -291,7 +287,6 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_setPROCESS_MODULE_property() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[2] = "";//process-module
@@ -305,7 +300,6 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_setInstall_property_true() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[7] = "true";//install
@@ -317,7 +311,6 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_setInstall_property_one() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[7] = "1";//install
@@ -329,7 +322,6 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_setInstall_property_maybe() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[7] = "maybe";//install
@@ -341,7 +333,6 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_setDISK_QUEUE_MAX_IN_MEMORY_SIZE_property() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         String[] args = getDefaultArgs();
 
@@ -354,7 +345,6 @@ public class ManagerTest {
 
     @Test(expected = NumberFormatException.class)
     public void testInitOptions_setDISK_QUEUE_MAX_IN_MEMORY_SIZE_property_NaN() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         String[] args = getDefaultArgs();
 
@@ -362,11 +352,11 @@ public class ManagerTest {
         props.setProperty("DISK-QUEUE-MAX-IN-MEMORY-SIZE", "ten");
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
+        fail();
     }
 
     @Test
     public void testInitOptions_missingPROCESS_MODULE() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[2] = "";
@@ -379,7 +369,6 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_normalizeLegacySystemProperties() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         System.setProperty("XQUERY-MODULE", PROCESS_MODULE);
         System.setProperty("XQUERY-MODULE.foo", "process-bar");
@@ -408,7 +397,6 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_normalizeLegacyProperties() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[2] = null; //process-module
@@ -435,18 +423,17 @@ public class ManagerTest {
 
     @Test(expected = NumberFormatException.class)
     public void testInitOptions_batchSize_parseError() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
         props.setProperty("BATCH-SIZE", "one");
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
+        fail();
     }
 
     @Test
     public void testInitOptions_batchSize() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
@@ -458,7 +445,6 @@ public class ManagerTest {
 
     @Test
     public void testInit_failOnError_falseCaseInsensitive() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         System.setProperty("FAIL-ON-ERROR", "False");
         String[] args = getDefaultArgs();
@@ -471,7 +457,6 @@ public class ManagerTest {
 
     @Test
     public void testInit_failOnErrorInvalidValue() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         System.setProperty("FAIL-ON-ERROR", "No");
         String[] args = getDefaultArgs();
@@ -484,7 +469,6 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_ensurePropertiesAreSet() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         System.setProperty("ERROR-FILE-NAME", EXPORT_FILE_DIR + "/out");
         System.setProperty("EXPORT-FILE-PART-EXT", "pt");
@@ -501,7 +485,6 @@ public class ManagerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testInitOptions_exportDirNotExists() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
 
         String[] args = getDefaultArgs();
@@ -510,11 +493,11 @@ public class ManagerTest {
         Properties props = new Properties();
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
+        fail();
     }
 
     @Test
     public void testInitOptions_exportFileAndErrorFileExists() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         String errorFilename = "error.txt";
         File errorFile = new File(EXPORT_FILE_DIR, errorFilename);
@@ -533,7 +516,6 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_clearExportFilePartExt() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
 
         System.setProperty("EXPORT-FILE-PART-EXT", "exp");
@@ -549,7 +531,6 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_defaultOptions() throws Exception {
-        System.out.println("initOptions");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         //args[2] = null;
@@ -593,7 +574,6 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_initModule() throws Exception {
-        System.out.println("init");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
@@ -605,7 +585,6 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_processTaskClass() throws Exception {
-        System.out.println("init");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
@@ -617,7 +596,6 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_customUrisLoader() throws Exception {
-        System.out.println("init");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         String loader = "com.marklogic.developer.corb.FileUrisLoader";
@@ -630,7 +608,6 @@ public class ManagerTest {
 
     @Test
     public void testInitOptions_InstallWithBlankModules() throws Exception {
-        System.out.println("init");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[4] = "src/test/resources/selector.xqy";
@@ -647,7 +624,6 @@ public class ManagerTest {
 
     @Test(expected = NullPointerException.class)
     public void testInitOptions_InstallWithMissingModule() throws Exception {
-        System.out.println("init");
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[4] = "src/test/resources/doesNotExist.xqy";
@@ -655,11 +631,11 @@ public class ManagerTest {
         Properties props = new Properties();
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
+        fail();
     }
 
     @Test
     public void testNormalizeLegacyProperties_whenPropertiesIsNull() throws RequestException {
-        System.out.println("normalizeLegacyProperties");
         Manager manager = getMockManagerWithEmptyResults();
         manager.properties = null;
         manager.normalizeLegacyProperties();
@@ -668,7 +644,6 @@ public class ManagerTest {
 
     @Test
     public void testNormalizeLegacyProperties() throws RequestException {
-        System.out.println("normalizeLegacyProperties");
         Properties props = new Properties();
         props.setProperty("XQUERY-MODULE", "foo");
         props.setProperty("XQUERY-MODULE.bar", "baz");
@@ -682,7 +657,6 @@ public class ManagerTest {
 
     @Test
     public void testNormalizeLegacyProperties_precedenceChecks() throws RequestException {
-        System.out.println("normalizeLegacyProperties");
         Properties props = new Properties();
         props.setProperty("PROCESS-MODULE.bar", "foo");
         props.setProperty("XQUERY-MODULE.bar", "baz");
@@ -698,7 +672,6 @@ public class ManagerTest {
      */
     @Test
     public void testGetTaskCls() throws Exception {
-        System.out.println("getTaskCls");
         String type = "";
         String className = "com.marklogic.developer.corb.Transform";
         Manager instance = new Manager();
@@ -709,13 +682,13 @@ public class ManagerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testGetTaskCls_notTaskClass() throws Exception {
-        System.out.println("getTaskCls");
         String type = "";
         String className = "java.lang.String";
         Manager instance = new Manager();
         Class<? extends Task> expResult = Transform.class;
         Class<? extends Task> result = instance.getTaskCls(type, className);
         assertEquals(expResult, result);
+        fail();
     }
 
     /**
@@ -723,7 +696,6 @@ public class ManagerTest {
      */
     @Test
     public void testGetUrisLoaderCls() throws Exception {
-        System.out.println("getUrisLoaderCls");
         String className = "com.marklogic.developer.corb.FileUrisLoader";
         Manager instance = new Manager();
         Class<? extends UrisLoader> expResult = FileUrisLoader.class;
@@ -733,20 +705,20 @@ public class ManagerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testGetUrisLoaderCls_notUrisClass() throws Exception {
-        System.out.println("getUrisLoaderCls");
         String className = "java.lang.String";
         Manager instance = new Manager();
         Class<? extends UrisLoader> expResult = FileUrisLoader.class;
         Class<? extends UrisLoader> result = instance.getUrisLoaderCls(className);
         assertEquals(expResult, result);
+        fail();
     }
 
     @Test(expected = ClassNotFoundException.class)
     public void testGetUrisLoaderCls_badClassname() throws Exception {
-        System.out.println("getUrisLoaderCls");
         String className = "does.not.Exist";
         Manager instance = new Manager();
         instance.getUrisLoaderCls(className);
+        fail();
     }
 
     /**
@@ -754,7 +726,6 @@ public class ManagerTest {
      */
     @Test
     public void testUsage() {
-        System.out.println("usage");
         Manager instance = new Manager();
         ByteArrayOutputStream outContent = new ByteArrayOutputStream();
         System.setErr(new PrintStream(outContent));
@@ -767,31 +738,30 @@ public class ManagerTest {
      */
     @Test(expected = IllegalArgumentException.class)
     public void testRun_missingURIS_MODULE_FILE_AND_LOADER() throws Exception {
-        System.out.println("run");
         Manager instance = new Manager();
         instance.run();
+        fail();
     }
 
     @Test(expected = NullPointerException.class)
     public void testRun_getURILoader_withURIS_MODULE_noContentSource() throws Exception {
-        System.out.println("run");
         Manager instance = new Manager();
         instance.options.setUrisModule("someFile.xqy");
         instance.run();
+        fail();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testRun_getURILoader_withURIS_MODULE_invalidCollection() throws Exception {
-        System.out.println("run");
         Manager instance = new Manager();
         instance.contentSource = ContentSourceFactory.newContentSource(new URI(XCC_CONNECTION_URI));
         instance.options.setUrisModule("someFile.xqy");
         instance.run();
+        fail();
     }
-    
+
     @Test
     public void testRun_getURILoader_withURIS_MODULE() throws Exception {
-        System.out.println("run");
         Manager instance = getMockManagerWithEmptyResults();
         instance.collection = "Modules";
         instance.options.setUrisModule("someFile.xqy");
@@ -803,7 +773,6 @@ public class ManagerTest {
      */
     @Test
     public void testRegisterStatusInfo() throws RequestException {
-        System.out.println("registerStatusInfo");
         String xccRootValue = "xccRootValue";
 
         ContentSource contentSource = mock(ContentSource.class);
@@ -838,9 +807,9 @@ public class ManagerTest {
 
     @Test(expected = NullPointerException.class)
     public void testRegisterStatusInfo_nullContentSource() {
-        System.out.println("registerStatusInfo");
         Manager instance = new Manager();
         instance.registerStatusInfo();
+        fail();
     }
 
     /**
@@ -848,7 +817,6 @@ public class ManagerTest {
      */
     @Test
     public void testLogProperties() throws RequestException {
-        System.out.println("logProperties");
         Properties props = new Properties();
         props.setProperty("key1", "value1");
         props.setProperty("key2", "value2");
@@ -861,7 +829,6 @@ public class ManagerTest {
 
     @Test
     public void testLogProperties_nullProperties() throws RequestException {
-        System.out.println("logProperties");
         Manager instance = getMockManagerWithEmptyResults();
         instance.logProperties();
         List<LogRecord> records = testLogger.getLogRecords();
@@ -873,7 +840,6 @@ public class ManagerTest {
      */
     @Test
     public void testStop_0args() {
-        System.out.println("stop");
         Manager instance = new Manager();
         instance.stop();
         List<LogRecord> records = testLogger.getLogRecords();
@@ -886,7 +852,6 @@ public class ManagerTest {
      */
     @Test
     public void testStop_ExecutionException() {
-        System.out.println("stop");
         ExecutionException e = new ExecutionException("test", new Error());
         Manager instance = new Manager();
         instance.stop(e);
@@ -938,10 +903,10 @@ public class ManagerTest {
             URIS_FILE};
         return args;
     }
-    
+
     public static Manager getMockManagerWithEmptyResults() throws RequestException {
         Manager manager = new MockManager();
-        
+
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke moduleInvoke = mock(ModuleInvoke.class);
@@ -950,9 +915,9 @@ public class ManagerTest {
         ResultItem uriCountResult = mock(ResultItem.class);
         XdmItem batchRefItem = mock(XdmItem.class);
         XdmItem uriCount = mock(XdmItem.class);
-        
+
         when(contentSource.newSession()).thenReturn(session);
-        when(contentSource.newSession((String)any())).thenReturn(session);
+        when(contentSource.newSession((String) any())).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(moduleInvoke);
         when(session.submitRequest((Request) any())).thenReturn(res);
         when(res.next()).thenReturn(resultItem).thenReturn(uriCountResult).thenReturn(null);
@@ -964,8 +929,9 @@ public class ManagerTest {
         manager.contentSource = contentSource;
         return manager;
     }
-    
+
     private static class MockManager extends Manager {
+
         //Want to retain the mock contentSoure that we set in our tests
         @Override
         protected void prepareContentSource() throws XccConfigException, GeneralSecurityException {

@@ -36,7 +36,6 @@ public class PausableThreadPoolExecutorTest {
      */
     @Test
     public void testPauseIsPausedResumeIsRunning() {
-        System.out.println("pause, isPaused, resume");
         BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
         PausableThreadPoolExecutor instance = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);

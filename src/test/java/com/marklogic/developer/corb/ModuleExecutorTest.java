@@ -66,10 +66,35 @@ public class ModuleExecutorTest {
     @Rule
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
     private final TestHandler testLogger = new TestHandler();
+    private static final Logger logger = Logger.getLogger(ModuleExecutor.class.getName());
     public static final String XCC_CONNECTION_URI = "xcc://admin:admin@localhost:2223/FFE";
     public static final String OPTIONS_FILE = "src/test/resources/helloWorld.properties";
     public static final String EXPORT_FILE_NAME = "src/test/resources/helloWorld.txt";
     public static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
+
+    /**
+     * Perform pre-test initialization.
+     *
+     * @throws Exception if the initialization fails for some reason
+     */
+    @Before
+    public void setUp()
+            throws Exception {
+        clearSystemProperties();
+        logger.addHandler(testLogger);
+    }
+
+    /**
+     * Perform post-test clean-up.
+     *
+     * @throws Exception if the clean-up fails for some reason
+     */
+    @After
+    public void tearDown()
+            throws Exception {
+        // Add additional tear down code here
+        clearSystemProperties();
+    }
 
     /**
      * Run the ModuleExecutor(URI) constructor test.
@@ -458,6 +483,7 @@ public class ModuleExecutorTest {
         ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
         executor.init(args);
         executor.run();
+        fail();
     }
 
     @Test(expected = IllegalStateException.class)
@@ -473,6 +499,7 @@ public class ModuleExecutorTest {
         ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
         executor.init(args);
         executor.run();
+        fail();
     }
 
     /**
@@ -492,35 +519,6 @@ public class ModuleExecutorTest {
 
         assertNotNull(props);
         assertFalse(props.isEmpty());
-    }
-
-    /**
-     * Perform pre-test initialization.
-     *
-     * @throws Exception if the initialization fails for some reason
-     *
-     * @generatedBy CodePro at 9/18/15 12:45 PM
-     */
-    @Before
-    public void setUp()
-            throws Exception {
-        clearSystemProperties();
-        Logger logger = Logger.getLogger(ModuleExecutor.class.getName());
-        logger.addHandler(testLogger);
-    }
-
-    /**
-     * Perform post-test clean-up.
-     *
-     * @throws Exception if the clean-up fails for some reason
-     *
-     * @generatedBy CodePro at 9/18/15 12:45 PM
-     */
-    @After
-    public void tearDown()
-            throws Exception {
-        // Add additional tear down code here
-        clearSystemProperties();
     }
 
     private Properties getProperties() {
@@ -599,7 +597,6 @@ public class ModuleExecutorTest {
      */
     @Test
     public void testMain_nullArgs() throws Exception {
-        System.out.println("main");
         String[] args = null;
         exit.expectSystemExit();
         ModuleExecutor.main(args);
@@ -607,7 +604,6 @@ public class ModuleExecutorTest {
 
     @Test
     public void testMain_emptyArgs() throws Exception {
-        System.out.println("main");
         String[] args = new String[]{};
         exit.expectSystemExit();
         ModuleExecutor.main(args);
@@ -618,7 +614,6 @@ public class ModuleExecutorTest {
      */
     @Test
     public void testInit_StringArr_nullProperties() throws Exception {
-        System.out.println("init");
         String[] args = null;
         Properties props = null;
         ModuleExecutor instance = new ModuleExecutor();
@@ -628,7 +623,6 @@ public class ModuleExecutorTest {
 
     @Test
     public void testInit_StringArr_emptyProperties() throws Exception {
-        System.out.println("init");
         String[] args = null;
         Properties props = new Properties();
         ModuleExecutor instance = new ModuleExecutor();
@@ -641,15 +635,14 @@ public class ModuleExecutorTest {
      */
     @Test(expected = NullPointerException.class)
     public void testInitOptions_missingPROCESS_MODULE() throws Exception {
-        System.out.println("initOptions");
         String[] args = new String[]{};
         ModuleExecutor instance = new ModuleExecutor();
         instance.initOptions(args);
+        fail();
     }
 
     @Test
     public void testInitOptions() throws Exception {
-        System.out.println("initOptions");
         String exportDir = TestUtils.createTempDirectory().toString();
         String[] args = new String[]{"foo", "processModule", "", "", exportDir};
         ModuleExecutor instance = new ModuleExecutor();
@@ -659,11 +652,11 @@ public class ModuleExecutorTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testInitOptions_exportDirDoesNotExist() throws Exception {
-        System.out.println("initOptions");
         String exportDir = "does/not/exist";
         String[] args = new String[]{"foo", "processModule", "", "", exportDir};
         ModuleExecutor instance = new ModuleExecutor();
         instance.initOptions(args);
+        fail();
     }
 
     /**
@@ -671,7 +664,6 @@ public class ModuleExecutorTest {
      */
     @Test
     public void testUsage() {
-        System.out.println("usage");
         ModuleExecutor instance = new ModuleExecutor();
         instance.usage();
     }
@@ -681,9 +673,9 @@ public class ModuleExecutorTest {
      */
     @Test(expected = NullPointerException.class)
     public void testRun_nullContentSource() throws Exception {
-        System.out.println("run");
         ModuleExecutor instance = new ModuleExecutor();
         instance.run();
+        fail();
     }
 
     /**
@@ -691,7 +683,6 @@ public class ModuleExecutorTest {
      */
     @Test
     public void testGetProperty() {
-        System.out.println("getProperty");
         String key = "foo";
         ModuleExecutor instance = new ModuleExecutor();
         String result = instance.getProperty(key);
@@ -703,7 +694,6 @@ public class ModuleExecutorTest {
      */
     @Test
     public void testGetValueAsBytes_withXdmBinary() {
-        System.out.println("getValueAsBytes");
         XdmBinary item = mock(XdmBinary.class);
         byte[] expected = {'a', 'b', 'c'};
         when(item.asBinaryData()).thenReturn(expected);
@@ -714,7 +704,6 @@ public class ModuleExecutorTest {
 
     @Test
     public void testGetValueAsBytes() {
-        System.out.println("getValueAsBytes");
         XdmItem item = mock(XdmItem.class);
         String expected = "foo";
         when(item.asString()).thenReturn(expected);
@@ -725,40 +714,39 @@ public class ModuleExecutorTest {
 
     @Test
     public void testGetValueAsBytes_null() throws RequestException {
-        System.out.println("getValueAsBytes");
         ModuleExecutor instance = getMockModuleExecutorWithEmptyResults();
         byte[] result = instance.getValueAsBytes(null);
         assertArrayEquals(new byte[]{}, result);
     }
-    
+
     public static ModuleExecutor getMockModuleExecutorWithEmptyResults() throws RequestException {
         ModuleExecutor manager = new MockModuleExecutor();
-        
+
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke moduleInvoke = mock(ModuleInvoke.class);
         AdhocQuery adhocQuery = mock(AdhocQuery.class);
-        
+
         ResultSequence res = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         ResultItem uriCountResult = mock(ResultItem.class);
         XdmItem batchRefItem = mock(XdmItem.class);
         XdmItem exampleValue = mock(XdmItem.class);
         XdmItem uriCount = mock(XdmItem.class);
-        
+
         when(contentSource.newSession()).thenReturn(session);
-        when(contentSource.newSession((String)any())).thenReturn(session);
+        when(contentSource.newSession((String) any())).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(moduleInvoke).thenReturn(moduleInvoke);
         when(session.newAdhocQuery(anyString())).thenReturn(adhocQuery);
-        
+
         when(session.submitRequest((Request) any())).thenReturn(res);
         //First, return false when registerInfo() is calling.
         when(res.hasNext()).thenReturn(Boolean.FALSE).thenReturn(Boolean.TRUE).thenReturn(Boolean.TRUE).thenReturn(Boolean.FALSE);
         when(res.next()).thenReturn(resultItem).thenReturn(uriCountResult).thenReturn(resultItem).thenReturn(null);
-        
+
         when(resultItem.getItem()).thenReturn(batchRefItem).thenReturn(exampleValue);
         when(uriCountResult.getItem()).thenReturn(uriCount);
-        
+
         when(batchRefItem.asString()).thenReturn("batchRefVal");
         when(exampleValue.asString()).thenReturn("foo");
         when(uriCount.asString()).thenReturn("1");
@@ -766,8 +754,9 @@ public class ModuleExecutorTest {
         manager.contentSource = contentSource;
         return manager;
     }
-    
+
     private static class MockModuleExecutor extends ModuleExecutor {
+
         //Want to retain the mock contentSoure that we set in our tests
         @Override
         protected void prepareContentSource() throws XccConfigException, GeneralSecurityException {

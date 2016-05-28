@@ -39,7 +39,6 @@ public class FileXMLUrisLoaderTest {
      */
     @Test
     public void testSetOptions_null() {
-        System.out.println("setOptions");
         TransformOptions options = null;
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.setOptions(options);
@@ -49,7 +48,6 @@ public class FileXMLUrisLoaderTest {
 
     @Test
     public void testSetOptions() {
-        System.out.println("setOptions");
         TransformOptions options = mock(TransformOptions.class);
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.setOptions(options);
@@ -62,7 +60,6 @@ public class FileXMLUrisLoaderTest {
      */
     @Test
     public void testSetContentSource_null() {
-        System.out.println("setContentSource");
         ContentSource cs = null;
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.setContentSource(cs);
@@ -75,7 +72,6 @@ public class FileXMLUrisLoaderTest {
      */
     @Test
     public void testSetCollection_null() {
-        System.out.println("setCollection");
         String collection = null;
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.setCollection(collection);
@@ -85,7 +81,6 @@ public class FileXMLUrisLoaderTest {
 
     @Test
     public void testSetCollection() {
-        System.out.println("setCollection");
         String collection = "foo";
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.setCollection(collection);
@@ -98,7 +93,6 @@ public class FileXMLUrisLoaderTest {
      */
     @Test
     public void testSetProperties_null() {
-        System.out.println("setProperties");
         Properties properties = null;
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.setProperties(properties);
@@ -108,7 +102,6 @@ public class FileXMLUrisLoaderTest {
 
     @Test
     public void testSetProperties_properties() {
-        System.out.println("setProperties");
         Properties properties = new Properties();
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.setProperties(properties);
@@ -133,7 +126,6 @@ public class FileXMLUrisLoaderTest {
      */
     @Test
     public void testOpen() throws Exception {
-        System.out.println("open");
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.open();
         assertNotNull(instance.nodeIterator);
@@ -151,7 +143,6 @@ public class FileXMLUrisLoaderTest {
 
     @Test
     public void testOpenWithoutXPath() throws Exception {
-        System.out.println("open");
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.properties.remove(Options.XML_NODE);
 
@@ -171,7 +162,6 @@ public class FileXMLUrisLoaderTest {
 
     @Test
     public void testSelectRootNode() throws Exception {
-        System.out.println("open");
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.properties.setProperty(Options.XML_NODE, "/");
 
@@ -187,7 +177,6 @@ public class FileXMLUrisLoaderTest {
 
     @Test
     public void testSelectDocumentElement() throws Exception {
-        System.out.println("open");
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.properties.setProperty(Options.XML_NODE, "/*");
 
@@ -203,7 +192,6 @@ public class FileXMLUrisLoaderTest {
 
     @Test
     public void testSelectAttributes() throws Exception {
-        System.out.println("open");
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.properties.setProperty("XML-NODE", "/root/a/@*");
         instance.open();
@@ -222,7 +210,6 @@ public class FileXMLUrisLoaderTest {
 
     @Test
     public void testSelectTextNodes() throws Exception {
-        System.out.println("open");
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.properties.setProperty("XML-NODE", "/root/a/text()");
         instance.open();
@@ -240,7 +227,6 @@ public class FileXMLUrisLoaderTest {
 
     @Test
     public void testSelectComments() throws Exception {
-        System.out.println("open");
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.properties.setProperty("XML-NODE", "//comment()");
         instance.open();
@@ -256,7 +242,6 @@ public class FileXMLUrisLoaderTest {
 
     @Test
     public void testSelectProcessingInstructions() throws Exception {
-        System.out.println("open");
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.properties.setProperty(Options.XML_NODE, "//processing-instruction()");
         instance.open();
@@ -272,7 +257,6 @@ public class FileXMLUrisLoaderTest {
 
     @Test
     public void testSelectWithUnion() throws Exception {
-        System.out.println("open");
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.properties.setProperty("XML-NODE", "//comment() | //@* | /*/*/text()");
         instance.open();
@@ -297,7 +281,6 @@ public class FileXMLUrisLoaderTest {
 
     @Test(expected = CorbException.class)
     public void testOpen_fileDoesNotExist() throws Exception {
-        System.out.println("open");
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.properties.setProperty("XML-FILE", "does/not/exit.xml");
         try {
@@ -305,6 +288,7 @@ public class FileXMLUrisLoaderTest {
         } finally {
             instance.close();
         }
+        fail();
     }
 
     /**
@@ -312,7 +296,6 @@ public class FileXMLUrisLoaderTest {
      */
     @Test
     public void testGetBatchRef() {
-        System.out.println("getBatchRef");
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         assertNull(instance.getBatchRef());
         instance.close();
@@ -323,7 +306,6 @@ public class FileXMLUrisLoaderTest {
      */
     @Test
     public void testGetTotalCount_defaultValue() {
-        System.out.println("getTotalCount");
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         assertEquals(0, instance.getTotalCount());
         instance.close();
@@ -331,7 +313,6 @@ public class FileXMLUrisLoaderTest {
 
     @Test
     public void testGetTotalCount() throws CorbException {
-        System.out.println("getTotalCount");
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.open();
         assertEquals(4, instance.getTotalCount());
@@ -343,18 +324,17 @@ public class FileXMLUrisLoaderTest {
      */
     @Test(expected = CorbException.class)
     public void testHasNext_throwException() throws Exception {
-        System.out.println("hasNext");
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         try {
             instance.hasNext();
         } finally {
             instance.close();
         }
+        fail();
     }
 
     @Test
     public void testHasNext() throws Exception {
-        System.out.println("hasNext");
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.properties.remove(Options.XML_NODE);
         instance.open();
@@ -372,7 +352,6 @@ public class FileXMLUrisLoaderTest {
      */
     @Test
     public void testNext() throws Exception {
-        System.out.println("next");
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.open();
         //Verify that hasNext() does not advance the buffered reader to the next line
@@ -389,7 +368,6 @@ public class FileXMLUrisLoaderTest {
      */
     @Test
     public void testClose() {
-        System.out.println("close");
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.doc = mock(Document.class);
         instance.close();
@@ -402,7 +380,6 @@ public class FileXMLUrisLoaderTest {
      */
     @Test
     public void testCleanup() {
-        System.out.println("cleanup");
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.doc = mock(Document.class);
         instance.collection = "foo";

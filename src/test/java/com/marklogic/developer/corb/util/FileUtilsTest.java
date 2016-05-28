@@ -29,11 +29,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -57,7 +53,6 @@ public class FileUtilsTest {
      */
     @Test
     public void testGetBytes() throws Exception {
-        System.out.println("getBytes");
         byte[] result = getBytes(new File("src/test/resources/uriInputFile.txt"));
         assertArrayEquals("Hello from the URIS-FILE!".getBytes(), result);
     }
@@ -67,7 +62,6 @@ public class FileUtilsTest {
      */
     @Test
     public void testCopy_File_File() throws Exception {
-        System.out.println("copy");
 
         File out = File.createTempFile("copiedFile", "txt");
         out.deleteOnExit();
@@ -83,7 +77,6 @@ public class FileUtilsTest {
      */
     @Test
     public void testCopy_String_String() throws Exception {
-        System.out.println("copy");
         String inFilePath = exampleContentFile.getAbsolutePath();
         File destFile = File.createTempFile("output", "txt");
         destFile.deleteOnExit();
@@ -100,7 +93,6 @@ public class FileUtilsTest {
      */
     @Test
     public void testDeleteFile_File() throws Exception {
-        System.out.println("deleteFile");
         File file = File.createTempFile("originalFile", "txt");
         FileUtils.deleteFile(file);
         assertFalse(file.exists());
@@ -153,19 +145,16 @@ public class FileUtilsTest {
 
     @Test
     public void testGetLineCount_null() throws IOException {
-        System.out.println("getLineCount");
         assertEquals(0, FileUtils.getLineCount(null));
     }
 
     @Test
     public void testGetLineCount_fileDoesNotExist() throws IOException {
-        System.out.println("getLineCount");
         assertEquals(0, FileUtils.getLineCount(new File("does/not/exist")));
     }
 
     @Test
     public void testGetLineCount() throws IOException {
-        System.out.println("getLineCount");
         assertEquals(12, FileUtils.getLineCount(exampleContentFile));
     }
 

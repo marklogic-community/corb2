@@ -34,7 +34,6 @@ public class PreBatchUpdateFileTaskTest {
      */
     @Test
     public void testGetTopContent() {
-        System.out.println("getTopContent");
         Properties props = new Properties();
         props.setProperty("EXPORT-FILE-TOP-CONTENT", "foo@" + Manager.URIS_BATCH_REF + "baz");
         props.setProperty(Manager.URIS_BATCH_REF, "bar");
@@ -44,9 +43,8 @@ public class PreBatchUpdateFileTaskTest {
         assertEquals("foobarbaz", result);
     }
 
-     @Test
+    @Test
     public void testGetTopContent_isNull() {
-        System.out.println("getTopContent");
         Properties props = new Properties();
         props.setProperty(Manager.URIS_BATCH_REF, "bar");
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
@@ -54,10 +52,9 @@ public class PreBatchUpdateFileTaskTest {
         String result = instance.getTopContent();
         assertNull(result);
     }
-    
-     @Test
+
+    @Test
     public void testGetTopContent_urisBatchRefIsNull() {
-        System.out.println("getTopContent");
         Properties props = new Properties();
         String val = "foo@" + Manager.URIS_BATCH_REF + "baz";
         props.setProperty("EXPORT-FILE-TOP-CONTENT", val);
@@ -66,13 +63,12 @@ public class PreBatchUpdateFileTaskTest {
         String result = instance.getTopContent();
         assertEquals(val, result);
     }
-    
+
     /**
      * Test of writeTopContent method, of class PreBatchUpdateFileTask.
      */
     @Test
     public void testWriteTopContent() throws Exception {
-        System.out.println("writeTopContent");
         String content = "foo,bar,baz";
         File tempDir = TestUtils.createTempDirectory();
         File tempFile = new File(tempDir, "topContent");
@@ -81,7 +77,7 @@ public class PreBatchUpdateFileTaskTest {
         Properties props = new Properties();
         props.setProperty("EXPORT-FILE-TOP-CONTENT", content);
         props.setProperty("EXPORT-FILE-NAME", tempFile.getName());
-        
+
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.properties = props;
         instance.exportDir = tempDir.toString();
@@ -93,16 +89,15 @@ public class PreBatchUpdateFileTaskTest {
     /**
      * Test of call method, of class PreBatchUpdateFileTask.
      */
-    @Test (expected = NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void testCall_npe() throws Exception {
-        System.out.println("call");
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.call();
+        fail();
     }
-    
-        @Test
+
+    @Test
     public void testCall() throws Exception {
-        System.out.println("writeTopContent");
         String content = "foo,bar,baz";
         File tempDir = TestUtils.createTempDirectory();
         File tempFile = new File(tempDir, "topContent");
@@ -111,13 +106,13 @@ public class PreBatchUpdateFileTaskTest {
         Properties props = new Properties();
         props.setProperty("EXPORT-FILE-TOP-CONTENT", content);
         props.setProperty("EXPORT-FILE-NAME", tempFile.getName());
-        
+
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.properties = props;
         instance.exportDir = tempDir.toString();
         File partFile = new File(tempDir, instance.getPartFileName());
         instance.call();
-        
+
         assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(partFile));
     }
 }

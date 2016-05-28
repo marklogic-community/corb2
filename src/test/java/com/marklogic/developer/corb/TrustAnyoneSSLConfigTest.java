@@ -33,7 +33,6 @@ public class TrustAnyoneSSLConfigTest {
      */
     @Test
     public void testGetSSLContext() throws Exception {
-        System.out.println("getSSLContext");
         TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
         SSLContext result = instance.getSSLContext();
         assertNotNull(result);
@@ -44,7 +43,6 @@ public class TrustAnyoneSSLConfigTest {
      */
     @Test
     public void testGetEnabledCipherSuites() {
-        System.out.println("getEnabledCipherSuites");
         TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
         String[] result = instance.getEnabledCipherSuites();
         assertNotNull(result);
@@ -56,7 +54,6 @@ public class TrustAnyoneSSLConfigTest {
      */
     @Test
     public void testGetEnabledProtocols() {
-        System.out.println("getEnabledProtocols");
         TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
         String[] result = instance.getEnabledProtocols();
         assertNotNull(result);

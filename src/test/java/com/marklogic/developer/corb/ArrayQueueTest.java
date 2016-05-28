@@ -34,7 +34,6 @@ public class ArrayQueueTest {
      */
     @Test
     public void testSize() {
-        System.out.println("size");
         ArrayQueue<String> instance = new ArrayQueue<String>(10);
         assertEquals(0, instance.size());
 
@@ -44,8 +43,8 @@ public class ArrayQueueTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testSizeNegativeInit() {
-        System.out.println("size");
         ArrayQueue<String> instance = new ArrayQueue<String>(-1);
+        fail();
     }
 
     /**
@@ -53,7 +52,6 @@ public class ArrayQueueTest {
      */
     @Test
     public void testPeek() {
-        System.out.println("peek");
         ArrayQueue<String> instance = new ArrayQueue<String>(10);
 
         String result = instance.peek();
@@ -68,7 +66,6 @@ public class ArrayQueueTest {
      */
     @Test
     public void testPoll() {
-        System.out.println("poll");
         ArrayQueue<String> instance = new ArrayQueue<String>(1);
 
         String result = instance.poll();
@@ -83,7 +80,6 @@ public class ArrayQueueTest {
      */
     @Test
     public void testOffer() {
-        System.out.println("offer");
         ArrayQueue<String> instance = new ArrayQueue<String>(1);
 
         assertTrue(instance.offer("foo"));
@@ -95,7 +91,6 @@ public class ArrayQueueTest {
      */
     @Test
     public void testIncrement() {
-        System.out.println("increment");
         int i = 0;
         ArrayQueue<String> instance = new ArrayQueue<String>(2);
         assertEquals(0, instance.size());
@@ -111,7 +106,6 @@ public class ArrayQueueTest {
      */
     @Test
     public void testIterator() {
-        System.out.println("iterator");
         ArrayQueue<String> instance = new ArrayQueue<String>(2);
         instance.add("foo");
         instance.add("bar");
@@ -123,7 +117,6 @@ public class ArrayQueueTest {
 
     @Test
     public void testIteratorEmpty() {
-        System.out.println("iterator");
         ArrayQueue<String> instance = new ArrayQueue<String>(2);
         Iterator<String> iterator = instance.iterator();
         assertFalse(iterator.hasNext());
@@ -134,7 +127,6 @@ public class ArrayQueueTest {
      */
     @Test
     public void testRemoveAt() {
-        System.out.println("removeAt");
         ArrayQueue<String> instance = new ArrayQueue<String>(2);
         instance.add("foo");
         instance.add("bar");
@@ -150,7 +142,6 @@ public class ArrayQueueTest {
      */
     @Test
     public void testRemove() {
-        System.out.println("remove");
         ArrayQueue<String> instance = new ArrayQueue<String>(2);
         instance.add("foo");
         instance.add("bar");
@@ -167,7 +158,6 @@ public class ArrayQueueTest {
      */
     @Test(expected = IllegalStateException.class)
     public void testRemoveTwice() {
-        System.out.println("remove");
         ArrayQueue<String> instance = new ArrayQueue<String>(2);
         instance.add("foo");
         instance.add("bar");
@@ -175,6 +165,7 @@ public class ArrayQueueTest {
         iterator.next();
         iterator.remove();
         iterator.remove();
+        fail();
     }
 
     /**
@@ -182,10 +173,9 @@ public class ArrayQueueTest {
      */
     @Test(expected = NoSuchElementException.class)
     public void testNextWhenEmpty() {
-        System.out.println("next");
         ArrayQueue<String> instance = new ArrayQueue<String>(2);
         instance.iterator().next();
-
+        fail();
     }
     
     /**
@@ -193,8 +183,8 @@ public class ArrayQueueTest {
      */
     @Test (expected = NullPointerException.class)
     public void testOfferNull() {
-        System.out.println("offer");
         ArrayQueue<String> instance = new ArrayQueue<String>(2);
         instance.offer(null);
+        fail();
     }
 }

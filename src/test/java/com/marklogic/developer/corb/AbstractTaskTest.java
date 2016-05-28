@@ -76,7 +76,6 @@ public class AbstractTaskTest {
      */
     @Test
     public void testSetContentSource() {
-        System.out.println("setContentSource");
         ContentSource cs = mock(ContentSource.class);
         AbstractTask instance = new AbstractTaskImpl();
         instance.setContentSource(cs);
@@ -88,7 +87,6 @@ public class AbstractTaskTest {
      */
     @Test
     public void testSetModuleType() {
-        System.out.println("setModuleType");
         String moduleType = "foo";
         AbstractTask instance = new AbstractTaskImpl();
         instance.setModuleType(moduleType);
@@ -100,7 +98,6 @@ public class AbstractTaskTest {
      */
     @Test
     public void testSetModuleURI() {
-        System.out.println("setModuleURI");
         String moduleUri = "test.xqy";
         AbstractTask instance = new AbstractTaskImpl();
         instance.setModuleURI(moduleUri);
@@ -112,7 +109,6 @@ public class AbstractTaskTest {
      */
     @Test
     public void testSetAdhocQuery() {
-        System.out.println("setAdhocQuery");
         String adhocQuery = "adhoc.xqy";
         AbstractTask instance = new AbstractTaskImpl();
         instance.setAdhocQuery(adhocQuery);
@@ -124,7 +120,6 @@ public class AbstractTaskTest {
      */
     @Test
     public void testSetQueryLanguage() {
-        System.out.println("setQueryLanguage");
         String language = "XQuery";
         AbstractTask instance = new AbstractTaskImpl();
         instance.setQueryLanguage(language);
@@ -136,7 +131,6 @@ public class AbstractTaskTest {
      */
     @Test
     public void testSetProperties() {
-        System.out.println("setProperties");
         Properties props = new Properties();
         Properties properties = props;
         AbstractTask instance = new AbstractTaskImpl();
@@ -149,7 +143,6 @@ public class AbstractTaskTest {
      */
     @Test
     public void testSetInputURI() {
-        System.out.println("setInputURI");
         String[] inputUri = {"foo", "bar", "baz"};
         AbstractTask instance = new AbstractTaskImpl();
         instance.setInputURI(inputUri);
@@ -158,7 +151,6 @@ public class AbstractTaskTest {
 
     @Test
     public void testSetInputURI_null() {
-        System.out.println("setInputURI");
         AbstractTask instance = new AbstractTaskImpl();
         assertNull(instance.inputUris);
         instance.setInputURI(null);
@@ -170,7 +162,6 @@ public class AbstractTaskTest {
      */
     @Test
     public void testSetFailOnError() {
-        System.out.println("setFailOnError");
         AbstractTask instance = new AbstractTaskImpl();
         instance.setFailOnError(false);
         assertFalse(instance.failOnError);
@@ -183,7 +174,6 @@ public class AbstractTaskTest {
      */
     @Test
     public void testSetExportDir() {
-        System.out.println("setExportDir");
         String exportFileDir = "/tmp";
         AbstractTask instance = new AbstractTaskImpl();
         instance.setExportDir(exportFileDir);
@@ -195,7 +185,6 @@ public class AbstractTaskTest {
      */
     @Test
     public void testGetExportDir() {
-        System.out.println("getExportDir");
         AbstractTask instance = new AbstractTaskImpl();
         String expResult = "/tmp";
         instance.exportDir = expResult;
@@ -208,7 +197,6 @@ public class AbstractTaskTest {
      */
     @Test
     public void testNewSession() {
-        System.out.println("newSession");
         AbstractTask instance = new AbstractTaskImpl();
         ContentSource cs = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -224,7 +212,6 @@ public class AbstractTaskTest {
      */
     @Test
     public void testInvokeModule() throws Exception {
-        System.out.println("invokeModule");
         AbstractTask instance = new AbstractTaskImpl();
         instance.moduleUri = "module.xqy";
         instance.adhocQuery = "adhoc.xqy";
@@ -255,7 +242,6 @@ public class AbstractTaskTest {
 
     @Test
     public void testGetIntProperty() {
-        System.out.println("getIntProperty");
         Properties props = new Properties();
         props.setProperty("one", "one");
         props.setProperty("two", "2");
@@ -301,6 +287,7 @@ public class AbstractTaskTest {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException("something bad happened", req);
         testHandleRequestException("RequestServerException", serverException, true, 0);
+        fail();
     }
 
     @Test
@@ -315,6 +302,7 @@ public class AbstractTaskTest {
         Request req = mock(Request.class);
         RequestPermissionException serverException = new RequestPermissionException("something bad happened", req, "admin");
         testHandleRequestException("RequestPermissionException", serverException, true, 2);
+        fail();
     }
 
     @Test
@@ -329,6 +317,7 @@ public class AbstractTaskTest {
         Request req = mock(Request.class);
         ServerConnectionException serverException = new ServerConnectionException("something bad happened", req);
         testHandleRequestException("ServerConnectionException", serverException, true, 0);
+        fail();
     }
 
     @Test
@@ -407,19 +396,21 @@ public class AbstractTaskTest {
         assertTrue(instance.hasRetryableMessage(exception));
     }
 
-    public void testHandleRequestException(String type, RequestException exception, boolean fail, int retryLimit) throws CorbException, IOException {
+    public void testHandleRequestException(String type, RequestException exception, boolean fail, int retryLimit)
+            throws CorbException, IOException {
         String[] uris = new String[]{"uri1"};
         testHandleRequestException(type, exception, fail, uris, retryLimit);
     }
 
-    public void testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, int retryLimit) throws CorbException, IOException {
+    public void testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, int retryLimit)
+            throws CorbException, IOException {
         File exportDir = TestUtils.createTempDirectory();
         File exportFile = File.createTempFile("error", ".err", exportDir);
         testHandleRequestException(type, exception, fail, uris, null, exportDir, exportFile.getName(), retryLimit);
     }
 
-    public void testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, String delim, File exportDir, String errorFilename, int retryLimit) throws CorbException, IOException {
-        System.out.println("handleRequestException");
+    public void testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, String delim, File exportDir, String errorFilename, int retryLimit)
+            throws CorbException, IOException {
         if (exportDir == null) {
             exportDir = TestUtils.createTempDirectory();
             exportDir.deleteOnExit();
@@ -451,7 +442,8 @@ public class AbstractTaskTest {
         }
     }
 
-    public File testWriteToError(String[] uris, String delim, File exportDir, String errorFilename, String message) throws CorbException, IOException {
+    public File testWriteToError(String[] uris, String delim, File exportDir, String errorFilename, String message)
+            throws CorbException, IOException {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException(message, req);
         testHandleRequestException("RequestServerException", serverException, false, uris, delim, exportDir, errorFilename, 0);
@@ -577,7 +569,6 @@ public class AbstractTaskTest {
      */
     @Test
     public void testAsString() {
-        System.out.println("asString");
         String[] uris = new String[]{"foo", "bar", "baz"};
         AbstractTask instance = new AbstractTaskImpl();
         String result = instance.asString(uris);
@@ -586,7 +577,6 @@ public class AbstractTaskTest {
 
     @Test
     public void testAsString_emptyArray() {
-        System.out.println("asString");
         String[] uris = new String[]{};
         AbstractTask instance = new AbstractTaskImpl();
         String result = instance.asString(uris);
@@ -595,7 +585,6 @@ public class AbstractTaskTest {
 
     @Test
     public void testAsString_null() {
-        System.out.println("asString");
         String[] uris = null;
         AbstractTask instance = new AbstractTaskImpl();
         String result = instance.asString(uris);
@@ -607,7 +596,6 @@ public class AbstractTaskTest {
      */
     @Test
     public void testCleanup() {
-        System.out.println("cleanup");
         AbstractTask instance = new AbstractTaskImpl();
         instance.cs = mock(ContentSource.class);
         instance.moduleType = "moduleType";
@@ -629,7 +617,6 @@ public class AbstractTaskTest {
      */
     @Test
     public void testGetProperty() {
-        System.out.println("getProperty");
         String key = "INIT-TASK";
         String val = "foo";
         Properties props = new Properties();
@@ -642,7 +629,6 @@ public class AbstractTaskTest {
 
     @Test
     public void testGetProperty_systemPropertyTakesPrecedence() {
-        System.out.println("getProperty");
         String key = "INIT-TASK";
         String val = "foo";
         System.setProperty(key, val);
@@ -660,7 +646,6 @@ public class AbstractTaskTest {
      */
     @Test
     public void testGetValueAsBytes_xdmBinary() {
-        System.out.println("getValueAsBytes");
         XdmItem item = mock(XdmBinary.class);
 
         AbstractTask instance = new AbstractTaskImpl();
@@ -670,7 +655,6 @@ public class AbstractTaskTest {
 
     @Test
     public void testGetValueAsBytes_xdmItem() {
-        System.out.println("getValueAsBytes");
         XdmItem item = mock(XdmItem.class);
         String value = "foo";
         when(item.asString()).thenReturn(value);
@@ -681,7 +665,6 @@ public class AbstractTaskTest {
 
     @Test
     public void testGetValueAsBytes_default() {
-        System.out.println("getValueAsBytes");
         XdmItem item = null;
         AbstractTask instance = new AbstractTaskImpl();
         byte[] result = instance.getValueAsBytes(item);

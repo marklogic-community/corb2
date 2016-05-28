@@ -36,7 +36,6 @@ public class ExportBatchToFileTaskTest {
      */
     @Test
     public void testGetFileName_fromURISBatchRef() {
-        System.out.println("getFileName");
         Properties props = new Properties();
         props.setProperty("URIS_BATCH_REF", "foo/bar/baz");
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
@@ -47,7 +46,6 @@ public class ExportBatchToFileTaskTest {
 
     @Test
     public void testGetFileName_fromEXPORTFILENAME() {
-        System.out.println("getFileName");
         Properties props = new Properties();
         props.setProperty("EXPORT-FILE-NAME", "foo/bar");
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
@@ -58,22 +56,22 @@ public class ExportBatchToFileTaskTest {
 
     @Test(expected = NullPointerException.class)
     public void testGetFileName_withEmptyExportFileName() {
-        System.out.println("getFileName");
         Properties props = new Properties();
         props.setProperty("EXPORT-FILE-NAME", "");
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
         instance.getFileName();
+        fail();
     }
 
     @Test(expected = NullPointerException.class)
     public void testGetFileName_withEmptyUrisBatchRef() {
-        System.out.println("getFileName");
         Properties props = new Properties();
         props.setProperty("URIS_BATCH_REF", "");
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
         instance.getFileName();
+        fail();
     }
 
     /**
@@ -81,7 +79,6 @@ public class ExportBatchToFileTaskTest {
      */
     @Test(expected = NullPointerException.class)
     public void testGetPartFileName_emptyName() {
-        System.out.println("getPartFileName");
         Properties props = new Properties();
         props.setProperty("URIS_BATCH_REF", "");
         props.setProperty("EXPORT-FILE-PART-EXT", ".txt");
@@ -89,11 +86,11 @@ public class ExportBatchToFileTaskTest {
         instance.properties = props;
         String result = instance.getPartFileName();
         assertEquals("", result);
+        fail();
     }
 
     @Test
     public void testGetPartFileName_withExtension() {
-        System.out.println("getPartFileName");
         Properties props = new Properties();
         props.setProperty("URIS_BATCH_REF", "foo");
         props.setProperty("EXPORT-FILE-PART-EXT", ".txt");
@@ -108,7 +105,6 @@ public class ExportBatchToFileTaskTest {
      */
     @Test
     public void testWriteToFile_nullSeq() throws Exception {
-        System.out.println("writeToFile");
         ResultSequence seq = null;
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.writeToFile(seq);
@@ -116,7 +112,6 @@ public class ExportBatchToFileTaskTest {
 
     @Test
     public void testWriteToFile_notSeqHasNext() throws Exception {
-        System.out.println("writeToFile");
         ResultSequence seq = mock(ResultSequence.class);
         when(seq.hasNext()).thenReturn(false);
         ExportBatchToFileTask instance = new ExportBatchToFileTask();

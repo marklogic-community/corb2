@@ -57,7 +57,6 @@ public class ExportToFileTaskTest {
      */
     @Test
     public void testGetFileName() {
-        System.out.println("getFileName");
         ExportToFileTask instance = new ExportToFileTask();
         String expected = "https://github.com/marklogic/corb2";
         String[] uri = {expected};
@@ -68,7 +67,6 @@ public class ExportToFileTaskTest {
     
     @Test
     public void testGetFileName_withLeadingSlash() {
-        System.out.println("getFileName");
         ExportToFileTask instance = new ExportToFileTask();
         String expected = "/corb2";
         String[] uri = {expected};
@@ -79,9 +77,9 @@ public class ExportToFileTaskTest {
     
     @Test (expected = NullPointerException.class)
     public void testGetFileName_nullInputURI() {
-        System.out.println("getFileName");
         ExportToFileTask instance = new ExportToFileTask();
         instance.getFileName();
+        fail();
     }
 
     /**
@@ -89,7 +87,6 @@ public class ExportToFileTaskTest {
      */
     @Test
     public void testWriteToFile_nullSequence() throws Exception {
-        System.out.println("writeToFile");
         ResultSequence seq = null;
         ExportToFileTask instance = new ExportToFileTask();
         instance.exportDir = tempFolder.newFolder().toString();
@@ -103,7 +100,6 @@ public class ExportToFileTaskTest {
     
     @Test
     public void testWriteToFile_silentFail() throws Exception {
-        System.out.println("writeToFile");
         ResultSequence seq = null;
         ExportToFileTask instance = new ExportToFileTask();
         instance.writeToFile(seq);
@@ -114,7 +110,6 @@ public class ExportToFileTaskTest {
      */
     @Test
     public void testProcessResult_noResults() throws Exception {
-        System.out.println("processResult");
         ResultSequence seq = null;
         ExportToFileTask instance = new ExportToFileTask();
         String result = instance.processResult(seq);
@@ -123,19 +118,17 @@ public class ExportToFileTaskTest {
 
     @Test (expected = NullPointerException.class)
     public void testProcessResult_nullInputUris() throws Exception {
-        System.out.println("processResult");
         ResultSequence seq = mock(ResultSequence.class);
         
         when(seq.hasNext()).thenReturn(true).thenReturn(false);
         ExportToFileTask instance = new ExportToFileTask();
    
-        String result = instance.processResult(seq);
-        assertEquals(TRUE, result);
+        instance.processResult(seq);
+        fail();
     }
     
     @Test
     public void testProcessResult() throws Exception {
-        System.out.println("processResult");
         ResultSequence seq = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         XdmItem item = mock(XdmItem.class);
@@ -156,7 +149,6 @@ public class ExportToFileTaskTest {
      */
     @Test
     public void testCleanup() {
-        System.out.println("cleanup");
         ExportToFileTask instance = new ExportToFileTask();
         instance.exportDir = "test";
         instance.cleanup();
@@ -168,7 +160,6 @@ public class ExportToFileTaskTest {
      */
     @Test
     public void testCall() throws Exception {
-        System.out.println("call");
         ExportToFileTask instance = new ExportToFileTask();
         instance.call();
     }
