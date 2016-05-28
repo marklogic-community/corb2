@@ -48,10 +48,6 @@ public class PostBatchUpdateFileTaskTest {
         clearSystemProperties();
     }
 
-    @After
-    public void tearDown() {
-    }
-
     /**
      * Test of getBottomContent method, of class PostBatchUpdateFileTask.
      */

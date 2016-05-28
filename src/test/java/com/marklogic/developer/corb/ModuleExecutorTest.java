@@ -494,14 +494,6 @@ public class ModuleExecutorTest {
         assertFalse(props.isEmpty());
     }
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterClass
-    public static void tearDownClass() throws Exception {
-    }
-
     /**
      * Perform pre-test initialization.
      *
