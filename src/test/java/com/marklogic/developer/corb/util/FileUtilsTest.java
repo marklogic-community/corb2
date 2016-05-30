@@ -67,7 +67,7 @@ public class FileUtilsTest {
         out.deleteOnExit();
         copy(exampleContentFile, out);
 
-        Assert.assertArrayEquals(getBytes(exampleContentFile), getBytes(out));
+        assertArrayEquals(getBytes(exampleContentFile), getBytes(out));
     }
 
     /**
