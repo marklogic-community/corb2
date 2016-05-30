@@ -52,6 +52,7 @@ import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
 import com.marklogic.developer.corb.util.FileUtils;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import com.marklogic.developer.corb.util.NumberUtils;
+import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
@@ -121,7 +122,8 @@ public class Manager extends AbstractManager {
     protected static final int EXIT_CODE_STOP_COMMAND = 3;
 
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
-
+    private static final String TAB = "\t";
+    
     public Manager() {
 
     }
@@ -436,24 +438,41 @@ public class Manager extends AbstractManager {
 
     @Override
     protected void usage() {
+        List<String> args = new ArrayList<String>(7);
+        String xcc_connection_uri = "xcc://user:password@host:port/[ database ]";
+        String options_file = "myjob.properties";
         PrintStream err = System.err;
+        
         err.println("usage 1:");
-        err.println("\t" + NAME + " xcc://user:password@host:port/[ database ]" + " input-selector module-name.xqy"
+        err.println(TAB + NAME + " " + xcc_connection_uri + " input-selector module-name.xqy"
                 + " [ thread-count [ uris-module [ module-root" + " [ modules-database [ install [ process-task"
                 + " [ pre-batch-module [ pre-batch-task" + " [ post-batch-module  [ post-batch-task"
                 + " [ export-file-dir [ export-file-name" + " [ uris-file ] ] ] ] ] ] ] ] ] ] ] ] ]");
+             
+        
         err.println("\nusage 2:");
-        err.println("\t-D" + XCC_CONNECTION_URI + "=xcc://user:password@host:port/[ database ]"
-                + " -D" + XQUERY_MODULE + "=module-name.xqy" + " -D" + THREAD_COUNT + "=10"
-                + " -D" + URIS_MODULE + "=get-uris.xqy"
-                + " -D" + POST_BATCH_XQUERY_MODULE + "=post-batch.xqy"
-                + " -D... " + NAME);
+        args.add(buildSystemPropertyArg(XCC_CONNECTION_URI, xcc_connection_uri));
+        args.add(buildSystemPropertyArg(XQUERY_MODULE ,"module-name.xqy"));
+        args.add(buildSystemPropertyArg(THREAD_COUNT, "10"));
+        args.add(buildSystemPropertyArg(URIS_MODULE, "get-uris.xqy"));
+        args.add(buildSystemPropertyArg(POST_BATCH_XQUERY_MODULE, "post-batch.xqy"));
+        args.add(buildSystemPropertyArg("... ", null));
+        args.add(NAME);
+        err.println(TAB + StringUtils.join(args, SPACE));
+        
         err.println("\nusage 3:");
-        err.println("\t" + "-D" + OPTIONS_FILE + "=myjob.properties " + NAME);
+        args.clear();
+        args.add(buildSystemPropertyArg(OPTIONS_FILE, options_file));
+        args.add(NAME);
+        err.println(TAB + StringUtils.join(args, SPACE));
+        
         err.println("\nusage 4:");
-        err.println("\t" + "-D" + OPTIONS_FILE + "=myjob.properties"
-                + " -D" + THREAD_COUNT + "=10 " + NAME
-                + " xcc://user:password@host:port/[ database ]");
+        args.clear();
+        args.add(buildSystemPropertyArg(OPTIONS_FILE, options_file));
+        args.add(buildSystemPropertyArg(THREAD_COUNT, "10"));
+        args.add(NAME);
+        args.add(xcc_connection_uri);
+        err.println(TAB + StringUtils.join(args, SPACE));
     }
 
     public int run() throws Exception {

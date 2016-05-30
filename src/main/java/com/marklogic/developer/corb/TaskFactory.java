@@ -43,7 +43,8 @@ public class TaskFactory {
     protected Manager manager;
     private final Map<String, String> moduleToAdhocQueryMap = new HashMap<String, String>();
     private final Map<String, String> moduleToPathMap = new HashMap<String, String>();
-
+    private static final String EXCEPTION_MSG_UNABLE_READ_ADHOC = "Unable to read adhoc query ";
+    private static final String EXCEPTION_MSG_NULL_CONTENT = "null content source";
     /**
      * @param manager
      */
@@ -62,7 +63,7 @@ public class TaskFactory {
         }
         if (null != options.getProcessModule()
                 && (null == uris || uris.length == 0 || null == manager.getContentSource())) {
-            throw new NullPointerException("null content source or input uri");
+            throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT + " or input uri");
         }
         try {
             Task task = options.getProcessTaskClass() == null ? new Transform() : options.getProcessTaskClass().newInstance();
@@ -79,7 +80,7 @@ public class TaskFactory {
             return null;
         }
         if (null != options.getPreBatchModule() && null == manager.getContentSource()) {
-            throw new NullPointerException("null content source");
+            throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
             Task task = options.getPreBatchTaskClass() == null ? new Transform() : options.getPreBatchTaskClass().newInstance();
@@ -96,7 +97,7 @@ public class TaskFactory {
             return null;
         }
         if (null != options.getPostBatchModule() && null == manager.getContentSource()) {
-            throw new NullPointerException("null content source");
+            throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
             Task task = options.getPostBatchTaskClass() == null ? new Transform() : options.getPostBatchTaskClass().newInstance();
@@ -113,7 +114,7 @@ public class TaskFactory {
             return null;
         }
         if (null != options.getInitModule() && null == manager.getContentSource()) {
-            throw new NullPointerException("null content source");
+            throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
             Task task = options.getInitTaskClass() == null ? new Transform() : options.getInitTaskClass().newInstance();
@@ -135,7 +136,7 @@ public class TaskFactory {
                 if (isInlineModule(module)) {
                     adhocQuery = getInlineModuleCode(module);
                     if (isEmpty(adhocQuery)) {
-                        throw new IllegalStateException("Unable to read adhoc query " + module);
+                        throw new IllegalStateException(EXCEPTION_MSG_UNABLE_READ_ADHOC + module);
                     }
                 } else {
                     adhocQuery = moduleToAdhocQueryMap.get(module);
@@ -143,7 +144,7 @@ public class TaskFactory {
                         String modulePath = module.substring(0, module.indexOf('|'));
                         adhocQuery = getAdhocQuery(modulePath);
                         if (isEmpty(adhocQuery)) {
-                            throw new IllegalStateException("Unable to read adhoc query " + module + " from classpath or filesystem");
+                            throw new IllegalStateException(EXCEPTION_MSG_UNABLE_READ_ADHOC + module + " from classpath or filesystem");
                         }
                         moduleToAdhocQueryMap.put(module, adhocQuery);
                     }

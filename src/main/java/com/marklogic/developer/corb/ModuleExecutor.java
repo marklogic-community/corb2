@@ -77,7 +77,8 @@ public class ModuleExecutor extends AbstractManager {
             = System.getProperty("line.separator") != null ? System.getProperty("line.separator").getBytes() : "\n".getBytes();
 
     protected static final Logger LOG = Logger.getLogger(ModuleExecutor.class.getName());
-
+    private static final String TAB = "\t";
+    
     /**
      * @param args
      */
@@ -175,22 +176,38 @@ public class ModuleExecutor extends AbstractManager {
 
     @Override
     protected void usage() {
+        List<String> args = new ArrayList<String>(5);
+        String xcc_connection_uri = "xcc://user:password@host:port/[ database ]";
+        String options_file = "myjob.properties";
         PrintStream err = System.err;
+        
         err.println("usage 1:");
-        err.println("\t"
-                + NAME
-                + " xcc://user:password@host:port/[ database ]"
-                + " process-module [module-root [modules-database [ export-file-name ] ] ]");
+        args.add(NAME);
+        args.add(xcc_connection_uri);
+        args.add("process-module [module-root [modules-database [ export-file-name ] ] ]");
+        err.println(TAB + StringUtils.join(args, SPACE));
+          
         err.println("\nusage 2:");
-        err.println("\t"
-                + "-D" + XCC_CONNECTION_URI + "=xcc://user:password@host:port/[ database ]"
-                + " -D" + PROCESS_MODULE + "=module-name.xqy"
-                + " -D... " + NAME);
+        args.clear();
+        args.add(buildSystemPropertyArg(XCC_CONNECTION_URI, xcc_connection_uri));
+        args.add(buildSystemPropertyArg(PROCESS_MODULE, "module-name.xqy"));
+        args.add(buildSystemPropertyArg("...", null));
+        args.add(NAME);
+        err.println(TAB + StringUtils.join(args, SPACE));
+        
         err.println("\nusage 3:");
-        err.println("\t" + "-D" + OPTIONS_FILE + "=myjob.properties " + NAME);
+        args.clear();
+        args.add(buildSystemPropertyArg(OPTIONS_FILE, options_file));
+        args.add(NAME);
+        err.println(TAB + StringUtils.join(args, SPACE));
+        
+        
         err.println("\nusage 4:");
-        err.println("\t" + "-D" + OPTIONS_FILE + "=myjob.properties " + NAME
-                + " xcc://user:password@host:port/[ database ]");
+        args.clear();
+        args.add(buildSystemPropertyArg(OPTIONS_FILE, options_file));
+        args.add(NAME);
+        args.add(xcc_connection_uri);
+        err.println(TAB + StringUtils.join(args, SPACE));
     }
 
     private void registerStatusInfo() {

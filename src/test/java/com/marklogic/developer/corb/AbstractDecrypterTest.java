@@ -29,6 +29,8 @@ import static org.junit.Assert.*;
  */
 public class AbstractDecrypterTest {
 
+    private static final String FOUR_SPACES = "    ";
+    
     /**
      * Test of init method, of class AbstractDecrypter.
      */
@@ -161,7 +163,7 @@ public class AbstractDecrypterTest {
     @Test
     public void testGetProperty_blankSystemProperty() throws IOException, ClassNotFoundException {
         String key = "testGetProperty";
-        System.setProperty(key, "    ");
+        System.setProperty(key, FOUR_SPACES);
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         instance.properties = new Properties();
         String result = instance.getProperty(key);
@@ -172,7 +174,7 @@ public class AbstractDecrypterTest {
     @Test
     public void testGetProperty_blankPropertiesProperty() throws IOException, ClassNotFoundException {
         String key = "testGetProperty";
-        System.setProperty(key, "    ");
+        System.setProperty(key, FOUR_SPACES);
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         String expResult = "";
         instance.properties = new Properties();

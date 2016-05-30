@@ -53,6 +53,7 @@ public class AbstractManagerTest {
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
     private static final Logger logger = Logger.getLogger(AbstractManager.class.getName());
     private final TestHandler testLogger = new TestHandler();
+    private final String xccConnectionUri = "xcc://foo:bar@localhost:8008/baz";
     private final String propertiesFilename = "helloWorld.properties";
     private final String propertiesFileDir = "src/test/resources/";
     private final String propertiesFilePath = propertiesFileDir + "/" + propertiesFilename;
@@ -307,10 +308,9 @@ public class AbstractManagerTest {
      */
     @Test
     public void testInitURI() throws Exception {
-        String uriArg = "xcc://foo:bar@localhost:8008/baz";
         AbstractManager instance = new AbstractManagerImpl();
-        instance.initURI(uriArg);
-        assertEquals(uriArg, instance.connectionUri.toString());
+        instance.initURI(xccConnectionUri);
+        assertEquals(xccConnectionUri, instance.connectionUri.toString());
     }
 
     @Test
@@ -320,17 +320,17 @@ public class AbstractManagerTest {
         instance.properties.setProperty("XCC-PASSWORD", "password");
         instance.properties.setProperty("XCC-HOSTNAME", "localhost");
         instance.properties.setProperty("XCC-PORT", "80");
-        instance.initURI("xcc://foo:bar@localhost:8008/baz");
-        assertEquals("xcc://foo:bar@localhost:8008/baz", instance.connectionUri.toString());
+        instance.initURI(xccConnectionUri);
+        assertEquals(xccConnectionUri, instance.connectionUri.toString());
     }
 
     @Test
     public void testInitURI_asSystemPropertyOnly() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        System.setProperty("XCC-CONNECTION-URI", "xcc://foo:bar@localhost:8008/baz");
+        System.setProperty("XCC-CONNECTION-URI", xccConnectionUri);
         instance.initURI(null);
         System.clearProperty("XCC-CONNECTION-URI");
-        assertEquals("xcc://foo:bar@localhost:8008/baz", instance.connectionUri.toString());
+        assertEquals(xccConnectionUri, instance.connectionUri.toString());
     }
 
     @Test
@@ -365,6 +365,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty("XCC-PASSWORD", "password");
         exit.expectSystemExit();
         instance.initURI(null);
+        fail();
     }
 
     @Test
@@ -373,6 +374,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty("XCC-PORT", "80");
         exit.expectSystemExit();
         instance.initURI(null);
+        fail();
     }
 
     @Test
@@ -381,6 +383,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty("XCC-HOSTNAME", "localhost");
         exit.expectSystemExit();
         instance.initURI(null);
+        fail();
     }
 
     @Test
@@ -389,6 +392,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty("XCC-USERNAME", "user");
         exit.expectSystemExit();
         instance.initURI(null);
+        fail();
     }
 
     /**
@@ -400,6 +404,7 @@ public class AbstractManagerTest {
         String propName = "";
         AbstractManager instance = new AbstractManagerImpl();
         instance.getOption(argVal, propName);
+        fail();
     }
 
     @Test

@@ -76,7 +76,8 @@ public abstract class AbstractManager {
     protected static final int EXIT_CODE_SUCCESS = 0;
     protected static final int EXIT_CODE_INIT_ERROR = 1;
     protected static final int EXIT_CODE_PROCESSING_ERROR = 2;
-
+    protected static final String SPACE = " ";
+        
 	private static final Logger LOG = Logger.getLogger(AbstractManager.class.getName());
     
 	public static Properties loadPropertiesFile(String filename) throws IOException {
@@ -295,6 +296,16 @@ public abstract class AbstractManager {
 	
 	protected abstract void usage();
 	
+    protected String buildSystemPropertyArg(String property, String value) {
+        StringBuilder arg = new StringBuilder("-D");
+        arg.append(property);
+        if (StringUtils.isNotEmpty(value)) {
+            arg.append("=");
+            arg.append(value);
+        }
+        return arg.toString();
+    }
+    
 	protected void logRuntimeArgs(){
 		RuntimeMXBean runtimemxBean = ManagementFactory.getRuntimeMXBean();
 		List<String> arguments = runtimemxBean.getInputArguments();

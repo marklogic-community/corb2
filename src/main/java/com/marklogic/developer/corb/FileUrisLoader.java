@@ -33,7 +33,8 @@ public class FileUrisLoader extends AbstractUrisLoader {
 	BufferedReader br;
 	String nextLine;
 	protected static final Logger LOG = Logger.getLogger(FileUrisLoader.class.getName());
-
+    private static final String EXCEPTION_MSG_PROBLEM_READING_URIS_FILE = "Problem while reading the uris file";
+    
 	@Override
 	public void open() throws CorbException {
         
@@ -72,7 +73,7 @@ public class FileUrisLoader extends AbstractUrisLoader {
 			try {
 				nextLine = readNextLine();
 			} catch (Exception exc) {
-				throw new CorbException("Problem while reading the uris file");
+				throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_URIS_FILE);
 			}
 		}
 		return nextLine != null;
@@ -88,7 +89,7 @@ public class FileUrisLoader extends AbstractUrisLoader {
 			try {
 				line = readNextLine();
 			} catch (Exception exc) {
-				throw new CorbException("Problem while reading the uris file");
+				throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_URIS_FILE);
 			}
 		}
 		for (int i = 0; line != null && i < replacements.length - 1; i += 2) {
