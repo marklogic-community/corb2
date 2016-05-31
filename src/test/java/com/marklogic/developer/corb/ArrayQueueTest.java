@@ -43,7 +43,7 @@ public class ArrayQueueTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testSizeNegativeInit() {
-        ArrayQueue<String> instance = new ArrayQueue<String>(-1);
+        new ArrayQueue<String>(-1);
         fail();
     }
 

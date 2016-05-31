@@ -48,21 +48,21 @@ public class DiskQueueTest {
 
     @Test(expected = InvalidParameterException.class)
     public void testDiskQueue_sizeTooSmall() {
-        Queue<String> instance = new DiskQueue<String>(0);
+        new DiskQueue<String>(0);
         fail();
     }
 
     @Test(expected = InvalidParameterException.class)
     public void testDiskQueue_tempDirNotDir() throws IOException {
         File tmpFile = File.createTempFile("tmp", "txt");
-        Queue<String> instance = new DiskQueue<String>(0, tmpFile);
+        new DiskQueue<String>(0, tmpFile);
         fail();
     }
 
     @Test(expected = InvalidParameterException.class)
     public void testDiskQueue_tempFileDoesNotExist() throws IOException {
         File tmpFile = new File("/does/not/exist");
-        Queue<String> instance = new DiskQueue<String>(0, tmpFile);
+        new DiskQueue<String>(0, tmpFile);
         fail();
     }
 
