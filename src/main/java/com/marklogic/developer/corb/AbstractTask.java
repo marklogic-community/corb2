@@ -29,6 +29,7 @@ import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_MESSAGE;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_INTERVAL;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.commaSeparatedValuesToList;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
@@ -329,17 +330,7 @@ public abstract class AbstractTask implements Task {
     }
 
     protected String asString(String[] uris) {
-        if (uris == null || uris.length == 0) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < uris.length; i++) {
-            if (i > 0) {
-                sb.append(',');
-            }
-            sb.append(uris[i]);
-        }
-        return sb.toString();
+        return uris == null ? "" : StringUtils.join(uris, ",");
     }
 
     protected abstract String processResult(ResultSequence seq) throws CorbException;
