@@ -30,6 +30,7 @@ import static org.junit.Assert.*;
 public class AbstractDecrypterTest {
 
     private static final String FOUR_SPACES = "    ";
+    private static final String VALUE = "val";
     
     /**
      * Test of init method, of class AbstractDecrypter.
@@ -113,19 +114,18 @@ public class AbstractDecrypterTest {
     @Test
     public void testDecrypt_notEncrypted() {
         String property = "prop";
-        String value = "val";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
-        String result = instance.decrypt(property, value);
-        assertEquals("VAL", result);
+        String result = instance.decrypt(property, VALUE);
+        assertEquals(VALUE.toUpperCase(), result);
     }
 
     @Test
     public void testDecrypt_encrypted() {
         String property = "prop";
-        String value = "ENC(val)";
+        String value = "ENC("+ VALUE + ")";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         String result = instance.decrypt(property, value);
-        assertEquals("VAL", result);
+        assertEquals(VALUE.toUpperCase(), result);
     }
 
     /**
@@ -134,10 +134,9 @@ public class AbstractDecrypterTest {
     @Test
     public void testDoDecrypt() {
         String property = "key";
-        String value = "val";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
-        String result = instance.doDecrypt(property, value);
-        assertEquals(value.toUpperCase(), result);
+        String result = instance.doDecrypt(property, VALUE);
+        assertEquals(VALUE.toUpperCase(), result);
     }
 
     /**
@@ -176,12 +175,11 @@ public class AbstractDecrypterTest {
         String key = "testGetProperty";
         System.setProperty(key, FOUR_SPACES);
         AbstractDecrypter instance = new AbstractDecrypterImpl();
-        String expResult = "";
         instance.properties = new Properties();
         instance.properties.setProperty(key, "      ");
         String result = instance.getProperty(key);
         System.clearProperty(key);
-        assertEquals(expResult, result);
+        assertEquals("", result);
     }
 
     private static class AbstractDecrypterImpl extends AbstractDecrypter {
