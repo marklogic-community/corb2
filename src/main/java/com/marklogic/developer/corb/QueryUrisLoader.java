@@ -55,7 +55,6 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             + PRE_BATCH_MODULE + "|" + PROCESS_MODULE + "|" + XQUERY_MODULE + "|" + POST_BATCH_MODULE
             + ")\\.[A-Za-z0-9]+=.*");
     private Queue<String> queue;
-    private long lastMessageMillis;
 
     Session session;
     ResultSequence res;
@@ -81,7 +80,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
                     new Object[]{opts.getResultBufferSize(), opts.getCacheResult()});
 
             session = cs.newSession();
-            Request req = null;
+            Request req;
             String urisModule = options.getUrisModule();
             if (isInlineOrAdhoc(urisModule)) {
                 String adhocQuery;
@@ -252,7 +251,6 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             if (freeMemory < (16 * 1024 * 1024)) {
                 LOG.log(WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
             }
-            lastMessageMillis = System.currentTimeMillis();
         }
         if (0 == currentIndex % 25000) {
             LOG.log(INFO, "queued {0}/{1}: {2}", new Object[]{currentIndex, total, uri});
