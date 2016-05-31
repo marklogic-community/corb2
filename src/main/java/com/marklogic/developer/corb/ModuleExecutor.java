@@ -69,9 +69,6 @@ public class ModuleExecutor extends AbstractManager {
 
     protected static final String NAME = ModuleExecutor.class.getSimpleName();
 
-    private Session session;
-    private ResultSequence res;
-
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
     protected static final byte[] NEWLINE
             = System.getProperty("line.separator") != null ? System.getProperty("line.separator").getBytes() : "\n".getBytes();
@@ -98,10 +95,6 @@ public class ModuleExecutor extends AbstractManager {
             LOG.log(SEVERE, "Error while running CORB", exc);
             System.exit(EXIT_CODE_PROCESSING_ERROR);
         }
-    }
-
-    public ModuleExecutor() {
-
     }
 
     @Override
@@ -252,12 +245,13 @@ public class ModuleExecutor extends AbstractManager {
         LOG.log(INFO, "{0} starting: {1}", new Object[]{NAME, VERSION_MSG});
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
         LOG.log(INFO, "maximum heap size = {0} MiB", maxMemory);
-
+        Session session;
+        Request req;
         try {
             RequestOptions opts = new RequestOptions();
             opts.setCacheResult(false);
             session = contentSource.newSession();
-            Request req = null;
+            
             List<String> propertyNames = new ArrayList<String>(properties.stringPropertyNames());
             propertyNames.addAll(System.getProperties().stringPropertyNames());
             String processModule = options.getProcessModule();
@@ -300,8 +294,8 @@ public class ModuleExecutor extends AbstractManager {
             }
 
             req.setOptions(opts);
-            res = session.submitRequest(req);
-
+            
+            ResultSequence res = session.submitRequest(req);
             writeToFile(res);
 
             LOG.info("Done");
