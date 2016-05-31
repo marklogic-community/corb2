@@ -61,14 +61,17 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     private static final byte[] HARD_CODED_BYTES = {120, 26, 58, 29, 43, 77, 95, 103, 29, 86, 97, 105, 52, 16, 42, 63, 37, 100, 45, 109, 108, 79, 75, 71, 11, 46, 36, 62, 124, 12, 7, 127};
     private static final String AES = "AES";
     private static final String USAGE_FORMAT = "java -cp marklogic-corb-" + AbstractManager.VERSION + ".jar " + HostKeyDecrypter.class.getName() + "{1} ";
+    private static final String EXCEPTION_MGS_SERIAL_NOT_FOUND = "Unable to find serial number on {1}"; 
+    private static final String METHOD_TEST = "test";
+    private static final String METHOD_ENCRYPT = "encrypt";
     // currently only usage is encrypt
     private static final String USAGE = "Encrypt:\n "
-            + MessageFormat.format(USAGE_FORMAT, new Object[]{"encrypt clearText"})
+            + MessageFormat.format(USAGE_FORMAT, new Object[]{METHOD_ENCRYPT + " clearText"})
             + "\nTest:\n "
-            + MessageFormat.format(USAGE_FORMAT, new Object[]{"test"});
+            + MessageFormat.format(USAGE_FORMAT, new Object[]{METHOD_TEST});
 
     protected static final Logger LOG = Logger.getLogger(HostKeyDecrypter.class.getName());
-
+        
     protected enum OSType {
 
         Windows {
@@ -171,10 +174,9 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                 return DEFAULT_BYTES;
             }
         };
-
+        
         public abstract byte[] getSN();
-        private static String EXCEPTION_MGS_SERIAL_NOT_FOUND = "Unable to find serial number on {1}";
-
+        
         private static void closeOrThrowRuntime(Closeable obj) {
             if (obj != null) {
                 try {
@@ -379,9 +381,9 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     public static void main(String[] args) throws Exception {
         String method = (args != null && args.length > 0) ? args[0].trim() : "";
 
-        if (method.equals("encrypt") && args.length == 2) {
+        if (METHOD_ENCRYPT.equals(method) && args.length == 2) {
             System.out.println(encrypt(args[1].trim()));
-        } else if (method.equals("test")) {
+        } else if (METHOD_TEST.equals(method)) {
             HostKeyDecrypter decrypter = new HostKeyDecrypter();
             decrypter.init(System.getProperties());
             String original = "234Helloworld!!!";
