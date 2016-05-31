@@ -931,10 +931,10 @@ public class ManagerTest {
     }
 
     private static class MockManager extends Manager {
-
-        //Want to retain the mock contentSoure that we set in our tests
+ 
         @Override
         protected void prepareContentSource() throws XccConfigException, GeneralSecurityException {
+            //Want to retain the mock contentSoure that we set in our tests
         }
     }
 }
