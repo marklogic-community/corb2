@@ -474,7 +474,7 @@ public class AbstractManagerTest {
     @Test(expected = NullPointerException.class)
     public void testGetSecurityOptions_nullPointer() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        SecurityOptions result = instance.getSecurityOptions();
+        instance.getSecurityOptions();
         fail();       
     }
 
