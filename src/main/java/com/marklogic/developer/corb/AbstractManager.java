@@ -300,7 +300,7 @@ public abstract class AbstractManager {
         StringBuilder arg = new StringBuilder("-D");
         arg.append(property);
         if (StringUtils.isNotEmpty(value)) {
-            arg.append("=");
+            arg.append('=');
             arg.append(value);
         }
         return arg.toString();
@@ -315,7 +315,7 @@ public abstract class AbstractManager {
                 argsToLog.add(argument);
             }
         }
-		LOG.log(INFO, "runtime arguments = {0}", StringUtils.join(argsToLog, " "));
+		LOG.log(INFO, "runtime arguments = {0}", StringUtils.join(argsToLog, SPACE));
 	}
     
 }
