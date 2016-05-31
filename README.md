@@ -1,5 +1,5 @@
 Version: 2.3.1
-[ ![Download](https://api.bintray.com/packages/marklogic/maven/marklogic-corb/images/download.svg) ](https://bintray.com/marklogic/maven/marklogic-corb/_latestVersion)[![Dependency Status](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed/badge.svg?style=flat)](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed)
+[ ![Download](https://api.bintray.com/packages/marklogic/maven/marklogic-corb/images/download.svg) ](https://bintray.com/marklogic/maven/marklogic-corb/_latestVersion)[![Javadocs](https://www.javadoc.io/badge/com.marklogic/marklogic-corb.svg)](https://www.javadoc.io/doc/com.marklogic/marklogic-corb)[![Dependency Status](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed/badge.svg?style=flat)](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed)
 
 [![Build Status](https://travis-ci.org/marklogic/corb2.svg?branch=development)](https://travis-ci.org/marklogic/corb2)
 [![codecov](https://codecov.io/gh/marklogic/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic/corb2/branch/development)
@@ -9,7 +9,7 @@ This document provides a comprehensive overview of CoRB2. For additional informa
 
 ### Downloads
 
-Download latest release from https://github.com/marklogic/corb2/releases.  
+Download the latest release directly from https://github.com/marklogic/corb2/releases or you can resolve dependencies through [Maven Central](http://mvnrepository.com/artifact/com.marklogic/marklogic-corb) or [JCenter](https://bintray.com/marklogic/maven/marklogic-corb/view).
 
 Corb v2.2.0 or later requires [marklogic-xcc-8.0.*.jar or later](https://developer.marklogic.com/products/xcc) to run. Please note that marklogic-xcc 8 is backwards compatible up to MarkLogic 5 and runs on Java 1.6 or later.
 
@@ -27,7 +27,7 @@ You can build CoRB in the same way as any Gradle project:
 ```
 
 You might want to skip the integration tests until you have configured a test database
-(the integration tests that require a live MarkLogic database):
+(the integration tests require a live MarkLogic database):
 
 ```
 ./gradlew build -x integrationTest
