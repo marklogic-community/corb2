@@ -123,10 +123,6 @@ public class Manager extends AbstractManager {
 
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
     private static final String TAB = "\t";
-    
-    public Manager() {
-
-    }
 
     /**
      * @param args

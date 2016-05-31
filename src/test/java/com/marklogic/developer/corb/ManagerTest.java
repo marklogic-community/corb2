@@ -613,7 +613,7 @@ public class ManagerTest {
         args[4] = "src/test/resources/selector.xqy";
         args[6] = "";
         args[7] = "true";
-        String loader = "com.marklogic.developer.corb.FileUrisLoader";
+
         Properties props = new Properties();
         Manager instance = getMockManagerWithEmptyResults();
         instance.options.setModulesDatabase("");

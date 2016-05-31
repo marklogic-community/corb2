@@ -122,7 +122,6 @@ public class AbstractUrisLoaderTest {
     @Test
     public void testGetProperty_isNull() {
         String key = "foo";
-        String value = "bar";
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         String result = instance.getProperty(key);
         assertEquals(null, result);

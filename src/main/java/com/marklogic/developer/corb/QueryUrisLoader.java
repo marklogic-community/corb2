@@ -62,9 +62,6 @@ public class QueryUrisLoader extends AbstractUrisLoader {
 
     private static final Logger LOG = Logger.getLogger(QueryUrisLoader.class.getName());
 
-    public QueryUrisLoader() {
-    }
-
     @Override
     public void open() throws CorbException {
         List<String> propertyNames = new ArrayList<String>();
