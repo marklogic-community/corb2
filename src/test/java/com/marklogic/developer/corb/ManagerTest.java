@@ -405,7 +405,7 @@ public class ManagerTest {
 
         Properties props = new Properties();
         props.setProperty(Options.XQUERY_MODULE, PROCESS_MODULE);
-        props.setProperty(XQUERY-MODULE.foo", "process-bar");
+        props.setProperty("XQUERY-MODULE.foo", "process-bar");
         props.setProperty(Options.PRE_BATCH_XQUERY_MODULE, PRE_BATCH_MODULE);
         props.setProperty("PRE-BATCH-XQUERY-MODULE.foo", "pre-bar");
         props.setProperty(Options.POST_BATCH_XQUERY_MODULE, POST_BATCH_MODULE);
