@@ -69,7 +69,7 @@ public class DiskQueueTest {
     @Test(expected = InvalidParameterException.class)
     public void testDiskQueue_tempDirIsNull() throws IOException {
         File tmpFile = null;
-        Queue<String> instance = new DiskQueue<String>(0, tmpFile);
+        new DiskQueue<String>(0, tmpFile);
         fail();
     }
 
