@@ -55,6 +55,7 @@ import org.w3c.dom.NodeList;
 public class FileUrisXMLLoader extends AbstractUrisLoader {
 
     protected static final Logger LOG = Logger.getLogger(FileUrisXMLLoader.class.getName());
+    private static final String EXCEPTION_MSG_PROBLEM_READING_XML_FILE = "Problem while reading the xml file";
     String nextUri;
     Iterator<Node> nodeIterator;
     Document doc;
@@ -150,7 +151,7 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
             try {
                 nextUri = readNextNode();
             } catch (Exception exc) {
-                throw new CorbException("Problem while reading the xml file");
+                throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE);
             }
         }
         return nextUri != null;
@@ -166,10 +167,9 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
             try {
                 node = readNextNode();
             } catch (Exception exc) {
-                throw new CorbException("Problem while reading the xml file");
+                throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE);
             }
         }
-
         return node;
     }
 
