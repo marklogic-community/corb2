@@ -1,5 +1,5 @@
 Version: 2.3.1
-[ ![Download](https://api.bintray.com/packages/marklogic/maven/marklogic-corb/images/download.svg) ](https://bintray.com/marklogic/maven/marklogic-corb/_latestVersion)[![Javadocs](https://www.javadoc.io/badge/com.marklogic/marklogic-corb.svg)](https://www.javadoc.io/doc/com.marklogic/marklogic-corb)[![Dependency Status](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed/badge.svg?style=flat)](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed)
+[ ![Download](https://api.bintray.com/packages/marklogic/maven/marklogic-corb/images/download.svg) ](https://bintray.com/marklogic/maven/marklogic-corb/_latestVersion)[![Javadocs](https://www.javadoc.io/badge/com.marklogic/marklogic-corb.svg?color=blue)](https://www.javadoc.io/doc/com.marklogic/marklogic-corb) [![Dependency Status](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed/badge.svg?style=flat)](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed)
 
 [![Build Status](https://travis-ci.org/marklogic/corb2.svg?branch=development)](https://travis-ci.org/marklogic/corb2)
 [![codecov](https://codecov.io/gh/marklogic/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic/corb2/branch/development)
