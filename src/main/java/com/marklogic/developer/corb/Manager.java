@@ -436,6 +436,7 @@ public class Manager extends AbstractManager {
     protected void usage() {
         List<String> args = new ArrayList<String>(7);
         String xcc_connection_uri = "xcc://user:password@host:port/[ database ]";
+        String thread_count = "10";
         String options_file = "myjob.properties";
         PrintStream err = System.err;
         
@@ -449,7 +450,7 @@ public class Manager extends AbstractManager {
         err.println("\nusage 2:");
         args.add(buildSystemPropertyArg(XCC_CONNECTION_URI, xcc_connection_uri));
         args.add(buildSystemPropertyArg(XQUERY_MODULE ,"module-name.xqy"));
-        args.add(buildSystemPropertyArg(THREAD_COUNT, "10"));
+        args.add(buildSystemPropertyArg(THREAD_COUNT, thread_count));
         args.add(buildSystemPropertyArg(URIS_MODULE, "get-uris.xqy"));
         args.add(buildSystemPropertyArg(POST_BATCH_XQUERY_MODULE, "post-batch.xqy"));
         args.add(buildSystemPropertyArg("... ", null));
@@ -465,7 +466,7 @@ public class Manager extends AbstractManager {
         err.println("\nusage 4:");
         args.clear();
         args.add(buildSystemPropertyArg(OPTIONS_FILE, options_file));
-        args.add(buildSystemPropertyArg(THREAD_COUNT, "10"));
+        args.add(buildSystemPropertyArg(THREAD_COUNT, thread_count));
         args.add(NAME);
         args.add(xcc_connection_uri);
         err.println(TAB + StringUtils.join(args, SPACE));
