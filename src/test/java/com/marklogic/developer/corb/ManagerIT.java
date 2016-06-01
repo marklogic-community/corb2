@@ -125,21 +125,21 @@ public class ManagerIT {
     @Test
     public void testManagerUsingSysProps() throws Exception {
         clearSystemProperties();
-        System.setProperty("XCC-CONNECTION-URI", ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty("COLLECTION-NAME", ManagerTest.COLLECTION_NAME);
-        System.setProperty("XQUERY-MODULE", ManagerTest.XQUERY_MODULE);
-        System.setProperty("THREAD-COUNT", ManagerTest.THREAD_COUNT);
-        System.setProperty("URIS-MODULE", "src/test/resources/selector.xqy|ADHOC");
-        System.setProperty("MODULE-ROOT", ManagerTest.MODULES_ROOT);
-        System.setProperty("MODULES-DATABASE", ManagerTest.MODULES_DATABASE);
-        System.setProperty("INSTALL", "false");
-        System.setProperty("PROCESS-TASK", ManagerTest.PROCESS_TASK);
-        System.setProperty("PRE-BATCH-MODULE", ManagerTest.PRE_BATCH_MODULE);
-        System.setProperty("PRE-BATCH-TASK", ManagerTest.PRE_BATCH_TASK);
-        System.setProperty("POST-BATCH-MODULE", ManagerTest.POST_BATCH_MODULE);
-        System.setProperty("POST-BATCH-TASK", ManagerTest.POST_BATCH_TASK);
-        System.setProperty("EXPORT-FILE-DIR", ManagerTest.EXPORT_FILE_DIR);
-        System.setProperty("EXPORT-FILE-NAME", "testManagerUsingSysProps.txt");
+        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
+        System.setProperty(Options.COLLECTION_NAME, ManagerTest.COLLECTION_NAME);
+        System.setProperty(Options.XQUERY_MODULE, ManagerTest.XQUERY_MODULE);
+        System.setProperty(Options.THREAD_COUNT, ManagerTest.THREAD_COUNT);
+        System.setProperty(Options.URIS_MODULE, "src/test/resources/selector.xqy|ADHOC");
+        System.setProperty(Options.MODULE_ROOT, ManagerTest.MODULES_ROOT);
+        System.setProperty(Options.MODULES_DATABASE, ManagerTest.MODULES_DATABASE);
+        System.setProperty(Options.INSTALL, Boolean.toString(false));
+        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
+        System.setProperty(Options.PRE_BATCH_MODULE, ManagerTest.PRE_BATCH_MODULE);
+        System.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
+        System.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
+        System.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
+        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        System.setProperty(Options.EXPORT_FILE_NAME, "testManagerUsingSysProps.txt");
         String[] args = {};
         //First, verify the output by executing run()
         Manager manager = new Manager();
@@ -162,24 +162,24 @@ public class ManagerIT {
     public void testManagerUsingSysProps_largeUrisList() throws Exception {
         clearSystemProperties();
         int uriCount = 100;
-        System.setProperty("XCC-CONNECTION-URI", ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty("COLLECTION-NAME", ManagerTest.COLLECTION_NAME);
-        System.setProperty("XQUERY-MODULE", ManagerTest.XQUERY_MODULE);
-        System.setProperty("THREAD-COUNT", "4");
-        System.setProperty("URIS-MODULE", "src/test/resources/selectorLargeList.xqy|ADHOC");
+        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
+        System.setProperty(Options.COLLECTION_NAME, ManagerTest.COLLECTION_NAME);
+        System.setProperty(Options.XQUERY_MODULE, ManagerTest.XQUERY_MODULE);
+        System.setProperty(Options.THREAD_COUNT, "4");
+        System.setProperty(Options.URIS_MODULE, "src/test/resources/selectorLargeList.xqy|ADHOC");
         System.setProperty("URIS-MODULE.count", String.valueOf(uriCount));
-        System.setProperty("MODULE-ROOT", ManagerTest.MODULES_ROOT);
-        System.setProperty("MODULES-DATABASE", ManagerTest.MODULES_DATABASE);
-        System.setProperty("INSTALL", "false");
-        System.setProperty("PROCESS-TASK", ManagerTest.PROCESS_TASK);
-        System.setProperty("PRE-BATCH-MODULE", ManagerTest.PRE_BATCH_MODULE);
-        System.setProperty("PRE-BATCH-TASK", ManagerTest.PRE_BATCH_TASK);
-        System.setProperty("POST-BATCH-MODULE", ManagerTest.POST_BATCH_MODULE);
-        System.setProperty("POST-BATCH-TASK", ManagerTest.POST_BATCH_TASK);
-        System.setProperty("EXPORT-FILE-DIR", ManagerTest.EXPORT_FILE_DIR);
-        System.setProperty("EXPORT-FILE-NAME", "testManagerUsingSysProps.txt");
-        System.setProperty("URIS-QUEUE-MAX-IN-MEMORY-SIZE", "10");
-        System.setProperty("URIS-QUEUE-TEMP-DIR", "/var/tmp");
+        System.setProperty(Options.MODULE_ROOT, ManagerTest.MODULES_ROOT);
+        System.setProperty(Options.MODULES_DATABASE, ManagerTest.MODULES_DATABASE);
+        System.setProperty(Options.INSTALL, Boolean.toString(false));
+        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
+        System.setProperty(Options.PRE_BATCH_MODULE, ManagerTest.PRE_BATCH_MODULE);
+        System.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
+        System.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
+        System.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
+        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        System.setProperty(Options.EXPORT_FILE_NAME, "testManagerUsingSysProps.txt");
+        System.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, "10");
+        System.setProperty(Options.DISK_QUEUE_TEMP_DIR, "/var/tmp");
         String[] args = {};
         Manager manager = new Manager();
         manager.init(args);
@@ -201,8 +201,8 @@ public class ManagerIT {
     public void testManagerUsingPropsFile() throws Exception {
         String exportFileName = ManagerTest.EXPORT_FILE_DIR + "/testManagerUsingPropsFile.txt";
         clearSystemProperties();
-        System.setProperty("OPTIONS-FILE", "src/test/resources/helloWorld.properties");
-        System.setProperty("EXPORT-FILE-NAME", exportFileName);
+        System.setProperty(Options.OPTIONS_FILE, "src/test/resources/helloWorld.properties");
+        System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
         String[] args = {};
         //First, verify the output using run()
         Manager manager = new Manager();
@@ -233,21 +233,21 @@ public class ManagerIT {
     @Test
     public void testManagerUsingInputFile() throws Exception {
         clearSystemProperties();
-        System.setProperty("XCC-CONNECTION-URI", ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty("COLLECTION-NAME", ManagerTest.COLLECTION_NAME);
-        System.setProperty("XQUERY-MODULE", ManagerTest.XQUERY_MODULE);
-        System.setProperty("THREAD-COUNT", ManagerTest.THREAD_COUNT);
-        System.setProperty("MODULE-ROOT", ManagerTest.MODULES_ROOT);
-        System.setProperty("MODULES-DATABASE", ManagerTest.MODULES_DATABASE);
-        System.setProperty("INSTALL", "false");
-        System.setProperty("PROCESS-TASK", ManagerTest.PROCESS_TASK);
-        System.setProperty("PRE-BATCH-MODULE", ManagerTest.PRE_BATCH_MODULE);
-        System.setProperty("PRE-BATCH-TASK", ManagerTest.PRE_BATCH_TASK);
-        System.setProperty("POST-BATCH-MODULE", ManagerTest.POST_BATCH_MODULE);
-        System.setProperty("POST-BATCH-TASK", ManagerTest.POST_BATCH_TASK);
-        System.setProperty("EXPORT-FILE-DIR", ManagerTest.EXPORT_FILE_DIR);
-        System.setProperty("EXPORT-FILE-NAME", "testManagerUsingInputFile.txt");
-        System.setProperty("URIS-FILE", "src/test/resources/uriInputFile.txt");
+        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
+        System.setProperty(Options.COLLECTION_NAME, ManagerTest.COLLECTION_NAME);
+        System.setProperty(Options.XQUERY_MODULE, ManagerTest.XQUERY_MODULE);
+        System.setProperty(Options.THREAD_COUNT, ManagerTest.THREAD_COUNT);
+        System.setProperty(Options.MODULE_ROOT, ManagerTest.MODULES_ROOT);
+        System.setProperty(Options.MODULES_DATABASE, ManagerTest.MODULES_DATABASE);
+        System.setProperty(Options.INSTALL, Boolean.toString(false));
+        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
+        System.setProperty(Options.PRE_BATCH_MODULE, ManagerTest.PRE_BATCH_MODULE);
+        System.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
+        System.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
+        System.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
+        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        System.setProperty(Options.EXPORT_FILE_NAME, "testManagerUsingInputFile.txt");
+        System.setProperty(Options.URIS_FILE, "src/test/resources/uriInputFile.txt");
         String[] args = {};
         //First, verify the output using run()
         Manager manager = new Manager();
@@ -279,21 +279,21 @@ public class ManagerIT {
     @Test
     public void testManagersPreBatchTask() throws Exception {
         clearSystemProperties();
-        System.setProperty("XCC-CONNECTION-URI", ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty("COLLECTION-NAME", ManagerTest.COLLECTION_NAME);
-        System.setProperty("XQUERY-MODULE", ManagerTest.XQUERY_MODULE);
-        System.setProperty("THREAD-COUNT", ManagerTest.THREAD_COUNT);
-        System.setProperty("MODULE-ROOT", ManagerTest.MODULES_ROOT);
-        System.setProperty("MODULES-DATABASE", ManagerTest.MODULES_DATABASE);
-        System.setProperty("INSTALL", "false");
-        System.setProperty("PROCESS-TASK", ManagerTest.PROCESS_TASK);
-        System.setProperty("PRE-BATCH-MODULE", ManagerTest.PRE_BATCH_MODULE);
-        System.setProperty("PRE-BATCH-TASK", ManagerTest.PRE_BATCH_TASK);
-        System.setProperty("POST-BATCH-MODULE", ManagerTest.POST_BATCH_MODULE);
-        System.setProperty("POST-BATCH-TASK", ManagerTest.POST_BATCH_TASK);
-        System.setProperty("EXPORT-FILE-DIR", ManagerTest.EXPORT_FILE_DIR);
-        System.setProperty("EXPORT-FILE-NAME", "testManagersPreBatchTask.txt");
-        System.setProperty("URIS-FILE", ManagerTest.URIS_FILE);
+        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
+        System.setProperty(Options.COLLECTION_NAME, ManagerTest.COLLECTION_NAME);
+        System.setProperty(Options.XQUERY_MODULE, ManagerTest.XQUERY_MODULE);
+        System.setProperty(Options.THREAD_COUNT, ManagerTest.THREAD_COUNT);
+        System.setProperty(Options.MODULE_ROOT, ManagerTest.MODULES_ROOT);
+        System.setProperty(Options.MODULES_DATABASE, ManagerTest.MODULES_DATABASE);
+        System.setProperty(Options.INSTALL, Boolean.toString(false));
+        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
+        System.setProperty(Options.PRE_BATCH_MODULE, ManagerTest.PRE_BATCH_MODULE);
+        System.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
+        System.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
+        System.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
+        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        System.setProperty(Options.EXPORT_FILE_NAME, "testManagersPreBatchTask.txt");
+        System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         String[] args = {};
         //First, verify output executing run()
         Manager manager = new Manager();
@@ -325,21 +325,21 @@ public class ManagerIT {
     @Test
     public void testManagersPostBatchTask() throws Exception {
         clearSystemProperties();
-        System.setProperty("XCC-CONNECTION-URI", ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty("COLLECTION-NAME", ManagerTest.COLLECTION_NAME);
-        System.setProperty("XQUERY-MODULE", ManagerTest.XQUERY_MODULE);
-        System.setProperty("THREAD-COUNT", ManagerTest.THREAD_COUNT);
-        System.setProperty("MODULE-ROOT", ManagerTest.MODULES_ROOT);
-        System.setProperty("MODULES-DATABASE", ManagerTest.MODULES_DATABASE);
-        System.setProperty("INSTALL", "false");
-        System.setProperty("PROCESS-TASK", ManagerTest.PROCESS_TASK);
-        System.setProperty("PRE-BATCH-MODULE", ManagerTest.PRE_BATCH_MODULE);
-        System.setProperty("PRE-BATCH-TASK", ManagerTest.PRE_BATCH_TASK);
-        System.setProperty("POST-BATCH-MODULE", ManagerTest.POST_BATCH_MODULE);
-        System.setProperty("POST-BATCH-TASK", ManagerTest.POST_BATCH_TASK);
-        System.setProperty("EXPORT-FILE-DIR", ManagerTest.EXPORT_FILE_DIR);
-        System.setProperty("EXPORT-FILE-NAME", "testManagersPostBatchTask.txt");
-        System.setProperty("URIS-FILE", ManagerTest.URIS_FILE);
+        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
+        System.setProperty(Options.COLLECTION_NAME, ManagerTest.COLLECTION_NAME);
+        System.setProperty(Options.XQUERY_MODULE, ManagerTest.XQUERY_MODULE);
+        System.setProperty(Options.THREAD_COUNT, ManagerTest.THREAD_COUNT);
+        System.setProperty(Options.MODULE_ROOT, ManagerTest.MODULES_ROOT);
+        System.setProperty(Options.MODULES_DATABASE, ManagerTest.MODULES_DATABASE);
+        System.setProperty(Options.INSTALL, Boolean.toString(false));
+        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
+        System.setProperty(Options.PRE_BATCH_MODULE, ManagerTest.PRE_BATCH_MODULE);
+        System.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
+        System.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
+        System.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
+        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        System.setProperty(Options.EXPORT_FILE_NAME, "testManagersPostBatchTask.txt");
+        System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         String[] args = {};
         //First, verify the output using run()
         Manager manager = new Manager();
@@ -371,22 +371,22 @@ public class ManagerIT {
     @Test
     public void testManagersPostBatchTaskZip() throws Exception {
         clearSystemProperties();
-        System.setProperty("XCC-CONNECTION-URI", ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty("COLLECTION-NAME", ManagerTest.COLLECTION_NAME);
-        System.setProperty("XQUERY-MODULE", ManagerTest.XQUERY_MODULE);
-        System.setProperty("THREAD-COUNT", ManagerTest.THREAD_COUNT);
-        System.setProperty("MODULE-ROOT", ManagerTest.MODULES_ROOT);
-        System.setProperty("MODULES-DATABASE", ManagerTest.MODULES_DATABASE);
-        System.setProperty("INSTALL", "false");
-        System.setProperty("PROCESS-TASK", ManagerTest.PROCESS_TASK);
-        System.setProperty("PRE-BATCH-MODULE", ManagerTest.PRE_BATCH_MODULE);
-        System.setProperty("PRE-BATCH-TASK", ManagerTest.PRE_BATCH_TASK);
-        System.setProperty("POST-BATCH-MODULE", ManagerTest.POST_BATCH_MODULE);
-        System.setProperty("POST-BATCH-TASK", ManagerTest.POST_BATCH_TASK);
-        System.setProperty("EXPORT-FILE-DIR", ManagerTest.EXPORT_FILE_DIR);
-        System.setProperty("EXPORT-FILE-NAME", "helloWorld.txt");
-        System.setProperty("URIS-FILE", ManagerTest.URIS_FILE);
-        System.setProperty("EXPORT_FILE_AS_ZIP", "true");
+        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
+        System.setProperty(Options.COLLECTION_NAME, ManagerTest.COLLECTION_NAME);
+        System.setProperty(Options.XQUERY_MODULE, ManagerTest.XQUERY_MODULE);
+        System.setProperty(Options.THREAD_COUNT, ManagerTest.THREAD_COUNT);
+        System.setProperty(Options.MODULE_ROOT, ManagerTest.MODULES_ROOT);
+        System.setProperty(Options.MODULES_DATABASE, ManagerTest.MODULES_DATABASE);
+        System.setProperty(Options.INSTALL, Boolean.toString(false));
+        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
+        System.setProperty(Options.PRE_BATCH_MODULE, ManagerTest.PRE_BATCH_MODULE);
+        System.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
+        System.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
+        System.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
+        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        System.setProperty(Options.EXPORT_FILE_NAME, "helloWorld.txt");
+        System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
+        System.setProperty(Options.EXPORT_FILE_AS_ZIP, Boolean.toString(true));
         String[] args = {};
         //First, verify the output using run()
         Manager manager = new Manager();
@@ -411,21 +411,21 @@ public class ManagerIT {
     @Test
     public void testManagerJavaScriptTransform() throws Exception {
         clearSystemProperties();
-        System.setProperty("XCC-CONNECTION-URI", ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty("COLLECTION-NAME", ManagerTest.COLLECTION_NAME);
-        System.setProperty("XQUERY-MODULE", "src/test/resources/mod-print-uri.sjs|ADHOC");
-        System.setProperty("THREAD-COUNT", ManagerTest.THREAD_COUNT);
-        System.setProperty("MODULE-ROOT", ManagerTest.MODULES_ROOT);
-        System.setProperty("MODULES-DATABASE", ManagerTest.MODULES_DATABASE);
-        System.setProperty("INSTALL", "false");
-        System.setProperty("PROCESS-TASK", ManagerTest.PROCESS_TASK);
-        System.setProperty("PRE-BATCH-MODULE", ManagerTest.PRE_BATCH_MODULE);
-        System.setProperty("PRE-BATCH-TASK", ManagerTest.PRE_BATCH_TASK);
-        System.setProperty("POST-BATCH-MODULE", ManagerTest.POST_BATCH_MODULE);
-        System.setProperty("POST-BATCH-TASK", ManagerTest.POST_BATCH_TASK);
-        System.setProperty("EXPORT-FILE-DIR", ManagerTest.EXPORT_FILE_DIR);
-        System.setProperty("EXPORT-FILE-NAME", "testManagerJavaScriptTransform.txt");
-        System.setProperty("URIS-FILE", ManagerTest.URIS_FILE);
+        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
+        System.setProperty(Options.COLLECTION_NAME, ManagerTest.COLLECTION_NAME);
+        System.setProperty(Options.XQUERY_MODULE, "src/test/resources/mod-print-uri.sjs|ADHOC");
+        System.setProperty(Options.THREAD_COUNT, ManagerTest.THREAD_COUNT);
+        System.setProperty(Options.MODULE_ROOT, ManagerTest.MODULES_ROOT);
+        System.setProperty(Options.MODULES_DATABASE, ManagerTest.MODULES_DATABASE);
+        System.setProperty(Options.INSTALL, Boolean.toString(false));
+        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
+        System.setProperty(Options.PRE_BATCH_MODULE, ManagerTest.PRE_BATCH_MODULE);
+        System.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
+        System.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
+        System.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
+        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        System.setProperty(Options.EXPORT_FILE_NAME, "testManagerJavaScriptTransform.txt");
+        System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         System.setProperty("XQUERY-MODULE.foo", "bar1");
         String[] args = {};
         //First, verify the output using run()
