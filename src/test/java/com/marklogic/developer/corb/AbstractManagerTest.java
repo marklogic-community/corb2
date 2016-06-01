@@ -51,22 +51,24 @@ public class AbstractManagerTest {
 
     @Rule
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
-    private static final Logger logger = Logger.getLogger(AbstractManager.class.getName());
+    private static final Logger LOG = Logger.getLogger(AbstractManager.class.getName());
     private final TestHandler testLogger = new TestHandler();
-    private final String xccConnectionUri = "xcc://foo:bar@localhost:8008/baz";
-    private final String propertiesFilename = "helloWorld.properties";
-    private final String propertiesFileDir = "src/test/resources/";
-    private final String propertiesFilePath = propertiesFileDir + "/" + propertiesFilename;
-    private final String invalidFilePath = "does/not/exist";
-    private final String selectorFilename = "selector.xqy";
-    private final String selectorFilePath = "src/test/resources/" + selectorFilename;
+    private static final String XCC_CONNECTION_URI = "xcc://foo:bar@localhost:8008/baz";
+    private static final String PROPERTIES_FILE_NAME = "helloWorld.properties";
+    private static final String PROPERTIES_FILE_DIR = "src/test/resources/";
+    private static final String PROPERTIES_FILE_PATH = PROPERTIES_FILE_DIR + "/" + PROPERTIES_FILE_NAME;
+    private static final String INVALID_FILE_PATH = "does/not/exist";
+    private static final String SELECTOR_FILE_NAME = "selector.xqy";
+    private static final String SELECTOR_FILE_PATH = "src/test/resources/" + SELECTOR_FILE_NAME;
+    private static final String KEY = "key";
+    private static final String VALUE = "value";
     private String selectorAsText;
 
     @Before
     public void setUp() throws FileNotFoundException {
-        logger.addHandler(testLogger);
+        LOG.addHandler(testLogger);
         clearSystemProperties();
-        String text = TestUtils.readFile(selectorFilePath);
+        String text = TestUtils.readFile(SELECTOR_FILE_PATH);
         selectorAsText = text.trim();
     }
 
@@ -80,7 +82,7 @@ public class AbstractManagerTest {
      */
     @Test
     public void testLoadPropertiesFile_String() throws Exception {
-        Properties result = AbstractManager.loadPropertiesFile(propertiesFilePath);
+        Properties result = AbstractManager.loadPropertiesFile(PROPERTIES_FILE_PATH);
         assertNotNull(result);
     }
 
@@ -89,13 +91,13 @@ public class AbstractManagerTest {
      */
     @Test
     public void testLoadPropertiesFile_String_boolean() throws Exception {
-        Properties result = AbstractManager.loadPropertiesFile(invalidFilePath, false);
+        Properties result = AbstractManager.loadPropertiesFile(INVALID_FILE_PATH, false);
         assertNotNull(result);
     }
 
     @Test(expected = IllegalStateException.class)
     public void testLoadPropertiesFile_String_boolean_MissingFileThrowsException() throws Exception {
-        AbstractManager.loadPropertiesFile(invalidFilePath, true);
+        AbstractManager.loadPropertiesFile(INVALID_FILE_PATH, true);
         fail();
     }
 
@@ -105,7 +107,7 @@ public class AbstractManagerTest {
     @Test
     public void testLoadPropertiesFile_3args() throws Exception {
         Properties props = new Properties();
-        Properties result = AbstractManager.loadPropertiesFile(invalidFilePath, false, props);
+        Properties result = AbstractManager.loadPropertiesFile(INVALID_FILE_PATH, false, props);
         assertEquals(props, result);
         assertTrue(props.isEmpty());
     }
@@ -113,8 +115,8 @@ public class AbstractManagerTest {
     @Test
     public void testLoadPropertiesFile_3args_loadFromClasspath() throws Exception {
         Properties props = new Properties();
-        props.setProperty("key", "value");
-        Properties result = AbstractManager.loadPropertiesFile(propertiesFilename, false, props);
+        props.setProperty(KEY, VALUE);
+        Properties result = AbstractManager.loadPropertiesFile(PROPERTIES_FILE_NAME, false, props);
         assertEquals(props, result);
         assertFalse(props.isEmpty());
         assertTrue(props.size() > 1);
@@ -123,8 +125,8 @@ public class AbstractManagerTest {
     @Test
     public void testLoadPropertiesFile_3args_existingPropertiesAndBadPath() throws Exception {
         Properties props = new Properties();
-        props.setProperty("key", "value");
-        Properties result = AbstractManager.loadPropertiesFile(invalidFilePath, false, props);
+        props.setProperty(KEY, VALUE);
+        Properties result = AbstractManager.loadPropertiesFile(INVALID_FILE_PATH, false, props);
         assertEquals(props, result);
         assertFalse(props.isEmpty());
         assertTrue(props.size() == 1);
@@ -133,15 +135,15 @@ public class AbstractManagerTest {
     @Test(expected = IllegalStateException.class)
     public void testLoadPropertiesFile_3args_existingPropertiesAndBadPathThrows() throws Exception {
         Properties props = new Properties();
-        props.setProperty("key", "value");
-        AbstractManager.loadPropertiesFile(invalidFilePath, true, props);
+        props.setProperty(KEY, VALUE);
+        AbstractManager.loadPropertiesFile(INVALID_FILE_PATH, true, props);
         fail();
     }
 
     @Test
     public void testLoadPropertiesFile_3args_existingPropertiesAndBlankPath() throws Exception {
         Properties props = new Properties();
-        props.setProperty("key", "value");
+        props.setProperty(KEY, VALUE);
         Properties result = AbstractManager.loadPropertiesFile("    ", true, props);
         assertEquals(props, result);
         assertFalse(props.isEmpty());
@@ -151,8 +153,8 @@ public class AbstractManagerTest {
     @Test(expected = IllegalStateException.class)
     public void testLoadPropertiesFile_3args_forDirectory() throws Exception {
         Properties props = new Properties();
-        props.setProperty("key", "value");
-        AbstractManager.loadPropertiesFile(propertiesFileDir, true, props);
+        props.setProperty(KEY, VALUE);
+        AbstractManager.loadPropertiesFile(PROPERTIES_FILE_DIR, true, props);
         fail();
     }
 
@@ -161,8 +163,7 @@ public class AbstractManagerTest {
      */
     @Test(expected = IllegalStateException.class)
     public void testGetAdhocQuery_missingFile() {
-        System.out.println("getAdhocQuery");
-        AbstractManager.getAdhocQuery(invalidFilePath);
+        AbstractManager.getAdhocQuery(INVALID_FILE_PATH);
         fail();
     }
 
@@ -186,19 +187,19 @@ public class AbstractManagerTest {
 
     @Test
     public void testGetAdhocQuery_fromClassloader() {
-        String result = AbstractManager.getAdhocQuery(selectorFilename);
+        String result = AbstractManager.getAdhocQuery(SELECTOR_FILE_NAME);
         assertEquals(selectorAsText, result);
     }
 
     @Test
     public void testGetAdhocQuery_fromFile() {
-        String result = AbstractManager.getAdhocQuery(selectorFilePath);
+        String result = AbstractManager.getAdhocQuery(SELECTOR_FILE_PATH);
         assertEquals(selectorAsText, result);
     }
 
     @Test(expected = IllegalStateException.class)
     public void testGetAdhocQuery_fromDir() {
-        AbstractManager.getAdhocQuery(propertiesFileDir);
+        AbstractManager.getAdhocQuery(PROPERTIES_FILE_DIR);
         fail();
     }
 
@@ -227,7 +228,7 @@ public class AbstractManagerTest {
      */
     @Test
     public void testInitPropertiesFromOptionsFile() throws Exception {
-        System.setProperty("OPTIONS-FILE", propertiesFilename);
+        System.setProperty(Options.OPTIONS_FILE, PROPERTIES_FILE_NAME);
         AbstractManager instance = new AbstractManagerImpl();
         instance.initPropertiesFromOptionsFile();
         Properties properties = instance.getProperties();
@@ -252,11 +253,11 @@ public class AbstractManagerTest {
     public void testInit_StringArr_Properties() throws Exception {
         String[] args = null;
         Properties props = new Properties();
-        props.setProperty("key", "value");
+        props.setProperty(KEY, VALUE);
         AbstractManager instance = new AbstractManagerImpl();
         instance.init(args, props);
         Properties properties = instance.getProperties();
-        assertTrue(properties.containsKey("key"));
+        assertTrue(properties.containsKey(KEY));
     }
 
     /**
@@ -272,7 +273,7 @@ public class AbstractManagerTest {
     @Test
     public void testInitDecrypter_validDecrypter() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty("DECRYPTER", "com.marklogic.developer.corb.JasyptDecrypter");
+        instance.properties.setProperty(Options.DECRYPTER, "com.marklogic.developer.corb.JasyptDecrypter");
         instance.initDecrypter();
         assertTrue(instance.decrypter instanceof com.marklogic.developer.corb.JasyptDecrypter);
     }
@@ -280,7 +281,7 @@ public class AbstractManagerTest {
     @Test(expected = IllegalArgumentException.class)
     public void testInitDecrypter_invalidDecrypter() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty("DECRYPTER", "java.lang.String");
+        instance.properties.setProperty(Options.DECRYPTER, "java.lang.String");
         instance.initDecrypter();
         fail();
     }
@@ -298,7 +299,7 @@ public class AbstractManagerTest {
     @Test(expected = IllegalArgumentException.class)
     public void testInitSSLConfig_invalidConfigClass() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty("SSL-CONFIG-CLASS", "java.lang.String");
+        instance.properties.setProperty(Options.SSL_CONFIG_CLASS, "java.lang.String");
         instance.initSSLConfig();
         fail();
     }
@@ -309,28 +310,28 @@ public class AbstractManagerTest {
     @Test
     public void testInitURI() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.initURI(xccConnectionUri);
-        assertEquals(xccConnectionUri, instance.connectionUri.toString());
+        instance.initURI(XCC_CONNECTION_URI);
+        assertEquals(XCC_CONNECTION_URI, instance.connectionUri.toString());
     }
 
     @Test
     public void testInitURI_argsTakePrecedenceOverProperties() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty("XCC-USERNAME", "username");
-        instance.properties.setProperty("XCC-PASSWORD", "password");
-        instance.properties.setProperty("XCC-HOSTNAME", "localhost");
-        instance.properties.setProperty("XCC-PORT", "80");
-        instance.initURI(xccConnectionUri);
-        assertEquals(xccConnectionUri, instance.connectionUri.toString());
+        instance.properties.setProperty(Options.XCC_USERNAME, "username");
+        instance.properties.setProperty(Options.XCC_PASSWORD, "password");
+        instance.properties.setProperty(Options.XCC_HOSTNAME, "localhost");
+        instance.properties.setProperty(Options.XCC_PORT, "80");
+        instance.initURI(XCC_CONNECTION_URI);
+        assertEquals(XCC_CONNECTION_URI, instance.connectionUri.toString());
     }
 
     @Test
     public void testInitURI_asSystemPropertyOnly() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        System.setProperty("XCC-CONNECTION-URI", xccConnectionUri);
+        System.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
         instance.initURI(null);
-        System.clearProperty("XCC-CONNECTION-URI");
-        assertEquals(xccConnectionUri, instance.connectionUri.toString());
+        System.clearProperty(Options.XCC_CONNECTION_URI);
+        assertEquals(XCC_CONNECTION_URI, instance.connectionUri.toString());
     }
 
     @Test
@@ -338,7 +339,7 @@ public class AbstractManagerTest {
         String uriArg = "www.marklogic.com";
         AbstractManager instance = new AbstractManagerImpl();
         instance.initURI(uriArg);
-        assertEquals("www.marklogic.com", instance.connectionUri.toString());
+        assertEquals(uriArg, instance.connectionUri.toString());
     }
 
     @Test
@@ -351,10 +352,10 @@ public class AbstractManagerTest {
     @Test
     public void testInitURI_nullURI_withValues() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty("XCC-USERNAME", "username");
-        instance.properties.setProperty("XCC-PASSWORD", "password");
-        instance.properties.setProperty("XCC-HOSTNAME", "localhost");
-        instance.properties.setProperty("XCC-PORT", "80");
+        instance.properties.setProperty(Options.XCC_USERNAME, "username");
+        instance.properties.setProperty(Options.XCC_PASSWORD, "password");
+        instance.properties.setProperty(Options.XCC_HOSTNAME, "localhost");
+        instance.properties.setProperty(Options.XCC_PORT, "80");
         instance.initURI(null);
         assertEquals("xcc://username:password@localhost:80", instance.connectionUri.toString());
     }
@@ -362,7 +363,7 @@ public class AbstractManagerTest {
     @Test
     public void testInitURI_nullURI_withPassword() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty("XCC-PASSWORD", "password");
+        instance.properties.setProperty(Options.XCC_PASSWORD, "password");
         exit.expectSystemExit();
         instance.initURI(null);
         fail();
@@ -371,7 +372,7 @@ public class AbstractManagerTest {
     @Test
     public void testInitURI_nullURI_withPort() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty("XCC-PORT", "80");
+        instance.properties.setProperty(Options.XCC_PORT, "80");
         exit.expectSystemExit();
         instance.initURI(null);
         fail();
@@ -380,7 +381,7 @@ public class AbstractManagerTest {
     @Test
     public void testInitURI_nullURI_withHostname() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty("XCC-HOSTNAME", "localhost");
+        instance.properties.setProperty(Options.XCC_HOSTNAME, "localhost");
         exit.expectSystemExit();
         instance.initURI(null);
         fail();
@@ -389,7 +390,7 @@ public class AbstractManagerTest {
     @Test
     public void testInitURI_nullURI_withUsername() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty("XCC-USERNAME", "user");
+        instance.properties.setProperty(Options.XCC_USERNAME, "user");
         exit.expectSystemExit();
         instance.initURI(null);
         fail();
