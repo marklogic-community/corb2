@@ -134,6 +134,12 @@ public class AbstractUrisLoaderTest {
     public void testCleanup() {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         instance.cleanup();
+        assertNull(instance.options);
+        assertNull(instance.cs);
+        assertNull(instance.collection);
+        assertNull(instance.properties);
+        assertNull(instance.replacements);
+        assertNull(instance.batchRef);
     }
 
     /**
