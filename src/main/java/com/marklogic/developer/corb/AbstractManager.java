@@ -90,18 +90,18 @@ public abstract class AbstractManager {
 	}
 
 	protected static Properties loadPropertiesFile(String filename, boolean excIfNotFound, Properties props) throws IOException {
-        filename = trim(filename);
-		if (isNotBlank(filename)) {
-			InputStream is = null;
+        String name = trim(filename);
+		if (isNotBlank(name)) {
+			InputStream  is = null;
 			try {
-				is = Manager.class.getResourceAsStream("/" + filename);
+				is = Manager.class.getResourceAsStream("/" + name);
 				if (is != null) {
-					LOG.log(INFO, "Loading {0} from classpath", filename);
+					LOG.log(INFO, "Loading {0} from classpath", name);
 					props.load(is);
 				} else {
 					File f = new File(filename);
 					if (f.exists() && !f.isDirectory()) {
-						LOG.log(INFO, "Loading {0} from filesystem", filename);
+						LOG.log(INFO, "Loading {0} from filesystem", name);
 						FileInputStream fis = null;
 						try {
 							fis = new FileInputStream(f);
@@ -110,7 +110,7 @@ public abstract class AbstractManager {
                             closeQuietly(fis);
 						}
 					} else if (excIfNotFound) {
-						throw new IllegalStateException("Unable to load properties file " + filename);
+						throw new IllegalStateException("Unable to load properties file " + name);
 					}
 				}
 			} finally {
