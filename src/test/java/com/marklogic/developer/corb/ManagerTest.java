@@ -173,7 +173,7 @@ public class ManagerTest {
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
-        props.setProperty("BATCH-SIZE", "5");
+        props.setProperty(Options.BATCH_SIZE, "5");
         Manager instance = getMockManagerWithEmptyResults();
         exit.expectSystemExit();
         instance.init(args, props);
@@ -185,9 +185,9 @@ public class ManagerTest {
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
-        props.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
+        props.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
         //no "COLLECTION-NAME" specified
-        props.setProperty("PROCESS-MODULE", "src/test/resources/mod-print-uri.sjs|ADHOC");
+        props.setProperty(Options.PROCESS_MODULE, "src/test/resources/mod-print-uri.sjs|ADHOC");
 
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
@@ -199,9 +199,9 @@ public class ManagerTest {
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
-        props.setProperty("XCC-CONNECTION-URI", XCC_CONNECTION_URI);
-        props.setProperty("PROCESS-MODULE", "src/test/resources/mod-print-uri.sjs|ADHOC");
-        props.setProperty("URIS-FILE", "does/not/exist");
+        props.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
+        props.setProperty(Options.PROCESS_MODULE, "src/test/resources/mod-print-uri.sjs|ADHOC");
+        props.setProperty(Options.URIS_FILE, "does/not/exist");
 
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
@@ -279,7 +279,7 @@ public class ManagerTest {
         args[2] = null;
 
         Properties props = new Properties();
-        props.setProperty("XQUERY-MODULE", PROCESS_MODULE);
+        props.setProperty(Options.XQUERY_MODULE, PROCESS_MODULE);
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
         assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
@@ -292,7 +292,7 @@ public class ManagerTest {
         args[2] = "";//process-module
 
         Properties props = new Properties();
-        props.setProperty("PROCESS-MODULE", PROCESS_MODULE);
+        props.setProperty(Options.PROCESS_MODULE, PROCESS_MODULE);
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
         assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
@@ -302,7 +302,7 @@ public class ManagerTest {
     public void testInitOptions_setInstall_property_true() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
-        args[7] = "true";//install
+        args[7] = Boolean.toString(true);//install
         Properties props = new Properties();
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
@@ -337,7 +337,7 @@ public class ManagerTest {
         String[] args = getDefaultArgs();
 
         Properties props = new Properties();
-        props.setProperty("DISK-QUEUE-MAX-IN-MEMORY-SIZE", "10");
+        props.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, "10");
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
         assertEquals(10, instance.options.getDiskQueueMaxInMemorySize());
@@ -349,7 +349,7 @@ public class ManagerTest {
         String[] args = getDefaultArgs();
 
         Properties props = new Properties();
-        props.setProperty("DISK-QUEUE-MAX-IN-MEMORY-SIZE", "ten");
+        props.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, "ten");
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
         fail();
@@ -370,11 +370,11 @@ public class ManagerTest {
     @Test
     public void testInitOptions_normalizeLegacySystemProperties() throws Exception {
         clearSystemProperties();
-        System.setProperty("XQUERY-MODULE", PROCESS_MODULE);
+        System.setProperty(Options.XQUERY_MODULE, PROCESS_MODULE);
         System.setProperty("XQUERY-MODULE.foo", "process-bar");
-        System.setProperty("PRE-BATCH-XQUERY-MODULE", PRE_BATCH_MODULE);
+        System.setProperty(Options.PRE_BATCH_XQUERY_MODULE, PRE_BATCH_MODULE);
         System.setProperty("PRE-BATCH-XQUERY-MODULE.foo", "pre-bar");
-        System.setProperty("POST-BATCH-XQUERY-MODULE", POST_BATCH_MODULE);
+        System.setProperty(Options.POST_BATCH_XQUERY_MODULE, POST_BATCH_MODULE);
         System.setProperty("POST-BATCH-XQUERY-MODULE.foo", "post-bar");
 
         String[] args = getDefaultArgs();
@@ -404,11 +404,11 @@ public class ManagerTest {
         args[13] = null; //post-batch-module
 
         Properties props = new Properties();
-        props.setProperty("XQUERY-MODULE", PROCESS_MODULE);
-        props.setProperty("XQUERY-MODULE.foo", "process-bar");
-        props.setProperty("PRE-BATCH-XQUERY-MODULE", PRE_BATCH_MODULE);
+        props.setProperty(Options.XQUERY_MODULE, PROCESS_MODULE);
+        props.setProperty(XQUERY-MODULE.foo", "process-bar");
+        props.setProperty(Options.PRE_BATCH_XQUERY_MODULE, PRE_BATCH_MODULE);
         props.setProperty("PRE-BATCH-XQUERY-MODULE.foo", "pre-bar");
-        props.setProperty("POST-BATCH-XQUERY-MODULE", POST_BATCH_MODULE);
+        props.setProperty(Options.POST_BATCH_XQUERY_MODULE, POST_BATCH_MODULE);
         props.setProperty("POST-BATCH-XQUERY-MODULE.foo", "post-bar");
 
         Manager instance = getMockManagerWithEmptyResults();
@@ -426,7 +426,7 @@ public class ManagerTest {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
-        props.setProperty("BATCH-SIZE", "one");
+        props.setProperty(Options.BATCH_SIZE, "one");
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
         fail();
@@ -437,7 +437,7 @@ public class ManagerTest {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
-        props.setProperty("BATCH-SIZE", "5");
+        props.setProperty(Options.BATCH_SIZE, "5");
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
         assertEquals(5, instance.options.getBatchSize());
@@ -446,7 +446,7 @@ public class ManagerTest {
     @Test
     public void testInit_failOnError_falseCaseInsensitive() throws Exception {
         clearSystemProperties();
-        System.setProperty("FAIL-ON-ERROR", "False");
+        System.setProperty(Options.FAIL_ON_ERROR, "False");
         String[] args = getDefaultArgs();
         Properties props = new Properties();
 
@@ -458,7 +458,7 @@ public class ManagerTest {
     @Test
     public void testInit_failOnErrorInvalidValue() throws Exception {
         clearSystemProperties();
-        System.setProperty("FAIL-ON-ERROR", "No");
+        System.setProperty(Options.FAIL_ON_ERROR, "No");
         String[] args = getDefaultArgs();
         Properties props = new Properties();
 
@@ -470,8 +470,8 @@ public class ManagerTest {
     @Test
     public void testInitOptions_ensurePropertiesAreSet() throws Exception {
         clearSystemProperties();
-        System.setProperty("ERROR-FILE-NAME", EXPORT_FILE_DIR + "/out");
-        System.setProperty("EXPORT-FILE-PART-EXT", "pt");
+        System.setProperty(Options.ERROR_FILE_NAME, EXPORT_FILE_DIR + "/out");
+        System.setProperty(Options.EXPORT_FILE_PART_EXT, "pt");
         String[] args = getDefaultArgs();
         Properties props = new Properties();
 
@@ -507,7 +507,7 @@ public class ManagerTest {
         String[] args = getDefaultArgs();
 
         Properties props = new Properties();
-        props.setProperty("ERROR-FILE-NAME", errorFilename);
+        props.setProperty(Options.ERROR_FILE_NAME, errorFilename);
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
         assertFalse(errorFile.exists());
@@ -518,15 +518,15 @@ public class ManagerTest {
     public void testInitOptions_clearExportFilePartExt() throws Exception {
         clearSystemProperties();
 
-        System.setProperty("EXPORT-FILE-PART-EXT", "exp");
+        System.setProperty(Options.EXPORT_FILE_PART_EXT, "exp");
         String[] args = getDefaultArgs();
         args[12] = null;
         Properties props = new Properties();
-        props.setProperty("EXPORT-FILE-PART-EXT", "expt");
+        props.setProperty(Options.EXPORT_FILE_PART_EXT, "expt");
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
-        assertNull(instance.properties.getProperty("EXPORT-FILE-PART-EXT"));
-        assertNull(System.getProperty("EXPORT-FILE-PART-EXT"));
+        assertNull(instance.properties.getProperty(Options.EXPORT_FILE_PART_EXT));
+        assertNull(System.getProperty(Options.EXPORT_FILE_PART_EXT));
     }
 
     @Test
@@ -552,24 +552,24 @@ public class ManagerTest {
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
 
-        assertNull(instance.properties.getProperty("PROCESS-TASK"));
+        assertNull(instance.properties.getProperty(Options.PROCESS_TASK));
         assertFalse(instance.options.isDoInstall());
         assertNull(instance.options.getUrisModule());
         assertEquals("Modules", instance.options.getModulesDatabase());
         assertNull(instance.options.getUrisFile());
         assertEquals(1, instance.options.getBatchSize());
         assertTrue(instance.options.isFailOnError());
-        assertNull(instance.properties.getProperty("EXPORT-FILE-DIR"));
-        assertNull(instance.properties.getProperty("EXPORT-FILE-NAME"));
-        assertNull(instance.properties.getProperty("ERROR-FILE-NAME"));
+        assertNull(instance.properties.getProperty(Options.EXPORT_FILE_DIR));
+        assertNull(instance.properties.getProperty(Options.EXPORT_FILE_NAME));
+        assertNull(instance.properties.getProperty(Options.ERROR_FILE_NAME));
         assertNull(instance.options.getInitModule());
         assertNull(instance.options.getInitTaskClass());
         assertNull(instance.options.getPreBatchModule());
         assertNull(instance.options.getPreBatchTaskClass());
         assertNull(instance.options.getPostBatchModule());
         assertNull(instance.options.getPostBatchTaskClass());
-        assertNull(instance.properties.getProperty("EXPORT-FILE-PART-EXT"));
-        assertNull(System.getProperty("EXPORT-FILE-PART-EXT"));
+        assertNull(instance.properties.getProperty(Options.EXPORT_FILE_PART_EXT));
+        assertNull(System.getProperty(Options.EXPORT_FILE_PART_EXT));
     }
 
     @Test
@@ -577,7 +577,7 @@ public class ManagerTest {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
-        props.setProperty("INIT-MODULE", "initModule");
+        props.setProperty(Options.INIT_MODULE, "initModule");
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
         assertEquals("initModule", instance.options.getInitModule());
@@ -588,7 +588,7 @@ public class ManagerTest {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
-        props.setProperty("INIT-TASK", PROCESS_TASK);
+        props.setProperty(Options.INIT_TASK, PROCESS_TASK);
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
         assertEquals(PROCESS_TASK, instance.options.getProcessTaskClass().getName());
@@ -600,7 +600,7 @@ public class ManagerTest {
         String[] args = getDefaultArgs();
         String loader = "com.marklogic.developer.corb.FileUrisLoader";
         Properties props = new Properties();
-        props.setProperty("URIS-LOADER", loader);
+        props.setProperty(Options.URIS_LOADER, loader);
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
         assertEquals(loader, instance.options.getUrisLoaderClass().getName());
@@ -627,7 +627,7 @@ public class ManagerTest {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[4] = "src/test/resources/doesNotExist.xqy";
-        args[7] = "true";
+        args[7] = Boolean.toString(true);
         Properties props = new Properties();
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
@@ -645,26 +645,27 @@ public class ManagerTest {
     @Test
     public void testNormalizeLegacyProperties() throws RequestException {
         Properties props = new Properties();
-        props.setProperty("XQUERY-MODULE", "foo");
+        props.setProperty(Options.XQUERY_MODULE, "foo");
         props.setProperty("XQUERY-MODULE.bar", "baz");
         Manager manager = getMockManagerWithEmptyResults();
         manager.properties = props;
         manager.normalizeLegacyProperties();
 
-        assertEquals("foo", manager.properties.getProperty("PROCESS-MODULE"));
+        assertEquals("foo", manager.properties.getProperty(Options.PROCESS_MODULE));
         assertEquals("baz", manager.properties.getProperty("PROCESS-MODULE.bar"));
     }
 
     @Test
     public void testNormalizeLegacyProperties_precedenceChecks() throws RequestException {
         Properties props = new Properties();
-        props.setProperty("PROCESS-MODULE.bar", "foo");
+        String processVal = "foo";
+        props.setProperty("PROCESS-MODULE.bar", processVal);
         props.setProperty("XQUERY-MODULE.bar", "baz");
         Manager manager = getMockManagerWithEmptyResults();
         manager.properties = props;
         manager.normalizeLegacyProperties();
 
-        assertEquals("foo", manager.properties.getProperty("PROCESS-MODULE.bar"));
+        assertEquals(processVal, manager.properties.getProperty("PROCESS-MODULE.bar"));
     }
 
     /**
