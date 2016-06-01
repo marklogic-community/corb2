@@ -60,8 +60,8 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     private static final byte[] DEFAULT_BYTES = {45, 32, 67, 34, 67, 23, 21, 45, 7, 89, 3, 27, 39, 62, 15};
     private static final byte[] HARD_CODED_BYTES = {120, 26, 58, 29, 43, 77, 95, 103, 29, 86, 97, 105, 52, 16, 42, 63, 37, 100, 45, 109, 108, 79, 75, 71, 11, 46, 36, 62, 124, 12, 7, 127};
     private static final String AES = "AES";
-    private static final String USAGE_FORMAT = "java -cp marklogic-corb-" + AbstractManager.VERSION + ".jar " + HostKeyDecrypter.class.getName() + "{1} ";
-    private static final String EXCEPTION_MGS_SERIAL_NOT_FOUND = "Unable to find serial number on {1}"; 
+    private static final String USAGE_FORMAT = "java -cp marklogic-corb-" + AbstractManager.VERSION + ".jar " + HostKeyDecrypter.class.getName() + "{0} ";
+    private static final String EXCEPTION_MGS_SERIAL_NOT_FOUND = "Unable to find serial number on {0}"; 
     private static final String METHOD_TEST = "test";
     private static final String METHOD_ENCRYPT = "encrypt";
     // currently only usage is encrypt
