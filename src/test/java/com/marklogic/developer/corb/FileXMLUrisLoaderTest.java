@@ -382,7 +382,7 @@ public class FileXMLUrisLoaderTest {
     public void testCleanup() {
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.doc = mock(Document.class);
-        instance.collection = "foo";
+        instance.collection = "testCollection";
         instance.cs = mock(ContentSource.class);
         instance.nextUri = "<test>testData</test>";
         instance.options = new TransformOptions();
