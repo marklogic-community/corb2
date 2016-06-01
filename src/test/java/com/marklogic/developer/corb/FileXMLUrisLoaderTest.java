@@ -193,7 +193,7 @@ public class FileXMLUrisLoaderTest {
     @Test
     public void testSelectAttributes() throws Exception {
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
-        instance.properties.setProperty("XML-NODE", "/root/a/@*");
+        instance.properties.setProperty(Options.XML_NODE, "/root/a/@*");
         instance.open();
         assertNotNull(instance.nodeIterator);
         ArrayList<String> nodes = new ArrayList<String>();
@@ -211,7 +211,7 @@ public class FileXMLUrisLoaderTest {
     @Test
     public void testSelectTextNodes() throws Exception {
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
-        instance.properties.setProperty("XML-NODE", "/root/a/text()");
+        instance.properties.setProperty(Options.XML_NODE, "/root/a/text()");
         instance.open();
         assertNotNull(instance.nodeIterator);
         ArrayList<String> nodes = new ArrayList<String>();
@@ -228,7 +228,7 @@ public class FileXMLUrisLoaderTest {
     @Test
     public void testSelectComments() throws Exception {
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
-        instance.properties.setProperty("XML-NODE", "//comment()");
+        instance.properties.setProperty(Options.XML_NODE, "//comment()");
         instance.open();
         assertNotNull(instance.nodeIterator);
         ArrayList<String> nodes = new ArrayList<String>();
@@ -258,7 +258,7 @@ public class FileXMLUrisLoaderTest {
     @Test
     public void testSelectWithUnion() throws Exception {
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
-        instance.properties.setProperty("XML-NODE", "//comment() | //@* | /*/*/text()");
+        instance.properties.setProperty(Options.XML_NODE, "//comment() | //@* | /*/*/text()");
         instance.open();
         assertNotNull(instance.nodeIterator);
         ArrayList<String> nodes = new ArrayList<String>();
@@ -282,7 +282,7 @@ public class FileXMLUrisLoaderTest {
     @Test(expected = CorbException.class)
     public void testOpen_fileDoesNotExist() throws Exception {
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
-        instance.properties.setProperty("XML-FILE", "does/not/exit.xml");
+        instance.properties.setProperty(Options.XML_FILE, "does/not/exit.xml");
         try {
             instance.open();
         } finally {
