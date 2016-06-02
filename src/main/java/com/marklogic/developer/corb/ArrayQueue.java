@@ -101,7 +101,7 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
         return x;
     }
 
-    void removeAt(int i) {
+    protected void removeAt(int i) {
         final char[][] items = this.queue;
         // if removing front item, just advance
         if (i == takeIndex) {
