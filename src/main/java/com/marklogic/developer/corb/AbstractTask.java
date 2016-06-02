@@ -417,7 +417,7 @@ public abstract class AbstractTask implements Task {
 
         String delim = getProperty(BATCH_URI_DELIM);
         if (delim == null || delim.length() == 0) {
-            delim = Manager.DEFAULT_BATCH_URI_DELIM;
+            delim = DEFAULT_BATCH_URI_DELIM;
         }
 
         synchronized (ERROR_SYNC_OBJ) {
