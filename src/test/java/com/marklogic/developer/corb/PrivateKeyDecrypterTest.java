@@ -57,6 +57,8 @@ public class PrivateKeyDecrypterTest {
     private static final String USAGE = PrivateKeyDecrypter.GEN_KEYS_USAGE + NEWLINE + PrivateKeyDecrypter.ENCRYPT_USAGE + NEWLINE;
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
     private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+    private PrintStream systemOut = System.out;
+    private PrintStream systemErr = System.err;
     
     @Before
     public void setUp() {
@@ -69,8 +71,8 @@ public class PrivateKeyDecrypterTest {
     @After
     public void tearDown() {
         clearSystemProperties();
-        System.setOut(null);
-        System.setErr(null);
+        System.setOut(systemOut);
+        System.setErr(systemErr);
     }
 
     private void setSystemProperties() {

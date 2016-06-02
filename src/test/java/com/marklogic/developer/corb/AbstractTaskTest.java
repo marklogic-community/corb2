@@ -435,7 +435,7 @@ public class AbstractTaskTest {
 
         instance.handleRequestException(exception);
         List<LogRecord> records = testLogger.getLogRecords();
-        System.out.println("logrecords " + records.size());
+
         assertEquals(Level.WARNING, records.get(0).getLevel());
         if (!(instance.shouldRetry(exception))) {
             assertEquals("failOnError is false. Encountered " + type + " at URI: " + instance.asString(uris), records.get(0).getMessage());
