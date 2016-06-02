@@ -39,8 +39,8 @@ import static org.junit.Assert.*;
  */
 public class IOUtilsTest {
 
-    final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
-    final String exampleContent;
+    private final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
+    private final String exampleContent;
 
     public IOUtilsTest() throws IOException {
         exampleContent = cat(new FileReader(exampleContentFile));
