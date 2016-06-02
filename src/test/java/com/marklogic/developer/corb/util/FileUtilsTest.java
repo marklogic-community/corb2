@@ -29,7 +29,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -41,12 +40,8 @@ import static org.mockito.Mockito.when;
  */
 public class FileUtilsTest {
 
-    final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
-    final String exampleContent;
-
-    public FileUtilsTest() throws IOException {
-        exampleContent = IOUtilsTest.cat(new FileReader(exampleContentFile));
-    }
+    private final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
+    private static final String TEXT_FILE_EXT = "txt";
 
     /**
      * Test of getBytes method, of class FileUtils.
@@ -63,7 +58,7 @@ public class FileUtilsTest {
     @Test
     public void testCopy_File_File() throws Exception {
 
-        File out = File.createTempFile("copiedFile", "txt");
+        File out = File.createTempFile("copiedFile", TEXT_FILE_EXT);
         out.deleteOnExit();
         copy(exampleContentFile, out);
 
@@ -78,7 +73,7 @@ public class FileUtilsTest {
     @Test
     public void testCopy_String_String() throws Exception {
         String inFilePath = exampleContentFile.getAbsolutePath();
-        File destFile = File.createTempFile("output", "txt");
+        File destFile = File.createTempFile("output", TEXT_FILE_EXT);
         destFile.deleteOnExit();
         String outFilePath = destFile.getAbsolutePath();
         copy(inFilePath, outFilePath);
@@ -93,7 +88,7 @@ public class FileUtilsTest {
      */
     @Test
     public void testDeleteFile_File() throws Exception {
-        File file = File.createTempFile("originalFile", "txt");
+        File file = File.createTempFile("originalFile", TEXT_FILE_EXT);
         FileUtils.deleteFile(file);
         assertFalse(file.exists());
     }
@@ -160,7 +155,7 @@ public class FileUtilsTest {
 
     @Test
     public void testMoveFile() throws IOException {
-        File file = File.createTempFile("moveFile", "txt");
+        File file = File.createTempFile("moveFile", TEXT_FILE_EXT);
         file.deleteOnExit();
         file.createNewFile();
         FileUtils.moveFile(file, file);
@@ -177,7 +172,7 @@ public class FileUtilsTest {
 
     @Test
     public void testGetFile_absolutePath() throws IOException {
-        File file = File.createTempFile("getFile", "txt");
+        File file = File.createTempFile("getFile", TEXT_FILE_EXT);
         file.deleteOnExit();
         file.createNewFile();
         File retrievedFile = FileUtils.getFile(file.getAbsolutePath());
