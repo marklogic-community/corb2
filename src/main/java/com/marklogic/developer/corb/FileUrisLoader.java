@@ -30,8 +30,8 @@ import java.util.logging.Logger;
 
 public class FileUrisLoader extends AbstractUrisLoader {
 
-	BufferedReader br;
-	String nextLine;
+	protected BufferedReader br;
+	protected String nextLine;
 	protected static final Logger LOG = Logger.getLogger(FileUrisLoader.class.getName());
     private static final String EXCEPTION_MSG_PROBLEM_READING_URIS_FILE = "Problem while reading the uris file";
     

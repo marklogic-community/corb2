@@ -56,11 +56,12 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
 
     protected static final Logger LOG = Logger.getLogger(FileUrisXMLLoader.class.getName());
     private static final String EXCEPTION_MSG_PROBLEM_READING_XML_FILE = "Problem while reading the xml file";
-    String nextUri;
-    Iterator<Node> nodeIterator;
-    Document doc;
-    Map<Integer, Node> nodeMap;
-    TransformerFactory transformerFactory;
+    protected String nextUri;
+    protected Iterator<Node> nodeIterator;
+    protected Document doc;
+
+    private Map<Integer, Node> nodeMap;
+    private TransformerFactory transformerFactory;
 
     @Override
     public void open() throws CorbException {
