@@ -38,13 +38,16 @@ import static org.junit.Assert.*;
  */
 public class JasyptDecrypterTest {
 
-    private static final Logger logger = Logger.getLogger(JasyptDecrypter.class.getName());
+    private static final Logger LOG = Logger.getLogger(JasyptDecrypter.class.getName());
     private final TestHandler testLogger = new TestHandler();
+    private static final String JASYPT_ALGORITHM = "jasypt.algorithm";
+    private static final String JASYPT_PASSWORD = "jasypt.password";
+    private static final String ERROR_NO_PASSWORD = "Unable to initialize jasypt decrypter. Couldn't find jasypt.password";
     
     @Before
     public void setUp() {
         clearSystemProperties();    
-        logger.addHandler(testLogger);
+        LOG.addHandler(testLogger);
     }
 
     @After
@@ -65,41 +68,41 @@ public class JasyptDecrypterTest {
     public void testInit_decrypter_badJasyptPropertiesFilePath() throws Exception {
         clearSystemProperties();
         Properties props = new Properties();
-        props.setProperty("JASYPT-PROPERTIES-FILE", "does/not/exist");
-        props.setProperty("jasypt.algorithm", "MD5");
-        props.setProperty("jasypt.password", "secret");
+        props.setProperty(Options.JASYPT_PROPERTIES_FILE, "does/not/exist");
+        props.setProperty(JASYPT_ALGORITHM, "MD5");
+        props.setProperty(JASYPT_PASSWORD, "secret");
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.properties = props;
         instance.init_decrypter();
         assertNull(instance.decrypter);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.SEVERE, records.get(0).getLevel());
-        assertEquals("Unable to initialize jasypt decrypter. Couldn't find jasypt.password", records.get(0).getMessage());
+        assertEquals(ERROR_NO_PASSWORD, records.get(0).getMessage());
     }
 
     @Test
     public void testInit_decrypter_propertiesAreBlank() throws Exception {
         clearSystemProperties();
         Properties props = new Properties();
-        props.setProperty("JASYPT-PROPERTIES-FILE", " ");
+        props.setProperty(Options.JASYPT_PROPERTIES_FILE, " ");
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.properties = props;
         instance.init_decrypter();
-        assertEquals("corbencrypt", instance.jaspytProperties.getProperty("jasypt.password"));
+        assertEquals("corbencrypt", instance.jaspytProperties.getProperty(JASYPT_PASSWORD));
     }
 
     //@Test
     public void testInit_decrypter_algorithmIsBlank() throws Exception {
         clearSystemProperties();
         Properties blankProps = new Properties();
-        blankProps.setProperty("jasypt.algorithm", "  ");
-        blankProps.setProperty("jasypt.password", "  ");
+        blankProps.setProperty(JASYPT_ALGORITHM, "  ");
+        blankProps.setProperty(JASYPT_PASSWORD, "  ");
         File blankPropsFile = File.createTempFile("temp", ".properties");
         blankPropsFile.deleteOnExit();
         FileOutputStream outputStream = new FileOutputStream(blankPropsFile);
         blankProps.store(outputStream, "");
         Properties props = new Properties();
-        props.setProperty("JASYPT-PROPERTIES-FILE", blankPropsFile.getAbsolutePath());
+        props.setProperty(Options.JASYPT_PROPERTIES_FILE, blankPropsFile.getAbsolutePath());
 
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.properties = props;
@@ -111,21 +114,21 @@ public class JasyptDecrypterTest {
     public void testInit_decrypter_algorithmIsNotBlank() throws Exception {
         clearSystemProperties();
         Properties blankProps = new Properties();
-        blankProps.setProperty("jasypt.algorithm", "PBEWithMD5AndTripleDES");
-        blankProps.setProperty("jasypt.password", "password");
+        blankProps.setProperty(JASYPT_ALGORITHM, "PBEWithMD5AndTripleDES");
+        blankProps.setProperty(JASYPT_PASSWORD, "password");
         File blankPropsFile = File.createTempFile("temp", ".properties");
         blankPropsFile.deleteOnExit();
         FileOutputStream outputStream = new FileOutputStream(blankPropsFile);
         blankProps.store(outputStream, "");
         Properties props = new Properties();
-        props.setProperty("JASYPT-PROPERTIES-FILE", blankPropsFile.getAbsolutePath());
+        props.setProperty(Options.JASYPT_PROPERTIES_FILE, blankPropsFile.getAbsolutePath());
 
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.properties = props;
         instance.init_decrypter();
 
-        assertEquals("PBEWithMD5AndTripleDES", instance.jaspytProperties.getProperty("jasypt.algorithm"));
-        assertEquals("password", instance.jaspytProperties.getProperty("jasypt.password"));
+        assertEquals("PBEWithMD5AndTripleDES", instance.jaspytProperties.getProperty(JASYPT_ALGORITHM));
+        assertEquals("password", instance.jaspytProperties.getProperty(JASYPT_PASSWORD));
         assertNotNull(instance.decrypter);
     }
 
@@ -139,25 +142,25 @@ public class JasyptDecrypterTest {
         emptyProps.store(outputStream, "");
         outputStream.close();
         Properties props = new Properties();
-        props.setProperty("JASYPT-PROPERTIES-FILE", emptyFile.getAbsolutePath());
+        props.setProperty(Options.JASYPT_PROPERTIES_FILE, emptyFile.getAbsolutePath());
 
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.properties = props;
         instance.init_decrypter();
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.SEVERE, records.get(0).getLevel());
-        assertEquals("Unable to initialize jasypt decrypter. Couldn't find jasypt.password", records.get(0).getMessage());
+        assertEquals(ERROR_NO_PASSWORD, records.get(0).getMessage());
     }
 
     @Test
     public void testInit_decrypter_withPassord() throws Exception {
         clearSystemProperties();
         Properties props = new Properties();
-        props.setProperty("JASYPT-PROPERTIES-FILE", "src/test/resources/jasypt.properties");
+        props.setProperty(Options.JASYPT_PROPERTIES_FILE, "src/test/resources/jasypt.properties");
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.properties = props;
         instance.init_decrypter();
-        assertEquals("corbencrypt", instance.jaspytProperties.getProperty("jasypt.password"));
+        assertEquals("corbencrypt", instance.jaspytProperties.getProperty(JASYPT_PASSWORD));
     }
 
     /**
