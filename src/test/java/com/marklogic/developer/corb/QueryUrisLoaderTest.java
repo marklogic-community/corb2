@@ -68,7 +68,7 @@ public class QueryUrisLoaderTest {
         Session session = mock(Session.class);
         when(contentSource.newSession()).thenReturn(session);
         Properties props = new Properties();
-        props.setProperty("URIS-REPLACE-PATTERN", "foo");
+        props.setProperty(Options.URIS_REPLACE_PATTERN, "foo");
         instance.properties = props;
         instance.cs = contentSource;
         try {
@@ -98,7 +98,7 @@ public class QueryUrisLoaderTest {
         when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
         when(xdmItem.asString()).thenReturn("none").thenReturn("none");
         Properties props = new Properties();
-        props.setProperty("URIS-REPLACE-PATTERN", "foo,");
+        props.setProperty(Options.URIS_REPLACE_PATTERN, "foo,");
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule("/module");
         transformOptions.setModuleRoot("/root");
@@ -133,7 +133,7 @@ public class QueryUrisLoaderTest {
         when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
         when(xdmItem.asString()).thenReturn("none").thenReturn("none");
         Properties props = new Properties();
-        props.setProperty("URIS-REPLACE-PATTERN", "foo,");
+        props.setProperty(Options.URIS_REPLACE_PATTERN, "foo,");
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule("INLINE-XQUERY|for $i in (1 to 5) return $i || '.xml'");
         transformOptions.setModuleRoot("/root");
@@ -168,7 +168,7 @@ public class QueryUrisLoaderTest {
         when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
         when(xdmItem.asString()).thenReturn("none").thenReturn("none");
         Properties props = new Properties();
-        props.setProperty("URIS-REPLACE-PATTERN", "foo,");
+        props.setProperty(Options.URIS_REPLACE_PATTERN, "foo,");
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule("INLINE-XQUERY|");
         transformOptions.setModuleRoot("/root");
@@ -289,7 +289,7 @@ public class QueryUrisLoaderTest {
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule("  |ADHOC");
         Properties props = new Properties();
-        props.setProperty("MAX_OPTS_FROM_MODULE", "0");
+        props.setProperty(Options.MAX_OPTS_FROM_MODULE, "0");
         instance.properties = props;
         instance.options = transformOptions;
         instance.cs = contentSource;
@@ -310,7 +310,7 @@ public class QueryUrisLoaderTest {
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule("  |ADHOC");
         Properties props = new Properties();
-        props.setProperty("MAX_OPTS_FROM_MODULE", "one");
+        props.setProperty(Options.MAX_OPTS_FROM_MODULE, "one");
         instance.properties = props;
         instance.options = transformOptions;
         instance.cs = contentSource;

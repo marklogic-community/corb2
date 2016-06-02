@@ -20,6 +20,7 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
 import static com.marklogic.developer.corb.PrivateKeyDecrypter.ENCRYPT_USAGE;
+import static com.marklogic.developer.corb.PrivateKeyDecrypter.GEN_KEYS_USAGE;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -54,7 +55,7 @@ public class PrivateKeyDecrypterTest {
     private static final String ALGORITHM = "RSA";
     private static final String SECRET = "secret";
     private static final String NEWLINE = "\n";
-    private static final String USAGE = PrivateKeyDecrypter.GEN_KEYS_USAGE + NEWLINE + PrivateKeyDecrypter.ENCRYPT_USAGE + NEWLINE;
+    private static final String USAGE = GEN_KEYS_USAGE + NEWLINE + ENCRYPT_USAGE + NEWLINE;
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
     private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
     private PrintStream systemOut = System.out;

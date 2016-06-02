@@ -35,7 +35,7 @@ public class PreBatchUpdateFileTaskTest {
     @Test
     public void testGetTopContent() {
         Properties props = new Properties();
-        props.setProperty("EXPORT-FILE-TOP-CONTENT", "foo@" + Manager.URIS_BATCH_REF + "baz");
+        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "foo@" + Manager.URIS_BATCH_REF + "baz");
         props.setProperty(Manager.URIS_BATCH_REF, "bar");
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.properties = props;
@@ -57,7 +57,7 @@ public class PreBatchUpdateFileTaskTest {
     public void testGetTopContent_urisBatchRefIsNull() {
         Properties props = new Properties();
         String val = "foo@" + Manager.URIS_BATCH_REF + "baz";
-        props.setProperty("EXPORT-FILE-TOP-CONTENT", val);
+        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, val);
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.properties = props;
         String result = instance.getTopContent();
@@ -75,8 +75,8 @@ public class PreBatchUpdateFileTaskTest {
         tempFile.createNewFile();
         tempFile.deleteOnExit();
         Properties props = new Properties();
-        props.setProperty("EXPORT-FILE-TOP-CONTENT", content);
-        props.setProperty("EXPORT-FILE-NAME", tempFile.getName());
+        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, content);
+        props.setProperty(Options.EXPORT_FILE_NAME, tempFile.getName());
 
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.properties = props;
@@ -104,8 +104,8 @@ public class PreBatchUpdateFileTaskTest {
         tempFile.createNewFile();
         tempFile.deleteOnExit();
         Properties props = new Properties();
-        props.setProperty("EXPORT-FILE-TOP-CONTENT", content);
-        props.setProperty("EXPORT-FILE-NAME", tempFile.getName());
+        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, content);
+        props.setProperty(Options.EXPORT_FILE_NAME, tempFile.getName());
 
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.properties = props;

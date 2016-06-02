@@ -19,7 +19,6 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
-import static com.marklogic.developer.corb.ManagerTest.EXPORT_FILE_DIR;
 import static com.marklogic.developer.corb.TestUtils.clearFile;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.util.FileUtilsTest.getBytes;
@@ -68,7 +67,7 @@ public class ManagerIT {
 
         logger.addHandler(testLogger);
         File tempDir = TestUtils.createTempDirectory();
-        EXPORT_FILE_DIR = tempDir.toString();
+        ManagerTest.EXPORT_FILE_DIR = tempDir.toString();
     }
 
     /**
@@ -80,7 +79,7 @@ public class ManagerIT {
      */
     @After
     public void tearDown() throws Exception {
-        FileUtils.deleteFile(EXPORT_FILE_DIR);
+        FileUtils.deleteFile(ManagerTest.EXPORT_FILE_DIR);
         clearSystemProperties();
     }
 
@@ -94,7 +93,7 @@ public class ManagerIT {
     public void testManagerUsingProgArgs() throws Exception {
         clearSystemProperties();
         String exportFileName = "testManagerUsingProgArgs.txt";
-        String exportFileDir = EXPORT_FILE_DIR;
+        String exportFileDir = ManagerTest.EXPORT_FILE_DIR;
         String[] args = ManagerTest.getDefaultArgs();
         args[14] = exportFileName;
         args[15] = null;
@@ -184,7 +183,7 @@ public class ManagerIT {
         Manager manager = new Manager();
         manager.init(args);
         manager.run();
-        File report = new File(EXPORT_FILE_DIR + "/testManagerUsingSysProps.txt");
+        File report = new File(ManagerTest.EXPORT_FILE_DIR + "/testManagerUsingSysProps.txt");
         report.deleteOnExit();
         int lineCount = FileUtils.getLineCount(report);
         assertEquals(uriCount + 2, lineCount);
@@ -199,7 +198,7 @@ public class ManagerIT {
      */
     @Test
     public void testManagerUsingPropsFile() throws Exception {
-        String exportFileName = EXPORT_FILE_DIR + "/testManagerUsingPropsFile.txt";
+        String exportFileName = ManagerTest.EXPORT_FILE_DIR + "/testManagerUsingPropsFile.txt";
         clearSystemProperties();
         System.setProperty(Options.OPTIONS_FILE, "src/test/resources/helloWorld.properties");
         System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
@@ -253,7 +252,7 @@ public class ManagerIT {
         Manager manager = new Manager();
         manager.init(args);
         manager.run();
-        String exportFilePath = EXPORT_FILE_DIR + "/testManagerUsingInputFile.txt";
+        String exportFilePath = ManagerTest.EXPORT_FILE_DIR + "/testManagerUsingInputFile.txt";
         File report = new File(exportFilePath);
         report.deleteOnExit();
         boolean fileExists = report.exists();
@@ -299,7 +298,7 @@ public class ManagerIT {
         Manager manager = new Manager();
         manager.init(args);
         manager.run();
-        String exportFilePath = EXPORT_FILE_DIR + "/testManagersPreBatchTask.txt";
+        String exportFilePath = ManagerTest.EXPORT_FILE_DIR + "/testManagersPreBatchTask.txt";
         File report = new File(exportFilePath);
         report.deleteOnExit();
         boolean fileExists = report.exists();
@@ -345,7 +344,7 @@ public class ManagerIT {
         Manager manager = new Manager();
         manager.init(args);
         manager.run();
-        String exportFilePath = EXPORT_FILE_DIR + "/testManagersPostBatchTask.txt";
+        String exportFilePath = ManagerTest.EXPORT_FILE_DIR + "/testManagersPostBatchTask.txt";
         File report = new File(exportFilePath);
         boolean fileExists = report.exists();
         assertTrue(fileExists);
@@ -392,7 +391,7 @@ public class ManagerIT {
         Manager manager = new Manager();
         manager.init(args);
         manager.run();
-        String zippedExportFilePath = EXPORT_FILE_DIR + "/helloWorld.txt.zip";
+        String zippedExportFilePath = ManagerTest.EXPORT_FILE_DIR + "/helloWorld.txt.zip";
         File report = new File(zippedExportFilePath);
         boolean fileExists = report.exists();
         clearFile(report);
@@ -432,7 +431,7 @@ public class ManagerIT {
         Manager manager = new Manager();
         manager.init(args);
         manager.run();
-        String exportFilePath = EXPORT_FILE_DIR + "/testManagerJavaScriptTransform.txt";
+        String exportFilePath = ManagerTest.EXPORT_FILE_DIR + "/testManagerJavaScriptTransform.txt";
         File report = new File(exportFilePath);
         report.deleteOnExit();
         boolean fileExists = report.exists();

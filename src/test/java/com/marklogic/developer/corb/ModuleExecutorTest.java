@@ -479,7 +479,7 @@ public class ModuleExecutorTest {
     @Test
     public void testSetProperties_1()
             throws Exception {
-        TestUtils.clearSystemProperties();
+        clearSystemProperties();
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
         ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
         Properties props = executor.getProperties();
