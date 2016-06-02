@@ -19,9 +19,12 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
+import static com.marklogic.developer.corb.PrivateKeyDecrypter.ENCRYPT_USAGE;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
@@ -50,16 +53,24 @@ public class PrivateKeyDecrypterTest {
     private static final String ACTION_ENCRYPT = "encrypt";
     private static final String ALGORITHM = "RSA";
     private static final String SECRET = "secret";
+    private static final String NEWLINE = "\n";
+    private static final String USAGE = PrivateKeyDecrypter.GEN_KEYS_USAGE + NEWLINE + PrivateKeyDecrypter.ENCRYPT_USAGE + NEWLINE;
+    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
     
     @Before
     public void setUp() {
         clearSystemProperties();
         LOG.addHandler(testLogger);
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
     }
 
     @After
     public void tearDown() {
         clearSystemProperties();
+        System.setOut(null);
+        System.setErr(null);
     }
 
     private void setSystemProperties() {
@@ -268,6 +279,7 @@ public class PrivateKeyDecrypterTest {
     public void testMain_encrypt() throws Exception {
         String[] args = {ACTION_ENCRYPT};
         PrivateKeyDecrypter.main(args);
+        assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
     }
 
     @Test
@@ -275,6 +287,7 @@ public class PrivateKeyDecrypterTest {
         String[] args = {ACTION_ENCRYPT, PUBLIC_KEY_PATH, SECRET, ALGORITHM};
         setSystemProperties();
         PrivateKeyDecrypter.main(args);
+        assertTrue(outContent.toString().startsWith("Input: " + SECRET + "\nOutput: "));
     }
 
     //TODO: test with an algorithm other than RSA
@@ -299,6 +312,7 @@ public class PrivateKeyDecrypterTest {
         String[] args = {ACTION_ENCRYPT, PRIVATE_KEY_PATH, "", ALGORITHM};
         setSystemProperties();
         PrivateKeyDecrypter.main(args);
+        assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
     }
 
     @Test
@@ -306,29 +320,34 @@ public class PrivateKeyDecrypterTest {
         String[] args = {ACTION_ENCRYPT, "", SECRET, ALGORITHM};
         setSystemProperties();
         PrivateKeyDecrypter.main(args);
+        assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
     }
 
     @Test
     public void testMain_invalidFirstArg() throws Exception {
         String[] args = {"invalidUsage"};
         PrivateKeyDecrypter.main(args);
+        assertEquals(USAGE, outContent.toString());
     }
 
     @Test
     public void testMain_nullArgs() throws Exception {
         String[] args = null;
         PrivateKeyDecrypter.main(args);
+        assertEquals(USAGE, outContent.toString());
     }
 
     @Test
     public void testMain_emptyArgsArray() throws Exception {
         String[] args = {};
         PrivateKeyDecrypter.main(args);
+        assertEquals(USAGE, outContent.toString());
     }
 
     @Test
     public void testMain_blankArgsArray() throws Exception {
         String[] args = {ACTION_ENCRYPT, "", "", ""};
         PrivateKeyDecrypter.main(args);
+        assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
     }
 }
