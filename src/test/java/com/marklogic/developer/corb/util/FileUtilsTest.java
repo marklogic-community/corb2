@@ -83,7 +83,7 @@ public class FileUtilsTest {
         String outFilePath = destFile.getAbsolutePath();
         copy(inFilePath, outFilePath);
 
-        Assert.assertArrayEquals(getBytes(exampleContentFile), getBytes(destFile));
+        assertArrayEquals(getBytes(exampleContentFile), getBytes(destFile));
     }
 
     /**

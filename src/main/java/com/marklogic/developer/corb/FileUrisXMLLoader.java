@@ -131,7 +131,7 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
         if (nodeIterator.hasNext()) {
             Node nextNode = nodeIterator.next();
             short nextNodeType = nextNode.getNodeType();
-            String line = null;
+            String line;
             if (nextNodeType == Node.ELEMENT_NODE || nextNodeType == Node.DOCUMENT_NODE) {
                 line = trim(nodeToString(nextNode));
             } else {
