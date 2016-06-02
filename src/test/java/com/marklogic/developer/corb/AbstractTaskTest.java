@@ -58,12 +58,12 @@ import static org.mockito.Mockito.when;
 public class AbstractTaskTest {
 
     private final TestHandler testLogger = new TestHandler();
-    private static final Logger logger = Logger.getLogger(AbstractTask.class.getName());
+    private static final Logger LOG = Logger.getLogger(AbstractTask.class.getName());
 
     @Before
     public void setUp() {
         clearSystemProperties();
-        logger.addHandler(testLogger);
+        LOG.addHandler(testLogger);
     }
 
     @After
@@ -231,7 +231,7 @@ public class AbstractTaskTest {
         Properties props = new Properties();
         props.setProperty("foo.bar", "baz");
         props.setProperty("foo.baz", "boo");
-        props.setProperty("BATCH-URI-DELIM", "");
+        props.setProperty(Options.BATCH_URI_DELIM, "");
         instance.properties = props;
 
         instance.inputUris = new String[]{"uri1", "uri2"};
@@ -411,27 +411,28 @@ public class AbstractTaskTest {
 
     public void testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, String delim, File exportDir, String errorFilename, int retryLimit)
             throws CorbException, IOException {
-        if (exportDir == null) {
-            exportDir = TestUtils.createTempDirectory();
-            exportDir.deleteOnExit();
+        File dir = exportDir;
+        if (dir == null) {
+            dir = TestUtils.createTempDirectory();
+            dir.deleteOnExit();
         }
         AbstractTask instance = new AbstractTaskImpl();
         instance.failOnError = fail;
         instance.inputUris = uris;
-        instance.exportDir = exportDir.getAbsolutePath();
+        instance.exportDir = dir.getAbsolutePath();
         instance.properties = new Properties();
         if (errorFilename != null) {
-            instance.properties.setProperty("ERROR-FILE-NAME", errorFilename);
+            instance.properties.setProperty(Options.ERROR_FILE_NAME, errorFilename);
         }
         if (delim != null) {
-            instance.properties.setProperty("BATCH-URI-DELIM", delim);
+            instance.properties.setProperty(Options.BATCH_URI_DELIM, delim);
         }
 
-        instance.properties.setProperty("XCC-CONNECTION-RETRY-INTERVAL", "1");
-        instance.properties.setProperty("XCC-CONNECTION-RETRY-LIMIT", Integer.toString(retryLimit));
+        instance.properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
+        instance.properties.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(retryLimit));
 
-        instance.properties.setProperty("QUERY-RETRY-INTERVAL", "1");
-        instance.properties.setProperty("QUERY-RETRY-LIMIT", Integer.toString(retryLimit));
+        instance.properties.setProperty(Options.QUERY_RETRY_INTERVAL, "1");
+        instance.properties.setProperty(Options.QUERY_RETRY_LIMIT, Integer.toString(retryLimit));
 
         instance.handleRequestException(exception);
         List<LogRecord> records = testLogger.getLogRecords();
@@ -617,7 +618,7 @@ public class AbstractTaskTest {
      */
     @Test
     public void testGetProperty() {
-        String key = "INIT-TASK";
+        String key = Options.INIT_TASK;
         String val = "foo";
         Properties props = new Properties();
         props.setProperty(key, val);
@@ -629,7 +630,7 @@ public class AbstractTaskTest {
 
     @Test
     public void testGetProperty_systemPropertyTakesPrecedence() {
-        String key = "INIT-TASK";
+        String key = Options.INIT_TASK;
         String val = "foo";
         System.setProperty(key, val);
         Properties props = new Properties();
