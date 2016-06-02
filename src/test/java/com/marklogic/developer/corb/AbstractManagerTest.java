@@ -244,6 +244,7 @@ public class AbstractManagerTest {
         String[] args = null;
         AbstractManager instance = new AbstractManagerImpl();
         instance.init(args);
+        assertNull(instance.properties);
     }
 
     /**

@@ -162,6 +162,7 @@ public class AbstractUrisLoaderTest {
         props.setProperty(Options.URIS_REPLACE_PATTERN, "foo,bar");
         instance.setProperties(props);
         instance.parseUriReplacePatterns();
+        assertTrue(instance.replacements.length == 2);
     }
 
     public static class AbstractUrisLoaderImpl extends AbstractUrisLoader {
