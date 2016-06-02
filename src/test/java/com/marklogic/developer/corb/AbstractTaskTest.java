@@ -43,7 +43,6 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -146,7 +145,7 @@ public class AbstractTaskTest {
         String[] inputUri = {"foo", "bar", "baz"};
         AbstractTask instance = new AbstractTaskImpl();
         instance.setInputURI(inputUri);
-        Assert.assertArrayEquals(inputUri, instance.inputUris);
+        assertArrayEquals(inputUri, instance.inputUris);
     }
 
     @Test
@@ -661,7 +660,7 @@ public class AbstractTaskTest {
         when(item.asString()).thenReturn(value);
         AbstractTask instance = new AbstractTaskImpl();
         byte[] result = instance.getValueAsBytes(item);
-        Assert.assertArrayEquals(value.getBytes(), result);
+        assertArrayEquals(value.getBytes(), result);
     }
 
     @Test
@@ -669,7 +668,7 @@ public class AbstractTaskTest {
         XdmItem item = null;
         AbstractTask instance = new AbstractTaskImpl();
         byte[] result = instance.getValueAsBytes(item);
-        Assert.assertArrayEquals(new byte[]{}, result);
+        assertArrayEquals(new byte[]{}, result);
     }
 
     private static class AbstractTaskImpl extends AbstractTask {

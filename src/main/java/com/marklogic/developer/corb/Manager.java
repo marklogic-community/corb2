@@ -777,14 +777,14 @@ public class Manager extends AbstractManager {
                             pool.setMaximumPoolSize(threadCount);
                             pool.setCorePoolSize(threadCount);
                         }
-                        LOG.log(INFO, "Changed {0} to {1}", new Object[]{Options.THREAD_COUNT, threadCount});
+                        LOG.log(INFO, "Changed {0} to {1}", new Object[]{THREAD_COUNT, threadCount});
                     } catch (IllegalArgumentException ex) {
                         LOG.log(WARNING, "Unable to change thread count", ex);
                     }
                 }
             }
         } else {
-            LOG.log(WARNING, Options.THREAD_COUNT + " must be a positive integer value");
+            LOG.log(WARNING, THREAD_COUNT + " must be a positive integer value");
         }
     }
 
