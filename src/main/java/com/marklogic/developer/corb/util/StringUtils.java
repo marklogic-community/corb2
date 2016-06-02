@@ -65,7 +65,8 @@ public class StringUtils {
             return defaultValue;
         }
         String lcStr = str.trim().toLowerCase();
-        return !(str.equals("") || str.equals("0") || lcStr.equals("f") || lcStr.equals("false") || lcStr.equals("n") || lcStr.equals("no"));
+        return !("".equals(lcStr) || "0".equals(lcStr) || "f".equals(lcStr) || "false".contains(lcStr) || 
+                "n".equals(lcStr) || "no".equals(lcStr));
     }
 
     /**
