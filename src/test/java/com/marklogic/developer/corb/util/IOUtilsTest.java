@@ -53,7 +53,6 @@ public class IOUtilsTest {
     public void testCloseQuietly() throws IOException {
         Closeable obj = new StringReader("foo");
         IOUtils.closeQuietly(obj);
-        assertTrue(true);
     }
 
     @Test

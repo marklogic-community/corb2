@@ -62,6 +62,7 @@ public class AbstractTaskTest {
     private static final String URI = "/doc.xml";
     private static final String ERROR = "ERROR";
     private static final String FOO = "foo";
+    private static final String BAR = "bar";
     private static final String USER_NAME = "user-name";
     
     @Before
@@ -147,7 +148,7 @@ public class AbstractTaskTest {
      */
     @Test
     public void testSetInputURI() {
-        String[] inputUri = {FOO, "bar", "baz"};
+        String[] inputUri = {FOO, BAR, "baz"};
         AbstractTask instance = new AbstractTaskImpl();
         instance.setInputURI(inputUri);
         assertArrayEquals(inputUri, instance.inputUris);
@@ -219,7 +220,7 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.moduleUri = "module.xqy";
         instance.adhocQuery = "adhoc.xqy";
-        instance.inputUris = new String[]{FOO, "bar", "baz"};
+        instance.inputUris = new String[]{FOO, BAR, "baz"};
         ContentSource cs = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke request = mock(ModuleInvoke.class);
@@ -574,7 +575,7 @@ public class AbstractTaskTest {
      */
     @Test
     public void testAsString() {
-        String[] uris = new String[]{FOO, "bar", "baz"};
+        String[] uris = new String[]{FOO, BAR, "baz"};
         AbstractTask instance = new AbstractTaskImpl();
         String result = instance.asString(uris);
         assertEquals("foo,bar,baz", result);
@@ -638,7 +639,7 @@ public class AbstractTaskTest {
         String val = FOO;
         System.setProperty(key, val);
         Properties props = new Properties();
-        props.setProperty(key, "bar");
+        props.setProperty(key, BAR);
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = props;
         String result = instance.getProperty(key);
