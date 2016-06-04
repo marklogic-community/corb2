@@ -30,6 +30,9 @@ import static org.mockito.Mockito.mock;
  */
 public class AbstractUrisLoaderTest {
 
+    private static final String FOO = "foo";
+    private static final String BAR = "bar";
+    
     /**
      * Test of setOptions method, of class AbstractUrisLoader.
      */
@@ -57,7 +60,7 @@ public class AbstractUrisLoaderTest {
      */
     @Test
     public void testSetCollection() {
-        String collection = "foo";
+        String collection = FOO;
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         instance.setCollection(collection);
         assertEquals(collection, instance.collection);
@@ -98,8 +101,8 @@ public class AbstractUrisLoaderTest {
      */
     @Test
     public void testGetProperty() {
-        String key = "foo";
-        String value = "bar";
+        String key = FOO;
+        String value = BAR;
         Properties props = new Properties();
         props.setProperty(key, value);
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
@@ -110,8 +113,8 @@ public class AbstractUrisLoaderTest {
 
     @Test
     public void testGetProperty_systemPropAndNullProperties() {
-        String key = "foo";
-        String value = "bar";
+        String key = FOO;
+        String value = BAR;
         System.setProperty(key, value);
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         String result = instance.getProperty(key);
@@ -121,7 +124,7 @@ public class AbstractUrisLoaderTest {
     
     @Test
     public void testGetProperty_isNull() {
-        String key = "foo";
+        String key = FOO;
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         String result = instance.getProperty(key);
         assertEquals(null, result);
