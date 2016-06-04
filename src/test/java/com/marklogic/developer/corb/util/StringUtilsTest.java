@@ -31,6 +31,8 @@ import static org.junit.Assert.*;
  */
 public class StringUtilsTest {
 
+    private static final String ADHOC_SUFFIX = "|ADHOC";
+    
     @Test
     public void testStringToBoolean_String_empty() {
         boolean result = StringUtils.stringToBoolean("");
@@ -305,8 +307,8 @@ public class StringUtilsTest {
         assertTrue(StringUtils.isInlineModule("INLINE-XQUERY|" + code));
         assertTrue(StringUtils.isInlineModule("INLINE-JavaScript|" + code));
         assertTrue(StringUtils.isInlineModule("INLINE-xquery|" + code));
-        assertTrue(StringUtils.isInlineModule("INLINE-JAVASCRIPT|" + code + "|ADHOC"));
-        assertTrue(StringUtils.isInlineModule("INLINE-XQUERY|" + code + "|ADHOC"));
+        assertTrue(StringUtils.isInlineModule("INLINE-JAVASCRIPT|" + code + ADHOC_SUFFIX));
+        assertTrue(StringUtils.isInlineModule("INLINE-XQUERY|" + code + ADHOC_SUFFIX));
     }
 
     @Test
@@ -322,7 +324,7 @@ public class StringUtilsTest {
     @Test
     public void testInlineModuleLanguage_JAVASCRIPT() {
         String code = "var i = 0; return i;";
-        String value = "INLINE-JAVASCRIPT|" + code + "|ADHOC";
+        String value = "INLINE-JAVASCRIPT|" + code + ADHOC_SUFFIX;
         String result = StringUtils.inlineModuleLanguage(value);
         assertEquals("JAVASCRIPT", result);
     }
@@ -347,7 +349,7 @@ public class StringUtilsTest {
     @Test
     public void testInlineModuleCode() {
         String code = "var i = 0; return i;";
-        String value = "INLINE-JAVASCRIPT|" + code + "|ADHOC";
+        String value = "INLINE-JAVASCRIPT|" + code + ADHOC_SUFFIX;
 
         String result = StringUtils.getInlineModuleCode(value);
         assertEquals(code, result);
@@ -356,7 +358,7 @@ public class StringUtilsTest {
     @Test
     public void testInlineModuleCode_badLanguage() {
         String code = "for $i in (1 to 10) return $i";
-        String value = "INLINE-JAVA|" + code + "|ADHOC";
+        String value = "INLINE-JAVA|" + code + ADHOC_SUFFIX;
 
         String result = StringUtils.getInlineModuleCode(value);
         assertNotEquals(code, result);

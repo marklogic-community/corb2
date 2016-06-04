@@ -43,6 +43,10 @@ import static org.mockito.Mockito.when;
  */
 public class QueryUrisLoaderTest {
 
+    private String foo = "foo";
+    private String bar = "bar";
+    private String none = "none";
+    
     /**
      * Test of open method, of class QueryUrisLoader.
      */
@@ -68,7 +72,7 @@ public class QueryUrisLoaderTest {
         Session session = mock(Session.class);
         when(contentSource.newSession()).thenReturn(session);
         Properties props = new Properties();
-        props.setProperty(Options.URIS_REPLACE_PATTERN, "foo");
+        props.setProperty(Options.URIS_REPLACE_PATTERN, foo);
         instance.properties = props;
         instance.cs = contentSource;
         try {
@@ -96,7 +100,7 @@ public class QueryUrisLoaderTest {
         when(session.submitRequest(request)).thenReturn(seq);
         when(seq.next()).thenReturn(item);
         when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
-        when(xdmItem.asString()).thenReturn("none").thenReturn("none");
+        when(xdmItem.asString()).thenReturn(none).thenReturn(none);
         Properties props = new Properties();
         props.setProperty(Options.URIS_REPLACE_PATTERN, "foo,");
         TransformOptions transformOptions = new TransformOptions();
@@ -131,7 +135,7 @@ public class QueryUrisLoaderTest {
         when(session.submitRequest(request)).thenReturn(seq);
         when(seq.next()).thenReturn(item);
         when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
-        when(xdmItem.asString()).thenReturn("none").thenReturn("none");
+        when(xdmItem.asString()).thenReturn(none).thenReturn(none);
         Properties props = new Properties();
         props.setProperty(Options.URIS_REPLACE_PATTERN, "foo,");
         TransformOptions transformOptions = new TransformOptions();
@@ -166,7 +170,7 @@ public class QueryUrisLoaderTest {
         when(session.submitRequest(request)).thenReturn(seq);
         when(seq.next()).thenReturn(item);
         when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
-        when(xdmItem.asString()).thenReturn("none").thenReturn("none");
+        when(xdmItem.asString()).thenReturn(none).thenReturn(none);
         Properties props = new Properties();
         props.setProperty(Options.URIS_REPLACE_PATTERN, "foo,");
         TransformOptions transformOptions = new TransformOptions();
@@ -225,7 +229,7 @@ public class QueryUrisLoaderTest {
 
     @Test
     public void testOpen() throws Exception {
-
+        String processModuleKey = "PROCESS-MODULE.foo";
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         AdhocQuery request = mock(AdhocQuery.class);
@@ -239,7 +243,7 @@ public class QueryUrisLoaderTest {
         when(session.submitRequest(request)).thenReturn(resultSequence);
         when(resultSequence.next()).thenReturn(item);
         when(item.getItem()).thenReturn(xItemFirst).thenReturn(xItemFirst).thenReturn(xItemCount);
-        when(xItemFirst.asString()).thenReturn("PROCESS-MODULE.foo=bar").thenReturn("PROCESS-MODULE.foo=bar");
+        when(xItemFirst.asString()).thenReturn(processModuleKey +"=" + bar).thenReturn(processModuleKey + "=" + bar);
         when(xItemCount.asString()).thenReturn("1");
         TransformOptions transformOptions = new TransformOptions();
         File file = File.createTempFile("adhoc", ".js");
@@ -249,7 +253,7 @@ public class QueryUrisLoaderTest {
         writer.close();
         transformOptions.setUrisModule(file.getAbsolutePath() + "|ADHOC");
         Properties props = new Properties();
-        props.setProperty("URIS-MODULE.foo", "bar");
+        props.setProperty("URIS-MODULE.foo", bar);
 
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.properties = props;
@@ -257,8 +261,8 @@ public class QueryUrisLoaderTest {
         instance.cs = contentSource;
         instance.collection = "";
         instance.open();
-        assertEquals(1, instance.total);
-        assertEquals("bar", instance.properties.getProperty("PROCESS-MODULE.foo"));
+        assertEquals(1, instance.getTotalCount());
+        assertEquals(bar, instance.properties.getProperty(processModuleKey));
         instance.close();
     }
 
@@ -375,7 +379,7 @@ public class QueryUrisLoaderTest {
 
         QueryUrisLoader instance = new QueryUrisLoader();
         TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setUrisModule("foo");
+        transformOptions.setUrisModule(foo);
         instance.options = transformOptions;
         instance.cs = contentSource;
         instance.res = resultSequence;
@@ -419,7 +423,7 @@ public class QueryUrisLoaderTest {
 
         QueryUrisLoader instance = new QueryUrisLoader();
         TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setUrisModule("foo");
+        transformOptions.setUrisModule(foo);
         instance.options = transformOptions;
         instance.cs = contentSource;
         instance.res = resultSequence;
@@ -445,6 +449,8 @@ public class QueryUrisLoaderTest {
     public void testClose_nullSession() {
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.close();
+        assertTrue(instance.getQueue().isEmpty());
+        assertNull(instance.session);
     }
 
     @Test
@@ -465,9 +471,9 @@ public class QueryUrisLoaderTest {
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.options = new TransformOptions();
         instance.cs = mock(ContentSource.class);
-        instance.collection = "foo";
+        instance.setCollection(foo);
         instance.properties = new Properties();
-        instance.batchRef = "bar";
+        instance.setBatchRef(bar);
         instance.replacements = new String[]{};
         instance.cleanup();
         instance.close();
@@ -475,7 +481,7 @@ public class QueryUrisLoaderTest {
         assertNull(instance.cs);
         assertNull(instance.collection);
         assertNull(instance.properties);
-        assertNull(instance.batchRef);
+        assertNull(instance.getBatchRef());
         assertNull(instance.replacements);
     }
 
@@ -484,27 +490,26 @@ public class QueryUrisLoaderTest {
      */
     @Test
     public void testGetProperty_nullProperties() {
-        String key = "foo";
         QueryUrisLoader instance = new QueryUrisLoader();
-        String result = instance.getProperty(key);
+        String result = instance.getProperty(foo);
         instance.close();
         assertNull(result);
     }
 
     @Test
     public void testGetProperty() {
-        String key = "foo";
+
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.properties = new Properties();
-        String result = instance.getProperty(key);
+        String result = instance.getProperty(foo);
         instance.close();
         assertNull(result);
     }
 
     @Test
     public void testGetProperty_exists() {
-        String key = "foo";
-        String value = "bar";
+        String key = foo;
+        String value = bar;
         QueryUrisLoader instance = new QueryUrisLoader();
         Properties props = new Properties();
         props.setProperty(key, value);

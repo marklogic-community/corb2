@@ -47,6 +47,8 @@ import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.security.GeneralSecurityException;
 import java.util.logging.Logger;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
@@ -71,7 +73,11 @@ public class ModuleExecutorTest {
     public static final String OPTIONS_FILE = "src/test/resources/helloWorld.properties";
     public static final String EXPORT_FILE_NAME = "src/test/resources/helloWorld.txt";
     public static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
-
+    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+    private PrintStream systemOut = System.out;
+    private PrintStream systemErr = System.err;
+    
     /**
      * Perform pre-test initialization.
      *
@@ -82,6 +88,8 @@ public class ModuleExecutorTest {
             throws Exception {
         clearSystemProperties();
         LOG.addHandler(testLogger);
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
     }
 
     /**
@@ -93,7 +101,9 @@ public class ModuleExecutorTest {
     public void tearDown()
             throws Exception {
         // Add additional tear down code here
-        clearSystemProperties();
+        clearSystemProperties();      
+        System.setOut(systemOut);
+        System.setErr(systemErr);
     }
 
     /**
@@ -567,6 +577,7 @@ public class ModuleExecutorTest {
         String[] args = null;
         exit.expectSystemExit();
         ModuleExecutor.main(args);
+        fail();
     }
 
     @Test
@@ -574,6 +585,7 @@ public class ModuleExecutorTest {
         String[] args = new String[]{};
         exit.expectSystemExit();
         ModuleExecutor.main(args);
+        fail();
     }
 
     /**
@@ -586,6 +598,7 @@ public class ModuleExecutorTest {
         ModuleExecutor instance = new ModuleExecutor();
         exit.expectSystemExit();
         instance.init(args, props);
+        fail();
     }
 
     @Test
@@ -595,6 +608,7 @@ public class ModuleExecutorTest {
         ModuleExecutor instance = new ModuleExecutor();
         exit.expectSystemExit();
         instance.init(args, props);
+        fail();
     }
 
     /**
@@ -633,6 +647,7 @@ public class ModuleExecutorTest {
     public void testUsage() {
         ModuleExecutor instance = new ModuleExecutor();
         instance.usage();
+        assertNotNull(errContent.toString());
     }
 
     /**
@@ -666,7 +681,7 @@ public class ModuleExecutorTest {
         when(item.asBinaryData()).thenReturn(expected);
         ModuleExecutor instance = new ModuleExecutor();
         byte[] result = instance.getValueAsBytes(item);
-        Assert.assertArrayEquals(expected, result);
+        assertArrayEquals(expected, result);
     }
 
     @Test

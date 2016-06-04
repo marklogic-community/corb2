@@ -35,7 +35,6 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -348,6 +347,7 @@ public class AbstractManagerTest {
         AbstractManager instance = new AbstractManagerImpl();
         exit.expectSystemExit();
         instance.initURI(null);
+        fail();
     }
 
     @Test
@@ -470,7 +470,7 @@ public class AbstractManagerTest {
         SecurityOptions securityOptions = instance.getSecurityOptions();
         
         assertNotNull(securityOptions);
-        Assert.assertArrayEquals(sslConfig.getSecurityOptions().getEnabledProtocols(), result.getEnabledProtocols());
+        assertArrayEquals(sslConfig.getSecurityOptions().getEnabledProtocols(), result.getEnabledProtocols());
     }
 
     @Test(expected = NullPointerException.class)

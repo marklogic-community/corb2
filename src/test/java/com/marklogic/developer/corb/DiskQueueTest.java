@@ -141,7 +141,7 @@ public class DiskQueueTest {
     public void testSize() {
         Queue<String> instance = new DiskQueue<String>(1);
         assertEquals(0, instance.size());
-        instance.add("test");
+        instance.add("testSize");
         int result = instance.size();
         assertEquals(1, result);
     }
@@ -170,7 +170,7 @@ public class DiskQueueTest {
     public void testPeek() {
         Queue<String> instance = new DiskQueue<String>(1);
         assertNull(instance.peek());
-        String item = "test";
+        String item = "testPeek";
         instance.add(item);
         assertEquals(item, instance.peek());
     }
@@ -181,7 +181,7 @@ public class DiskQueueTest {
     @Test
     public void testRemove() {
         Queue<String> instance = new DiskQueue<String>(1);
-        String element = "test";
+        String element = "testRemove";
         instance.add(element);
         String result = instance.remove();
         assertEquals(element, result);
@@ -200,7 +200,7 @@ public class DiskQueueTest {
     @Test
     public void testPoll() {
         Queue<String> instance = new DiskQueue<String>(1);
-        String element = "test";
+        String element = "testPoll";
         instance.add(element);
         Object result = instance.poll();
         assertEquals(element, result);
@@ -219,7 +219,7 @@ public class DiskQueueTest {
     @Test
     public void testClear() {
         Queue<String> instance = new DiskQueue<String>(1);
-        instance.add("test");
+        instance.add("testClear");
         instance.clear();
         assertEquals(0, instance.size());
     }

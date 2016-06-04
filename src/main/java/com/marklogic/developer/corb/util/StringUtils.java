@@ -133,15 +133,16 @@ public class StringUtils {
     }
 
     public static String buildModulePath(String root, String module) {
+        String moduleRoot = root;
         if (!root.endsWith("/")) {
-            root += "/";
+            moduleRoot += "/";
         }
 
         if (module.startsWith("/") && module.length() > 1) {
             module = module.substring(1);
         }
 
-        return root + module;
+        return moduleRoot + module;
     }
 
     /**

@@ -19,7 +19,9 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Arrays;
 import org.junit.After;
 import org.junit.Before;
@@ -31,15 +33,25 @@ import static org.junit.Assert.*;
  * @author Mads Hanse, MarkLogic Corporation
  */
 public class HostKeyDecrypterTest {
-
+    
+    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+    private PrintStream systemOut = System.out;
+    private PrintStream systemErr = System.err;
+    private static final String USAGE = HostKeyDecrypter.USAGE + "\n";
+    
     @Before
     public void setUp() {
         clearSystemProperties();
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
     }
 
     @After
     public void tearDown() {
         clearSystemProperties();
+        System.setOut(systemOut);
+        System.setErr(systemErr);
     }
 
     /**
@@ -98,18 +110,21 @@ public class HostKeyDecrypterTest {
     public void testMain_usage_nullArgs() throws Exception {
         String[] args = null;
         HostKeyDecrypter.main(args);
+        assertEquals(USAGE, outContent.toString());
     }
 
     @Test
     public void testMain_usage_decryptWithoutValue() throws Exception {
         String[] args = {"encrypt"};
         HostKeyDecrypter.main(args);
+        assertEquals(USAGE, outContent.toString());
     }
 
     @Test
     public void testMain_usage_unrecognizedMethod() throws Exception {
         String[] args = {"foo"};
         HostKeyDecrypter.main(args);
+        assertEquals(USAGE, outContent.toString());
     }
 
     @Test

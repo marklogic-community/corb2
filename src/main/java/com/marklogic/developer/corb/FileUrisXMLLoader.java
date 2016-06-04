@@ -102,8 +102,7 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
                 nodeMap.put(i, node);
             }
 
-            total = nodeMap.size();
-
+            this.setTotalCount(nodeMap.size());
             nodeIterator = nodeMap.values().iterator();
 
         } catch (Exception exc) {

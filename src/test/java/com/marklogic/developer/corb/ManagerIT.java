@@ -51,8 +51,10 @@ public class ManagerIT {
     @Rule
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
     private final TestHandler testLogger = new TestHandler();
-    private static final Logger logger = Logger.getLogger(Manager.class.getName());
-
+    private static final Logger LOG = Logger.getLogger(Manager.class.getName());
+    private static final String EXT_TXT = ".txt";
+    private static final String transformSlowModule = "src/test/resources/transformSlow.xqy|ADHOC";
+    
     /**
      * Perform pre-test initialization.
      *
@@ -65,7 +67,7 @@ public class ManagerIT {
             throws Exception {
         clearSystemProperties();
 
-        logger.addHandler(testLogger);
+        LOG.addHandler(testLogger);
         File tempDir = TestUtils.createTempDirectory();
         ManagerTest.EXPORT_FILE_DIR = tempDir.toString();
     }
@@ -478,12 +480,12 @@ public class ManagerIT {
         clearSystemProperties();
         File exportFile = new File(ManagerTest.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_NAME);
         exportFile.deleteOnExit();
-        File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + ".txt");
+        File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);
         commandFile.deleteOnExit();
         System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
         System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         System.setProperty(Options.THREAD_COUNT, "1");
-        System.setProperty(Options.PROCESS_MODULE, "src/test/resources/transformSlow.xqy|ADHOC");
+        System.setProperty(Options.PROCESS_MODULE, transformSlowModule);
         System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
         System.setProperty(Options.EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
         System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
@@ -538,12 +540,12 @@ public class ManagerIT {
         clearSystemProperties();
         File exportFile = new File(ManagerTest.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_NAME);
         exportFile.deleteOnExit();
-        File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + ".txt");
+        File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);
         commandFile.deleteOnExit();
         System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
         System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         System.setProperty(Options.THREAD_COUNT, "1");
-        System.setProperty(Options.PROCESS_MODULE, "src/test/resources/transformSlow.xqy|ADHOC");
+        System.setProperty(Options.PROCESS_MODULE, transformSlowModule);
         System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
         System.setProperty(Options.EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
         System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
@@ -596,12 +598,12 @@ public class ManagerIT {
         clearSystemProperties();
         File exportFile = new File(ManagerTest.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_NAME);
         exportFile.deleteOnExit();
-        File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + ".txt");
+        File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);
         commandFile.deleteOnExit();
         System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
         System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         System.setProperty(Options.THREAD_COUNT, "1");
-        System.setProperty(Options.PROCESS_MODULE, "src/test/resources/transformSlow.xqy|ADHOC");
+        System.setProperty(Options.PROCESS_MODULE, transformSlowModule);
         System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
         System.setProperty(Options.EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
         System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
@@ -637,12 +639,12 @@ public class ManagerIT {
         clearSystemProperties();
         File exportFile = new File(ManagerTest.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_NAME);
         exportFile.deleteOnExit();
-        File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + ".txt");
+        File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);
         commandFile.deleteOnExit();
         System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
         System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         System.setProperty(Options.THREAD_COUNT, "4");
-        System.setProperty(Options.PROCESS_MODULE, "src/test/resources/transformSlow.xqy|ADHOC");
+        System.setProperty(Options.PROCESS_MODULE, transformSlowModule);
         System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
         System.setProperty(Options.EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
         System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);

@@ -56,8 +56,8 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             + ")\\.[A-Za-z0-9]+=.*");
     private Queue<String> queue;
 
-    Session session;
-    ResultSequence res;
+    protected Session session;
+    protected ResultSequence res;
 
     private static final Logger LOG = Logger.getLogger(QueryUrisLoader.class.getName());
 
@@ -131,19 +131,19 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             ResultItem next = res.next();
 
             int maxOpts = this.getMaxOptionsFromModule();
-            for (int i = 0; i < maxOpts && next != null && batchRef == null && !(next.getItem().asString().matches("\\d+")); i++) {
+            for (int i = 0; i < maxOpts && next != null && getBatchRef() == null && !(next.getItem().asString().matches("\\d+")); i++) {
                 String value = next.getItem().asString();
                 if (MODULE_CUSTOM_INPUT.matcher(value).matches()) {
                     int idx = value.indexOf('=');
                     properties.put(value.substring(0, idx).replace(XQUERY_MODULE + ".", PROCESS_MODULE + "."), value.substring(idx + 1));
                 } else {
-                    batchRef = value;
+                    setBatchRef(value);
                 }
                 next = res.next();
             }
 
             try {
-                total = Integer.parseInt(next.getItem().asString());
+                setTotalCount(Integer.parseInt(next.getItem().asString()));
             } catch (NumberFormatException exc) {
                 throw new CorbException("Uris module " + options.getUrisModule() + " does not return total URI count");
             }
@@ -167,12 +167,12 @@ public class QueryUrisLoader extends AbstractUrisLoader {
                 }
                 
                 if (!queue.add(uri)) {
-                	LOG.log(SEVERE,"Unabled to add uri {0} to queue. Received uris {1} which is more than expected {2}",new Object[]{uri,(i+1),total});
-                } else if (i >= total) {
-                	LOG.log(WARNING,"Received uri {0} at index {1} which is more than expected {2}",new Object[]{uri,(i+1),total});
+                	LOG.log(SEVERE,"Unabled to add uri {0} to queue. Received uris {1} which is more than expected {2}",new Object[]{uri,(i+1),getTotalCount()});
+                } else if (i >= getTotalCount()) {
+                	LOG.log(WARNING,"Received uri {0} at index {1} which is more than expected {2}",new Object[]{uri,(i+1),getTotalCount()});
                 }
                 
-                logQueueStatus(i, uri, total);
+                logQueueStatus(i, uri, getTotalCount());
                 i++;
             }
 
@@ -185,10 +185,10 @@ public class QueryUrisLoader extends AbstractUrisLoader {
 
     protected Queue<String> getQueue() {
         Queue<String> queue;
-        if (options.shouldUseDiskQueue()) {
+        if (options != null && options.shouldUseDiskQueue()) {
             queue = new DiskQueue<String>(options.getDiskQueueMaxInMemorySize(), options.getDiskQueueTempDir());
         } else {
-            queue = new ArrayQueue<String>(total);
+            queue = new ArrayQueue<String>(getTotalCount());
         }
         return queue;
     }
@@ -245,7 +245,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         return max;
     }
 
-    void logQueueStatus(int currentIndex, String uri, int total) {
+    protected void logQueueStatus(int currentIndex, String uri, int total) {
         if (0 == currentIndex % 50000) {
             long freeMemory = Runtime.getRuntime().freeMemory();
             if (freeMemory < (16 * 1024 * 1024)) {

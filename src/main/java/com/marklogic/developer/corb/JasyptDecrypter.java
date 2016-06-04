@@ -31,8 +31,8 @@ import java.util.logging.Logger;
 public class JasyptDecrypter extends AbstractDecrypter {
 
     protected transient Properties jaspytProperties;
-    Class<?> decrypterCls;
-    Object decrypter;
+    protected Class<?> decrypterCls;
+    protected Object decrypter;
 
     protected static final Logger LOG = Logger.getLogger(JasyptDecrypter.class.getName());
 

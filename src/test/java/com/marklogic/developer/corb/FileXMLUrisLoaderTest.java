@@ -388,7 +388,7 @@ public class FileXMLUrisLoaderTest {
         instance.options = new TransformOptions();
         instance.properties = new Properties();
         instance.replacements = new String[]{};
-        instance.total = 100;
+        instance.setTotalCount(100);
         instance.close();
         instance.cleanup();
         assertNull(instance.doc);

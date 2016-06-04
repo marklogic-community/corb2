@@ -41,12 +41,12 @@ public class FileUrisLoader extends AbstractUrisLoader {
 		parseUriReplacePatterns();
 		
 		try {
-			String fileName = options.getUrisFile();
+			String fileName = getOptions().getUrisFile();
 			LineNumberReader lnr = null;
 			try {
 				lnr = new LineNumberReader(new FileReader(fileName));
 				lnr.skip(Long.MAX_VALUE);
-				total = lnr.getLineNumber() + 1;
+				this.setTotalCount(lnr.getLineNumber() + 1);
 			} finally {
                 closeQuietly(lnr);
 			}
@@ -55,7 +55,7 @@ public class FileUrisLoader extends AbstractUrisLoader {
 			br = new BufferedReader(fr);
 
 		} catch (Exception exc) {
-			throw new CorbException("Problem loading data from uris file " + options.getUrisFile(), exc);
+			throw new CorbException("Problem loading data from uris file " + getOptions().getUrisFile(), exc);
 		}
 	}
 

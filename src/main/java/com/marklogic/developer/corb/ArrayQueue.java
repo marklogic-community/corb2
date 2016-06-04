@@ -83,7 +83,7 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
         ++count;
     }
 
-    final int increment(int i) {
+    protected final int increment(int i) {
         return (++i == queue.length) ? 0 : i;
     }
 

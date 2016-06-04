@@ -118,7 +118,7 @@ public class Manager extends AbstractManager {
     protected boolean execError;
     protected boolean stopCommand;
 
-    static int EXIT_CODE_NO_URIS = EXIT_CODE_SUCCESS;
+    protected static int EXIT_CODE_NO_URIS = EXIT_CODE_SUCCESS;
     protected static final int EXIT_CODE_STOP_COMMAND = 3;
 
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());

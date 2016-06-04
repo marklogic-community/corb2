@@ -65,7 +65,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     private static final String METHOD_TEST = "test";
     private static final String METHOD_ENCRYPT = "encrypt";
     // currently only usage is encrypt
-    private static final String USAGE = "Encrypt:\n "
+    protected static final String USAGE = "Encrypt:\n "
             + MessageFormat.format(USAGE_FORMAT, new Object[]{METHOD_ENCRYPT + " clearText"})
             + "\nTest:\n "
             + MessageFormat.format(USAGE_FORMAT, new Object[]{METHOD_TEST});

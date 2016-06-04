@@ -56,11 +56,12 @@ public abstract class AbstractDecrypter implements Decrypter {
 
     @Override
     public String decrypt(String property, String value) {
+        String val = value;
         Matcher match = ENCRYPTED_VALUE_REGEX.matcher(value);
         if (match.matches()) {
-            value = match.group(1);
+            val = match.group(1);
         }
-        return doDecrypt(property, value);
+        return doDecrypt(property, val);
     }
 
     protected abstract void init_decrypter() throws IOException, ClassNotFoundException;

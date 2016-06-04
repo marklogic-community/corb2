@@ -322,7 +322,7 @@ public class PostBatchUpdateFileTaskTest {
 
         for (String value : values.split(",")) {
             sb.append(value)
-                    .append("\n");
+                    .append('\n');
         }
         return sb.toString();
     }

@@ -98,11 +98,13 @@ public class ExportToFileTaskTest {
         file.delete();
     }
     
-    @Test
+    @Test(expected = NullPointerException.class)
     public void testWriteToFile_silentFail() throws Exception {
         ResultSequence seq = null;
-        ExportToFileTask instance = new ExportToFileTask();
+        ExportToFileTask instance = new ExportToFileTask(); 
+        File f = new File(instance.exportDir, instance.getFileName());
         instance.writeToFile(seq);
+        fail();
     }
 
     /**

@@ -224,6 +224,7 @@ public class PrivateKeyDecrypterTest {
     public void testMain_genKeys_noOptions() throws Exception {
         String[] args = {ACTION_GEN_KEYS};
         PrivateKeyDecrypter.main(args);
+        assertEquals(GEN_KEYS_USAGE + NEWLINE, errContent.toString());
     }
     
     private File createTempFile() throws IOException {

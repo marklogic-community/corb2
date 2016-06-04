@@ -41,13 +41,13 @@ public class MonitorTest {
 
     private static final double DOUBLE_DELTA = 0.0;
     private final TestHandler testLogger = new TestHandler();
-    private static final Logger logger = Logger.getLogger(Monitor.class.getName());
+    private static final Logger LOG = Logger.getLogger(Monitor.class.getName());
 
     @Before
     public void setUp()
             throws Exception {
         clearSystemProperties();
-        logger.addHandler(testLogger);
+        LOG.addHandler(testLogger);
     }
 
     @Test
