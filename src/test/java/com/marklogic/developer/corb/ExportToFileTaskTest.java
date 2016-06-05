@@ -95,14 +95,18 @@ public class ExportToFileTaskTest {
         instance.writeToFile(seq);
         File file = new File(instance.exportDir, instance.getFileName());
         assertFalse(file.exists());
-        file.delete();
     }
     
     @Test
     public void testWriteToFile_silentFail() throws Exception {
         ResultSequence seq = null;
         ExportToFileTask instance = new ExportToFileTask(); 
+        instance.exportDir = tempFolder.newFolder().toString();
+        String[] uri = {"/testFile"};
+        instance.setInputURI(uri);
         instance.writeToFile(seq);
+        File file = new File(instance.exportDir, instance.getFileName());
+        assertFalse(file.exists());
     }
 
     /**
