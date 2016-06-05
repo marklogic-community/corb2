@@ -98,7 +98,11 @@ public class ModuleExecutor extends AbstractManager {
     }
 
     @Override
-    public void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException {
+    public void init(String[] commandlineArgs, Properties props) 
+            throws IOException, URISyntaxException, ClassNotFoundException, 
+            InstantiationException, IllegalAccessException, XccConfigException, 
+            GeneralSecurityException {
+        String[] args = commandlineArgs;
         if (args == null) {
             args = new String[0];
         }
