@@ -263,28 +263,28 @@ public class AbstractTaskTest {
     public void testInvokeModule_RetryableXQueryException() throws Exception {
         Request req = mock(Request.class);
         RetryableXQueryException retryableException = new RetryableXQueryException(req, "code", "401", XQUERY_VERSION, "something bad happened", "", "", true, new String[0], new QueryStackFrame[0]);
-        testHandleRequestException("RetryableXQueryException", retryableException, false, 2);
+        assertTrue(testHandleRequestException("RetryableXQueryException", retryableException, false, 2));
     }
 
     @Test
     public void testInvokeModule_XQueryException() throws Exception {
         Request req = mock(Request.class);
         XQueryException xqueryException = new XQueryException(req, "code", "401", XQUERY_VERSION, "something bad happened", "", "", true, new String[0], new QueryStackFrame[0]);
-        testHandleRequestException("XQueryException", xqueryException, false, 2);
+        assertTrue(testHandleRequestException("XQueryException", xqueryException, false, 2));
     }
 
     @Test
     public void testInvokeModule_RetryableJavaScriptException() throws Exception {
         Request req = mock(Request.class);
         RetryableJavaScriptException retryableException = new RetryableJavaScriptException(req, "code", "401", "something bad happened", "", "", true, new String[0], new QueryStackFrame[0]);
-        testHandleRequestException("RetryableJavaScriptException", retryableException, false, 2);
+        assertTrue(testHandleRequestException("RetryableJavaScriptException", retryableException, false, 2));
     }
 
     @Test
     public void testHandleRequestException_RequestServerException() throws CorbException, IOException {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException("something bad happened", req);
-        testHandleRequestException("RequestServerException", serverException, false, 2);
+        assertTrue(testHandleRequestException("RequestServerException", serverException, false, 2));
     }
 
     @Test(expected = CorbException.class)
@@ -299,7 +299,7 @@ public class AbstractTaskTest {
     public void testHandleRequestException_RequestPermissionException() throws CorbException, IOException {
         Request req = mock(Request.class);
         RequestPermissionException serverException = new RequestPermissionException("something bad happened", req, "admin");
-        testHandleRequestException("RequestPermissionException", serverException, false, 2);
+        assertTrue(testHandleRequestException("RequestPermissionException", serverException, false, 2));
     }
 
     @Test(expected = CorbException.class)
@@ -314,7 +314,7 @@ public class AbstractTaskTest {
     public void testHandleRequestException_ServerConnectionException() throws CorbException, IOException {
         Request req = mock(Request.class);
         ServerConnectionException serverException = new ServerConnectionException("something bad happened", req);
-        testHandleRequestException("ServerConnectionException", serverException, false, 2);
+        assertTrue(testHandleRequestException("ServerConnectionException", serverException, false, 2));
     }
 
     @Test(expected = CorbException.class)
@@ -401,20 +401,20 @@ public class AbstractTaskTest {
         assertTrue(instance.hasRetryableMessage(exception));
     }
 
-    public void testHandleRequestException(String type, RequestException exception, boolean fail, int retryLimit)
+    public boolean testHandleRequestException(String type, RequestException exception, boolean fail, int retryLimit)
             throws CorbException, IOException {
         String[] uris = new String[]{URI};
-        testHandleRequestException(type, exception, fail, uris, retryLimit);
+        return testHandleRequestException(type, exception, fail, uris, retryLimit);
     }
 
-    public void testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, int retryLimit)
+    public boolean testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, int retryLimit)
             throws CorbException, IOException {
         File exportDir = TestUtils.createTempDirectory();
         File exportFile = File.createTempFile(ERROR, ".err", exportDir);
-        testHandleRequestException(type, exception, fail, uris, null, exportDir, exportFile.getName(), retryLimit);
+        return testHandleRequestException(type, exception, fail, uris, null, exportDir, exportFile.getName(), retryLimit);
     }
 
-    public void testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, String delim, File exportDir, String errorFilename, int retryLimit)
+    public boolean testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, String delim, File exportDir, String errorFilename, int retryLimit)
             throws CorbException, IOException {
         File dir = exportDir;
         if (dir == null) {
@@ -442,10 +442,11 @@ public class AbstractTaskTest {
         instance.handleRequestException(exception);
         List<LogRecord> records = testLogger.getLogRecords();
 
-        assertEquals(Level.WARNING, records.get(0).getLevel());
-        if (!(instance.shouldRetry(exception))) {
-            assertEquals("failOnError is false. Encountered " + type + " at URI: " + instance.asString(uris), records.get(0).getMessage());
-        }
+        boolean hasWarning = Level.WARNING.equals(records.get(0).getLevel());
+        boolean shouldRetryOrFailOnErrorIsFalse = instance.shouldRetry(exception) || 
+                ("failOnError is false. Encountered " + type + " at URI: " + instance.asString(uris)).equals(records.get(0).getMessage());
+        
+        return hasWarning && shouldRetryOrFailOnErrorIsFalse;
     }
 
     public File testWriteToError(String[] uris, String delim, File exportDir, String errorFilename, String message)
