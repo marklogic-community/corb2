@@ -1,7 +1,7 @@
-Version: 2.3.1
-[ ![Download](https://api.bintray.com/packages/marklogic/maven/marklogic-corb/images/download.svg) ](https://bintray.com/marklogic/maven/marklogic-corb/_latestVersion)[![Javadocs](https://www.javadoc.io/badge/com.marklogic/marklogic-corb.svg?color=blue)](https://www.javadoc.io/doc/com.marklogic/marklogic-corb) [![Dependency Status](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed/badge.svg?style=flat)](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed)
+[![Download](https://api.bintray.com/packages/marklogic/maven/marklogic-corb/images/download.svg) ](https://bintray.com/marklogic/maven/marklogic-corb/_latestVersion)[![Javadocs](https://www.javadoc.io/badge/com.marklogic/marklogic-corb.svg?color=blue)](https://www.javadoc.io/doc/com.marklogic/marklogic-corb) [![Dependency Status](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed/badge.svg?style=flat)](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed)
 
 [![Build Status](https://travis-ci.org/marklogic/corb2.svg?branch=development)](https://travis-ci.org/marklogic/corb2)
+[![CircleCI](https://circleci.com/gh/marklogic/corb2/tree/development.svg?style=shield)](https://circleci.com/gh/marklogic/corb2/tree/development)
 [![codecov](https://codecov.io/gh/marklogic/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic/corb2/branch/development)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/c0195f063ae34c7ea17bb4c97ab7ff2c)](https://www.codacy.com/app/mads-hansen/corb2?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marklogic/corb2&amp;utm_campaign=Badge_Grade)
 ### User Guide
