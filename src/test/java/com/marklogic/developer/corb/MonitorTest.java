@@ -57,7 +57,8 @@ public class MonitorTest {
         Monitor instance = new Monitor(pool, mock(CompletionService.class), mock(Manager.class));
         instance.run();
         List<LogRecord> records = testLogger.getLogRecords();
-        containsLogRecord(records, new LogRecord(Level.INFO, "CoRB2 has been paused. Resume execution by changing the state in the command file null to RESUME"));
+        assertFalse(containsLogRecord(records, 
+                new LogRecord(Level.INFO, "CoRB2 has been paused. Resume execution by changing the state in the command file null to RESUME")));
     }
 
     /**
