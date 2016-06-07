@@ -38,9 +38,9 @@ public class ModuleExecutorIT {
     public void testRun_main() throws Exception {
         clearSystemProperties();
         String[] args = {};
-        System.setProperty("XCC-CONNECTION-URI", ModuleExecutorTest.XCC_CONNECTION_URI);
-        System.setProperty("PROCESS-MODULE", "INLINE-JAVASCRIPT|var uri = '/a/b/c'; uri;");
-        System.setProperty("EXPORT-FILE-NAME", ModuleExecutorTest.EXPORT_FILE_NAME);
+        System.setProperty(Options.XCC_CONNECTION_URI, ModuleExecutorTest.XCC_CONNECTION_URI);
+        System.setProperty(Options.PROCESS_MODULE, "INLINE-JAVASCRIPT|var uri = '/a/b/c'; uri;");
+        System.setProperty(Options.EXPORT_FILE_NAME, ModuleExecutorTest.EXPORT_FILE_NAME);
         exit.expectSystemExit();
         ModuleExecutor.main(args);
         String result = TestUtils.readFile(new File(ModuleExecutorTest.EXPORT_FILE_NAME));
@@ -51,18 +51,18 @@ public class ModuleExecutorIT {
     public void testRun_inline() throws Exception {
         clearSystemProperties();
         String[] args = {};
-        System.setProperty("XCC-CONNECTION-URI", ModuleExecutorTest.XCC_CONNECTION_URI);
-        System.setProperty("PROCESS-MODULE", "INLINE-JAVASCRIPT|var uri = '/a/b/c'; uri;");
-        System.setProperty("EXPORT-FILE-NAME", ModuleExecutorTest.EXPORT_FILE_NAME);
+        System.setProperty(Options.XCC_CONNECTION_URI, ModuleExecutorTest.XCC_CONNECTION_URI);
+        System.setProperty(Options.PROCESS_MODULE, "INLINE-JAVASCRIPT|var uri = '/d/e/f'; uri;");
+        System.setProperty(Options.EXPORT_FILE_NAME, ModuleExecutorTest.EXPORT_FILE_NAME);
         ModuleExecutor executor = new ModuleExecutor();
         executor.init(args);
         executor.run();
-        String reportPath = executor.getProperty("EXPORT-FILE-NAME");
+        String reportPath = executor.getProperty(Options.EXPORT_FILE_NAME);
         File report = new File(reportPath);
         boolean fileExists = report.exists();
         assertTrue(fileExists);
         String result = TestUtils.readFile(report);
-        assertEquals("/a/b/c\n", result);
+        assertEquals("/d/e/f\n", result);
     }
 
 }
