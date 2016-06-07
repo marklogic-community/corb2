@@ -33,6 +33,8 @@ public class StringUtilsTest {
 
     private static final String ADHOC_SUFFIX = "|ADHOC";
     private static final String INLINE_JAVASCRIPT_CODE = "var i = 0; return i;";
+    private static final String UTILITIES_FILENAME = "Utilities.xqy";
+    private static final String INLINE_JAVASCRIPT_PREFIX = "INLINE-JAVASCRIPT|";
     
     @Test
     public void testStringToBoolean_String_empty() {
@@ -180,17 +182,17 @@ public class StringUtilsTest {
     @Test
     public void testBuildModulePath_Package_String_withSuffix() {
         Package _package = Package.getPackage("com.marklogic.developer.corb.util");
-        String result = StringUtils.buildModulePath(_package, "Utilities.xqy");
+        String result = StringUtils.buildModulePath(_package, UTILITIES_FILENAME);
         assertEquals("/com/marklogic/developer/corb/util/Utilities.xqy", result);
     }
 
     @Test
     public void testBuildModulePath() {
         assertEquals("/Utilities.xqy", StringUtils.buildModulePath("/", "/Utilities.xqy"));
-        assertEquals("/Utilities.xqy", StringUtils.buildModulePath("/", "Utilities.xqy"));
-        assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo", "Utilities.xqy"));
+        assertEquals("/Utilities.xqy", StringUtils.buildModulePath("/", UTILITIES_FILENAME));
+        assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo", UTILITIES_FILENAME));
         assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo", "/Utilities.xqy"));
-        assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo/", "Utilities.xqy"));
+        assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo/", UTILITIES_FILENAME));
         assertEquals("/foo//", StringUtils.buildModulePath("/foo/", "/"));
     }
 
@@ -304,11 +306,11 @@ public class StringUtilsTest {
     @Test
     public void testIsInlineModule() {
         String code = INLINE_JAVASCRIPT_CODE;
-        assertTrue(StringUtils.isInlineModule("INLINE-JAVASCRIPT|" + code));
+        assertTrue(StringUtils.isInlineModule(INLINE_JAVASCRIPT_PREFIX + code));
         assertTrue(StringUtils.isInlineModule("INLINE-XQUERY|" + code));
         assertTrue(StringUtils.isInlineModule("INLINE-JavaScript|" + code));
         assertTrue(StringUtils.isInlineModule("INLINE-xquery|" + code));
-        assertTrue(StringUtils.isInlineModule("INLINE-JAVASCRIPT|" + code + ADHOC_SUFFIX));
+        assertTrue(StringUtils.isInlineModule(INLINE_JAVASCRIPT_PREFIX+ code + ADHOC_SUFFIX));
         assertTrue(StringUtils.isInlineModule("INLINE-XQUERY|" + code + ADHOC_SUFFIX));
     }
 
@@ -325,7 +327,7 @@ public class StringUtilsTest {
     @Test
     public void testInlineModuleLanguage_JAVASCRIPT() {
         String code = INLINE_JAVASCRIPT_CODE;
-        String value = "INLINE-JAVASCRIPT|" + code + ADHOC_SUFFIX;
+        String value = INLINE_JAVASCRIPT_PREFIX + code + ADHOC_SUFFIX;
         String result = StringUtils.inlineModuleLanguage(value);
         assertEquals("JAVASCRIPT", result);
     }
@@ -350,7 +352,7 @@ public class StringUtilsTest {
     @Test
     public void testInlineModuleCode() {
         String code = INLINE_JAVASCRIPT_CODE;
-        String value = "INLINE-JAVASCRIPT|" + code + ADHOC_SUFFIX;
+        String value = INLINE_JAVASCRIPT_PREFIX + code + ADHOC_SUFFIX;
 
         String result = StringUtils.getInlineModuleCode(value);
         assertEquals(code, result);
