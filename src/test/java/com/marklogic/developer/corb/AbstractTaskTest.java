@@ -63,7 +63,11 @@ public class AbstractTaskTest {
     private static final String ERROR = "ERROR";
     private static final String FOO = "foo";
     private static final String BAR = "bar";
+    private static final String BAZ = "baz";
     private static final String USER_NAME = "user-name";
+    private static final String W3C_CODE = "401";
+    private static final String CODE = "code";
+    private static final String ERROR_MSG = "something bad happened";
     
     @Before
     public void setUp() {
@@ -148,7 +152,7 @@ public class AbstractTaskTest {
      */
     @Test
     public void testSetInputURI() {
-        String[] inputUri = {FOO, BAR, "baz"};
+        String[] inputUri = {FOO, BAR, BAZ};
         AbstractTask instance = new AbstractTaskImpl();
         instance.setInputURI(inputUri);
         assertArrayEquals(inputUri, instance.inputUris);
@@ -220,7 +224,7 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.moduleUri = "module.xqy";
         instance.adhocQuery = "adhoc.xqy";
-        instance.inputUris = new String[]{FOO, BAR, "baz"};
+        instance.inputUris = new String[]{FOO, BAR, BAZ};
         ContentSource cs = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke request = mock(ModuleInvoke.class);
@@ -234,7 +238,7 @@ public class AbstractTaskTest {
         instance.cs = cs;
         instance.moduleType = FOO;
         Properties props = new Properties();
-        props.setProperty("foo.bar", "baz");
+        props.setProperty("foo.bar", BAZ);
         props.setProperty("foo.baz", "boo");
         props.setProperty(Options.BATCH_URI_DELIM, "");
         instance.properties = props;
@@ -262,35 +266,35 @@ public class AbstractTaskTest {
     @Test
     public void testInvokeModule_RetryableXQueryException() throws Exception {
         Request req = mock(Request.class);
-        RetryableXQueryException retryableException = new RetryableXQueryException(req, "code", "401", XQUERY_VERSION, "something bad happened", "", "", true, new String[0], new QueryStackFrame[0]);
+        RetryableXQueryException retryableException = new RetryableXQueryException(req, CODE, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
         assertTrue(testHandleRequestException("RetryableXQueryException", retryableException, false, 2));
     }
 
     @Test
     public void testInvokeModule_XQueryException() throws Exception {
         Request req = mock(Request.class);
-        XQueryException xqueryException = new XQueryException(req, "code", "401", XQUERY_VERSION, "something bad happened", "", "", true, new String[0], new QueryStackFrame[0]);
+        XQueryException xqueryException = new XQueryException(req, CODE, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
         assertTrue(testHandleRequestException("XQueryException", xqueryException, false, 2));
     }
 
     @Test
     public void testInvokeModule_RetryableJavaScriptException() throws Exception {
         Request req = mock(Request.class);
-        RetryableJavaScriptException retryableException = new RetryableJavaScriptException(req, "code", "401", "something bad happened", "", "", true, new String[0], new QueryStackFrame[0]);
+        RetryableJavaScriptException retryableException = new RetryableJavaScriptException(req, CODE, W3C_CODE, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
         assertTrue(testHandleRequestException("RetryableJavaScriptException", retryableException, false, 2));
     }
 
     @Test
     public void testHandleRequestException_RequestServerException() throws CorbException, IOException {
         Request req = mock(Request.class);
-        RequestServerException serverException = new RequestServerException("something bad happened", req);
+        RequestServerException serverException = new RequestServerException(ERROR_MSG, req);
         assertTrue(testHandleRequestException("RequestServerException", serverException, false, 2));
     }
 
     @Test(expected = CorbException.class)
     public void testHandleRequestException_RequestServerException_fail() throws CorbException, IOException {
         Request req = mock(Request.class);
-        RequestServerException serverException = new RequestServerException("something bad happened", req);
+        RequestServerException serverException = new RequestServerException(ERROR_MSG, req);
         testHandleRequestException("RequestServerException", serverException, true, 0);
         fail();
     }
@@ -298,14 +302,14 @@ public class AbstractTaskTest {
     @Test
     public void testHandleRequestException_RequestPermissionException() throws CorbException, IOException {
         Request req = mock(Request.class);
-        RequestPermissionException serverException = new RequestPermissionException("something bad happened", req, "admin");
+        RequestPermissionException serverException = new RequestPermissionException(ERROR_MSG, req, "admin");
         assertTrue(testHandleRequestException("RequestPermissionException", serverException, false, 2));
     }
 
     @Test(expected = CorbException.class)
     public void testHandleRequestException_RequestPermissionException_fail() throws CorbException, IOException {
         Request req = mock(Request.class);
-        RequestPermissionException serverException = new RequestPermissionException("something bad happened", req, "admin");
+        RequestPermissionException serverException = new RequestPermissionException(ERROR_MSG, req, "admin");
         testHandleRequestException("RequestPermissionException", serverException, true, 2);
         fail();
     }
@@ -313,14 +317,14 @@ public class AbstractTaskTest {
     @Test
     public void testHandleRequestException_ServerConnectionException() throws CorbException, IOException {
         Request req = mock(Request.class);
-        ServerConnectionException serverException = new ServerConnectionException("something bad happened", req);
+        ServerConnectionException serverException = new ServerConnectionException(ERROR_MSG, req);
         assertTrue(testHandleRequestException("ServerConnectionException", serverException, false, 2));
     }
 
     @Test(expected = CorbException.class)
     public void testHandleRequestException_ServerConnectionException_fail() throws CorbException, IOException {
         Request req = mock(Request.class);
-        ServerConnectionException serverException = new ServerConnectionException("something bad happened", req);
+        ServerConnectionException serverException = new ServerConnectionException(ERROR_MSG, req);
         testHandleRequestException("ServerConnectionException", serverException, true, 0);
         fail();
     }
@@ -332,7 +336,7 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "foo, SVC-EXTIME, XDMP-EXTIME, bar");
-        XQueryException exception = new XQueryException(req, "SVC-EXTIME", "401", XQUERY_VERSION, "timeout", "", "", false, new String[0], new QueryStackFrame[0]);
+        XQueryException exception = new XQueryException(req, "SVC-EXTIME", W3C_CODE, XQUERY_VERSION, "timeout", "", "", false, new String[0], new QueryStackFrame[0]);
         assertTrue(instance.shouldRetry(exception));
     }
 
@@ -343,7 +347,7 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
-        XQueryException exception = new XQueryException(req, "SVC-EXTIME", "401", XQUERY_VERSION, "timeout", "", "", false, new String[0], new QueryStackFrame[0]);
+        XQueryException exception = new XQueryException(req, "SVC-EXTIME", W3C_CODE, XQUERY_VERSION, "timeout", "", "", false, new String[0], new QueryStackFrame[0]);
 
         assertFalse(instance.shouldRetry(exception));
 
@@ -363,7 +367,7 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
-        XQueryException exception = new XQueryException(req, "SVC-EXTIME", "401", XQUERY_VERSION, "timeout", "", "", true, new String[0], new QueryStackFrame[0]);
+        XQueryException exception = new XQueryException(req, "SVC-EXTIME", W3C_CODE, XQUERY_VERSION, "timeout", "", "", true, new String[0], new QueryStackFrame[0]);
 
         assertTrue(instance.shouldRetry(exception)); //since it's retryable, doesn't matter if code matches
 
@@ -576,7 +580,7 @@ public class AbstractTaskTest {
      */
     @Test
     public void testAsString() {
-        String[] uris = new String[]{FOO, BAR, "baz"};
+        String[] uris = new String[]{FOO, BAR, BAZ};
         AbstractTask instance = new AbstractTaskImpl();
         String result = instance.asString(uris);
         assertEquals("foo,bar,baz", result);
