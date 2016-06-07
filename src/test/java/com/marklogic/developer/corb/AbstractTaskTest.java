@@ -338,7 +338,7 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "foo, SVC-EXTIME, XDMP-EXTIME, bar");
-        XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, "timeout", "", "", false, new String[0], new QueryStackFrame[0]);
+        XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", false, new String[0], new QueryStackFrame[0]);
         assertTrue(instance.shouldRetry(exception));
     }
 
@@ -349,7 +349,7 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
-        XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, "timeout", "", "", false, new String[0], new QueryStackFrame[0]);
+        XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", false, new String[0], new QueryStackFrame[0]);
 
         assertFalse(instance.shouldRetry(exception));
 
@@ -369,7 +369,7 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
-        XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, "timeout", "", "", true, new String[0], new QueryStackFrame[0]);
+        XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
 
         assertTrue(instance.shouldRetry(exception)); //since it's retryable, doesn't matter if code matches
 
