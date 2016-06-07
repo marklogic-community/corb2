@@ -67,7 +67,7 @@ public class ManagerTest {
     @Rule
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
     private final TestHandler testLogger = new TestHandler();
-    private static final Logger logger = Logger.getLogger(Manager.class.getName());
+    private static final Logger LOG = Logger.getLogger(Manager.class.getName());
     public static final String XCC_CONNECTION_URI = "xcc://admin:admin@localhost:2223/FFE";
     public static final String COLLECTION_NAME = "StringPassedToTheURIsModule";
     public static final String XQUERY_MODULE = "src/test/resources/transform.xqy|ADHOC";
@@ -82,8 +82,10 @@ public class ManagerTest {
     public static String EXPORT_FILE_DIR = null;
     public static final String EXPORT_FILE_NAME = "exportFile.out";
     public static final String URIS_FILE = "src/test/resources/uris-file.txt";
-
-    private static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
+    public static final String XQUERY_MODULE_FOO = "process-bar";
+    public static final String POST_BATCH_XQUERY_MODULE_FOO = "post-bar";
+    public static final String PRE_BATCH_XQUERY_MODULE_FOO = "pre-bar";
+    public static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
 
     /**
      * Perform pre-test initialization.
@@ -96,7 +98,7 @@ public class ManagerTest {
     public void setUp()
             throws Exception {
         clearSystemProperties();
-        logger.addHandler(testLogger);
+        LOG.addHandler(testLogger);
         File tempDir = TestUtils.createTempDirectory();
         EXPORT_FILE_DIR = tempDir.toString();
     }
@@ -130,10 +132,12 @@ public class ManagerTest {
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
         @SuppressWarnings("unchecked")
         BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
-        when(threadPool.getQueue()).thenReturn(queue).thenThrow(new NullPointerException());
+        when(threadPool.getQueue()).thenReturn(queue).thenReturn(null);
 
         RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
+        
         cbp.rejectedExecution(r, threadPool);
+        assertNull(threadPool.getQueue());
     }
 
     @Test(expected = MockitoException.class)
@@ -371,11 +375,11 @@ public class ManagerTest {
     public void testInitOptions_normalizeLegacySystemProperties() throws Exception {
         clearSystemProperties();
         System.setProperty(Options.XQUERY_MODULE, PROCESS_MODULE);
-        System.setProperty("XQUERY-MODULE.foo", "process-bar");
+        System.setProperty("XQUERY-MODULE.foo", XQUERY_MODULE_FOO);
         System.setProperty(Options.PRE_BATCH_XQUERY_MODULE, PRE_BATCH_MODULE);
-        System.setProperty("PRE-BATCH-XQUERY-MODULE.foo", "pre-bar");
+        System.setProperty("PRE-BATCH-XQUERY-MODULE.foo", PRE_BATCH_XQUERY_MODULE_FOO);
         System.setProperty(Options.POST_BATCH_XQUERY_MODULE, POST_BATCH_MODULE);
-        System.setProperty("POST-BATCH-XQUERY-MODULE.foo", "post-bar");
+        System.setProperty("POST-BATCH-XQUERY-MODULE.foo", POST_BATCH_XQUERY_MODULE_FOO);
 
         String[] args = getDefaultArgs();
         args[2] = null; //process-module
@@ -388,11 +392,11 @@ public class ManagerTest {
         instance.init(args, props);
 
         assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
-        assertEquals("process-bar", System.getProperty("PROCESS-MODULE.foo"));
+        assertEquals(XQUERY_MODULE_FOO, System.getProperty("PROCESS-MODULE.foo"));
         assertEquals(PRE_BATCH_MODULE, instance.options.getPreBatchModule());
-        assertEquals("pre-bar", System.getProperty("PRE-BATCH-MODULE.foo"));
+        assertEquals(PRE_BATCH_XQUERY_MODULE_FOO, System.getProperty("PRE-BATCH-MODULE.foo"));
         assertEquals(POST_BATCH_MODULE, instance.options.getPostBatchModule());
-        assertEquals("post-bar", System.getProperty("POST-BATCH-MODULE.foo"));
+        assertEquals(POST_BATCH_XQUERY_MODULE_FOO, System.getProperty("POST-BATCH-MODULE.foo"));
     }
 
     @Test
@@ -405,20 +409,20 @@ public class ManagerTest {
 
         Properties props = new Properties();
         props.setProperty(Options.XQUERY_MODULE, PROCESS_MODULE);
-        props.setProperty("XQUERY-MODULE.foo", "process-bar");
+        props.setProperty("XQUERY-MODULE.foo", XQUERY_MODULE_FOO);
         props.setProperty(Options.PRE_BATCH_XQUERY_MODULE, PRE_BATCH_MODULE);
-        props.setProperty("PRE-BATCH-XQUERY-MODULE.foo", "pre-bar");
+        props.setProperty("PRE-BATCH-XQUERY-MODULE.foo", PRE_BATCH_XQUERY_MODULE_FOO);
         props.setProperty(Options.POST_BATCH_XQUERY_MODULE, POST_BATCH_MODULE);
-        props.setProperty("POST-BATCH-XQUERY-MODULE.foo", "post-bar");
+        props.setProperty("POST-BATCH-XQUERY-MODULE.foo", POST_BATCH_XQUERY_MODULE_FOO);
 
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
         assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
-        assertEquals("process-bar", instance.properties.getProperty("PROCESS-MODULE.foo"));
+        assertEquals(XQUERY_MODULE_FOO, instance.properties.getProperty("PROCESS-MODULE.foo"));
         assertEquals(PRE_BATCH_MODULE, instance.options.getPreBatchModule());
-        assertEquals("pre-bar", instance.properties.getProperty("PRE-BATCH-MODULE.foo"));
+        assertEquals(PRE_BATCH_XQUERY_MODULE_FOO, instance.properties.getProperty("PRE-BATCH-MODULE.foo"));
         assertEquals(POST_BATCH_MODULE, instance.options.getPostBatchModule());
-        assertEquals("post-bar", instance.properties.getProperty("POST-BATCH-MODULE.foo"));
+        assertEquals(POST_BATCH_XQUERY_MODULE_FOO, instance.properties.getProperty("POST-BATCH-MODULE.foo"));
     }
 
     @Test(expected = NumberFormatException.class)

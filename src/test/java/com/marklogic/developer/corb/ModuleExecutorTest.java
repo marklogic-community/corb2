@@ -73,6 +73,7 @@ public class ModuleExecutorTest {
     public static final String OPTIONS_FILE = "src/test/resources/helloWorld.properties";
     public static final String EXPORT_FILE_NAME = "src/test/resources/helloWorld.txt";
     public static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
+    private static final String FOO = "foo";
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
     private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
     private PrintStream systemOut = System.out;
@@ -625,7 +626,7 @@ public class ModuleExecutorTest {
     @Test
     public void testInitOptions() throws Exception {
         String exportDir = TestUtils.createTempDirectory().toString();
-        String[] args = new String[]{"foo", "processModule", "", "", exportDir};
+        String[] args = new String[]{FOO, "processModule", "", "", exportDir};
         ModuleExecutor instance = new ModuleExecutor();
         instance.initOptions(args);
         assertEquals(exportDir, instance.properties.getProperty(Options.EXPORT_FILE_DIR));
@@ -634,7 +635,7 @@ public class ModuleExecutorTest {
     @Test(expected = IllegalArgumentException.class)
     public void testInitOptions_exportDirDoesNotExist() throws Exception {
         String exportDir = "does/not/exist";
-        String[] args = new String[]{"foo", "processModule", "", "", exportDir};
+        String[] args = new String[]{FOO, "processModule", "", "", exportDir};
         ModuleExecutor instance = new ModuleExecutor();
         instance.initOptions(args);
         fail();
@@ -665,7 +666,7 @@ public class ModuleExecutorTest {
      */
     @Test
     public void testGetProperty() {
-        String key = "foo";
+        String key = "getPropertyKeyDoesNotExist";
         ModuleExecutor instance = new ModuleExecutor();
         String result = instance.getProperty(key);
         assertNull(result);
@@ -687,7 +688,7 @@ public class ModuleExecutorTest {
     @Test
     public void testGetValueAsBytes() {
         XdmItem item = mock(XdmItem.class);
-        String expected = "foo";
+        String expected = FOO;
         when(item.asString()).thenReturn(expected);
         ModuleExecutor instance = new ModuleExecutor();
         byte[] result = instance.getValueAsBytes(item);
@@ -730,7 +731,7 @@ public class ModuleExecutorTest {
         when(uriCountResult.getItem()).thenReturn(uriCount);
 
         when(batchRefItem.asString()).thenReturn("batchRefVal");
-        when(exampleValue.asString()).thenReturn("foo");
+        when(exampleValue.asString()).thenReturn(FOO);
         when(uriCount.asString()).thenReturn("1");
 
         manager.contentSource = contentSource;
