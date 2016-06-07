@@ -68,6 +68,8 @@ public class AbstractTaskTest {
     private static final String W3C_CODE = "401";
     private static final String CODE = "code";
     private static final String ERROR_MSG = "something bad happened";
+    private static final String SVC_EXTIME = "SVC-EXTIME";
+    private static final String ADMIN = "admin";
     
     @Before
     public void setUp() {
@@ -302,14 +304,14 @@ public class AbstractTaskTest {
     @Test
     public void testHandleRequestException_RequestPermissionException() throws CorbException, IOException {
         Request req = mock(Request.class);
-        RequestPermissionException serverException = new RequestPermissionException(ERROR_MSG, req, "admin");
+        RequestPermissionException serverException = new RequestPermissionException(ERROR_MSG, req, ADMIN);
         assertTrue(testHandleRequestException("RequestPermissionException", serverException, false, 2));
     }
 
     @Test(expected = CorbException.class)
     public void testHandleRequestException_RequestPermissionException_fail() throws CorbException, IOException {
         Request req = mock(Request.class);
-        RequestPermissionException serverException = new RequestPermissionException(ERROR_MSG, req, "admin");
+        RequestPermissionException serverException = new RequestPermissionException(ERROR_MSG, req, ADMIN);
         testHandleRequestException("RequestPermissionException", serverException, true, 2);
         fail();
     }
@@ -336,7 +338,7 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "foo, SVC-EXTIME, XDMP-EXTIME, bar");
-        XQueryException exception = new XQueryException(req, "SVC-EXTIME", W3C_CODE, XQUERY_VERSION, "timeout", "", "", false, new String[0], new QueryStackFrame[0]);
+        XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, "timeout", "", "", false, new String[0], new QueryStackFrame[0]);
         assertTrue(instance.shouldRetry(exception));
     }
 
@@ -347,11 +349,11 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
-        XQueryException exception = new XQueryException(req, "SVC-EXTIME", W3C_CODE, XQUERY_VERSION, "timeout", "", "", false, new String[0], new QueryStackFrame[0]);
+        XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, "timeout", "", "", false, new String[0], new QueryStackFrame[0]);
 
         assertFalse(instance.shouldRetry(exception));
 
-        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-EXTIME,XDMP-EXTIME");
+        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, SVC_EXTIME + ",XDMP-EXTIME");
 
         assertTrue(instance.shouldRetry(exception));
 
@@ -367,11 +369,11 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
-        XQueryException exception = new XQueryException(req, "SVC-EXTIME", W3C_CODE, XQUERY_VERSION, "timeout", "", "", true, new String[0], new QueryStackFrame[0]);
+        XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, "timeout", "", "", true, new String[0], new QueryStackFrame[0]);
 
         assertTrue(instance.shouldRetry(exception)); //since it's retryable, doesn't matter if code matches
 
-        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-EXTIME,XDMP-EXTIME");
+        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, SVC_EXTIME + ",XDMP-EXTIME");
         assertTrue(instance.shouldRetry(exception)); //is retryable and the code matches
 
         instance.properties.remove(Options.QUERY_RETRY_ERROR_CODES);
