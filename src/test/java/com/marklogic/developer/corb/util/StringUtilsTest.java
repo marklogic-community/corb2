@@ -32,6 +32,7 @@ import static org.junit.Assert.*;
 public class StringUtilsTest {
 
     private static final String ADHOC_SUFFIX = "|ADHOC";
+    private static final String INLINE_JAVASCRIPT_CODE = "var i = 0; return i;";
     
     @Test
     public void testStringToBoolean_String_empty() {
@@ -302,7 +303,7 @@ public class StringUtilsTest {
      */
     @Test
     public void testIsInlineModule() {
-        String code = "var i = 0; return i;";
+        String code = INLINE_JAVASCRIPT_CODE;
         assertTrue(StringUtils.isInlineModule("INLINE-JAVASCRIPT|" + code));
         assertTrue(StringUtils.isInlineModule("INLINE-XQUERY|" + code));
         assertTrue(StringUtils.isInlineModule("INLINE-JavaScript|" + code));
@@ -313,7 +314,7 @@ public class StringUtilsTest {
 
     @Test
     public void testIsInlineModule_false() {
-        String code = "var i = 0; return i;";
+        String code = INLINE_JAVASCRIPT_CODE;
         assertFalse(StringUtils.isInlineModule("INLINE-JAVASCRIPT" + code)); //missing the |
         assertFalse(StringUtils.isInlineModule("INLINE-RUBY|" + code)); //wrong language
     }
@@ -323,7 +324,7 @@ public class StringUtilsTest {
      */
     @Test
     public void testInlineModuleLanguage_JAVASCRIPT() {
-        String code = "var i = 0; return i;";
+        String code = INLINE_JAVASCRIPT_CODE;
         String value = "INLINE-JAVASCRIPT|" + code + ADHOC_SUFFIX;
         String result = StringUtils.inlineModuleLanguage(value);
         assertEquals("JAVASCRIPT", result);
@@ -348,7 +349,7 @@ public class StringUtilsTest {
      */
     @Test
     public void testInlineModuleCode() {
-        String code = "var i = 0; return i;";
+        String code = INLINE_JAVASCRIPT_CODE;
         String value = "INLINE-JAVASCRIPT|" + code + ADHOC_SUFFIX;
 
         String result = StringUtils.getInlineModuleCode(value);

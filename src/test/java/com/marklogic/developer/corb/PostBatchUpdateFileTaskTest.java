@@ -251,34 +251,34 @@ public class PostBatchUpdateFileTaskTest {
 
     @Test
     public void testCall_removeDuplicatesAndSort_customComparator() throws Exception {
-        testCustomComparator(null, "b,z...,d....,d....,a.....");
+        assertTrue(testCustomComparator(null, "b,z...,d....,d....,a....."));
     }
 
     @Test
     public void testCall_removeDuplicatesAndSort_customComparator_distinct() throws Exception {
-        testCustomComparator("distinct", "b,z...,d....,a.....");
+        assertTrue(testCustomComparator("distinct", "b,z...,d....,a....."));
     }
 
     @Test
     public void testCall_removeDuplicatesAndSort_customComparator_badClass() throws Exception {
-        testCustomComparator("distinct", "z...,d....,d....,a.....,b", "java.lang.String");
+        assertTrue(testCustomComparator("distinct", "z...,d....,d....,a.....,b", "java.lang.String"));
     }
 
     @Test
     public void testCall_removeDuplicatesAndSort_noSortOrDedup_distinctOnly() throws Exception {
-        testCustomComparator("distinct", "z...,d....,d....,a.....,b", null);
+        assertTrue(testCustomComparator("distinct", "z...,d....,d....,a.....,b", null));
     }
 
     @Test
     public void testCall_removeDuplicatesAndSort_noSortOrDedup_blankSort() throws Exception {
-        testCustomComparator(" ", "z...,d....,d....,a.....,b", null);
+        assertTrue(testCustomComparator(" ", "z...,d....,d....,a.....,b", null));
     }
 
-    public void testCustomComparator(String sortProperty, String expected) throws Exception {
-        testCustomComparator(sortProperty, expected, "com.marklogic.developer.corb.PostBatchUpdateFileTaskTest$StringLengthComparator");
+    public boolean testCustomComparator(String sortProperty, String expected) throws Exception {
+        return testCustomComparator(sortProperty, expected, "com.marklogic.developer.corb.PostBatchUpdateFileTaskTest$StringLengthComparator");
     }
 
-    public void testCustomComparator(String sortProperty, String expected, String comparator) throws Exception {
+    public boolean testCustomComparator(String sortProperty, String expected, String comparator) throws Exception {
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
         FileWriter writer = new FileWriter(file, true);
@@ -298,7 +298,7 @@ public class PostBatchUpdateFileTaskTest {
             props.setProperty(Options.EXPORT_FILE_SORT, sortProperty);
         }
         String result = testRemoveDuplicatesAndSort(file, props);
-        assertEquals(splitAndAppendNewline(expected), result);
+        return result.equals(splitAndAppendNewline(expected));
     }
 
     @Test

@@ -64,14 +64,14 @@ public class IOUtilsTest {
             }
         };
         IOUtils.closeQuietly(closeable);
-        assertTrue(true); //did not throw IOException
+        //did not throw IOException
     }
 
     @Test
     public void testCloseQuietly_null() throws IOException {
         Closeable closeable = null;
         IOUtils.closeQuietly(closeable);
-        assertTrue(true); //did not throw IOException
+        //did not throw IOException
     }
 
     @Test(expected = IOException.class)
