@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.xcc.ResultSequence;
+import java.io.File;
 import java.util.Properties;
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -106,16 +107,26 @@ public class ExportBatchToFileTaskTest {
     @Test
     public void testWriteToFile_nullSeq() throws Exception {
         ResultSequence seq = null;
+        Properties props = new Properties();
+        props.setProperty(Options.EXPORT_FILE_NAME, "testWriteToFileNullSeq.txt");
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
+        instance.properties = props;
         instance.writeToFile(seq);
+        File file = new File(instance.exportDir, instance.getPartFileName());
+        assertFalse(file.exists());
     }
 
     @Test
     public void testWriteToFile_notSeqHasNext() throws Exception {
         ResultSequence seq = mock(ResultSequence.class);
         when(seq.hasNext()).thenReturn(false);
+        Properties props = new Properties();
+        props.setProperty(Options.EXPORT_FILE_NAME, "testWriteToFile.txt");
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
+        instance.properties = props;
         instance.writeToFile(seq);
+        File file = new File(instance.exportDir, instance.getPartFileName());
+        assertFalse(file.exists());
     }
 
 }
