@@ -79,7 +79,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     private void setSystemProperties() {
-        System.setProperty(Options.PRIVATE_KEY_FILE, PRIVATE_KEY_PATH);
+        System.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_PATH);
     }
 
     /**
@@ -129,7 +129,7 @@ public class PrivateKeyDecrypterTest {
         clearSystemProperties();
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
-        instance.properties.setProperty(Options.PRIVATE_KEY_FILE, "");
+        instance.properties.setProperty(PRIVATE_KEY_FILE, "");
         //init_decrypter() is invoked as part of init(), reset logs and measure only for this invocation
         testLogger.clear();
 
@@ -145,7 +145,7 @@ public class PrivateKeyDecrypterTest {
         clearSystemProperties();
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
-        instance.properties.setProperty(Options.PRIVATE_KEY_FILE, PRIVATE_KEY_PATH.replace(PRIVATE_KEY_NAME, ""));
+        instance.properties.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_PATH.replace(PRIVATE_KEY_NAME, ""));
         //init_decrypter() is invoked as part of init(), reset logs and measure only for this invocation
         testLogger.clear();
 
@@ -161,7 +161,7 @@ public class PrivateKeyDecrypterTest {
         clearSystemProperties();
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
-        instance.properties.setProperty(Options.PRIVATE_KEY_FILE, PRIVATE_KEY_PATH + "/invalid");
+        instance.properties.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_PATH + "/invalid");
         //init_decrypter() is invoked as part of init(), reset logs and measure only for this invocation
         testLogger.clear();
 
@@ -177,7 +177,7 @@ public class PrivateKeyDecrypterTest {
         clearSystemProperties();
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
-        instance.properties.setProperty(Options.PRIVATE_KEY_FILE, PRIVATE_KEY_NAME);
+        instance.properties.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_NAME);
         //init_decrypter() is invoked as part of init(), reset logs and measure only for this invocation
         testLogger.clear();
 
@@ -205,7 +205,7 @@ public class PrivateKeyDecrypterTest {
         String value = SECRET;
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
-        instance.properties.setProperty(Options.PRIVATE_KEY_FILE, PRIVATE_KEY_PATH);
+        instance.properties.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_PATH);
         instance.init_decrypter();
         String result = instance.doDecrypt("key", ENCRYPTED_VALUE);
         assertEquals(value, result);
@@ -216,7 +216,7 @@ public class PrivateKeyDecrypterTest {
         String value = SECRET;
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
-        instance.properties.setProperty(Options.PRIVATE_KEY_FILE, PRIVATE_KEY_PATH);
+        instance.properties.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_PATH);
         instance.init_decrypter();
         String result = instance.doDecrypt("key", value);
         assertEquals(value, result);
