@@ -108,8 +108,7 @@ public class StringUtilsTest {
     @Test(expected = NullPointerException.class)
     public void testJoin_ObjectArr_StringIsNull() {
         Object[] items = null;
-        String delim = ",";
-        StringUtils.join(items, delim);
+        StringUtils.join(items, DELIM);
     }
 
     /**

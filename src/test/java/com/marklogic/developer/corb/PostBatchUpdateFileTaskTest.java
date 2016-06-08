@@ -291,7 +291,7 @@ public class PostBatchUpdateFileTaskTest {
         writer.append("d....\n");
         writer.append("d....\n");
         writer.append("a.....\n");
-        writer.append("b\n");
+        writer.append(B);
         writer.flush();
         writer.close();
 
