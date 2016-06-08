@@ -46,7 +46,7 @@ public class QueryUrisLoaderTest {
     private String foo = "foo";
     private String bar = "bar";
     private String none = "none";
-    
+    private static final String ADHOC_SUFFIX = "|ADHOC";
     /**
      * Test of open method, of class QueryUrisLoader.
      */
@@ -102,7 +102,7 @@ public class QueryUrisLoaderTest {
         when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
         when(xdmItem.asString()).thenReturn(none).thenReturn(none);
         Properties props = new Properties();
-        props.setProperty(Options.URIS_REPLACE_PATTERN, "foo,");
+        props.setProperty(Options.URIS_REPLACE_PATTERN, "foo1,");
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule("/module");
         transformOptions.setModuleRoot("/root");
@@ -137,7 +137,7 @@ public class QueryUrisLoaderTest {
         when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
         when(xdmItem.asString()).thenReturn(none).thenReturn(none);
         Properties props = new Properties();
-        props.setProperty(Options.URIS_REPLACE_PATTERN, "foo,");
+        props.setProperty(Options.URIS_REPLACE_PATTERN, "foo2,");
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule("INLINE-XQUERY|for $i in (1 to 5) return $i || '.xml'");
         transformOptions.setModuleRoot("/root");
@@ -172,7 +172,7 @@ public class QueryUrisLoaderTest {
         when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
         when(xdmItem.asString()).thenReturn(none).thenReturn(none);
         Properties props = new Properties();
-        props.setProperty(Options.URIS_REPLACE_PATTERN, "foo,");
+        props.setProperty(Options.URIS_REPLACE_PATTERN, "foo3,");
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule("INLINE-XQUERY|");
         transformOptions.setModuleRoot("/root");
@@ -195,7 +195,7 @@ public class QueryUrisLoaderTest {
         Session session = mock(Session.class);
         when(contentSource.newSession()).thenReturn(session);
         TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setUrisModule("|ADHOC");
+        transformOptions.setUrisModule(ADHOC_SUFFIX);
         instance.options = transformOptions;
         instance.cs = contentSource;
         try {
@@ -215,7 +215,7 @@ public class QueryUrisLoaderTest {
         TransformOptions transformOptions = new TransformOptions();
         File file = File.createTempFile("adhoc", "xqy");
         file.deleteOnExit();
-        transformOptions.setUrisModule(file.getAbsolutePath() + "|ADHOC");
+        transformOptions.setUrisModule(file.getAbsolutePath() + ADHOC_SUFFIX);
         instance.options = transformOptions;
         instance.cs = contentSource;
 
@@ -230,6 +230,7 @@ public class QueryUrisLoaderTest {
     @Test
     public void testOpen() throws Exception {
         String processModuleKey = "PROCESS-MODULE.foo";
+        String keyEqualsBar = processModuleKey + "=" + bar;
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         AdhocQuery request = mock(AdhocQuery.class);
@@ -243,7 +244,7 @@ public class QueryUrisLoaderTest {
         when(session.submitRequest(request)).thenReturn(resultSequence);
         when(resultSequence.next()).thenReturn(item);
         when(item.getItem()).thenReturn(xItemFirst).thenReturn(xItemFirst).thenReturn(xItemCount);
-        when(xItemFirst.asString()).thenReturn(processModuleKey +"=" + bar).thenReturn(processModuleKey + "=" + bar);
+        when(xItemFirst.asString()).thenReturn(keyEqualsBar).thenReturn(keyEqualsBar);
         when(xItemCount.asString()).thenReturn("1");
         TransformOptions transformOptions = new TransformOptions();
         File file = File.createTempFile("adhoc", ".js");
@@ -251,7 +252,7 @@ public class QueryUrisLoaderTest {
         FileWriter writer = new FileWriter(file, true);
         writer.append("var foo;");
         writer.close();
-        transformOptions.setUrisModule(file.getAbsolutePath() + "|ADHOC");
+        transformOptions.setUrisModule(file.getAbsolutePath() + ADHOC_SUFFIX);
         Properties props = new Properties();
         props.setProperty("URIS-MODULE.foo", bar);
 

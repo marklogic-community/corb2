@@ -62,7 +62,8 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
 
     private Map<Integer, Node> nodeMap;
     private TransformerFactory transformerFactory;
-
+    private static final String YES = "yes";
+    
     @Override
     public void open() throws CorbException {
 
@@ -118,8 +119,8 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
                 transformerFactory = TransformerFactory.newInstance();
             }
             Transformer t = transformerFactory.newTransformer();
-            t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-            t.setOutputProperty(OutputKeys.INDENT, "yes");
+            t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, YES);
+            t.setOutputProperty(OutputKeys.INDENT, YES);
             t.transform(new DOMSource(node), new StreamResult(sw));
         } catch (TransformerException te) {
             throw new CorbException("nodeToString Transformer Exception", te);

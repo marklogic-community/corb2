@@ -43,6 +43,8 @@ public class JasyptDecrypterTest {
     private static final String JASYPT_ALGORITHM = "jasypt.algorithm";
     private static final String JASYPT_PASSWORD = "jasypt.password";
     private static final String ERROR_NO_PASSWORD = "Unable to initialize jasypt decrypter. Couldn't find jasypt.password";
+    private static final String TEMP_PREFIX = "temp";
+    private static final String PROPERTIES_SUFFIX = ".properties";
     
     @Before
     public void setUp() {
@@ -97,7 +99,7 @@ public class JasyptDecrypterTest {
         Properties blankProps = new Properties();
         blankProps.setProperty(JASYPT_ALGORITHM, "  ");
         blankProps.setProperty(JASYPT_PASSWORD, "  ");
-        File blankPropsFile = File.createTempFile("temp", ".properties");
+        File blankPropsFile = File.createTempFile(TEMP_PREFIX, PROPERTIES_SUFFIX);
         blankPropsFile.deleteOnExit();
         FileOutputStream outputStream = new FileOutputStream(blankPropsFile);
         blankProps.store(outputStream, "");
@@ -113,10 +115,12 @@ public class JasyptDecrypterTest {
     //@Test
     public void testInit_decrypter_algorithmIsNotBlank() throws Exception {
         clearSystemProperties();
+        String password = "password";
+        String alg = "PBEWithMD5AndTripleDES";
         Properties blankProps = new Properties();
-        blankProps.setProperty(JASYPT_ALGORITHM, "PBEWithMD5AndTripleDES");
-        blankProps.setProperty(JASYPT_PASSWORD, "password");
-        File blankPropsFile = File.createTempFile("temp", ".properties");
+        blankProps.setProperty(JASYPT_ALGORITHM, alg);
+        blankProps.setProperty(JASYPT_PASSWORD, password);
+        File blankPropsFile = File.createTempFile(TEMP_PREFIX, PROPERTIES_SUFFIX);
         blankPropsFile.deleteOnExit();
         FileOutputStream outputStream = new FileOutputStream(blankPropsFile);
         blankProps.store(outputStream, "");
@@ -127,8 +131,8 @@ public class JasyptDecrypterTest {
         instance.properties = props;
         instance.init_decrypter();
 
-        assertEquals("PBEWithMD5AndTripleDES", instance.jaspytProperties.getProperty(JASYPT_ALGORITHM));
-        assertEquals("password", instance.jaspytProperties.getProperty(JASYPT_PASSWORD));
+        assertEquals(alg, instance.jaspytProperties.getProperty(JASYPT_ALGORITHM));
+        assertEquals(password, instance.jaspytProperties.getProperty(JASYPT_PASSWORD));
         assertNotNull(instance.decrypter);
     }
 
@@ -136,7 +140,7 @@ public class JasyptDecrypterTest {
     public void testInit_decrypter_noJasyptProperties() throws Exception {
         clearSystemProperties();
         Properties emptyProps = new Properties();
-        File emptyFile = File.createTempFile("temp", ".properties");
+        File emptyFile = File.createTempFile(TEMP_PREFIX, PROPERTIES_SUFFIX);
         emptyFile.deleteOnExit();
         FileOutputStream outputStream = new FileOutputStream(emptyFile);
         emptyProps.store(outputStream, "");
@@ -168,8 +172,8 @@ public class JasyptDecrypterTest {
      */
     @Test
     public void testDoDecrypt() {
-        String property = "foo";
-        String value = "bar";
+        String property = "prop1";
+        String value = "value";
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.decrypter = new TestDecrypt();
         instance.decrypterCls = TestDecrypt.class;

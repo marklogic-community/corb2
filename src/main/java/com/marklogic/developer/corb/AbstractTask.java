@@ -317,19 +317,23 @@ public abstract class AbstractTask implements Task {
             } else if (requestException instanceof ServerConnectionException || failOnError) {
                 throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
             } else {
-                LOG.log(WARNING, "failOnError is false. Encountered " + name + AT_URI + asString(inputUris), requestException);
+                LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
                 writeToErrorFile(inputUris, requestException.getMessage());
                 return inputUris;
             }
         } else if (failOnError) {
             throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
         } else {
-            LOG.log(WARNING, "failOnError is false. Encountered " + name + AT_URI + asString(inputUris), requestException);
+            LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
             writeToErrorFile(inputUris, requestException.getMessage());
             return inputUris;
         }
     }
-
+    
+    private String failOnErrorIsFalseMessage(final String name, final String[] inputUris) {
+        return "failOnError is false. Encountered " + name + AT_URI + asString(inputUris);
+    }
+    
     protected String asString(String[] uris) {
         return uris == null ? "" : StringUtils.join(uris, ",");
     }

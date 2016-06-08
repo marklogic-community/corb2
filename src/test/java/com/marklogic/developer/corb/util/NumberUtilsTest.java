@@ -47,13 +47,13 @@ public class NumberUtilsTest {
      */
     @Test
     public void testToInt_String_int() {
-        int result = NumberUtils.toInt("6", -1);
-        assertEquals(6, result);
+        int result = NumberUtils.toInt("7", -1);
+        assertEquals(7, result);
     }
     
     @Test
     public void testToInt_String_int_invalid() {
-        int result = NumberUtils.toInt("six", -1);
+        int result = NumberUtils.toInt("seven", -1);
         assertEquals(-1, result);
     }
 }

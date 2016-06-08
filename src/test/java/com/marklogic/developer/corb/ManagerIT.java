@@ -54,6 +54,10 @@ public class ManagerIT {
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
     private static final String EXT_TXT = ".txt";
     private static final String transformSlowModule = "src/test/resources/transformSlow.xqy|ADHOC";
+    private static final String pause_cmd = "pause";
+    private static final LogRecord PAUSING = new LogRecord(Level.INFO, "pausing");
+    private static final LogRecord RESUMING = new LogRecord(Level.INFO, "resuming");
+    private static final String CORB_INIT_ERROR_MSG = "Error initializing CORB";
     
     /**
      * Perform pre-test initialization.
@@ -462,7 +466,7 @@ public class ManagerIT {
         Manager.main(args);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.SEVERE, records.get(0).getLevel());
-        assertEquals("Error initializing CORB", records.get(0).getMessage());
+        assertEquals(CORB_INIT_ERROR_MSG, records.get(0).getMessage());
     }
 
     @Test
@@ -472,7 +476,7 @@ public class ManagerIT {
         Manager.main(args);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.SEVERE, records.get(0).getLevel());
-        assertEquals("Error initializing CORB", records.get(0).getMessage());
+        assertEquals(CORB_INIT_ERROR_MSG, records.get(0).getMessage());
     }
 
     @Test
@@ -496,7 +500,7 @@ public class ManagerIT {
             @Override
             public void run() {
                 Properties props = new Properties();
-                props.put(Options.COMMAND, "pause");
+                props.put(Options.COMMAND, pause_cmd);
                 File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
                 try {
                     commandFile.createNewFile();
@@ -531,8 +535,8 @@ public class ManagerIT {
         int lineCount = FileUtils.getLineCount(exportFile);
         assertEquals(8, lineCount);
         List<LogRecord> records = testLogger.getLogRecords();
-        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "pausing")));
-        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "resuming")));
+        assertTrue(containsLogRecord(records, PAUSING));
+        assertTrue(containsLogRecord(records, RESUMING));
     }
 
     @Test
@@ -556,7 +560,7 @@ public class ManagerIT {
             @Override
             public void run() {
                 Properties props = new Properties();
-                props.put(Options.COMMAND, "pause");
+                props.put(Options.COMMAND, pause_cmd);
                 File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
                 try {
                     commandFile.createNewFile();
@@ -589,8 +593,8 @@ public class ManagerIT {
         int lineCount = FileUtils.getLineCount(exportFile);
         assertEquals(8, lineCount);
         List<LogRecord> records = testLogger.getLogRecords();
-        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "pausing")));
-        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "resuming")));
+        assertTrue(containsLogRecord(records, PAUSING));
+        assertTrue(containsLogRecord(records, RESUMING));
     }
 
     @Test
@@ -643,7 +647,7 @@ public class ManagerIT {
         commandFile.deleteOnExit();
         System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
         System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
-        System.setProperty(Options.THREAD_COUNT, "4");
+        System.setProperty(Options.THREAD_COUNT, "3");
         System.setProperty(Options.PROCESS_MODULE, transformSlowModule);
         System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
         System.setProperty(Options.EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);

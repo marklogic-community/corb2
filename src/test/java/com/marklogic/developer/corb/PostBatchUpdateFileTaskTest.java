@@ -45,6 +45,10 @@ public class PostBatchUpdateFileTaskTest {
     private static final String TEMP_FILE_SUFFIX = "txt";
     private static final String PART_FILE_EXT = ".zpart";
     private static final String ZIP_EXT = ".zip";
+    private static final String A = "a\n";
+    private static final String B = "b\n";
+    private static final String D = "d\n";
+    private static final String Z = "z\n";
     
     @Before
     public void setUp() {
@@ -228,16 +232,16 @@ public class PostBatchUpdateFileTaskTest {
     public void testCall_removeDuplicatesAndSort_trueSort_withHeaderAndFooter()
             throws Exception {
         String header = "BEGIN\nletter\n";
-        String d = "d\n";
+        
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
         FileWriter writer = new FileWriter(file, true);
         writer.append(header);
-        writer.append("z\n");
-        writer.append(d);
-        writer.append(d);
-        writer.append("a\n");
-        writer.append("b\n");
+        writer.append(Z);
+        writer.append(D);
+        writer.append(D);
+        writer.append(A);
+        writer.append(B);
         writer.flush();
         writer.close();
 
@@ -359,15 +363,15 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     private String testRemoveDuplicatesAndSort(Properties props) throws IOException, Exception {
-        String d = "d\n";
+
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
         FileWriter writer = new FileWriter(file, true);
-        writer.append("z\n");
-        writer.append(d);
-        writer.append(d);
-        writer.append("a\n");
-        writer.append("b\n");
+        writer.append(Z);
+        writer.append(D);
+        writer.append(D);
+        writer.append(A);
+        writer.append(B);
         writer.close();
         return testRemoveDuplicatesAndSort(file, props);
     }

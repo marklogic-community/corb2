@@ -70,6 +70,10 @@ public class AbstractTaskTest {
     private static final String ERROR_MSG = "something bad happened";
     private static final String SVC_EXTIME = "SVC-EXTIME";
     private static final String ADMIN = "admin";
+    private static final String ONE = "one";
+    private static final String TWO = "two";
+    private static final String THREE = "three";
+    private static final String REJECTED_MSG = "denied!";
     
     @Before
     public void setUp() {
@@ -254,14 +258,14 @@ public class AbstractTaskTest {
     @Test
     public void testGetIntProperty() {
         Properties props = new Properties();
-        props.setProperty("one", "one");
-        props.setProperty("two", "2");
-        props.setProperty("three", "");
+        props.setProperty(ONE, ONE);
+        props.setProperty(TWO, "2");
+        props.setProperty(THREE, "");
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = props;
-        assertEquals(-1, instance.getIntProperty("one"));
-        assertEquals(2, instance.getIntProperty("two"));
-        assertEquals(-1, instance.getIntProperty("three"));
+        assertEquals(-1, instance.getIntProperty(ONE));
+        assertEquals(2, instance.getIntProperty(TWO));
+        assertEquals(-1, instance.getIntProperty(THREE));
         assertEquals(-1, instance.getIntProperty("four"));
     }
 
@@ -387,10 +391,10 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
-        RequestPermissionException exception = new RequestPermissionException("denied!", req, USER_NAME, false);
+        RequestPermissionException exception = new RequestPermissionException(REJECTED_MSG, req, USER_NAME, false);
         assertFalse(instance.shouldRetry(exception));
 
-        exception = new RequestPermissionException("denied!", req, "user-name", true);
+        exception = new RequestPermissionException(REJECTED_MSG, req, USER_NAME, true);
         assertTrue(instance.shouldRetry(exception));
     }
 
@@ -400,7 +404,7 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_MESSAGE, "FOO,Authentication failure for user,BAR");
-        RequestPermissionException exception = new RequestPermissionException("denied!", req, USER_NAME, false);
+        RequestPermissionException exception = new RequestPermissionException(REJECTED_MSG, req, USER_NAME, false);
         assertFalse(instance.hasRetryableMessage(exception));
 
         exception = new RequestPermissionException("Authentication failure for user 'user-name'", req, USER_NAME, false);
@@ -559,7 +563,7 @@ public class AbstractTaskTest {
         String[] uris = new String[]{URI};
         File exportDir = TestUtils.createTempDirectory();
         String filename = "testWriteToErrorFile_customBatchUridelim.err";
-        String delim = "$";
+        String delim = "|";
         String message = null;
         File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
         assertFalse(TestUtils.readFile(errorFile).contains(delim));
@@ -570,7 +574,7 @@ public class AbstractTaskTest {
         String[] uris = new String[]{URI};
         File exportDir = TestUtils.createTempDirectory();
         String filename = "testWriteToErrorFile_customBatchUridelim.err";
-        String delim = "$";
+        String delim = "~";
         String message = "";
         File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
 

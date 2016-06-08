@@ -54,6 +54,7 @@ public class PrivateKeyDecrypterTest {
     private static final String ACTION_GEN_KEYS = "gen-keys";
     private static final String ACTION_ENCRYPT = "encrypt";
     private static final String ALGORITHM = "RSA";
+    private static final String STRENGTH = "2048";
     private static final String SECRET = "secret";
     private static final String NEWLINE = "\n";
     private static final String USAGE = GEN_KEYS_USAGE + NEWLINE + ENCRYPT_USAGE + NEWLINE;
@@ -241,7 +242,7 @@ public class PrivateKeyDecrypterTest {
     public void testMain_genKeys() throws Exception {
         File tempPublic = createTempFile();
         File tempPrivate = createTempFile();
-        String[] args = {ACTION_GEN_KEYS, tempPrivate.toString(), tempPublic.toString(), ALGORITHM, "2048"};
+        String[] args = {ACTION_GEN_KEYS, tempPrivate.toString(), tempPublic.toString(), ALGORITHM, STRENGTH};
         PrivateKeyDecrypter.main(args);
         assertTrue(tempPublic.exists());
         assertTrue(tempPrivate.exists());
@@ -253,7 +254,7 @@ public class PrivateKeyDecrypterTest {
         tempPublic.delete();
         File tempPrivate = createTempFile();
         tempPrivate.delete();
-        String[] args = {ACTION_GEN_KEYS, "", tempPublic.toString(), ALGORITHM, "2048"};
+        String[] args = {ACTION_GEN_KEYS, "", tempPublic.toString(), ALGORITHM, STRENGTH};
         PrivateKeyDecrypter.main(args);
         assertFalse(tempPublic.exists());
         assertFalse(tempPrivate.exists());
@@ -265,7 +266,7 @@ public class PrivateKeyDecrypterTest {
         tempPublic.delete();
         File tempPrivate = createTempFile();
         tempPrivate.delete();
-        String[] args = {ACTION_GEN_KEYS, tempPrivate.toString(), "", ALGORITHM, "2048"};
+        String[] args = {ACTION_GEN_KEYS, tempPrivate.toString(), "", ALGORITHM, STRENGTH};
         PrivateKeyDecrypter.main(args);
         assertFalse(tempPublic.exists());
         assertFalse(tempPrivate.exists());

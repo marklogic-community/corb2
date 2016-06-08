@@ -62,7 +62,11 @@ public class AbstractManagerTest {
     private static final String KEY = "key";
     private static final String VALUE = "value";
     private String selectorAsText;
-
+    private String username = "username";
+    private String password = "password";
+    private String host = "localhost";
+    private String port = "80";
+    
     @Before
     public void setUp() throws FileNotFoundException {
         LOG.addHandler(testLogger);
@@ -317,10 +321,10 @@ public class AbstractManagerTest {
     @Test
     public void testInitURI_argsTakePrecedenceOverProperties() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_USERNAME, "username");
-        instance.properties.setProperty(Options.XCC_PASSWORD, "password");
-        instance.properties.setProperty(Options.XCC_HOSTNAME, "localhost");
-        instance.properties.setProperty(Options.XCC_PORT, "80");
+        instance.properties.setProperty(Options.XCC_USERNAME, username);
+        instance.properties.setProperty(Options.XCC_PASSWORD, password);
+        instance.properties.setProperty(Options.XCC_HOSTNAME, host);
+        instance.properties.setProperty(Options.XCC_PORT, port);
         instance.initURI(XCC_CONNECTION_URI);
         assertEquals(XCC_CONNECTION_URI, instance.connectionUri.toString());
     }
@@ -353,10 +357,10 @@ public class AbstractManagerTest {
     @Test
     public void testInitURI_nullURI_withValues() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_USERNAME, "username");
-        instance.properties.setProperty(Options.XCC_PASSWORD, "password");
-        instance.properties.setProperty(Options.XCC_HOSTNAME, "localhost");
-        instance.properties.setProperty(Options.XCC_PORT, "80");
+        instance.properties.setProperty(Options.XCC_USERNAME, username);
+        instance.properties.setProperty(Options.XCC_PASSWORD, password);
+        instance.properties.setProperty(Options.XCC_HOSTNAME, host);
+        instance.properties.setProperty(Options.XCC_PORT, port);
         instance.initURI(null);
         assertEquals("xcc://username:password@localhost:80", instance.connectionUri.toString());
     }
@@ -364,7 +368,7 @@ public class AbstractManagerTest {
     @Test
     public void testInitURI_nullURI_withPassword() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_PASSWORD, "password");
+        instance.properties.setProperty(Options.XCC_PASSWORD, password);
         exit.expectSystemExit();
         instance.initURI(null);
         fail();
@@ -373,7 +377,7 @@ public class AbstractManagerTest {
     @Test
     public void testInitURI_nullURI_withPort() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_PORT, "80");
+        instance.properties.setProperty(Options.XCC_PORT, port);
         exit.expectSystemExit();
         instance.initURI(null);
         fail();
@@ -382,7 +386,7 @@ public class AbstractManagerTest {
     @Test
     public void testInitURI_nullURI_withHostname() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_HOSTNAME, "localhost");
+        instance.properties.setProperty(Options.XCC_HOSTNAME, host);
         exit.expectSystemExit();
         instance.initURI(null);
         fail();
@@ -391,7 +395,7 @@ public class AbstractManagerTest {
     @Test
     public void testInitURI_nullURI_withUsername() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_USERNAME, "user");
+        instance.properties.setProperty(Options.XCC_USERNAME, username);
         exit.expectSystemExit();
         instance.initURI(null);
         fail();

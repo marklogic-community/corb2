@@ -34,8 +34,11 @@ public class StringUtilsTest {
     private static final String ADHOC_SUFFIX = "|ADHOC";
     private static final String INLINE_JAVASCRIPT_CODE = "var i = 0; return i;";
     private static final String UTILITIES_FILENAME = "Utilities.xqy";
-    private static final String ABSOLUTE_UTILITIES_FILE = "/" + UTILITIES_FILENAME;
+    private static final String SLASH = "/";
+    private static final String ABSOLUTE_UTILITIES_FILE = SLASH + UTILITIES_FILENAME;
     private static final String INLINE_JAVASCRIPT_PREFIX = "INLINE-JAVASCRIPT|";
+    private static final String INLINE_XQUERY_PREFIX = "INLINE-XQUERY|";
+    private static final String DELIM = ",";
     
     @Test
     public void testStringToBoolean_String_empty() {
@@ -48,20 +51,20 @@ public class StringUtilsTest {
      */
     @Test
     public void testGetPathExtension() {
-        String result = StringUtils.getPathExtension("dir/dir/filename.csv");
+        String result = StringUtils.getPathExtension("dirA/dirB/filename.csv");
         assertEquals("csv", result);
     }
 
     @Test
     public void testGetPathExtension_multipleDotsInPath() {
-        String result = StringUtils.getPathExtension("dir/dir/file.name.csv.txt");
+        String result = StringUtils.getPathExtension("dir1/dir2/file.name.csv.txt");
         assertEquals("txt", result);
     }
 
     @Test
     public void testGetPathExtension_noExtension() {
         String path = "dir/dir/filename";
-        String result = StringUtils.getPathExtension("dir/dir/filename");
+        String result = StringUtils.getPathExtension(path);
         assertEquals(path, result);
     }
 
@@ -71,21 +74,21 @@ public class StringUtilsTest {
     @Test
     public void testJoin_List_String() {
         List<String> items = Arrays.asList(new String[]{"a", "b", "c"});
-        String result = StringUtils.join(items, ",");
+        String result = StringUtils.join(items, DELIM);
         assertEquals("a,b,c", result);
     }
 
     @Test
     public void testJoin_List_StringIsNull() {
         List<String> items = null;
-        String result = StringUtils.join(items, ",");
+        String result = StringUtils.join(items, DELIM);
         assertEquals(null, result);
     }
 
     @Test
     public void testJoin_emptyList() {
         List<String> items = new ArrayList<String>();
-        String result = StringUtils.join(items, ",");
+        String result = StringUtils.join(items, DELIM);
         assertEquals("", result);
     }
 
@@ -105,7 +108,7 @@ public class StringUtilsTest {
     @Test(expected = NullPointerException.class)
     public void testJoin_ObjectArr_StringIsNull() {
         Object[] items = null;
-        String delim = "|";
+        String delim = ",";
         StringUtils.join(items, delim);
     }
 
@@ -115,7 +118,7 @@ public class StringUtilsTest {
     @Test
     public void testJoin_StringArr_String() {
         String[] items = new String[]{"a", "b", "c"};
-        String delim = ",";
+        String delim = DELIM;
         String result = StringUtils.join(items, delim);
         assertEquals("a,b,c", result);
     }
@@ -123,7 +126,7 @@ public class StringUtilsTest {
     @Test(expected = NullPointerException.class)
     public void testJoin_StringArr_StringIsNull() {
         String[] items = null;
-        String delim = ",";
+        String delim = DELIM;
         StringUtils.join(items, delim);
     }
 
@@ -189,12 +192,12 @@ public class StringUtilsTest {
 
     @Test
     public void testBuildModulePath() {
-        assertEquals(ABSOLUTE_UTILITIES_FILE, StringUtils.buildModulePath("/", ABSOLUTE_UTILITIES_FILE));
-        assertEquals(ABSOLUTE_UTILITIES_FILE, StringUtils.buildModulePath("/", UTILITIES_FILENAME));
+        assertEquals(ABSOLUTE_UTILITIES_FILE, StringUtils.buildModulePath(SLASH, ABSOLUTE_UTILITIES_FILE));
+        assertEquals(ABSOLUTE_UTILITIES_FILE, StringUtils.buildModulePath(SLASH, UTILITIES_FILENAME));
         assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo", UTILITIES_FILENAME));
         assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo", ABSOLUTE_UTILITIES_FILE));
         assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo/", UTILITIES_FILENAME));
-        assertEquals("/foo//", StringUtils.buildModulePath("/foo/", "/"));
+        assertEquals("/foo//", StringUtils.buildModulePath("/foo/", SLASH));
     }
 
     /**
@@ -297,8 +300,8 @@ public class StringUtilsTest {
         assertFalse(StringUtils.isJavaScriptModule("/myModule.js.xqy"));
         assertFalse(StringUtils.isJavaScriptModule("/myModule.js.xqy|ADHOC"));
         assertFalse(StringUtils.isJavaScriptModule("/myModule.jsx"));
-        assertFalse(StringUtils.isJavaScriptModule("INLINE-XQUERY|for $i in (1 to 5) return $i"));
-        assertFalse(StringUtils.isJavaScriptModule("INLINE-XQUERY|var foo = 1; return foo;|ADHOC"));
+        assertFalse(StringUtils.isJavaScriptModule(INLINE_XQUERY_PREFIX + "for $i in (1 to 5) return $i"));
+        assertFalse(StringUtils.isJavaScriptModule(INLINE_XQUERY_PREFIX + "var foo = 1; return foo;|ADHOC"));
     }
 
     /**
@@ -308,11 +311,11 @@ public class StringUtilsTest {
     public void testIsInlineModule() {
         String code = INLINE_JAVASCRIPT_CODE;
         assertTrue(StringUtils.isInlineModule(INLINE_JAVASCRIPT_PREFIX + code));
-        assertTrue(StringUtils.isInlineModule("INLINE-XQUERY|" + code));
+        assertTrue(StringUtils.isInlineModule(INLINE_XQUERY_PREFIX + code));
         assertTrue(StringUtils.isInlineModule("INLINE-JavaScript|" + code));
-        assertTrue(StringUtils.isInlineModule("INLINE-xquery|" + code));
+        assertTrue(StringUtils.isInlineModule(INLINE_XQUERY_PREFIX + code));
         assertTrue(StringUtils.isInlineModule(INLINE_JAVASCRIPT_PREFIX+ code + ADHOC_SUFFIX));
-        assertTrue(StringUtils.isInlineModule("INLINE-XQUERY|" + code + ADHOC_SUFFIX));
+        assertTrue(StringUtils.isInlineModule(INLINE_XQUERY_PREFIX + code + ADHOC_SUFFIX));
     }
 
     @Test
@@ -336,7 +339,7 @@ public class StringUtilsTest {
     @Test
     public void testInlineModuleLanguage_XQUERY() {
         String code = "for $i in (1 to 10) return $i";
-        String value = "INLINE-XQUERY|" + code;
+        String value = INLINE_XQUERY_PREFIX + code;
         String result = StringUtils.inlineModuleLanguage(value);
         assertEquals("XQUERY", result);
     }

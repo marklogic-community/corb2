@@ -84,9 +84,9 @@ public class DiskQueueTest {
     @Test
     public void testDiskQueue_finalizeWhileOpen() throws IOException, Throwable {
         DiskQueue<String> instance = new DiskQueue<String>(1);
-        instance.add("one");
-        instance.add("two");
-        instance.add("three");
+        instance.add("first");
+        instance.add("second");
+        instance.add("third");
         assertEquals(3, instance.size());
         instance.finalize();
         List<LogRecord> records = testLogger.getLogRecords();

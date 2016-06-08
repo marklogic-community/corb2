@@ -751,7 +751,7 @@ public class ManagerTest {
     @Test(expected = NullPointerException.class)
     public void testRun_getURILoader_withURIS_MODULE_noContentSource() throws Exception {
         Manager instance = new Manager();
-        instance.options.setUrisModule("someFile.xqy");
+        instance.options.setUrisModule("someFile1.xqy");
         instance.run();
         fail();
     }
@@ -760,7 +760,7 @@ public class ManagerTest {
     public void testRun_getURILoader_withURIS_MODULE_invalidCollection() throws Exception {
         Manager instance = new Manager();
         instance.contentSource = ContentSourceFactory.newContentSource(new URI(XCC_CONNECTION_URI));
-        instance.options.setUrisModule("someFile.xqy");
+        instance.options.setUrisModule("someFile2.xqy");
         instance.run();
         fail();
     }
@@ -768,8 +768,8 @@ public class ManagerTest {
     @Test
     public void testRun_getURILoader_withURIS_MODULE() throws Exception {
         Manager instance = getMockManagerWithEmptyResults();
-        instance.collection = "Modules";
-        instance.options.setUrisModule("someFile.xqy");
+        instance.collection = "URILoader_Modules";
+        instance.options.setUrisModule("someFile3.xqy");
         int count = instance.run();
         assertEquals(0, count);
     }
