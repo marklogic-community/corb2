@@ -154,7 +154,8 @@ public class Manager extends AbstractManager {
     }
 
     @Override
-    public void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException {
+    public void init(String[] commandline_args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException {
+        String[] args = commandline_args;
         if (args == null) {
             args = new String[0];
         }

@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
+import static com.marklogic.developer.corb.Options.PRIVATE_KEY_FILE;
 import static com.marklogic.developer.corb.PrivateKeyDecrypter.ENCRYPT_USAGE;
 import static com.marklogic.developer.corb.PrivateKeyDecrypter.GEN_KEYS_USAGE;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
@@ -87,6 +88,9 @@ public class PrivateKeyDecrypterTest {
     public void testInit_decrypter_initNotInvoked() throws Exception {
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init_decrypter();
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(Level.SEVERE, records.get(0).getLevel());
+        assertEquals(PRIVATE_KEY_FILE + " property must be defined", records.get(0).getMessage());
     }
 
     @Test

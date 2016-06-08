@@ -228,13 +228,14 @@ public class PostBatchUpdateFileTaskTest {
     public void testCall_removeDuplicatesAndSort_trueSort_withHeaderAndFooter()
             throws Exception {
         String header = "BEGIN\nletter\n";
+        String d = "d\n";
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
         FileWriter writer = new FileWriter(file, true);
         writer.append(header);
         writer.append("z\n");
-        writer.append("d\n");
-        writer.append("d\n");
+        writer.append(d);
+        writer.append(d);
         writer.append("a\n");
         writer.append("b\n");
         writer.flush();
@@ -358,12 +359,13 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     private String testRemoveDuplicatesAndSort(Properties props) throws IOException, Exception {
+        String d = "d\n";
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
         FileWriter writer = new FileWriter(file, true);
         writer.append("z\n");
-        writer.append("d\n");
-        writer.append("d\n");
+        writer.append(d);
+        writer.append(d);
         writer.append("a\n");
         writer.append("b\n");
         writer.close();

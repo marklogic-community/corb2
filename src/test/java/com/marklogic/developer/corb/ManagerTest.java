@@ -770,7 +770,8 @@ public class ManagerTest {
         Manager instance = getMockManagerWithEmptyResults();
         instance.collection = "Modules";
         instance.options.setUrisModule("someFile.xqy");
-        instance.run();
+        int count = instance.run();
+        assertEquals(0, count);
     }
 
     /**

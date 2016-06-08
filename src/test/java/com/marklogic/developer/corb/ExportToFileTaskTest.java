@@ -165,7 +165,8 @@ public class ExportToFileTaskTest {
     @Test
     public void testCall() throws Exception {
         ExportToFileTask instance = new ExportToFileTask();
-        instance.call();
+        String[] result = instance.call();
+        assertNull(result);
     }
 
 }

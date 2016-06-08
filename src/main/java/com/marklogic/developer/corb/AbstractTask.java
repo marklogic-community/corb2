@@ -98,7 +98,8 @@ public abstract class AbstractTask implements Task {
     protected boolean failOnError = true;
 
     private static final Logger LOG = Logger.getLogger(AbstractTask.class.getName());
-
+    private static final String AT_URI = " at URI: ";
+    
     @Override
     public void setContentSource(ContentSource cs) {
         this.cs = cs;
@@ -254,7 +255,7 @@ public abstract class AbstractTask implements Task {
         } catch (RequestException exc) {
             return handleRequestException(exc);
         } catch (Exception exc) {
-            throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
+            throw new CorbException(exc.getMessage() + AT_URI + asString(inputUris), exc);
         } finally {
             if (null != session && !session.isClosed()) {
                 session.close();
@@ -306,24 +307,24 @@ public abstract class AbstractTask implements Task {
             if (retryCount < retryLimit) {
                 retryCount++;
                 LOG.log(WARNING,
-                        "Encountered " + name + " from Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
-                        new Object[]{retryCount, retryInterval, requestException.getMessage(), asString(inputUris)});
+                        "Encountered " + name + " from Marklogic Server. Retrying attempt {0} after {1} seconds..: {2}{3}{4}",
+                        new Object[]{retryCount, retryInterval, requestException.getMessage(), AT_URI, asString(inputUris)});
                 try {
                     Thread.sleep(retryInterval * 1000L);
                 } catch (Exception ex) {
                 }
                 return invokeModule();
             } else if (requestException instanceof ServerConnectionException || failOnError) {
-                throw new CorbException(requestException.getMessage() + " at URI: " + asString(inputUris), requestException);
+                throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
             } else {
-                LOG.log(WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), requestException);
+                LOG.log(WARNING, "failOnError is false. Encountered " + name + AT_URI + asString(inputUris), requestException);
                 writeToErrorFile(inputUris, requestException.getMessage());
                 return inputUris;
             }
         } else if (failOnError) {
-            throw new CorbException(requestException.getMessage() + " at URI: " + asString(inputUris), requestException);
+            throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
         } else {
-            LOG.log(WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), requestException);
+            LOG.log(WARNING, "failOnError is false. Encountered " + name + AT_URI + asString(inputUris), requestException);
             writeToErrorFile(inputUris, requestException.getMessage());
             return inputUris;
         }

@@ -34,6 +34,7 @@ public class StringUtilsTest {
     private static final String ADHOC_SUFFIX = "|ADHOC";
     private static final String INLINE_JAVASCRIPT_CODE = "var i = 0; return i;";
     private static final String UTILITIES_FILENAME = "Utilities.xqy";
+    private static final String ABSOLUTE_UTILITIES_FILE = "/" + UTILITIES_FILENAME;
     private static final String INLINE_JAVASCRIPT_PREFIX = "INLINE-JAVASCRIPT|";
     
     @Test
@@ -183,15 +184,15 @@ public class StringUtilsTest {
     public void testBuildModulePath_Package_String_withSuffix() {
         Package _package = Package.getPackage("com.marklogic.developer.corb.util");
         String result = StringUtils.buildModulePath(_package, UTILITIES_FILENAME);
-        assertEquals("/com/marklogic/developer/corb/util/Utilities.xqy", result);
+        assertEquals("/com/marklogic/developer/corb/util/" + UTILITIES_FILENAME, result);
     }
 
     @Test
     public void testBuildModulePath() {
-        assertEquals("/Utilities.xqy", StringUtils.buildModulePath("/", "/Utilities.xqy"));
-        assertEquals("/Utilities.xqy", StringUtils.buildModulePath("/", UTILITIES_FILENAME));
+        assertEquals(ABSOLUTE_UTILITIES_FILE, StringUtils.buildModulePath("/", ABSOLUTE_UTILITIES_FILE));
+        assertEquals(ABSOLUTE_UTILITIES_FILE, StringUtils.buildModulePath("/", UTILITIES_FILENAME));
         assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo", UTILITIES_FILENAME));
-        assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo", "/Utilities.xqy"));
+        assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo", ABSOLUTE_UTILITIES_FILE));
         assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo/", UTILITIES_FILENAME));
         assertEquals("/foo//", StringUtils.buildModulePath("/foo/", "/"));
     }

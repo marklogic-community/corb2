@@ -182,7 +182,7 @@ public class JasyptDecrypterTest {
         String property = "";
         String value = "";
         JasyptDecrypter instance = new JasyptDecrypter();
-        instance.decrypter = new String();
+        instance.decrypter = "";
         instance.doDecrypt(property, value);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.INFO, records.get(0).getLevel());
