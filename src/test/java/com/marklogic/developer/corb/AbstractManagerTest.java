@@ -277,7 +277,7 @@ public class AbstractManagerTest {
     @Test
     public void testInitDecrypter_validDecrypter() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.DECRYPTER, "com.marklogic.developer.corb.JasyptDecrypter");
+        instance.properties.setProperty(Options.DECRYPTER, JasyptDecrypter.class.getName());
         instance.initDecrypter();
         assertTrue(instance.decrypter instanceof com.marklogic.developer.corb.JasyptDecrypter);
     }
@@ -285,7 +285,7 @@ public class AbstractManagerTest {
     @Test(expected = IllegalArgumentException.class)
     public void testInitDecrypter_invalidDecrypter() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.DECRYPTER, "java.lang.String");
+        instance.properties.setProperty(Options.DECRYPTER, String.class.getName());
         instance.initDecrypter();
         fail();
     }
@@ -303,7 +303,7 @@ public class AbstractManagerTest {
     @Test(expected = IllegalArgumentException.class)
     public void testInitSSLConfig_invalidConfigClass() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.SSL_CONFIG_CLASS, "java.lang.String");
+        instance.properties.setProperty(Options.SSL_CONFIG_CLASS, String.class.getName());
         instance.initSSLConfig();
         fail();
     }
@@ -415,8 +415,8 @@ public class AbstractManagerTest {
 
     @Test
     public void testGetOption() {
-        String key = "foo";
-        String val = "bar";
+        String key = "option";
+        String val = "value";
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(key, val);
         assertEquals(val, instance.getOption(key));
@@ -425,8 +425,8 @@ public class AbstractManagerTest {
 
     @Test
     public void testGetOption_paddedValue() {
-        String key = "foo";
-        String val = "bar  ";
+        String key = "option2";
+        String val = "value2  ";
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(key, val);
         assertEquals(val.trim(), instance.getOption(key));

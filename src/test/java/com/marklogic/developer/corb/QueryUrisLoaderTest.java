@@ -213,7 +213,7 @@ public class QueryUrisLoaderTest {
         Session session = mock(Session.class);
         when(contentSource.newSession()).thenReturn(session);
         TransformOptions transformOptions = new TransformOptions();
-        File file = File.createTempFile("adhoc", "xqy");
+        File file = File.createTempFile("adhocXQuery", "xqy");
         file.deleteOnExit();
         transformOptions.setUrisModule(file.getAbsolutePath() + ADHOC_SUFFIX);
         instance.options = transformOptions;
@@ -245,9 +245,9 @@ public class QueryUrisLoaderTest {
         when(resultSequence.next()).thenReturn(item);
         when(item.getItem()).thenReturn(xItemFirst).thenReturn(xItemFirst).thenReturn(xItemCount);
         when(xItemFirst.asString()).thenReturn(keyEqualsBar).thenReturn(keyEqualsBar);
-        when(xItemCount.asString()).thenReturn("1");
+        when(xItemCount.asString()).thenReturn(Integer.toString(1));
         TransformOptions transformOptions = new TransformOptions();
-        File file = File.createTempFile("adhoc", ".js");
+        File file = File.createTempFile("adhocJS", ".js");
         file.deleteOnExit();
         FileWriter writer = new FileWriter(file, true);
         writer.append("var foo;");
@@ -274,7 +274,7 @@ public class QueryUrisLoaderTest {
         Session session = mock(Session.class);
         when(contentSource.newSession()).thenReturn(session);
         TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setUrisModule("  |ADHOC");
+        transformOptions.setUrisModule("  " + ADHOC_SUFFIX);
         instance.options = transformOptions;
         instance.cs = contentSource;
         try {
@@ -292,7 +292,7 @@ public class QueryUrisLoaderTest {
         Session session = mock(Session.class);
         when(contentSource.newSession()).thenReturn(session);
         TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setUrisModule("  |ADHOC");
+        transformOptions.setUrisModule("  " + ADHOC_SUFFIX);
         Properties props = new Properties();
         props.setProperty(Options.MAX_OPTS_FROM_MODULE, "0");
         instance.properties = props;
@@ -313,7 +313,7 @@ public class QueryUrisLoaderTest {
         Session session = mock(Session.class);
         when(contentSource.newSession()).thenReturn(session);
         TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setUrisModule("  |ADHOC");
+        transformOptions.setUrisModule("  " + ADHOC_SUFFIX);
         Properties props = new Properties();
         props.setProperty(Options.MAX_OPTS_FROM_MODULE, "one");
         instance.properties = props;
@@ -371,9 +371,9 @@ public class QueryUrisLoaderTest {
 
         when(session.newModuleInvoke(anyString())).thenReturn(request);
         when(contentSource.newSession()).thenReturn(session);
-        when(xdmItem.asString()).thenReturn("1");
+        when(xdmItem.asString()).thenReturn(Integer.toString(1));
         when(resultItem.getItem()).thenReturn(xdmItem);
-        when(resultItem.asString()).thenReturn("1");
+        when(resultItem.asString()).thenReturn(Integer.toString(1));
         when(resultSequence.next()).thenReturn(resultItem);
         when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
         when(session.submitRequest(request)).thenReturn(resultSequence);
@@ -415,7 +415,7 @@ public class QueryUrisLoaderTest {
 
         when(session.newModuleInvoke(anyString())).thenReturn(request);
         when(contentSource.newSession()).thenReturn(session);
-        when(xdmItem.asString()).thenReturn("1");
+        when(xdmItem.asString()).thenReturn(Integer.toString(1));
         when(resultItem.getItem()).thenReturn(xdmItem);
         when(resultItem.asString()).thenReturn("foo_bar_baz-1_2_3");
         when(resultSequence.next()).thenReturn(resultItem).thenReturn(resultItem).thenReturn(resultItem).thenReturn(resultItem);

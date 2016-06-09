@@ -218,7 +218,7 @@ public class StringUtilsTest {
 
     @Test(expected = UnsupportedEncodingException.class)
     public void testDumpHex_unsupportedEncoding() throws Exception {
-        StringUtils.dumpHex("abcd", "does not exist");
+        StringUtils.dumpHex("abcde", "does not exist");
         fail();
     }
 

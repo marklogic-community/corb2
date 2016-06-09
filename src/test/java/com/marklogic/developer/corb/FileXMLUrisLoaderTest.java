@@ -34,6 +34,10 @@ import static org.mockito.Mockito.mock;
  */
 public class FileXMLUrisLoaderTest {
 
+    private static final String anchor1 = "<a href=\"test1.html\">test1</a>";
+    private static final String anchor2 = "<a href=\"test2.html\">test2</a>";
+    private static final String anchor3 = "<a href=\"test3.html\">test3</a>";
+    private static final String anchor4 = "<a href=\"\">\n<!---->\n</a>"; //indent options result in extra carriage returns
     /**
      * Test of setOptions method, of class FileUrisXMLLoader.
      */
@@ -113,9 +117,9 @@ public class FileXMLUrisLoaderTest {
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         TransformOptions options = new TransformOptions();
         Properties props = new Properties();
-        props.setProperty("URIS-LOADER", "com.marklogic.developer.corb.FileUrisXMLLoader");
-        props.setProperty("XML-FILE", "src/test/resources/xml-file.xml");
-        props.setProperty("XML-NODE", "/root/a");
+        props.setProperty(Options.URIS_LOADER, FileUrisLoader.class.getName());
+        props.setProperty(Options.XML_FILE, "src/test/resources/xml-file.xml");
+        props.setProperty(Options.XML_NODE, "/root/a");
         instance.properties = props;
         instance.options = options;
         return instance;
@@ -135,10 +139,10 @@ public class FileXMLUrisLoaderTest {
         }
         instance.close();
         assertEquals(4, nodes.size());
-        assertTrue(nodes.contains("<a href=\"test1.html\">test1</a>"));
-        assertTrue(nodes.contains("<a href=\"test2.html\">test2</a>"));
-        assertTrue(nodes.contains("<a href=\"test3.html\">test3</a>"));
-        assertTrue(nodes.contains("<a href=\"\">\n<!---->\n</a>")); //indent options result in extra carriage returns
+        assertTrue(nodes.contains(anchor1));
+        assertTrue(nodes.contains(anchor2));
+        assertTrue(nodes.contains(anchor3));
+        assertTrue(nodes.contains(anchor4));
     }
 
     @Test
@@ -154,10 +158,10 @@ public class FileXMLUrisLoaderTest {
         }
         instance.close();
         assertEquals(4, nodes.size());
-        assertTrue(nodes.contains("<a href=\"test1.html\">test1</a>"));
-        assertTrue(nodes.contains("<a href=\"test2.html\">test2</a>"));
-        assertTrue(nodes.contains("<a href=\"test3.html\">test3</a>"));
-        assertTrue(nodes.contains("<a href=\"\">\n<!---->\n</a>")); //indent options result in extra carriage returns
+        assertTrue(nodes.contains(anchor1));
+        assertTrue(nodes.contains(anchor2));
+        assertTrue(nodes.contains(anchor3));
+        assertTrue(nodes.contains(anchor4));
     }
 
     @Test

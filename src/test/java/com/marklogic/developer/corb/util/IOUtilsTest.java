@@ -41,7 +41,8 @@ public class IOUtilsTest {
 
     private final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
     private final String exampleContent;
-
+    private static final String NULL_OUTPUTSTREAM_MSG = "null OutputStream";
+    
     public IOUtilsTest() throws IOException {
         exampleContent = cat(new FileReader(exampleContentFile));
     }
@@ -218,7 +219,7 @@ public class IOUtilsTest {
             throw new IOException("null InputStream");
         }
         if (outputStream == null) {
-            throw new IOException("null OutputStream");
+            throw new IOException(NULL_OUTPUTSTREAM_MSG);
         }
         long totalBytes = 0;
         int len;
@@ -251,7 +252,7 @@ public class IOUtilsTest {
             throw new IOException("null Reader");
         }
         if (destination == null) {
-            throw new IOException("null OutputStream");
+            throw new IOException(NULL_OUTPUTSTREAM_MSG);
         }
         long totalBytes = 0;
         int len;

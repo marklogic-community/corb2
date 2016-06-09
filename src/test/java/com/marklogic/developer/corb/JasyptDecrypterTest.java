@@ -45,6 +45,7 @@ public class JasyptDecrypterTest {
     private static final String ERROR_NO_PASSWORD = "Unable to initialize jasypt decrypter. Couldn't find jasypt.password";
     private static final String TEMP_PREFIX = "temp";
     private static final String PROPERTIES_SUFFIX = ".properties";
+    private static final String UNENCRYPTED_PASSWORD = "corbencrypt";
     
     @Before
     public void setUp() {
@@ -90,7 +91,7 @@ public class JasyptDecrypterTest {
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.properties = props;
         instance.init_decrypter();
-        assertEquals("corbencrypt", instance.jaspytProperties.getProperty(JASYPT_PASSWORD));
+        assertEquals(UNENCRYPTED_PASSWORD, instance.jaspytProperties.getProperty(JASYPT_PASSWORD));
     }
 
     //@Test
@@ -164,7 +165,7 @@ public class JasyptDecrypterTest {
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.properties = props;
         instance.init_decrypter();
-        assertEquals("corbencrypt", instance.jaspytProperties.getProperty(JASYPT_PASSWORD));
+        assertEquals(UNENCRYPTED_PASSWORD, instance.jaspytProperties.getProperty(JASYPT_PASSWORD));
     }
 
     /**

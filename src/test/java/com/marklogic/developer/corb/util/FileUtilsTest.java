@@ -144,7 +144,7 @@ public class FileUtilsTest {
 
     @Test
     public void testGetLineCount_fileDoesNotExist() throws IOException {
-        assertEquals(0, FileUtils.getLineCount(new File("does/not/exist")));
+        assertEquals(0, FileUtils.getLineCount(new File("does/not/exist2")));
     }
 
     @Test

@@ -97,17 +97,20 @@ public class DiskQueueTest {
 
     @Test
     public void testDiskQueue_loadFromFile() throws IOException, Throwable {
+        String one = "one";
+        String two = "two";
+        String three = "three";
         Queue<String> instance = new DiskQueue<String>(1);
         assertEquals(0, instance.size());
-        instance.add("one");
+        instance.add(one);
         assertEquals(1, instance.size());
-        instance.add("two");
+        instance.add(two);
         assertEquals(2, instance.size());
-        instance.add("three");
+        instance.add(three);
         assertEquals(3, instance.size());
-        assertEquals("one", instance.remove());
-        assertEquals("two", instance.remove());
-        assertEquals("three", instance.remove());
+        assertEquals(one, instance.remove());
+        assertEquals(two, instance.remove());
+        assertEquals(three, instance.remove());
         assertEquals(0, instance.size());
     }
 

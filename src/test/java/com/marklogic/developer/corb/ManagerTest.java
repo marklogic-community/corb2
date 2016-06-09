@@ -177,7 +177,7 @@ public class ManagerTest {
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
-        props.setProperty(Options.BATCH_SIZE, "5");
+        props.setProperty(Options.BATCH_SIZE,Integer.toString(5));
         Manager instance = getMockManagerWithEmptyResults();
         exit.expectSystemExit();
         instance.init(args, props);
@@ -406,7 +406,7 @@ public class ManagerTest {
         args[2] = null; //process-module
         args[11] = null; //pre-batch-module
         args[13] = null; //post-batch-module
-
+        
         Properties props = new Properties();
         props.setProperty(Options.XQUERY_MODULE, PROCESS_MODULE);
         props.setProperty("XQUERY-MODULE.foo", XQUERY_MODULE_FOO);
@@ -441,7 +441,7 @@ public class ManagerTest {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
-        props.setProperty(Options.BATCH_SIZE, "5");
+        props.setProperty(Options.BATCH_SIZE, Integer.toString(5));
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
         assertEquals(5, instance.options.getBatchSize());
@@ -602,7 +602,7 @@ public class ManagerTest {
     public void testInitOptions_customUrisLoader() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
-        String loader = "com.marklogic.developer.corb.FileUrisLoader";
+        String loader = FileUrisLoader.class.getName();
         Properties props = new Properties();
         props.setProperty(Options.URIS_LOADER, loader);
         Manager instance = getMockManagerWithEmptyResults();
@@ -648,23 +648,25 @@ public class ManagerTest {
 
     @Test
     public void testNormalizeLegacyProperties() throws RequestException {
+        String legacyValue1 = "legacyVal1";
+        String legacyValue2 = "legacyVal2";
         Properties props = new Properties();
-        props.setProperty(Options.XQUERY_MODULE, "foo");
-        props.setProperty("XQUERY-MODULE.bar", "baz");
+        props.setProperty(Options.XQUERY_MODULE, legacyValue1);
+        props.setProperty("XQUERY-MODULE.bar", legacyValue2);
         Manager manager = getMockManagerWithEmptyResults();
         manager.properties = props;
         manager.normalizeLegacyProperties();
 
-        assertEquals("foo", manager.properties.getProperty(Options.PROCESS_MODULE));
-        assertEquals("baz", manager.properties.getProperty("PROCESS-MODULE.bar"));
+        assertEquals(legacyValue1, manager.properties.getProperty(Options.PROCESS_MODULE));
+        assertEquals(legacyValue2, manager.properties.getProperty("PROCESS-MODULE.bar"));
     }
 
     @Test
     public void testNormalizeLegacyProperties_precedenceChecks() throws RequestException {
         Properties props = new Properties();
-        String processVal = "foo";
+        String processVal = "legacyValue";
         props.setProperty("PROCESS-MODULE.bar", processVal);
-        props.setProperty("XQUERY-MODULE.bar", "baz");
+        props.setProperty("XQUERY-MODULE.bar", "asdf");
         Manager manager = getMockManagerWithEmptyResults();
         manager.properties = props;
         manager.normalizeLegacyProperties();
@@ -678,7 +680,7 @@ public class ManagerTest {
     @Test
     public void testGetTaskCls() throws Exception {
         String type = "";
-        String className = "com.marklogic.developer.corb.Transform";
+        String className = Transform.class.getName();
         Manager instance = new Manager();
         Class<? extends Task> expResult = Transform.class;
         Class<? extends Task> result = instance.getTaskCls(type, className);
@@ -688,10 +690,9 @@ public class ManagerTest {
     @Test(expected = IllegalArgumentException.class)
     public void testGetTaskCls_notTaskClass() throws Exception {
         String type = "";
-        String className = "java.lang.String";
         Manager instance = new Manager();
         Class<? extends Task> expResult = Transform.class;
-        Class<? extends Task> result = instance.getTaskCls(type, className);
+        Class<? extends Task> result = instance.getTaskCls(type, String.class.getName());
         assertEquals(expResult, result);
         fail();
     }
@@ -701,7 +702,7 @@ public class ManagerTest {
      */
     @Test
     public void testGetUrisLoaderCls() throws Exception {
-        String className = "com.marklogic.developer.corb.FileUrisLoader";
+        String className = FileUrisLoader.class.getName();
         Manager instance = new Manager();
         Class<? extends UrisLoader> expResult = FileUrisLoader.class;
         Class<? extends UrisLoader> result = instance.getUrisLoaderCls(className);
@@ -710,10 +711,9 @@ public class ManagerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testGetUrisLoaderCls_notUrisClass() throws Exception {
-        String className = "java.lang.String";
         Manager instance = new Manager();
         Class<? extends UrisLoader> expResult = FileUrisLoader.class;
-        Class<? extends UrisLoader> result = instance.getUrisLoaderCls(className);
+        Class<? extends UrisLoader> result = instance.getUrisLoaderCls(String.class.getName());
         assertEquals(expResult, result);
         fail();
     }
@@ -793,7 +793,7 @@ public class ManagerTest {
         when(contentSource.newSession()).thenReturn(session);
         when(session.newAdhocQuery(anyString())).thenReturn(adhocQuery);
         when(resultSequence.hasNext()).thenReturn(true, true, false);
-        when(firstXdmItem.asString()).thenReturn("0");
+        when(firstXdmItem.asString()).thenReturn(Integer.toString(0));
         when(first.getItem()).thenReturn(firstXdmItem);
         when(first.getIndex()).thenReturn(0);
         when(secondXdmItem.asString()).thenReturn(xccRootValue);
@@ -930,7 +930,7 @@ public class ManagerTest {
         when(resultItem.getItem()).thenReturn(batchRefItem);
         when(uriCountResult.getItem()).thenReturn(uriCount);
         when(batchRefItem.asString()).thenReturn("batchRefVal");
-        when(uriCount.asString()).thenReturn("0");
+        when(uriCount.asString()).thenReturn(Integer.toString(0));
 
         manager.contentSource = contentSource;
         return manager;

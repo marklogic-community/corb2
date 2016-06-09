@@ -74,6 +74,7 @@ public class AbstractTaskTest {
     private static final String TWO = "two";
     private static final String THREE = "three";
     private static final String REJECTED_MSG = "denied!";
+    private static final String TMP_DIR = "/tmp";
     
     @Before
     public void setUp() {
@@ -189,7 +190,7 @@ public class AbstractTaskTest {
      */
     @Test
     public void testSetExportDir() {
-        String exportFileDir = "/tmp";
+        String exportFileDir = TMP_DIR;
         AbstractTask instance = new AbstractTaskImpl();
         instance.setExportDir(exportFileDir);
         assertEquals(exportFileDir, instance.exportDir);
@@ -201,7 +202,7 @@ public class AbstractTaskTest {
     @Test
     public void testGetExportDir() {
         AbstractTask instance = new AbstractTaskImpl();
-        String expResult = "/tmp";
+        String expResult = TMP_DIR;
         instance.exportDir = expResult;
         String result = instance.getExportDir();
         assertEquals(expResult, result);
@@ -352,7 +353,7 @@ public class AbstractTaskTest {
         Request req = mock(Request.class);
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
-        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
+        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,XDMP-BAR,XDMP-BAZ");
         XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", false, new String[0], new QueryStackFrame[0]);
 
         assertFalse(instance.shouldRetry(exception));
@@ -390,7 +391,7 @@ public class AbstractTaskTest {
         Request req = mock(Request.class);
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
-        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
+        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "XDMP-FOO,SVC-BAR,SVC-BAZ");
         RequestPermissionException exception = new RequestPermissionException(REJECTED_MSG, req, USER_NAME, false);
         assertFalse(instance.shouldRetry(exception));
 
