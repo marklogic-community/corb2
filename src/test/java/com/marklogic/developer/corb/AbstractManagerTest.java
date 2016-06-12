@@ -416,7 +416,7 @@ public class AbstractManagerTest {
     @Test
     public void testGetOption() {
         String key = "option";
-        String val = "value";
+        String val = VALUE;
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(key, val);
         assertEquals(val, instance.getOption(key));
