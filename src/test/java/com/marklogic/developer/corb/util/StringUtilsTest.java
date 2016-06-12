@@ -177,15 +177,15 @@ public class StringUtilsTest {
      */
     @Test
     public void testBuildModulePath_Package_String() {
-        Package modulePackage = Package.getPackage("com.marklogic.developer.corb.util");
+        Package modulePackage = this.getClass().getPackage();
         String result = StringUtils.buildModulePath(modulePackage, "Utilities");
         assertEquals("/com/marklogic/developer/corb/util/Utilities.xqy", result);
     }
 
     @Test
     public void testBuildModulePath_Package_String_withSuffix() {
-        Package _package = Package.getPackage("com.marklogic.developer.corb.util");
-        String result = StringUtils.buildModulePath(_package, UTILITIES_FILENAME);
+        Package modulePackage = this.getClass().getPackage();
+        String result = StringUtils.buildModulePath(modulePackage, UTILITIES_FILENAME);
         assertEquals("/com/marklogic/developer/corb/util/" + UTILITIES_FILENAME, result);
     }
 
