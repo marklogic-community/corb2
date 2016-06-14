@@ -98,8 +98,28 @@ public class ExportToFileTaskTest {
     }
     
     @Test
-    public void testWriteToFile_silentFail() throws Exception {
-        ResultSequence seq = null;
+    public void testWriteToFile() throws Exception {
+        ResultSequence seq = mock(ResultSequence.class);
+        ResultItem resultItem = mock(ResultItem.class);
+        XdmItem xdmItem = mock(XdmItem.class);
+        when(seq.hasNext()).thenReturn(Boolean.TRUE).thenReturn(Boolean.TRUE).thenReturn(Boolean.FALSE);
+        when(seq.next()).thenReturn(resultItem);
+        when(resultItem.getItem()).thenReturn(xdmItem);
+        when(xdmItem.asString()).thenReturn("test");
+        
+        ExportToFileTask instance = new ExportToFileTask(); 
+        instance.exportDir = tempFolder.newFolder().toString();
+        String[] uri = {"/testFile"};
+        instance.setInputURI(uri);
+        instance.writeToFile(seq);
+        File file = new File(instance.exportDir, instance.getFileName());
+        assertTrue(file.exists());
+    }
+    
+    @Test
+    public void testWriteToFile_noResults() throws Exception {
+        ResultSequence seq = mock(ResultSequence.class);
+        when(seq.hasNext()).thenReturn(Boolean.FALSE);      
         ExportToFileTask instance = new ExportToFileTask(); 
         instance.exportDir = tempFolder.newFolder().toString();
         String[] uri = {"/testFile"};
@@ -108,7 +128,7 @@ public class ExportToFileTaskTest {
         File file = new File(instance.exportDir, instance.getFileName());
         assertFalse(file.exists());
     }
-
+    
     /**
      * Test of processResult method, of class ExportToFileTask.
      */
