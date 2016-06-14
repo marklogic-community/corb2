@@ -64,7 +64,7 @@ public class AbstractTaskTest {
     private static final String FOO = "foo";
     private static final String BAR = "bar";
     private static final String BAZ = "baz";
-    private static final String USER_NAME = "user-name";
+    protected static final String USER_NAME = "user-name";
     private static final String W3C_CODE = "401";
     private static final String CODE = "code";
     private static final String ERROR_MSG = "something bad happened";
@@ -73,7 +73,7 @@ public class AbstractTaskTest {
     private static final String ONE = "one";
     private static final String TWO = "two";
     private static final String THREE = "three";
-    private static final String REJECTED_MSG = "denied!";
+    protected static final String REJECTED_MSG = "denied!";
     private static final String TMP_DIR = "/tmp";
     
     @Before
@@ -411,7 +411,7 @@ public class AbstractTaskTest {
         exception = new RequestPermissionException("Authentication failure for user 'user-name'", req, USER_NAME, false);
         assertTrue(instance.hasRetryableMessage(exception));
     }
-
+    
     public boolean testHandleRequestException(String type, RequestException exception, boolean fail, int retryLimit)
             throws CorbException, IOException {
         String[] uris = new String[]{URI};

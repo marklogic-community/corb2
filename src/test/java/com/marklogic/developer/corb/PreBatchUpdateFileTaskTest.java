@@ -18,10 +18,13 @@
  */
 package com.marklogic.developer.corb;
 
+import com.marklogic.xcc.Request;
+import com.marklogic.xcc.exceptions.RequestPermissionException;
 import java.io.File;
 import java.util.Properties;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
 /**
  *
@@ -114,5 +117,18 @@ public class PreBatchUpdateFileTaskTest {
         instance.call();
 
         assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(partFile));
+    }
+    
+    @Test
+    public void testHasRetryableMessage() {
+        Request req = mock(Request.class);
+        AbstractTask instance = new PreBatchUpdateFileTask();
+        instance.properties = new Properties();
+        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_MESSAGE, "FOO,Authentication failure for user,BAR");
+        RequestPermissionException exception = new RequestPermissionException(AbstractTaskTest.REJECTED_MSG, req, AbstractTaskTest.USER_NAME, false);
+        assertFalse(instance.hasRetryableMessage(exception));
+
+        exception = new RequestPermissionException("Authentication failure for user 'user-name'", req, AbstractTaskTest.USER_NAME, false);
+        assertTrue(instance.hasRetryableMessage(exception));
     }
 }

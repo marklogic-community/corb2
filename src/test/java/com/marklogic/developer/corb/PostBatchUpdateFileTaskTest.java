@@ -24,12 +24,15 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.createTempDirectory;
+import com.marklogic.xcc.Request;
+import com.marklogic.xcc.exceptions.RequestPermissionException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import static org.mockito.Mockito.mock;
 
 /**
  *
@@ -397,6 +400,19 @@ public class PostBatchUpdateFileTaskTest {
         instance.call();
     }
 
+    @Test
+    public void testHasRetryableMessage() {
+        Request req = mock(Request.class);
+        AbstractTask instance = new PostBatchUpdateFileTask();
+        instance.properties = new Properties();
+        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_MESSAGE, "FOO,Authentication failure for user,BAR");
+        RequestPermissionException exception = new RequestPermissionException(AbstractTaskTest.REJECTED_MSG, req, AbstractTaskTest.USER_NAME, false);
+        assertFalse(instance.hasRetryableMessage(exception));
+
+        exception = new RequestPermissionException("Authentication failure for user 'user-name'", req, AbstractTaskTest.USER_NAME, false);
+        assertTrue(instance.hasRetryableMessage(exception));
+    }
+    
     private File createSampleFile() throws IOException {
         return createSampleFile(".tmp");
     }
