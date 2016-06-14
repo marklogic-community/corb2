@@ -105,7 +105,7 @@ public class ExportToFileTaskTest {
         when(seq.hasNext()).thenReturn(Boolean.TRUE).thenReturn(Boolean.TRUE).thenReturn(Boolean.FALSE);
         when(seq.next()).thenReturn(resultItem);
         when(resultItem.getItem()).thenReturn(xdmItem);
-        when(xdmItem.asString()).thenReturn("test");
+        when(xdmItem.asString()).thenReturn("testWriteToFile");
         
         ExportToFileTask instance = new ExportToFileTask(); 
         instance.exportDir = tempFolder.newFolder().toString();
