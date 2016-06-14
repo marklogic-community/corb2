@@ -46,7 +46,8 @@ public class TransformTest {
     public void testCall() throws Exception {
         Transform instance = new Transform();
         String[] result = instance.call();
-        assertNull(result);
+        assertNotNull(result);
+        assertTrue(result.length == 0);
     }
 
 }

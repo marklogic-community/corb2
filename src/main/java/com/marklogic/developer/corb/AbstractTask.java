@@ -164,7 +164,7 @@ public abstract class AbstractTask implements Task {
 
     protected String[] invokeModule() throws CorbException {
         if (moduleUri == null && adhocQuery == null) {
-            return null;
+            return new String[0];
         }
 
         Session session = null;

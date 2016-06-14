@@ -166,7 +166,8 @@ public class ExportToFileTaskTest {
     public void testCall() throws Exception {
         ExportToFileTask instance = new ExportToFileTask();
         String[] result = instance.call();
-        assertNull(result);
+        assertNotNull(result);
+        assertTrue(result.length == 0);
     }
 
 }
