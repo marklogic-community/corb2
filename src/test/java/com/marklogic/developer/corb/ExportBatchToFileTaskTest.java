@@ -31,7 +31,10 @@ import static org.mockito.Mockito.when;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class ExportBatchToFileTaskTest {
-
+    
+    private static final String EMPTY = "";
+    private static final String TXT_EXT = ".txt";
+    
     /**
      * Test of getFileName method, of class ExportBatchToFileTask.
      */
@@ -47,18 +50,19 @@ public class ExportBatchToFileTaskTest {
 
     @Test
     public void testGetFileName_fromEXPORTFILENAME() {
+        String filename = "foo/bar";
         Properties props = new Properties();
-        props.setProperty(Options.EXPORT_FILE_NAME, "foo/bar");
+        props.setProperty(Options.EXPORT_FILE_NAME, filename);
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
         String result = instance.getFileName();
-        assertEquals("foo/bar", result);
+        assertEquals(filename, result);
     }
 
     @Test(expected = NullPointerException.class)
     public void testGetFileName_withEmptyExportFileName() {
         Properties props = new Properties();
-        props.setProperty(Options.EXPORT_FILE_NAME, "");
+        props.setProperty(Options.EXPORT_FILE_NAME, EMPTY);
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
         instance.getFileName();
@@ -68,7 +72,7 @@ public class ExportBatchToFileTaskTest {
     @Test(expected = NullPointerException.class)
     public void testGetFileName_withEmptyUrisBatchRef() {
         Properties props = new Properties();
-        props.setProperty(Options.URIS_BATCH_REF, "");
+        props.setProperty(Options.URIS_BATCH_REF, EMPTY);
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
         instance.getFileName();
@@ -81,8 +85,8 @@ public class ExportBatchToFileTaskTest {
     @Test(expected = NullPointerException.class)
     public void testGetPartFileName_emptyName() {
         Properties props = new Properties();
-        props.setProperty(Options.URIS_BATCH_REF, "");
-        props.setProperty(Options.EXPORT_FILE_PART_EXT, ".txt");
+        props.setProperty(Options.URIS_BATCH_REF, EMPTY);
+        props.setProperty(Options.EXPORT_FILE_PART_EXT, TXT_EXT);
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
         String result = instance.getPartFileName();
@@ -94,7 +98,7 @@ public class ExportBatchToFileTaskTest {
     public void testGetPartFileName_withExtension() {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, "foo");
-        props.setProperty(Options.EXPORT_FILE_PART_EXT, ".txt");
+        props.setProperty(Options.EXPORT_FILE_PART_EXT, TXT_EXT);
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
         String result = instance.getPartFileName();
