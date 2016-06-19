@@ -32,7 +32,8 @@ import org.junit.Test;
 public class TwoWaySSLConfigTest {
 
     public static final String SSL_PROPERTIES = "src/test/resources/SSL.properties";
-
+    public static final String SSLV3 = "SSLv3";
+    
     @Before
     public void setUp() {
         clearSystemProperties();
@@ -129,9 +130,19 @@ public class TwoWaySSLConfigTest {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.loadPropertiesFile();
         assertNotNull(instance.properties);
-        assertEquals(instance.getEnabledCipherSuites()[1], "SSLv3");
+        assertEquals(instance.getEnabledCipherSuites()[1], SSLV3);
     }
 
+    @Test
+    public void testLoadPropertiesFile_withNullProperties() throws Exception {
+        System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
+        TwoWaySSLConfig instance = new TwoWaySSLConfig();
+        instance.properties = null;
+        instance.loadPropertiesFile();
+        assertNotNull(instance.properties);
+        assertEquals(instance.getEnabledCipherSuites()[1], SSLV3);
+    }
+    
     @Test
     public void testLoadPropertiesFile_doesNotExist() throws Exception {
         System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, "");
