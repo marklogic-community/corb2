@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
 plugins {
     id 'java' 
     id 'com.github.johnrengelman.shadow' version '1.2.3'
@@ -59,7 +62,7 @@ dependencies {
 
 test {
     testLogging {
-        events 'started','passed'
+        events TestLogEvent.STARTED,TestLogEvent.PASSED
     }
     //we will run Integration and Performance tests in separate tasks
     exclude '**/*IT.class'
@@ -103,7 +106,7 @@ task integrationTest(type: Test, dependsOn: test) {
         includeTestsMatching "*IT"
     }
     testLogging {
-        events 'started','passed'
+        events TestLogEvent.STARTED,TestLogEvent.PASSED
     }
     //If you want to ensure that integration tests are run every time when you invoke
     //this task, uncomment the following line.
@@ -130,7 +133,7 @@ task performanceTest(type: Test) {
         includeTestsMatching "*PT"
     }
     testLogging {
-        events 'started','passed'
+        events TestLogEvent.STARTED,TestLogEvent.PASSED
     }
     
     //If you want to ensure that performance tests are run every time when you invoke
@@ -154,16 +157,23 @@ tasks.withType(Test) {
     reports.html.destination = file("${reporting.baseDir}/${name}")
     testLogging {
         // set options for log level LIFECYCLE
-        events "passed", "skipped", "failed", "standardOut"
+        events TestLogEvent.PASSED,
+               TestLogEvent.FAILED,
+               TestLogEvent.SKIPPED,
+               TestLogEvent.STANDARD_OUT
         showExceptions true
-        exceptionFormat "short"
+        exceptionFormat TestExceptionFormat.SHORT
         showCauses true
         showStackTraces true
 
         // set options for log level DEBUG and INFO
         debug {
-            events "started", "passed", "skipped", "failed", "standardOut", "standardError"
-            exceptionFormat "full"
+            events TestLogEvent.PASSED,
+                   TestLogEvent.FAILED,
+                   TestLogEvent.SKIPPED,
+                   TestLogEvent.STANDARD_OUT,
+                   TestLogEvent.STANDARD_ERROR
+            exceptionFormat TestExceptionFormat.FULL
         }
         info.events = debug.events
         info.exceptionFormat = debug.exceptionFormat
