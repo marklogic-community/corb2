@@ -229,22 +229,34 @@ public class QueryUrisLoaderTest {
 
     @Test
     public void testOpen() throws Exception {
-        String processModuleKey = "PROCESS-MODULE.foo";
-        String keyEqualsBar = processModuleKey + "=" + bar;
+        String processModuleKey1 = "PROCESS-MODULE.foo";
+        String processModuleKey2 = "PROCESS-MODULE.foo-foo";
+        String processModuleKey3 = "PROCESS-MODULE.foo_foo2";
+        String keyEqualsBar = processModuleKey1 + "=" + bar;
+        String keyEqualsBar2 = processModuleKey2 + "=" + bar;
+        String keyEqualsBar3 = processModuleKey3 + "=" + bar;
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         AdhocQuery request = mock(AdhocQuery.class);
         ResultSequence resultSequence = mock(ResultSequence.class);
         ResultItem item = mock(ResultItem.class);
-        XdmItem xItemFirst = mock(XdmItem.class);
+        XdmItem xItem1 = mock(XdmItem.class);
+        XdmItem xItem2 = mock(XdmItem.class);
+        XdmItem xItem3 = mock(XdmItem.class);
         XdmItem xItemCount = mock(XdmItem.class);
         when(contentSource.newSession()).thenReturn(session);
         when(session.newAdhocQuery(anyString())).thenReturn(request);
         when(request.setNewStringVariable(anyString(), anyString())).thenReturn(null).thenReturn(null).thenReturn(null).thenReturn(null);
         when(session.submitRequest(request)).thenReturn(resultSequence);
         when(resultSequence.next()).thenReturn(item);
-        when(item.getItem()).thenReturn(xItemFirst).thenReturn(xItemFirst).thenReturn(xItemCount);
-        when(xItemFirst.asString()).thenReturn(keyEqualsBar).thenReturn(keyEqualsBar);
+        when(item.getItem()).
+                thenReturn(xItem1).thenReturn(xItem1).
+                thenReturn(xItem2).thenReturn(xItem2).
+                thenReturn(xItem3).thenReturn(xItem3).
+                thenReturn(xItemCount);
+        when(xItem1.asString()).thenReturn(keyEqualsBar).thenReturn(keyEqualsBar);
+        when(xItem2.asString()).thenReturn(keyEqualsBar2).thenReturn(keyEqualsBar2);
+        when(xItem3.asString()).thenReturn(keyEqualsBar3).thenReturn(keyEqualsBar3);
         when(xItemCount.asString()).thenReturn(Integer.toString(1));
         TransformOptions transformOptions = new TransformOptions();
         File file = File.createTempFile("adhocJS", ".js");
@@ -263,7 +275,9 @@ public class QueryUrisLoaderTest {
         instance.collection = "";
         instance.open();
         assertEquals(1, instance.getTotalCount());
-        assertEquals(bar, instance.properties.getProperty(processModuleKey));
+        assertEquals(bar, instance.properties.getProperty(processModuleKey1));
+        assertEquals(bar, instance.properties.getProperty(processModuleKey2));
+        assertEquals(bar, instance.properties.getProperty(processModuleKey3));
         instance.close();
     }
 
