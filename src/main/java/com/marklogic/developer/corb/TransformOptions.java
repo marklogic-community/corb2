@@ -59,9 +59,9 @@ public class TransformOptions {
 
 	private int threadCount = 1;
 	private int batchSize = 1;
-    private boolean useDiskQueue;
-    private int diskQueueMaxInMemorySize = 100000;
-    private File diskQueueTempDir;
+  private boolean useDiskQueue;
+  private int diskQueueMaxInMemorySize = 1000;
+  private File diskQueueTempDir;
 	private boolean doInstall;
 
 	private boolean failOnError = true;
