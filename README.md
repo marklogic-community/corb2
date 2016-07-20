@@ -161,7 +161,7 @@ Appending `|ADHOC` to the name or path of a XQuery module (with .xqy extension) 
 It is also possible to set a module option with inline code blocks, rather than a file path. This can be done by prepending either `INLINE-XQUERY|` or `INLINE-JAVASCRIPT|` to the option value, followed by the XQuery or JavaScript code to execute. Inline code blocks are executed as "adhoc" modules and are not uploaded to the Modules database. The `|ADHOC` suffix is optional for inline code blocks.
 
 ##### Inline Adhoc Example:
-* `URIS-MODULE=INLINE-XQUERY|xquery version '1.0-ml'; let $uris := collection('foo') return (count($uris), $uris)`
+* `URIS-MODULE=INLINE-XQUERY|xquery version '1.0-ml'; let $uris := cts:uris('', ('document'), cts:collection-query('foo')) return (count($uris), $uris)`
 
 ### JavaScript Modules
 JavaScript modules are supported with Marklogic 8 and can be used in place of an XQuery module. However, if returning multiple values (ex: URIS-MODULE), values must be returned as a [ValueIterator](https://docs.marklogic.com/js/ValueIterator). MarkLogic JavaScript API has helper functions to convert Arrays into ValueIterator ([`xdmp.arrayValues()`](https://docs.marklogic.com/xdmp.arrayValues)) and inserting values into another ValueIterator ([`fn.insertBefore()`](https://docs.marklogic.com/fn.insertBefore)).
