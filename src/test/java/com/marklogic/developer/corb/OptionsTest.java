@@ -36,10 +36,9 @@ public class OptionsTest {
         for (java.lang.reflect.Field field : Options.class.getDeclaredFields()) {
             //Verify that all of the String constants
             if (String.class.isInstance(field.getType())) {
-                Usage[] usages = field.getAnnotationsByType(Usage.class);
+                Usage usage = field.getAnnotation(Usage.class);
                 System.out.println(field.getName());
-                assertFalse(usages.length == 0);
-                assertTrue(usages.length == 1);
+                assertNotNull(usage);
             }
         }
     }
