@@ -24,6 +24,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 import javax.net.ssl.SSLContext;
 
+/**
+ * 
+ * @since 2.2.0
+ */
 public interface SSLConfig {
 	void setProperties(Properties props);
 	void setDecrypter(Decrypter decrypter);

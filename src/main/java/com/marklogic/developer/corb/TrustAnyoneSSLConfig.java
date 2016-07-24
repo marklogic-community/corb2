@@ -30,6 +30,8 @@ import javax.net.ssl.X509TrustManager;
  * Creates a TrustManager that <b>does not</b> validate certificate chains.
  * Useful for bypassing issues with self-signed certs, but should be used with
  * caution.
+ * 
+ * @since 2.2.0
  */
 public class TrustAnyoneSSLConfig extends AbstractSSLConfig {
 

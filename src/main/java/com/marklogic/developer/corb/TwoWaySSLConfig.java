@@ -39,6 +39,10 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
+/**
+ * 
+ * @since 2.2.0
+ */
 public class TwoWaySSLConfig extends AbstractSSLConfig {
 
     private static final Logger LOG = Logger.getLogger(TwoWaySSLConfig.class.getName());

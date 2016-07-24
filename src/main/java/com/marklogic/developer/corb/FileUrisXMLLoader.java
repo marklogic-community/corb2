@@ -52,6 +52,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+/**
+ * @since 2.3.1
+ */
 public class FileUrisXMLLoader extends AbstractUrisLoader {
 
     protected static final Logger LOG = Logger.getLogger(FileUrisXMLLoader.class.getName());

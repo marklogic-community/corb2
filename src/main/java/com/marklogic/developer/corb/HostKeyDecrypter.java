@@ -53,6 +53,7 @@ import javax.xml.bind.DatatypeConverter;
  * endpoint to encrypt plaintext passwords
  *
  * @author Richard Kennedy
+ * @since 2.2.0
  */
 public class HostKeyDecrypter extends AbstractDecrypter {
 
