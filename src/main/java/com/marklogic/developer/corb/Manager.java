@@ -269,7 +269,7 @@ public class Manager extends AbstractManager {
         if (batchSize != null) {
             options.setBatchSize(Integer.parseInt(batchSize));
         }
-        if (failOnError != null && (failOnError.equalsIgnoreCase("false"))) {
+        if (failOnError != null && failOnError.equalsIgnoreCase("false")) {
             options.setFailOnError(false);
         }
         if (diskQueueMaxInMemorySize != null) {
@@ -605,7 +605,7 @@ public class Manager extends AbstractManager {
         } finally {
             session.close();
         }
-        while ((null != rs) && rs.hasNext()) {
+        while (null != rs && rs.hasNext()) {
             ResultItem rsItem = rs.next();
             XdmItem item = rsItem.getItem();
             if (rsItem.getIndex() == 0 && item.asString().equals("0")) {

@@ -308,7 +308,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         OSType type = OSType.Other;
         if (osName != null) {
             String os = osName.toLowerCase(Locale.ENGLISH);
-            if ((os.contains("mac")) || (os.contains("darwin"))) {
+            if (os.contains("mac") || os.contains("darwin")) {
                 type = OSType.Mac;
             } else if (os.contains("win")) {
                 type = OSType.Windows;

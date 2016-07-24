@@ -544,7 +544,7 @@ public class ModuleExecutorTest {
             String queryPath = options.getProcessModule().substring(0, options.getProcessModule().indexOf('|'));
 
             String adhocQuery = AbstractManager.getAdhocQuery(queryPath);
-            if (adhocQuery == null || (adhocQuery.length() == 0)) {
+            if (adhocQuery == null || adhocQuery.length() == 0) {
                 throw new IllegalStateException(
                         "Unable to read adhoc query " + queryPath
                         + " from classpath or filesystem");

@@ -131,7 +131,7 @@ public class Monitor implements Runnable {
             // check for low memory
             long freeMemory = Runtime.getRuntime().freeMemory();
             if (freeMemory < (16 * 1024 * 1024)) {
-                LOG.log(WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
+                LOG.log(WARNING, "free memory: {0} MiB", freeMemory / 1024 * 1024);
             }
         }
         return lastProgress;

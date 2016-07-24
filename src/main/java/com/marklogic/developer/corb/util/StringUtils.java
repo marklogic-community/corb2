@@ -263,17 +263,17 @@ public class StringUtils {
     }
 
     public static boolean isAdhoc(final String value) {
-        return (value != null && value.matches(ADHOC_PATTERN));
+        return value != null && value.matches(ADHOC_PATTERN);
     }
 
     public static boolean isJavaScriptModule(final String value) {
-        return (value != null
+        return value != null
                 && (value.matches(JAVASCRIPT_MODULE_FILENAME_PATTERN)
-                    || inlineModuleLanguage(value).equalsIgnoreCase("javascript")));
+                    || inlineModuleLanguage(value).equalsIgnoreCase("javascript"));
     }
 
     public static boolean isInlineModule(final String value) {
-        return (value != null && value.matches(INLINE_MODULE_PATTERN));
+        return value != null && value.matches(INLINE_MODULE_PATTERN);
     }
 
     public static boolean isInlineOrAdhoc(final String value) {

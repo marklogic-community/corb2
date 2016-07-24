@@ -224,7 +224,7 @@ public class ModuleExecutor extends AbstractManager {
         } finally {
             session.close();
         }
-        while ((null != rs) && rs.hasNext()) {
+        while (null != rs && rs.hasNext()) {
             ResultItem rsItem = rs.next();
             XdmItem item = rsItem.getItem();
             if (rsItem.getIndex() == 0 && item.asString().equals("0")) {
