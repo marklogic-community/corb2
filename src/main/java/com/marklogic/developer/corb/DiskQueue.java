@@ -178,7 +178,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
         }
 
         // If there's anything in the file, or the queue is full, then we have to write to the file.
-        if ((fileQueue != null) || !memoryQueue.offer(element)) {
+        if (fileQueue != null || !memoryQueue.offer(element)) {
             try {
                 openFile();
                 fileOut.write(element);
