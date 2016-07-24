@@ -30,7 +30,7 @@ import java.net.URL;
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class FileUtils {
+public final class FileUtils {
 
     private FileUtils() {
     }

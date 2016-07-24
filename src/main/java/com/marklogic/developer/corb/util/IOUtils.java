@@ -26,7 +26,7 @@ import java.io.InputStream;
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class IOUtils {
+public final class IOUtils {
 
     public static final int BUFFER_SIZE = 32 * 1024;
 

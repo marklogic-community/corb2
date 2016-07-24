@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class StringUtils {
+public final class StringUtils {
 
     public static final String EMPTY = "";
     private static final String ADHOC_PATTERN = "(?i).*\\|ADHOC";
