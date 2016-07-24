@@ -75,7 +75,7 @@ public class ModuleExecutor extends AbstractManager {
 
     protected static final Logger LOG = Logger.getLogger(ModuleExecutor.class.getName());
     private static final String TAB = "\t";
-    
+
     /**
      * @param args
      */
@@ -98,9 +98,9 @@ public class ModuleExecutor extends AbstractManager {
     }
 
     @Override
-    public void init(String[] commandlineArgs, Properties props) 
-            throws IOException, URISyntaxException, ClassNotFoundException, 
-            InstantiationException, IllegalAccessException, XccConfigException, 
+    public void init(String[] commandlineArgs, Properties props)
+            throws IOException, URISyntaxException, ClassNotFoundException,
+            InstantiationException, IllegalAccessException, XccConfigException,
             GeneralSecurityException {
         String[] args = commandlineArgs;
         if (args == null) {
@@ -173,17 +173,18 @@ public class ModuleExecutor extends AbstractManager {
 
     @Override
     protected void usage() {
+        super.usage();
         List<String> args = new ArrayList<String>(5);
         String xcc_connection_uri = "xcc://user:password@host:port/[ database ]";
         String options_file = "myjob.properties";
         PrintStream err = System.err;
-        
+
         err.println("usage 1:");
         args.add(NAME);
         args.add(xcc_connection_uri);
         args.add("process-module [module-root [modules-database [ export-file-name ] ] ]");
         err.println(TAB + StringUtils.join(args, SPACE));
-          
+
         err.println("\nusage 2:");
         args.clear();
         args.add(buildSystemPropertyArg(XCC_CONNECTION_URI, xcc_connection_uri));
@@ -191,14 +192,13 @@ public class ModuleExecutor extends AbstractManager {
         args.add(buildSystemPropertyArg("...", null));
         args.add(NAME);
         err.println(TAB + StringUtils.join(args, SPACE));
-        
+
         err.println("\nusage 3:");
         args.clear();
         args.add(buildSystemPropertyArg(OPTIONS_FILE, options_file));
         args.add(NAME);
         err.println(TAB + StringUtils.join(args, SPACE));
-        
-        
+
         err.println("\nusage 4:");
         args.clear();
         args.add(buildSystemPropertyArg(OPTIONS_FILE, options_file));
@@ -255,7 +255,7 @@ public class ModuleExecutor extends AbstractManager {
             RequestOptions opts = new RequestOptions();
             opts.setCacheResult(false);
             session = contentSource.newSession();
-            
+
             List<String> propertyNames = new ArrayList<String>(properties.stringPropertyNames());
             propertyNames.addAll(System.getProperties().stringPropertyNames());
             String processModule = options.getProcessModule();
@@ -298,7 +298,7 @@ public class ModuleExecutor extends AbstractManager {
             }
 
             req.setOptions(opts);
-            
+
             ResultSequence res = session.submitRequest(req);
             writeToFile(res);
 
