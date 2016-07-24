@@ -592,22 +592,20 @@ public class ModuleExecutorTest {
     /**
      * Test of init method, of class ModuleExecutor.
      */
-    @Test
+    @Test (expected = InstantiationException.class)
     public void testInit_StringArr_nullProperties() throws Exception {
         String[] args = null;
         Properties props = null;
         ModuleExecutor instance = new ModuleExecutor();
-        exit.expectSystemExit();
         instance.init(args, props);
         fail();
     }
 
-    @Test
+    @Test (expected = InstantiationException.class)
     public void testInit_StringArr_emptyProperties() throws Exception {
         String[] args = null;
         Properties props = new Properties();
         ModuleExecutor instance = new ModuleExecutor();
-        exit.expectSystemExit();
         instance.init(args, props);
         fail();
     }
@@ -646,9 +644,16 @@ public class ModuleExecutorTest {
      */
     @Test
     public void testUsage() {
+        AbstractManager aManager = new AbstractManagerTest.AbstractManagerImpl();
+        aManager.usage();
+        String aManagerUsage = outContent.toString();
+        outContent.reset();
+        
         ModuleExecutor instance = new ModuleExecutor();
         instance.usage();
+        
         assertNotNull(errContent.toString());
+        assertTrue(outContent.toString().contains(aManagerUsage));
     }
 
     /**

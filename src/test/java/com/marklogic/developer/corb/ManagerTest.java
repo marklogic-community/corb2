@@ -68,6 +68,7 @@ public class ManagerTest {
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
     private final TestHandler testLogger = new TestHandler();
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
+    private PrintStream systemErr = System.err;
     public static final String XCC_CONNECTION_URI = "xcc://admin:admin@localhost:2223/FFE";
     public static final String COLLECTION_NAME = "StringPassedToTheURIsModule";
     public static final String XQUERY_MODULE = "src/test/resources/transform.xqy|ADHOC";
@@ -114,6 +115,7 @@ public class ManagerTest {
     public void tearDown() throws Exception {
         FileUtils.deleteFile(ManagerTest.EXPORT_FILE_DIR);
         clearSystemProperties();
+        System.setErr(systemErr);
     }
 
     @Test(expected = NullPointerException.class)
@@ -172,16 +174,14 @@ public class ManagerTest {
     /**
      * Test of init method, of class Manager.
      */
-    @Test
+    @Test (expected = InstantiationException.class)
     public void testInit_nullArgs_properties() throws Exception {
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
         props.setProperty(Options.BATCH_SIZE,Integer.toString(5));
         Manager instance = getMockManagerWithEmptyResults();
-        exit.expectSystemExit();
         instance.init(args, props);
-        assertEquals(props, instance.properties);
     }
 
     @Test
@@ -212,14 +212,12 @@ public class ManagerTest {
         fail();
     }
 
-    @Test
+    @Test (expected = InstantiationException.class)
     public void testInit_nullArgs_emptyProperties() throws Exception {
         String[] args = null;
         Properties props = new Properties();
         Manager instance = getMockManagerWithEmptyResults();
-        exit.expectSystemExit();
         instance.init(args, props);
-        assertEquals(props, instance.properties);
     }
 
     /**
@@ -734,8 +732,14 @@ public class ManagerTest {
         Manager instance = new Manager();
         ByteArrayOutputStream outContent = new ByteArrayOutputStream();
         System.setErr(new PrintStream(outContent));
+        
+        AbstractManager aManager = new AbstractManagerTest.AbstractManagerImpl();
+        aManager.usage();
+        String aManagerUsage = outContent.toString();
+        outContent.reset();
         instance.usage();
-        assertTrue(outContent.toString().contains("usage"));
+        System.out.println(aManagerUsage);
+        assertTrue(outContent.toString().contains(aManagerUsage));
     }
 
     /**

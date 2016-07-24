@@ -132,7 +132,8 @@ public class Manager extends AbstractManager {
         try {
             manager.init(args);
         } catch (Exception exc) {
-            LOG.log(SEVERE, "Error initializing CORB", exc);
+            LOG.log(SEVERE, "Error initializing CORB {0}", exc.getMessage());
+            manager.usage();
             System.exit(EXIT_CODE_INIT_ERROR);
         }
         //now we can start corb. 
@@ -435,35 +436,36 @@ public class Manager extends AbstractManager {
 
     @Override
     protected void usage() {
+        super.usage();
+
         List<String> args = new ArrayList<String>(7);
         String xcc_connection_uri = "xcc://user:password@host:port/[ database ]";
         String thread_count = "10";
         String options_file = "myjob.properties";
         PrintStream err = System.err;
-        
+
         err.println("usage 1:");
         err.println(TAB + NAME + " " + xcc_connection_uri + " input-selector module-name.xqy"
                 + " [ thread-count [ uris-module [ module-root" + " [ modules-database [ install [ process-task"
                 + " [ pre-batch-module [ pre-batch-task" + " [ post-batch-module  [ post-batch-task"
                 + " [ export-file-dir [ export-file-name" + " [ uris-file ] ] ] ] ] ] ] ] ] ] ] ] ]");
-             
-        
+
         err.println("\nusage 2:");
         args.add(buildSystemPropertyArg(XCC_CONNECTION_URI, xcc_connection_uri));
-        args.add(buildSystemPropertyArg(XQUERY_MODULE ,"module-name.xqy"));
+        args.add(buildSystemPropertyArg(PROCESS_MODULE, "module-name.xqy"));
         args.add(buildSystemPropertyArg(THREAD_COUNT, thread_count));
         args.add(buildSystemPropertyArg(URIS_MODULE, "get-uris.xqy"));
-        args.add(buildSystemPropertyArg(POST_BATCH_XQUERY_MODULE, "post-batch.xqy"));
+        args.add(buildSystemPropertyArg(POST_BATCH_MODULE, "post-batch.xqy"));
         args.add(buildSystemPropertyArg("... ", null));
         args.add(NAME);
         err.println(TAB + StringUtils.join(args, SPACE));
-        
+
         err.println("\nusage 3:");
         args.clear();
         args.add(buildSystemPropertyArg(OPTIONS_FILE, options_file));
         args.add(NAME);
         err.println(TAB + StringUtils.join(args, SPACE));
-        
+
         err.println("\nusage 4:");
         args.clear();
         args.add(buildSystemPropertyArg(OPTIONS_FILE, options_file));

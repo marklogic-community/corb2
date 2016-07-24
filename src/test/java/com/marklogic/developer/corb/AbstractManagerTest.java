@@ -24,8 +24,10 @@ import com.marklogic.xcc.SecurityOptions;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
@@ -66,6 +68,7 @@ public class AbstractManagerTest {
     private String password = "password";
     private String host = "localhost";
     private String port = "80";
+    private PrintStream systemErr = System.err;
     
     @Before
     public void setUp() throws FileNotFoundException {
@@ -78,6 +81,7 @@ public class AbstractManagerTest {
     @After
     public void tearDown() {
         clearSystemProperties();
+        System.setErr(systemErr);
     }
 
     /**
@@ -346,10 +350,9 @@ public class AbstractManagerTest {
         assertEquals(uriArg, instance.connectionUri.toString());
     }
 
-    @Test
+    @Test (expected = InstantiationException.class)
     public void testInitURI_nullURI() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
-        exit.expectSystemExit();
         instance.initURI(null);
         fail();
     }
@@ -365,38 +368,34 @@ public class AbstractManagerTest {
         assertEquals("xcc://username:password@localhost:80", instance.connectionUri.toString());
     }
 
-    @Test
+    @Test (expected = InstantiationException.class)
     public void testInitURI_nullURI_withPassword() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.XCC_PASSWORD, password);
-        exit.expectSystemExit();
         instance.initURI(null);
         fail();
     }
 
-    @Test
+    @Test (expected = InstantiationException.class)
     public void testInitURI_nullURI_withPort() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.XCC_PORT, port);
-        exit.expectSystemExit();
         instance.initURI(null);
         fail();
     }
 
-    @Test
+    @Test (expected = InstantiationException.class)
     public void testInitURI_nullURI_withHostname() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.XCC_HOSTNAME, host);
-        exit.expectSystemExit();
         instance.initURI(null);
         fail();
     }
 
-    @Test
+    @Test (expected = InstantiationException.class)
     public void testInitURI_nullURI_withUsername() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.XCC_USERNAME, username);
-        exit.expectSystemExit();
         instance.initURI(null);
         fail();
     }
@@ -499,8 +498,13 @@ public class AbstractManagerTest {
      */
     @Test
     public void testUsage() {
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(outContent));
         AbstractManager instance = new AbstractManagerImpl();
         instance.usage();
+        
+        String usage = outContent.toString();
+        assertNotNull(usage);
     }
 
     /**
@@ -523,10 +527,6 @@ public class AbstractManagerTest {
             this.properties = props;
         }
 
-        @Override
-        public void usage() {
-
-        }
     }
 
 }
