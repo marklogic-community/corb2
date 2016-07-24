@@ -52,8 +52,7 @@ public class Options {
             + "Default value is 1. If greater than 1, the PROCESS-MODULE will "
             + "receive a delimited string as the $URI variable value, which needs "
             + "to be tokenized to get individual URIs. The default delimiter is `;`, "
-            + "which can be overridden with the option BATCH-URI-DELIM.",
-            defaultValue = "1")
+            + "which can be overridden with the option BATCH-URI-DELIM.")
     public static final String BATCH_SIZE = "BATCH-SIZE";
 
     /**
@@ -61,8 +60,7 @@ public class Options {
      * URIS when {@value #BATCH_SIZE} is greater than 1.
      */
     @Usage(description = "Use if the default delimiter ';' cannot be used to join "
-            + "multiple URIS when BATCH-SIZE is greater than 1.",
-            defaultValue = ";")
+            + "multiple URIS when BATCH-SIZE is greater than 1.")
     public static final String BATCH_URI_DELIM = "BATCH-URI-DELIM";
 
     /**
@@ -70,8 +68,7 @@ public class Options {
      * external or global variable with the name URIS.
      */
     @Usage(description = "Value of this parameter will be passed into the URIS-MODULE "
-            + "via external or global variable with the name URIS.",
-            isMainArg = true)
+            + "via external or global variable with the name URIS.")
     public static final String COLLECTION_NAME = "COLLECTION-NAME";
 
     /**
@@ -140,11 +137,11 @@ public class Options {
      */
     @Usage(description = "The class name of the options value decrypter, which must "
             + "implement com.marklogic.developer.corb.Decrypter. Encryptable options "
-            + "include XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT, and XCC-DBNAME\n"
-            + "com.marklogic.developer.corb.PrivateKeyDecrypter (Included) Requires private key file\n"
-            + "com.marklogic.developer.corb.JasyptDecrypter (Included) Requires jasypt-*.jar in classpath\n"
+            + "include XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT, and XCC-DBNAME. "
+            + "com.marklogic.developer.corb.PrivateKeyDecrypter (Included) Requires private key file. "
+            + "com.marklogic.developer.corb.JasyptDecrypter (Included) Requires jasypt-*.jar in classpath. "
             + "com.marklogic.developer.corb.HostKeyDecrypter (Included) Requires "
-            + "Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files")
+            + "Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files.")
     public static final String DECRYPTER = "DECRYPTER";
 
     /**
@@ -304,7 +301,7 @@ public class Options {
      * If specified, CoRB will use this class for sorting in place of ascending
      * or descending string comparator even if a value was specified for
      * {@value #EXPORT_FILE_SORT}.
-     * 
+     *
      * @since 2.2.1
      */
     @Usage(description = "A java class that must implement java.util.Comparator. "
@@ -569,7 +566,8 @@ public class Options {
      * Module is expected to have at least one external or global variable with
      * name URI. XQuery and JavaScript modules need to have "{@code .xqy}" and
      * "{@code .sjs}" extensions respectively. If returning multiple values from
-     * a JavaScript module, values must be returned as ValueIterator.
+     * a JavaScript module, values must be returned as 
+     * <a href="https://docs.marklogic.com/js/ValueIterator">ValueIterator</a>.
      */
     @Usage(description = "XQuery or JavaScript to be executed in a batch for each URI "
             + "from the URIS-MODULE or URIS-FILE. Module is expected to have at least "
@@ -659,6 +657,8 @@ public class Options {
      * {@link com.marklogic.developer.corb.SSLConfig}. If not specified, CoRB
      * defaults to @{link com.marklogic.developer.corb.TrustAnyoneSSLConfig} for
      * xccs connections.
+     *
+     * @see com.marklogic.developer.corb.SSLConfig
      */
     @Usage(description = "A java class that must implement com.marklogic.developer.corb.SSLConfig. "
             + "If not specified, CoRB defaults to com.marklogic.developer.corb.TrustAnyoneSSLConfig for xccs connections.")
@@ -910,13 +910,15 @@ public class Options {
 
 }
 
+/**
+ * Annotation used to document attributes of the CoRB Options.
+ *
+ * @author Mads Hansen, MarkLogic Corporation
+ */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @interface Usage {
 
     String description() default "";
 
-    String defaultValue() default "";
-
-    boolean isMainArg() default false;
 }

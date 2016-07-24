@@ -304,7 +304,7 @@ public abstract class AbstractManager {
 
     protected void usage() {
         PrintStream err = System.err;
-        err.println("CoRB needs options specified through one or more of the following mechanisms:\n"
+        err.println("CoRB2 requires options to be specified through one or more of the following mechanisms:\n"
                 + "1.) command-line parameters\n"
                 + "2.) Java system properties ex: -DXCC-CONNECTION-URI=xcc://user:password@localhost:8202\n"
                 + "3.) As properties file in the class path specified using -DOPTIONS-FILE=myjob.properties. "
@@ -312,19 +312,17 @@ public abstract class AbstractManager {
                 + "If specified in more than one place, a command line parameter takes precedence over "
                 + "a Java system property, which take precedence over a property "
                 + "from the OPTIONS-FILE properties file.\n\n"
-                + "CoRB2 OPTIONS:\n");
+                + "CoRB2 Options:\n");
         
         for (java.lang.reflect.Field field : Options.class.getDeclaredFields()) {
             for (Usage usage : field.getAnnotationsByType(Usage.class)) {
                 if (StringUtils.isNotEmpty(usage.description())) {
-                    err.println(field.getName() + "\t"
-                            //+ String.format("%0" + (4) + "d", 0).replace("0"," ") 
-                            + usage.description());
+                    err.println(field.getName() + "\n\t" + usage.description());
                 }
             }
         }
         
-        err.println("\nPlease report issues at: https://github.com/marklogic/corb2/issues");
+        err.println("\nPlease report issues at: https://github.com/marklogic/corb2/issues\n");
     }
 	
     protected String buildSystemPropertyArg(String property, String value) {
