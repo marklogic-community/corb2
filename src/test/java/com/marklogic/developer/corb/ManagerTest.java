@@ -308,7 +308,7 @@ public class ManagerTest {
         Properties props = new Properties();
         Manager instance = getMockManagerWithEmptyResults();
         instance.init(args, props);
-        assertEquals(true, instance.options.isDoInstall());
+        assertTrue(instance.options.isDoInstall());
     }
 
     @Test
