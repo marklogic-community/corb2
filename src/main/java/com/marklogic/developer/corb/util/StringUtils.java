@@ -36,6 +36,7 @@ public final class StringUtils {
 
     public static final String EMPTY = "";
     public static final String SLASH = "/";
+    public static final String XQUERY_EXTENSION = ".xqy";
     private static final String ADHOC_PATTERN = "(?i).*\\|ADHOC";
     private static final String JAVASCRIPT_MODULE_FILENAME_PATTERN = "(?i).*\\.s?js(\\|ADHOC)?$";
     private static final String INLINE_MODULE_PATTERN = "(?i)INLINE-(JAVASCRIPT|XQUERY)\\|(.*?)(\\|ADHOC)?$";
@@ -120,7 +121,7 @@ public final class StringUtils {
      * @return
      */
     public static String buildModulePath(Class<?> clazz) {
-        return SLASH + clazz.getName().replace('.', '/') + ".xqy";
+        return SLASH + clazz.getName().replace('.', '/') + XQUERY_EXTENSION;
     }
 
     /**
@@ -130,7 +131,7 @@ public final class StringUtils {
      * @return
      */
     public static String buildModulePath(Package modulePackage, String name) {
-        return SLASH + modulePackage.getName().replace('.', '/') + SLASH + name + (name.endsWith(".xqy") ? "" : ".xqy");
+        return SLASH + modulePackage.getName().replace('.', '/') + SLASH + name + (name.endsWith(XQUERY_EXTENSION) ? "" : XQUERY_EXTENSION);
     }
 
     public static String buildModulePath(String root, String module) {
