@@ -27,6 +27,21 @@ import java.util.Properties;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mock;
 
 /**
  *
@@ -34,10 +49,15 @@ import static org.mockito.Mockito.mock;
  */
 public class FileXMLUrisLoaderTest {
 
-    private static final String anchor1 = "<a href=\"test1.html\">test1</a>";
-    private static final String anchor2 = "<a href=\"test2.html\">test2</a>";
-    private static final String anchor3 = "<a href=\"test3.html\">test3</a>";
-    private static final String anchor4 = "<a href=\"\">\n<!---->\n</a>"; //indent options result in extra carriage returns
+    private static final String ANCHOR1 = "<a href=\"test1.html\">test1</a>";
+    private static final String ANCHOR2 = "<a href=\"test2.html\">test2</a>";
+    private static final String ANCHOR3 = "<a href=\"test3.html\">test3</a>";
+    private static final String ANCHOR4 = "<a href=\"\">\n<!---->\n</a>"; //indent options result in extra carriage returns
+    private static final String TEST1 = "test1";
+    private static final String TEST2 = "test2";
+    private static final String TEST3 = "test3";
+    private static final String HTML_SUFFIX = ".html";
+    
     /**
      * Test of setOptions method, of class FileUrisXMLLoader.
      */
@@ -139,10 +159,10 @@ public class FileXMLUrisLoaderTest {
         }
         instance.close();
         assertEquals(4, nodes.size());
-        assertTrue(nodes.contains(anchor1));
-        assertTrue(nodes.contains(anchor2));
-        assertTrue(nodes.contains(anchor3));
-        assertTrue(nodes.contains(anchor4));
+        assertTrue(nodes.contains(ANCHOR1));
+        assertTrue(nodes.contains(ANCHOR2));
+        assertTrue(nodes.contains(ANCHOR3));
+        assertTrue(nodes.contains(ANCHOR4));
     }
 
     @Test
@@ -158,10 +178,10 @@ public class FileXMLUrisLoaderTest {
         }
         instance.close();
         assertEquals(4, nodes.size());
-        assertTrue(nodes.contains(anchor1));
-        assertTrue(nodes.contains(anchor2));
-        assertTrue(nodes.contains(anchor3));
-        assertTrue(nodes.contains(anchor4));
+        assertTrue(nodes.contains(ANCHOR1));
+        assertTrue(nodes.contains(ANCHOR2));
+        assertTrue(nodes.contains(ANCHOR3));
+        assertTrue(nodes.contains(ANCHOR4));
     }
 
     @Test
@@ -207,9 +227,9 @@ public class FileXMLUrisLoaderTest {
         instance.close();
 
         assertEquals(3, nodes.size());
-        assertTrue(nodes.contains("test1.html"));
-        assertTrue(nodes.contains("test2.html"));
-        assertTrue(nodes.contains("test3.html"));
+        assertTrue(nodes.contains(TEST1 + HTML_SUFFIX));
+        assertTrue(nodes.contains(TEST2 + HTML_SUFFIX));
+        assertTrue(nodes.contains(TEST3 + HTML_SUFFIX));
     }
 
     @Test
@@ -224,9 +244,9 @@ public class FileXMLUrisLoaderTest {
         }
         instance.close();
         assertEquals(3, nodes.size());
-        assertTrue(nodes.contains("test1"));
-        assertTrue(nodes.contains("test2"));
-        assertTrue(nodes.contains("test3"));
+        assertTrue(nodes.contains(TEST1));
+        assertTrue(nodes.contains(TEST2));
+        assertTrue(nodes.contains(TEST3));
     }
 
     @Test
@@ -273,13 +293,13 @@ public class FileXMLUrisLoaderTest {
         //comment()
         assertTrue(nodes.contains("http://test.com/test1.html"));
         //@*
-        assertTrue(nodes.contains("test1.html"));
-        assertTrue(nodes.contains("test2.html"));
-        assertTrue(nodes.contains("test3.html"));
+        assertTrue(nodes.contains(TEST1 + HTML_SUFFIX));
+        assertTrue(nodes.contains(TEST2 + HTML_SUFFIX));
+        assertTrue(nodes.contains(TEST3 + HTML_SUFFIX));
         //text()
-        assertTrue(nodes.contains("test1"));
-        assertTrue(nodes.contains("test2"));
-        assertTrue(nodes.contains("test3"));
+        assertTrue(nodes.contains(TEST1));
+        assertTrue(nodes.contains(TEST2));
+        assertTrue(nodes.contains(TEST3));
         instance.close();
     }
 

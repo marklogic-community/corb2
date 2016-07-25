@@ -75,6 +75,7 @@ public class AbstractTaskTest {
     private static final String THREE = "three";
     protected static final String REJECTED_MSG = "denied!";
     private static final String TMP_DIR = "/tmp";
+    private static final String ADHOC_MODULE = "adhoc.xqy";
     
     @Before
     public void setUp() {
@@ -125,7 +126,7 @@ public class AbstractTaskTest {
      */
     @Test
     public void testSetAdhocQuery() {
-        String adhocQuery = "adhoc.xqy";
+        String adhocQuery = ADHOC_MODULE;
         AbstractTask instance = new AbstractTaskImpl();
         instance.setAdhocQuery(adhocQuery);
         assertEquals(adhocQuery, instance.adhocQuery);
@@ -230,7 +231,7 @@ public class AbstractTaskTest {
     public void testInvokeModule() throws Exception {
         AbstractTask instance = new AbstractTaskImpl();
         instance.moduleUri = "module.xqy";
-        instance.adhocQuery = "adhoc.xqy";
+        instance.adhocQuery = ADHOC_MODULE;
         instance.inputUris = new String[]{FOO, BAR, BAZ};
         ContentSource cs = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -241,19 +242,20 @@ public class AbstractTaskTest {
         when(session.newModuleInvoke(anyString())).thenReturn(request);
         when(request.setNewStringVariable(anyString(), anyString())).thenReturn(null);
         when(session.submitRequest(request)).thenReturn(seq);
-
+        String key1 = "foo.bar";
+        String key2 = "foo.baz";
         instance.cs = cs;
         instance.moduleType = FOO;
         Properties props = new Properties();
-        props.setProperty("foo.bar", BAZ);
-        props.setProperty("foo.baz", "boo");
+        props.setProperty(key1, BAZ);
+        props.setProperty(key2, "boo");
         props.setProperty(Options.BATCH_URI_DELIM, "");
         instance.properties = props;
 
         instance.inputUris = new String[]{URI, "uri2"};
         instance.invokeModule();
-        assertTrue(AbstractTask.MODULE_PROPS.get(FOO).contains("foo.bar"));
-        assertTrue(AbstractTask.MODULE_PROPS.get(FOO).contains("foo.baz"));
+        assertTrue(AbstractTask.MODULE_PROPS.get(FOO).contains(key1));
+        assertTrue(AbstractTask.MODULE_PROPS.get(FOO).contains(key2));
     }
 
     @Test
@@ -447,7 +449,7 @@ public class AbstractTaskTest {
         instance.properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
         instance.properties.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(retryLimit));
 
-        instance.properties.setProperty(Options.QUERY_RETRY_INTERVAL, "1");
+        instance.properties.setProperty(Options.QUERY_RETRY_INTERVAL, "2");
         instance.properties.setProperty(Options.QUERY_RETRY_LIMIT, Integer.toString(retryLimit));
 
         instance.handleRequestException(exception);

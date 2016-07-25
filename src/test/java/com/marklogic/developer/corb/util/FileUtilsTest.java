@@ -180,7 +180,7 @@ public class FileUtilsTest {
 
     @Test
     public void testGetFile_doesNotExist() {
-        File file = FileUtils.getFile("doesNotExist");
+        File file = FileUtils.getFile("fileDoesNotExist");
         assertFalse(file.exists());
     }
 

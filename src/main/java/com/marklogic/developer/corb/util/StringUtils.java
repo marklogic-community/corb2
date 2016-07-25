@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 public final class StringUtils {
 
     public static final String EMPTY = "";
+    public static final String SLASH = "/";
     private static final String ADHOC_PATTERN = "(?i).*\\|ADHOC";
     private static final String JAVASCRIPT_MODULE_FILENAME_PATTERN = "(?i).*\\.s?js(\\|ADHOC)?$";
     private static final String INLINE_MODULE_PATTERN = "(?i)INLINE-(JAVASCRIPT|XQUERY)\\|(.*?)(\\|ADHOC)?$";
@@ -119,7 +120,7 @@ public final class StringUtils {
      * @return
      */
     public static String buildModulePath(Class<?> clazz) {
-        return "/" + clazz.getName().replace('.', '/') + ".xqy";
+        return SLASH + clazz.getName().replace('.', '/') + ".xqy";
     }
 
     /**
@@ -129,17 +130,17 @@ public final class StringUtils {
      * @return
      */
     public static String buildModulePath(Package modulePackage, String name) {
-        return "/" + modulePackage.getName().replace('.', '/') + "/" + name + (name.endsWith(".xqy") ? "" : ".xqy");
+        return SLASH + modulePackage.getName().replace('.', '/') + SLASH + name + (name.endsWith(".xqy") ? "" : ".xqy");
     }
 
     public static String buildModulePath(String root, String module) {
         String moduleRoot = root;
         String modulePath = module;
-        if (!root.endsWith("/")) {
-            moduleRoot += "/";
+        if (!root.endsWith(SLASH)) {
+            moduleRoot += SLASH;
         }
 
-        if (module.startsWith("/") && module.length() > 1) {
+        if (module.startsWith(SLASH) && module.length() > 1) {
             modulePath = module.substring(1);
         }
 

@@ -52,6 +52,7 @@ public class PostBatchUpdateFileTaskTest {
     private static final String B = "b\n";
     private static final String D = "d\n";
     private static final String Z = "z\n";
+    private static final String ZDDAB = "z...,d....,d....,a.....,b";
     
     @Before
     public void setUp() {
@@ -269,17 +270,17 @@ public class PostBatchUpdateFileTaskTest {
 
     @Test
     public void testCall_removeDuplicatesAndSort_customComparator_badClass() throws Exception {
-        assertTrue(testCustomComparator("distinct", "z...,d....,d....,a.....,b", "java.lang.String"));
+        assertTrue(testCustomComparator("distinct", ZDDAB, "java.lang.String"));
     }
 
     @Test
     public void testCall_removeDuplicatesAndSort_noSortOrDedup_distinctOnly() throws Exception {
-        assertTrue(testCustomComparator("distinct", "z...,d....,d....,a.....,b", null));
+        assertTrue(testCustomComparator("distinct", ZDDAB, null));
     }
 
     @Test
     public void testCall_removeDuplicatesAndSort_noSortOrDedup_blankSort() throws Exception {
-        assertTrue(testCustomComparator(" ", "z...,d....,d....,a.....,b", null));
+        assertTrue(testCustomComparator(" ", ZDDAB, null));
     }
 
     public boolean testCustomComparator(String sortProperty, String expected) throws Exception {
@@ -287,12 +288,14 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     public boolean testCustomComparator(String sortProperty, String expected, String comparator) throws Exception {
+        
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
         FileWriter writer = new FileWriter(file, true);
         writer.append("z...\n");
-        writer.append("d....\n");
-        writer.append("d....\n");
+        String d_dot_dot_dot_newline = "d....\n";
+        writer.append(d_dot_dot_dot_newline);
+        writer.append(d_dot_dot_dot_newline);
         writer.append("a.....\n");
         writer.append(B);
         writer.flush();

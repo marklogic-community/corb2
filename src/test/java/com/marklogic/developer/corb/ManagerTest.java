@@ -372,12 +372,13 @@ public class ManagerTest {
     @Test
     public void testInitOptions_normalizeLegacySystemProperties() throws Exception {
         clearSystemProperties();
+        String propertySuffix = ".foo";
         System.setProperty(Options.XQUERY_MODULE, PROCESS_MODULE);
-        System.setProperty("XQUERY-MODULE.foo", XQUERY_MODULE_FOO);
+        System.setProperty(Options.XQUERY_MODULE + propertySuffix, XQUERY_MODULE_FOO);
         System.setProperty(Options.PRE_BATCH_XQUERY_MODULE, PRE_BATCH_MODULE);
-        System.setProperty("PRE-BATCH-XQUERY-MODULE.foo", PRE_BATCH_XQUERY_MODULE_FOO);
+        System.setProperty(Options.PRE_BATCH_XQUERY_MODULE + propertySuffix, PRE_BATCH_XQUERY_MODULE_FOO);
         System.setProperty(Options.POST_BATCH_XQUERY_MODULE, POST_BATCH_MODULE);
-        System.setProperty("POST-BATCH-XQUERY-MODULE.foo", POST_BATCH_XQUERY_MODULE_FOO);
+        System.setProperty(Options.POST_BATCH_XQUERY_MODULE + propertySuffix, POST_BATCH_XQUERY_MODULE_FOO);
 
         String[] args = getDefaultArgs();
         args[2] = null; //process-module
@@ -390,11 +391,11 @@ public class ManagerTest {
         instance.init(args, props);
 
         assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
-        assertEquals(XQUERY_MODULE_FOO, System.getProperty("PROCESS-MODULE.foo"));
+        assertEquals(XQUERY_MODULE_FOO, System.getProperty(Options.PROCESS_MODULE + propertySuffix));
         assertEquals(PRE_BATCH_MODULE, instance.options.getPreBatchModule());
-        assertEquals(PRE_BATCH_XQUERY_MODULE_FOO, System.getProperty("PRE-BATCH-MODULE.foo"));
+        assertEquals(PRE_BATCH_XQUERY_MODULE_FOO, System.getProperty(Options.PRE_BATCH_MODULE+ propertySuffix));
         assertEquals(POST_BATCH_MODULE, instance.options.getPostBatchModule());
-        assertEquals(POST_BATCH_XQUERY_MODULE_FOO, System.getProperty("POST-BATCH-MODULE.foo"));
+        assertEquals(POST_BATCH_XQUERY_MODULE_FOO, System.getProperty(Options.POST_BATCH_MODULE+ propertySuffix));
     }
 
     @Test

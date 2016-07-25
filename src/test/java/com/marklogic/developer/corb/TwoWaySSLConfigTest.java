@@ -33,6 +33,7 @@ public class TwoWaySSLConfigTest {
 
     public static final String SSL_PROPERTIES = "src/test/resources/SSL.properties";
     public static final String SSLV3 = "SSLv3";
+    public static final String A_B_C = "a,b,c";
     
     @Before
     public void setUp() {
@@ -66,7 +67,7 @@ public class TwoWaySSLConfigTest {
     public void testGetEnabledCipherSuites() {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         Properties props = new Properties();
-        props.setProperty(TwoWaySSLConfig.SSL_CIPHER_SUITES, "a,b,c");
+        props.setProperty(TwoWaySSLConfig.SSL_CIPHER_SUITES, A_B_C);
         instance.setProperties(props);
         String[] result = instance.getEnabledCipherSuites();
         assertNotNull(result);
@@ -97,7 +98,7 @@ public class TwoWaySSLConfigTest {
     public void testGetEnabledProtocols_null() {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         Properties props = new Properties();
-        props.setProperty(TwoWaySSLConfig.SSL_ENABLED_PROTOCOLS, "a,b,c");
+        props.setProperty(TwoWaySSLConfig.SSL_ENABLED_PROTOCOLS, A_B_C);
         instance.setProperties(props);
         String[] result = instance.getEnabledProtocols();
         assertNotNull(result);

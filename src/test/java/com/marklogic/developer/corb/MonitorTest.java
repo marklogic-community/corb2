@@ -57,7 +57,7 @@ public class MonitorTest {
         Monitor instance = new Monitor(pool, mock(CompletionService.class), mock(Manager.class));
         instance.run();
         List<LogRecord> records = testLogger.getLogRecords();
-        assertFalse(containsLogRecord(records, 
+        assertFalse(containsLogRecord(records,
                 new LogRecord(Level.INFO, "CoRB2 has been paused. Resume execution by changing the state in the command file null to RESUME")));
     }
 
@@ -119,12 +119,13 @@ public class MonitorTest {
 
     @Test
     public void testGetEstimatedTimeCompletion() {
+        String fourtyFiveSeconds = "00:00:45";
         assertEquals("02:38:20", Monitor.getEstimatedTimeCompletion(100, 5, 0.01));
         assertEquals("01:23:20", Monitor.getEstimatedTimeCompletion(100, 50, 0.01));
         assertEquals("00:08:20", Monitor.getEstimatedTimeCompletion(100, 50, 0.1));
         assertEquals("00:00:50", Monitor.getEstimatedTimeCompletion(100, 50, 1.0));
-        assertEquals("00:00:45", Monitor.getEstimatedTimeCompletion(100, 50, 1.1));
-        assertEquals("00:00:45", Monitor.getEstimatedTimeCompletion(100, 50, 1.111));
+        assertEquals(fourtyFiveSeconds, Monitor.getEstimatedTimeCompletion(100, 50, 1.1));
+        assertEquals(fourtyFiveSeconds, Monitor.getEstimatedTimeCompletion(100, 50, 1.111));
         assertEquals("00:00:44", Monitor.getEstimatedTimeCompletion(100, 50, 1.12345));
         assertEquals("00:00:01", Monitor.getEstimatedTimeCompletion(100, 50, 49));
         assertEquals("00:00:00", Monitor.getEstimatedTimeCompletion(100, 50, 60));
@@ -134,13 +135,15 @@ public class MonitorTest {
 
     @Test
     public void testFormat() {
+        String point96 = "0.96";
+        String point01 = "0.01";
         assertEquals("1", Monitor.formatTransactionsPerSecond(1));
         assertEquals("0.9", Monitor.formatTransactionsPerSecond(0.9));
         assertEquals("0.95", Monitor.formatTransactionsPerSecond(0.95));
-        assertEquals("0.96", Monitor.formatTransactionsPerSecond(0.956));
-        assertEquals("0.96", Monitor.formatTransactionsPerSecond(0.9559));
-        assertEquals("0.01", Monitor.formatTransactionsPerSecond(0.01));
-        assertEquals("0.01", Monitor.formatTransactionsPerSecond(0.014));
+        assertEquals(point96, Monitor.formatTransactionsPerSecond(0.956));
+        assertEquals(point96, Monitor.formatTransactionsPerSecond(0.9559));
+        assertEquals(point01, Monitor.formatTransactionsPerSecond(0.01));
+        assertEquals(point01, Monitor.formatTransactionsPerSecond(0.014));
         assertEquals(Integer.toString(100), Monitor.formatTransactionsPerSecond(100.00));
         assertEquals("1,000", Monitor.formatTransactionsPerSecond(1000));
         assertEquals(Integer.toString(100), Monitor.formatTransactionsPerSecond(100.1234));

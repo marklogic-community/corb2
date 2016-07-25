@@ -39,6 +39,8 @@ public class StringUtilsTest {
     private static final String INLINE_JAVASCRIPT_PREFIX = "INLINE-JAVASCRIPT|";
     private static final String INLINE_XQUERY_PREFIX = "INLINE-XQUERY|";
     private static final String DELIM = ",";
+    private static final String A_B_C = "a,b,c";
+    private static final String FOO = "foo";
     
     @Test
     public void testStringToBoolean_String_empty() {
@@ -75,7 +77,7 @@ public class StringUtilsTest {
     public void testJoin_List_String() {
         List<String> items = Arrays.asList(new String[]{"a", "b", "c"});
         String result = StringUtils.join(items, DELIM);
-        assertEquals("a,b,c", result);
+        assertEquals(A_B_C, result);
     }
 
     @Test
@@ -99,7 +101,7 @@ public class StringUtilsTest {
     public void testJoin_ObjectArr_String() {
         Object[] items = new Object[2];
         items[0] = 2;
-        items[1] = "foo";
+        items[1] = FOO;
         String delim = "|";
         String result = StringUtils.join(items, delim);
         assertEquals("2|foo", result);
@@ -119,7 +121,7 @@ public class StringUtilsTest {
         String[] items = new String[]{"a", "b", "c"};
         String delim = DELIM;
         String result = StringUtils.join(items, delim);
-        assertEquals("a,b,c", result);
+        assertEquals(A_B_C, result);
     }
 
     @Test(expected = NullPointerException.class)
@@ -218,7 +220,7 @@ public class StringUtilsTest {
 
     @Test(expected = UnsupportedEncodingException.class)
     public void testDumpHex_unsupportedEncoding() throws Exception {
-        StringUtils.dumpHex("abcde", "does not exist");
+        StringUtils.dumpHex(FOO, "does not exist");
         fail();
     }
 
@@ -232,7 +234,7 @@ public class StringUtilsTest {
 
     @Test
     public void testTrim() {
-        assertEquals("foo", StringUtils.trim("  foo  "));
+        assertEquals(FOO, StringUtils.trim("  foo  "));
     }
 
     @Test
@@ -247,7 +249,7 @@ public class StringUtilsTest {
 
     @Test
     public void testTrimToEmpty() {
-        assertEquals("foo", StringUtils.trimToEmpty("  foo  "));
+        assertEquals(FOO, StringUtils.trimToEmpty("  foo  "));
     }
 
     @Test
