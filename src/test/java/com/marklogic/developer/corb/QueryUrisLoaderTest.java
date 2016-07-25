@@ -46,6 +46,7 @@ public class QueryUrisLoaderTest {
     private String foo = "foo";
     private String bar = "bar";
     private String none = "none";
+    private String root = "/root";
     private static final String ADHOC_SUFFIX = "|ADHOC";
     /**
      * Test of open method, of class QueryUrisLoader.
@@ -105,8 +106,7 @@ public class QueryUrisLoaderTest {
         props.setProperty(Options.URIS_REPLACE_PATTERN, "foo1,");
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule("/module");
-        transformOptions.setModuleRoot("/root");
-        instance.collection = "";
+        transformOptions.setModuleRoot(root);
         instance.properties = props;
         instance.cs = contentSource;
         instance.options = transformOptions;
@@ -140,8 +140,7 @@ public class QueryUrisLoaderTest {
         props.setProperty(Options.URIS_REPLACE_PATTERN, "foo2,");
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule("INLINE-XQUERY|for $i in (1 to 5) return $i || '.xml'");
-        transformOptions.setModuleRoot("/root");
-        instance.collection = "";
+        transformOptions.setModuleRoot(root);
         instance.properties = props;
         instance.cs = contentSource;
         instance.options = transformOptions;
@@ -175,7 +174,7 @@ public class QueryUrisLoaderTest {
         props.setProperty(Options.URIS_REPLACE_PATTERN, "foo3,");
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule("INLINE-XQUERY|");
-        transformOptions.setModuleRoot("/root");
+        transformOptions.setModuleRoot(root);
 
         instance.properties = props;
         instance.cs = contentSource;
@@ -232,9 +231,10 @@ public class QueryUrisLoaderTest {
         String processModuleKey1 = "PROCESS-MODULE.foo";
         String processModuleKey2 = "PROCESS-MODULE.foo-foo";
         String processModuleKey3 = "PROCESS-MODULE.foo_foo2";
-        String keyEqualsBar = processModuleKey1 + "=" + bar;
-        String keyEqualsBar2 = processModuleKey2 + "=" + bar;
-        String keyEqualsBar3 = processModuleKey3 + "=" + bar;
+        String equalsBar = "=bar";
+        String keyEqualsBar = processModuleKey1 + equalsBar;
+        String keyEqualsBar2 = processModuleKey2 + equalsBar;
+        String keyEqualsBar3 = processModuleKey3 + equalsBar;
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         AdhocQuery request = mock(AdhocQuery.class);
