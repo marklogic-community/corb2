@@ -137,7 +137,7 @@ public class PostBatchUpdateFileTaskTest {
     public void testMoveFile_0args() throws Exception {
         File partFile = createSamplePartFile();
         String partFilePath = partFile.toString();
-        String exportFilePath = partFilePath.substring(0, partFilePath.lastIndexOf("."));
+        String exportFilePath = partFilePath.substring(0, partFilePath.lastIndexOf('.'));
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_PART_EXT, PART_EXT);
         props.setProperty(Options.EXPORT_FILE_NAME, exportFilePath);
