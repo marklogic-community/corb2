@@ -34,6 +34,7 @@ import static com.marklogic.developer.corb.Options.INIT_TASK;
 import static com.marklogic.developer.corb.Options.INSTALL;
 import static com.marklogic.developer.corb.Options.MODULES_DATABASE;
 import static com.marklogic.developer.corb.Options.MODULE_ROOT;
+import static com.marklogic.developer.corb.Options.NUM_TPS_FOR_ETC;
 import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
 import static com.marklogic.developer.corb.Options.POST_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.POST_BATCH_TASK;
@@ -234,6 +235,8 @@ public class Manager extends AbstractManager {
         options.setUseDiskQueue(stringToBoolean(getOption(DISK_QUEUE)));
         String diskQueueMaxInMemorySize = getOption(DISK_QUEUE_MAX_IN_MEMORY_SIZE);
         String diskQueueTempDir = getOption(DISK_QUEUE_TEMP_DIR);
+        
+        String numTpsForETC = getOption(NUM_TPS_FOR_ETC);
 
         //Check legacy properties keys, for backwards compatability
         if (processModule == null) {
@@ -274,6 +277,9 @@ public class Manager extends AbstractManager {
         }
         if (diskQueueMaxInMemorySize != null) {
             options.setDiskQueueMaxInMemorySize(Integer.parseInt(diskQueueMaxInMemorySize));
+        }
+        if (numTpsForETC != null) {
+        		options.setNumTpsForETC(Integer.parseInt(numTpsForETC));
         }
         if (!this.properties.containsKey(EXPORT_FILE_DIR) && exportFileDir != null) {
             this.properties.put(EXPORT_FILE_DIR, exportFileDir);
@@ -799,6 +805,10 @@ public class Manager extends AbstractManager {
             LOG.info("pausing");
             pool.pause();
         }
+    }
+    
+    public boolean isPaused(){
+    	return pool != null && pool.isPaused();
     }
 
     /**

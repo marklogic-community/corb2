@@ -411,6 +411,12 @@ public class Options {
     public static final String MODULE_ROOT = "MODULE-ROOT";
 
     /**
+     * Default is 10. Max number of recent tps (transaction per second) values used to calculate ETC (estimated time to completion)
+     */
+    @Usage(description = "Default is 10. Max number of recent tps values used to calculate ETC")
+    public static final String NUM_TPS_FOR_ETC="NUM_TPS_FOR_ETC";
+    
+    /**
      * A properties file containing any of the CoRB2 options. Relative and full
      * file system paths are supported.
      */

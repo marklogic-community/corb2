@@ -65,12 +65,12 @@ public class MonitorTest {
      * Test of calculateThreadsPerSecond method, of class Monitor.
      */
     @Test
-    public void testCalculateThreadsPerSecond_3args() {
+    public void testCalculateTransactionsPerSecond_3args() {
         long amountCompleted = 10L;
         long previousMillis = 1000L;
         long currentMillis = 2000L;
-        double expResult = Monitor.calculateThreadsPerSecond(amountCompleted, 0, currentMillis, previousMillis);
-        double result = Monitor.calculateThreadsPerSecond(amountCompleted, currentMillis, previousMillis);
+        double expResult = Monitor.calculateTransactionsPerSecond(amountCompleted, 0, currentMillis, previousMillis);
+        double result = Monitor.calculateTransactionsPerSecond(amountCompleted, currentMillis, previousMillis);
         assertEquals(expResult, result, DOUBLE_DELTA);
     }
 
@@ -84,7 +84,7 @@ public class MonitorTest {
         long currentMillis = 2000L;
         long previousMillis = 1000L;
         double expResult = 100.0;
-        double result = Monitor.calculateThreadsPerSecond(amountCompleted, previouslyCompleted, currentMillis, previousMillis);
+        double result = Monitor.calculateTransactionsPerSecond(amountCompleted, previouslyCompleted, currentMillis, previousMillis);
         assertEquals(expResult, result, DOUBLE_DELTA);
     }
 
@@ -98,39 +98,42 @@ public class MonitorTest {
         long currentMillis = 3000L;
         long previousMillis = 1000L;
         double expResult = 0.5;
-        double result = Monitor.calculateThreadsPerSecond(amountCompleted, previouslyCompleted, currentMillis, previousMillis);
+        double result = Monitor.calculateTransactionsPerSecond(amountCompleted, previouslyCompleted, currentMillis, previousMillis);
         assertEquals(expResult, result, DOUBLE_DELTA);
     }
 
     @Test
     public void testGetProgressMessage() {
-        assertEquals("10/100, 4 tps(avg), 3 tps(cur), ETC 00:00:22, 2 active threads.", getProgressMessage(10, 100, 4, 3, 2));
-        assertEquals("10/100, 0.4 tps(avg), 3 tps(cur), ETC 00:03:45, 2 active threads.", getProgressMessage(10, 100, 0.4, 3, 2));
-        assertEquals("10/100, 0.49 tps(avg), 3 tps(cur), ETC 00:03:03, 2 active threads.", getProgressMessage(10, 100, 0.49, 3, 2));
-        assertEquals("10/100, 0.45 tps(avg), 3 tps(cur), ETC 00:03:20, 2 active threads.", getProgressMessage(10, 100, 0.449, 3, 2));
-        assertEquals("10/100, 0.04 tps(avg), 3 tps(cur), ETC 00:34:05, 2 active threads.", getProgressMessage(10, 100, 0.044, 3, 2));
-        assertEquals("10/100, 0 tps(avg), 3 tps(cur), ETC 06:15:00, 2 active threads.", getProgressMessage(10, 100, 0.004, 3, 2));
+        assertEquals("10/100, 4 tps(avg), 3 tps(cur), ETC 00:00:11, 2 active threads.", getProgressMessage(10, 100, 4, 3, 8, 2, false));
+        assertEquals("10/100, 0.4 tps(avg), 3 tps(cur), ETC 00:07:30 (paused), 2 active threads.", getProgressMessage(10, 100, 0.4, 3, 0.2, 2, true));
+        assertEquals("10/100, 0.49 tps(avg), 3 tps(cur), ETC 00:03:03, 2 active threads.", getProgressMessage(10, 100, 0.49, 3, 0.49, 2, false));
+        assertEquals("10/100, 0.45 tps(avg), 3 tps(cur), ETC 00:03:20, 2 active threads.", getProgressMessage(10, 100, 0.449, 3, 0.449, 2, false));
+        assertEquals("10/100, 0.04 tps(avg), 3 tps(cur), ETC 00:34:05, 2 active threads.", getProgressMessage(10, 100, 0.044, 3, 0.044, 2, false));
+        assertEquals("10/100, 0 tps(avg), 3 tps(cur), ETC 06:15:00 (paused), 2 active threads.", getProgressMessage(10, 100, 0.004, 3, 0.004, 2, true));
     }
 
     @Test
     public void testGetEstimatedTimeCompletion_zero() {
-        assertEquals("00:00:-1", Monitor.getEstimatedTimeCompletion(100, 50, 0));
+    	assertEquals("00:00:-1", Monitor.getEstimatedTimeCompletion(100, 50, 0, false));
+        assertEquals("00:00:-1 (paused)", Monitor.getEstimatedTimeCompletion(100, 50, 0, true));
     }
 
     @Test
     public void testGetEstimatedTimeCompletion() {
         String fourtyFiveSeconds = "00:00:45";
-        assertEquals("02:38:20", Monitor.getEstimatedTimeCompletion(100, 5, 0.01));
-        assertEquals("01:23:20", Monitor.getEstimatedTimeCompletion(100, 50, 0.01));
-        assertEquals("00:08:20", Monitor.getEstimatedTimeCompletion(100, 50, 0.1));
-        assertEquals("00:00:50", Monitor.getEstimatedTimeCompletion(100, 50, 1.0));
-        assertEquals(fourtyFiveSeconds, Monitor.getEstimatedTimeCompletion(100, 50, 1.1));
-        assertEquals(fourtyFiveSeconds, Monitor.getEstimatedTimeCompletion(100, 50, 1.111));
-        assertEquals("00:00:44", Monitor.getEstimatedTimeCompletion(100, 50, 1.12345));
-        assertEquals("00:00:01", Monitor.getEstimatedTimeCompletion(100, 50, 49));
-        assertEquals("00:00:00", Monitor.getEstimatedTimeCompletion(100, 50, 60));
+        assertEquals("02:38:20", Monitor.getEstimatedTimeCompletion(100, 5, 0.01, false));
+        assertEquals("01:23:20", Monitor.getEstimatedTimeCompletion(100, 50, 0.01, false));
+        assertEquals("00:08:20", Monitor.getEstimatedTimeCompletion(100, 50, 0.1, false));
+        assertEquals("00:00:50", Monitor.getEstimatedTimeCompletion(100, 50, 1.0, false));
+        assertEquals(fourtyFiveSeconds, Monitor.getEstimatedTimeCompletion(100, 50, 1.1, false));
+        assertEquals(fourtyFiveSeconds, Monitor.getEstimatedTimeCompletion(100, 50, 1.111, false));
+        assertEquals("00:00:44", Monitor.getEstimatedTimeCompletion(100, 50, 1.12345, false));
+        assertEquals("00:00:01", Monitor.getEstimatedTimeCompletion(100, 50, 49, false));
+        assertEquals("00:00:00", Monitor.getEstimatedTimeCompletion(100, 50, 60, false));
 
-        assertEquals("2777:38:20", Monitor.getEstimatedTimeCompletion(100000d, 5d, 0.01d));
+        assertEquals("2777:38:20", Monitor.getEstimatedTimeCompletion(100000d, 5d, 0.01d, false));
+        
+        assertEquals("02:38:20 (paused)", Monitor.getEstimatedTimeCompletion(100, 5, 0.01, true));
     }
 
     @Test

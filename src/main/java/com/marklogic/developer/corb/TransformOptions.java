@@ -63,6 +63,8 @@ public class TransformOptions {
   private int diskQueueMaxInMemorySize = 1000;
   private File diskQueueTempDir;
 	private boolean doInstall;
+	
+	private int numTpsForETC = 10;
 
 	private boolean failOnError = true;
 
@@ -352,5 +354,15 @@ public class TransformOptions {
     
     public File getDiskQueueTempDir() {
         return this.diskQueueTempDir;
+    }
+    
+    public void setNumTpsForETC(int numTpsForETC){
+    	if(numTpsForETC > 0){
+    		this.numTpsForETC = numTpsForETC;
+    	}
+    }
+    
+    public int getNumTpsForETC(){
+    		return this.numTpsForETC;
     }
 }

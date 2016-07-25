@@ -115,6 +115,7 @@ Option | Description
 **DISK-QUEUE** | Boolean value indicating whether the CoRB job should spill to disk when a maximum number of URIs have been loaded in memory, in order to control memory consumption and avoid Out of Memory exceptions for extremely large sets of URIs.
 **DISK-QUEUE-MAX-IN-MEMORY-SIZE** | The maximum number of URIs to hold in memory before spilling over to disk. Default is 1000.
 **DISK-QUEUE-TEMP-DIR** | The directory where the URIs queue can write to disk when the maximum in-memory items has been exceeded. Default behavior is to use java.io.tmpdir.
+**NUM_TPS_FOR_ETC** | Default is 10. Number of recent transactions per second (tps) values used to calculate estimated completion time (ETC). 
 
 ### Alternate XCC connection configuration
 Option | Description
