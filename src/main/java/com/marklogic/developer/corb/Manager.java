@@ -821,7 +821,7 @@ public class Manager extends AbstractManager {
                 pool.resume();
             }
             List<Runnable> remaining = pool.shutdownNow();
-            if (remaining.size() > 0) {
+            if (!remaining.isEmpty()) {
                 LOG.log(WARNING, "thread pool was shut down with {0} pending tasks", remaining.size());
             }
             pool = null;
