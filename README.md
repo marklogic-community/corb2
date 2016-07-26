@@ -266,7 +266,7 @@ Option | Description
 ### Usage
 #### Usage 1 - Command line options:
 ```
-java -server -cp .:marklogic-xcc-8.0.4.2.jar:marklogic-corb-2.3.0.jar
+java -server -cp .:marklogic-xcc-8.0.5.jar:marklogic-corb-2.3.2.jar
         com.marklogic.developer.corb.Manager
         XCC-CONNECTION-URI
         [COLLECTION-NAME [PROCESS-MODULE [ THREAD-COUNT [ URIS-MODULE [ MODULE-ROOT
@@ -277,7 +277,7 @@ java -server -cp .:marklogic-xcc-8.0.4.2.jar:marklogic-corb-2.3.0.jar
 
 #### Usage 2 - Java system properties specifying options:
 ```
-java -server -cp .:marklogic-xcc-8.0.4.2.jar:marklogic-corb-2.3.0.jar
+java -server -cp .:marklogic-xcc-8.0.5.jar:marklogic-corb-2.3.2.jar
         -DXCC-CONNECTION-URI=xcc://user:password@host:port/[ database ]
         -DPROCESS-MODULE=module-name.xqy -DTHREAD-COUNT=10
         -DURIS-MODULE=get-uris.xqy
@@ -288,14 +288,14 @@ java -server -cp .:marklogic-xcc-8.0.4.2.jar:marklogic-corb-2.3.0.jar
 
 #### Usage 3 - Properties file specifying options:
 ```
-java -server -cp .:marklogic-xcc-8.0.4.2.jar:marklogic-corb-2.3.0.jar
+java -server -cp .:marklogic-xcc-8.0.5.jar:marklogic-corb-2.3.2.jar
         -DOPTIONS-FILE=myjob.properties com.marklogic.developer.corb.Manager
 ```
 > looks for myjob.properties file in classpath
 
 #### Usage 4 - Combination of properties file with java system properties and command line options:
 ```
-java -server -cp .:marklogic-xcc-8.0.4.2.jar:marklogic-corb-2.3.0.jar
+java -server -cp .:marklogic-xcc-8.0.5.jar:marklogic-corb-2.3.2.jar
         -DOPTIONS-FILE=myjob.properties -DTHREAD-COUNT=10
         com.marklogic.developer.corb.Manager XCC-CONNECTION-URI
 ```
