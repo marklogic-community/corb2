@@ -76,25 +76,22 @@ public abstract class AbstractTask implements Task {
     protected ContentSource cs;
     protected String moduleType;
     protected String moduleUri;
-    protected Properties properties;
+    protected Properties properties = new Properties();
     protected String[] inputUris;
 
     protected String adhocQuery;
     protected String language;
-
     protected String exportDir;
 
     private static final Object SYNC_OBJ = new Object();
     protected static final Map<String, Set<String>> MODULE_PROPS = new HashMap<String, Set<String>>();
 
-    protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
     protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
-
-    protected static final int DEFAULT_QUERY_RETRY_LIMIT = 2;
+    protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;   
     protected static final int DEFAULT_QUERY_RETRY_INTERVAL = 20;
-
+    protected static final int DEFAULT_QUERY_RETRY_LIMIT = 2;
+    
     protected int retryCount = 0;
-
     protected boolean failOnError = true;
 
     private static final Logger LOG = Logger.getLogger(AbstractTask.class.getName());
@@ -360,7 +357,7 @@ public abstract class AbstractTask implements Task {
         return trim(val);
     }
 
-    protected byte[] getValueAsBytes(XdmItem item) {
+    static protected byte[] getValueAsBytes(XdmItem item) {
         if (item instanceof XdmBinary) {
             return ((XdmBinary) item).asBinaryData();
         } else if (item != null) {

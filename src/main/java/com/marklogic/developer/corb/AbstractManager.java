@@ -68,13 +68,10 @@ public abstract class AbstractManager {
 
     protected Decrypter decrypter;
     protected SSLConfig sslConfig;
-
     protected URI connectionUri;
     protected String collection;
-    protected Properties properties = new Properties();
-    ;
 	protected TransformOptions options = new TransformOptions();
-    ;
+    protected Properties properties = new Properties();
 	protected ContentSource contentSource;
 
     protected static final int EXIT_CODE_SUCCESS = 0;
@@ -318,7 +315,6 @@ public abstract class AbstractManager {
             Usage usage = field.getAnnotation(Usage.class);
             if (usage != null && StringUtils.isNotEmpty(usage.description())) {
                 err.println(field.getName() + "\n\t" + usage.description());
-
             }
         }
 

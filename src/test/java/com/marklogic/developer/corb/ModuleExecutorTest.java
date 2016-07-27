@@ -311,7 +311,7 @@ public class ModuleExecutorTest {
         ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
         executor.init(args);
         ResultSequence resSeq = run(executor);
-        byte[] report = executor.getValueAsBytes(resSeq.next().getItem());
+        byte[] report = AbstractTask.getValueAsBytes(resSeq.next().getItem());
 
         assertNotNull(report);
     }
@@ -677,39 +677,30 @@ public class ModuleExecutorTest {
         assertNull(result);
     }
 
-    /**
-     * Test of getValueAsBytes method, of class ModuleExecutor.
-     */
     @Test
-    public void testGetValueAsBytes_withXdmBinary() {
-        XdmBinary item = mock(XdmBinary.class);
-        byte[] expected = {'a', 'b', 'c'};
-        when(item.asBinaryData()).thenReturn(expected);
-        ModuleExecutor instance = new ModuleExecutor();
-        byte[] result = instance.getValueAsBytes(item);
-        assertArrayEquals(expected, result);
+    public void testCustomProcessResults() throws RequestException, Exception {
+        String[] args = {"xcc://user:pass@localhost:8000", "module.xqy"};
+        ModuleExecutor instance = getMockModuleExecutorCustomProcessResults();
+        instance.init(args);
+        instance.run();
+        MockModuleExecutorResults moduleExecutor = (MockModuleExecutorResults)instance;
+        assertFalse(moduleExecutor.results.isEmpty());
+        assertTrue(moduleExecutor.results.size() == 2);
     }
-
-    @Test
-    public void testGetValueAsBytes() {
-        XdmItem item = mock(XdmItem.class);
-        String expected = FOO;
-        when(item.asString()).thenReturn(expected);
-        ModuleExecutor instance = new ModuleExecutor();
-        byte[] result = instance.getValueAsBytes(item);
-        assertArrayEquals(expected.getBytes(), result);
+    
+    public static ModuleExecutor getMockModuleExecutorCustomProcessResults() throws RequestException{
+        MockModuleExecutorResults manager = new MockModuleExecutorResults();
+        manager.contentSource = getMockContentSource();
+        return manager;
     }
-
-    @Test
-    public void testGetValueAsBytes_null() throws RequestException {
-        ModuleExecutor instance = getMockModuleExecutorWithEmptyResults();
-        byte[] result = instance.getValueAsBytes(null);
-        assertArrayEquals(new byte[]{}, result);
-    }
-
+    
     public static ModuleExecutor getMockModuleExecutorWithEmptyResults() throws RequestException {
         ModuleExecutor manager = new MockModuleExecutor();
-
+        manager.contentSource = getMockContentSource();
+        return manager;
+    }
+    
+    public static ContentSource getMockContentSource() throws RequestException {
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke moduleInvoke = mock(ModuleInvoke.class);
@@ -738,16 +729,26 @@ public class ModuleExecutorTest {
         when(batchRefItem.asString()).thenReturn("batchRefVal");
         when(exampleValue.asString()).thenReturn(FOO);
         when(uriCount.asString()).thenReturn("1");
-
-        manager.contentSource = contentSource;
-        return manager;
+        
+        return contentSource;
     }
-
+    
     private static class MockModuleExecutor extends ModuleExecutor {
 
-        //Want to retain the mock contentSoure that we set in our tests
+        //Want to retain the mock contentSource that we set in our tests
         @Override
         protected void prepareContentSource() throws XccConfigException, GeneralSecurityException {
         }
     }
+    
+    private static class MockModuleExecutorResults extends MockModuleExecutor {
+        public List<String> results = new ArrayList();
+        @Override
+        protected void writeToFile(ResultSequence res) {
+            while (res.hasNext()) {
+                results.add(res.next().getItem().asString());
+            }
+        }
+    }
+    
 }

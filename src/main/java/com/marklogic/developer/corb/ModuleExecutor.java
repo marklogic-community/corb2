@@ -18,6 +18,7 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.AbstractTask.TRUE;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_DIR;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
 import static com.marklogic.developer.corb.Options.MODULES_DATABASE;
@@ -41,7 +42,6 @@ import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
-import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -68,16 +68,16 @@ import java.util.logging.Logger;
 public class ModuleExecutor extends AbstractManager {
 
     protected static final String NAME = ModuleExecutor.class.getSimpleName();
-
-    private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
-    protected static final byte[] NEWLINE
+    private static final byte[] NEWLINE
             = System.getProperty("line.separator") != null ? System.getProperty("line.separator").getBytes() : "\n".getBytes();
-
     protected static final Logger LOG = Logger.getLogger(ModuleExecutor.class.getName());
     private static final String TAB = "\t";
 
     /**
-     * @param args
+     * Execute an XQuery or JavaScript module in MarkLogic
+     *
+     * @param args {@value #XCC_CONNECTION_URI} {@value #PROCESS_MODULE}
+     * [@{value #MODULE_ROOT}] [{@value #MODULES_DATABASE}] [{@value #EXPORT_FILE_DIR}] [{@value #EXPORT_FILE_NAME}]
      */
     public static void main(String[] args) {
         ModuleExecutor moduleExecutor = new ModuleExecutor();
@@ -85,9 +85,10 @@ public class ModuleExecutor extends AbstractManager {
             moduleExecutor.init(args);
         } catch (Exception exc) {
             LOG.log(SEVERE, "Error initializing ModuleExecutor", exc);
+            moduleExecutor.usage();
             System.exit(EXIT_CODE_INIT_ERROR);
         }
-        //now we can start corb. 
+
         try {
             moduleExecutor.run();
             System.exit(EXIT_CODE_SUCCESS);
@@ -234,6 +235,7 @@ public class ModuleExecutor extends AbstractManager {
                 options.setXDBC_ROOT(item.asString());
             }
         }
+
         LOG.log(INFO, "Configured modules db: {0}", options.getModulesDatabase());
         LOG.log(INFO, "Configured modules root: {0}", options.getModuleRoot());
         LOG.log(INFO, "Configured process module: {0}", options.getProcessModule());
@@ -249,11 +251,14 @@ public class ModuleExecutor extends AbstractManager {
         LOG.log(INFO, "{0} starting: {1}", new Object[]{NAME, VERSION_MSG});
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
         LOG.log(INFO, "maximum heap size = {0} MiB", maxMemory);
-        Session session;
-        Request req;
+
+        Session session = null;
+        Request request;
+        ResultSequence resultSequence = null;
+
         try {
-            RequestOptions opts = new RequestOptions();
-            opts.setCacheResult(false);
+            RequestOptions requestOptions = new RequestOptions();
+            requestOptions.setCacheResult(false);
             session = contentSource.newSession();
 
             List<String> propertyNames = new ArrayList<String>(properties.stringPropertyNames());
@@ -275,15 +280,15 @@ public class ModuleExecutor extends AbstractManager {
                     }
                     LOG.log(INFO, "invoking adhoc process module {0}", queryPath);
                 }
-                req = session.newAdhocQuery(adhocQuery);
+                request = session.newAdhocQuery(adhocQuery);
                 if (isJavaScriptModule(processModule)) {
-                    opts.setQueryLanguage("javascript");
+                    requestOptions.setQueryLanguage("javascript");
                 }
             } else {
                 String root = options.getModuleRoot();
                 String modulePath = buildModulePath(root, processModule);
                 LOG.log(INFO, "invoking module {0}", modulePath);
-                req = session.newModuleInvoke(modulePath);
+                request = session.newModuleInvoke(modulePath);
             }
 
             // custom inputs
@@ -292,20 +297,26 @@ public class ModuleExecutor extends AbstractManager {
                     String varName = propName.substring((PROCESS_MODULE + ".").length());
                     String value = getProperty(propName);
                     if (value != null) {
-                        req.setNewStringVariable(varName, value);
+                        request.setNewStringVariable(varName, value);
                     }
                 }
             }
 
-            req.setOptions(opts);
+            request.setOptions(requestOptions);
 
-            ResultSequence res = session.submitRequest(req);
-            writeToFile(res);
-
+            resultSequence = session.submitRequest(request);
+            processResult(resultSequence);
+            resultSequence.close();
             LOG.info("Done");
+
         } catch (Exception exc) {
             LOG.severe(exc.getMessage());
             throw exc;
+        } finally {
+            closeQuietly(session);
+            if (null != resultSequence && !resultSequence.isClosed()) {
+                resultSequence.close();
+            }
         }
     }
 
@@ -317,7 +328,16 @@ public class ModuleExecutor extends AbstractManager {
         return trim(val);
     }
 
-    private void writeToFile(ResultSequence seq) throws IOException {
+    protected String processResult(ResultSequence seq) throws CorbException {
+        try {
+            writeToFile(seq);
+            return TRUE;
+        } catch (IOException exc) {
+            throw new CorbException(exc.getMessage(), exc);
+        }
+    }
+
+    protected void writeToFile(ResultSequence seq) throws IOException {
         if (seq == null || !seq.hasNext()) {
             return;
         }
@@ -336,22 +356,12 @@ public class ModuleExecutor extends AbstractManager {
             }
             writer = new BufferedOutputStream(new FileOutputStream(f));
             while (seq.hasNext()) {
-                writer.write(getValueAsBytes(seq.next().getItem()));
+                writer.write(AbstractTask.getValueAsBytes(seq.next().getItem()));
                 writer.write(NEWLINE);
             }
             writer.flush();
         } finally {
             closeQuietly(writer);
-        }
-    }
-
-    protected byte[] getValueAsBytes(XdmItem item) {
-        if (item instanceof XdmBinary) {
-            return ((XdmBinary) item).asBinaryData();
-        } else if (item != null) {
-            return item.asString().getBytes();
-        } else {
-            return EMPTY_BYTE_ARRAY;
         }
     }
 
