@@ -31,10 +31,7 @@ import java.lang.annotation.Target;
  * @since 2.3.0
  */
 public class Options {
-    
-    private Options(){
-    }
-    
+
     /**
      * The number of URIs to be executed in single transform.
      * <p>
@@ -414,11 +411,12 @@ public class Options {
     public static final String MODULE_ROOT = "MODULE-ROOT";
 
     /**
-     * Default is 10. Max number of recent tps (transaction per second) values used to calculate ETC (estimated time to completion)
+     * Default is 10. Max number of recent tps (transaction per second) values
+     * used to calculate ETC (estimated time to completion)
      */
     @Usage(description = "Default is 10. Max number of recent tps values used to calculate ETC")
-    public static final String NUM_TPS_FOR_ETC="NUM-TPS-FOR-ETC";
-    
+    public static final String NUM_TPS_FOR_ETC = "NUM-TPS-FOR-ETC";
+
     /**
      * A properties file containing any of the CoRB2 options. Relative and full
      * file system paths are supported.
@@ -575,7 +573,7 @@ public class Options {
      * Module is expected to have at least one external or global variable with
      * name URI. XQuery and JavaScript modules need to have "{@code .xqy}" and
      * "{@code .sjs}" extensions respectively. If returning multiple values from
-     * a JavaScript module, values must be returned as 
+     * a JavaScript module, values must be returned as
      * <a href="https://docs.marklogic.com/js/ValueIterator">ValueIterator</a>.
      */
     @Usage(description = "XQuery or JavaScript to be executed in a batch for each URI "
@@ -916,6 +914,9 @@ public class Options {
      */
     @Usage(description = "Use PROCESS_MODULE instead")
     public static final String XQUERY_MODULE = "XQUERY-MODULE";
+
+    private Options() {
+    }
 
 }
 
