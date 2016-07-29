@@ -379,7 +379,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
      * @param args
      * @throws java.lang.Exception
      */
-    public static void main(String[] args) throws Exception {
+    public static void main(String... args) throws Exception {
         String method = (args != null && args.length > 0) ? args[0].trim() : "";
 
         if (METHOD_ENCRYPT.equals(method) && args.length == 2) {

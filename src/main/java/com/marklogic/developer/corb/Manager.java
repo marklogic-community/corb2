@@ -128,7 +128,7 @@ public class Manager extends AbstractManager {
     /**
      * @param args
      */
-    public static void main(String[] args) {
+    public static void main(String... args) {
         Manager manager = new Manager();
         try {
             manager.init(args);
@@ -203,7 +203,7 @@ public class Manager extends AbstractManager {
         }
     }
 
-    protected void initOptions(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    protected void initOptions(String... args) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         // gather inputs		
         String processModule = getOption(args.length > 2 ? args[2] : null, PROCESS_MODULE);
         String threadCount = getOption(args.length > 3 ? args[3] : null, THREAD_COUNT);

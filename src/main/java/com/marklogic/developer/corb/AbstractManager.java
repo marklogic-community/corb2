@@ -171,7 +171,7 @@ public abstract class AbstractManager {
         loadPropertiesFile(propsFileName, true, this.properties);
     }
 
-    public void init(String[] args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException {
+    public void init(String... args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException {
         init(args, null);
     }
 

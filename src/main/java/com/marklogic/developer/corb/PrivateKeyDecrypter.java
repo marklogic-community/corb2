@@ -231,7 +231,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
     }
 
     // key generator
-    public static void main(String[] args) throws Exception {
+    public static void main(String... args) throws Exception {
         String method = (args != null && args.length > 0) ? args[0].trim() : "";
         if ("gen-keys".equals(method)) {
             generateKeys(args);

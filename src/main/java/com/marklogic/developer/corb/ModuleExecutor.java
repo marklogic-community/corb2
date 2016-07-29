@@ -79,7 +79,7 @@ public class ModuleExecutor extends AbstractManager {
      * @param args {@value #XCC_CONNECTION_URI} {@value #PROCESS_MODULE}
      * [@{value #MODULE_ROOT}] [{@value #MODULES_DATABASE}] [{@value #EXPORT_FILE_DIR}] [{@value #EXPORT_FILE_NAME}]
      */
-    public static void main(String[] args) {
+    public static void main(String... args) {
         ModuleExecutor moduleExecutor = new ModuleExecutor();
         try {
             moduleExecutor.init(args);
@@ -126,7 +126,7 @@ public class ModuleExecutor extends AbstractManager {
         registerStatusInfo();
     }
 
-    protected void initOptions(String[] args) {
+    protected void initOptions(String... args) {
         String processModule = getOption(args.length > 1 ? args[1] : null, PROCESS_MODULE);
         String moduleRoot = getOption(args.length > 2 ? args[2] : null, MODULE_ROOT);
         String modulesDatabase = getOption(args.length > 3 ? args[3] : null, MODULES_DATABASE);

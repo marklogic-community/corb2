@@ -56,7 +56,7 @@ public interface Task extends Callable<String[]> {
 	 */
 	void setProperties(Properties props);
 
-	void setInputURI(String[] inputUri);
+	void setInputURI(String... inputUri);
 
 	void setFailOnError(boolean failOnError);
 	

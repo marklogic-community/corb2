@@ -128,7 +128,7 @@ public abstract class AbstractTask implements Task {
     }
 
     @Override
-    public void setInputURI(String[] inputUri) {
+    public void setInputURI(String... inputUri) {
         this.inputUris = inputUri != null ? inputUri.clone() : new String[]{};
     }
 
@@ -327,11 +327,11 @@ public abstract class AbstractTask implements Task {
         }
     }
     
-    private String failOnErrorIsFalseMessage(final String name, final String[] inputUris) {
+    private String failOnErrorIsFalseMessage(final String name, final String... inputUris) {
         return "failOnError is false. Encountered " + name + AT_URI + asString(inputUris);
     }
     
-    protected String asString(String[] uris) {
+    protected String asString(String... uris) {
         return uris == null ? "" : StringUtils.join(uris, ",");
     }
 

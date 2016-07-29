@@ -52,7 +52,7 @@ public class TaskFactory {
         this.manager = manager;
     }
 
-    public Task newProcessTask(String[] uris) {
+    public Task newProcessTask(String... uris) {
         return newProcessTask(uris, true);
     }
 
@@ -125,7 +125,7 @@ public class TaskFactory {
         }
     }
 
-    private void setupTask(Task task, String moduleType, String module, String[] uris) {
+    private void setupTask(Task task, String moduleType, String module, String... uris) {
         setupTask(task, moduleType, module, uris, true);
     }
 
