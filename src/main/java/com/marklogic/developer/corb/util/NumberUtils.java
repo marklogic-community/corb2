@@ -25,7 +25,7 @@ package com.marklogic.developer.corb.util;
 public final class NumberUtils {
 
     private NumberUtils() {
-    };
+    }
     
     /**
      * <p>Convert a <code>String</code> to an <code>int</code>, returning

@@ -31,7 +31,10 @@ import java.lang.annotation.Target;
  * @since 2.3.0
  */
 public class Options {
-
+    
+    private Options(){
+    }
+    
     /**
      * The number of URIs to be executed in single transform.
      * <p>
