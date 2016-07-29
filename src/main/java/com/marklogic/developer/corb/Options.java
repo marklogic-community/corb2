@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
  * @author Mads Hansen, MarkLogic Corporation
  * @since 2.3.0
  */
-public class Options {
+public final class Options {
 
     /**
      * The number of URIs to be executed in single transform.
