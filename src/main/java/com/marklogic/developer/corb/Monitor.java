@@ -23,6 +23,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -40,7 +41,7 @@ import java.util.logging.Logger;
 public class Monitor implements Runnable {
 
     protected static final Logger LOG = Logger.getLogger(Monitor.class.getName());
-    
+
     protected static final int DEFAULT_NUM_TPS_FOR_ETC = 10;
 
     private final CompletionService<String[]> cs;
@@ -54,8 +55,8 @@ public class Monitor implements Runnable {
     protected long completed = 0;
     private long prevCompleted = 0;
     private long prevMillis = 0;
-    
-    private final ArrayList<Double> tpsForETCList;
+
+    private final List<Double> tpsForETCList;
     private final int numTpsForEtc;
 
     /**
@@ -67,7 +68,7 @@ public class Monitor implements Runnable {
         this.pool = pool;
         this.cs = cs;
         this.manager = manager;
-        
+
         this.numTpsForEtc = manager.getOptions() != null ? manager.getOptions().getNumTpsForETC() : DEFAULT_NUM_TPS_FOR_ETC;
         this.tpsForETCList = new ArrayList<Double>(this.numTpsForEtc);
     }
@@ -103,7 +104,7 @@ public class Monitor implements Runnable {
         while (!shutdownNow) {
             // try to avoid thread starvation
             Thread.yield();
-               
+
             future = cs.poll(TransformOptions.PROGRESS_INTERVAL_MS, TimeUnit.MILLISECONDS);
             if (null != future) {
                 // record result, or throw exception
@@ -113,7 +114,7 @@ public class Monitor implements Runnable {
             }
 
             showProgress();
-            
+
             if (completed >= taskCount) {
                 if (pool.getActiveCount() > 0 || (pool.getTaskCount() - pool.getCompletedTaskCount()) > 0) {
                     LOG.log(SEVERE, "Thread pool is still active with all the tasks completed and received. We shouldn't see this message.");
@@ -132,7 +133,7 @@ public class Monitor implements Runnable {
         long current = System.currentTimeMillis();
         if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
             if (pool.isPaused()) {
-                 LOG.log(INFO, "CoRB2 has been paused. Resume execution by changing the " + Options.COMMAND + " option in the command file {0} to RESUME", manager.getOption(COMMAND_FILE));
+                LOG.log(INFO, "CoRB2 has been paused. Resume execution by changing the " + Options.COMMAND + " option in the command file {0} to RESUME", manager.getOption(COMMAND_FILE));
             }
             LOG.log(INFO, "completed {0}", getProgressMessage(completed));
             lastProgress = current;
@@ -170,31 +171,31 @@ public class Monitor implements Runnable {
         }
         prevCompleted = completed;
         prevMillis = curMillis;
-        
+
         boolean isPaused = manager.isPaused();
-        double tpsForETC = calculateTpsForETC(curTps,isPaused);       
+        double tpsForETC = calculateTpsForETC(curTps, isPaused);
         return getProgressMessage(completed, taskCount, tps, curTps, tpsForETC, pool.getActiveCount(), isPaused);
     }
-    
-    protected double calculateTpsForETC(double curTps, boolean isPaused){
-    	if(curTps == 0 && isPaused){
-    		this.tpsForETCList.clear();
-    	}else {
-    		if(this.tpsForETCList.size() >= this.numTpsForEtc){
-    			this.tpsForETCList.remove(0);
-    		}
-    		this.tpsForETCList.add(curTps);
-    	}
-    		
-      double tpsForETC = 0;
-      double sum = 0;
-      for(Double next:this.tpsForETCList){
-      	sum += next;
-      }
-      if(this.tpsForETCList.size() > 0){
-      	tpsForETC = sum / this.tpsForETCList.size();
-      }
-      return tpsForETC;
+
+    protected double calculateTpsForETC(double curTps, boolean isPaused) {
+        if (curTps == 0 && isPaused) {
+            this.tpsForETCList.clear();
+        } else {
+            if (this.tpsForETCList.size() >= this.numTpsForEtc) {
+                this.tpsForETCList.remove(0);
+            }
+            this.tpsForETCList.add(curTps);
+        }
+
+        double tpsForETC = 0;
+        double sum = 0;
+        for (Double next : this.tpsForETCList) {
+            sum += next;
+        }
+        if (this.tpsForETCList.size() > 0) {
+            tpsForETC = sum / this.tpsForETCList.size();
+        }
+        return tpsForETC;
     }
 
     static protected double calculateTransactionsPerSecond(long amountCompleted, long currentMillis, long previousMillis) {
@@ -207,26 +208,28 @@ public class Monitor implements Runnable {
 
     static protected String getProgressMessage(long completed, long taskCount, double tps, double curTps, double tpsForETC, int threads, boolean isPaused) {
         String etc = getEstimatedTimeCompletion(taskCount, completed, tpsForETC, isPaused);
-        return completed + "/" + taskCount + ", " + 
-                formatTransactionsPerSecond(tps) + " tps(avg), " + 
-                formatTransactionsPerSecond(curTps) + " tps(cur), " +
-                "ETC " + etc + ", " + 
-                threads + " active threads.";
+        return completed + "/" + taskCount + ", "
+                + formatTransactionsPerSecond(tps) + " tps(avg), "
+                + formatTransactionsPerSecond(curTps) + " tps(cur), "
+                + "ETC " + etc + ", "
+                + threads + " active threads.";
     }
 
-    static protected String getEstimatedTimeCompletion(double taskCount, double completed, double tpsForETC, boolean isPaused) {      	
-    		double ets = (tpsForETC != 0) ? (taskCount - completed) / tpsForETC : -1;
+    static protected String getEstimatedTimeCompletion(double taskCount, double completed, double tpsForETC, boolean isPaused) {
+        double ets = (tpsForETC != 0) ? (taskCount - completed) / tpsForETC : -1;
         int hours = (int) ets / 3600;
         int minutes = (int) (ets % 3600) / 60;
         int seconds = (int) ets % 60;
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds) 
-        		+ (isPaused ? " (paused)":"");
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+                + (isPaused ? " (paused)" : "");
     }
+
     /**
-     * Returns a string representation of the number. 
-     * Returns a decimal number to two places if the value is less than 1.
+     * Returns a string representation of the number. Returns a decimal number
+     * to two places if the value is less than 1.
+     *
      * @param n
-     * @return 
+     * @return
      */
     static protected String formatTransactionsPerSecond(Number n) {
         NumberFormat format = DecimalFormat.getInstance();
