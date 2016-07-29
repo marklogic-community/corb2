@@ -169,7 +169,7 @@ public abstract class AbstractTask implements Task {
         Thread.yield();// try to avoid thread starvation
         try {
             session = newSession();
-            Request request = null;
+            Request request ;
 
             Set<String> modulePropNames = MODULE_PROPS.get(moduleType);
             if (modulePropNames == null) {
