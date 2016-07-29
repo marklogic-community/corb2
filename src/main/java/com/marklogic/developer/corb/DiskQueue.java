@@ -97,6 +97,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
      * @param tempDir Directory where queue temporary files will be written to.
      */
     public DiskQueue(int maxInMemorySize, File tempDir) {
+        super();
         if (maxInMemorySize < 1) {
             throw new InvalidParameterException(DiskQueue.class.getSimpleName() + " max in-memory size must be at least one");
         }
@@ -271,6 +272,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
         private final int capacity;
 
         public MemoryQueue(int capacity) {
+            super();
             this.capacity = capacity;
             queue = new ArrayList<String>(capacity);
         }

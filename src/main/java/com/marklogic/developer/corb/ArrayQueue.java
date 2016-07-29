@@ -38,6 +38,7 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
     private int putIndex;
 
     ArrayQueue(int capacity) {
+        super();
         if (capacity < 0) {
             throw new IllegalArgumentException();
         }
