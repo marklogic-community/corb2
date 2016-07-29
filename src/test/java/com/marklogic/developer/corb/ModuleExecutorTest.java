@@ -45,7 +45,6 @@ import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ModuleInvoke;
 import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.exceptions.XccConfigException;
-import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
