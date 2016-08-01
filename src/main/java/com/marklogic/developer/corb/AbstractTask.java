@@ -31,6 +31,7 @@ import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.commaSeparatedValuesToList;
+import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 import com.marklogic.xcc.ContentSource;
@@ -87,16 +88,16 @@ public abstract class AbstractTask implements Task {
     protected static final Map<String, Set<String>> MODULE_PROPS = new HashMap<String, Set<String>>();
 
     protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
-    protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;   
+    protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
     protected static final int DEFAULT_QUERY_RETRY_INTERVAL = 20;
     protected static final int DEFAULT_QUERY_RETRY_LIMIT = 2;
-    
+
     protected int retryCount = 0;
     protected boolean failOnError = true;
 
     private static final Logger LOG = Logger.getLogger(AbstractTask.class.getName());
     private static final String AT_URI = " at URI: ";
-    
+
     @Override
     public void setContentSource(ContentSource cs) {
         this.cs = cs;
@@ -169,7 +170,7 @@ public abstract class AbstractTask implements Task {
         Thread.yield();// try to avoid thread starvation
         try {
             session = newSession();
-            Request request ;
+            Request request;
 
             Set<String> modulePropNames = MODULE_PROPS.get(moduleType);
             if (modulePropNames == null) {
@@ -209,17 +210,10 @@ public abstract class AbstractTask implements Task {
                     request.setNewStringVariable(URI, inputUris[0]);
                 } else {
                     String delim = getProperty(BATCH_URI_DELIM);
-                    if (delim == null || delim.length() == 0) {
+                    if (isEmpty(delim)) {
                         delim = DEFAULT_BATCH_URI_DELIM;
                     }
-                    StringBuilder buff = new StringBuilder();
-                    for (String uri : inputUris) {
-                        if (buff.length() > 0) {
-                            buff.append(delim);
-                        }
-                        buff.append(uri);
-                    }
-                    request.setNewStringVariable(URI, buff.toString());
+                    request.setNewStringVariable(URI, StringUtils.join(inputUris, delim));
                 }
             }
 
@@ -326,11 +320,11 @@ public abstract class AbstractTask implements Task {
             return inputUris;
         }
     }
-    
+
     private String failOnErrorIsFalseMessage(final String name, final String... inputUris) {
         return "failOnError is false. Encountered " + name + AT_URI + asString(inputUris);
     }
-    
+
     protected String asString(String... uris) {
         return uris == null ? "" : StringUtils.join(uris, ",");
     }
@@ -413,12 +407,12 @@ public abstract class AbstractTask implements Task {
         }
 
         String errorFileName = getProperty(ERROR_FILE_NAME);
-        if (errorFileName == null || errorFileName.length() == 0) {
+        if (isEmpty(errorFileName)) {
             return;
         }
 
         String delim = getProperty(BATCH_URI_DELIM);
-        if (delim == null || delim.length() == 0) {
+        if (isEmpty(delim)) {
             delim = DEFAULT_BATCH_URI_DELIM;
         }
 
