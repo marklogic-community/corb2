@@ -726,7 +726,9 @@ public class Manager extends AbstractManager {
             // now start process tasks
             monitor.setTaskCount(expectedTotalCount);
             monitorThread.start();
-
+            
+            long lastMessageMillis = System.currentTimeMillis();
+            long freeMemory;
             String uri;
             List<String> uriBatch = new ArrayList<String>(options.getBatchSize());
 
@@ -749,6 +751,17 @@ public class Manager extends AbstractManager {
                 }
 
                 urisCount++;
+                
+                if (0 == urisCount % 25000) {
+                  LOG.log(INFO, "received {0}/{1}: {2}", new Object[]{urisCount, expectedTotalCount, uri});
+
+                  if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
+                      LOG.warning("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
+                      freeMemory = Runtime.getRuntime().freeMemory();
+                      LOG.log(INFO, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
+                  }
+                  lastMessageMillis = System.currentTimeMillis();
+                }
             }
 
             if (urisCount == expectedTotalCount) {
