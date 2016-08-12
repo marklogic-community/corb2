@@ -23,6 +23,7 @@ import org.junit.*;
 import org.w3c.dom.Document;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import static org.junit.Assert.*;
@@ -138,7 +139,7 @@ public class FileXMLUrisLoaderTest {
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.open();
         assertNotNull(instance.nodeIterator);
-        ArrayList<String> nodes = new ArrayList<String>();
+        List<String> nodes = new ArrayList<String>();
         while (instance.hasNext()) {
             nodes.add(instance.next());
         }
@@ -157,7 +158,7 @@ public class FileXMLUrisLoaderTest {
 
         instance.open();
         assertNotNull(instance.nodeIterator);
-        ArrayList<String> nodes = new ArrayList<String>();
+        List<String> nodes = new ArrayList<String>();
         while (instance.hasNext()) {
             nodes.add(instance.next());
         }
@@ -176,7 +177,7 @@ public class FileXMLUrisLoaderTest {
 
         instance.open();
         assertNotNull(instance.nodeIterator);
-        ArrayList<String> nodes = new ArrayList<String>();
+        List<String> nodes = new ArrayList<String>();
         while (instance.hasNext()) {
             nodes.add(instance.next());
         }
@@ -191,7 +192,7 @@ public class FileXMLUrisLoaderTest {
 
         instance.open();
         assertNotNull(instance.nodeIterator);
-        ArrayList<String> nodes = new ArrayList<String>();
+        List<String> nodes = new ArrayList<String>();
         while (instance.hasNext()) {
             nodes.add(instance.next());
         }
@@ -205,7 +206,7 @@ public class FileXMLUrisLoaderTest {
         instance.properties.setProperty(Options.XML_NODE, "/root/a/@*");
         instance.open();
         assertNotNull(instance.nodeIterator);
-        ArrayList<String> nodes = new ArrayList<String>();
+        List<String> nodes = new ArrayList<String>();
         while (instance.hasNext()) {
             nodes.add(instance.next());
         }
@@ -223,7 +224,7 @@ public class FileXMLUrisLoaderTest {
         instance.properties.setProperty(Options.XML_NODE, "/root/a/text()");
         instance.open();
         assertNotNull(instance.nodeIterator);
-        ArrayList<String> nodes = new ArrayList<String>();
+        List<String> nodes = new ArrayList<String>();
         while (instance.hasNext()) {
             nodes.add(instance.next());
         }
@@ -240,7 +241,7 @@ public class FileXMLUrisLoaderTest {
         instance.properties.setProperty(Options.XML_NODE, "//comment()");
         instance.open();
         assertNotNull(instance.nodeIterator);
-        ArrayList<String> nodes = new ArrayList<String>();
+        List<String> nodes = new ArrayList<String>();
         while (instance.hasNext()) {
             nodes.add(instance.next());
         }
@@ -255,7 +256,7 @@ public class FileXMLUrisLoaderTest {
         instance.properties.setProperty(Options.XML_NODE, "//processing-instruction()");
         instance.open();
         assertNotNull(instance.nodeIterator);
-        ArrayList<String> nodes = new ArrayList<String>();
+        List<String> nodes = new ArrayList<String>();
         while (instance.hasNext()) {
             nodes.add(instance.next());
         }
@@ -270,7 +271,7 @@ public class FileXMLUrisLoaderTest {
         instance.properties.setProperty(Options.XML_NODE, "//comment() | //@* | /*/*/text()");
         instance.open();
         assertNotNull(instance.nodeIterator);
-        ArrayList<String> nodes = new ArrayList<String>();
+        List<String> nodes = new ArrayList<String>();
         while (instance.hasNext()) {
             nodes.add(instance.next());
         }
