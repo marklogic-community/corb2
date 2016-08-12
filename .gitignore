@@ -13,3 +13,4 @@ nb-configuration.xml
 /nbproject/
 /META-INF/
 /dependency-reduced-pom.xml
+/cov-int/
