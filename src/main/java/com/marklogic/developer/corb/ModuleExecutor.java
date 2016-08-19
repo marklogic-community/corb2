@@ -76,8 +76,7 @@ public class ModuleExecutor extends AbstractManager {
     /**
      * Execute an XQuery or JavaScript module in MarkLogic
      *
-     * @param args {@value #XCC_CONNECTION_URI} {@value #PROCESS_MODULE}
-     * [@{value #MODULE_ROOT}] [{@value #MODULES_DATABASE}] [{@value #EXPORT_FILE_DIR}] [{@value #EXPORT_FILE_NAME}]
+     * @param args
      */
     public static void main(String... args) {
         ModuleExecutor moduleExecutor = new ModuleExecutor();
