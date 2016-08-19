@@ -93,6 +93,7 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
@@ -726,8 +727,9 @@ public class Manager extends AbstractManager {
             // now start process tasks
             monitor.setTaskCount(expectedTotalCount);
             monitorThread.start();
-            
+            Level memoryLogLevel = INFO;
             long lastMessageMillis = System.currentTimeMillis();
+            final long RAM_TOTAL = Runtime.getRuntime().totalMemory();
             long freeMemory;
             String uri;
             List<String> uriBatch = new ArrayList<String>(options.getBatchSize());
@@ -758,7 +760,12 @@ public class Manager extends AbstractManager {
                   if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
                       LOG.warning("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
                       freeMemory = Runtime.getRuntime().freeMemory();
-                      LOG.log(INFO, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
+                      if (freeMemory < RAM_TOTAL * 0.2d) {
+                          memoryLogLevel = WARNING;
+                      } else {
+                          memoryLogLevel = INFO;
+                      }
+                      LOG.log(memoryLogLevel, "free memory: {0} MiB" + " of " + RAM_TOTAL/(1024*1024), (freeMemory / (1024 * 1024)));
                   }
                   lastMessageMillis = System.currentTimeMillis();
                 }
