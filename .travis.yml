@@ -20,13 +20,14 @@ env:
 script:
   # disable integration and performance tests, since we don't have a MarkLogic instance to use
   - ./gradlew check jacocoTestReport -PskipIntegrationTest -PskipPerformanceTest
-
+  - sonar-scanner -Dsonar.login=$SONAR_TOKEN
 after_success:
   #codecov.io integration
   - bash <(curl -s https://codecov.io/bash)
   - ./gradlew jacocoTestReport coveralls -PskipIntegrationTest -PskipPerformanceTest
 
-addons: 
+addons:
+  sonarqube: true
   coverity_scan:
     project:
       name: "marklogic/corb2"
