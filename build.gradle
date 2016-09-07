@@ -12,6 +12,10 @@ plugins {
     id 'com.github.kt3k.coveralls' version '2.6.3'
 }
 
+ext {
+    externalsortinginjavaVersion = '0.1.9'
+}
+
 sourceCompatibility = '1.6'
 targetCompatibility = '1.6'
 
@@ -52,11 +56,11 @@ configurations {
 
 dependencies {
     compile 'com.marklogic:marklogic-xcc:8.0.5'
-    compile 'com.google.code.externalsortinginjava:externalsortinginjava:0.1.9'
+    compile "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
     // if you want to compile without testing comment out the lines below
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile 'org.jasypt:jasypt:1.9.2'
-    testCompile 'com.github.stefanbirkner:system-rules:1.16.0' //facilitates tests for methods that invoke System.exit
+    testCompile 'com.github.stefanbirkner:system-rules:1.16.1' //facilitates tests for methods that invoke System.exit
     testCompile 'org.mockito:mockito-all:1.+'
 }
 
@@ -73,7 +77,7 @@ test {
 jar.enabled = false
 shadowJar {
     dependencies {
-        include(dependency('com.google.code.externalsortinginjava:externalsortinginjava:.*'))
+        include(dependency("com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"))
     }
     //generate same name as the jar task would
     archiveName = "${baseName}-${version}.${extension}"

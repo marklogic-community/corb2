@@ -24,7 +24,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.marklogic</groupId>
     <artifactId>marklogic-corb</artifactId>
-    <version>2.3.1</version>
+    <version>2.3.2</version>
     <packaging>jar</packaging>
 
     <name>corb</name>
@@ -47,7 +47,7 @@
         <dependency>
             <groupId>com.github.stefanbirkner</groupId>
             <artifactId>system-rules</artifactId>
-            <version>1.16.0</version>
+            <version>1.16.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
