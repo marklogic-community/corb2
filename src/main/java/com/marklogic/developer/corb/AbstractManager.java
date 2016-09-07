@@ -272,21 +272,21 @@ public abstract class AbstractManager {
     }
 
     protected void prepareContentSource() throws XccConfigException, GeneralSecurityException {
-        String error_msg_ssl = "Problem creating content source with ssl. {0}";
+        String errorMsg = "Problem creating content source with ssl. {0}";
         try {
             // support SSL
             boolean ssl = connectionUri != null && connectionUri.getScheme() != null
-                    && connectionUri.getScheme().equals("xccs");
+                    && "xccs".equals(connectionUri.getScheme());
             contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
                     : ContentSourceFactory.newContentSource(connectionUri);
         } catch (XccConfigException e) {
             LOG.log(SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly.{0}", e.getMessage());
             throw e;
         } catch (KeyManagementException e) {
-            LOG.log(SEVERE, error_msg_ssl, e.getMessage());
+            LOG.log(SEVERE, errorMsg, e.getMessage());
             throw e;
         } catch (NoSuchAlgorithmException e) {
-            LOG.log(SEVERE, error_msg_ssl, e.getMessage());
+            LOG.log(SEVERE, errorMsg, e.getMessage());
             throw e;
         }
     }
