@@ -13,7 +13,7 @@ plugins {
 }
 
 ext {
-    externalsortinginjavaVersion = '0.1.9'
+    externalsortinginjavaVersion = '0.2.2'
 }
 
 sourceCompatibility = '1.8'
