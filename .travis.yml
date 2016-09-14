@@ -9,7 +9,6 @@ cache:
 
 jdk:
   - oraclejdk8
-  - oraclejdk7
 
 env:
   global:
@@ -20,7 +19,7 @@ env:
 script:
   # disable integration and performance tests, since we don't have a MarkLogic instance to use
   - ./gradlew check jacocoTestReport -PskipIntegrationTest -PskipPerformanceTest
-  #- sonar-scanner -Dsonar.login=$SONAR_TOKEN
+  - sonar-scanner -Dsonar.login=$SONAR_TOKEN
 after_success:
   #codecov.io integration
   - bash <(curl -s https://codecov.io/bash)
