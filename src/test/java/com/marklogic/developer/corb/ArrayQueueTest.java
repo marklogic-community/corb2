@@ -20,6 +20,7 @@ package com.marklogic.developer.corb;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Queue;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -37,7 +38,7 @@ public class ArrayQueueTest {
      */
     @Test
     public void testSize() {
-        ArrayQueue<String> instance = new ArrayQueue<String>(10);
+        Queue<String> instance = new ArrayQueue<>(10);
         assertEquals(0, instance.size());
 
         instance.add(FOO);
@@ -46,7 +47,7 @@ public class ArrayQueueTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testSizeNegativeInit() {
-        new ArrayQueue<String>(-1);
+        new ArrayQueue<>(-1);
         fail();
     }
 
@@ -55,7 +56,7 @@ public class ArrayQueueTest {
      */
     @Test
     public void testPeek() {
-        ArrayQueue<String> instance = new ArrayQueue<String>(10);
+        Queue<String> instance = new ArrayQueue<>(10);
 
         String result = instance.peek();
         assertNull(result);
@@ -69,7 +70,7 @@ public class ArrayQueueTest {
      */
     @Test
     public void testPoll() {
-        ArrayQueue<String> instance = new ArrayQueue<String>(1);
+        Queue<String> instance = new ArrayQueue<>(1);
 
         String result = instance.poll();
         assertNull(result);
@@ -83,7 +84,7 @@ public class ArrayQueueTest {
      */
     @Test
     public void testOffer() {
-        ArrayQueue<String> instance = new ArrayQueue<String>(1);
+        Queue<String> instance = new ArrayQueue<>(1);
 
         assertTrue(instance.offer(FOO));
         assertFalse(instance.offer(FOO));
@@ -120,7 +121,7 @@ public class ArrayQueueTest {
 
     @Test
     public void testIteratorEmpty() {
-        ArrayQueue<String> instance = new ArrayQueue<String>(2);
+        Queue<String> instance = new ArrayQueue<>(2);
         Iterator<String> iterator = instance.iterator();
         assertFalse(iterator.hasNext());
     }
@@ -130,7 +131,7 @@ public class ArrayQueueTest {
      */
     @Test
     public void testRemoveAt() {
-        ArrayQueue<String> instance = new ArrayQueue<String>(2);
+        ArrayQueue<String> instance = new ArrayQueue<>(2);
         instance.add(FOO);
         instance.add(BAR);
         instance.removeAt(0);
@@ -145,7 +146,7 @@ public class ArrayQueueTest {
      */
     @Test
     public void testRemove() {
-        ArrayQueue<String> instance = new ArrayQueue<String>(2);
+        Queue<String> instance = new ArrayQueue<>(2);
         instance.add(FOO);
         instance.add(BAR);
         Iterator<String> iterator = instance.iterator();
@@ -161,7 +162,7 @@ public class ArrayQueueTest {
      */
     @Test(expected = IllegalStateException.class)
     public void testRemoveTwice() {
-        ArrayQueue<String> instance = new ArrayQueue<String>(2);
+        Queue<String> instance = new ArrayQueue<>(2);
         instance.add(FOO);
         instance.add(BAR);
         Iterator<String> iterator = instance.iterator();
@@ -176,7 +177,7 @@ public class ArrayQueueTest {
      */
     @Test(expected = NoSuchElementException.class)
     public void testNextWhenEmpty() {
-        ArrayQueue<String> instance = new ArrayQueue<String>(2);
+        Queue<String> instance = new ArrayQueue<>(2);
         instance.iterator().next();
         fail();
     }
@@ -186,7 +187,7 @@ public class ArrayQueueTest {
      */
     @Test (expected = NullPointerException.class)
     public void testOfferNull() {
-        ArrayQueue<String> instance = new ArrayQueue<String>(2);
+        Queue<String> instance = new ArrayQueue<>(2);
         instance.offer(null);
         fail();
     }

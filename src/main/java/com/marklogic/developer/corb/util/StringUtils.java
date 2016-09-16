@@ -233,7 +233,7 @@ public final class StringUtils {
      * @return 
      */
     public static List<String> commaSeparatedValuesToList(String value) {
-        List<String> values = new ArrayList<String>();    
+        List<String> values = new ArrayList<>();    
         for (String item : split(value, ",")) {
             values.add(item.trim());
         }

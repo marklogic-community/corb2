@@ -536,14 +536,14 @@ public class ModuleExecutorTest {
             TransformOptions options = executor.getOptions();
             Properties properties = executor.getProperties();
 
-            List<String> propertyNames = new ArrayList<String>(
+            List<String> propertyNames = new ArrayList<>(
                     properties.stringPropertyNames());
             propertyNames.addAll(System.getProperties().stringPropertyNames());
 
             String queryPath = options.getProcessModule().substring(0, options.getProcessModule().indexOf('|'));
 
             String adhocQuery = AbstractManager.getAdhocQuery(queryPath);
-            if (adhocQuery == null || adhocQuery.length() == 0) {
+            if (StringUtils.isEmpty(adhocQuery)) {
                 throw new IllegalStateException(
                         "Unable to read adhoc query " + queryPath
                         + " from classpath or filesystem");

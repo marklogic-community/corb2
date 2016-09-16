@@ -29,7 +29,7 @@ import java.util.logging.Handler;
  */
 public class TestHandler extends Handler {
 
-    private final List<LogRecord> logRecords = new ArrayList<LogRecord>();
+    private final List<LogRecord> logRecords = new ArrayList<>();
     
     @Override
     public void publish(LogRecord logRecord){
@@ -45,7 +45,7 @@ public class TestHandler extends Handler {
     }
 
     public List<LogRecord> getLogRecords() {
-        return new ArrayList<LogRecord>(logRecords);
+        return new ArrayList<>(logRecords);
     }
 
     public void clear() {

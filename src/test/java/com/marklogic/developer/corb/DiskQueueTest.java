@@ -39,37 +39,37 @@ import static org.junit.Assert.*;
 public class DiskQueueTest {
 
     private final TestHandler testLogger = new TestHandler();
-    private static final Logger logger = Logger.getLogger(DiskQueue.class.getName());
+    private static final Logger LOG = Logger.getLogger(DiskQueue.class.getName());
 
     @Before
     public void setUp() {
-        logger.addHandler(testLogger);
+        LOG.addHandler(testLogger);
     }
 
     @Test(expected = InvalidParameterException.class)
     public void testDiskQueue_sizeTooSmall() {
-        new DiskQueue<String>(0);
+        new DiskQueue<>(0);
         fail();
     }
 
     @Test(expected = InvalidParameterException.class)
     public void testDiskQueue_tempDirNotDir() throws IOException {
         File tmpFile = File.createTempFile("tmp", "txt");
-        new DiskQueue<String>(0, tmpFile);
+        new DiskQueue<>(0, tmpFile);
         fail();
     }
 
     @Test(expected = InvalidParameterException.class)
     public void testDiskQueue_tempFileDoesNotExist() throws IOException {
         File tmpFile = new File("/does/not/exist");
-        new DiskQueue<String>(0, tmpFile);
+        new DiskQueue<>(0, tmpFile);
         fail();
     }
 
     @Test(expected = InvalidParameterException.class)
     public void testDiskQueue_tempDirIsNull() throws IOException {
         File tmpFile = null;
-        new DiskQueue<String>(0, tmpFile);
+        new DiskQueue<>(0, tmpFile);
         fail();
     }
 
@@ -77,13 +77,13 @@ public class DiskQueueTest {
     public void testDiskQueue_tempDirDoesNotExist() throws IOException {
         File tmpFile = TestUtils.createTempDirectory();
         tmpFile.delete();
-        new DiskQueue<String>(0, tmpFile);
+        new DiskQueue<>(0, tmpFile);
         fail();
     }
 
     @Test
     public void testDiskQueue_finalizeWhileOpen() throws IOException, Throwable {
-        DiskQueue<String> instance = new DiskQueue<String>(1);
+        DiskQueue<String> instance = new DiskQueue<>(1);
         instance.add("first");
         instance.add("second");
         instance.add("third");
@@ -100,7 +100,7 @@ public class DiskQueueTest {
         String one = "one";
         String two = "two";
         String three = "three";
-        Queue<String> instance = new DiskQueue<String>(1);
+        Queue<String> instance = new DiskQueue<>(1);
         assertEquals(0, instance.size());
         instance.add(one);
         assertEquals(1, instance.size());
@@ -119,7 +119,7 @@ public class DiskQueueTest {
      */
     @Test
     public void testFinalize() throws Exception {
-        DiskQueue<String> instance = new DiskQueue<String>(1);
+        DiskQueue<String> instance = new DiskQueue<>(1);
         try {
             instance.finalize();
         } catch (Throwable ex) {
@@ -132,7 +132,7 @@ public class DiskQueueTest {
      */
     @Test(expected = RuntimeException.class)
     public void testIterator() {
-        Queue<String> instance = new DiskQueue<String>(1);
+        Queue<String> instance = new DiskQueue<>(1);
         instance.iterator();
         fail();
     }
@@ -142,7 +142,7 @@ public class DiskQueueTest {
      */
     @Test
     public void testSize() {
-        Queue<String> instance = new DiskQueue<String>(1);
+        Queue<String> instance = new DiskQueue<>(1);
         assertEquals(0, instance.size());
         instance.add("testSize");
         int result = instance.size();
@@ -154,14 +154,14 @@ public class DiskQueueTest {
      */
     @Test
     public void testOffer() {
-        Queue<String> instance = new DiskQueue<String>(1);
+        Queue<String> instance = new DiskQueue<>(1);
         boolean result = instance.offer("test1");
         assertTrue(result);
     }
 
     @Test(expected = NullPointerException.class)
     public void testOffer_null() {
-        Queue<String> instance = new DiskQueue<String>(1);
+        Queue<String> instance = new DiskQueue<>(1);
         instance.offer(null);
         fail();
     }
@@ -171,7 +171,7 @@ public class DiskQueueTest {
      */
     @Test
     public void testPeek() {
-        Queue<String> instance = new DiskQueue<String>(1);
+        Queue<String> instance = new DiskQueue<>(1);
         assertNull(instance.peek());
         String item = "testPeek";
         instance.add(item);
@@ -183,7 +183,7 @@ public class DiskQueueTest {
      */
     @Test
     public void testRemove() {
-        Queue<String> instance = new DiskQueue<String>(1);
+        Queue<String> instance = new DiskQueue<>(1);
         String element = "testRemove";
         instance.add(element);
         String result = instance.remove();
@@ -192,7 +192,7 @@ public class DiskQueueTest {
 
     @Test(expected = IndexOutOfBoundsException.class)
     public void testRemove_whenEmpty() {
-        Queue<String> instance = new DiskQueue<String>(1);
+        Queue<String> instance = new DiskQueue<>(1);
         instance.remove();
         fail();
     }
@@ -202,7 +202,7 @@ public class DiskQueueTest {
      */
     @Test
     public void testPoll() {
-        Queue<String> instance = new DiskQueue<String>(1);
+        Queue<String> instance = new DiskQueue<>(1);
         String element = "testPoll";
         instance.add(element);
         Object result = instance.poll();
@@ -211,7 +211,7 @@ public class DiskQueueTest {
 
     @Test
     public void testPoll_whenEmpty() {
-        DiskQueue<String> instance = new DiskQueue<String>(1);
+        Queue<String> instance = new DiskQueue<>(1);
         Object result = instance.poll();
         assertNull(result);
     }
@@ -221,7 +221,7 @@ public class DiskQueueTest {
      */
     @Test
     public void testClear() {
-        Queue<String> instance = new DiskQueue<String>(1);
+        Queue<String> instance = new DiskQueue<>(1);
         instance.add("testClear");
         instance.clear();
         assertEquals(0, instance.size());

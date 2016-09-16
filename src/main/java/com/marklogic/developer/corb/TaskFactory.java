@@ -41,8 +41,8 @@ import java.util.Map;
 public class TaskFactory {
 
     protected Manager manager;
-    private final Map<String, String> moduleToAdhocQueryMap = new HashMap<String, String>();
-    private final Map<String, String> moduleToPathMap = new HashMap<String, String>();
+    private final Map<String, String> moduleToAdhocQueryMap = new HashMap<>();
+    private final Map<String, String> moduleToPathMap = new HashMap<>();
     private static final String EXCEPTION_MSG_UNABLE_READ_ADHOC = "Unable to read adhoc query ";
     private static final String EXCEPTION_MSG_NULL_CONTENT = "null content source";
     /**
@@ -171,7 +171,7 @@ public class TaskFactory {
         task.setExportDir(manager.getOptions().getExportFileDir());
 
         if (task instanceof ExportBatchToFileTask) {
-            String fileName = ((ExportBatchToFileTask) task).getFileName();
+            String fileName = ((ExportToFileTask) task).getFileName();
             if (isBlank(fileName)) {
                 throw new IllegalArgumentException("No file name for ExportBatchToFileTask");
             }

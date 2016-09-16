@@ -106,7 +106,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
         }
         
         this.tempDir = tempDir;
-        memoryQueue = new MemoryQueue<E>(maxInMemorySize);
+        memoryQueue = new MemoryQueue<>(maxInMemorySize);
         refillMemoryRatio = DEFAULT_REFILL_RATIO;
     }
 
@@ -274,7 +274,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
         public MemoryQueue(int capacity) {
             super();
             this.capacity = capacity;
-            queue = new ArrayList<String>(capacity);
+            queue = new ArrayList<>(capacity);
         }
 
         @Override

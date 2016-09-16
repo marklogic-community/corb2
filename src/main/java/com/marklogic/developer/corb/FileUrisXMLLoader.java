@@ -96,7 +96,7 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
                 nodeList = (NodeList) result;
             }
 
-            nodeMap = new ConcurrentHashMap<Integer, Node>(nodeList.getLength());
+            nodeMap = new ConcurrentHashMap<>(nodeList.getLength());
 
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Node node = nodeList.item(i);

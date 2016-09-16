@@ -70,7 +70,7 @@ public class Monitor implements Runnable {
         this.manager = manager;
 
         this.numTpsForEtc = manager.getOptions() != null ? manager.getOptions().getNumTpsForETC() : DEFAULT_NUM_TPS_FOR_ETC;
-        this.tpsForETCList = new ArrayList<Double>(this.numTpsForEtc);
+        this.tpsForETCList = new ArrayList<>(this.numTpsForEtc);
     }
 
     /*

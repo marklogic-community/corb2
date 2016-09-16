@@ -89,7 +89,7 @@ public class StringUtilsTest {
 
     @Test
     public void testJoin_emptyList() {
-        List<String> items = new ArrayList<String>();
+        List<String> items = new ArrayList<>();
         String result = StringUtils.join(items, DELIM);
         assertEquals("", result);
     }
