@@ -103,7 +103,7 @@ public class TestUtils {
 
     public static boolean containsLogRecord(List<LogRecord> logRecords, LogRecord logRecord) {
         return logRecords.stream()
-                .anyMatch((record) -> (record.getLevel().equals(logRecord.getLevel()) && 
+                .anyMatch(record -> (record.getLevel().equals(logRecord.getLevel()) && 
                         record.getMessage().equals(logRecord.getMessage())));
     }
 }
