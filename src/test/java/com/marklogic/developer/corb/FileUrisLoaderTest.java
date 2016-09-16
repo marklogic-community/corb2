@@ -244,9 +244,9 @@ public class FileUrisLoaderTest {
             TransformOptions options = new TransformOptions();
             File file = File.createTempFile("temp", ".txt");
             file.deleteOnExit();
-            Writer writer = new FileWriter(file);
-            writer.append("foo\n\nbar");
-            writer.close();
+            try (Writer writer = new FileWriter(file)) {
+                writer.append("foo\n\nbar");
+            }
             options.setUrisFile(file.getAbsolutePath());
             instance.options = options;
             instance.open();
