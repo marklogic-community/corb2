@@ -91,19 +91,19 @@ public class TestUtils {
     }
 
     public static void clearFile(File file) {
-        try (PrintWriter pw  = new PrintWriter(file)){          
+        try (PrintWriter pw = new PrintWriter(file)) {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
 
     public static File createTempDirectory() throws IOException {
-        return Files.createTempDirectory("temp", new FileAttribute<?>[0]).toFile();  
+        return Files.createTempDirectory("temp", new FileAttribute<?>[0]).toFile();
     }
 
     public static boolean containsLogRecord(List<LogRecord> logRecords, LogRecord logRecord) {
         return logRecords.stream()
-                .anyMatch(record -> (record.getLevel().equals(logRecord.getLevel()) && 
-                        record.getMessage().equals(logRecord.getMessage())));
+                .anyMatch(record -> (record.getLevel().equals(logRecord.getLevel())
+                        && record.getMessage().equals(logRecord.getMessage())));
     }
 }
