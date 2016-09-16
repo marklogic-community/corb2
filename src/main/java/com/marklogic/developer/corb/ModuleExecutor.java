@@ -26,7 +26,6 @@ import static com.marklogic.developer.corb.Options.MODULE_ROOT;
 import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
@@ -174,7 +173,7 @@ public class ModuleExecutor extends AbstractManager {
     @Override
     protected void usage() {
         super.usage();
-        List<String> args = new ArrayList<String>(5);
+        List<String> args = new ArrayList<>(5);
         String xcc_connection_uri = "xcc://user:password@host:port/[ database ]";
         String options_file = "myjob.properties";
         PrintStream err = System.err;
@@ -251,18 +250,17 @@ public class ModuleExecutor extends AbstractManager {
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
         LOG.log(INFO, "maximum heap size = {0} MiB", maxMemory);
 
-        Session session = null;
         Request request;
         ResultSequence resultSequence = null;
 
-        try {
-            RequestOptions requestOptions = new RequestOptions();
-            requestOptions.setCacheResult(false);
-            session = contentSource.newSession();
-
-            List<String> propertyNames = new ArrayList<String>(properties.stringPropertyNames());
-            propertyNames.addAll(System.getProperties().stringPropertyNames());
-            String processModule = options.getProcessModule();
+        RequestOptions requestOptions = new RequestOptions();
+        requestOptions.setCacheResult(false);
+        
+        List<String> propertyNames = new ArrayList<>(properties.stringPropertyNames());
+        propertyNames.addAll(System.getProperties().stringPropertyNames());
+        String processModule = options.getProcessModule();
+            
+        try (Session session = contentSource.newSession()) {   
             if (isInlineOrAdhoc(processModule)) {
                 String adhocQuery;
                 if (isInlineModule(processModule)) {
@@ -305,14 +303,13 @@ public class ModuleExecutor extends AbstractManager {
 
             resultSequence = session.submitRequest(request);
             processResult(resultSequence);
-            resultSequence.close();
+
             LOG.info("Done");
 
         } catch (Exception exc) {
             LOG.severe(exc.getMessage());
             throw exc;
         } finally {
-            closeQuietly(session);
             if (null != resultSequence && !resultSequence.isClosed()) {
                 resultSequence.close();
             }
@@ -346,22 +343,18 @@ public class ModuleExecutor extends AbstractManager {
             return;
         }
         LOG.info("Writing output to file");
-
-        BufferedOutputStream writer = null;
-        try {
-            File f = new File(fileDir, fileName);
-            if (f.getParentFile() != null) {
-                f.getParentFile().mkdirs();
-            }
-            writer = new BufferedOutputStream(new FileOutputStream(f));
+ 
+        File file = new File(fileDir, fileName);
+        if (file.getParentFile() != null) {
+            file.getParentFile().mkdirs();
+        }
+        try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(file))) {
             while (seq.hasNext()) {
                 writer.write(AbstractTask.getValueAsBytes(seq.next().getItem()));
                 writer.write(NEWLINE);
             }
             writer.flush();
-        } finally {
-            closeQuietly(writer);
-        }
+        }   
     }
 
 }

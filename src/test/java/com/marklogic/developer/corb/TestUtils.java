@@ -18,11 +18,12 @@
  */
 package com.marklogic.developer.corb;
 
-import com.marklogic.developer.corb.util.IOUtils;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileAttribute;
 import java.util.List;
 import java.util.Scanner;
 import java.util.logging.LogRecord;
@@ -81,43 +82,28 @@ public class TestUtils {
     }
 
     public static String readFile(File file) throws FileNotFoundException {
-        // \A == The beginning of the input
-        Scanner scanner = new Scanner(file, "UTF-8");
-        String result = scanner.useDelimiter("\\A").next();
-        scanner.close();
+        String result;
+        try ( // \A == The beginning of the input
+                Scanner scanner = new Scanner(file, "UTF-8")) {
+            result = scanner.useDelimiter("\\A").next();
+        }
         return result;
     }
 
     public static void clearFile(File file) {
-        PrintWriter pw = null;
-        try {
-            pw = new PrintWriter(file);
+        try (PrintWriter pw  = new PrintWriter(file)){          
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        IOUtils.closeQuietly(pw);
     }
 
-    //TODO: remove this, and upgrade code to use Files.createTempDirectory() when we upgrade to a JRE >= 1.7
     public static File createTempDirectory() throws IOException {
-        final File temp;
-        temp = File.createTempFile("temp", Long.toString(System.nanoTime()));
-        if (!(temp.delete())) {
-            throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
-        }
-        if (!(temp.mkdir())) {
-            throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
-        }
-        return temp;
+        return Files.createTempDirectory("temp", new FileAttribute<?>[0]).toFile();  
     }
 
     public static boolean containsLogRecord(List<LogRecord> logRecords, LogRecord logRecord) {
-        for (LogRecord record : logRecords) {
-            if (record.getLevel().equals(logRecord.getLevel())
-                    && record.getMessage().equals(logRecord.getMessage())) {
-                return true;
-            }
-        }
-        return false;
+        return logRecords.stream()
+                .anyMatch((record) -> (record.getLevel().equals(logRecord.getLevel()) && 
+                        record.getMessage().equals(logRecord.getMessage())));
     }
 }

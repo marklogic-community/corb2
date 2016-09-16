@@ -28,7 +28,6 @@ import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_CODES;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_MESSAGE;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_INTERVAL;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.commaSeparatedValuesToList;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
@@ -48,6 +47,7 @@ import com.marklogic.xcc.types.XdmItem;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -85,7 +85,7 @@ public abstract class AbstractTask implements Task {
     protected String exportDir;
 
     private static final Object SYNC_OBJ = new Object();
-    protected static final Map<String, Set<String>> MODULE_PROPS = new HashMap<String, Set<String>>();
+    protected static final Map<String, Set<String>> MODULE_PROPS = new HashMap<>();
 
     protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
     protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
@@ -177,7 +177,7 @@ public abstract class AbstractTask implements Task {
                 synchronized (SYNC_OBJ) {
                     modulePropNames = MODULE_PROPS.get(moduleType);
                     if (modulePropNames == null) {
-                        Set<String> propSet = new HashSet<String>();
+                        Set<String> propSet = new HashSet<>();
                         if (properties != null) {
                             for (String propName : properties.stringPropertyNames()) {
                                 if (propName.startsWith(moduleType + ".")) {
@@ -357,7 +357,7 @@ public abstract class AbstractTask implements Task {
         } else if (item != null) {
             return item.asString().getBytes();
         } else {
-            return EMPTY_BYTE_ARRAY;
+            return EMPTY_BYTE_ARRAY.clone();
         }
     }
 
@@ -416,10 +416,8 @@ public abstract class AbstractTask implements Task {
             delim = DEFAULT_BATCH_URI_DELIM;
         }
 
-        synchronized (ERROR_SYNC_OBJ) {
-            BufferedOutputStream writer = null;
-            try {
-                writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, errorFileName), true));
+        synchronized (ERROR_SYNC_OBJ) {      
+            try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, errorFileName), true))){              
                 for (String uri : uris) {
                     writer.write(uri.getBytes());
                     if (isNotEmpty(message)) {
@@ -431,9 +429,7 @@ public abstract class AbstractTask implements Task {
                 writer.flush();
             } catch (Exception exc) {
                 LOG.log(SEVERE, "Problem writing uris to " + ERROR_FILE_NAME, exc);
-            } finally {
-                closeQuietly(writer);
-            }
+            } 
         }
     }
 

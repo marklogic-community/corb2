@@ -27,7 +27,6 @@ import static com.marklogic.developer.corb.Options.XCC_HOSTNAME;
 import static com.marklogic.developer.corb.Options.XCC_PASSWORD;
 import static com.marklogic.developer.corb.Options.XCC_PORT;
 import static com.marklogic.developer.corb.Options.XCC_USERNAME;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.IOUtils.isDirectory;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
@@ -93,9 +92,7 @@ public abstract class AbstractManager {
     protected static Properties loadPropertiesFile(String filename, boolean excIfNotFound, Properties props) throws IOException {
         String name = trim(filename);
         if (isNotBlank(name)) {
-            InputStream is = null;
-            try {
-                is = Manager.class.getResourceAsStream("/" + name);
+            try (InputStream is = Manager.class.getResourceAsStream("/" + name)) {
                 if (is != null) {
                     LOG.log(INFO, "Loading {0} from classpath", name);
                     props.load(is);
@@ -103,30 +100,23 @@ public abstract class AbstractManager {
                     File f = new File(filename);
                     if (f.exists() && !f.isDirectory()) {
                         LOG.log(INFO, "Loading {0} from filesystem", name);
-                        FileInputStream fis = null;
-                        try {
-                            fis = new FileInputStream(f);
+                        try (FileInputStream fis = new FileInputStream(f)) {
                             props.load(fis);
-                        } finally {
-                            closeQuietly(fis);
                         }
                     } else if (excIfNotFound) {
                         throw new IllegalStateException("Unable to load properties file " + name);
                     }
                 }
-            } finally {
-                closeQuietly(is);
             }
         }
         return props;
     }
 
     public static String getAdhocQuery(String module) {
-        InputStream is = null;
-        InputStreamReader reader = null;
-        StringWriter writer = null;
+        
+       
         try {
-            is = TaskFactory.class.getResourceAsStream("/" + module);
+            InputStream is  = TaskFactory.class.getResourceAsStream("/" + module);
             if (is == null) {
                 File f = new File(module);
                 if (f.exists() && !f.isDirectory()) {
@@ -137,24 +127,19 @@ public abstract class AbstractManager {
             } else if (isDirectory(is)) {
                 throw new IllegalStateException("Adhoc query module cannot be a directory");
             }
-
-            reader = new InputStreamReader(is);
-            writer = new StringWriter();
-            char[] buffer = new char[512];
-            int n = 0;
-            while (-1 != (n = reader.read(buffer))) {
-                writer.write(buffer, 0, n);
-            }
-            writer.close();
-            reader.close();
-
-            return writer.toString().trim();
+         
+            try (InputStreamReader reader = new InputStreamReader(is);
+                    StringWriter writer = new StringWriter()) {
+                
+                char[] buffer = new char[512];
+                int n = 0;
+                while (-1 != (n = reader.read(buffer))) {
+                    writer.write(buffer, 0, n);
+                }   
+                return writer.toString().trim();
+            }     
         } catch (IOException exc) {
             throw new IllegalStateException("Problem reading adhoc query module " + module, exc);
-        } finally {
-            closeQuietly(writer);
-            closeQuietly(reader);
-            closeQuietly(is);
         }
     }
 
@@ -282,10 +267,7 @@ public abstract class AbstractManager {
         } catch (XccConfigException e) {
             LOG.log(SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly.{0}", e.getMessage());
             throw e;
-        } catch (KeyManagementException e) {
-            LOG.log(SEVERE, errorMsg, e.getMessage());
-            throw e;
-        } catch (NoSuchAlgorithmException e) {
+        } catch (KeyManagementException | NoSuchAlgorithmException e) {
             LOG.log(SEVERE, errorMsg, e.getMessage());
             throw e;
         }
@@ -334,7 +316,7 @@ public abstract class AbstractManager {
     protected void logRuntimeArgs() {
         RuntimeMXBean runtimemxBean = ManagementFactory.getRuntimeMXBean();
         List<String> arguments = runtimemxBean.getInputArguments();
-        List<String> argsToLog = new ArrayList<String>(arguments.size());
+        List<String> argsToLog = new ArrayList<>(arguments.size());
         for (String argument : arguments) {
             if (!argument.startsWith("-DXCC")) {
                 argsToLog.add(argument);

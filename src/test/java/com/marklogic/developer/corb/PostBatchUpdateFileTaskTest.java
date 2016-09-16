@@ -239,15 +239,15 @@ public class PostBatchUpdateFileTaskTest {
         
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
-        FileWriter writer = new FileWriter(file, true);
-        writer.append(header);
-        writer.append(Z);
-        writer.append(D);
-        writer.append(D);
-        writer.append(A);
-        writer.append(B);
-        writer.flush();
-        writer.close();
+        try (FileWriter writer = new FileWriter(file, true)) {
+            writer.append(header);
+            writer.append(Z);
+            writer.append(D);
+            writer.append(D);
+            writer.append(A);
+            writer.append(B);
+            writer.flush();
+        }
 
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, header);
@@ -291,15 +291,15 @@ public class PostBatchUpdateFileTaskTest {
         
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
-        FileWriter writer = new FileWriter(file, true);
-        writer.append("z...\n");
-        String d_dot_dot_dot_newline = "d....\n";
-        writer.append(d_dot_dot_dot_newline);
-        writer.append(d_dot_dot_dot_newline);
-        writer.append("a.....\n");
-        writer.append(B);
-        writer.flush();
-        writer.close();
+        try (FileWriter writer = new FileWriter(file, true)) {
+            writer.append("z...\n");
+            String d_dot_dot_dot_newline = "d....\n";
+            writer.append(d_dot_dot_dot_newline);
+            writer.append(d_dot_dot_dot_newline);
+            writer.append("a.....\n");
+            writer.append(B);
+            writer.flush();
+        }
 
         Properties props = new Properties();
         if (comparator != null) {
@@ -372,13 +372,13 @@ public class PostBatchUpdateFileTaskTest {
 
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
-        FileWriter writer = new FileWriter(file, true);
-        writer.append(Z);
-        writer.append(D);
-        writer.append(D);
-        writer.append(A);
-        writer.append(B);
-        writer.close();
+        try (FileWriter writer = new FileWriter(file, true)) {
+            writer.append(Z);
+            writer.append(D);
+            writer.append(D);
+            writer.append(A);
+            writer.append(B);
+        }
         return testRemoveDuplicatesAndSort(file, props);
     }
 
@@ -423,9 +423,9 @@ public class PostBatchUpdateFileTaskTest {
     private File createSampleFile(String extension) throws IOException {
         File file = File.createTempFile(TEMP_FILE_PREFIX, extension);
         file.deleteOnExit();
-        FileWriter writer = new FileWriter(file, true);
-        writer.append(EXAMPLE_CONTENT);
-        writer.close();
+        try (FileWriter writer = new FileWriter(file, true)) {
+            writer.append(EXAMPLE_CONTENT);
+        }
         return file;
     }
 

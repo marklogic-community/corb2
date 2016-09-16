@@ -31,9 +31,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -41,7 +43,10 @@ import java.security.spec.X509EncodedKeySpec;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.xml.bind.DatatypeConverter;
 
 public class PrivateKeyDecrypter extends AbstractDecrypter {
@@ -147,7 +152,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
                 final Cipher cipher = Cipher.getInstance(algorithm);
                 cipher.init(Cipher.DECRYPT_MODE, privateKey);
                 dValue = new String(cipher.doFinal(DatatypeConverter.parseBase64Binary(value)));
-            } catch (Exception exc) {
+            } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException exc) {
                 LOG.log(INFO, "Cannot decrypt {0}. Ignore if clear text.", property);
             }
         }
@@ -183,19 +188,14 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
         PrivateKey privateKey = keyPair.getPrivate();
         PublicKey publicKey = keyPair.getPublic();
 
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(new File(privateKeyPathName));
-            fos.write(privateKey.getEncoded());
-            fos.close();
+        try (FileOutputStream privateFos = new FileOutputStream(new File(privateKeyPathName));
+                FileOutputStream publicFos = new FileOutputStream(new File(publicKeyPathName))) {
+            
+            privateFos.write(privateKey.getEncoded());
             System.out.println("Generated private key: " + privateKeyPathName);
 
-            fos = new FileOutputStream(new File(publicKeyPathName));
-            fos.write(publicKey.getEncoded());
-            fos.close();
+            publicFos.write(publicKey.getEncoded());
             System.out.println("Generated public key: " + publicKeyPathName);
-        } finally {
-            closeQuietly(fos);
         }
     }
 
@@ -217,16 +217,12 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
             return;
         }
 
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(publicKeyPathName);
+        try (FileInputStream fis = new FileInputStream(publicKeyPathName)) {
             X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(toByteArray(fis));
             Cipher cipher = Cipher.getInstance(algorithm);
             cipher.init(Cipher.ENCRYPT_MODE, KeyFactory.getInstance(algorithm).generatePublic(x509EncodedKeySpec));
             String encryptedText = DatatypeConverter.printBase64Binary(cipher.doFinal(clearText.getBytes("UTF-8")));
             System.out.println("Input: " + clearText + "\nOutput: " + encryptedText);
-        } finally {
-            closeQuietly(fis);
         }
     }
 

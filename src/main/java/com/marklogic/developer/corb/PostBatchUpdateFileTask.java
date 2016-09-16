@@ -27,7 +27,6 @@ import static com.marklogic.developer.corb.Options.EXPORT_FILE_SORT;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_SORT_COMPARATOR;
 import com.marklogic.developer.corb.util.FileUtils;
 import static com.marklogic.developer.corb.util.FileUtils.deleteFile;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
@@ -122,11 +121,9 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     }
     
     protected void copyHeaderIntoFile(File inputFile, int headerLineCount, File outputFile) throws IOException {
-        BufferedWriter writer = null;
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(inputFile));
-            writer = new BufferedWriter(new FileWriter(outputFile, false));
+   
+        try (BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, false))) {
             String line;
             int currentLine = 0;
             while ((line = reader.readLine()) != null && currentLine < headerLineCount) {
@@ -135,12 +132,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
                 currentLine++;
             }
             writer.flush();
-            reader.close();
-            writer.close();
-        } finally {
-            closeQuietly(reader);
-            closeQuietly(writer);
-        }
+        }      
     }
 
     protected String getBottomContent() {
@@ -150,16 +142,12 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     protected void writeBottomContent() throws IOException {
         String bottomContent = getBottomContent();
         bottomContent = trimToEmpty(bottomContent);
-        if (isNotEmpty(bottomContent)) {
-            BufferedOutputStream writer = null;
-            try {
-                writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, getPartFileName()), true));
+        if (isNotEmpty(bottomContent)) {      
+            try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, getPartFileName()), true))) {
                 writer.write(bottomContent.getBytes());
                 writer.write(NEWLINE);
                 writer.flush();
-            } finally {
-                closeQuietly(writer);
-            }
+            } 
         }
     }
     
@@ -192,38 +180,26 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 
             File outFile = new File(exportDir, outFileName);
             File zipFile = new File(exportDir, partZipFileName);
-
-            ZipOutputStream zos = null;
-            FileOutputStream fos = null;
             
-            try {
-                if (outFile.exists()) {
-                    deleteFile(zipFile);
+            if (outFile.exists()) {
+                deleteFile(zipFile);
 
-                    fos = new FileOutputStream(zipFile);
-                    zos = new ZipOutputStream(fos);
-
+                try (FileOutputStream fos = new FileOutputStream(zipFile); 
+                        ZipOutputStream zos = new ZipOutputStream(fos)) {
                     ZipEntry ze = new ZipEntry(outFileName);
                     zos.putNextEntry(ze);
-
                     byte[] buffer = new byte[2048];
-                    FileInputStream fis = null; 
-                    try {
-                        fis = new FileInputStream(outFile);
+                    try (FileInputStream fis = new FileInputStream(outFile)) {
                         int len;
                         while ((len = fis.read(buffer)) > 0) {
                             zos.write(buffer, 0, len);
                         }
-                    } finally {
-                        closeQuietly(fis);
                     }
                     zos.closeEntry();
                     zos.flush();
-                }
-            } finally {
-                closeQuietly(zos);
-                closeQuietly(fos);
+                } 
             }
+           
             // move the file if required
             moveFile(partZipFileName, outZipFileName);
 

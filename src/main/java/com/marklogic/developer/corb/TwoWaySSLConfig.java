@@ -18,7 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
@@ -106,9 +105,8 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
             File f = new File(securityFileName);
             if (f.exists() && !f.isDirectory()) {
                 LOG.log(Level.INFO, "Loading SSL configuration file {0} from filesystem", securityFileName);
-                InputStream is = null;
-                try {
-                    is = new FileInputStream(f);
+
+                try (InputStream is = new FileInputStream(f);) {     
                     if (properties == null) {
                         properties = new Properties();
                     }
@@ -116,8 +114,6 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
                 } catch (IOException e) {
                     LOG.severe(MessageFormat.format("Error loading ssl properties file {0}", SSL_PROPERTIES_FILE));
                     throw new RuntimeException(e);
-                } finally {
-                    closeQuietly(is);
                 }
             } else {
                 throw new IllegalStateException("Unable to load " + securityFileName);
@@ -157,12 +153,9 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
             // adding custom key store
             KeyStore clientKeyStore = KeyStore.getInstance(sslkeyStoreType);
             char[] sslkeyStorePasswordChars = sslkeyStorePassword != null ? sslkeyStorePassword.toCharArray() : null;
-            InputStream keystoreInputStream = null;
-            try {
-                keystoreInputStream = new FileInputStream(sslkeyStore);
+
+            try (InputStream keystoreInputStream = new FileInputStream(sslkeyStore)) {              
                 clientKeyStore.load(keystoreInputStream, sslkeyStorePasswordChars);
-            } finally {
-                closeQuietly(keystoreInputStream);
             }
             char[] sslkeyPasswordChars = sslkeyPassword != null ? sslkeyPassword.toCharArray() : null;
             // using SunX509 format

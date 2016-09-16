@@ -18,7 +18,6 @@
  */
 package com.marklogic.developer.corb.util;
 
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -103,13 +102,9 @@ public final class FileUtils {
      */
     public static int getLineCount(final File file) throws IOException {
         if (file != null && file.exists()) {
-            LineNumberReader lnr = null;
-            try {
-                lnr = new LineNumberReader(new FileReader(file));
+            try (LineNumberReader lnr = new LineNumberReader(new FileReader(file))) {            
                 lnr.skip(Long.MAX_VALUE);
                 return lnr.getLineNumber();
-            } finally {
-                closeQuietly(lnr);
             }
         }
         return 0;
@@ -133,4 +128,5 @@ public final class FileUtils {
         }
         return file;
     }
+    
 }

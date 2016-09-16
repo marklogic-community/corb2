@@ -19,7 +19,6 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_URI_TO_PATH;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import com.marklogic.xcc.ResultSequence;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -45,19 +44,16 @@ public class ExportToFileTask extends AbstractTask {
 		if (seq == null || !seq.hasNext()) {
 			return;
 		}
-		BufferedOutputStream writer = null;
-		try {
-			File f = new File(exportDir, getFileName());
-			f.getParentFile().mkdirs();
-			writer = new BufferedOutputStream(new FileOutputStream(f));
-			while (seq.hasNext()) {
-				writer.write(getValueAsBytes(seq.next().getItem()));
-				writer.write(NEWLINE);
-			}
-			writer.flush();
-		} finally {
-            closeQuietly(writer);
-		}
+
+        File f = new File(exportDir, getFileName());
+        f.getParentFile().mkdirs();
+        try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(f))) {
+            while (seq.hasNext()) {
+                writer.write(getValueAsBytes(seq.next().getItem()));
+                writer.write(NEWLINE);
+            }
+            writer.flush();
+        }
 	}
 
 	@Override

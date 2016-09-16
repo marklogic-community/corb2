@@ -63,7 +63,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
 
     @Override
     public void open() throws CorbException {
-        List<String> propertyNames = new ArrayList<String>();
+        List<String> propertyNames = new ArrayList<>();
         if (properties != null) {
             propertyNames.addAll(properties.stringPropertyNames());
         }
@@ -186,9 +186,9 @@ public class QueryUrisLoader extends AbstractUrisLoader {
     protected Queue<String> getQueue() {
         Queue<String> queue;
         if (options != null && options.shouldUseDiskQueue()) {
-            queue = new DiskQueue<String>(options.getDiskQueueMaxInMemorySize(), options.getDiskQueueTempDir());
+            queue = new DiskQueue<>(options.getDiskQueueMaxInMemorySize(), options.getDiskQueueTempDir());
         } else {
-            queue = new ArrayQueue<String>(getTotalCount());
+            queue = new ArrayQueue<>(getTotalCount());
         }
         return queue;
     }

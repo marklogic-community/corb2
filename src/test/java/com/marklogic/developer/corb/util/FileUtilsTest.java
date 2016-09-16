@@ -19,7 +19,6 @@
 package com.marklogic.developer.corb.util;
 
 import static com.marklogic.developer.corb.util.IOUtils.BUFFER_SIZE;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,6 +27,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileAttribute;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -184,22 +185,9 @@ public class FileUtilsTest {
         assertFalse(file.exists());
     }
 
-    //TODO remove when we upgrade to JRE 1.7+
     public static File createTempDirectory()
             throws IOException {
-        final File temp;
-
-        temp = File.createTempFile("temp", Long.toString(System.nanoTime()));
-
-        if (!(temp.delete())) {
-            throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
-        }
-
-        if (!(temp.mkdir())) {
-            throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
-        }
-
-        return temp;
+        return Files.createTempDirectory("temp", new FileAttribute<?>[0]).toFile(); 
     }
 
     /**
@@ -210,16 +198,9 @@ public class FileUtilsTest {
      * @throws IOException
      */
     public static void copy(final File source, final File destination) throws IOException {
-        InputStream inputStream = new FileInputStream(source);
-        try {
-            OutputStream outputStream = new FileOutputStream(destination);
-            try {
-                IOUtilsTest.copy(inputStream, outputStream);
-            } finally {
-                closeQuietly(inputStream);
-            }
-        } finally {
-            closeQuietly(inputStream);
+        try (InputStream inputStream = new FileInputStream(source); 
+                OutputStream outputStream = new FileOutputStream(destination)) {
+            IOUtilsTest.copy(inputStream, outputStream);
         }
     }
 
@@ -232,17 +213,10 @@ public class FileUtilsTest {
      * @throws FileNotFoundException
      */
     public static void copy(final String sourceFilePath, final String destinationFilePath) throws FileNotFoundException, IOException {
-        InputStream inputStream = new FileInputStream(sourceFilePath);
-        try {
-            OutputStream outputStream = new FileOutputStream(destinationFilePath);
-            try {
-                IOUtilsTest.copy(inputStream, outputStream);
-            } finally {
-                closeQuietly(outputStream);
-            }
-        } finally {
-            closeQuietly(inputStream);
-        }
+        try (InputStream inputStream = new FileInputStream(sourceFilePath); 
+                OutputStream outputStream = new FileOutputStream(destinationFilePath)) {    
+            IOUtilsTest.copy(inputStream, outputStream);
+        }        
     }
 
     /**
@@ -253,23 +227,16 @@ public class FileUtilsTest {
      * @throws IOException
      */
     public static byte[] getBytes(File contentFile) throws IOException {
-        InputStream is = null;
-        ByteArrayOutputStream os = null;
+
         byte[] buf = new byte[BUFFER_SIZE];
         int read;
-        try {
-            is = new FileInputStream(contentFile);
-            try {
-                os = new ByteArrayOutputStream();
-                while ((read = is.read(buf)) > 0) {
-                    os.write(buf, 0, read);
-                }
-                return os.toByteArray();
-            } finally {
-                closeQuietly(os);
+        
+        try (InputStream is = new FileInputStream(contentFile); 
+                ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+            while ((read = is.read(buf)) > 0) {
+                os.write(buf, 0, read);
             }
-        } finally {
-            closeQuietly(is);
-        }
+            return os.toByteArray();
+        }   
     }
 }

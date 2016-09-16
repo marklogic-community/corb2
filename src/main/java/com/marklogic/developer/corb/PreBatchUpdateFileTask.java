@@ -21,7 +21,6 @@ package com.marklogic.developer.corb;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_HEADER_LINE_COUNT;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_TOP_CONTENT;
 import com.marklogic.developer.corb.util.FileUtils;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trimToEmpty;
 import java.io.BufferedOutputStream;
@@ -52,14 +51,10 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 		String topContent = getTopContent();
 		topContent = trimToEmpty(topContent);
 		if (isNotEmpty(topContent)) {
-			BufferedOutputStream writer = null;
-			try {
-				writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, getPartFileName())));
+			try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, getPartFileName())))) {
 				writer.write(topContent.getBytes());
 				writer.write(NEWLINE);
 				writer.flush();
-			} finally {
-                closeQuietly(writer);
 			}
 		}
 	}

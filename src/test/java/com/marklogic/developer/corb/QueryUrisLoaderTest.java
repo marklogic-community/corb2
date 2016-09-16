@@ -261,9 +261,9 @@ public class QueryUrisLoaderTest {
         TransformOptions transformOptions = new TransformOptions();
         File file = File.createTempFile("adhocJS", ".js");
         file.deleteOnExit();
-        FileWriter writer = new FileWriter(file, true);
-        writer.append("var foo;");
-        writer.close();
+        try (FileWriter writer = new FileWriter(file, true)) {
+            writer.append("var foo;");
+        }
         transformOptions.setUrisModule(file.getAbsolutePath() + ADHOC_SUFFIX);
         Properties props = new Properties();
         props.setProperty("URIS-MODULE.foo", bar);
@@ -346,9 +346,10 @@ public class QueryUrisLoaderTest {
      */
     @Test
     public void testGetBatchRef() {
-        QueryUrisLoader instance = new QueryUrisLoader();
-        String result = instance.getBatchRef();
-        instance.close();
+        String result;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            result = instance.getBatchRef();
+        }
         assertNull(result);
     }
 
@@ -357,9 +358,10 @@ public class QueryUrisLoaderTest {
      */
     @Test
     public void testGetTotalCount() {
-        QueryUrisLoader instance = new QueryUrisLoader();
-        int result = instance.getTotalCount();
-        instance.close();
+        int result;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            result = instance.getTotalCount();
+        }
         assertEquals(0, result);
     }
 
@@ -368,9 +370,10 @@ public class QueryUrisLoaderTest {
      */
     @Test
     public void testHasNext_resultSequenceIsNull() throws Exception {
-        QueryUrisLoader instance = new QueryUrisLoader();
-        boolean result = instance.hasNext();
-        instance.close();
+        boolean result;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            result = instance.hasNext();
+        }
         assertFalse(result);
     }
 
@@ -392,15 +395,16 @@ public class QueryUrisLoaderTest {
         when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
         when(session.submitRequest(request)).thenReturn(resultSequence);
 
-        QueryUrisLoader instance = new QueryUrisLoader();
-        TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setUrisModule(foo);
-        instance.options = transformOptions;
-        instance.cs = contentSource;
-        instance.res = resultSequence;
-        instance.open();
-        boolean result = instance.hasNext();
-        instance.close();
+        boolean result;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            TransformOptions transformOptions = new TransformOptions();
+            transformOptions.setUrisModule(foo);
+            instance.options = transformOptions;
+            instance.cs = contentSource;
+            instance.res = resultSequence;
+            instance.open();
+            result = instance.hasNext();
+        }
         assertTrue(result);
     }
 
@@ -408,10 +412,11 @@ public class QueryUrisLoaderTest {
     public void testHasNext_resultSequenceNotHasNext() throws Exception {
         ResultSequence resultSequence = mock(ResultSequence.class);
         when(resultSequence.hasNext()).thenReturn(false);
-        QueryUrisLoader instance = new QueryUrisLoader();
-        instance.res = resultSequence;
-        boolean result = instance.hasNext();
-        instance.close();
+        boolean result;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            instance.res = resultSequence;
+            result = instance.hasNext();
+        }
         assertFalse(result);
     }
 
@@ -436,16 +441,17 @@ public class QueryUrisLoaderTest {
         when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
         when(session.submitRequest(request)).thenReturn(resultSequence);
 
-        QueryUrisLoader instance = new QueryUrisLoader();
-        TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setUrisModule(foo);
-        instance.options = transformOptions;
-        instance.cs = contentSource;
-        instance.res = resultSequence;
-        instance.replacements = new String[]{"_", ",", "-", "\n"};
-        instance.open();
-        String result = instance.next();
-        instance.close();
+        String result;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            TransformOptions transformOptions = new TransformOptions();
+            transformOptions.setUrisModule(foo);
+            instance.options = transformOptions;
+            instance.cs = contentSource;
+            instance.res = resultSequence;
+            instance.replacements = new String[]{"_", ",", "-", "\n"};
+            instance.open();
+            result = instance.next();
+        }
         assertEquals("foo,bar,baz\n1,2,3", result);
     }
 
@@ -505,19 +511,21 @@ public class QueryUrisLoaderTest {
      */
     @Test
     public void testGetProperty_nullProperties() {
-        QueryUrisLoader instance = new QueryUrisLoader();
-        String result = instance.getProperty(foo);
-        instance.close();
+        String result;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            result = instance.getProperty(foo);
+        }
         assertNull(result);
     }
 
     @Test
     public void testGetProperty() {
 
-        QueryUrisLoader instance = new QueryUrisLoader();
-        instance.properties = new Properties();
-        String result = instance.getProperty(foo);
-        instance.close();
+        String result;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            instance.properties = new Properties();
+            result = instance.getProperty(foo);
+        }
         assertNull(result);
     }
 
@@ -525,12 +533,13 @@ public class QueryUrisLoaderTest {
     public void testGetProperty_exists() {
         String key = foo;
         String value = bar;
-        QueryUrisLoader instance = new QueryUrisLoader();
-        Properties props = new Properties();
-        props.setProperty(key, value);
-        instance.properties = props;
-        String result = instance.getProperty(key);
-        instance.close();
+        String result;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            Properties props = new Properties();
+            props.setProperty(key, value);
+            instance.properties = props;
+            result = instance.getProperty(key);
+        }
         assertEquals(value, result);
     }
 

@@ -143,9 +143,9 @@ public class JasyptDecrypterTest {
         Properties emptyProps = new Properties();
         File emptyFile = File.createTempFile(TEMP_PREFIX, PROPERTIES_SUFFIX);
         emptyFile.deleteOnExit();
-        FileOutputStream outputStream = new FileOutputStream(emptyFile);
-        emptyProps.store(outputStream, "");
-        outputStream.close();
+        try (FileOutputStream outputStream = new FileOutputStream(emptyFile)) {
+            emptyProps.store(outputStream, "");
+        }
         Properties props = new Properties();
         props.setProperty(Options.JASYPT_PROPERTIES_FILE, emptyFile.getAbsolutePath());
 

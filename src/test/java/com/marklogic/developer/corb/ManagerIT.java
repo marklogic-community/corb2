@@ -504,9 +504,9 @@ POST_XQUERY_MODULE_OUTPUT;
                 File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
                 try {
                     commandFile.createNewFile();
-                    FileOutputStream fos = new FileOutputStream(commandFile);
-                    props.store(fos, null);
-                    fos.close();
+                    try (FileOutputStream fos = new FileOutputStream(commandFile)) {
+                        props.store(fos, null);
+                    }
                 } catch (IOException ex) {
                     Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -519,10 +519,8 @@ POST_XQUERY_MODULE_OUTPUT;
                 props.put(Options.COMMAND, "RESUME");
                 props.put(Options.THREAD_COUNT, Integer.toString(6));
                 File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
-                try {
-                    FileOutputStream fos = new FileOutputStream(commandFile);
+                try (FileOutputStream fos = new FileOutputStream(commandFile)) {
                     props.store(fos, null);
-                    fos.close();
                 } catch (IOException ex) {
                     Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -564,9 +562,9 @@ POST_XQUERY_MODULE_OUTPUT;
                 File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
                 try {
                     commandFile.createNewFile();
-                    FileOutputStream fos = new FileOutputStream(commandFile);
-                    props.store(fos, null);
-                    fos.close();
+                    try (FileOutputStream fos = new FileOutputStream(commandFile)) {
+                        props.store(fos, null);
+                    }
                 } catch (IOException ex) {
                     Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -577,10 +575,8 @@ POST_XQUERY_MODULE_OUTPUT;
             public void run() {
                 Properties props = new Properties();
                 File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
-                try {
-                    FileOutputStream fos = new FileOutputStream(commandFile);
+                try (FileOutputStream fos = new FileOutputStream(commandFile)) {
                     props.store(fos, null);
-                    fos.close();
                 } catch (IOException ex) {
                     Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -620,9 +616,9 @@ POST_XQUERY_MODULE_OUTPUT;
                 File commandFile = new File(System.getProperty(Options.COMMAND_FILE));
                 try {
                     commandFile.createNewFile();
-                    FileOutputStream fos = new FileOutputStream(commandFile);
-                    props.store(fos, null);
-                    fos.close();
+                    try (FileOutputStream fos = new FileOutputStream(commandFile)) {
+                        props.store(fos, null);
+                    }
                 } catch (IOException ex) {
                     Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -663,9 +659,9 @@ POST_XQUERY_MODULE_OUTPUT;
                     commandFile.createNewFile();
                     Properties props = new Properties();
                     props.put(Options.THREAD_COUNT, Integer.toString(1));
-                    FileOutputStream fos = new FileOutputStream(commandFile);
-                    props.store(fos, null);
-                    fos.close();
+                    try (FileOutputStream fos = new FileOutputStream(commandFile)) {
+                        props.store(fos, null);
+                    }
                 } catch (IOException ex) {
                     Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
                 }

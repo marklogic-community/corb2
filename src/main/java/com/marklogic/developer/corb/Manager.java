@@ -51,7 +51,6 @@ import static com.marklogic.developer.corb.Options.URIS_MODULE;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
 import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
 import com.marklogic.developer.corb.util.FileUtils;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import com.marklogic.developer.corb.util.NumberUtils;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
@@ -393,7 +392,7 @@ public class Manager extends AbstractManager {
         }
 
         //key=Current Property, value=Legacy Property
-        Map<String, String> legacyProperties = new HashMap<String, String>(3);
+        Map<String, String> legacyProperties = new HashMap<>(3);
         legacyProperties.put(PROCESS_MODULE, XQUERY_MODULE);
         legacyProperties.put(PRE_BATCH_MODULE, PRE_BATCH_XQUERY_MODULE);
         legacyProperties.put(POST_BATCH_MODULE, POST_BATCH_XQUERY_MODULE);
@@ -445,7 +444,7 @@ public class Manager extends AbstractManager {
     protected void usage() {
         super.usage();
 
-        List<String> args = new ArrayList<String>(7);
+        List<String> args = new ArrayList<>(7);
         String xcc_connection_uri = "xcc://user:password@host:port/[ database ]";
         String thread_count = "10";
         String options_file = "myjob.properties";
@@ -521,10 +520,10 @@ public class Manager extends AbstractManager {
         RejectedExecutionHandler policy = new CallerBlocksPolicy();
         int threads = options.getThreadCount();
         // an array queue should be somewhat lighter-weight
-        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(options.getQueueSize());
+        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(options.getQueueSize());
         pool = new PausableThreadPoolExecutor(threads, threads, 16, TimeUnit.SECONDS, workQueue, policy);
         pool.prestartAllCoreThreads();
-        completionService = new ExecutorCompletionService<String[]>(pool);
+        completionService = new ExecutorCompletionService<>(pool);
         monitor = new Monitor(pool, completionService, this);
         Thread thread = new Thread(monitor, "monitor");
         return thread;
@@ -555,7 +554,7 @@ public class Manager extends AbstractManager {
                     continue;
                 } // Next check: if XCC is configured for the filesystem, warn
                 // user
-                else if (options.getModulesDatabase().equals("")) {
+                else if (options.getModulesDatabase().isEmpty()) {
                     LOG.warning("XCC configured for the filesystem: please install modules manually");
                     return;
                 } // Finally, if it's configured for a database, install.
@@ -700,10 +699,10 @@ public class Manager extends AbstractManager {
     private int populateQueue() throws Exception {
         LOG.info("populating queue");
         TaskFactory taskFactory = new TaskFactory(this);
-        UrisLoader urisLoader = getUriLoader();
+        
         int expectedTotalCount = -1;
         int urisCount = 0;
-        try {
+        try (UrisLoader urisLoader = getUriLoader()) {
             // run init task
             runInitTask(taskFactory);
 
@@ -732,7 +731,7 @@ public class Manager extends AbstractManager {
             final long RAM_TOTAL = Runtime.getRuntime().totalMemory();
             long freeMemory;
             String uri;
-            List<String> uriBatch = new ArrayList<String>(options.getBatchSize());
+            List<String> uriBatch = new ArrayList<>(options.getBatchSize());
 
             while (urisLoader.hasNext()) {
                 // check pool occasionally, for fast-fail
@@ -783,9 +782,7 @@ public class Manager extends AbstractManager {
         } catch (Exception exc) {
             stop();
             throw exc;
-        } finally {
-            closeQuietly(urisLoader);
-        }
+        } 
 
         return urisCount;
     }
@@ -901,9 +898,9 @@ public class Manager extends AbstractManager {
         }
 
         public void onChange(File file) {
-            InputStream in = null;
-            try {
-                in = new FileInputStream(file);
+ 
+            try (InputStream in = new FileInputStream(file);) {
+                
                 Properties commandFile = new Properties();
                 commandFile.load(in);
 
@@ -926,8 +923,6 @@ public class Manager extends AbstractManager {
 
             } catch (IOException e) {
                 LOG.log(WARNING, MessageFormat.format("Unable to load {0}", COMMAND_FILE), e);
-            } finally {
-                closeQuietly(in);
             }
         }
     }
