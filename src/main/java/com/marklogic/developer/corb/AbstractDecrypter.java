@@ -38,7 +38,7 @@ public abstract class AbstractDecrypter implements Decrypter {
 
     @Override
     public void init(Properties properties) throws IOException, ClassNotFoundException {
-        this.properties = (properties == null ? new Properties() : properties);
+        this.properties = properties == null ? new Properties() : properties;
 
         init_decrypter();
     }
