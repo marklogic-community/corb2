@@ -1,9 +1,12 @@
-[![Download](https://api.bintray.com/packages/marklogic/maven/marklogic-corb/images/download.svg) ](https://bintray.com/marklogic/maven/marklogic-corb/_latestVersion)[![Javadocs](https://www.javadoc.io/badge/com.marklogic/marklogic-corb.svg?color=blue)](https://www.javadoc.io/doc/com.marklogic/marklogic-corb) [![Dependency Status](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed/badge.svg?style=flat)](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed)
+[![Download the latest version](https://api.bintray.com/packages/marklogic/maven/marklogic-corb/images/download.svg)](https://bintray.com/marklogic/maven/marklogic-corb/_latestVersion)
+[![Javadocs](https://www.javadoc.io/badge/com.marklogic/marklogic-corb.svg?color=blue)](https://www.javadoc.io/doc/com.marklogic/marklogic-corb)
+[![Dependency Status](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed/badge.svg?style=flat)](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed)
 
-[![Build Status](https://travis-ci.org/marklogic/corb2.svg?branch=development)](https://travis-ci.org/marklogic/corb2)
-[![CircleCI](https://circleci.com/gh/marklogic/corb2/tree/development.svg?style=shield)](https://circleci.com/gh/marklogic/corb2/tree/development)
-[![codecov](https://codecov.io/gh/marklogic/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic/corb2/branch/development)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/c0195f063ae34c7ea17bb4c97ab7ff2c)](https://www.codacy.com/app/mads-hansen/corb2?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marklogic/corb2&amp;utm_campaign=Badge_Grade)
+[![Travis-ci gradle build status](https://travis-ci.org/marklogic/corb2.svg?branch=development)](https://travis-ci.org/marklogic/corb2)
+[![CircleCI maven build status](https://circleci.com/gh/marklogic/corb2/tree/development.svg?style=shield)](https://circleci.com/gh/marklogic/corb2/tree/development)
+[![Codecov code coverage](https://codecov.io/gh/marklogic/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic/corb2/branch/development)
+[![SonarQube Quality](https://sonarqube.com/api/badges/gate?key=com.marklogic%3Amarklogic-corb)](https://sonarqube.com/overview?id=com.marklogic%3Amarklogic-corb)
+[![Codacy Grade Badge](https://api.codacy.com/project/badge/Grade/c0195f063ae34c7ea17bb4c97ab7ff2c)](https://www.codacy.com/app/mads-hansen/corb2?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marklogic/corb2&amp;utm_campaign=Badge_Grade)
 ### User Guide
 This document provides a comprehensive overview of CoRB2. For additional information, please refer to the CoRB2 [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc). This document also covers the less robust [ModuleExecutor Tool](#moduleexecutor-tool), which can be used when only a single staged query is necessary. The ModuleExecutor Tool is provided as part of the CoRB2 distribution.
 
@@ -98,13 +101,13 @@ Option | Description
 **EXPORT-FILE-SORT** | If `ascending` or `descending`, lines will be sorted. If <code>&#124;distinct</code> is specified after the sort direction, duplicate lines from **EXPORT-FILE-NAME** will be removed. i.e. <code>ascending&#124;distinct</code> or <code>descending&#124;distinct</code>
 **EXPORT-FILE-SORT-COMPARATOR** | A java class that must implement `java.util.Comparator`. If specified, CoRB will use this class for sorting in place of ascending or descending string comparator even if a value was specified for **EXPORT-FILE-SORT**.
 **EXPORT-FILE-TOP-CONTENT** | Used by `com.marklogic.developer.corb.PreBatchUpdateFileTask` to insert content at the top of **EXPORT-FILE-NAME** before batch process starts. If it includes the string `@URIS\_BATCH\_REF`, it is replaced by the batch reference returned by **URIS-MODULE**.
-**EXPORT-FILE-URI-TO-PATH** | Default is true. Boolean value indicating whether to convert doc URI to a filepath. 
+**EXPORT-FILE-URI-TO-PATH** | Default is true. Boolean value indicating whether to convert doc URI to a filepath.
 **FAIL-ON-ERROR** | Boolean value indicating whether the CoRB job should fail and exit if a process module throws an error. Default is true. This option will not handle repeated connection failures.
 **INSTALL** | Whether to install the Modules in the Modules database. Specify 'true' or '1' for installation. Default is false.
 **MAX_OPTS_FROM_MODULE** | Default is 10. Max number of custom inputs from the URIS-MODULE to other modules.
 **MODULE-ROOT** | Default is '/'.
 **MODULES-DATABASE** | Uses the **XCC-CONNECTION-URI** if not provided; use 0 for file system.
-**NUM-TPS-FOR-ETC** | Default is 10. Number of recent transactions per second (tps) values used to calculate estimated completion time (ETC). 
+**NUM-TPS-FOR-ETC** | Default is 10. Number of recent transactions per second (tps) values used to calculate estimated completion time (ETC).
 **QUERY-RETRY-LIMIT** | Number of re-query attempts before giving up. Default is 2.
 **QUERY-RETRY-INTERVAL** | Time interval, in seconds, between re-query attempts. Default is 20.
 **QUERY-RETRY-ERROR-CODES** | A comma separated list of MarkLogic error codes for which a QueryException should be retried.
