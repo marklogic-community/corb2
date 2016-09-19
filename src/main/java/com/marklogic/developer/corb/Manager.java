@@ -263,7 +263,7 @@ public class Manager extends AbstractManager {
         if (modulesDatabase != null) {
             options.setModulesDatabase(modulesDatabase);
         }
-        if (install != null && (install.equalsIgnoreCase("true") || install.equals("1"))) {
+        if (install != null && ("true".equalsIgnoreCase(install) || "1".equals(install))) {
             options.setDoInstall(true);
         }
         if (urisFile != null) {
@@ -272,7 +272,7 @@ public class Manager extends AbstractManager {
         if (batchSize != null) {
             options.setBatchSize(Integer.parseInt(batchSize));
         }
-        if (failOnError != null && failOnError.equalsIgnoreCase("false")) {
+        if (failOnError != null && "false".equalsIgnoreCase(failOnError)) {
             options.setFailOnError(false);
         }
         if (diskQueueMaxInMemorySize != null) {
@@ -525,8 +525,7 @@ public class Manager extends AbstractManager {
         pool.prestartAllCoreThreads();
         completionService = new ExecutorCompletionService<>(pool);
         monitor = new Monitor(pool, completionService, this);
-        Thread thread = new Thread(monitor, "monitor");
-        return thread;
+        return new Thread(monitor, "monitor");
     }
 
     /**
