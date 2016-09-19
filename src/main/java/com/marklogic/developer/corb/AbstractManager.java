@@ -77,7 +77,7 @@ public abstract class AbstractManager {
     protected static final int EXIT_CODE_INIT_ERROR = 1;
     protected static final int EXIT_CODE_PROCESSING_ERROR = 2;
     protected static final String SPACE = " ";
-
+    
     private static final Logger LOG = Logger.getLogger(AbstractManager.class.getName());
 
     public static Properties loadPropertiesFile(String filename) throws IOException {
@@ -209,21 +209,20 @@ public abstract class AbstractManager {
         String port = getOption(XCC_PORT);
         String dbname = getOption(XCC_DBNAME);
 
-        if (uriAsString == null && (username == null || password == null || host == null || port == null)) {
-            throw new InstantiationException(XCC_CONNECTION_URI + " or "
-                    + XCC_USERNAME + ", " + XCC_PASSWORD + ", " + XCC_HOSTNAME
-                    + " and " + XCC_PORT + " must be specified");
+        if (StringUtils.anyIsNull(uriAsString) && StringUtils.anyIsNull(username, password, host, port)) {
+            throw new InstantiationException(String.format("Either %1$s or %2$s, %3$s, %4$s, and %5$s must be specified", 
+                    XCC_CONNECTION_URI, XCC_USERNAME, XCC_PASSWORD, XCC_HOSTNAME, XCC_PORT));
         }
 
         if (this.decrypter != null) {
             uriAsString = this.decrypter.getConnectionURI(uriAsString, username, password, host, port, dbname);
         } else if (uriAsString == null) {
-            uriAsString = "xcc://" + username + ":" + password + "@" + host + ":" + port + (dbname != null ? "/" + dbname : "");
+            uriAsString = StringUtils.getXccUri(username, password, host, port, dbname);
         }
 
         this.connectionUri = new URI(uriAsString);
     }
-
+    
     /**
      * Retrieve the value of the specified key from either the System
      * properties, or the properties object.

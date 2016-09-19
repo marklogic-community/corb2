@@ -19,6 +19,8 @@
 package com.marklogic.developer.corb.util;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,7 +42,7 @@ public final class StringUtils {
     private static final String ADHOC_PATTERN = "(?i).*\\|ADHOC";
     private static final String JAVASCRIPT_MODULE_FILENAME_PATTERN = "(?i).*\\.s?js(\\|ADHOC)?$";
     private static final String INLINE_MODULE_PATTERN = "(?i)INLINE-(JAVASCRIPT|XQUERY)\\|(.*?)(\\|ADHOC)?$";
-
+    private static final String UTF_8 = "UTF-8";
     private static final Pattern COMPILED_INLINE_MODULE_PATTERN = Pattern.compile(INLINE_MODULE_PATTERN);
 
     private StringUtils() {
@@ -303,4 +305,72 @@ public final class StringUtils {
         }
         return code;
     }
+    
+    /**
+     * Build an XCC URI from the values provided. Values will be URLEncoded, if it does not appear that they have already been URLEncoded.
+     * @param username
+     * @param password
+     * @param host
+     * @param port
+     * @param dbname
+     * @return 
+     */
+    public static String getXccUri(String username, String password, String host, String port, String dbname) {
+        return "xcc://" + urlEncodeIfNecessary(username) + ":" + urlEncodeIfNecessary(password) + "@" + host + ":" + port + (dbname == null ? "" : "/" + urlEncodeIfNecessary(dbname));
+    }
+    
+    /**
+     * Indicate whether any items in the array of String objects are null.
+     * @param args
+     * @return 
+     */
+    public static boolean anyIsNull(String... args) {
+        return Arrays.asList(args).contains(null);
+    }
+    
+    /**
+     * If the given string is not URLEncoded, encode it. Otherwise, return the original value.
+     * @param arg
+     * @return 
+     */
+    protected static String urlEncodeIfNecessary(String arg) {
+        return isUrlEncoded(arg) ? arg : urlEncode(arg);       
+    }
+    
+    /**
+     * Determines whether the value is URLEncoded by evaluating whether the 
+     * length of the URLDecoded value is the same.
+     * @param arg
+     * @return 
+     */
+    public static boolean isUrlEncoded(String arg) {
+        return arg.length() != urlDecode(arg).length();  
+    }
+    
+    /**
+     * URLEncode the given value
+     * @param arg
+     * @return 
+     */
+    protected static String urlEncode(String arg) {
+        try {
+            return URLEncoder.encode(arg, UTF_8);
+        } catch (UnsupportedEncodingException ex) {
+            throw new AssertionError(UTF_8 + " not supported");
+        }
+    }
+    
+    /**
+     * URLDecode the given value
+     * @param arg
+     * @return 
+     */
+    protected static String urlDecode(String arg) {
+        try {
+            return URLDecoder.decode(arg, UTF_8);
+        } catch (UnsupportedEncodingException ex) {
+            throw new AssertionError(UTF_8 + " not supported");
+        }
+    }
+
 }
