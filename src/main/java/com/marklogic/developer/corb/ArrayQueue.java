@@ -61,8 +61,7 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
         if (count == 0) {
             return null;
         }
-        String x = extract();
-        return x;
+        return extract();
     }
 
     @Override
