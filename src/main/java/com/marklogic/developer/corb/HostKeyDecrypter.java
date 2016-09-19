@@ -75,7 +75,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         
     protected enum OSType {
 
-        Windows {
+        WINDOWS {
             /**
              * get bios serial number on windows machine
              *
@@ -112,7 +112,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                 }
             }
         },
-        Mac {
+        MAC {
             /**
              * get bios serial number on mac machine
              *
@@ -140,7 +140,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                 }
             }
         },
-        Linux {
+        LINUX {
             /**
              * get bios serial number on linux machine uses lshal command that
              * is part of the hal package
@@ -169,7 +169,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                 }
             }
         },
-        Other {
+        OTHER {
             @Override
             public byte[] getSN() {
                 return DEFAULT_BYTES;
@@ -305,15 +305,15 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     }
 
     protected static OSType getOperatingSystemType(String osName) {
-        OSType type = OSType.Other;
+        OSType type = OSType.OTHER;
         if (osName != null) {
             String os = osName.toLowerCase(Locale.ENGLISH);
             if (os.contains("mac") || os.contains("darwin")) {
-                type = OSType.Mac;
+                type = OSType.MAC;
             } else if (os.contains("win")) {
-                type = OSType.Windows;
+                type = OSType.WINDOWS;
             } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
-                type = OSType.Linux;
+                type = OSType.LINUX;
             }
         }
         return type;
