@@ -351,7 +351,7 @@ public abstract class AbstractTask implements Task {
         return trim(val);
     }
 
-    static protected byte[] getValueAsBytes(XdmItem item) {
+    protected static byte[] getValueAsBytes(XdmItem item) {
         if (item instanceof XdmBinary) {
             return ((XdmBinary) item).asBinaryData();
         } else if (item != null) {
