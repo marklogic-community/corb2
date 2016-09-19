@@ -75,7 +75,7 @@ public class FileUrisLoader extends AbstractUrisLoader {
 
     @Override
     public String next() throws CorbException {
-        String line = null;
+        String line;
         if (nextLine != null) {
             line = nextLine;
             nextLine = null;
