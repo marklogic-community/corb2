@@ -93,14 +93,14 @@ public class HostKeyDecrypterTest {
 
     @Test
     public void testGetOperatingSystemType() {
-        assertEquals(HostKeyDecrypter.OSType.Mac, HostKeyDecrypter.getOperatingSystemType("Darwin"));
-        assertEquals(HostKeyDecrypter.OSType.Windows, HostKeyDecrypter.getOperatingSystemType("Windows 95"));
-        assertEquals(HostKeyDecrypter.OSType.Windows, HostKeyDecrypter.getOperatingSystemType("windows xp"));
-        assertEquals(HostKeyDecrypter.OSType.Linux, HostKeyDecrypter.getOperatingSystemType("unix"));
-        assertEquals(HostKeyDecrypter.OSType.Linux, HostKeyDecrypter.getOperatingSystemType("Red Had Linux"));
-        assertEquals(HostKeyDecrypter.OSType.Linux, HostKeyDecrypter.getOperatingSystemType("AIX/OS2"));
-        assertEquals(HostKeyDecrypter.OSType.Other, HostKeyDecrypter.getOperatingSystemType("ReactOS"));
-        assertEquals(HostKeyDecrypter.OSType.Other, HostKeyDecrypter.getOperatingSystemType(null));
+        assertEquals(HostKeyDecrypter.OSType.MAC, HostKeyDecrypter.getOperatingSystemType("Darwin"));
+        assertEquals(HostKeyDecrypter.OSType.WINDOWS, HostKeyDecrypter.getOperatingSystemType("Windows 95"));
+        assertEquals(HostKeyDecrypter.OSType.WINDOWS, HostKeyDecrypter.getOperatingSystemType("windows xp"));
+        assertEquals(HostKeyDecrypter.OSType.LINUX, HostKeyDecrypter.getOperatingSystemType("unix"));
+        assertEquals(HostKeyDecrypter.OSType.LINUX, HostKeyDecrypter.getOperatingSystemType("Red Had Linux"));
+        assertEquals(HostKeyDecrypter.OSType.LINUX, HostKeyDecrypter.getOperatingSystemType("AIX/OS2"));
+        assertEquals(HostKeyDecrypter.OSType.OTHER, HostKeyDecrypter.getOperatingSystemType("ReactOS"));
+        assertEquals(HostKeyDecrypter.OSType.OTHER, HostKeyDecrypter.getOperatingSystemType(null));
     }
 
     /**
