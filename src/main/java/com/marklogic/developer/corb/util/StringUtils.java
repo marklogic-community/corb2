@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,7 +46,9 @@ public final class StringUtils {
     private static final String INLINE_MODULE_PATTERN = "(?i)INLINE-(JAVASCRIPT|XQUERY)\\|(.*?)(\\|ADHOC)?$";
     private static final String UTF_8 = "UTF-8";
     private static final Pattern COMPILED_INLINE_MODULE_PATTERN = Pattern.compile(INLINE_MODULE_PATTERN);
-
+    private static final String UTF_8_NOT_SUPPORTED = UTF_8 + " not supported";
+    private static final Logger LOG = Logger.getLogger(StringUtils.class.getName());
+    
     private StringUtils() {
     }
 
@@ -273,7 +277,7 @@ public final class StringUtils {
     public static boolean isJavaScriptModule(final String value) {
         return value != null
                 && (value.matches(JAVASCRIPT_MODULE_FILENAME_PATTERN)
-                    || inlineModuleLanguage(value).equalsIgnoreCase("javascript"));
+                    || "javascript".equalsIgnoreCase(inlineModuleLanguage(value)));
     }
 
     public static boolean isInlineModule(final String value) {
@@ -356,7 +360,8 @@ public final class StringUtils {
         try {
             return URLEncoder.encode(arg, UTF_8);
         } catch (UnsupportedEncodingException ex) {
-            throw new AssertionError(UTF_8 + " not supported");
+            LOG.log(Level.SEVERE, UTF_8_NOT_SUPPORTED, ex);
+            throw new AssertionError(UTF_8_NOT_SUPPORTED);
         }
     }
     
@@ -369,7 +374,8 @@ public final class StringUtils {
         try {
             return URLDecoder.decode(arg, UTF_8);
         } catch (UnsupportedEncodingException ex) {
-            throw new AssertionError(UTF_8 + " not supported");
+            LOG.log(Level.SEVERE, UTF_8_NOT_SUPPORTED, ex);
+            throw new AssertionError(UTF_8_NOT_SUPPORTED);
         }
     }
 

@@ -613,7 +613,7 @@ public class Manager extends AbstractManager {
         while (null != rs && rs.hasNext()) {
             ResultItem rsItem = rs.next();
             XdmItem item = rsItem.getItem();
-            if (rsItem.getIndex() == 0 && item.asString().equals("0")) {
+            if (rsItem.getIndex() == 0 && "0".equals(item.asString())) {
                 options.setModulesDatabase("");
             }
             if (rsItem.getIndex() == 1) {
@@ -677,7 +677,7 @@ public class Manager extends AbstractManager {
     }
 
     private UrisLoader getUriLoader() throws InstantiationException, IllegalAccessException {
-        UrisLoader loader = null;
+        UrisLoader loader;
         if (isNotBlank(options.getUrisModule())) {
             loader = new QueryUrisLoader();
         } else if (isNotBlank(options.getUrisFile())) {
