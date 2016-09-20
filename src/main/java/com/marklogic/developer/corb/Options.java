@@ -475,6 +475,7 @@ public final class Options {
      * @deprecated Use the {@link #POST_BATCH_MODULE} option instead.
      * @see #POST_BATCH_MODULE
      */
+    @Deprecated
     @Usage
     public static final String POST_BATCH_XQUERY_MODULE = "POST-BATCH-XQUERY-MODULE";
 
@@ -534,6 +535,7 @@ public final class Options {
      * @deprecated Use the {@link #PRE_BATCH_MODULE} option instead.
      * @see #PRE_BATCH_MODULE
      */
+    @Deprecated
     @Usage
     public static final String PRE_BATCH_XQUERY_MODULE = "PRE-BATCH-XQUERY-MODULE";
 
@@ -912,6 +914,7 @@ public final class Options {
      * @deprecated Use the {@link #PROCESS_MODULE} option instead.
      * @see #PROCESS_MODULE
      */
+    @Deprecated
     @Usage(description = "Use PROCESS_MODULE instead")
     public static final String XQUERY_MODULE = "XQUERY-MODULE";
 
