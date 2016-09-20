@@ -191,7 +191,7 @@ public class JasyptDecrypterTest {
         instance.doDecrypt(property, value);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.INFO, records.get(0).getLevel());
-        assertEquals("Cannot decrypt {0}. Ignore if clear text.", records.get(0).getMessage());
+        assertTrue(records.get(0).getMessage().startsWith("Cannot decrypt . Ignore if clear text."));
     }
 
     @Test
