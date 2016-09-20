@@ -192,7 +192,7 @@ public class Monitor implements Runnable {
         for (Double next : this.tpsForETCList) {
             sum += next;
         }
-        if (this.tpsForETCList.size() > 0) {
+        if (!this.tpsForETCList.isEmpty()) {
             tpsForETC = sum / this.tpsForETCList.size();
         }
         return tpsForETC;
