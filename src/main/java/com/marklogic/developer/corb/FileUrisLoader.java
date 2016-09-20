@@ -67,7 +67,7 @@ public class FileUrisLoader extends AbstractUrisLoader {
             try {
                 nextLine = readNextLine();
             } catch (Exception exc) {
-                throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_URIS_FILE);
+                throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_URIS_FILE, exc);
             }
         }
         return nextLine != null;
@@ -83,7 +83,7 @@ public class FileUrisLoader extends AbstractUrisLoader {
             try {
                 line = readNextLine();
             } catch (Exception exc) {
-                throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_URIS_FILE);
+                throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_URIS_FILE, exc);
             }
         }
         for (int i = 0; line != null && i < replacements.length - 1; i += 2) {
