@@ -48,6 +48,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -395,7 +396,7 @@ public abstract class AbstractTask implements Task {
             try {
                 intVal = Integer.parseInt(value);
             } catch (Exception exc) {
-                LOG.log(WARNING, "Unable to parse '{0}' value '{1}' as an int", new Object[]{key, value});
+                LOG.log(WARNING, MessageFormat.format("Unable to parse '{0}' value '{1}' as an int", new Object[]{key, value}), exc);
             }
         }
         return intVal;
