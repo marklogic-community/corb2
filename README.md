@@ -12,9 +12,14 @@ This document provides a comprehensive overview of CoRB2. For additional informa
 
 ### Downloads
 
-Download the latest release directly from https://github.com/marklogic/corb2/releases or you can resolve dependencies through [Maven Central](http://mvnrepository.com/artifact/com.marklogic/marklogic-corb) or [JCenter](https://bintray.com/marklogic/maven/marklogic-corb/view).
+Download the latest release directly from https://github.com/marklogic/corb2/releases or resolve dependencies through [Maven Central](http://mvnrepository.com/artifact/com.marklogic/marklogic-corb) or [JCenter](https://bintray.com/marklogic/maven/marklogic-corb/view).
 
-Corb v2.2.0 or later requires [marklogic-xcc-8.0.*.jar or later](https://developer.marklogic.com/products/xcc) to run. Please note that marklogic-xcc 8 is backwards compatible up to MarkLogic 5 and runs on Java 1.6 or later.
+- CoRB v2.4.0 (or later) requires Java 8 (or later) to run.
+
+- [CoRB v2.3.2](https://github.com/marklogic/corb2/releases/tag/2.3.2) is the last release compatable with Java 7 and 6.
+- [CoRB v2.2.0](https://github.com/marklogic/corb2/releases/tag/2.2.0) (or later) requires [marklogic-xcc 8.0.* (or later)](https://developer.marklogic.com/products/xcc) to run.
+> Note: marklogic-xcc 8 is backwards compatible to MarkLogic 5 and runs on Java 1.6 or later.
+
 
 CoRB uses Java logger. To customize logging, specify a logging configuration file using Java system argument  
 `-Djava.util.logging.config.file=/path/to/logging.properties`
