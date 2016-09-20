@@ -40,6 +40,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.text.MessageFormat;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
@@ -153,7 +154,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
                 cipher.init(Cipher.DECRYPT_MODE, privateKey);
                 dValue = new String(cipher.doFinal(DatatypeConverter.parseBase64Binary(value)));
             } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException exc) {
-                LOG.log(INFO, "Cannot decrypt {0}. Ignore if clear text.", property);
+                LOG.log(INFO, MessageFormat.format("Cannot decrypt {0}. Ignore if clear text.", property), exc);
             }
         }
         return dValue == null ? value : dValue.trim();

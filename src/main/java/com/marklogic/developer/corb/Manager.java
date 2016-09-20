@@ -133,7 +133,7 @@ public class Manager extends AbstractManager {
         try {
             manager.init(args);
         } catch (Exception exc) {
-            LOG.log(SEVERE, "Error initializing CORB {0}", exc.getMessage());
+            LOG.log(SEVERE, MessageFormat.format("Error initializing CORB {0}", exc.getMessage()), exc);
             manager.usage();
             System.exit(EXIT_CODE_INIT_ERROR);
         }
@@ -577,11 +577,8 @@ public class Manager extends AbstractManager {
                     session.insertContent(c);
                 }
             }
-        } catch (IOException e) {
-            LOG.log(SEVERE, "error while reading modules {0}", e.getMessage());
-            throw e;
-        } catch (RequestException e) {
-            LOG.log(SEVERE, "error while loading modules {0}", e.getMessage());
+        } catch (IOException | RequestException e) {
+            LOG.log(SEVERE, MessageFormat.format("error while reading modules {0}", e.getMessage()), e);
             throw e;
         } finally {
             session.close();
