@@ -185,7 +185,8 @@ public class PrivateKeyDecrypterTest {
 
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.INFO, records.get(0).getLevel());
-        assertEquals("Loading private key file {0} from classpath", records.get(0).getMessage());
+        String message = records.get(0).getMessage();
+        assertTrue(message.startsWith("Loading private key file ") && message.contains("from classpath"));
     }
 
     /**
