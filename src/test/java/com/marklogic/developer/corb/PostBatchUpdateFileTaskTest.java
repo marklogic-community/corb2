@@ -72,7 +72,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testGetBottomContent_nullBottom() {
+    public void testGetBottomContentNullBottom() {
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
         String result = instance.getBottomContent();
         assertNull(result);
@@ -103,7 +103,7 @@ public class PostBatchUpdateFileTaskTest {
      * Test of moveFile method, of class PostBatchUpdateFileTask.
      */
     @Test
-    public void testMoveFile_String_String() throws Exception {
+    public void testMoveFileStringString() throws Exception {
         File source = createSampleFile();
         String destFilePath = source.toString() + BAK_EXT;
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
@@ -116,7 +116,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testMoveFile_String_String_destExists() throws Exception {
+    public void testMoveFileStringStringDestExists() throws Exception {
         File source = createSampleFile();
         String destFilePath = source.toString() + BAK_EXT;
         File dest = new File(destFilePath);
@@ -134,7 +134,7 @@ public class PostBatchUpdateFileTaskTest {
      * Test of moveFile method, of class PostBatchUpdateFileTask.
      */
     @Test
-    public void testMoveFile_0args() throws Exception {
+    public void testMoveFileZeroargs() throws Exception {
         File partFile = createSamplePartFile();
         String partFilePath = partFile.toString();
         String exportFilePath = partFilePath.substring(0, partFilePath.lastIndexOf('.'));
@@ -172,7 +172,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCompressFile_outputFileDoesNotExist() throws Exception {
+    public void testCompressFileOutputFileDoesNotExist() throws Exception {
         File sampleFile = createSamplePartFile();
         sampleFile.delete();
         Properties props = new Properties();
@@ -190,7 +190,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCompressFile_zipPartExists() throws Exception {
+    public void testCompressFileZipPartExists() throws Exception {
         File sampleFile = createSamplePartFile();
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_AS_ZIP, Boolean.toString(true));
@@ -213,7 +213,7 @@ public class PostBatchUpdateFileTaskTest {
      * Test of call method, of class PostBatchUpdateFileTask.
      */
     @Test
-    public void testCall_removeDuplicatesAndSort_ascUniq() throws Exception {
+    public void testCallRemoveDuplicatesAndSortAscUniq() throws Exception {
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_SORT, "asc|uniq");
         String result = testRemoveDuplicatesAndSort(props);
@@ -225,7 +225,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCall_removeDuplicatesAndSort_ASCENDING() throws Exception {
+    public void testCallRemoveDuplicatesAndSortASCENDING() throws Exception {
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_SORT, "ASCENDING|distinct");
         String result = testRemoveDuplicatesAndSort(props);
@@ -233,7 +233,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCall_removeDuplicatesAndSort_trueSort_withHeaderAndFooter()
+    public void testCallRemoveDuplicatesAndSortTrueSortWithHeaderAndFooter()
             throws Exception {
         String header = "BEGIN\nletter\n";
         
@@ -259,27 +259,27 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCall_removeDuplicatesAndSort_customComparator() throws Exception {
+    public void testCallRemoveDuplicatesAndSortCustomComparator() throws Exception {
         assertTrue(testCustomComparator(null, "b,z...,d....,d....,a....."));
     }
 
     @Test
-    public void testCall_removeDuplicatesAndSort_customComparator_distinct() throws Exception {
+    public void testCallRemoveDuplicatesAndSortCustomComparatorDistinct() throws Exception {
         assertTrue(testCustomComparator("distinct", "b,z...,d....,a....."));
     }
 
     @Test
-    public void testCall_removeDuplicatesAndSort_customComparator_badClass() throws Exception {
+    public void testCallRemoveDuplicatesAndSortCustomComparatorBadClass() throws Exception {
         assertTrue(testCustomComparator("distinct", ZDDAB, "java.lang.String"));
     }
 
     @Test
-    public void testCall_removeDuplicatesAndSort_noSortOrDedup_distinctOnly() throws Exception {
+    public void testCallRemoveDuplicatesAndSortNoSortOrDedupDistinctOnly() throws Exception {
         assertTrue(testCustomComparator("distinct", ZDDAB, null));
     }
 
     @Test
-    public void testCall_removeDuplicatesAndSort_noSortOrDedup_blankSort() throws Exception {
+    public void testCallRemoveDuplicatesAndSortNoSortOrDedupBlankSort() throws Exception {
         assertTrue(testCustomComparator(" ", ZDDAB, null));
     }
 
@@ -313,7 +313,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCall_removeDuplicatesAndSort_descendingDistinct() throws Exception {
+    public void testCallRemoveDuplicatesAndSortDescendingDistinct() throws Exception {
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_SORT, "desc|distinct");
         String result = testRemoveDuplicatesAndSort(props);
@@ -321,7 +321,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCall_removeDuplicatesAndSort_invalidValue() throws Exception {
+    public void testCallRemoveDuplicatesAndSortInvalidValue() throws Exception {
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_SORT, Boolean.toString(false));
         String result = testRemoveDuplicatesAndSort(props);
@@ -339,7 +339,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCall_removeDuplicatesAndSort_emptyFile_extensionWithoutDot() throws Exception {
+    public void testCallRemoveDuplicatesAndSortEmptyFileExtensionWithoutDot() throws Exception {
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
         file.createNewFile();
@@ -354,7 +354,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCall_removeDuplicatesAndSort_emptyFile_emptyExtension() throws Exception {
+    public void testCallRemoveDuplicatesAndSortEmptyFileEmptyExtension() throws Exception {
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
         file.createNewFile();

@@ -86,7 +86,7 @@ public class PrivateKeyDecrypterTest {
      * Test of init_decrypter method, of class PrivateKeyDecrypter.
      */
     @Test
-    public void testInit_decrypter_initNotInvoked() throws Exception {
+    public void testInitDecrypterInitNotInvoked() throws Exception {
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init_decrypter();
         List<LogRecord> records = testLogger.getLogRecords();
@@ -95,7 +95,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testInit_decrypter_missingPrivateKeyFile() throws Exception {
+    public void testInitDecrypterMissingPrivateKeyFile() throws Exception {
         clearSystemProperties();
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
@@ -109,7 +109,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testInit_decrypter_withAlgorithm() throws Exception {
+    public void testInitDecrypterWithAlgorithm() throws Exception {
         clearSystemProperties();
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
@@ -125,7 +125,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testInit_decrypter_withEmptyPrivateKeyPath() throws Exception {
+    public void testInitDecrypterWithEmptyPrivateKeyPath() throws Exception {
         clearSystemProperties();
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
@@ -141,7 +141,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testInit_decrypter_withDirectoryAsPrivateKeyPath() throws Exception {
+    public void testInitDecrypterWithDirectoryAsPrivateKeyPath() throws Exception {
         clearSystemProperties();
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
@@ -157,7 +157,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testInit_decrypter_withInvalidPrivateKeyPath() throws Exception {
+    public void testInitDecrypterWithInvalidPrivateKeyPath() throws Exception {
         clearSystemProperties();
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
@@ -173,7 +173,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testInit_decrypter_loadPrivateKeyFromClasspath() throws Exception {
+    public void testInitDecrypterLoadPrivateKeyFromClasspath() throws Exception {
         clearSystemProperties();
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
@@ -192,7 +192,7 @@ public class PrivateKeyDecrypterTest {
      * Test of doDecrypt method, of class PrivateKeyDecrypter.
      */
     @Test
-    public void testDoDecrypt_withoutPrivateKey() {
+    public void testDoDecryptWithoutPrivateKey() {
         String property = "key";
         String value = "value";
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
@@ -201,7 +201,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testDoDecrypt_withPrivateKey() throws IOException, ClassNotFoundException {
+    public void testDoDecryptWithPrivateKey() throws IOException, ClassNotFoundException {
         String value = SECRET;
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
@@ -212,7 +212,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testDoDecrypt_unencryptedValue() throws IOException, ClassNotFoundException {
+    public void testDoDecryptUnencryptedValue() throws IOException, ClassNotFoundException {
         String value = SECRET;
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
@@ -226,7 +226,7 @@ public class PrivateKeyDecrypterTest {
      * Test of main method, of class PrivateKeyDecrypter.
      */
     @Test
-    public void testMain_genKeys_noOptions() throws Exception {
+    public void testMainGenKeysNoOptions() throws Exception {
         String[] args = {ACTION_GEN_KEYS};
         PrivateKeyDecrypter.main(args);
         assertEquals(GEN_KEYS_USAGE + NEWLINE, errContent.toString());
@@ -239,7 +239,7 @@ public class PrivateKeyDecrypterTest {
     }
     
     @Test
-    public void testMain_genKeys() throws Exception {
+    public void testMainGenKeys() throws Exception {
         File tempPublic = createTempFile();
         File tempPrivate = createTempFile();
         String[] args = {ACTION_GEN_KEYS, tempPrivate.toString(), tempPublic.toString(), ALGORITHM, STRENGTH};
@@ -249,7 +249,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMain_genKeys_emptyPrivateKeyPath() throws Exception {
+    public void testMainGenKeysEmptyPrivateKeyPath() throws Exception {
         File tempPublic = createTempFile();
         tempPublic.delete();
         File tempPrivate = createTempFile();
@@ -261,7 +261,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMain_genKeys_emptyPublicKeyPath() throws Exception {
+    public void testMainGenKeysEmptyPublicKeyPath() throws Exception {
         File tempPublic = createTempFile();
         tempPublic.delete();
         File tempPrivate = createTempFile();
@@ -273,7 +273,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMain_genKeys_emptyArgValues() throws Exception {
+    public void testMainGenKeysEmptyArgValues() throws Exception {
         File tempPublic = createTempFile();
         tempPublic.delete();
         File tempPrivate = createTempFile();
@@ -285,14 +285,14 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMain_encrypt() throws Exception {
+    public void testMainEncrypt() throws Exception {
         String[] args = {ACTION_ENCRYPT};
         PrivateKeyDecrypter.main(args);
         assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
     }
 
     @Test
-    public void testMain_encrypt_allParameters() throws Exception {
+    public void testMainEncryptAllParameters() throws Exception {
         String[] args = {ACTION_ENCRYPT, PUBLIC_KEY_PATH, SECRET, ALGORITHM};
         setSystemProperties();
         PrivateKeyDecrypter.main(args);
@@ -301,7 +301,7 @@ public class PrivateKeyDecrypterTest {
 
     //TODO: test with an algorithm other than RSA
     @Test(expected = NoSuchAlgorithmException.class)
-    public void testMain_encrypt_invalidAlgorithm() throws Exception {
+    public void testMainEncryptInvalidAlgorithm() throws Exception {
         String[] args = {ACTION_ENCRYPT, PUBLIC_KEY_PATH, SECRET, "badAlgorithm"};
         setSystemProperties();
         PrivateKeyDecrypter.main(args);
@@ -309,7 +309,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test(expected = InvalidKeySpecException.class)
-    public void testMain_encrypt_invalidPublicKey() throws Exception {
+    public void testMainEncryptInvalidPublicKey() throws Exception {
         String[] args = {ACTION_ENCRYPT, PRIVATE_KEY_PATH, SECRET, ALGORITHM};
         setSystemProperties();
         PrivateKeyDecrypter.main(args);
@@ -317,7 +317,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMain_encrypt_blankValue() throws Exception {
+    public void testMainEncryptBlankValue() throws Exception {
         String[] args = {ACTION_ENCRYPT, PRIVATE_KEY_PATH, "", ALGORITHM};
         setSystemProperties();
         PrivateKeyDecrypter.main(args);
@@ -325,7 +325,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMain_encrypt_nullKey() throws Exception {
+    public void testMainEncryptNullKey() throws Exception {
         String[] args = {ACTION_ENCRYPT, "", SECRET, ALGORITHM};
         setSystemProperties();
         PrivateKeyDecrypter.main(args);
@@ -333,7 +333,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMain_invalidFirstArg() throws Exception {
+    public void testMainInvalidFirstArg() throws Exception {
         String[] args = {"invalidUsage"};
         PrivateKeyDecrypter.main(args);
         assertEquals(USAGE, outContent.toString());
@@ -347,14 +347,14 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMain_emptyArgsArray() throws Exception {
+    public void testMainEmptyArgsArray() throws Exception {
         String[] args = {};
         PrivateKeyDecrypter.main(args);
         assertEquals(USAGE, outContent.toString());
     }
 
     @Test
-    public void testMain_blankArgsArray() throws Exception {
+    public void testMainBlankArgsArray() throws Exception {
         String[] args = {ACTION_ENCRYPT, "", "", ""};
         PrivateKeyDecrypter.main(args);
         assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());

@@ -66,7 +66,7 @@ public class ExportToFileTaskTest {
     }
     
     @Test
-    public void testGetFileName_withLeadingSlash() {
+    public void testGetFileNameWithLeadingSlash() {
         ExportToFileTask instance = new ExportToFileTask();
         String expected = "/corb2";
         String[] uri = {expected};
@@ -76,7 +76,7 @@ public class ExportToFileTaskTest {
     }
     
     @Test (expected = NullPointerException.class)
-    public void testGetFileName_nullInputURI() {
+    public void testGetFileNameNullInputURI() {
         ExportToFileTask instance = new ExportToFileTask();
         instance.getFileName();
         fail();
@@ -86,7 +86,7 @@ public class ExportToFileTaskTest {
      * Test of writeToFile method, of class ExportToFileTask.
      */
     @Test
-    public void testWriteToFile_nullSequence() throws Exception {
+    public void testWriteToFileNullSequence() throws Exception {
         ResultSequence seq = null;
         ExportToFileTask instance = new ExportToFileTask();
         instance.exportDir = tempFolder.newFolder().toString();
@@ -117,7 +117,7 @@ public class ExportToFileTaskTest {
     }
     
     @Test
-    public void testWriteToFile_noResults() throws Exception {
+    public void testWriteToFileNoResults() throws Exception {
         ResultSequence seq = mock(ResultSequence.class);
         when(seq.hasNext()).thenReturn(Boolean.FALSE);      
         ExportToFileTask instance = new ExportToFileTask(); 
@@ -133,7 +133,7 @@ public class ExportToFileTaskTest {
      * Test of processResult method, of class ExportToFileTask.
      */
     @Test
-    public void testProcessResult_noResults() throws Exception {
+    public void testProcessResultNoResults() throws Exception {
         ResultSequence seq = null;
         ExportToFileTask instance = new ExportToFileTask();
         String result = instance.processResult(seq);
@@ -141,7 +141,7 @@ public class ExportToFileTaskTest {
     }
 
     @Test (expected = NullPointerException.class)
-    public void testProcessResult_nullInputUris() throws Exception {
+    public void testProcessResultNullInputUris() throws Exception {
         ResultSequence seq = mock(ResultSequence.class);
         
         when(seq.hasNext()).thenReturn(true).thenReturn(false);

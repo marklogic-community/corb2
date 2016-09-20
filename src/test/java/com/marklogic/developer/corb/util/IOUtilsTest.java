@@ -57,7 +57,7 @@ public class IOUtilsTest {
     }
 
     @Test
-    public void testCloseQuietly_throws() throws IOException {
+    public void testCloseQuietlyThrows() throws IOException {
         Closeable closeable = new Closeable() {
             @Override
             public void close() throws IOException {
@@ -69,14 +69,14 @@ public class IOUtilsTest {
     }
 
     @Test
-    public void testCloseQuietly_null() throws IOException {
+    public void testCloseQuietlyNull() throws IOException {
         Closeable closeable = null;
         IOUtils.closeQuietly(closeable);
         //did not throw IOException
     }
 
     @Test(expected = IOException.class)
-    public void testCopy_null_InputStream() throws Exception {
+    public void testCopyNullInputStream() throws Exception {
         InputStream in = null;
         File out = File.createTempFile("copiedFile", "txt");
         out.deleteOnExit();
@@ -84,7 +84,7 @@ public class IOUtilsTest {
     }
 
     @Test(expected = IOException.class)
-    public void testCopy_InputStream_null() throws Exception {
+    public void testCopyInputStreamNull() throws Exception {
         InputStream in = new FileInputStream(exampleContentFile);
         copy(in, null);
     }
@@ -95,7 +95,7 @@ public class IOUtilsTest {
      * @throws java.lang.Exception
      */
     @Test
-    public void testCopy_Reader_OutputStream() throws Exception {
+    public void testCopyReaderOutputStream() throws Exception {
         Reader in = new FileReader(exampleContentFile);
         OutputStream out = new ByteArrayOutputStream();
 
@@ -104,14 +104,14 @@ public class IOUtilsTest {
     }
 
     @Test(expected = IOException.class)
-    public void testCopy_ReaderIsNull_OutputStream() throws IOException {
+    public void testCopyReaderIsNullOutputStream() throws IOException {
         Reader in = null;
         OutputStream out = new ByteArrayOutputStream();
         copy(in, out);
     }
 
     @Test(expected = IOException.class)
-    public void testCopy_Reader_OutputStreamIsNull() throws IOException {
+    public void testCopyReaderOutputStreamIsNull() throws IOException {
         Reader in = new FileReader(exampleContentFile);
         OutputStream out = null;
         copy(in, out);
@@ -123,7 +123,7 @@ public class IOUtilsTest {
      * @throws java.lang.Exception
      */
     @Test
-    public void testCat_Reader() throws Exception {
+    public void testCatReader() throws Exception {
         Reader reader = new FileReader(exampleContentFile);
         String result = cat(reader);
         assertEquals(exampleContent, result);
@@ -135,7 +135,7 @@ public class IOUtilsTest {
      * @throws java.lang.Exception
      */
     @Test
-    public void testCat_InputStream() throws Exception {
+    public void testCatInputStream() throws Exception {
         InputStream is = new FileInputStream(exampleContentFile);
         byte[] result = cat(is);
         assertArrayEquals(exampleContent.getBytes(), result);
@@ -147,7 +147,7 @@ public class IOUtilsTest {
      * @throws java.lang.Exception
      */
     @Test
-    public void testGetSize_InputStream() throws Exception {
+    public void testGetSizeInputStream() throws Exception {
         long result = -1;
         InputStream is;
         try {
@@ -164,7 +164,7 @@ public class IOUtilsTest {
      * @throws java.lang.Exception
      */
     @Test
-    public void testGetSize_Reader() throws Exception {
+    public void testGetSizeReader() throws Exception {
         Reader reader = new FileReader(exampleContentFile);
         long result = getSize(reader);
         assertEquals(exampleContent.length(), result);

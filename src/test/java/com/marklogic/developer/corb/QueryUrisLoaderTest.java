@@ -52,7 +52,7 @@ public class QueryUrisLoaderTest {
      * Test of open method, of class QueryUrisLoader.
      */
     @Test(expected = NullPointerException.class)
-    public void testOpen_nullPropertiesAndNullOptions() throws Exception {
+    public void testOpenNullPropertiesAndNullOptions() throws Exception {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -67,7 +67,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testOpen_withBadUrisReplacePattern() throws Exception {
+    public void testOpenWithBadUrisReplacePattern() throws Exception {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -85,7 +85,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = CorbException.class)
-    public void testOpen_badUriCount() throws Exception {
+    public void testOpenBadUriCount() throws Exception {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -119,7 +119,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = CorbException.class)
-    public void testOpen_inlineUriModule() throws Exception {
+    public void testOpenInlineUriModule() throws Exception {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -153,7 +153,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_noCodeInInline() throws Exception {
+    public void testOpenNoCodeInInline() throws Exception {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);

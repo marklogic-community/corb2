@@ -164,7 +164,7 @@ public class ManagerIT {
     }
 
     @Test
-    public void testManagerUsingSysProps_largeUrisList() throws Exception {
+    public void testManagerUsingSysPropsLargeUrisList() throws Exception {
         clearSystemProperties();
         int uriCount = 100;
         String exportFilename = "testManagerUsingSysProps1.txt";
@@ -460,7 +460,7 @@ POST_XQUERY_MODULE_OUTPUT;
      */
     //Main instantiates a new Manager, so need to move to Integration or change implementation
     @Test
-    public void testMain_nullArgs() {
+    public void testMainNullArgs() {
         String[] args = null;
         exit.expectSystemExit();
         Manager.main(args);
@@ -470,7 +470,7 @@ POST_XQUERY_MODULE_OUTPUT;
     }
 
     @Test
-    public void testMain_exception() {
+    public void testMainException() {
         String[] args = ManagerTest.getDefaultArgs();
         exit.expectSystemExit();
         Manager.main(args);
@@ -538,7 +538,7 @@ POST_XQUERY_MODULE_OUTPUT;
     }
 
     @Test
-    public void testCommandFilePause_resumeWhenCommandFileChangedAndNoCommand() throws IOException, Exception {
+    public void testCommandFilePauseResumeWhenCommandFileChangedAndNoCommand() throws IOException, Exception {
         clearSystemProperties();
         File exportFile = new File(ManagerTest.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_NAME);
         exportFile.deleteOnExit();

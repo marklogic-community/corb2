@@ -258,7 +258,7 @@ public class AbstractManagerTest {
      * Test of init method, of class AbstractManager.
      */
     @Test
-    public void testInit_StringArrProperties() throws Exception {
+    public void testInitStringArrProperties() throws Exception {
         String[] args = null;
         Properties props = new Properties();
         props.setProperty(KEY, VALUE);
@@ -351,7 +351,7 @@ public class AbstractManagerTest {
     }
 
     @Test(expected = InstantiationException.class)
-    public void testInitURI_nullURI() throws Exception {
+    public void testInitURINullURI() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
         instance.initURI(null);
         fail();
@@ -488,7 +488,7 @@ public class AbstractManagerTest {
     }
 
     @Test(expected = XccConfigException.class)
-    public void testPrepareContentSource_noScheme() throws Exception {
+    public void testPrepareContentSourceNoScheme() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
         instance.connectionUri = new URI("//user:pass@localhost:8001");
         instance.sslConfig = mock(SSLConfig.class);
@@ -512,7 +512,7 @@ public class AbstractManagerTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testGetSecurityOptions_nullPointer() throws Exception {
+    public void testGetSecurityOptionsNullPointer() throws Exception {
         AbstractManager instance = new AbstractManagerImpl();
         instance.getSecurityOptions();
         fail();

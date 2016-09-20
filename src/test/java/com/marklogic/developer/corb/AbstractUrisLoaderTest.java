@@ -149,7 +149,7 @@ public class AbstractUrisLoaderTest {
      * Test of parseUriReplacePatterns method, of class AbstractUrisLoader.
      */
     @Test(expected = IllegalArgumentException.class)
-    public void testParseUriReplacePatterns_uneven() {
+    public void testParseUriReplacePatternsUneven() {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         Properties props = new Properties();
         props.setProperty(Options.URIS_REPLACE_PATTERN, "foo|bar");

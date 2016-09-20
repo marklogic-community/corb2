@@ -47,7 +47,7 @@ public class PreBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testGetTopContent_isNull() {
+    public void testGetTopContentIsNull() {
         Properties props = new Properties();
         props.setProperty(Manager.URIS_BATCH_REF, "bar");
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
@@ -57,7 +57,7 @@ public class PreBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testGetTopContent_urisBatchRefIsNull() {
+    public void testGetTopContentUrisBatchRefIsNull() {
         Properties props = new Properties();
         String val = "foo@" + Manager.URIS_BATCH_REF + "baz";
         props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, val);
@@ -93,7 +93,7 @@ public class PreBatchUpdateFileTaskTest {
      * Test of call method, of class PreBatchUpdateFileTask.
      */
     @Test(expected = NullPointerException.class)
-    public void testCall_npe() throws Exception {
+    public void testCallNpe() throws Exception {
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.call();
         fail();

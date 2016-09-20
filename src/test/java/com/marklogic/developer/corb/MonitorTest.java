@@ -51,7 +51,7 @@ public class MonitorTest {
     }
 
     @Test
-    public void testRun_whenPaused() {
+    public void testRunWhenPaused() {
         PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
         when(pool.isPaused()).thenReturn(true);
         Monitor instance = new Monitor(pool, mock(CompletionService.class), mock(Manager.class));
@@ -65,7 +65,7 @@ public class MonitorTest {
      * Test of calculateThreadsPerSecond method, of class Monitor.
      */
     @Test
-    public void testCalculateTransactionsPerSecond_3args() {
+    public void testCalculateTransactionsPerSecond3args() {
         long amountCompleted = 10L;
         long previousMillis = 1000L;
         long currentMillis = 2000L;
@@ -78,7 +78,7 @@ public class MonitorTest {
      * Test of calculateThreadsPerSecond method, of class Monitor.
      */
     @Test
-    public void testCalculateThreadsPerSecond_4args() {
+    public void testCalculateThreadsPerSecond4args() {
         long amountCompleted = 110L;
         long previouslyCompleted = 10L;
         long currentMillis = 2000L;
@@ -92,7 +92,7 @@ public class MonitorTest {
      * Test of calculateThreadsPerSecond method, of class Monitor.
      */
     @Test
-    public void testCalculateThreadsPerSecond_fractional() {
+    public void testCalculateThreadsPerSecondFractional() {
         long amountCompleted = 10L;
         long previouslyCompleted = 9L;
         long currentMillis = 3000L;
@@ -113,7 +113,7 @@ public class MonitorTest {
     }
 
     @Test
-    public void testGetEstimatedTimeCompletion_zero() {
+    public void testGetEstimatedTimeCompletionZero() {
     	assertEquals("00:00:-1", Monitor.getEstimatedTimeCompletion(100, 50, 0, false));
         assertEquals("00:00:-1 (paused)", Monitor.getEstimatedTimeCompletion(100, 50, 0, true));
     }

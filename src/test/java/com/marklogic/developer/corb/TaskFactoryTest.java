@@ -37,7 +37,7 @@ public class TaskFactoryTest {
      * Test of newProcessTask method, of class TaskFactory.
      */
     @Test(expected = NullPointerException.class)
-    public void testNewProcessTask_StringArr_nullManager() {
+    public void testNewProcessTaskStringArrNullManager() {
         String[] uris = null;
         TaskFactory instance = new TaskFactory(null);
         instance.newProcessTask(uris);
@@ -45,7 +45,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testNewProcessTask_StringArr_nullPorcessTask() {
+    public void testNewProcessTaskStringArrNullPorcessTask() {
         String[] uris = null;
         Manager manager = new Manager();
         TaskFactory instance = new TaskFactory(manager);
@@ -54,7 +54,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testNewProcessTask_StringArr_nullUrisAndNullContentSource() {
+    public void testNewProcessTaskStringArrNullUrisAndNullContentSource() {
         String[] uris = null;
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
@@ -64,7 +64,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testNewProcessTask_StringArr_nullInputUriWithContentSourceAndModule() {
+    public void testNewProcessTaskStringArrNullInputUriWithContentSourceAndModule() {
         String[] uris = null;
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
@@ -75,7 +75,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testNewProcessTask_StringArr() {
+    public void testNewProcessTaskStringArr() {
         String[] uris = new String[]{MODULE};
         Manager manager = new Manager();
         manager.options.setProcessTaskClass(ExportBatchToFileTask.class);
@@ -87,7 +87,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testNewProcessTask_StringArr_emptyUris() {
+    public void testNewProcessTaskStringArrEmptyUris() {
         String[] uris = new String[]{};
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
@@ -99,7 +99,7 @@ public class TaskFactoryTest {
     }
 
     @Test
-    public void testNewProcessTask_StringArr_withProcessModuleAndContentSource() {
+    public void testNewProcessTaskStringArrWithProcessModuleAndContentSource() {
         String[] uris = new String[]{"a"};
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
@@ -111,7 +111,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testNewProcessTask_StringArr_nullProcessModule() {
+    public void testNewProcessTaskStringArrNullProcessModule() {
         String[] uris = new String[]{"a"};
         Manager manager = new Manager();
         manager.contentSource = mock(ContentSource.class);
@@ -124,7 +124,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testNewProcessTask_StringArr_nullContentSource() {
+    public void testNewProcessTaskStringArrNullContentSource() {
         String[] uris = new String[]{"a"};
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
@@ -138,7 +138,7 @@ public class TaskFactoryTest {
      * Test of newProcessTask method, of class TaskFactory.
      */
     @Test
-    public void testNewProcessTask_StringArr_boolean() {
+    public void testNewProcessTaskStringArrBoolean() {
         String[] uris = new String[]{"a"};
         boolean failOnError = false;
         Manager manager = new Manager();
@@ -153,7 +153,7 @@ public class TaskFactoryTest {
      * Test of newPreBatchTask method, of class TaskFactory.
      */
     @Test
-    public void testNewPreBatchTask_noBatchTaskOrModule() {
+    public void testNewPreBatchTaskNoBatchTaskOrModule() {
         Manager manager = new Manager();
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newPreBatchTask();
@@ -161,7 +161,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testNewPreBatchTask_onlyPreBatchTaskClass() {
+    public void testNewPreBatchTaskOnlyPreBatchTaskClass() {
         Manager manager = new Manager();
         manager.options.setPreBatchTaskClass(ExportBatchToFileTask.class);
         TaskFactory instance = new TaskFactory(manager);
@@ -170,7 +170,7 @@ public class TaskFactoryTest {
     }
 
     @Test
-    public void testNewPreBatchTask_withClassModuleAndSource() {
+    public void testNewPreBatchTaskWithClassModuleAndSource() {
         Manager manager = new Manager();
         //manager.options.setPreBatchTaskClass(ExportBatchToFileTask.class);
         manager.options.setPreBatchModule(MODULE);
@@ -181,7 +181,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testNewPreBatchTask_noPreBatchModuleAndContent() {
+    public void testNewPreBatchTaskNoPreBatchModuleAndContent() {
         Manager manager = new Manager();
         manager.options.setPreBatchTaskClass(ExportBatchToFileTask.class);
         manager.options.setPreBatchModule(MODULE);
@@ -192,7 +192,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testNewPreBatchTask_withPreBatchTaskClassAndContent() {
+    public void testNewPreBatchTaskWithPreBatchTaskClassAndContent() {
         Manager manager = new Manager();
         manager.options.setPreBatchTaskClass(ExportBatchToFileTask.class);
         manager.contentSource = mock(ContentSource.class);
@@ -213,7 +213,7 @@ public class TaskFactoryTest {
      * Test of newPostBatchTask method, of class TaskFactory.
      */
     @Test
-    public void testNewPostBatchTask_noPostbatchTaskClassOrModule() {
+    public void testNewPostBatchTaskNoPostbatchTaskClassOrModule() {
         Manager manager = new Manager();
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newPostBatchTask();
@@ -221,7 +221,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testNewPostBatchTask_onlyPostBatchTaskClass() {
+    public void testNewPostBatchTaskOnlyPostBatchTaskClass() {
         Manager manager = new Manager();
         manager.options.setPostBatchTaskClass(ExportBatchToFileTask.class);
         TaskFactory instance = new TaskFactory(null);
@@ -230,7 +230,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testNewPostBatchTask_noPostBatchModuleAndContent() {
+    public void testNewPostBatchTaskNoPostBatchModuleAndContent() {
         Manager manager = new Manager();
         manager.options.setPostBatchTaskClass(ExportBatchToFileTask.class);
         manager.options.setPostBatchModule(MODULE);
@@ -241,7 +241,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testNewPostBatchTask_withClassModuleAndSource() {
+    public void testNewPostBatchTaskWithClassModuleAndSource() {
         Manager manager = new Manager();
         manager.options.setPostBatchTaskClass(ExportBatchToFileTask.class);
         manager.options.setPostBatchModule(MODULE);
@@ -265,7 +265,7 @@ public class TaskFactoryTest {
      * Test of newInitTask method, of class TaskFactory.
      */
     @Test
-    public void testNewInitTask_noPostbatchTaskClassOrModule() {
+    public void testNewInitTaskNoPostbatchTaskClassOrModule() {
         Manager manager = new Manager();
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newInitTask();
@@ -273,7 +273,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testNewInitTask_withInitTaskClassOnly() {
+    public void testNewInitTaskWithInitTaskClassOnly() {
         Manager manager = new Manager();
         manager.options.setInitTaskClass(ExportBatchToFileTask.class);
         TaskFactory instance = new TaskFactory(manager);
@@ -282,7 +282,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testNewInitTask_withInitModuleOnly() {
+    public void testNewInitTaskWithInitModuleOnly() {
         Manager manager = new Manager();
         manager.options.setInitModule(MODULE);
         TaskFactory instance = new TaskFactory(manager);
@@ -291,7 +291,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testNewInitTask_withTaskClassAndInitModule() {
+    public void testNewInitTaskWithTaskClassAndInitModule() {
         Manager manager = new Manager();
         manager.options.setInitTaskClass(ExportBatchToFileTask.class);
         manager.options.setInitModule(MODULE);
@@ -301,7 +301,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testNewInitTask_withInitModule() {
+    public void testNewInitTaskWithInitModule() {
         Manager manager = new Manager();
         manager.options.setInitModule(MODULE);
         TaskFactory instance = new TaskFactory(manager);
@@ -310,7 +310,7 @@ public class TaskFactoryTest {
     }
 
     @Test
-    public void testNewInitTask_withInitModuleAndContentSource() {
+    public void testNewInitTaskWithInitModuleAndContentSource() {
         Manager manager = new Manager();
         manager.options.setInitModule(MODULE);
         manager.contentSource = mock(ContentSource.class);
@@ -332,7 +332,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testNewInitTask_emptyModule() throws IOException {
+    public void testNewInitTaskEmptyModule() throws IOException {
         Manager manager = new Manager();
         File emptyModule = File.createTempFile("testNewInitTask", "txt");
         emptyModule.createNewFile();
@@ -347,7 +347,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testNewInitTask_inline() {
+    public void testNewInitTaskInline() {
         Manager manager = new Manager();
         manager.options.setInitModule("INLINE-XQUERY|for $i in (1 to 5) $i");
         manager.options.setInitTaskClass(ExportBatchToFileTask.class);
@@ -359,7 +359,7 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testNewInitTask_inline_isEmpty() {
+    public void testNewInitTaskInlineIsEmpty() {
         Manager manager = new Manager();
         manager.options.setInitModule("INLINE-JAVASCRIPT|");
         manager.options.setInitTaskClass(ExportBatchToFileTask.class);

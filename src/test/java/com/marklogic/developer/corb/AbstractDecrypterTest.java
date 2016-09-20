@@ -40,7 +40,7 @@ public class AbstractDecrypterTest {
      * Test of init method, of class AbstractDecrypter.
      */
     @Test
-    public void testInit_nullProperties() throws Exception {
+    public void testInitNullProperties() throws Exception {
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         instance.init(null);
         assertNotNull(instance.properties);
@@ -72,7 +72,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testGetConnectionURI_constructUrl() {
+    public void testGetConnectionURIConstructUrl() {
         String uri = null;
         String dbname = "db";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
@@ -81,7 +81,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testGetConnectionURI_constructUrl_dbIsNull() {
+    public void testGetConnectionURIConstructUrlDbIsNull() {
         String uri = null;
         String dbname = null;
         AbstractDecrypter instance = new AbstractDecrypterImpl();
@@ -91,7 +91,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testGetConnectionURI_constructUrl_dbIsBlank() {
+    public void testGetConnectionURIConstructUrlDbIsBlank() {
         String uri = null;
         String dbname = "";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
@@ -103,7 +103,7 @@ public class AbstractDecrypterTest {
      * Test of decrypt method, of class AbstractDecrypter.
      */
     @Test
-    public void testDecrypt_notEncrypted() {
+    public void testDecryptNotEncrypted() {
         String property = "unencryptedProp";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         String result = instance.decrypt(property, VALUE);
@@ -111,7 +111,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testDecrypt_encrypted() {
+    public void testDecryptEncrypted() {
         String property = "encryptedProp";
         String value = "ENC("+ VALUE + ")";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
@@ -134,7 +134,7 @@ public class AbstractDecrypterTest {
      * Test of getProperty method, of class AbstractDecrypter.
      */
     @Test
-    public void testGetProperty_nullProperties() {
+    public void testGetPropertyNullProperties() {
         String key = "testProperty";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         String result = instance.getProperty(key);
@@ -151,7 +151,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testGetProperty_blankSystemProperty() throws IOException, ClassNotFoundException {
+    public void testGetPropertyBlankSystemProperty() throws IOException, ClassNotFoundException {
         String key = "testGetSystemProperty";
         System.setProperty(key, FOUR_SPACES);
         AbstractDecrypter instance = new AbstractDecrypterImpl();
@@ -162,7 +162,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testGetProperty_blankPropertiesProperty() throws IOException, ClassNotFoundException {
+    public void testGetPropertyBlankPropertiesProperty() throws IOException, ClassNotFoundException {
         String key = "testGetBlankProperty";
         System.setProperty(key, FOUR_SPACES);
         AbstractDecrypter instance = new AbstractDecrypterImpl();

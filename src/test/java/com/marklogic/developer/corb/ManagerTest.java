@@ -119,7 +119,7 @@ public class ManagerTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testRejectedExecution_npe() {
+    public void testRejectedExecutionNpe() {
         Runnable r = mock(Runnable.class);
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
 
@@ -143,7 +143,7 @@ public class ManagerTest {
     }
 
     @Test(expected = MockitoException.class)
-    public void testRejectedExecution_rejectedExecution() {
+    public void testRejectedExecutionRejectedExecution() {
         Runnable r = mock(Runnable.class);
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
 
@@ -155,7 +155,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testRejectedExecution_warningIsTrueAndQueIsNotNull() {
+    public void testRejectedExecutionWarningIsTrueAndQueIsNotNull() {
         Runnable r = mock(Runnable.class);
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
         @SuppressWarnings("unchecked")
@@ -175,7 +175,7 @@ public class ManagerTest {
      * Test of init method, of class Manager.
      */
     @Test (expected = InstantiationException.class)
-    public void testInit_nullArgs_properties() throws Exception {
+    public void testInitNullArgsProperties() throws Exception {
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
@@ -185,7 +185,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInit_blankCollection() throws Exception {
+    public void testInitBlankCollection() throws Exception {
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
@@ -199,7 +199,7 @@ public class ManagerTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testInit_urisFileDoesNoteExist() throws Exception {
+    public void testInitUrisFileDoesNoteExist() throws Exception {
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
@@ -213,7 +213,7 @@ public class ManagerTest {
     }
 
     @Test (expected = InstantiationException.class)
-    public void testInit_nullArgs_emptyProperties() throws Exception {
+    public void testInitNullArgsEmptyProperties() throws Exception {
         String[] args = null;
         Properties props = new Properties();
         Manager instance = getMockManagerWithEmptyResults();
@@ -224,7 +224,7 @@ public class ManagerTest {
      * Test of initOptions method, of class Manager.
      */
     @Test(expected = NullPointerException.class)
-    public void testInitOptions_nullArgs() throws Exception {
+    public void testInitOptionsNullArgs() throws Exception {
         String[] args = null;
         Manager instance = getMockManagerWithEmptyResults();
         instance.initOptions(args);
@@ -240,7 +240,7 @@ public class ManagerTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testInitOptions_withEmptyProperties() throws Exception {
+    public void testInitOptionsWithEmptyProperties() throws Exception {
         String[] args = null;
         Manager instance = getMockManagerWithEmptyResults();
         instance.properties = new Properties();
@@ -249,7 +249,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_urisFileIsBlank() throws Exception {
+    public void testInitOptionsUrisFileIsBlank() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[15] = "      ";
@@ -262,7 +262,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_urisFileIsNull() throws Exception {
+    public void testInitOptionsUrisFileIsNull() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[15] = null;
@@ -275,7 +275,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_setXQUERY_MODULE_property() throws Exception {
+    public void testInitOptionsSetXQUERYMODULEProperty() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[2] = null;
@@ -288,7 +288,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_setPROCESS_MODULE_property() throws Exception {
+    public void testInitOptionsSetPROCESSMODULEProperty() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[2] = "";//process-module
@@ -301,7 +301,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_setInstall_property_true() throws Exception {
+    public void testInitOptionsSetInstallPropertyTrue() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[7] = Boolean.toString(true);//install
@@ -312,7 +312,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_setInstall_property_one() throws Exception {
+    public void testInitOptionsSetInstallPropertyOne() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[7] = "1";//install
@@ -323,7 +323,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_setInstall_property_maybe() throws Exception {
+    public void testInitOptionsSetInstallPropertyMaybe() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[7] = "maybe";//install
@@ -334,7 +334,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_setDISK_QUEUE_MAX_IN_MEMORY_SIZE_property() throws Exception {
+    public void testInitOptionsSetDISKQUEUEMAXINMEMORYSIZEProperty() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
 
@@ -346,7 +346,7 @@ public class ManagerTest {
     }
 
     @Test(expected = NumberFormatException.class)
-    public void testInitOptions_setDISK_QUEUE_MAX_IN_MEMORY_SIZE_property_NaN() throws Exception {
+    public void testInitOptionsSetDISKQUEUEMAXINMEMORYSIZEPropertyNaN() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
 
@@ -358,7 +358,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_missingPROCESS_MODULE() throws Exception {
+    public void testInitOptionsMissingPROCESSMODULE() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[2] = "";
@@ -370,7 +370,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_normalizeLegacySystemProperties() throws Exception {
+    public void testInitOptionsNormalizeLegacySystemProperties() throws Exception {
         clearSystemProperties();
         String propertySuffix = ".foo";
         System.setProperty(Options.XQUERY_MODULE, PROCESS_MODULE);
@@ -399,7 +399,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_normalizeLegacyProperties() throws Exception {
+    public void testInitOptionsNormalizeLegacyProperties() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[2] = null; //process-module
@@ -425,7 +425,7 @@ public class ManagerTest {
     }
 
     @Test(expected = NumberFormatException.class)
-    public void testInitOptions_batchSize_parseError() throws Exception {
+    public void testInitOptionsBatchSizeParseError() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
@@ -436,7 +436,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_batchSize() throws Exception {
+    public void testInitOptionsBatchSize() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
@@ -447,7 +447,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInit_failOnError_falseCaseInsensitive() throws Exception {
+    public void testInitFailOnErrorFalseCaseInsensitive() throws Exception {
         clearSystemProperties();
         System.setProperty(Options.FAIL_ON_ERROR, "False");
         String[] args = getDefaultArgs();
@@ -459,7 +459,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInit_failOnErrorInvalidValue() throws Exception {
+    public void testInitFailOnErrorInvalidValue() throws Exception {
         clearSystemProperties();
         System.setProperty(Options.FAIL_ON_ERROR, "No");
         String[] args = getDefaultArgs();
@@ -471,7 +471,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_ensurePropertiesAreSet() throws Exception {
+    public void testInitOptionsEnsurePropertiesAreSet() throws Exception {
         clearSystemProperties();
         System.setProperty(Options.ERROR_FILE_NAME, EXPORT_FILE_DIR + "/out");
         System.setProperty(Options.EXPORT_FILE_PART_EXT, "pt");
@@ -487,7 +487,7 @@ public class ManagerTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testInitOptions_exportDirNotExists() throws Exception {
+    public void testInitOptionsExportDirNotExists() throws Exception {
         clearSystemProperties();
 
         String[] args = getDefaultArgs();
@@ -500,7 +500,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_exportFileAndErrorFileExists() throws Exception {
+    public void testInitOptionsExportFileAndErrorFileExists() throws Exception {
         clearSystemProperties();
         String errorFilename = "error.txt";
         File errorFile = new File(EXPORT_FILE_DIR, errorFilename);
@@ -518,7 +518,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_clearExportFilePartExt() throws Exception {
+    public void testInitOptionsClearExportFilePartExt() throws Exception {
         clearSystemProperties();
 
         System.setProperty(Options.EXPORT_FILE_PART_EXT, "exp");
@@ -533,7 +533,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_defaultOptions() throws Exception {
+    public void testInitOptionsDefaultOptions() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         //args[2] = null;
@@ -576,7 +576,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_initModule() throws Exception {
+    public void testInitOptionsInitModule() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
@@ -587,7 +587,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_processTaskClass() throws Exception {
+    public void testInitOptionsProcessTaskClass() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
@@ -598,7 +598,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_customUrisLoader() throws Exception {
+    public void testInitOptionsCustomUrisLoader() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         String loader = FileUrisLoader.class.getName();
@@ -610,7 +610,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptions_InstallWithBlankModules() throws Exception {
+    public void testInitOptionsInstallWithBlankModules() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[4] = "src/test/resources/selector.xqy";
@@ -626,7 +626,7 @@ public class ManagerTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testInitOptions_InstallWithMissingModule() throws Exception {
+    public void testInitOptionsInstallWithMissingModule() throws Exception {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[4] = "src/test/resources/doesNotExist.xqy";
@@ -638,7 +638,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testNormalizeLegacyProperties_whenPropertiesIsNull() throws RequestException {
+    public void testNormalizeLegacyPropertiesWhenPropertiesIsNull() throws RequestException {
         Manager manager = getMockManagerWithEmptyResults();
         manager.properties = null;
         manager.normalizeLegacyProperties();
@@ -661,7 +661,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testNormalizeLegacyProperties_precedenceChecks() throws RequestException {
+    public void testNormalizeLegacyPropertiesPrecedenceChecks() throws RequestException {
         Properties props = new Properties();
         String processVal = "legacyValue";
         props.setProperty("PROCESS-MODULE.bar", processVal);
@@ -687,7 +687,7 @@ public class ManagerTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testGetTaskCls_notTaskClass() throws Exception {
+    public void testGetTaskClsNotTaskClass() throws Exception {
         String type = "";
         Manager instance = new Manager();
         Class<? extends Task> expResult = Transform.class;
@@ -709,7 +709,7 @@ public class ManagerTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testGetUrisLoaderCls_notUrisClass() throws Exception {
+    public void testGetUrisLoaderClsNotUrisClass() throws Exception {
         Manager instance = new Manager();
         Class<? extends UrisLoader> expResult = FileUrisLoader.class;
         Class<? extends UrisLoader> result = instance.getUrisLoaderCls(String.class.getName());
@@ -718,7 +718,7 @@ public class ManagerTest {
     }
 
     @Test(expected = ClassNotFoundException.class)
-    public void testGetUrisLoaderCls_badClassname() throws Exception {
+    public void testGetUrisLoaderClsBadClassname() throws Exception {
         String className = "does.not.Exist";
         Manager instance = new Manager();
         instance.getUrisLoaderCls(className);
@@ -747,14 +747,14 @@ public class ManagerTest {
      * Test of run method, of class Manager.
      */
     @Test(expected = IllegalArgumentException.class)
-    public void testRun_missingURIS_MODULE_FILE_AND_LOADER() throws Exception {
+    public void testRunMissingURISMODULEFILEANDLOADER() throws Exception {
         Manager instance = new Manager();
         instance.run();
         fail();
     }
 
     @Test(expected = NullPointerException.class)
-    public void testRun_getURILoader_withURIS_MODULE_noContentSource() throws Exception {
+    public void testRunGetURILoaderWithURISMODULENoContentSource() throws Exception {
         Manager instance = new Manager();
         instance.options.setUrisModule("someFile1.xqy");
         instance.run();
@@ -762,7 +762,7 @@ public class ManagerTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testRun_getURILoader_withURIS_MODULE_invalidCollection() throws Exception {
+    public void testRunGetURILoaderWithURISMODULEInvalidCollection() throws Exception {
         Manager instance = new Manager();
         instance.contentSource = ContentSourceFactory.newContentSource(new URI(XCC_CONNECTION_URI));
         instance.options.setUrisModule("someFile2.xqy");
@@ -771,7 +771,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testRun_getURILoader_withURIS_MODULE() throws Exception {
+    public void testRunGetURILoaderWithURISMODULE() throws Exception {
         Manager instance = getMockManagerWithEmptyResults();
         instance.collection = "URILoader_Modules";
         instance.options.setUrisModule("someFile3.xqy");
@@ -817,7 +817,7 @@ public class ManagerTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testRegisterStatusInfo_nullContentSource() {
+    public void testRegisterStatusInfoNullContentSource() {
         Manager instance = new Manager();
         instance.registerStatusInfo();
         fail();
@@ -839,7 +839,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testLogProperties_nullProperties() throws RequestException {
+    public void testLogPropertiesNullProperties() throws RequestException {
         Manager instance = getMockManagerWithEmptyResults();
         instance.logProperties();
         List<LogRecord> records = testLogger.getLogRecords();
@@ -850,7 +850,7 @@ public class ManagerTest {
      * Test of stop method, of class Manager.
      */
     @Test
-    public void testStop_0args() {
+    public void testStop0args() {
         Manager instance = new Manager();
         instance.stop();
         List<LogRecord> records = testLogger.getLogRecords();
@@ -862,7 +862,7 @@ public class ManagerTest {
      * Test of stop method, of class Manager.
      */
     @Test
-    public void testStop_ExecutionException() {
+    public void testStopExecutionException() {
         ExecutionException e = new ExecutionException("test", new Error());
         Manager instance = new Manager();
         instance.stop(e);
@@ -887,7 +887,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testSetThreadCount_invalidValue() {
+    public void testSetThreadCount_InvalidValue() {
         Manager instance = new Manager();
         instance.setThreadCount(-5);
         assertEquals(1, instance.options.getThreadCount());

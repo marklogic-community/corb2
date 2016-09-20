@@ -58,7 +58,7 @@ public class HostKeyDecrypterTest {
      * Test of init_decrypter method, of class HostKeyDecrypter.
      */
     //@Test travis-ci throws an IOException
-    public void testInit_decrypter() throws Exception {
+    public void testInitDecrypter() throws Exception {
         HostKeyDecrypter instance = new HostKeyDecrypter();
         try {
             instance.init_decrypter();
@@ -107,21 +107,21 @@ public class HostKeyDecrypterTest {
      * Test of main method, of class HostKeyDecrypter.
      */
     @Test
-    public void testMain_usage_nullArgs() throws Exception {
+    public void testMainUsageNullArgs() throws Exception {
         String[] args = null;
         HostKeyDecrypter.main(args);
         assertEquals(USAGE, outContent.toString());
     }
 
     @Test
-    public void testMain_usage_decryptWithoutValue() throws Exception {
+    public void testMainUsageDecryptWithoutValue() throws Exception {
         String[] args = {"encrypt"};
         HostKeyDecrypter.main(args);
         assertEquals(USAGE, outContent.toString());
     }
 
     @Test
-    public void testMain_usage_unrecognizedMethod() throws Exception {
+    public void testMainUsageUnrecognizedMethod() throws Exception {
         String[] args = {"foo"};
         HostKeyDecrypter.main(args);
         assertEquals(USAGE, outContent.toString());

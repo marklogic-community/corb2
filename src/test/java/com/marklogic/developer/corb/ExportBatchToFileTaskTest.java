@@ -39,7 +39,7 @@ public class ExportBatchToFileTaskTest {
      * Test of getFileName method, of class ExportBatchToFileTask.
      */
     @Test
-    public void testGetFileName_fromURISBatchRef() {
+    public void testGetFileNameFromURISBatchRef() {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, "foo/bar/baz");
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
@@ -49,7 +49,7 @@ public class ExportBatchToFileTaskTest {
     }
 
     @Test
-    public void testGetFileName_fromEXPORTFILENAME() {
+    public void testGetFileNameFromEXPORTFILENAME() {
         String filename = "foo/bar";
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_NAME, filename);
@@ -60,7 +60,7 @@ public class ExportBatchToFileTaskTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testGetFileName_withEmptyExportFileName() {
+    public void testGetFileNameWithEmptyExportFileName() {
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_NAME, EMPTY);
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
@@ -70,7 +70,7 @@ public class ExportBatchToFileTaskTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testGetFileName_withEmptyUrisBatchRef() {
+    public void testGetFileNameWithEmptyUrisBatchRef() {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, EMPTY);
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
@@ -83,7 +83,7 @@ public class ExportBatchToFileTaskTest {
      * Test of getPartFileName method, of class ExportBatchToFileTask.
      */
     @Test(expected = NullPointerException.class)
-    public void testGetPartFileName_emptyName() {
+    public void testGetPartFileNameEmptyName() {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, EMPTY);
         props.setProperty(Options.EXPORT_FILE_PART_EXT, TXT_EXT);
@@ -95,7 +95,7 @@ public class ExportBatchToFileTaskTest {
     }
 
     @Test
-    public void testGetPartFileName_withExtension() {
+    public void testGetPartFileNameWithExtension() {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, "foo");
         props.setProperty(Options.EXPORT_FILE_PART_EXT, TXT_EXT);
@@ -109,7 +109,7 @@ public class ExportBatchToFileTaskTest {
      * Test of writeToFile method, of class ExportBatchToFileTask.
      */
     @Test
-    public void testWriteToFile_nullSeq() throws Exception {
+    public void testWriteToFileNullSeq() throws Exception {
         ResultSequence seq = null;
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_NAME, "testWriteToFileNullSeq.txt");
@@ -121,7 +121,7 @@ public class ExportBatchToFileTaskTest {
     }
 
     @Test
-    public void testWriteToFile_notSeqHasNext() throws Exception {
+    public void testWriteToFileNotSeqHasNext() throws Exception {
         ResultSequence seq = mock(ResultSequence.class);
         when(seq.hasNext()).thenReturn(false);
         Properties props = new Properties();

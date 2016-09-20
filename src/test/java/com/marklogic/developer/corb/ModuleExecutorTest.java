@@ -112,7 +112,7 @@ public class ModuleExecutorTest {
      * @throws Exception
      */
     @Test
-    public void testModuleExecutor_1()
+    public void testModuleExecutor1()
             throws Exception {
         clearSystemProperties();
         ModuleExecutor result = new ModuleExecutor();
@@ -146,7 +146,7 @@ public class ModuleExecutorTest {
      * @throws Exception
      */
     @Test
-    public void testGetContentSource_1()
+    public void testGetContentSource1()
             throws Exception {
         clearSystemProperties();
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
@@ -175,7 +175,7 @@ public class ModuleExecutorTest {
      * @throws Exception
      */
     @Test
-    public void testGetOption_1()
+    public void testGetOption1()
             throws Exception {
         clearSystemProperties();
         String argVal = "";
@@ -193,7 +193,7 @@ public class ModuleExecutorTest {
      * @throws Exception
      */
     @Test
-    public void testGetOption_2()
+    public void testGetOption2()
             throws Exception {
         clearSystemProperties();
         System.setProperty(Options.URIS_MODULE, "helloWorld-selector.xqy");
@@ -212,7 +212,7 @@ public class ModuleExecutorTest {
      * @throws Exception
      */
     @Test
-    public void testGetOption_3()
+    public void testGetOption3()
             throws Exception {
         clearSystemProperties();
         String argVal = Options.URIS_MODULE;
@@ -230,7 +230,7 @@ public class ModuleExecutorTest {
      * @throws Exception
      */
     @Test
-    public void testGetOptions_1()
+    public void testGetOptions1()
             throws Exception {
         clearSystemProperties();
         ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
@@ -245,7 +245,7 @@ public class ModuleExecutorTest {
      * @throws Exception
      */
     @Test
-    public void testGetProperties_1()
+    public void testGetProperties1()
             throws Exception {
         clearSystemProperties();
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
@@ -261,7 +261,7 @@ public class ModuleExecutorTest {
      * @throws Exception
      */
     @Test
-    public void testGetProperty_1()
+    public void testGetProperty1()
             throws Exception {
         clearSystemProperties();
         String key = "systemProperty";
@@ -280,7 +280,7 @@ public class ModuleExecutorTest {
      * @throws Exception
      */
     @Test
-    public void testGetProperty_2()
+    public void testGetProperty2()
             throws Exception {
         clearSystemProperties();
         ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
@@ -299,7 +299,7 @@ public class ModuleExecutorTest {
      * @throws Exception
      */
     @Test
-    public void testGetValueAsBytes_1()
+    public void testGetValueAsBytes1()
             throws Exception {
         clearSystemProperties();
         System.setProperty(Options.EXPORT_FILE_NAME, "src/test/resources/testGetValueAsBytes_1.txt");
@@ -321,7 +321,7 @@ public class ModuleExecutorTest {
      * @throws Exception
      */
     @Test
-    public void testMain_1()
+    public void testMain1()
             throws Exception {
         clearSystemProperties();
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
@@ -345,7 +345,7 @@ public class ModuleExecutorTest {
      * @throws Exception
      */
     @Test
-    public void testNewTrustAnyoneOptions_1()
+    public void testNewTrustAnyoneOptions1()
             throws Exception {
 
         SecurityOptions result = new TrustAnyoneSSLConfig().getSecurityOptions();
@@ -377,7 +377,7 @@ public class ModuleExecutorTest {
      * @throws Exception
      */
     @Test
-    public void testRun_1()
+    public void testRun1()
             throws Exception {
         clearSystemProperties();
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
@@ -402,7 +402,7 @@ public class ModuleExecutorTest {
      * @throws Exception
      */
     @Test
-    public void testRun_2()
+    public void testRun2()
             throws Exception {
         clearSystemProperties();
         String[] args = {
@@ -430,7 +430,7 @@ public class ModuleExecutorTest {
      * @throws Exception
      */
     @Test
-    public void testRun_3()
+    public void testRun3()
             throws Exception {
         clearSystemProperties();
         String[] args = {};
@@ -453,7 +453,7 @@ public class ModuleExecutorTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testRun_inlineEmpty() throws Exception {
+    public void testRunInlineEmpty() throws Exception {
         clearSystemProperties();
         String[] args = {};
         System.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
@@ -466,7 +466,7 @@ public class ModuleExecutorTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testRun_adhocIsEmpty() throws Exception {
+    public void testRunAdhocIsEmpty() throws Exception {
         File emptyModule = File.createTempFile("emptyModule", "txt");
         emptyModule.createNewFile();
         emptyModule.deleteOnExit();
@@ -487,7 +487,7 @@ public class ModuleExecutorTest {
      * @throws Exception
      */
     @Test
-    public void testSetProperties_1()
+    public void testSetProperties1()
             throws Exception {
         clearSystemProperties();
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
@@ -573,7 +573,7 @@ public class ModuleExecutorTest {
      * Test of main method, of class ModuleExecutor.
      */
     @Test
-    public void testMain_nullArgs() throws Exception {
+    public void testMainNullArgs() throws Exception {
         String[] args = null;
         exit.expectSystemExit();
         ModuleExecutor.main(args);
@@ -581,7 +581,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testMain_emptyArgs() throws Exception {
+    public void testMainEmptyArgs() throws Exception {
         String[] args = new String[]{};
         exit.expectSystemExit();
         ModuleExecutor.main(args);
@@ -592,7 +592,7 @@ public class ModuleExecutorTest {
      * Test of init method, of class ModuleExecutor.
      */
     @Test (expected = InstantiationException.class)
-    public void testInit_StringArr_nullProperties() throws Exception {
+    public void testInitStringArrNullProperties() throws Exception {
         String[] args = null;
         Properties props = null;
         ModuleExecutor instance = new ModuleExecutor();
@@ -601,7 +601,7 @@ public class ModuleExecutorTest {
     }
 
     @Test (expected = InstantiationException.class)
-    public void testInit_StringArr_emptyProperties() throws Exception {
+    public void testInitStringArrEmptyProperties() throws Exception {
         String[] args = null;
         Properties props = new Properties();
         ModuleExecutor instance = new ModuleExecutor();
@@ -613,7 +613,7 @@ public class ModuleExecutorTest {
      * Test of initOptions method, of class ModuleExecutor.
      */
     @Test(expected = NullPointerException.class)
-    public void testInitOptions_missingPROCESS_MODULE() throws Exception {
+    public void testInitOptionsMissingPROCESSMODULE() throws Exception {
         String[] args = new String[]{};
         ModuleExecutor instance = new ModuleExecutor();
         instance.initOptions(args);
@@ -630,7 +630,7 @@ public class ModuleExecutorTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testInitOptions_exportDirDoesNotExist() throws Exception {
+    public void testInitOptionsExportDirDoesNotExist() throws Exception {
         String exportDir = "does/not/exist";
         String[] args = new String[]{FOO, "processModule", "", "", exportDir};
         ModuleExecutor instance = new ModuleExecutor();
@@ -659,7 +659,7 @@ public class ModuleExecutorTest {
      * Test of run method, of class ModuleExecutor.
      */
     @Test(expected = NullPointerException.class)
-    public void testRun_nullContentSource() throws Exception {
+    public void testRunNullContentSource() throws Exception {
         ModuleExecutor instance = new ModuleExecutor();
         instance.run();
         fail();

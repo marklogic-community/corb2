@@ -35,7 +35,7 @@ public class ModuleExecutorIT {
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Test
-    public void testRun_main() throws Exception {
+    public void testRunMain() throws Exception {
         clearSystemProperties();
         String[] args = {};
         System.setProperty(Options.XCC_CONNECTION_URI, ModuleExecutorTest.XCC_CONNECTION_URI);
@@ -48,7 +48,7 @@ public class ModuleExecutorIT {
     }
 
     @Test
-    public void testRun_inline() throws Exception {
+    public void testRunInline() throws Exception {
         clearSystemProperties();
         String[] args = {};
         System.setProperty(Options.XCC_CONNECTION_URI, ModuleExecutorTest.XCC_CONNECTION_URI);

@@ -40,7 +40,7 @@ public class FileUrisLoaderTest {
      * Test of setOptions method, of class FileUrisLoader.
      */
     @Test
-    public void testSetOptions_null() {
+    public void testSetOptionsNull() {
         TransformOptions options = null;
         try (FileUrisLoader instance = new FileUrisLoader()) {
             instance.setOptions(options);
@@ -61,7 +61,7 @@ public class FileUrisLoaderTest {
      * Test of setContentSource method, of class FileUrisLoader.
      */
     @Test
-    public void testSetContentSource_null() {
+    public void testSetContentSourceNull() {
         ContentSource cs = null;
         try (FileUrisLoader instance = new FileUrisLoader()) {
             instance.setContentSource(cs);
@@ -73,7 +73,7 @@ public class FileUrisLoaderTest {
      * Test of setCollection method, of class FileUrisLoader.
      */
     @Test
-    public void testSetCollection_null() {
+    public void testSetCollectionNull() {
         String collection = null;
         try (FileUrisLoader instance = new FileUrisLoader()) {
             instance.setCollection(collection);
@@ -94,7 +94,7 @@ public class FileUrisLoaderTest {
      * Test of setProperties method, of class FileUrisLoader.
      */
     @Test
-    public void testSetProperties_null() {
+    public void testSetPropertiesNull() {
         Properties properties = null;
         try (FileUrisLoader instance = new FileUrisLoader()) {
             instance.setProperties(properties);
@@ -103,7 +103,7 @@ public class FileUrisLoaderTest {
     }
 
     @Test
-    public void testSetProperties_properties() {
+    public void testSetPropertiesProperties() {
         Properties properties = new Properties();
         try (FileUrisLoader instance = new FileUrisLoader()) {
             instance.setProperties(properties);
@@ -131,7 +131,7 @@ public class FileUrisLoaderTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testOpen_invalidReplacePattern() throws Exception {
+    public void testOpenInvalidReplacePattern() throws Exception {
         FileUrisLoader instance = new FileUrisLoader();
         TransformOptions options = new TransformOptions();
         options.setUrisFile(URIS_FILE);
@@ -148,7 +148,7 @@ public class FileUrisLoaderTest {
     }
 
     @Test(expected = CorbException.class)
-    public void testOpen_fileDoesNotExist() throws Exception {
+    public void testOpenFileDoesNotExist() throws Exception {
         FileUrisLoader instance = new FileUrisLoader();
         TransformOptions options = new TransformOptions();
         options.setUrisFile("does/not/exist");
@@ -175,7 +175,7 @@ public class FileUrisLoaderTest {
      * Test of getTotalCount method, of class FileUrisLoader.
      */
     @Test
-    public void testGetTotalCount_defaultValue() {
+    public void testGetTotalCountDefaultValue() {
         try (FileUrisLoader instance = new FileUrisLoader()) {
             assertEquals(0, instance.getTotalCount());
         }
@@ -196,7 +196,7 @@ public class FileUrisLoaderTest {
      * Test of hasNext method, of class FileUrisLoader.
      */
     @Test(expected = CorbException.class)
-    public void testHasNext_throwException() throws Exception {
+    public void testHasNextThrowException() throws Exception {
         try (FileUrisLoader instance = new FileUrisLoader()) {
             instance.hasNext();
         }
@@ -239,7 +239,7 @@ public class FileUrisLoaderTest {
     }
 
     @Test
-    public void testNext_withEmptyLine() throws Exception {
+    public void testNextWithEmptyLine() throws Exception {
         try (FileUrisLoader instance = new FileUrisLoader()) {
             TransformOptions options = new TransformOptions();
             File file = File.createTempFile("temp", ".txt");

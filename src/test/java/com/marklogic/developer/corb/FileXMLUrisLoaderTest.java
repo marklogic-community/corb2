@@ -48,7 +48,7 @@ public class FileXMLUrisLoaderTest {
      * Test of setOptions method, of class FileUrisXMLLoader.
      */
     @Test
-    public void testSetOptions_null() {
+    public void testSetOptionsNull() {
         TransformOptions options = null;
         try (FileUrisXMLLoader instance = new FileUrisXMLLoader()) {
             instance.setOptions(options);
@@ -69,7 +69,7 @@ public class FileXMLUrisLoaderTest {
      * Test of setContentSource method, of class FileUrisXMLLoader.
      */
     @Test
-    public void testSetContentSource_null() {
+    public void testSetContentSourceNull() {
         ContentSource cs = null;
         try (FileUrisXMLLoader instance = new FileUrisXMLLoader()) {
             instance.setContentSource(cs);
@@ -81,7 +81,7 @@ public class FileXMLUrisLoaderTest {
      * Test of setCollection method, of class FileUrisXMLLoader.
      */
     @Test
-    public void testSetCollection_null() {
+    public void testSetCollectionNull() {
         String collection = null;
         try (FileUrisXMLLoader instance = new FileUrisXMLLoader()) {
             instance.setCollection(collection);
@@ -102,7 +102,7 @@ public class FileXMLUrisLoaderTest {
      * Test of setProperties method, of class FileUrisXMLLoader.
      */
     @Test
-    public void testSetProperties_null() {
+    public void testSetPropertiesNull() {
         Properties properties = null;
         try (FileUrisXMLLoader instance = new FileUrisXMLLoader()) {
             instance.setProperties(properties);
@@ -111,7 +111,7 @@ public class FileXMLUrisLoaderTest {
     }
 
     @Test
-    public void testSetProperties_properties() {
+    public void testSetPropertiesProperties() {
         Properties properties = new Properties();
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.setProperties(properties);
@@ -293,7 +293,7 @@ public class FileXMLUrisLoaderTest {
     }
 
     @Test(expected = CorbException.class)
-    public void testOpen_fileDoesNotExist() throws Exception {
+    public void testOpenFileDoesNotExist() throws Exception {
         FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader();
         instance.properties.setProperty(Options.XML_FILE, "does/not/exit.xml");
         try {
@@ -318,7 +318,7 @@ public class FileXMLUrisLoaderTest {
      * Test of getTotalCount method, of class FileUrisXMLLoader.
      */
     @Test
-    public void testGetTotalCount_defaultValue() {
+    public void testGetTotalCountDefaultValue() {
         try (FileUrisXMLLoader instance = new FileUrisXMLLoader()) {
             assertEquals(0, instance.getTotalCount());
         }
@@ -336,7 +336,7 @@ public class FileXMLUrisLoaderTest {
      * Test of hasNext method, of class FileUrisXMLLoader.
      */
     @Test(expected = CorbException.class)
-    public void testHasNext_throwException() throws Exception {
+    public void testHasNextThrowException() throws Exception {
         try (FileUrisXMLLoader instance = new FileUrisXMLLoader()) {
             instance.hasNext();
         }

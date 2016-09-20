@@ -31,13 +31,13 @@ public class NumberUtilsTest {
      * Test of toInt method, of class NumberUtils.
      */
     @Test
-    public void testToInt_String() {
+    public void testToIntString() {
         int result = NumberUtils.toInt("6");
         assertEquals(6, result);
     }
 
     @Test
-    public void testToInt_String_invalid() {
+    public void testToIntStringInvalid() {
         int result = NumberUtils.toInt("six");
         assertEquals(0, result);
     }
@@ -46,13 +46,13 @@ public class NumberUtilsTest {
      * Test of toInt method, of class NumberUtils.
      */
     @Test
-    public void testToInt_String_int() {
+    public void testToIntStringInt() {
         int result = NumberUtils.toInt("7", -1);
         assertEquals(7, result);
     }
     
     @Test
-    public void testToInt_String_int_invalid() {
+    public void testToIntStringIntInvalid() {
         int result = NumberUtils.toInt("seven", -1);
         assertEquals(-1, result);
     }

@@ -56,7 +56,7 @@ public class FileUtilsTest {
      * Test of copy method, of class Utilities.
      */
     @Test
-    public void testCopy_File_File() throws Exception {
+    public void testCopyFileFile() throws Exception {
 
         File out = File.createTempFile("copiedFile", TEXT_FILE_EXT);
         out.deleteOnExit();
@@ -71,7 +71,7 @@ public class FileUtilsTest {
      * @throws java.lang.Exception
      */
     @Test
-    public void testCopy_String_String() throws Exception {
+    public void testCopyStringString() throws Exception {
         String inFilePath = exampleContentFile.getAbsolutePath();
         File destFile = File.createTempFile("output", TEXT_FILE_EXT);
         destFile.deleteOnExit();
@@ -87,14 +87,14 @@ public class FileUtilsTest {
      * @throws java.lang.Exception
      */
     @Test
-    public void testDeleteFile_File() throws Exception {
+    public void testDeleteFileFile() throws Exception {
         File file = File.createTempFile("originalFile", TEXT_FILE_EXT);
         FileUtils.deleteFile(file);
         assertFalse(file.exists());
     }
 
     @Test
-    public void testDeleteFile_FileIsNull() throws IOException {
+    public void testDeleteFileFileIsNull() throws IOException {
         File file = new File("/tmp/_doesNotExit_" + Math.random());
         file.deleteOnExit();
         FileUtils.deleteFile(file);
@@ -102,7 +102,7 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testDeleteFile_FolderIsEmpty() throws IOException {
+    public void testDeleteFileFolderIsEmpty() throws IOException {
         File tempDirectory = createTempDirectory();
         tempDirectory.deleteOnExit();
         FileUtils.deleteFile(tempDirectory);
@@ -110,7 +110,7 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testDeleteFile_FolderHasFiles() throws IOException {
+    public void testDeleteFileFolderHasFiles() throws IOException {
         File tempDirectory = createTempDirectory();
         File tempFile = File.createTempFile("deleteFile", "bar", tempDirectory);
         tempDirectory.deleteOnExit();
@@ -121,14 +121,14 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testDeleteFile_StringIsNull() throws IOException {
+    public void testDeleteFileStringIsNull() throws IOException {
         String filename = "/tmp/_doesNotExist_" + Math.random();
         FileUtils.deleteFile(filename);
         assertFalse(new File(filename).exists());
     }
 
     @Test(expected = IOException.class)
-    public void testDeleteFile_cannotDelete() throws IOException {
+    public void testDeleteFileCannotDelete() throws IOException {
         File exceptionalFile = mock(File.class);
         when(exceptionalFile.exists()).thenReturn(true);
         when(exceptionalFile.isDirectory()).thenReturn(false);
@@ -139,12 +139,12 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testGetLineCount_null() throws IOException {
+    public void testGetLineCountNull() throws IOException {
         assertEquals(0, FileUtils.getLineCount(null));
     }
 
     @Test
-    public void testGetLineCount_fileDoesNotExist() throws IOException {
+    public void testGetLineCountFileDoesNotExist() throws IOException {
         assertEquals(0, FileUtils.getLineCount(new File("does/not/exist2")));
     }
 
@@ -163,7 +163,7 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testGetFile_fromClasspath() {
+    public void testGetFileFromClasspath() {
         File file = FileUtils.getFile("doesNotExist");
         assertFalse(file.exists());
         file = FileUtils.getFile("selector.xqy");
@@ -171,7 +171,7 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testGetFile_absolutePath() throws IOException {
+    public void testGetFileAbsolutePath() throws IOException {
         File file = File.createTempFile("getFile", TEXT_FILE_EXT);
         file.deleteOnExit();
         file.createNewFile();
@@ -180,7 +180,7 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testGetFile_doesNotExist() {
+    public void testGetFileDoesNotExist() {
         File file = FileUtils.getFile("fileDoesNotExist");
         assertFalse(file.exists());
     }

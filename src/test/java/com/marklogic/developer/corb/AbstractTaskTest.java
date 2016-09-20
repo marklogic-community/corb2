@@ -167,7 +167,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testSetInputURI_null() {
+    public void testSetInputURINull() {
         AbstractTask instance = new AbstractTaskImpl();
         assertNull(instance.inputUris);
         instance.setInputURI(null);
@@ -273,35 +273,35 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testInvokeModule_RetryableXQueryException() throws Exception {
+    public void testInvokeModuleRetryableXQueryException() throws Exception {
         Request req = mock(Request.class);
         RetryableXQueryException retryableException = new RetryableXQueryException(req, CODE, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
         assertTrue(testHandleRequestException("RetryableXQueryException", retryableException, false, 2));
     }
 
     @Test
-    public void testInvokeModule_XQueryException() throws Exception {
+    public void testInvokeModuleXQueryException() throws Exception {
         Request req = mock(Request.class);
         XQueryException xqueryException = new XQueryException(req, CODE, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
         assertTrue(testHandleRequestException("XQueryException", xqueryException, false, 2));
     }
 
     @Test
-    public void testInvokeModule_RetryableJavaScriptException() throws Exception {
+    public void testInvokeModuleRetryableJavaScriptException() throws Exception {
         Request req = mock(Request.class);
         RetryableJavaScriptException retryableException = new RetryableJavaScriptException(req, CODE, W3C_CODE, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
         assertTrue(testHandleRequestException("RetryableJavaScriptException", retryableException, false, 2));
     }
 
     @Test
-    public void testHandleRequestException_RequestServerException() throws CorbException, IOException {
+    public void testHandleRequestExceptionRequestServerException() throws CorbException, IOException {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException(ERROR_MSG, req);
         assertTrue(testHandleRequestException("RequestServerException", serverException, false, 2));
     }
 
     @Test(expected = CorbException.class)
-    public void testHandleRequestException_RequestServerException_fail() throws CorbException, IOException {
+    public void testHandleRequestExceptionRequestServerExceptionFail() throws CorbException, IOException {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException(ERROR_MSG, req);
         testHandleRequestException("RequestServerException", serverException, true, 0);
@@ -309,14 +309,14 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testHandleRequestException_RequestPermissionException() throws CorbException, IOException {
+    public void testHandleRequestExceptionRequestPermissionException() throws CorbException, IOException {
         Request req = mock(Request.class);
         RequestPermissionException serverException = new RequestPermissionException(ERROR_MSG, req, ADMIN);
         assertTrue(testHandleRequestException("RequestPermissionException", serverException, false, 2));
     }
 
     @Test(expected = CorbException.class)
-    public void testHandleRequestException_RequestPermissionException_fail() throws CorbException, IOException {
+    public void testHandleRequestExceptionRequestPermissionExceptionFail() throws CorbException, IOException {
         Request req = mock(Request.class);
         RequestPermissionException serverException = new RequestPermissionException(ERROR_MSG, req, ADMIN);
         testHandleRequestException("RequestPermissionException", serverException, true, 2);
@@ -324,14 +324,14 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testHandleRequestException_ServerConnectionException() throws CorbException, IOException {
+    public void testHandleRequestExceptionServerConnectionException() throws CorbException, IOException {
         Request req = mock(Request.class);
         ServerConnectionException serverException = new ServerConnectionException(ERROR_MSG, req);
         assertTrue(testHandleRequestException("ServerConnectionException", serverException, false, 2));
     }
 
     @Test(expected = CorbException.class)
-    public void testHandleRequestException_ServerConnectionException_fail() throws CorbException, IOException {
+    public void testHandleRequestExceptionServerConnectionExceptionFail() throws CorbException, IOException {
         Request req = mock(Request.class);
         ServerConnectionException serverException = new ServerConnectionException(ERROR_MSG, req);
         testHandleRequestException("ServerConnectionException", serverException, true, 0);
@@ -476,7 +476,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testWriteToErrorFile_nullUris() throws CorbException, IOException {
+    public void testWriteToErrorFileNullUris() throws CorbException, IOException {
         String[] uris = null;
         File exportDir = TestUtils.createTempDirectory();
         exportDir.deleteOnExit();
@@ -489,7 +489,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testWriteToErrorFile_emptyUris() throws CorbException, IOException {
+    public void testWriteToErrorFileEmptyUris() throws CorbException, IOException {
         String[] uris = new String[]{};
         File exportDir = TestUtils.createTempDirectory();
         exportDir.deleteOnExit();
@@ -501,7 +501,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testWriteToErrorFile_nullErrorFilename() throws CorbException, IOException {
+    public void testWriteToErrorFileNullErrorFilename() throws CorbException, IOException {
         String[] uris = new String[]{URI};
         File exportDir = TestUtils.createTempDirectory();
         exportDir.deleteOnExit();
@@ -513,7 +513,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testWriteToErrorFile_emptyErrorFilename() throws CorbException, IOException {
+    public void testWriteToErrorFileEmptyErrorFilename() throws CorbException, IOException {
         String[] uris = new String[]{URI};
         File exportDir = TestUtils.createTempDirectory();
         exportDir.deleteOnExit();
@@ -526,7 +526,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testWriteToErrorFile_nullBatchUridelim() throws CorbException, IOException {
+    public void testWriteToErrorFileNullBatchUridelim() throws CorbException, IOException {
         String[] uris = new String[]{URI};
         File exportDir = TestUtils.createTempDirectory();
         exportDir.deleteOnExit();
@@ -538,7 +538,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testWriteToErrorFile_emptyBatchUridelim() throws CorbException, IOException {
+    public void testWriteToErrorFileEmptyBatchUridelim() throws CorbException, IOException {
         String[] uris = new String[]{URI};
         File exportDir = TestUtils.createTempDirectory();
         exportDir.deleteOnExit();
@@ -550,7 +550,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testWriteToErrorFile_customBatchUridelim() throws CorbException, IOException {
+    public void testWriteToErrorFileCustomBatchUridelim() throws CorbException, IOException {
         String[] uris = new String[]{URI};
         File exportDir = TestUtils.createTempDirectory();
         String filename = "testWriteToErrorFile_customBatchUridelim.err";
@@ -562,7 +562,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testWriteToErrorFile_nullMessage() throws CorbException, IOException {
+    public void testWriteToErrorFileNullMessage() throws CorbException, IOException {
         String[] uris = new String[]{URI};
         File exportDir = TestUtils.createTempDirectory();
         String filename = "testWriteToErrorFile_customBatchUridelim.err";
@@ -573,7 +573,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testWriteToErrorFile_emptyMessage() throws CorbException, IOException {
+    public void testWriteToErrorFileEmptyMessage() throws CorbException, IOException {
         String[] uris = new String[]{URI};
         File exportDir = TestUtils.createTempDirectory();
         String filename = "testWriteToErrorFile_customBatchUridelim.err";
@@ -596,7 +596,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testAsString_emptyArray() {
+    public void testAsStringEmptyArray() {
         String[] uris = new String[]{};
         AbstractTask instance = new AbstractTaskImpl();
         String result = instance.asString(uris);
@@ -604,7 +604,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testAsString_null() {
+    public void testAsStringNull() {
         String[] uris = null;
         AbstractTask instance = new AbstractTaskImpl();
         String result = instance.asString(uris);
@@ -648,7 +648,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGetProperty_systemPropertyTakesPrecedence() {
+    public void testGetPropertySystemPropertyTakesPrecedence() {
         String key = Options.INIT_TASK;
         String val = FOO;
         System.setProperty(key, val);
@@ -665,7 +665,7 @@ public class AbstractTaskTest {
      * Test of getValueAsBytes method, of class AbstractTask.
      */
     @Test
-    public void testGetValueAsBytes_xdmBinary() {
+    public void testGetValueAsBytesXdmBinary() {
         XdmItem item = mock(XdmBinary.class);
 
         AbstractTask instance = new AbstractTaskImpl();
@@ -674,7 +674,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGetValueAsBytes_xdmItem() {
+    public void testGetValueAsBytesXdmItem() {
         XdmItem item = mock(XdmItem.class);
         String value = FOO;
         when(item.asString()).thenReturn(value);
@@ -684,7 +684,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGetValueAsBytes_default() {
+    public void testGetValueAsBytesDefault() {
         XdmItem item = null;
         AbstractTask instance = new AbstractTaskImpl();
         byte[] result = instance.getValueAsBytes(item);

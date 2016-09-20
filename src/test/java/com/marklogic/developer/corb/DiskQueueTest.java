@@ -47,34 +47,34 @@ public class DiskQueueTest {
     }
 
     @Test(expected = InvalidParameterException.class)
-    public void testDiskQueue_sizeTooSmall() {
+    public void testDiskQueueSizeTooSmall() {
         new DiskQueue<>(0);
         fail();
     }
 
     @Test(expected = InvalidParameterException.class)
-    public void testDiskQueue_tempDirNotDir() throws IOException {
+    public void testDiskQueueTempDirNotDir() throws IOException {
         File tmpFile = File.createTempFile("tmp", "txt");
         new DiskQueue<>(0, tmpFile);
         fail();
     }
 
     @Test(expected = InvalidParameterException.class)
-    public void testDiskQueue_tempFileDoesNotExist() throws IOException {
+    public void testDiskQueueTempFileDoesNotExist() throws IOException {
         File tmpFile = new File("/does/not/exist");
         new DiskQueue<>(0, tmpFile);
         fail();
     }
 
     @Test(expected = InvalidParameterException.class)
-    public void testDiskQueue_tempDirIsNull() throws IOException {
+    public void testDiskQueueTempDirIsNull() throws IOException {
         File tmpFile = null;
         new DiskQueue<>(0, tmpFile);
         fail();
     }
 
     @Test(expected = InvalidParameterException.class)
-    public void testDiskQueue_tempDirDoesNotExist() throws IOException {
+    public void testDiskQueueTempDirDoesNotExist() throws IOException {
         File tmpFile = TestUtils.createTempDirectory();
         tmpFile.delete();
         new DiskQueue<>(0, tmpFile);
@@ -82,7 +82,7 @@ public class DiskQueueTest {
     }
 
     @Test
-    public void testDiskQueue_finalizeWhileOpen() throws IOException, Throwable {
+    public void testDiskQueueFinalizeWhileOpen() throws IOException, Throwable {
         DiskQueue<String> instance = new DiskQueue<>(1);
         instance.add("first");
         instance.add("second");
@@ -96,7 +96,7 @@ public class DiskQueueTest {
     }
 
     @Test
-    public void testDiskQueue_loadFromFile() throws IOException, Throwable {
+    public void testDiskQueueLoadFromFile() throws IOException, Throwable {
         String one = "one";
         String two = "two";
         String three = "three";
@@ -160,7 +160,7 @@ public class DiskQueueTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testOffer_null() {
+    public void testOfferNull() {
         Queue<String> instance = new DiskQueue<>(1);
         instance.offer(null);
         fail();
@@ -191,7 +191,7 @@ public class DiskQueueTest {
     }
 
     @Test(expected = IndexOutOfBoundsException.class)
-    public void testRemove_whenEmpty() {
+    public void testRemoveWhenEmpty() {
         Queue<String> instance = new DiskQueue<>(1);
         instance.remove();
         fail();
@@ -210,7 +210,7 @@ public class DiskQueueTest {
     }
 
     @Test
-    public void testPoll_whenEmpty() {
+    public void testPollWhenEmpty() {
         Queue<String> instance = new DiskQueue<>(1);
         Object result = instance.poll();
         assertNull(result);
