@@ -18,6 +18,8 @@ Download the latest release directly from https://github.com/marklogic/corb2/rel
 
 - [CoRB v2.3.2](https://github.com/marklogic/corb2/releases/tag/2.3.2) is the last release compatable with Java 7 and 6.
 - [CoRB v2.2.0](https://github.com/marklogic/corb2/releases/tag/2.2.0) (or later) requires [marklogic-xcc 8.0.* (or later)](https://developer.marklogic.com/products/xcc) to run.
+
+
 > Note: marklogic-xcc 8 is backwards compatible to MarkLogic 5 and runs on Java 1.6 or later.
 
 
