@@ -186,7 +186,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
                 fileOut.newLine();
                 fileElementCount += 1;
             } catch (IOException e) {
-                LOG.severe(MessageFormat.format("Error writing to {0} backing store", DiskQueue.class.getSimpleName()));
+                LOG.log(Level.SEVERE, MessageFormat.format("Error writing to {0} backing store", DiskQueue.class.getSimpleName()), e);
                 return false;
             }
         }
@@ -261,7 +261,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
                 // to start from zero instead of closing file (but for current use case of fill once, drain
                 // once this works just fine)
             } catch (IOException e) {
-                LOG.severe(MessageFormat.format("Error reading from {0} backing store", DiskQueue.class.getSimpleName()));
+                LOG.log(Level.SEVERE, MessageFormat.format("Error reading from {0} backing store", DiskQueue.class.getSimpleName()), e);
             }
         }
     }
