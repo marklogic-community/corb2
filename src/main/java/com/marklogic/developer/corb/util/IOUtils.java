@@ -18,6 +18,7 @@
  */
 package com.marklogic.developer.corb.util;
 
+import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,7 +43,7 @@ public final class IOUtils {
      * ByteArrayInputStream
      */
     public static final boolean isDirectory(InputStream is) {
-        return is.getClass().getSimpleName().equals("ByteArrayInputStream");
+        return is instanceof ByteArrayInputStream;
     }
 
     /**
