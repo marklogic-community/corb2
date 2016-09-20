@@ -24,6 +24,7 @@ import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.text.MessageFormat;
 import java.util.Properties;
 import static java.util.logging.Level.INFO;
 import java.util.logging.Logger;
@@ -77,7 +78,7 @@ public class JasyptDecrypter extends AbstractDecrypter {
                 Method decrypt = decrypterCls.getMethod("decrypt", String.class);
                 dValue = (String) decrypt.invoke(decrypter, value);
             } catch (Exception exc) {
-                LOG.log(INFO, "Cannot decrypt {0}. Ignore if clear text.", property);
+                LOG.log(INFO, MessageFormat.format("Cannot decrypt {0}. Ignore if clear text.", property), exc);
             }
         }
         return dValue == null ? value : dValue.trim();
