@@ -24,345 +24,346 @@ import java.io.File;
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * @author Colleen Whitney, colleen.whitney@marklogic.com
  * @author Bhagat Bandlamudi, MarkLogic Corporation
- * 
+ *
  */
 public class TransformOptions {
 
-	public static final int SLEEP_TIME_MS = 500;
-	public static final long PROGRESS_INTERVAL_MS = 60 * SLEEP_TIME_MS;
-	public static final String NAME = TransformOptions.class.getName();
-	private static final String SLASH = "/";
-	public static final String COLLECTION_TYPE = "COLLECTION";
-	public static final String DIRECTORY_TYPE = "DIRECTORY";
-	public static final String QUERY_TYPE = "QUERY";
+    public static final int SLEEP_TIME_MS = 500;
+    public static final long PROGRESS_INTERVAL_MS = 60L * SLEEP_TIME_MS;
+    public static final String NAME = TransformOptions.class.getName();
+    private static final String SLASH = "/";
+    public static final String COLLECTION_TYPE = "COLLECTION";
+    public static final String DIRECTORY_TYPE = "DIRECTORY";
+    public static final String QUERY_TYPE = "QUERY";
 
-	private String processModule;
-	private Class<? extends Task> processTaskCls;
+    private String processModule;
+    private Class<? extends Task> processTaskCls;
 
-	private String preBatchModule;
-	private Class<? extends Task> preBatchTaskCls;
+    private String preBatchModule;
+    private Class<? extends Task> preBatchTaskCls;
 
-	private String postBatchModule;
-	private Class<? extends Task> postBatchTaskCls;
+    private String postBatchModule;
+    private Class<? extends Task> postBatchTaskCls;
 
-	private String initModule;
-	private Class<? extends Task> initTaskCls;
+    private String initModule;
+    private Class<? extends Task> initTaskCls;
 
-	private String exportFileDir;
+    private String exportFileDir;
 
-	// Defaults for optional arguments
-	private String moduleRoot = SLASH;
+    // Defaults for optional arguments
+    private String moduleRoot = SLASH;
 
-	private String urisModule;
-	private String urisFile;
-	private Class<? extends UrisLoader> urisLoaderCls;
+    private String urisModule;
+    private String urisFile;
+    private Class<? extends UrisLoader> urisLoaderCls;
 
-	private int threadCount = 1;
-	private int batchSize = 1;
-  private boolean useDiskQueue;
-  private int diskQueueMaxInMemorySize = 1000;
-  private File diskQueueTempDir;
-	private boolean doInstall;
-	
-	private int numTpsForETC = 10;
+    private int threadCount = 1;
+    private int batchSize = 1;
+    private boolean useDiskQueue;
+    private int diskQueueMaxInMemorySize = 1000;
+    private File diskQueueTempDir;
+    private boolean doInstall;
 
-	private boolean failOnError = true;
+    private int numTpsForETC = 10;
 
-	// We could get rid of this now that we check status...
-	private String modulesDatabase = "Modules";
+    private boolean failOnError = true;
 
-	// Set on status check
-	private String XDBC_ROOT = SLASH;
+    // We could get rid of this now that we check status...
+    private String modulesDatabase = "Modules";
 
-	/**
-	 * @return
-	 */
-	public String getXDBC_ROOT() {
-		return XDBC_ROOT;
-	}
+    // Set on status check
+    private String XDBC_ROOT = SLASH;
 
-	/**
-	 * @param xdbc_root
-	 */
-	public void setXDBC_ROOT(String xdbc_root) {
-		XDBC_ROOT = xdbc_root;
-	}
+    /**
+     * @return
+     */
+    public String getXDBC_ROOT() {
+        return XDBC_ROOT;
+    }
 
-	/**
-	 * @return
-	 */
-	public int getThreadCount() {
-		return threadCount;
-	}
+    /**
+     * @param xdbc_root
+     */
+    public void setXDBC_ROOT(String xdbc_root) {
+        XDBC_ROOT = xdbc_root;
+    }
 
-	/**
-	 * @param count
-	 */
-	public void setThreadCount(int count) {
-		this.threadCount = count;
-	}
+    /**
+     * @return
+     */
+    public int getThreadCount() {
+        return threadCount;
+    }
 
-	public int getBatchSize() {
-		return batchSize;
-	}
+    /**
+     * @param count
+     */
+    public void setThreadCount(int count) {
+        this.threadCount = count;
+    }
 
-	public void setBatchSize(int batchSize) {
-		this.batchSize = batchSize;
-	}
+    public int getBatchSize() {
+        return batchSize;
+    }
 
-	/**
-	 * @return
-	 */
-	public String getLogLevel() {
-		// TODO LogLevel make configurable
-		return "INFO";
-	}
+    public void setBatchSize(int batchSize) {
+        this.batchSize = batchSize;
+    }
 
-	/**
-	 * @return
-	 */
-	public String getLogHandler() {
-		// TODO LogHandler make configurable
-		return "CONSOLE";
-	}
+    /**
+     * @return
+     */
+    public String getLogLevel() {
+        // TODO LogLevel make configurable
+        return "INFO";
+    }
 
-	/**
-	 * @return
-	 */
-	public String getModulesDatabase() {
-		return this.modulesDatabase;
-	}
+    /**
+     * @return
+     */
+    public String getLogHandler() {
+        // TODO LogHandler make configurable
+        return "CONSOLE";
+    }
 
-	/**
-	 * @param modulesDatabase
-	 */
-	public void setModulesDatabase(String modulesDatabase) {
-		this.modulesDatabase = modulesDatabase;
-	}
+    /**
+     * @return
+     */
+    public String getModulesDatabase() {
+        return this.modulesDatabase;
+    }
 
-	/**
-	 * @return
-	 */
-	public String getUrisModule() {
-		return urisModule;
-	}
+    /**
+     * @param modulesDatabase
+     */
+    public void setModulesDatabase(String modulesDatabase) {
+        this.modulesDatabase = modulesDatabase;
+    }
 
-	/**
-	 * @param urisModule
-	 */
-	public void setUrisModule(String urisModule) {
-		this.urisModule = urisModule;
-	}
+    /**
+     * @return
+     */
+    public String getUrisModule() {
+        return urisModule;
+    }
 
-	public String getUrisFile() {
-		return this.urisFile;
-	}
+    /**
+     * @param urisModule
+     */
+    public void setUrisModule(String urisModule) {
+        this.urisModule = urisModule;
+    }
 
-	public void setUrisFile(String urisFile) {
-		this.urisFile = urisFile;
-	}
-	
-	public Class<? extends UrisLoader> getUrisLoaderClass() {
-		return this.urisLoaderCls;
-	}
+    public String getUrisFile() {
+        return this.urisFile;
+    }
 
-	public void setUrisLoaderClass(Class<? extends UrisLoader> urisLoaderCls) {
-		this.urisLoaderCls = urisLoaderCls;
-	}
+    public void setUrisFile(String urisFile) {
+        this.urisFile = urisFile;
+    }
 
-	/**
-	 * @return
-	 */
-	public String getProcessModule() {
-		return processModule;
-	}
+    public Class<? extends UrisLoader> getUrisLoaderClass() {
+        return this.urisLoaderCls;
+    }
 
-	/**
-	 * @param processModule
-	 */
-	public void setProcessModule(String processModule) {
-		this.processModule = processModule;
-	}
+    public void setUrisLoaderClass(Class<? extends UrisLoader> urisLoaderCls) {
+        this.urisLoaderCls = urisLoaderCls;
+    }
 
-	/**
-	 * Java class
-	 * 
-	 * @param processTaskCls
-	 */
-	public void setProcessTaskClass(Class<? extends Task> processTaskCls) {
-		this.processTaskCls = processTaskCls;
-	}
+    /**
+     * @return
+     */
+    public String getProcessModule() {
+        return processModule;
+    }
 
-	/**
-	 * Java Class
-	 * 
-	 * @return
-	 */
-	public Class<? extends Task> getProcessTaskClass() {
-		return this.processTaskCls;
-	}
+    /**
+     * @param processModule
+     */
+    public void setProcessModule(String processModule) {
+        this.processModule = processModule;
+    }
 
-	/**
-	 * @return
-	 */
-	public String getModuleRoot() {
-		return moduleRoot;
-	}
+    /**
+     * Java class
+     *
+     * @param processTaskCls
+     */
+    public void setProcessTaskClass(Class<? extends Task> processTaskCls) {
+        this.processTaskCls = processTaskCls;
+    }
 
-	/**
-	 * @param moduleRoot
-	 */
-	public void setModuleRoot(String moduleRoot) {
-		this.moduleRoot = moduleRoot;
-	}
+    /**
+     * Java Class
+     *
+     * @return
+     */
+    public Class<? extends Task> getProcessTaskClass() {
+        return this.processTaskCls;
+    }
 
-	/**
-	 * @return
-	 */
-	public boolean isDoInstall() {
-		return doInstall;
-	}
+    /**
+     * @return
+     */
+    public String getModuleRoot() {
+        return moduleRoot;
+    }
 
-	/**
-	 * @param doInstall
-	 */
-	public void setDoInstall(boolean doInstall) {
-		this.doInstall = doInstall;
-	}
+    /**
+     * @param moduleRoot
+     */
+    public void setModuleRoot(String moduleRoot) {
+        this.moduleRoot = moduleRoot;
+    }
 
-	public void setPreBatchModule(String preBatchModule) {
-		this.preBatchModule = preBatchModule;
-	}
+    /**
+     * @return
+     */
+    public boolean isDoInstall() {
+        return doInstall;
+    }
 
-	public String getPreBatchModule() {
-		return this.preBatchModule;
-	}
+    /**
+     * @param doInstall
+     */
+    public void setDoInstall(boolean doInstall) {
+        this.doInstall = doInstall;
+    }
 
-	/**
-	 * Java Class
-	 * 
-	 * @param preBatchTaskCls
-	 */
-	public void setPreBatchTaskClass(Class<? extends Task> preBatchTaskCls) {
-		this.preBatchTaskCls = preBatchTaskCls;
-	}
+    public void setPreBatchModule(String preBatchModule) {
+        this.preBatchModule = preBatchModule;
+    }
 
-	/**
-	 * Java Class
-	 * 
-	 * @return
-	 */
-	public Class<? extends Task> getPreBatchTaskClass() {
-		return this.preBatchTaskCls;
-	}
+    public String getPreBatchModule() {
+        return this.preBatchModule;
+    }
 
-	public void setPostBatchModule(String postBatchModule) {
-		this.postBatchModule = postBatchModule;
-	}
+    /**
+     * Java Class
+     *
+     * @param preBatchTaskCls
+     */
+    public void setPreBatchTaskClass(Class<? extends Task> preBatchTaskCls) {
+        this.preBatchTaskCls = preBatchTaskCls;
+    }
 
-	public String getPostBatchModule() {
-		return this.postBatchModule;
-	}
+    /**
+     * Java Class
+     *
+     * @return
+     */
+    public Class<? extends Task> getPreBatchTaskClass() {
+        return this.preBatchTaskCls;
+    }
 
-	/**
-	 * Java Class
-	 * 
-	 * @param postBatchTaskCls
-	 */
-	public void setPostBatchTaskClass(Class<? extends Task> postBatchTaskCls) {
-		this.postBatchTaskCls = postBatchTaskCls;
-	}
+    public void setPostBatchModule(String postBatchModule) {
+        this.postBatchModule = postBatchModule;
+    }
 
-	/**
-	 * Java Class
-	 * 
-	 * @return
-	 */
-	public Class<? extends Task> getPostBatchTaskClass() {
-		return this.postBatchTaskCls;
-	}
+    public String getPostBatchModule() {
+        return this.postBatchModule;
+    }
 
-	public String getExportFileDir() {
-		return this.exportFileDir;
-	}
+    /**
+     * Java Class
+     *
+     * @param postBatchTaskCls
+     */
+    public void setPostBatchTaskClass(Class<? extends Task> postBatchTaskCls) {
+        this.postBatchTaskCls = postBatchTaskCls;
+    }
 
-	public void setExportFileDir(String exportFileDir) {
-		this.exportFileDir = exportFileDir;
-	}
+    /**
+     * Java Class
+     *
+     * @return
+     */
+    public Class<? extends Task> getPostBatchTaskClass() {
+        return this.postBatchTaskCls;
+    }
 
-	public void setInitModule(String initModule) {
-		this.initModule = initModule;
-	}
+    public String getExportFileDir() {
+        return this.exportFileDir;
+    }
 
-	public String getInitModule() {
-		return this.initModule;
-	}
+    public void setExportFileDir(String exportFileDir) {
+        this.exportFileDir = exportFileDir;
+    }
 
-	/**
-	 * Java Class
-	 * 
-	 * @param initTaskCls
-	 */
-	public void setInitTaskClass(Class<? extends Task> initTaskCls) {
-		this.initTaskCls = initTaskCls;
-	}
+    public void setInitModule(String initModule) {
+        this.initModule = initModule;
+    }
 
-	/**
-	 * Java Class
-	 * 
-	 * @return
-	 */
-	public Class<? extends Task> getInitTaskClass() {
-		return this.initTaskCls;
-	}
+    public String getInitModule() {
+        return this.initModule;
+    }
 
-	/**
+    /**
+     * Java Class
+     *
+     * @param initTaskCls
+     */
+    public void setInitTaskClass(Class<? extends Task> initTaskCls) {
+        this.initTaskCls = initTaskCls;
+    }
+
+    /**
+     * Java Class
+     *
+     * @return
+     */
+    public Class<? extends Task> getInitTaskClass() {
+        return this.initTaskCls;
+    }
+
+    /**
      * The size of the ThreadPool work queue
-	 * @return
-	 */
-	public int getQueueSize() {
-		return 100 * 1000;
-	}
+     *
+     * @return
+     */
+    public int getQueueSize() {
+        return 100 * 1000;
+    }
 
-	public void setFailOnError(boolean failOnError) {
-		this.failOnError = failOnError;
-	}
+    public void setFailOnError(boolean failOnError) {
+        this.failOnError = failOnError;
+    }
 
-	public boolean isFailOnError() {
-		return this.failOnError;
-	}
-    
+    public boolean isFailOnError() {
+        return this.failOnError;
+    }
+
     public void setUseDiskQueue(boolean useDiskQueue) {
         this.useDiskQueue = useDiskQueue;
     }
-    
+
     public boolean shouldUseDiskQueue() {
         return this.useDiskQueue;
     }
-    
+
     public void setDiskQueueMaxInMemorySize(int size) {
         this.diskQueueMaxInMemorySize = size;
     }
-    
+
     public int getDiskQueueMaxInMemorySize() {
         return this.diskQueueMaxInMemorySize;
     }
-    
+
     public void setDiskQueueTempDir(File directory) {
         this.diskQueueTempDir = directory;
     }
-    
+
     public File getDiskQueueTempDir() {
         return this.diskQueueTempDir;
     }
-    
-    public void setNumTpsForETC(int numTpsForETC){
-    	if(numTpsForETC > 0){
-    		this.numTpsForETC = numTpsForETC;
-    	}
+
+    public void setNumTpsForETC(int numTpsForETC) {
+        if (numTpsForETC > 0) {
+            this.numTpsForETC = numTpsForETC;
+        }
     }
-    
-    public int getNumTpsForETC(){
-    		return this.numTpsForETC;
+
+    public int getNumTpsForETC() {
+        return this.numTpsForETC;
     }
 }
