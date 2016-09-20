@@ -396,7 +396,7 @@ public abstract class AbstractTask implements Task {
             try {
                 intVal = Integer.parseInt(value);
             } catch (Exception exc) {
-                LOG.log(WARNING, MessageFormat.format("Unable to parse '{0}' value '{1}' as an int", new Object[]{key, value}), exc);
+                LOG.log(WARNING, MessageFormat.format("Unable to parse '{0}' value '{1}' as an int", key, value), exc);
             }
         }
         return intVal;
