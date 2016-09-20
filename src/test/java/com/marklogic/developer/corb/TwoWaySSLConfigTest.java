@@ -113,9 +113,11 @@ public class TwoWaySSLConfigTest {
      */
     @Test
     public void testLoadPropertiesFileNullSSLPropertiesFile() throws Exception {
+        System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.loadPropertiesFile();
         assertNotNull(instance.properties);
+        System.clearProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -158,6 +160,7 @@ public class TwoWaySSLConfigTest {
      */
     @Test(expected = IllegalStateException.class)
     public void testGetSSLContextNoProperties() throws Exception {
+        System.clearProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE);
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.getSSLContext();
         fail();
@@ -169,6 +172,7 @@ public class TwoWaySSLConfigTest {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         SSLContext context = instance.getSSLContext();
         assertNotNull(context);
+        System.clearProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE);
     }
 
 }
