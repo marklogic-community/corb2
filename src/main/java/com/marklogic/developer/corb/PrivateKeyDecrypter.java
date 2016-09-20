@@ -41,7 +41,6 @@ import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.text.MessageFormat;
-import java.util.logging.Level;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
