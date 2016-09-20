@@ -307,7 +307,7 @@ public class ModuleExecutor extends AbstractManager {
             LOG.info("Done");
 
         } catch (Exception exc) {
-            LOG.severe(exc.getMessage());
+            LOG.log(SEVERE, exc.getMessage(), exc);
             throw exc;
         } finally {
             if (null != resultSequence && !resultSequence.isClosed()) {
