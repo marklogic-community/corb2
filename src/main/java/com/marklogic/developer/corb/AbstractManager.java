@@ -260,7 +260,7 @@ public abstract class AbstractManager {
     
     protected void logOptions(){
         //default behavior is not lo log anything
-    };
+    }
     
     protected void logProperties() {
         for (Entry<Object, Object> e : properties.entrySet()) {
