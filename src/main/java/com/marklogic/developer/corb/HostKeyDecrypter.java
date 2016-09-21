@@ -38,6 +38,7 @@ import java.security.SecureRandom;
 import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.Scanner;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.crypto.BadPaddingException;
@@ -367,6 +368,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         try {
             decryptedTextBytes = cipher.doFinal(encryptedTextBytes);
         } catch (Exception e) {
+            LOG.log(Level.SEVERE, "decryption failed", e);
             e.printStackTrace();
         }
         return new String(decryptedTextBytes);
