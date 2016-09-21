@@ -112,14 +112,14 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
                     }
                     properties.load(is);
                 } catch (IOException e) {
-                    LOG.severe(MessageFormat.format("Error loading ssl properties file {0}", SSL_PROPERTIES_FILE));
+                    LOG.log(Level.SEVERE, MessageFormat.format("Error loading ssl properties file {0}", SSL_PROPERTIES_FILE));
                     throw new RuntimeException(e);
                 }
             } else {
                 throw new IllegalStateException("Unable to load " + securityFileName);
             }
         } else {
-            LOG.info(MessageFormat.format("Property {0} not present", SSL_PROPERTIES_FILE));
+            LOG.log(Level.INFO, MessageFormat.format("Property {0} not present", SSL_PROPERTIES_FILE));
         }
     }
 
