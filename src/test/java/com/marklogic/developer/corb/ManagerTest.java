@@ -823,27 +823,12 @@ public class ManagerTest {
         fail();
     }
 
-    /**
-     * Test of logProperties method, of class Manager.
-     */
     @Test
-    public void testLogProperties() throws RequestException {
-        Properties props = new Properties();
-        props.setProperty("key1", "value1");
-        props.setProperty("key2", "value2");
+    public void testLogOptions() throws RequestException {
         Manager instance = getMockManagerWithEmptyResults();
-        instance.properties = props;
-        instance.logProperties();
+        instance.logOptions();
         List<LogRecord> records = testLogger.getLogRecords();
-        assertEquals(props.size(), records.size());
-    }
-
-    @Test
-    public void testLogPropertiesNullProperties() throws RequestException {
-        Manager instance = getMockManagerWithEmptyResults();
-        instance.logProperties();
-        List<LogRecord> records = testLogger.getLogRecords();
-        assertEquals(0, records.size());
+        assertEquals(19, records.size());
     }
 
     /**

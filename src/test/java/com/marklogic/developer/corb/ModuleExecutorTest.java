@@ -49,6 +49,7 @@ import com.marklogic.xcc.types.XdmItem;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.security.GeneralSecurityException;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import static org.mockito.Matchers.any;
@@ -77,7 +78,7 @@ public class ModuleExecutorTest {
     private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
     private PrintStream systemOut = System.out;
     private PrintStream systemErr = System.err;
-    
+
     /**
      * Perform pre-test initialization.
      *
@@ -101,7 +102,7 @@ public class ModuleExecutorTest {
     public void tearDown()
             throws Exception {
         // Add additional tear down code here
-        clearSystemProperties();      
+        clearSystemProperties();
         System.setOut(systemOut);
         System.setErr(systemErr);
     }
@@ -155,6 +156,14 @@ public class ModuleExecutorTest {
         ContentSource result = executor.getContentSource();
 
         assertNotNull(result);
+    }
+
+    @Test
+    public void testLogOptions() throws RequestException {
+        ModuleExecutor instance = getMockModuleExecutorWithEmptyResults();
+        instance.logOptions();
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(3, records.size());
     }
 
     protected String getOption(String argVal, String propName, Properties properties) {
@@ -370,7 +379,15 @@ public class ModuleExecutorTest {
         assertNotNull(executor.contentSource);
 
     }
-
+    
+    @Test(expected = CorbException.class)
+    public void testProcessResult() throws IOException, CorbException {
+        clearSystemProperties();
+        ModuleExecutor executor = new MockModuleExecutorCannotWrite();
+        ResultSequence seq = null;
+        executor.processResult(seq);
+    }
+    
     /**
      * Run the void run() method test.
      *
@@ -591,7 +608,7 @@ public class ModuleExecutorTest {
     /**
      * Test of init method, of class ModuleExecutor.
      */
-    @Test (expected = InstantiationException.class)
+    @Test(expected = InstantiationException.class)
     public void testInitStringArrNullProperties() throws Exception {
         String[] args = null;
         Properties props = null;
@@ -600,7 +617,7 @@ public class ModuleExecutorTest {
         fail();
     }
 
-    @Test (expected = InstantiationException.class)
+    @Test(expected = InstantiationException.class)
     public void testInitStringArrEmptyProperties() throws Exception {
         String[] args = null;
         Properties props = new Properties();
@@ -647,10 +664,10 @@ public class ModuleExecutorTest {
         aManager.usage();
         String aManagerUsage = outContent.toString();
         outContent.reset();
-        
+
         ModuleExecutor instance = new ModuleExecutor();
         instance.usage();
-        
+
         assertNotNull(errContent.toString());
         assertTrue(outContent.toString().contains(aManagerUsage));
     }
@@ -682,23 +699,23 @@ public class ModuleExecutorTest {
         ModuleExecutor instance = getMockModuleExecutorCustomProcessResults();
         instance.init(args);
         instance.run();
-        MockModuleExecutorResults moduleExecutor = (MockModuleExecutorResults)instance;
+        MockModuleExecutorResults moduleExecutor = (MockModuleExecutorResults) instance;
         assertFalse(moduleExecutor.results.isEmpty());
         assertTrue(moduleExecutor.results.size() == 2);
     }
-    
-    public static ModuleExecutor getMockModuleExecutorCustomProcessResults() throws RequestException{
+
+    public static ModuleExecutor getMockModuleExecutorCustomProcessResults() throws RequestException {
         MockModuleExecutorResults manager = new MockModuleExecutorResults();
         manager.contentSource = getMockContentSource();
         return manager;
     }
-    
+
     public static ModuleExecutor getMockModuleExecutorWithEmptyResults() throws RequestException {
         ModuleExecutor manager = new MockModuleExecutor();
         manager.contentSource = getMockContentSource();
         return manager;
     }
-    
+
     public static ContentSource getMockContentSource() throws RequestException {
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -728,10 +745,10 @@ public class ModuleExecutorTest {
         when(batchRefItem.asString()).thenReturn("batchRefVal");
         when(exampleValue.asString()).thenReturn(FOO);
         when(uriCount.asString()).thenReturn("1");
-        
+
         return contentSource;
     }
-    
+
     private static class MockModuleExecutor extends ModuleExecutor {
 
         //Want to retain the mock contentSource that we set in our tests
@@ -739,9 +756,19 @@ public class ModuleExecutorTest {
         protected void prepareContentSource() throws XccConfigException, GeneralSecurityException {
         }
     }
-    
+
+    private static class MockModuleExecutorCannotWrite extends ModuleExecutor {
+        
+        @Override
+        protected void writeToFile(ResultSequence seq) throws IOException {
+            super.writeToFile(seq);
+            throw new IOException("Throwing exception in order to test branch coverage");
+        }
+    }
     private static class MockModuleExecutorResults extends MockModuleExecutor {
+
         public List<String> results = new ArrayList();
+
         @Override
         protected void writeToFile(ResultSequence res) {
             while (res.hasNext()) {
@@ -749,5 +776,5 @@ public class ModuleExecutorTest {
             }
         }
     }
-    
+
 }

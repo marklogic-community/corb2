@@ -57,16 +57,12 @@ import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.stringToBoolean;
-import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentCreateOptions;
 import com.marklogic.xcc.ContentFactory;
-import com.marklogic.xcc.ResultItem;
-import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
-import com.marklogic.xcc.types.XdmItem;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -79,7 +75,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -235,7 +230,7 @@ public class Manager extends AbstractManager {
         options.setUseDiskQueue(stringToBoolean(getOption(DISK_QUEUE)));
         String diskQueueMaxInMemorySize = getOption(DISK_QUEUE_MAX_IN_MEMORY_SIZE);
         String diskQueueTempDir = getOption(DISK_QUEUE_TEMP_DIR);
-        
+
         String numTpsForETC = getOption(NUM_TPS_FOR_ETC);
 
         //Check legacy properties keys, for backwards compatability
@@ -279,7 +274,7 @@ public class Manager extends AbstractManager {
             options.setDiskQueueMaxInMemorySize(Integer.parseInt(diskQueueMaxInMemorySize));
         }
         if (numTpsForETC != null) {
-        		options.setNumTpsForETC(Integer.parseInt(numTpsForETC));
+            options.setNumTpsForETC(Integer.parseInt(numTpsForETC));
         }
         if (!this.properties.containsKey(EXPORT_FILE_DIR) && exportFileDir != null) {
             this.properties.put(EXPORT_FILE_DIR, exportFileDir);
@@ -537,11 +532,9 @@ public class Manager extends AbstractManager {
             options.getProcessModule(), options.getPreBatchModule(), options.getPostBatchModule()};
         String modulesDatabase = options.getModulesDatabase();
         LOG.log(INFO, "checking modules, database: {0}", modulesDatabase);
-        Session session = contentSource.newSession(modulesDatabase);
-        InputStream is = null;
-        Content c = null;
+
         ContentCreateOptions opts = ContentCreateOptions.newTextInstance();
-        try {
+        try (Session session = contentSource.newSession(modulesDatabase)) {
             for (String resourceModule : resourceModules) {
                 if (resourceModule == null || isInlineOrAdhoc(resourceModule)) {
                     continue;
@@ -559,6 +552,7 @@ public class Manager extends AbstractManager {
                 } // Finally, if it's configured for a database, install.
                 else {
                     File f = new File(resourceModule);
+                    Content c;
                     // If not installed, are the specified files on the
                     // filesystem?
                     if (f.exists()) {
@@ -568,11 +562,12 @@ public class Manager extends AbstractManager {
                     else {
                         LOG.log(WARNING, "looking for {0} as resource", resourceModule);
                         String moduleUri = options.getModuleRoot() + resourceModule;
-                        is = this.getClass().getResourceAsStream(resourceModule);
-                        if (null == is) {
-                            throw new NullPointerException(resourceModule + " could not be found on the filesystem," + " or in package resources");
+                        try (InputStream is = this.getClass().getResourceAsStream(resourceModule)) {
+                            if (null == is) {
+                                throw new NullPointerException(resourceModule + " could not be found on the filesystem," + " or in package resources");
+                            }
+                            c = ContentFactory.newContent(moduleUri, is, opts);
                         }
-                        c = ContentFactory.newContent(moduleUri, is, opts);
                     }
                     session.insertContent(c);
                 }
@@ -580,44 +575,11 @@ public class Manager extends AbstractManager {
         } catch (IOException | RequestException e) {
             LOG.log(SEVERE, MessageFormat.format("error while reading modules {0}", e.getMessage()), e);
             throw e;
-        } finally {
-            session.close();
-            if (null != is) {
-                try {
-                    is.close();
-                } catch (IOException ioe) {
-                    LOG.log(SEVERE, "Couldn't close the stream", ioe);
-                }
-            }
         }
     }
 
-    protected void registerStatusInfo() {
-        Session session = contentSource.newSession();
-        AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML + DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
-                + "let $status := \n" + " xdmp:server-status(xdmp:host(), xdmp:server())\n"
-                + "let $modules := $status/mlss:modules\n"
-                + "let $root := $status/mlss:root\n"
-                + "return (data($modules), data($root))");
-        ResultSequence rs = null;
-        try {
-            rs = session.submitRequest(q);
-        } catch (RequestException e) {
-            e.printStackTrace();
-        } finally {
-            session.close();
-        }
-        while (null != rs && rs.hasNext()) {
-            ResultItem rsItem = rs.next();
-            XdmItem item = rsItem.getItem();
-            if (rsItem.getIndex() == 0 && "0".equals(item.asString())) {
-                options.setModulesDatabase("");
-            }
-            if (rsItem.getIndex() == 1) {
-                options.setXDBC_ROOT(item.asString());
-            }
-        }
-
+    @Override
+    protected void logOptions() {
         LOG.log(INFO, "Configured modules db: {0}", options.getModulesDatabase());
         LOG.log(INFO, "Configured modules xdbc root: {0}", options.getXDBC_ROOT());
         LOG.log(INFO, "Configured modules root: {0}", options.getModuleRoot());
@@ -637,15 +599,6 @@ public class Manager extends AbstractManager {
         LOG.log(INFO, "Configured failonError: {0}", options.isFailOnError());
         LOG.log(INFO, "Configured URIs queue max in-memory size: {0}", options.getDiskQueueMaxInMemorySize());
         LOG.log(INFO, "Configured URIs queue temp dir: {0}", options.getDiskQueueTempDir());
-        logProperties();
-    }
-
-    protected void logProperties() {
-        for (Entry<Object, Object> e : properties.entrySet()) {
-            if (e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
-                LOG.log(INFO, "Loaded property {0}={1}", new Object[]{e.getKey(), e.getValue()});
-            }
-        }
     }
 
     private void runInitTask(TaskFactory tf) throws Exception {
@@ -695,7 +648,7 @@ public class Manager extends AbstractManager {
     private int populateQueue() throws Exception {
         LOG.info("populating queue");
         TaskFactory taskFactory = new TaskFactory(this);
-        
+
         int expectedTotalCount = -1;
         int urisCount = 0;
         try (UrisLoader urisLoader = getUriLoader()) {
@@ -748,21 +701,21 @@ public class Manager extends AbstractManager {
                 }
 
                 urisCount++;
-                
-                if (0 == urisCount % 25000) {
-                  LOG.log(INFO, "received {0}/{1}: {2}", new Object[]{urisCount, expectedTotalCount, uri});
 
-                  if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
-                      LOG.warning("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
-                      freeMemory = Runtime.getRuntime().freeMemory();
-                      if (freeMemory < RAM_TOTAL * 0.2d) {
-                          memoryLogLevel = WARNING;
-                      } else {
-                          memoryLogLevel = INFO;
-                      }
-                      LOG.log(memoryLogLevel, "free memory: {0} MiB" + " of " + RAM_TOTAL/(1024*1024), (freeMemory / (1024 * 1024)));
-                  }
-                  lastMessageMillis = System.currentTimeMillis();
+                if (0 == urisCount % 25000) {
+                    LOG.log(INFO, "received {0}/{1}: {2}", new Object[]{urisCount, expectedTotalCount, uri});
+
+                    if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
+                        LOG.warning("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
+                        freeMemory = Runtime.getRuntime().freeMemory();
+                        if (freeMemory < RAM_TOTAL * 0.2d) {
+                            memoryLogLevel = WARNING;
+                        } else {
+                            memoryLogLevel = INFO;
+                        }
+                        LOG.log(memoryLogLevel, "free memory: {0} MiB" + " of " + RAM_TOTAL / (1024 * 1024), (freeMemory / (1024 * 1024)));
+                    }
+                    lastMessageMillis = System.currentTimeMillis();
                 }
             }
 
@@ -778,7 +731,7 @@ public class Manager extends AbstractManager {
         } catch (Exception exc) {
             stop();
             throw exc;
-        } 
+        }
 
         return urisCount;
     }
@@ -819,9 +772,9 @@ public class Manager extends AbstractManager {
             pool.pause();
         }
     }
-    
-    public boolean isPaused(){
-    	return pool != null && pool.isPaused();
+
+    public boolean isPaused() {
+        return pool != null && pool.isPaused();
     }
 
     /**
@@ -894,9 +847,9 @@ public class Manager extends AbstractManager {
         }
 
         public void onChange(File file) {
- 
+
             try (InputStream in = new FileInputStream(file);) {
-                
+
                 Properties commandFile = new Properties();
                 commandFile.load(in);
 

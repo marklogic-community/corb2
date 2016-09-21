@@ -33,15 +33,11 @@ import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
-import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
-import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
-import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
-import com.marklogic.xcc.types.XdmItem;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -51,7 +47,6 @@ import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Properties;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
@@ -206,43 +201,11 @@ public class ModuleExecutor extends AbstractManager {
         err.println(TAB + StringUtils.join(args, SPACE));
     }
 
-    private void registerStatusInfo() {
-        Session session = contentSource.newSession();
-        AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML
-                + DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
-                + "let $status := \n"
-                + " xdmp:server-status(xdmp:host(), xdmp:server())\n"
-                + "let $modules := $status/mlss:modules\n"
-                + "let $root := $status/mlss:root\n"
-                + "return (data($modules), data($root))");
-        ResultSequence rs = null;
-        try {
-            rs = session.submitRequest(q);
-        } catch (RequestException e) {
-            e.printStackTrace();
-        } finally {
-            session.close();
-        }
-        while (null != rs && rs.hasNext()) {
-            ResultItem rsItem = rs.next();
-            XdmItem item = rsItem.getItem();
-            if (rsItem.getIndex() == 0 && item.asString().equals("0")) {
-                options.setModulesDatabase("");
-            }
-            if (rsItem.getIndex() == 1) {
-                options.setXDBC_ROOT(item.asString());
-            }
-        }
-
+    @Override
+    protected void logOptions() {
         LOG.log(INFO, "Configured modules db: {0}", options.getModulesDatabase());
         LOG.log(INFO, "Configured modules root: {0}", options.getModuleRoot());
         LOG.log(INFO, "Configured process module: {0}", options.getProcessModule());
-
-        for (Entry<Object, Object> e : properties.entrySet()) {
-            if (e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
-                LOG.log(INFO, "Loaded property {0}={1}", new Object[]{e.getKey(), e.getValue()});
-            }
-        }
     }
 
     public void run() throws Exception {
@@ -255,12 +218,12 @@ public class ModuleExecutor extends AbstractManager {
 
         RequestOptions requestOptions = new RequestOptions();
         requestOptions.setCacheResult(false);
-        
+
         List<String> propertyNames = new ArrayList<>(properties.stringPropertyNames());
         propertyNames.addAll(System.getProperties().stringPropertyNames());
         String processModule = options.getProcessModule();
-            
-        try (Session session = contentSource.newSession()) {   
+
+        try (Session session = contentSource.newSession()) {
             if (isInlineOrAdhoc(processModule)) {
                 String adhocQuery;
                 if (isInlineModule(processModule)) {
@@ -343,7 +306,7 @@ public class ModuleExecutor extends AbstractManager {
             return;
         }
         LOG.info("Writing output to file");
- 
+
         File file = new File(fileDir, fileName);
         if (file.getParentFile() != null) {
             file.getParentFile().mkdirs();
@@ -354,7 +317,7 @@ public class ModuleExecutor extends AbstractManager {
                 writer.write(NEWLINE);
             }
             writer.flush();
-        }   
+        }
     }
 
 }

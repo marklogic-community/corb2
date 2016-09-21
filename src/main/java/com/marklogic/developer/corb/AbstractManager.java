@@ -31,11 +31,16 @@ import static com.marklogic.developer.corb.util.IOUtils.isDirectory;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
+import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ContentSourceFactory;
+import com.marklogic.xcc.ResultItem;
+import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.SecurityOptions;
+import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.XccConfigException;
+import com.marklogic.xcc.types.XdmItem;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -52,6 +57,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Properties;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
@@ -69,15 +75,15 @@ public abstract class AbstractManager {
     protected SSLConfig sslConfig;
     protected URI connectionUri;
     protected String collection;
-	protected TransformOptions options = new TransformOptions();
+    protected TransformOptions options = new TransformOptions();
     protected Properties properties = new Properties();
-	protected ContentSource contentSource;
+    protected ContentSource contentSource;
 
     protected static final int EXIT_CODE_SUCCESS = 0;
     protected static final int EXIT_CODE_INIT_ERROR = 1;
     protected static final int EXIT_CODE_PROCESSING_ERROR = 2;
     protected static final String SPACE = " ";
-    
+
     private static final Logger LOG = Logger.getLogger(AbstractManager.class.getName());
 
     public static Properties loadPropertiesFile(String filename) throws IOException {
@@ -113,10 +119,9 @@ public abstract class AbstractManager {
     }
 
     public static String getAdhocQuery(String module) {
-        
-       
+
         try {
-            InputStream is  = TaskFactory.class.getResourceAsStream("/" + module);
+            InputStream is = TaskFactory.class.getResourceAsStream("/" + module);
             if (is == null) {
                 File f = new File(module);
                 if (f.exists() && !f.isDirectory()) {
@@ -127,17 +132,17 @@ public abstract class AbstractManager {
             } else if (isDirectory(is)) {
                 throw new IllegalStateException("Adhoc query module cannot be a directory");
             }
-         
+
             try (InputStreamReader reader = new InputStreamReader(is);
                     StringWriter writer = new StringWriter()) {
-                
+
                 char[] buffer = new char[512];
                 int n = 0;
                 while (-1 != (n = reader.read(buffer))) {
                     writer.write(buffer, 0, n);
-                }   
+                }
                 return writer.toString().trim();
-            }     
+            }
         } catch (IOException exc) {
             throw new IllegalStateException("Problem reading adhoc query module " + module, exc);
         }
@@ -210,7 +215,7 @@ public abstract class AbstractManager {
         String dbname = getOption(XCC_DBNAME);
 
         if (StringUtils.anyIsNull(uriAsString) && StringUtils.anyIsNull(username, password, host, port)) {
-            throw new InstantiationException(String.format("Either %1$s or %2$s, %3$s, %4$s, and %5$s must be specified", 
+            throw new InstantiationException(String.format("Either %1$s or %2$s, %3$s, %4$s, and %5$s must be specified",
                     XCC_CONNECTION_URI, XCC_USERNAME, XCC_PASSWORD, XCC_HOSTNAME, XCC_PORT));
         }
 
@@ -222,7 +227,47 @@ public abstract class AbstractManager {
 
         this.connectionUri = new URI(uriAsString);
     }
+
+    protected void registerStatusInfo() {
+        Session session = contentSource.newSession();
+        AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML + DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
+                + "let $status := xdmp:server-status(xdmp:host(), xdmp:server())\n"
+                + "let $modules := $status/mlss:modules\n"
+                + "let $root := $status/mlss:root\n"
+                + "return (data($modules), data($root))");
+        ResultSequence rs = null;
+        try {
+            rs = session.submitRequest(q);
+        } catch (RequestException e) {
+            LOG.log(SEVERE, "registerStatusInfo request failed", e);
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
+        while (null != rs && rs.hasNext()) {
+            ResultItem rsItem = rs.next();
+            XdmItem item = rsItem.getItem();
+            if (rsItem.getIndex() == 0 && "0".equals(item.asString())) {
+                options.setModulesDatabase("");
+            }
+            if (rsItem.getIndex() == 1) {
+                options.setXDBC_ROOT(item.asString());
+            }
+        }
+        logOptions();
+        logProperties();
+    }
     
+    protected void logOptions(){};
+    
+    protected void logProperties() {
+        for (Entry<Object, Object> e : properties.entrySet()) {
+            if (e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
+                LOG.log(INFO, "Loaded property {0}={1}", new Object[]{e.getKey(), e.getValue()});
+            }
+        }
+    }
+
     /**
      * Retrieve the value of the specified key from either the System
      * properties, or the properties object.

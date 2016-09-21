@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
+import static com.marklogic.developer.corb.ManagerTest.getMockManagerWithEmptyResults;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.SecurityOptions;
 import com.marklogic.xcc.exceptions.RequestException;
@@ -167,6 +168,26 @@ public class AbstractManagerTest {
         fail();
     }
 
+    @Test
+    public void testLogProperties() throws RequestException {
+        Properties props = new Properties();
+        props.setProperty("key1", "value1");
+        props.setProperty("key2", "value2");
+        Manager instance = getMockManagerWithEmptyResults();
+        instance.properties = props;
+        instance.logProperties();
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(props.size(), records.size());
+    }
+
+    @Test
+    public void testLogPropertiesNullProperties() throws RequestException {
+        Manager instance = getMockManagerWithEmptyResults();
+        instance.logProperties();
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(0, records.size());
+    }
+    
     /**
      * Test of getAdhocQuery method, of class AbstractManager.
      */
