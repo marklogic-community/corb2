@@ -258,7 +258,9 @@ public abstract class AbstractManager {
         logProperties();
     }
     
-    protected void logOptions(){};
+    protected void logOptions(){
+        //default behavior is not lo log anything
+    };
     
     protected void logProperties() {
         for (Entry<Object, Object> e : properties.entrySet()) {
