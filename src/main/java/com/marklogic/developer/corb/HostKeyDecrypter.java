@@ -63,7 +63,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     private static final byte[] HARD_CODED_BYTES = {120, 26, 58, 29, 43, 77, 95, 103, 29, 86, 97, 105, 52, 16, 42, 63, 37, 100, 45, 109, 108, 79, 75, 71, 11, 46, 36, 62, 124, 12, 7, 127};
     private static final String AES = "AES";
     private static final String USAGE_FORMAT = "java -cp marklogic-corb-" + AbstractManager.VERSION + ".jar " + HostKeyDecrypter.class.getName() + "{0} ";
-    private static final String EXCEPTION_MGS_SERIAL_NOT_FOUND = "Unable to find serial number on {0}"; 
+    private static final String EXCEPTION_MGS_SERIAL_NOT_FOUND = "Unable to find serial number on {0}";
     private static final String METHOD_TEST = "test";
     private static final String METHOD_ENCRYPT = "encrypt";
     // currently only usage is encrypt
@@ -73,7 +73,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
             + MessageFormat.format(USAGE_FORMAT, new Object[]{METHOD_TEST});
 
     protected static final Logger LOG = Logger.getLogger(HostKeyDecrypter.class.getName());
-        
+
     protected enum OSType {
 
         WINDOWS {
@@ -87,28 +87,25 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                 StringBuilder sb = new StringBuilder();
                 BufferedReader br = null;
                 boolean isSN = false;
-                Scanner sc = null;
                 try {
                     br = read("wmic bios get serialnumber");
-                    sc = new Scanner(br);
-                    while (sc.hasNext()) {
-                        String next = sc.next();
-                        if ("SerialNumber".equals(next) || isSN) {
-                            isSN = true;
-                            next = sc.next();
-                            sb.append(next);
+                    try (Scanner sc = new Scanner(br)) {
+                        while (sc.hasNext()) {
+                            String next = sc.next();
+                            if ("SerialNumber".equals(next) || isSN) {
+                                isSN = true;
+                                next = sc.next();
+                                sb.append(next);
+                            }
+                        }
+                        String sn = sb.toString();
+                        if (!sn.isEmpty()) {
+                            return sn.getBytes();
+                        } else {
+                            throw new IllegalStateException(MessageFormat.format(EXCEPTION_MGS_SERIAL_NOT_FOUND, new Object[]{this.toString()}));
                         }
                     }
-                    String sn = sb.toString();
-                    if (!sn.isEmpty()) {
-                        return sn.getBytes();
-                    } else {
-                        throw new IllegalStateException(MessageFormat.format(EXCEPTION_MGS_SERIAL_NOT_FOUND, new Object[]{this.toString()}));
-                    }
                 } finally {
-                    if (sc != null) {
-                        sc.close();
-                    } //Scanner doesn't implement Closable in 1.6
                     closeOrThrowRuntime(br);
                 }
             }
@@ -127,13 +124,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
 
                 try {
                     br = read("/usr/sbin/system_profiler SPHardwareDataType");
-                    while ((line = br.readLine()) != null) {
-                        if (line.contains(marker)) {
-                            String sn = line.split(marker)[1].trim();
-                            return sn.getBytes();
-                        }
-                    }
-                    throw new IllegalStateException(MessageFormat.format(EXCEPTION_MGS_SERIAL_NOT_FOUND, new Object[]{this.toString()}));
+                    return getValueFollowingMarker(br, marker, this.toString());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 } finally {
@@ -150,19 +141,13 @@ public class HostKeyDecrypter extends AbstractDecrypter {
              */
             @Override
             public byte[] getSN() {
-                String line = null;
+
                 String marker = "system.hardware.serial";
                 BufferedReader br = null;
 
                 try {
                     br = read("lshal");
-                    while ((line = br.readLine()) != null) {
-                        if (line.contains(marker)) {
-                            String sn = line.split(marker)[1].trim();
-                            return sn.getBytes();
-                        }
-                    }
-                    throw new IllegalStateException(MessageFormat.format(EXCEPTION_MGS_SERIAL_NOT_FOUND, new Object[]{this.toString()}));
+                    return getValueFollowingMarker(br, marker, this.toString());
                 } catch (IOException e) {
                     throw new RuntimeException("Required to have lshal command installed on linux machine", e);
                 } finally {
@@ -176,9 +161,20 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                 return DEFAULT_BYTES;
             }
         };
-        
+
         public abstract byte[] getSN();
-        
+
+        private static byte[] getValueFollowingMarker(BufferedReader br, String marker, String clazz) throws IOException {
+            String line = null;
+            while ((line = br.readLine()) != null) {
+                if (line.contains(marker)) {
+                    String sn = line.split(marker)[1].trim();
+                    return sn.getBytes();
+                }
+            }
+            throw new IllegalStateException(MessageFormat.format(EXCEPTION_MGS_SERIAL_NOT_FOUND, clazz));
+        }
+
         private static void closeOrThrowRuntime(Closeable obj) {
             if (obj != null) {
                 try {

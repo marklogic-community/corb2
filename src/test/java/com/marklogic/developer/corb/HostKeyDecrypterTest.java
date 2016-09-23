@@ -18,11 +18,21 @@
  */
 package com.marklogic.developer.corb;
 
+import com.marklogic.developer.TestHandler;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.StringReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,16 +43,20 @@ import static org.junit.Assert.*;
  * @author Mads Hanse, MarkLogic Corporation
  */
 public class HostKeyDecrypterTest {
-    
+
+    private final TestHandler testLogger = new TestHandler();
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
     private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
     private PrintStream systemOut = System.out;
     private PrintStream systemErr = System.err;
     private static final String USAGE = HostKeyDecrypter.USAGE + "\n";
-    
+    private static final Logger LOG = Logger.getLogger(HostKeyDecrypterTest.class.getName());
+    private static final Logger HOST_KEY_DECRYPTER_LOG = Logger.getLogger(HostKeyDecrypter.class.getName());
+
     @Before
     public void setUp() {
         clearSystemProperties();
+        HOST_KEY_DECRYPTER_LOG.addHandler(testLogger);
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
     }
@@ -54,22 +68,22 @@ public class HostKeyDecrypterTest {
         System.setErr(systemErr);
     }
 
-    /**
-     * Test of init_decrypter method, of class HostKeyDecrypter.
-     */
-    //@Test travis-ci throws an IOException
-    public void testInitDecrypter() throws Exception {
+    @Test
+    public void testInitDecrypter() {
         HostKeyDecrypter instance = new HostKeyDecrypter();
         try {
             instance.init_decrypter();
+            List<LogRecord> records = testLogger.getLogRecords();
+            assertTrue("Initialized HostKeyDecrypter".equals(records.get(0).getMessage()));
         } catch (IOException ex) {
             //travis-ci throws an IOException
+            LOG.log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
     }
 
-    /**
-     * Test of xor method, of class HostKeyDecrypter.
-     */
     @Test
     public void testXor() {
         byte[] byteOne = {1, 0, 1, 0, 1};
@@ -79,16 +93,17 @@ public class HostKeyDecrypterTest {
         assertTrue(Arrays.equals(expResult, result));
     }
 
-    /**
-     * Test of getSHA256Hash method, of class HostKeyDecrypter.
-     */
     @Test
-    public void testGetSHA256Hash() throws Exception {
+    public void testGetSHA256Hash() {
         byte[] expected = {-75, -44, 4, 92, 63, 70, 111, -87, 31, -30, -52, 106, -66, 121, 35, 42, 26, 87, -51, -15, 4, -9, -94, 110, 113, 110, 10, 30, 39, -119, -33, 120};
         byte[] input = {'A', 'B', 'C'};
-        byte[] result = HostKeyDecrypter.getSHA256Hash(input);
-        System.out.println(Arrays.toString(result));
-        assertTrue(Arrays.equals(expected, result));
+        try {
+            byte[] result = HostKeyDecrypter.getSHA256Hash(input);
+            System.out.println(Arrays.toString(result));
+            assertTrue(Arrays.equals(expected, result));
+        } catch (NoSuchAlgorithmException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
     }
 
     @Test
@@ -103,27 +118,67 @@ public class HostKeyDecrypterTest {
         assertEquals(HostKeyDecrypter.OSType.OTHER, HostKeyDecrypter.getOperatingSystemType(null));
     }
 
-    /**
-     * Test of main method, of class HostKeyDecrypter.
-     */
     @Test
-    public void testMainUsageNullArgs() throws Exception {
+    public void testGetValueFollowingMarker() {
+        BufferedReader br = new BufferedReader(new StringReader("Serial Number xyz-123"));
+        try {
+            Class<?> clazz = HostKeyDecrypter.OSType.class;
+            Method method = clazz.getDeclaredMethod("getValueFollowingMarker", BufferedReader.class, String.class, String.class);
+            method.setAccessible(true);
+            byte[] serial = (byte[]) method.invoke(clazz, br, "Serial Number", HostKeyDecrypter.OSType.MAC.toString());
+            assertTrue("xyz-123".equals(new String(serial)));
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testGetValueFollowingMarkerNotFound() {
+        BufferedReader br = new BufferedReader(new StringReader("Serial Number xyz-123"));
+        byte[] result = null;
+        try {
+            Class<?> clazz = HostKeyDecrypter.OSType.class;
+            Method method = clazz.getDeclaredMethod("getValueFollowingMarker", BufferedReader.class, String.class, String.class);
+            method.setAccessible(true);
+            result = (byte[]) method.invoke(clazz, br, "badMarker", HostKeyDecrypter.OSType.MAC.toString());
+            fail();
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
+        assertNull(result);
+    }
+
+    @Test
+    public void testMainUsageNullArgs() {
         String[] args = null;
-        HostKeyDecrypter.main(args);
+        try {
+            HostKeyDecrypter.main(args);
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
         assertEquals(USAGE, outContent.toString());
     }
 
     @Test
-    public void testMainUsageDecryptWithoutValue() throws Exception {
+    public void testMainUsageEncryptWithoutValue() {
         String[] args = {"encrypt"};
-        HostKeyDecrypter.main(args);
+        try {
+            HostKeyDecrypter.main(args);
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
         assertEquals(USAGE, outContent.toString());
     }
 
     @Test
-    public void testMainUsageUnrecognizedMethod() throws Exception {
+    public void testMainUsageUnrecognizedMethod() {
         String[] args = {"foo"};
-        HostKeyDecrypter.main(args);
+        try {
+            HostKeyDecrypter.main(args);
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
         assertEquals(USAGE, outContent.toString());
     }
 
