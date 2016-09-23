@@ -29,6 +29,7 @@ import com.marklogic.xcc.types.XdmItem;
 import com.marklogic.xcc.types.XdmVariable;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import org.junit.Test;
@@ -48,11 +49,9 @@ public class QueryUrisLoaderTest {
     private String none = "none";
     private String root = "/root";
     private static final String ADHOC_SUFFIX = "|ADHOC";
-    /**
-     * Test of open method, of class QueryUrisLoader.
-     */
+
     @Test(expected = NullPointerException.class)
-    public void testOpenNullPropertiesAndNullOptions() throws Exception {
+    public void testOpenNullPropertiesAndNullOptions() throws CorbException  {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -67,7 +66,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testOpenWithBadUrisReplacePattern() throws Exception {
+    public void testOpenWithBadUrisReplacePattern() throws CorbException {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -85,7 +84,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = CorbException.class)
-    public void testOpenBadUriCount() throws Exception {
+    public void testOpenBadUriCount() throws RequestException, CorbException {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -119,7 +118,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = CorbException.class)
-    public void testOpenInlineUriModule() throws Exception {
+    public void testOpenInlineUriModule() throws RequestException, CorbException  {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -153,7 +152,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpenNoCodeInInline() throws Exception {
+    public void testOpenNoCodeInInline() throws RequestException, CorbException  {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -188,7 +187,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_adHocIsDirectory() throws Exception {
+    public void testOpen_adHocIsDirectory() throws CorbException{
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -206,7 +205,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_adHocIsEmpty() throws Exception {
+    public void testOpen_adHocIsEmpty() throws IOException, CorbException  {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -227,7 +226,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testOpen() throws Exception {
+    public void testOpen() throws RequestException, IOException, CorbException  {
         String processModuleKey1 = "PROCESS-MODULE.foo";
         String processModuleKey2 = "PROCESS-MODULE.foo-foo";
         String processModuleKey3 = "PROCESS-MODULE.foo_foo2";
@@ -268,21 +267,21 @@ public class QueryUrisLoaderTest {
         Properties props = new Properties();
         props.setProperty("URIS-MODULE.foo", bar);
 
-        QueryUrisLoader instance = new QueryUrisLoader();
-        instance.properties = props;
-        instance.options = transformOptions;
-        instance.cs = contentSource;
-        instance.collection = "";
-        instance.open();
-        assertEquals(1, instance.getTotalCount());
-        assertEquals(bar, instance.properties.getProperty(processModuleKey1));
-        assertEquals(bar, instance.properties.getProperty(processModuleKey2));
-        assertEquals(bar, instance.properties.getProperty(processModuleKey3));
-        instance.close();
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            instance.properties = props;
+            instance.options = transformOptions;
+            instance.cs = contentSource;
+            instance.collection = "";
+            instance.open();
+            assertEquals(1, instance.getTotalCount());
+            assertEquals(bar, instance.properties.getProperty(processModuleKey1));
+            assertEquals(bar, instance.properties.getProperty(processModuleKey2));
+            assertEquals(bar, instance.properties.getProperty(processModuleKey3));
+        }
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_badAdhocFilenameIsEmpty() throws Exception {
+    public void testOpen_badAdhocFilenameIsEmpty() throws CorbException {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -300,7 +299,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_maxOptsFromModuleZero() throws Exception {
+    public void testOpen_maxOptsFromModuleZero() throws CorbException  {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -321,7 +320,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_InvalidMaxOptsFromModuleZero() throws Exception {
+    public void testOpen_InvalidMaxOptsFromModuleZero() throws CorbException  {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -365,11 +364,8 @@ public class QueryUrisLoaderTest {
         assertEquals(0, result);
     }
 
-    /**
-     * Test of hasNext method, of class QueryUrisLoader.
-     */
     @Test
-    public void testHasNext_resultSequenceIsNull() throws Exception {
+    public void testHasNext_resultSequenceIsNull() throws CorbException  {
         boolean result;
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
             result = instance.hasNext();
@@ -409,7 +405,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testHasNext_resultSequenceNotHasNext() throws Exception {
+    public void testHasNext_resultSequenceNotHasNext() throws CorbException  {
         ResultSequence resultSequence = mock(ResultSequence.class);
         when(resultSequence.hasNext()).thenReturn(false);
         boolean result;
@@ -420,11 +416,8 @@ public class QueryUrisLoaderTest {
         assertFalse(result);
     }
 
-    /**
-     * Test of next method, of class QueryUrisLoader.
-     */
     @Test
-    public void testNext() throws Exception {
+    public void testNext() throws RequestException, CorbException  {
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke request = mock(ModuleInvoke.class);
@@ -456,7 +449,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = NoSuchElementException.class)
-    public void testNext_noQueue() throws Exception {
+    public void testNext_noQueue() throws CorbException {
 
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.next();

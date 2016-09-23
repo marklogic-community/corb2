@@ -32,10 +32,7 @@ import static org.mockito.Mockito.mock;
 public class TaskFactoryTest {
 
     private static final String MODULE = "module";
-    
-    /**
-     * Test of newProcessTask method, of class TaskFactory.
-     */
+
     @Test(expected = NullPointerException.class)
     public void testNewProcessTaskStringArrNullManager() {
         String[] uris = null;
@@ -134,9 +131,6 @@ public class TaskFactoryTest {
         fail();
     }
 
-    /**
-     * Test of newProcessTask method, of class TaskFactory.
-     */
     @Test
     public void testNewProcessTaskStringArrBoolean() {
         String[] uris = new String[]{"a"};
@@ -149,9 +143,6 @@ public class TaskFactoryTest {
         assertNotNull(result);
     }
 
-    /**
-     * Test of newPreBatchTask method, of class TaskFactory.
-     */
     @Test
     public void testNewPreBatchTaskNoBatchTaskOrModule() {
         Manager manager = new Manager();
@@ -209,9 +200,6 @@ public class TaskFactoryTest {
         instance.newPreBatchTask();
     }
 
-    /**
-     * Test of newPostBatchTask method, of class TaskFactory.
-     */
     @Test
     public void testNewPostBatchTaskNoPostbatchTaskClassOrModule() {
         Manager manager = new Manager();
@@ -261,9 +249,6 @@ public class TaskFactoryTest {
         fail();
     }
 
-    /**
-     * Test of newInitTask method, of class TaskFactory.
-     */
     @Test
     public void testNewInitTaskNoPostbatchTaskClassOrModule() {
         Manager manager = new Manager();
