@@ -22,6 +22,8 @@ import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
 import org.junit.After;
 import static org.junit.Assert.*;
@@ -37,7 +39,8 @@ public class TwoWaySSLConfigTest {
     public static final String SSL_PROPERTIES = "src/test/resources/SSL.properties";
     public static final String SSLV3 = "SSLv3";
     public static final String A_B_C = "a,b,c";
-    
+    private static final Logger LOG = Logger.getLogger(TwoWaySSLConfigTest.class.getName());
+
     @Before
     public void setUp() {
         clearSystemProperties();
@@ -140,7 +143,7 @@ public class TwoWaySSLConfigTest {
     }
 
     @Test
-    public void testLoadPropertiesFileWithNullProperties() throws Exception {
+    public void testLoadPropertiesFileWithNullProperties() {
         System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.properties = null;
@@ -148,9 +151,9 @@ public class TwoWaySSLConfigTest {
         assertNotNull(instance.properties);
         assertEquals(instance.getEnabledCipherSuites()[1], SSLV3);
     }
-    
+
     @Test
-    public void testLoadPropertiesFileDoesNotExist() throws Exception {
+    public void testLoadPropertiesFileDoesNotExist() {
         System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, "");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.loadPropertiesFile();
@@ -161,20 +164,31 @@ public class TwoWaySSLConfigTest {
      * Test of getSSLContext method, of class TwoWaySSLConfig.
      */
     @Test(expected = IllegalStateException.class)
-    public void testGetSSLContextNoProperties() throws NoSuchAlgorithmException, KeyManagementException {
-        System.clearProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE);
-        TwoWaySSLConfig instance = new TwoWaySSLConfig();
-        instance.getSSLContext();
-        fail();
+    public void testGetSSLContextNoProperties() {
+        try {
+            System.clearProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE);
+            TwoWaySSLConfig instance = new TwoWaySSLConfig();
+            instance.getSSLContext();
+
+        } catch (NoSuchAlgorithmException | KeyManagementException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
-    public void testGetSSLContext() throws NoSuchAlgorithmException, KeyManagementException {
+    public void testGetSSLContext() {
         System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
-        SSLContext context = instance.getSSLContext();
-        assertNotNull(context);
-        System.clearProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE);
+        try {
+            SSLContext context = instance.getSSLContext();
+            assertNotNull(context);
+        } catch (NoSuchAlgorithmException | KeyManagementException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        } finally {
+            System.clearProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE);
+        }
     }
 
 }
