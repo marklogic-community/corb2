@@ -43,35 +43,23 @@ public class FileUtilsTest {
     private final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
     private static final String TEXT_FILE_EXT = "txt";
 
-    /**
-     * Test of getBytes method, of class FileUtils.
-     */
     @Test
-    public void testGetBytes() throws Exception {
+    public void testGetBytes() throws IOException {
         byte[] result = getBytes(new File("src/test/resources/uriInputFile.txt"));
         assertArrayEquals("Hello from the URIS-FILE!".getBytes(), result);
     }
 
-    /**
-     * Test of copy method, of class Utilities.
-     */
     @Test
-    public void testCopyFileFile() throws Exception {
-
+    public void testCopyFileFile() throws IOException {
         File out = File.createTempFile("copiedFile", TEXT_FILE_EXT);
         out.deleteOnExit();
         copy(exampleContentFile, out);
-
+        
         assertArrayEquals(getBytes(exampleContentFile), getBytes(out));
     }
 
-    /**
-     * Test of copy method, of class Utilities.
-     *
-     * @throws java.lang.Exception
-     */
     @Test
-    public void testCopyStringString() throws Exception {
+    public void testCopyStringString() throws IOException {
         String inFilePath = exampleContentFile.getAbsolutePath();
         File destFile = File.createTempFile("output", TEXT_FILE_EXT);
         destFile.deleteOnExit();
@@ -81,13 +69,8 @@ public class FileUtilsTest {
         assertArrayEquals(getBytes(exampleContentFile), getBytes(destFile));
     }
 
-    /**
-     * Test of deleteFile method, of class Utilities.
-     *
-     * @throws java.lang.Exception
-     */
     @Test
-    public void testDeleteFileFile() throws Exception {
+    public void testDeleteFileFile() throws IOException {
         File file = File.createTempFile("originalFile", TEXT_FILE_EXT);
         FileUtils.deleteFile(file);
         assertFalse(file.exists());

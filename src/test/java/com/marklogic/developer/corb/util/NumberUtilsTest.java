@@ -27,9 +27,6 @@ import static org.junit.Assert.*;
  */
 public class NumberUtilsTest {
 
-    /**
-     * Test of toInt method, of class NumberUtils.
-     */
     @Test
     public void testToIntString() {
         int result = NumberUtils.toInt("6");
@@ -41,10 +38,7 @@ public class NumberUtilsTest {
         int result = NumberUtils.toInt("six");
         assertEquals(0, result);
     }
-    
-    /**
-     * Test of toInt method, of class NumberUtils.
-     */
+
     @Test
     public void testToIntStringInt() {
         int result = NumberUtils.toInt("7", -1);

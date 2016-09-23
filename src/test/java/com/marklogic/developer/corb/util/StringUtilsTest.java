@@ -243,7 +243,7 @@ public class StringUtilsTest {
     }
 
     @Test(expected = UnsupportedEncodingException.class)
-    public void testDumpHexUnsupportedEncoding() throws Exception {
+    public void testDumpHexUnsupportedEncoding() throws UnsupportedEncodingException {
         StringUtils.dumpHex(FOO, "does not exist");
         fail();
     }

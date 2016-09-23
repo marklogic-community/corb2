@@ -47,9 +47,6 @@ public class IOUtilsTest {
         exampleContent = cat(new FileReader(exampleContentFile));
     }
 
-    /**
-     * Test of closeQuietly method, of class IOUtils.
-     */
     @Test
     public void testCloseQuietly() throws IOException {
         Closeable obj = new StringReader("foo");
@@ -76,7 +73,7 @@ public class IOUtilsTest {
     }
 
     @Test(expected = IOException.class)
-    public void testCopyNullInputStream() throws Exception {
+    public void testCopyNullInputStream() throws IOException {
         InputStream in = null;
         File out = File.createTempFile("copiedFile", "txt");
         out.deleteOnExit();
@@ -84,18 +81,13 @@ public class IOUtilsTest {
     }
 
     @Test(expected = IOException.class)
-    public void testCopyInputStreamNull() throws Exception {
+    public void testCopyInputStreamNull() throws IOException {
         InputStream in = new FileInputStream(exampleContentFile);
         copy(in, null);
     }
 
-    /**
-     * Test of copy method, of class Utilities.
-     *
-     * @throws java.lang.Exception
-     */
     @Test
-    public void testCopyReaderOutputStream() throws Exception {
+    public void testCopyReaderOutputStream() throws IOException {
         Reader in = new FileReader(exampleContentFile);
         OutputStream out = new ByteArrayOutputStream();
 
@@ -117,75 +109,42 @@ public class IOUtilsTest {
         copy(in, out);
     }
 
-    /**
-     * Test of cat method, of class Utilities.
-     *
-     * @throws java.lang.Exception
-     */
     @Test
-    public void testCatReader() throws Exception {
+    public void testCatReader() throws IOException {
         Reader reader = new FileReader(exampleContentFile);
         String result = cat(reader);
         assertEquals(exampleContent, result);
     }
 
-    /**
-     * Test of cat method, of class Utilities.
-     *
-     * @throws java.lang.Exception
-     */
     @Test
-    public void testCatInputStream() throws Exception {
+    public void testCatInputStream() throws IOException {
         InputStream is = new FileInputStream(exampleContentFile);
         byte[] result = cat(is);
         assertArrayEquals(exampleContent.getBytes(), result);
     }
 
-    /**
-     * Test of getSize method, of class Utilities.
-     *
-     * @throws java.lang.Exception
-     */
     @Test
-    public void testGetSizeInputStream() throws Exception {
+    public void testGetSizeInputStream() throws IOException {
         long result = -1;
-        InputStream is;
-        try {
-            is = new FileInputStream(exampleContentFile);
+        try (InputStream is = new FileInputStream(exampleContentFile);){   
             result = getSize(is);
-        } catch (Exception ex) {
         }
         assertEquals(exampleContent.length(), result);
     }
 
-    /**
-     * Test of getSize method, of class Utilities.
-     *
-     * @throws java.lang.Exception
-     */
     @Test
-    public void testGetSizeReader() throws Exception {
+    public void testGetSizeReader() throws IOException {
         Reader reader = new FileReader(exampleContentFile);
         long result = getSize(reader);
         assertEquals(exampleContent.length(), result);
     }
 
-    /**
-     * Test of getBytes method, of class Utilities.
-     *
-     * @throws java.lang.Exception
-     */
     @Test
-    public void testGetBytes() throws Exception {
+    public void testGetBytes() throws IOException {
         byte[] result = FileUtilsTest.getBytes(exampleContentFile);
         assertArrayEquals(exampleContent.getBytes(), result);
     }
 
-    /**
-     * @param r
-     * @return
-     * @throws IOException
-     */
     public static String cat(Reader r) throws IOException {
         StringBuilder rv = new StringBuilder();
         int size;
@@ -196,24 +155,12 @@ public class IOUtilsTest {
         return rv.toString();
     }
 
-    /**
-     * @param is
-     * @return
-     * @throws IOException
-     */
     public static byte[] cat(InputStream is) throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream(BUFFER_SIZE);
         copy(is, bos);
         return bos.toByteArray();
     }
 
-    /**
-     *
-     * @param inputStream
-     * @param outputStream
-     * @return
-     * @throws IOException
-     */
     public static long copy(final InputStream inputStream, final OutputStream outputStream) throws IOException {
         if (inputStream == null) {
             throw new IOException("null InputStream");
@@ -240,13 +187,6 @@ public class IOUtilsTest {
         return totalBytes;
     }
 
-    /**
-     *
-     * @param source
-     * @param destination
-     * @return
-     * @throws IOException
-     */
     public static long copy(final Reader source, final OutputStream destination) throws IOException {
         if (source == null) {
             throw new IOException("null Reader");
@@ -274,12 +214,6 @@ public class IOUtilsTest {
         return totalBytes;
     }
 
-    /**
-     *
-     * @param is
-     * @return
-     * @throws IOException
-     */
     public static long getSize(InputStream is) throws IOException {
         long size = 0;
         int b;
@@ -290,12 +224,6 @@ public class IOUtilsTest {
         return size;
     }
 
-    /**
-     *
-     * @param r
-     * @return
-     * @throws IOException
-     */
     public static long getSize(Reader r) throws IOException {
         long size = 0;
         int b;
