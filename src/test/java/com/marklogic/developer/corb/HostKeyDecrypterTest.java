@@ -52,7 +52,7 @@ public class HostKeyDecrypterTest {
     private static final String USAGE = HostKeyDecrypter.USAGE + "\n";
     private static final Logger LOG = Logger.getLogger(HostKeyDecrypterTest.class.getName());
     private static final Logger HOST_KEY_DECRYPTER_LOG = Logger.getLogger(HostKeyDecrypter.class.getName());
-
+    private static final String METHOD_GET_VALUE_FOLLOWING_MARKER = "getValueFollowingMarker";
     @Before
     public void setUp() {
         clearSystemProperties();
@@ -75,10 +75,10 @@ public class HostKeyDecrypterTest {
             instance.init_decrypter();
             List<LogRecord> records = testLogger.getLogRecords();
             assertTrue("Initialized HostKeyDecrypter".equals(records.get(0).getMessage()));
-        } catch (IOException ex) {
-            //travis-ci throws an IOException
+        } catch (RuntimeException ex) {
+            //travis-ci throws an IOException, can't find lshal and then a RuntimeException is thrown
             LOG.log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
+        } catch (IOException | ClassNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -123,7 +123,7 @@ public class HostKeyDecrypterTest {
         BufferedReader br = new BufferedReader(new StringReader("Serial Number xyz-123"));
         try {
             Class<?> clazz = HostKeyDecrypter.OSType.class;
-            Method method = clazz.getDeclaredMethod("getValueFollowingMarker", BufferedReader.class, String.class, String.class);
+            Method method = clazz.getDeclaredMethod(METHOD_GET_VALUE_FOLLOWING_MARKER, BufferedReader.class, String.class, String.class);
             method.setAccessible(true);
             byte[] serial = (byte[]) method.invoke(clazz, br, "Serial Number", HostKeyDecrypter.OSType.MAC.toString());
             assertTrue("xyz-123".equals(new String(serial)));
@@ -135,11 +135,11 @@ public class HostKeyDecrypterTest {
 
     @Test
     public void testGetValueFollowingMarkerNotFound() {
-        BufferedReader br = new BufferedReader(new StringReader("Serial Number xyz-123"));
+        BufferedReader br = new BufferedReader(new StringReader("Serial Number abc-123"));
         byte[] result = null;
         try {
             Class<?> clazz = HostKeyDecrypter.OSType.class;
-            Method method = clazz.getDeclaredMethod("getValueFollowingMarker", BufferedReader.class, String.class, String.class);
+            Method method = clazz.getDeclaredMethod(METHOD_GET_VALUE_FOLLOWING_MARKER, BufferedReader.class, String.class, String.class);
             method.setAccessible(true);
             result = (byte[]) method.invoke(clazz, br, "badMarker", HostKeyDecrypter.OSType.MAC.toString());
             fail();
