@@ -32,6 +32,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.anyString;
@@ -51,7 +53,7 @@ public class QueryUrisLoaderTest {
     private static final String ADHOC_SUFFIX = "|ADHOC";
 
     @Test(expected = NullPointerException.class)
-    public void testOpenNullPropertiesAndNullOptions() throws CorbException  {
+    public void testOpenNullPropertiesAndNullOptions() throws CorbException {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -118,7 +120,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = CorbException.class)
-    public void testOpenInlineUriModule() throws RequestException, CorbException  {
+    public void testOpenInlineUriModule() throws RequestException, CorbException {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -152,7 +154,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpenNoCodeInInline() throws RequestException, CorbException  {
+    public void testOpenNoCodeInInline() throws RequestException, CorbException {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -187,7 +189,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_adHocIsDirectory() throws CorbException{
+    public void testOpen_adHocIsDirectory() throws CorbException {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -205,7 +207,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_adHocIsEmpty() throws IOException, CorbException  {
+    public void testOpen_adHocIsEmpty() throws IOException, CorbException {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -226,57 +228,62 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testOpen() throws RequestException, IOException, CorbException  {
-        String processModuleKey1 = "PROCESS-MODULE.foo";
-        String processModuleKey2 = "PROCESS-MODULE.foo-foo";
-        String processModuleKey3 = "PROCESS-MODULE.foo_foo2";
-        String equalsBar = "=bar";
-        String keyEqualsBar = processModuleKey1 + equalsBar;
-        String keyEqualsBar2 = processModuleKey2 + equalsBar;
-        String keyEqualsBar3 = processModuleKey3 + equalsBar;
-        ContentSource contentSource = mock(ContentSource.class);
-        Session session = mock(Session.class);
-        AdhocQuery request = mock(AdhocQuery.class);
-        ResultSequence resultSequence = mock(ResultSequence.class);
-        ResultItem item = mock(ResultItem.class);
-        XdmItem xItem1 = mock(XdmItem.class);
-        XdmItem xItem2 = mock(XdmItem.class);
-        XdmItem xItem3 = mock(XdmItem.class);
-        XdmItem xItemCount = mock(XdmItem.class);
-        when(contentSource.newSession()).thenReturn(session);
-        when(session.newAdhocQuery(anyString())).thenReturn(request);
-        when(request.setNewStringVariable(anyString(), anyString())).thenReturn(null).thenReturn(null).thenReturn(null).thenReturn(null);
-        when(session.submitRequest(request)).thenReturn(resultSequence);
-        when(resultSequence.next()).thenReturn(item);
-        when(item.getItem()).
-                thenReturn(xItem1).thenReturn(xItem1).
-                thenReturn(xItem2).thenReturn(xItem2).
-                thenReturn(xItem3).thenReturn(xItem3).
-                thenReturn(xItemCount);
-        when(xItem1.asString()).thenReturn(keyEqualsBar).thenReturn(keyEqualsBar);
-        when(xItem2.asString()).thenReturn(keyEqualsBar2).thenReturn(keyEqualsBar2);
-        when(xItem3.asString()).thenReturn(keyEqualsBar3).thenReturn(keyEqualsBar3);
-        when(xItemCount.asString()).thenReturn(Integer.toString(1));
-        TransformOptions transformOptions = new TransformOptions();
-        File file = File.createTempFile("adhocJS", ".js");
-        file.deleteOnExit();
-        try (FileWriter writer = new FileWriter(file, true)) {
-            writer.append("var foo;");
-        }
-        transformOptions.setUrisModule(file.getAbsolutePath() + ADHOC_SUFFIX);
-        Properties props = new Properties();
-        props.setProperty("URIS-MODULE.foo", bar);
+    public void testOpen() {
+        try {
+            String processModuleKey1 = "PROCESS-MODULE.foo";
+            String processModuleKey2 = "PROCESS-MODULE.foo-foo";
+            String processModuleKey3 = "PROCESS-MODULE.foo_foo2";
+            String equalsBar = "=bar";
+            String keyEqualsBar = processModuleKey1 + equalsBar;
+            String keyEqualsBar2 = processModuleKey2 + equalsBar;
+            String keyEqualsBar3 = processModuleKey3 + equalsBar;
+            ContentSource contentSource = mock(ContentSource.class);
+            Session session = mock(Session.class);
+            AdhocQuery request = mock(AdhocQuery.class);
+            ResultSequence resultSequence = mock(ResultSequence.class);
+            ResultItem item = mock(ResultItem.class);
+            XdmItem xItem1 = mock(XdmItem.class);
+            XdmItem xItem2 = mock(XdmItem.class);
+            XdmItem xItem3 = mock(XdmItem.class);
+            XdmItem xItemCount = mock(XdmItem.class);
+            when(contentSource.newSession()).thenReturn(session);
+            when(session.newAdhocQuery(anyString())).thenReturn(request);
+            when(request.setNewStringVariable(anyString(), anyString())).thenReturn(null).thenReturn(null).thenReturn(null).thenReturn(null);
+            when(session.submitRequest(request)).thenReturn(resultSequence);
+            when(resultSequence.next()).thenReturn(item);
+            when(item.getItem()).
+                    thenReturn(xItem1).thenReturn(xItem1).
+                    thenReturn(xItem2).thenReturn(xItem2).
+                    thenReturn(xItem3).thenReturn(xItem3).
+                    thenReturn(xItemCount);
+            when(xItem1.asString()).thenReturn(keyEqualsBar).thenReturn(keyEqualsBar);
+            when(xItem2.asString()).thenReturn(keyEqualsBar2).thenReturn(keyEqualsBar2);
+            when(xItem3.asString()).thenReturn(keyEqualsBar3).thenReturn(keyEqualsBar3);
+            when(xItemCount.asString()).thenReturn(Integer.toString(1));
+            TransformOptions transformOptions = new TransformOptions();
+            File file = File.createTempFile("adhocJS", ".js");
+            file.deleteOnExit();
+            try (FileWriter writer = new FileWriter(file, true)) {
+                writer.append("var foo;");
+            }
+            transformOptions.setUrisModule(file.getAbsolutePath() + ADHOC_SUFFIX);
+            Properties props = new Properties();
+            props.setProperty("URIS-MODULE.foo", bar);
 
-        try (QueryUrisLoader instance = new QueryUrisLoader()) {
-            instance.properties = props;
-            instance.options = transformOptions;
-            instance.cs = contentSource;
-            instance.collection = "";
-            instance.open();
-            assertEquals(1, instance.getTotalCount());
-            assertEquals(bar, instance.properties.getProperty(processModuleKey1));
-            assertEquals(bar, instance.properties.getProperty(processModuleKey2));
-            assertEquals(bar, instance.properties.getProperty(processModuleKey3));
+            try (QueryUrisLoader instance = new QueryUrisLoader()) {
+                instance.properties = props;
+                instance.options = transformOptions;
+                instance.cs = contentSource;
+                instance.collection = "";
+                instance.open();
+                assertEquals(1, instance.getTotalCount());
+                assertEquals(bar, instance.properties.getProperty(processModuleKey1));
+                assertEquals(bar, instance.properties.getProperty(processModuleKey2));
+                assertEquals(bar, instance.properties.getProperty(processModuleKey3));
+            }
+        } catch (RequestException | IOException | CorbException ex) {
+            Logger.getLogger(QueryUrisLoaderTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail();
         }
     }
 
@@ -299,7 +306,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_maxOptsFromModuleZero() throws CorbException  {
+    public void testOpen_maxOptsFromModuleZero() throws CorbException {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -320,7 +327,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_InvalidMaxOptsFromModuleZero() throws CorbException  {
+    public void testOpen_InvalidMaxOptsFromModuleZero() throws CorbException {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -340,9 +347,6 @@ public class QueryUrisLoaderTest {
         fail();
     }
 
-    /**
-     * Test of getBatchRef method, of class QueryUrisLoader.
-     */
     @Test
     public void testGetBatchRef() {
         String result;
@@ -352,9 +356,6 @@ public class QueryUrisLoaderTest {
         assertNull(result);
     }
 
-    /**
-     * Test of getTotalCount method, of class QueryUrisLoader.
-     */
     @Test
     public void testGetTotalCount() {
         int result;
@@ -365,87 +366,104 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testHasNext_resultSequenceIsNull() throws CorbException  {
+    public void testHasNext_resultSequenceIsNull() {
         boolean result;
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
             result = instance.hasNext();
+            assertFalse(result);
+        } catch (CorbException ex) {
+            Logger.getLogger(QueryUrisLoaderTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail();
         }
-        assertFalse(result);
+
     }
 
     @Test
-    public void testHasNext_resultSequenceHasNext() throws CorbException, RequestException {
-        ContentSource contentSource = mock(ContentSource.class);
-        Session session = mock(Session.class);
-        ModuleInvoke request = mock(ModuleInvoke.class);
-        ResultSequence resultSequence = mock(ResultSequence.class);
-        ResultItem resultItem = mock(ResultItem.class);
-        XdmItem xdmItem = mock(XdmItem.class);
+    public void testHasNext_resultSequenceHasNext() {
+        try {
+            ContentSource contentSource = mock(ContentSource.class);
+            Session session = mock(Session.class);
+            ModuleInvoke request = mock(ModuleInvoke.class);
+            ResultSequence resultSequence = mock(ResultSequence.class);
+            ResultItem resultItem = mock(ResultItem.class);
+            XdmItem xdmItem = mock(XdmItem.class);
 
-        when(session.newModuleInvoke(anyString())).thenReturn(request);
-        when(contentSource.newSession()).thenReturn(session);
-        when(xdmItem.asString()).thenReturn(Integer.toString(1));
-        when(resultItem.getItem()).thenReturn(xdmItem);
-        when(resultItem.asString()).thenReturn(Integer.toString(1));
-        when(resultSequence.next()).thenReturn(resultItem);
-        when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
-        when(session.submitRequest(request)).thenReturn(resultSequence);
+            when(session.newModuleInvoke(anyString())).thenReturn(request);
+            when(contentSource.newSession()).thenReturn(session);
+            when(xdmItem.asString()).thenReturn(Integer.toString(1));
+            when(resultItem.getItem()).thenReturn(xdmItem);
+            when(resultItem.asString()).thenReturn(Integer.toString(1));
+            when(resultSequence.next()).thenReturn(resultItem);
+            when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
+            when(session.submitRequest(request)).thenReturn(resultSequence);
 
-        boolean result;
-        try (QueryUrisLoader instance = new QueryUrisLoader()) {
-            TransformOptions transformOptions = new TransformOptions();
-            transformOptions.setUrisModule(foo);
-            instance.options = transformOptions;
-            instance.cs = contentSource;
-            instance.res = resultSequence;
-            instance.open();
-            result = instance.hasNext();
+            boolean result;
+            try (QueryUrisLoader instance = new QueryUrisLoader()) {
+                TransformOptions transformOptions = new TransformOptions();
+                transformOptions.setUrisModule(foo);
+                instance.options = transformOptions;
+                instance.cs = contentSource;
+                instance.res = resultSequence;
+                instance.open();
+                result = instance.hasNext();
+            }
+            assertTrue(result);
+        } catch (RequestException | CorbException ex) {
+            Logger.getLogger(QueryUrisLoaderTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail();
         }
-        assertTrue(result);
     }
 
     @Test
-    public void testHasNext_resultSequenceNotHasNext() throws CorbException  {
+    public void testHasNext_resultSequenceNotHasNext() {
         ResultSequence resultSequence = mock(ResultSequence.class);
         when(resultSequence.hasNext()).thenReturn(false);
         boolean result;
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
             instance.res = resultSequence;
             result = instance.hasNext();
+            assertFalse(result);
+        } catch (CorbException ex) {
+            Logger.getLogger(QueryUrisLoaderTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail();
         }
-        assertFalse(result);
     }
 
     @Test
-    public void testNext() throws RequestException, CorbException  {
-        ContentSource contentSource = mock(ContentSource.class);
-        Session session = mock(Session.class);
-        ModuleInvoke request = mock(ModuleInvoke.class);
-        ResultSequence resultSequence = mock(ResultSequence.class);
-        ResultItem resultItem = mock(ResultItem.class);
-        XdmItem xdmItem = mock(XdmItem.class);
+    public void testNext() {
+        try {
+            ContentSource contentSource = mock(ContentSource.class);
+            Session session = mock(Session.class);
+            ModuleInvoke request = mock(ModuleInvoke.class);
+            ResultSequence resultSequence = mock(ResultSequence.class);
+            ResultItem resultItem = mock(ResultItem.class);
+            XdmItem xdmItem = mock(XdmItem.class);
 
-        when(session.newModuleInvoke(anyString())).thenReturn(request);
-        when(contentSource.newSession()).thenReturn(session);
-        when(xdmItem.asString()).thenReturn(Integer.toString(1));
-        when(resultItem.getItem()).thenReturn(xdmItem);
-        when(resultItem.asString()).thenReturn("foo_bar_baz-1_2_3");
-        when(resultSequence.next()).thenReturn(resultItem).thenReturn(resultItem).thenReturn(resultItem).thenReturn(resultItem);
-        when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
-        when(session.submitRequest(request)).thenReturn(resultSequence);
+            when(session.newModuleInvoke(anyString())).thenReturn(request);
+            when(contentSource.newSession()).thenReturn(session);
+            when(xdmItem.asString()).thenReturn(Integer.toString(1));
+            when(resultItem.getItem()).thenReturn(xdmItem);
+            when(resultItem.asString()).thenReturn("foo_bar_baz-1_2_3");
+            when(resultSequence.next()).thenReturn(resultItem).thenReturn(resultItem).thenReturn(resultItem).thenReturn(resultItem);
+            when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
+            when(session.submitRequest(request)).thenReturn(resultSequence);
 
-        String result;
-        try (QueryUrisLoader instance = new QueryUrisLoader()) {
-            TransformOptions transformOptions = new TransformOptions();
-            transformOptions.setUrisModule(foo);
-            instance.options = transformOptions;
-            instance.cs = contentSource;
-            instance.res = resultSequence;
-            instance.replacements = new String[]{"_", ",", "-", "\n"};
-            instance.open();
-            result = instance.next();
+            String result;
+            try (QueryUrisLoader instance = new QueryUrisLoader()) {
+                TransformOptions transformOptions = new TransformOptions();
+                transformOptions.setUrisModule(foo);
+                instance.options = transformOptions;
+                instance.cs = contentSource;
+                instance.res = resultSequence;
+                instance.replacements = new String[]{"_", ",", "-", "\n"};
+                instance.open();
+                result = instance.next();
+            }
+            assertEquals("foo,bar,baz\n1,2,3", result);
+        } catch (RequestException | CorbException ex) {
+            Logger.getLogger(QueryUrisLoaderTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail();
         }
-        assertEquals("foo,bar,baz\n1,2,3", result);
     }
 
     @Test(expected = NoSuchElementException.class)
@@ -456,9 +474,6 @@ public class QueryUrisLoaderTest {
         fail();
     }
 
-    /**
-     * Test of close method, of class QueryUrisLoader.
-     */
     @Test
     public void testClose_nullSession() {
         QueryUrisLoader instance = new QueryUrisLoader();
@@ -499,9 +514,6 @@ public class QueryUrisLoaderTest {
         assertNull(instance.replacements);
     }
 
-    /**
-     * Test of getProperty method, of class QueryUrisLoader.
-     */
     @Test
     public void testGetProperty_nullProperties() {
         String result;
@@ -513,7 +525,6 @@ public class QueryUrisLoaderTest {
 
     @Test
     public void testGetProperty() {
-
         String result;
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
             instance.properties = new Properties();
