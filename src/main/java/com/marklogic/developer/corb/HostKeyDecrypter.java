@@ -118,7 +118,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
              */
             @Override
             public byte[] getSN() {
-                String line = null;
+                String line;
                 String marker = "Serial Number";
                 BufferedReader br = null;
 
@@ -165,7 +165,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         public abstract byte[] getSN();
 
         private static byte[] getValueFollowingMarker(BufferedReader br, String marker, String clazz) throws IOException {
-            String line = null;
+            String line;
             while ((line = br.readLine()) != null) {
                 if (line.contains(marker)) {
                     String sn = line.split(marker)[1].trim();
