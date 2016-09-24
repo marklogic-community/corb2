@@ -18,9 +18,13 @@
  */
 package com.marklogic.developer.corb;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.TimeUnit;
+import java.util.Timer;
+import java.util.TimerTask;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -54,4 +58,26 @@ public class PausableThreadPoolExecutorTest {
         assertTrue(instance.isRunning());
     }
 
+    @Test
+    public void testBeforeExecute() {
+        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
+        RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
+        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+        Thread thread = null;
+        Runnable runnable = null;
+        executor.pause();
+        
+        LocalDateTime startedAt = LocalDateTime.now();
+        int howLongToWait = 200;
+        TimerTask deferResume = new TimerTask() {
+                    @Override
+                    public void run() {
+                        executor.resume();
+                    }
+                };
+        new Timer().schedule(deferResume, howLongToWait);
+        executor.beforeExecute(thread, runnable);
+        Duration elapsedTime = Duration.between(startedAt, LocalDateTime.now());
+        assertTrue(elapsedTime.toMillis() >= howLongToWait);
+    }
 }
