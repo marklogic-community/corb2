@@ -20,6 +20,8 @@ package com.marklogic.developer.corb;
 
 import java.io.IOException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -35,28 +37,33 @@ public class AbstractDecrypterTest {
     private static final String USER = "user";
     private static final String PASS = "pass";
     private static final String PORT = "8003";
-    
-    /**
-     * Test of init method, of class AbstractDecrypter.
-     */
+    private static final Logger LOG = Logger.getLogger(AbstractDecrypterTest.class.getName());
+
     @Test
-    public void testInitNullProperties() throws Exception {
+    public void testInitNullProperties()  {
         AbstractDecrypter instance = new AbstractDecrypterImpl();
-        instance.init(null);
+        try {
+            instance.init(null);
+        } catch (IOException | ClassNotFoundException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
         assertNotNull(instance.properties);
     }
 
     @Test
-    public void testInit() throws Exception {
+    public void testInit() {
         Properties props = new Properties();
         AbstractDecrypter instance = new AbstractDecrypterImpl();
-        instance.init(props);
+        try {
+            instance.init(props);
+        } catch (IOException | ClassNotFoundException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
         assertEquals(props, instance.properties);
     }
 
-    /**
-     * Test of getConnectionURI method, of class AbstractDecrypter.
-     */
     @Test
     public void testGetConnectionURI() {
         String uri = "xcc://user:pass@localhost:8003/dbname";
@@ -99,9 +106,7 @@ public class AbstractDecrypterTest {
         String result = instance.getConnectionURI(uri, USER, PASS, LOCALHOST, PORT, dbname);
         assertEquals("xcc://USER:PASS@LOCALHOST:8003/", result);
     }
-    /**
-     * Test of decrypt method, of class AbstractDecrypter.
-     */
+
     @Test
     public void testDecryptNotEncrypted() {
         String property = "unencryptedProp";
@@ -119,9 +124,6 @@ public class AbstractDecrypterTest {
         assertEquals(VALUE.toUpperCase(), result);
     }
 
-    /**
-     * Test of doDecrypt method, of class AbstractDecrypter.
-     */
     @Test
     public void testDoDecrypt() {
         String property = "key";
@@ -130,9 +132,6 @@ public class AbstractDecrypterTest {
         assertEquals(VALUE.toUpperCase(), result);
     }
 
-    /**
-     * Test of getProperty method, of class AbstractDecrypter.
-     */
     @Test
     public void testGetPropertyNullProperties() {
         String key = "testProperty";
@@ -142,7 +141,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testGetProperty() throws IOException, ClassNotFoundException {
+    public void testGetProperty() {
         String key = "testGetProperty";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         instance.properties = new Properties();
@@ -151,7 +150,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testGetPropertyBlankSystemProperty() throws IOException, ClassNotFoundException {
+    public void testGetPropertyBlankSystemProperty() {
         String key = "testGetSystemProperty";
         System.setProperty(key, FOUR_SPACES);
         AbstractDecrypter instance = new AbstractDecrypterImpl();
@@ -162,7 +161,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testGetPropertyBlankPropertiesProperty() throws IOException, ClassNotFoundException {
+    public void testGetPropertyBlankPropertiesProperty() {
         String key = "testGetBlankProperty";
         System.setProperty(key, FOUR_SPACES);
         AbstractDecrypter instance = new AbstractDecrypterImpl();
