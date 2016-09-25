@@ -42,7 +42,11 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
@@ -823,7 +827,6 @@ public class ManagerTest {
         props.setProperty("PROCESS-MODULE.bar", processVal);
         props.setProperty("XQUERY-MODULE.bar", "asdf");
         try {
-
             Manager manager = getMockManagerWithEmptyResults();
             manager.properties = props;
             manager.normalizeLegacyProperties();
@@ -836,8 +839,126 @@ public class ManagerTest {
     }
 
     @Test
-    public void testOnChange() {
+    public void testCommandFileWatcherOnChangeFile() {
+        File file = FileUtils.getFile("helloWorld.properties");
+        Manager manager = new Manager();
+        Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
+        fileWatcher.onChange(file);
+        assertFalse(manager.isPaused());
+    }
 
+    @Test
+    public void testCommandFileWatcherRun() {
+        try {
+            List<String> lines = Arrays.asList("THREAD-COUNT=100");
+            File file = createTempFile(lines);
+            Manager manager = new Manager();
+            Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
+            fileWatcher.run();
+            assertEquals(100, manager.options.getThreadCount());
+        } catch (Exception ex) {
+            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testCommandFileWatcherRunFileDoesNotExist() {
+        try {
+            File file = new File("doesnotexist");
+            Manager manager = new Manager();
+            Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
+            fileWatcher.run();
+            assertEquals(1, manager.options.getThreadCount());
+        } catch (Exception ex) {
+            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testCommandFileWatcherOnChangeFileIsPaused() {
+        try {
+            List<String> lines = Arrays.asList("COMMAND=PAUSE");
+            File file = createTempFile(lines);
+            Manager manager = new Manager();
+            Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
+            fileWatcher.onChange(file);
+            assertTrue(testLogger.getLogRecords().isEmpty());
+        } catch (Exception ex) {
+            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testCommandFileWatcherOnChangeFileIsStop() {
+        try {
+            List<String> lines = Arrays.asList("COMMAND=STOP");
+            File file = createTempFile(lines);
+            Manager manager = new Manager();
+            Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
+            fileWatcher.onChange(file);
+            assertTrue(manager.stopCommand);
+        } catch (Exception ex) {
+            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testCommandFileWatcherOnChangeThreadCount() {
+        try {
+            List<String> lines = Arrays.asList("THREAD-COUNT=11");
+            File file = createTempFile(lines);
+            Manager manager = new Manager();
+            Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
+            fileWatcher.onChange(file);
+            assertEquals(11, manager.options.getThreadCount());
+        } catch (Exception ex) {
+            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testCommandFileWatcherOnChangeThreadCountIsZero() {
+        try {
+            List<String> lines = Arrays.asList("THREAD-COUNT=0");
+            File file = createTempFile(lines);
+            Manager manager = new Manager();
+            Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
+            fileWatcher.onChange(file);
+            assertEquals(1, manager.options.getThreadCount());
+        } catch (Exception ex) {
+            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testCommandFileWatcherOnChangeFileDoesNotExist() {
+        try {
+            File file = new File("does-not-exist");
+            Manager manager = new Manager();
+            Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
+            fileWatcher.onChange(file);
+        } catch (Exception ex) {
+            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail();
+        }
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(Level.WARNING, records.get(0).getLevel());
+        assertEquals("Unable to load COMMAND-FILE", records.get(0).getMessage());
+        assertEquals(1, records.size());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testCommandFileWatcherOnChangeFileIsNull() {
+        File file = null;
+        Manager manager = new Manager();
+        Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
+        fileWatcher.onChange(file);
     }
 
     @Test
@@ -918,13 +1039,9 @@ public class ManagerTest {
         String aManagerUsage = outContent.toString();
         outContent.reset();
         instance.usage();
-        System.out.println(aManagerUsage);
         assertTrue(outContent.toString().contains(aManagerUsage));
     }
 
-    /**
-     * Test of run method, of class Manager.
-     */
     @Test(expected = IllegalArgumentException.class)
     public void testRunMissingURISMODULEFILEANDLOADER() throws IllegalArgumentException {
         Manager instance = new Manager();
@@ -955,7 +1072,7 @@ public class ManagerTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testRunGetURILoaderWithURISMODULEInvalidCollection() throws IllegalArgumentException{
+    public void testRunGetURILoaderWithURISMODULEInvalidCollection() throws IllegalArgumentException {
         Manager instance = new Manager();
         instance.options.setUrisModule("someFile2.xqy");
         try {
@@ -1106,7 +1223,15 @@ public class ManagerTest {
             URIS_FILE};
         return args;
     }
-
+    
+    public File createTempFile(List<String> lines) throws IOException {
+        Path path = Files.createTempFile("tmp", "txt");
+            File file = path.toFile();
+            file.deleteOnExit();
+            Files.write(path, lines, Charset.forName("UTF-8"));
+            return file;
+    }
+    
     public static Manager getMockManagerWithEmptyResults() throws RequestException {
         Manager manager = new MockManager();
 
