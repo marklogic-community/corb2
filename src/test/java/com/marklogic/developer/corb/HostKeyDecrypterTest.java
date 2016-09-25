@@ -100,7 +100,6 @@ public class HostKeyDecrypterTest {
         byte[] input = {'A', 'B', 'C'};
         try {
             byte[] result = HostKeyDecrypter.getSHA256Hash(input);
-            System.out.println(Arrays.toString(result));
             assertTrue(Arrays.equals(expected, result));
         } catch (NoSuchAlgorithmException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -112,14 +111,7 @@ public class HostKeyDecrypterTest {
         byte[] expected = {45, 32, 67, 34, 67, 23, 21, 45, 7, 89, 3, 27, 39, 62, 15};
         assertTrue(Arrays.equals(expected, HostKeyDecrypter.OSType.OTHER.getSN()));
     }
-    /*
-    @Test
-    public void testMACGetSN() throws IOException {
-        OSType mac = mock(HostKeyDecrypter.OSType.class);
-        when(mac.readAndParse(any(), anyString(), anyString())).thenThrow(IOException);
-        //assertTrue(Arrays.equals(, HostKeyDecrypter.OSType.MAC.getSN()));
-    }
-    */
+
     @Test
     public void testGetOperatingSystemType() {
         assertEquals(HostKeyDecrypter.OSType.MAC, HostKeyDecrypter.getOperatingSystemType("Darwin"));
@@ -132,21 +124,18 @@ public class HostKeyDecrypterTest {
         assertEquals(HostKeyDecrypter.OSType.OTHER, HostKeyDecrypter.getOperatingSystemType(null));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testGetValueFollowingMarker() {
-        BufferedReader br = new BufferedReader(new StringReader("Serial Number xyz-123"));
         try {
             Class<?> clazz = HostKeyDecrypter.OSType.class;
             Method method = clazz.getDeclaredMethod(METHOD_GET_SN, String.class, String.class, OSType.class);
             method.setAccessible(true);
-            byte[] serial = (byte[]) method.invoke(clazz, "fileDoesNotExistXYZ", "Serial Number", OSType.MAC);
+            method.invoke(clazz, "fileDoesNotExistXYZ", "Serial Number", OSType.MAC);
+            fail();
         } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
             Logger.getLogger(HostKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
-            if (ex.getCause() instanceof RuntimeException) {
-                throw new RuntimeException(ex.getCause());
-            }
-        }
-        fail();
+            assertTrue(ex.getCause() instanceof RuntimeException);
+        }     
     }
 
     @Test
