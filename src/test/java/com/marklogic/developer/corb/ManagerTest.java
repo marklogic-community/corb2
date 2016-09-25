@@ -61,6 +61,8 @@ import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import org.mockito.exceptions.base.MockitoException;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
 
 /**
  * The class <code>ManagerTest</code> contains tests for the class
@@ -73,7 +75,8 @@ public class ManagerTest {
     @Rule
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
     private final TestHandler testLogger = new TestHandler();
-    private static final Logger LOG = Logger.getLogger(Manager.class.getName());
+    private static final Logger MANAGER_LOGGER = Logger.getLogger(Manager.class.getName());
+    private static final Logger LOG = Logger.getLogger(ManagerTest.class.getName());
     private PrintStream systemErr = System.err;
     public static final String XCC_CONNECTION_URI = "xcc://admin:admin@localhost:2223/FFE";
     public static final String COLLECTION_NAME = "StringPassedToTheURIsModule";
@@ -105,7 +108,7 @@ public class ManagerTest {
     public void setUp()
             throws Exception {
         clearSystemProperties();
-        LOG.addHandler(testLogger);
+        MANAGER_LOGGER.addHandler(testLogger);
         File tempDir = TestUtils.createTempDirectory();
         EXPORT_FILE_DIR = tempDir.toString();
     }
@@ -187,7 +190,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
         } catch (IOException | URISyntaxException | ClassNotFoundException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         fail();
     }
@@ -205,7 +208,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertEquals("", instance.collection);
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -223,7 +226,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         fail();
     }
@@ -236,7 +239,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
         } catch (IOException | URISyntaxException | ClassNotFoundException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         fail();
     }
@@ -248,7 +251,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.initOptions(args);
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         fail();
     }
@@ -261,7 +264,7 @@ public class ManagerTest {
             instance.initOptions(args);
 
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         fail();
     }
@@ -275,7 +278,7 @@ public class ManagerTest {
             instance.initOptions(args);
 
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         fail();
     }
@@ -292,7 +295,7 @@ public class ManagerTest {
             assertNull(instance.options.getUrisFile());
 
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -309,7 +312,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertNull(instance.options.getUrisFile());
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -327,7 +330,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -346,7 +349,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -362,7 +365,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertTrue(instance.options.isDoInstall());
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -378,7 +381,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertTrue(instance.options.isDoInstall());
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -394,7 +397,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertFalse(instance.options.isDoInstall());
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -410,7 +413,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertEquals(10, instance.options.getDiskQueueMaxInMemorySize());
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -425,7 +428,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         fail();
     }
@@ -441,7 +444,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertNull(instance.options.getProcessModule());
         } catch (RequestException | IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -474,7 +477,7 @@ public class ManagerTest {
             assertEquals(POST_BATCH_MODULE, instance.options.getPostBatchModule());
             assertEquals(POST_BATCH_XQUERY_MODULE_FOO, System.getProperty(Options.POST_BATCH_MODULE + propertySuffix));
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -504,7 +507,7 @@ public class ManagerTest {
             assertEquals(POST_BATCH_MODULE, instance.options.getPostBatchModule());
             assertEquals(POST_BATCH_XQUERY_MODULE_FOO, instance.properties.getProperty("POST-BATCH-MODULE.foo"));
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -519,7 +522,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         fail();
     }
@@ -535,7 +538,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertEquals(5, instance.options.getBatchSize());
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -551,7 +554,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertFalse(instance.options.isFailOnError());
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -567,7 +570,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertTrue(instance.options.isFailOnError());
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -587,7 +590,7 @@ public class ManagerTest {
             assertEquals(EXPORT_FILE_NAME, instance.properties.getProperty("EXPORT-FILE-NAME"));
             assertEquals(EXPORT_FILE_DIR + "/out", instance.properties.getProperty("ERROR-FILE-NAME"));
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -602,7 +605,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         fail();
     }
@@ -626,7 +629,7 @@ public class ManagerTest {
             assertFalse(errorFile.exists());
             assertFalse(exportFile.exists());
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -646,7 +649,7 @@ public class ManagerTest {
             assertNull(instance.properties.getProperty(Options.EXPORT_FILE_PART_EXT));
             assertNull(System.getProperty(Options.EXPORT_FILE_PART_EXT));
         } catch (RequestException | IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -676,7 +679,7 @@ public class ManagerTest {
             instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
 
@@ -711,7 +714,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertEquals("initModule", instance.options.getInitModule());
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -727,7 +730,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertEquals(PROCESS_TASK, instance.options.getProcessTaskClass().getName());
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -744,7 +747,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertEquals(loader, instance.options.getUrisLoaderClass().getName());
         } catch (RequestException | IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -765,7 +768,7 @@ public class ManagerTest {
             List<LogRecord> records = testLogger.getLogRecords();
             assertTrue(containsLogRecord(records, new LogRecord(Level.WARNING, "XCC configured for the filesystem: please install modules manually")));
         } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -781,7 +784,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
         } catch (RequestException | IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         fail();
     }
@@ -794,7 +797,7 @@ public class ManagerTest {
             manager.normalizeLegacyProperties();
             assertNull(manager.properties);
         } catch (RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -815,7 +818,7 @@ public class ManagerTest {
             assertEquals(legacyValue1, manager.properties.getProperty(Options.PROCESS_MODULE));
             assertEquals(legacyValue2, manager.properties.getProperty("PROCESS-MODULE.bar"));
         } catch (RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -833,7 +836,7 @@ public class ManagerTest {
 
             assertEquals(processVal, manager.properties.getProperty("PROCESS-MODULE.bar"));
         } catch (RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -857,7 +860,7 @@ public class ManagerTest {
             fileWatcher.run();
             assertEquals(100, manager.options.getThreadCount());
         } catch (Exception ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -871,7 +874,7 @@ public class ManagerTest {
             fileWatcher.run();
             assertEquals(1, manager.options.getThreadCount());
         } catch (Exception ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -886,7 +889,7 @@ public class ManagerTest {
             fileWatcher.onChange(file);
             assertTrue(testLogger.getLogRecords().isEmpty());
         } catch (Exception ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -901,7 +904,7 @@ public class ManagerTest {
             fileWatcher.onChange(file);
             assertTrue(manager.stopCommand);
         } catch (Exception ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -916,7 +919,7 @@ public class ManagerTest {
             fileWatcher.onChange(file);
             assertEquals(11, manager.options.getThreadCount());
         } catch (Exception ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -931,7 +934,7 @@ public class ManagerTest {
             fileWatcher.onChange(file);
             assertEquals(1, manager.options.getThreadCount());
         } catch (Exception ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -944,7 +947,7 @@ public class ManagerTest {
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.onChange(file);
         } catch (Exception ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
         List<LogRecord> records = testLogger.getLogRecords();
@@ -971,7 +974,7 @@ public class ManagerTest {
             Class<? extends Task> result = instance.getTaskCls(type, className);
             assertEquals(expResult, result);
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -986,7 +989,7 @@ public class ManagerTest {
             assertEquals(expResult, result);
 
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         fail();
     }
@@ -1000,7 +1003,7 @@ public class ManagerTest {
             Class<? extends UrisLoader> result = instance.getUrisLoaderCls(className);
             assertEquals(expResult, result);
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -1011,7 +1014,7 @@ public class ManagerTest {
         try {
             instance.getUrisLoaderCls(String.class.getName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         fail();
     }
@@ -1023,7 +1026,7 @@ public class ManagerTest {
         try {
             instance.getUrisLoaderCls(className);
         } catch (InstantiationException | IllegalAccessException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         fail();
     }
@@ -1048,7 +1051,7 @@ public class ManagerTest {
         try {
             instance.run();
         } catch (Exception ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             if (ex instanceof IllegalArgumentException) {
                 throw (IllegalArgumentException) ex;
             }
@@ -1063,7 +1066,7 @@ public class ManagerTest {
         try {
             instance.run();
         } catch (Exception ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             if (ex instanceof NullPointerException) {
                 throw (NullPointerException) ex;
             }
@@ -1079,7 +1082,7 @@ public class ManagerTest {
             instance.contentSource = ContentSourceFactory.newContentSource(new URI(XCC_CONNECTION_URI));
             instance.run();
         } catch (Exception ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             if (ex instanceof IllegalArgumentException) {
                 throw (IllegalArgumentException) ex;
             }
@@ -1096,7 +1099,7 @@ public class ManagerTest {
             int count = instance.run();
             assertEquals(0, count);
         } catch (Exception ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -1136,7 +1139,7 @@ public class ManagerTest {
             List<LogRecord> records = testLogger.getLogRecords();
             assertEquals(19, records.size());
         } catch (RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -1156,7 +1159,7 @@ public class ManagerTest {
             List<LogRecord> records = testLogger.getLogRecords();
             assertEquals(19, records.size());
         } catch (RequestException ex) {
-            Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
