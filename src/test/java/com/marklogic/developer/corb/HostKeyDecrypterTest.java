@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
+import com.marklogic.developer.corb.HostKeyDecrypter.OSType;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -52,7 +53,7 @@ public class HostKeyDecrypterTest {
     private static final String USAGE = HostKeyDecrypter.USAGE + "\n";
     private static final Logger LOG = Logger.getLogger(HostKeyDecrypterTest.class.getName());
     private static final Logger HOST_KEY_DECRYPTER_LOG = Logger.getLogger(HostKeyDecrypter.class.getName());
-    private static final String METHOD_GET_VALUE_FOLLOWING_MARKER = "getValueFollowingMarker";
+    private static final String METHOD_GET_SN = "getSN";
     @Before
     public void setUp() {
         clearSystemProperties();
@@ -107,6 +108,19 @@ public class HostKeyDecrypterTest {
     }
 
     @Test
+    public void testOTHERGetSN() {
+        byte[] expected = {45, 32, 67, 34, 67, 23, 21, 45, 7, 89, 3, 27, 39, 62, 15};
+        assertTrue(Arrays.equals(expected, HostKeyDecrypter.OSType.OTHER.getSN()));
+    }
+    /*
+    @Test
+    public void testMACGetSN() throws IOException {
+        OSType mac = mock(HostKeyDecrypter.OSType.class);
+        when(mac.readAndParse(any(), anyString(), anyString())).thenThrow(IOException);
+        //assertTrue(Arrays.equals(, HostKeyDecrypter.OSType.MAC.getSN()));
+    }
+    */
+    @Test
     public void testGetOperatingSystemType() {
         assertEquals(HostKeyDecrypter.OSType.MAC, HostKeyDecrypter.getOperatingSystemType("Darwin"));
         assertEquals(HostKeyDecrypter.OSType.WINDOWS, HostKeyDecrypter.getOperatingSystemType("Windows 95"));
@@ -118,35 +132,21 @@ public class HostKeyDecrypterTest {
         assertEquals(HostKeyDecrypter.OSType.OTHER, HostKeyDecrypter.getOperatingSystemType(null));
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void testGetValueFollowingMarker() {
         BufferedReader br = new BufferedReader(new StringReader("Serial Number xyz-123"));
         try {
             Class<?> clazz = HostKeyDecrypter.OSType.class;
-            Method method = clazz.getDeclaredMethod(METHOD_GET_VALUE_FOLLOWING_MARKER, BufferedReader.class, String.class, String.class);
+            Method method = clazz.getDeclaredMethod(METHOD_GET_SN, String.class, String.class, OSType.class);
             method.setAccessible(true);
-            byte[] serial = (byte[]) method.invoke(clazz, br, "Serial Number", HostKeyDecrypter.OSType.MAC.toString());
-            assertTrue("xyz-123".equals(new String(serial)));
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
+            byte[] serial = (byte[]) method.invoke(clazz, "fileDoesNotExistXYZ", "Serial Number", OSType.MAC);
+        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+            Logger.getLogger(HostKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            if (ex.getCause() instanceof RuntimeException) {
+                throw new RuntimeException(ex.getCause());
+            }
         }
-    }
-
-    @Test
-    public void testGetValueFollowingMarkerNotFound() {
-        BufferedReader br = new BufferedReader(new StringReader("Serial Number abc-123"));
-        byte[] result = null;
-        try {
-            Class<?> clazz = HostKeyDecrypter.OSType.class;
-            Method method = clazz.getDeclaredMethod(METHOD_GET_VALUE_FOLLOWING_MARKER, BufferedReader.class, String.class, String.class);
-            method.setAccessible(true);
-            result = (byte[]) method.invoke(clazz, br, "badMarker", HostKeyDecrypter.OSType.MAC.toString());
-            fail();
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
-        assertNull(result);
+        fail();
     }
 
     @Test

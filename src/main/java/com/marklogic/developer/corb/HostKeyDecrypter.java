@@ -37,6 +37,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.MessageFormat;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -118,18 +119,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
              */
             @Override
             public byte[] getSN() {
-                String line;
-                String marker = "Serial Number";
-                BufferedReader br = null;
-
-                try {
-                    br = read("/usr/sbin/system_profiler SPHardwareDataType");
-                    return getValueFollowingMarker(br, marker, this.toString());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                } finally {
-                    closeOrThrowRuntime(br);
-                }
+                return OSType.getSN("/usr/sbin/system_profiler SPHardwareDataType", "Serial Number", this);
             }
         },
         LINUX {
@@ -141,18 +131,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
              */
             @Override
             public byte[] getSN() {
-
-                String marker = "system.hardware.serial";
-                BufferedReader br = null;
-
-                try {
-                    br = read("lshal");
-                    return getValueFollowingMarker(br, marker, this.toString());
-                } catch (IOException e) {
-                    throw new RuntimeException("Required to have lshal command installed on linux machine", e);
-                } finally {
-                    closeOrThrowRuntime(br);
-                }
+                return OSType.getSN("lshal", "system.hardware.serial", this);
             }
         },
         OTHER {
@@ -164,15 +143,17 @@ public class HostKeyDecrypter extends AbstractDecrypter {
 
         public abstract byte[] getSN();
 
-        private static byte[] getValueFollowingMarker(BufferedReader br, String marker, String clazz) throws IOException {
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.contains(marker)) {
-                    String sn = line.split(marker)[1].trim();
+        private static byte[] getSN(String command, String marker, OSType os) {
+            try (BufferedReader br = read(command)) {
+                Optional<String> hasMatch = br.lines().filter(s -> s.contains(marker)).findFirst();
+                if (hasMatch.isPresent()) {
+                    String sn = hasMatch.get().split(marker)[1].trim();
                     return sn.getBytes();
                 }
+            } catch (IOException ex) {
+                new RuntimeException("Required to have " + command + " command installed on machine", ex);
             }
-            throw new IllegalStateException(MessageFormat.format(EXCEPTION_MGS_SERIAL_NOT_FOUND, clazz));
+            throw new IllegalStateException(MessageFormat.format(EXCEPTION_MGS_SERIAL_NOT_FOUND, os));
         }
 
         private static void closeOrThrowRuntime(Closeable obj) {
@@ -195,11 +176,8 @@ public class HostKeyDecrypter extends AbstractDecrypter {
             }
 
             OutputStream os = process.getOutputStream();
-            try {
-                os.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            closeOrThrowRuntime(os);
+            
             InputStream is = process.getInputStream();
             return new BufferedReader(new InputStreamReader(is));
         }
