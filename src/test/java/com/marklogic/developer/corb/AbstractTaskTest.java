@@ -36,6 +36,7 @@ import com.marklogic.xcc.exceptions.XQueryException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
@@ -76,7 +77,7 @@ public class AbstractTaskTest {
     protected static final String REJECTED_MSG = "denied!";
     private static final String TMP_DIR = "/tmp";
     private static final String ADHOC_MODULE = "adhoc.xqy";
-    
+
     @Before
     public void setUp() {
         clearSystemProperties();
@@ -88,9 +89,6 @@ public class AbstractTaskTest {
         clearSystemProperties();
     }
 
-    /**
-     * Test of setContentSource method, of class AbstractTask.
-     */
     @Test
     public void testSetContentSource() {
         ContentSource cs = mock(ContentSource.class);
@@ -99,9 +97,6 @@ public class AbstractTaskTest {
         assertEquals(cs, instance.cs);
     }
 
-    /**
-     * Test of setModuleType method, of class AbstractTask.
-     */
     @Test
     public void testSetModuleType() {
         String moduleType = FOO;
@@ -110,9 +105,6 @@ public class AbstractTaskTest {
         assertEquals(moduleType, instance.moduleType);
     }
 
-    /**
-     * Test of setModuleURI method, of class AbstractTask.
-     */
     @Test
     public void testSetModuleURI() {
         String moduleUri = "test.xqy";
@@ -121,9 +113,6 @@ public class AbstractTaskTest {
         assertEquals(moduleUri, instance.moduleUri);
     }
 
-    /**
-     * Test of setAdhocQuery method, of class AbstractTask.
-     */
     @Test
     public void testSetAdhocQuery() {
         String adhocQuery = ADHOC_MODULE;
@@ -132,9 +121,6 @@ public class AbstractTaskTest {
         assertEquals(adhocQuery, instance.adhocQuery);
     }
 
-    /**
-     * Test of setQueryLanguage method, of class AbstractTask.
-     */
     @Test
     public void testSetQueryLanguage() {
         String language = "XQuery";
@@ -143,9 +129,6 @@ public class AbstractTaskTest {
         assertEquals(language, instance.language);
     }
 
-    /**
-     * Test of setProperties method, of class AbstractTask.
-     */
     @Test
     public void testSetProperties() {
         Properties props = new Properties();
@@ -155,9 +138,6 @@ public class AbstractTaskTest {
         assertEquals(properties, instance.properties);
     }
 
-    /**
-     * Test of setInputURI method, of class AbstractTask.
-     */
     @Test
     public void testSetInputURI() {
         String[] inputUri = {FOO, BAR, BAZ};
@@ -174,9 +154,6 @@ public class AbstractTaskTest {
         assertNotNull(instance.inputUris);
     }
 
-    /**
-     * Test of setFailOnError method, of class AbstractTask.
-     */
     @Test
     public void testSetFailOnError() {
         AbstractTask instance = new AbstractTaskImpl();
@@ -186,9 +163,6 @@ public class AbstractTaskTest {
         assertTrue(instance.failOnError);
     }
 
-    /**
-     * Test of setExportDir method, of class AbstractTask.
-     */
     @Test
     public void testSetExportDir() {
         String exportFileDir = TMP_DIR;
@@ -197,9 +171,6 @@ public class AbstractTaskTest {
         assertEquals(exportFileDir, instance.exportDir);
     }
 
-    /**
-     * Test of getExportDir method, of class AbstractTask.
-     */
     @Test
     public void testGetExportDir() {
         AbstractTask instance = new AbstractTaskImpl();
@@ -209,9 +180,6 @@ public class AbstractTaskTest {
         assertEquals(expResult, result);
     }
 
-    /**
-     * Test of newSession method, of class AbstractTask.
-     */
     @Test
     public void testNewSession() {
         AbstractTask instance = new AbstractTaskImpl();
@@ -224,38 +192,40 @@ public class AbstractTaskTest {
         assertEquals(expResult, result);
     }
 
-    /**
-     * Test of invokeModule method, of class AbstractTask.
-     */
     @Test
-    public void testInvokeModule() throws Exception {
-        AbstractTask instance = new AbstractTaskImpl();
-        instance.moduleUri = "module.xqy";
-        instance.adhocQuery = ADHOC_MODULE;
-        instance.inputUris = new String[]{FOO, BAR, BAZ};
-        ContentSource cs = mock(ContentSource.class);
-        Session session = mock(Session.class);
-        ModuleInvoke request = mock(ModuleInvoke.class);
-        ResultSequence seq = mock(ResultSequence.class);
+    public void testInvokeModule() {
+        try {
+            AbstractTask instance = new AbstractTaskImpl();
+            instance.moduleUri = "module.xqy";
+            instance.adhocQuery = ADHOC_MODULE;
+            instance.inputUris = new String[]{FOO, BAR, BAZ};
+            ContentSource cs = mock(ContentSource.class);
+            Session session = mock(Session.class);
+            ModuleInvoke request = mock(ModuleInvoke.class);
+            ResultSequence seq = mock(ResultSequence.class);
 
-        when(cs.newSession()).thenReturn(session);
-        when(session.newModuleInvoke(anyString())).thenReturn(request);
-        when(request.setNewStringVariable(anyString(), anyString())).thenReturn(null);
-        when(session.submitRequest(request)).thenReturn(seq);
-        String key1 = "foo.bar";
-        String key2 = "foo.baz";
-        instance.cs = cs;
-        instance.moduleType = FOO;
-        Properties props = new Properties();
-        props.setProperty(key1, BAZ);
-        props.setProperty(key2, "boo");
-        props.setProperty(Options.BATCH_URI_DELIM, "");
-        instance.properties = props;
+            when(cs.newSession()).thenReturn(session);
+            when(session.newModuleInvoke(anyString())).thenReturn(request);
+            when(request.setNewStringVariable(anyString(), anyString())).thenReturn(null);
+            when(session.submitRequest(request)).thenReturn(seq);
+            String key1 = "foo.bar";
+            String key2 = "foo.baz";
+            instance.cs = cs;
+            instance.moduleType = FOO;
+            Properties props = new Properties();
+            props.setProperty(key1, BAZ);
+            props.setProperty(key2, "boo");
+            props.setProperty(Options.BATCH_URI_DELIM, "");
+            instance.properties = props;
 
-        instance.inputUris = new String[]{URI, "uri2"};
-        instance.invokeModule();
-        assertTrue(AbstractTask.MODULE_PROPS.get(FOO).contains(key1));
-        assertTrue(AbstractTask.MODULE_PROPS.get(FOO).contains(key2));
+            instance.inputUris = new String[]{URI, "uri2"};
+            instance.invokeModule();
+            assertTrue(AbstractTask.MODULE_PROPS.get(FOO).contains(key1));
+            assertTrue(AbstractTask.MODULE_PROPS.get(FOO).contains(key2));
+        } catch (RequestException | CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
@@ -273,74 +243,115 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testInvokeModuleRetryableXQueryException() throws Exception {
+    public void testInvokeModuleRetryableXQueryException() {
         Request req = mock(Request.class);
         RetryableXQueryException retryableException = new RetryableXQueryException(req, CODE, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
-        assertTrue(testHandleRequestException("RetryableXQueryException", retryableException, false, 2));
+        try {
+            assertTrue(testHandleRequestException("RetryableXQueryException", retryableException, false, 2));
+        } catch (CorbException | IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
-    public void testInvokeModuleXQueryException() throws Exception {
+    public void testInvokeModuleXQueryException() {
         Request req = mock(Request.class);
         XQueryException xqueryException = new XQueryException(req, CODE, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
-        assertTrue(testHandleRequestException("XQueryException", xqueryException, false, 2));
+        try {
+            assertTrue(testHandleRequestException("XQueryException", xqueryException, false, 2));
+        } catch (CorbException | IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
-    public void testInvokeModuleRetryableJavaScriptException() throws Exception {
+    public void testInvokeModuleRetryableJavaScriptException() {
         Request req = mock(Request.class);
         RetryableJavaScriptException retryableException = new RetryableJavaScriptException(req, CODE, W3C_CODE, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
-        assertTrue(testHandleRequestException("RetryableJavaScriptException", retryableException, false, 2));
+        try {
+            assertTrue(testHandleRequestException("RetryableJavaScriptException", retryableException, false, 2));
+        } catch (CorbException | IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
-    public void testHandleRequestExceptionRequestServerException() throws CorbException, IOException {
+    public void testHandleRequestExceptionRequestServerException() {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException(ERROR_MSG, req);
-        assertTrue(testHandleRequestException("RequestServerException", serverException, false, 2));
+        try {
+            assertTrue(testHandleRequestException("RequestServerException", serverException, false, 2));
+        } catch (CorbException | IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test(expected = CorbException.class)
-    public void testHandleRequestExceptionRequestServerExceptionFail() throws CorbException, IOException {
+    public void testHandleRequestExceptionRequestServerExceptionFail() throws CorbException {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException(ERROR_MSG, req);
-        testHandleRequestException("RequestServerException", serverException, true, 0);
+        try {
+            testHandleRequestException("RequestServerException", serverException, true, 0);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
         fail();
     }
 
     @Test
-    public void testHandleRequestExceptionRequestPermissionException() throws CorbException, IOException {
+    public void testHandleRequestExceptionRequestPermissionException() {
         Request req = mock(Request.class);
         RequestPermissionException serverException = new RequestPermissionException(ERROR_MSG, req, ADMIN);
-        assertTrue(testHandleRequestException("RequestPermissionException", serverException, false, 2));
+        try {
+            assertTrue(testHandleRequestException("RequestPermissionException", serverException, false, 2));
+        } catch (CorbException | IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test(expected = CorbException.class)
-    public void testHandleRequestExceptionRequestPermissionExceptionFail() throws CorbException, IOException {
+    public void testHandleRequestExceptionRequestPermissionExceptionFail() throws CorbException {
         Request req = mock(Request.class);
         RequestPermissionException serverException = new RequestPermissionException(ERROR_MSG, req, ADMIN);
-        testHandleRequestException("RequestPermissionException", serverException, true, 2);
+        try {
+            testHandleRequestException("RequestPermissionException", serverException, true, 2);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
         fail();
     }
 
     @Test
-    public void testHandleRequestExceptionServerConnectionException() throws CorbException, IOException {
+    public void testHandleRequestExceptionServerConnectionException() {
         Request req = mock(Request.class);
         ServerConnectionException serverException = new ServerConnectionException(ERROR_MSG, req);
-        assertTrue(testHandleRequestException("ServerConnectionException", serverException, false, 2));
+        try {
+            assertTrue(testHandleRequestException("ServerConnectionException", serverException, false, 2));
+        } catch (CorbException | IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test(expected = CorbException.class)
-    public void testHandleRequestExceptionServerConnectionExceptionFail() throws CorbException, IOException {
+    public void testHandleRequestExceptionServerConnectionExceptionFail() throws CorbException {
         Request req = mock(Request.class);
         ServerConnectionException serverException = new ServerConnectionException(ERROR_MSG, req);
-        testHandleRequestException("ServerConnectionException", serverException, true, 0);
+        try {
+            testHandleRequestException("ServerConnectionException", serverException, true, 0);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
         fail();
     }
 
     @Test
     public void testShouldRetryNotRetryableQueryExceptionCSVwithSpaces() {
-
         Request req = mock(Request.class);
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
@@ -413,73 +424,11 @@ public class AbstractTaskTest {
         exception = new RequestPermissionException("Authentication failure for user 'user-name'", req, USER_NAME, false);
         assertTrue(instance.hasRetryableMessage(exception));
     }
-    
-    public boolean testHandleRequestException(String type, RequestException exception, boolean fail, int retryLimit)
-            throws CorbException, IOException {
-        String[] uris = new String[]{URI};
-        return testHandleRequestException(type, exception, fail, uris, retryLimit);
-    }
-
-    public boolean testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, int retryLimit)
-            throws CorbException, IOException {
-        File exportDir = TestUtils.createTempDirectory();
-        File exportFile = File.createTempFile(ERROR, ".err", exportDir);
-        return testHandleRequestException(type, exception, fail, uris, null, exportDir, exportFile.getName(), retryLimit);
-    }
-
-    public boolean testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, String delim, File exportDir, String errorFilename, int retryLimit)
-            throws CorbException, IOException {
-        File dir = exportDir;
-        if (dir == null) {
-            dir = TestUtils.createTempDirectory();
-            dir.deleteOnExit();
-        }
-        AbstractTask instance = new AbstractTaskImpl();
-        instance.failOnError = fail;
-        instance.inputUris = uris;
-        instance.exportDir = dir.getAbsolutePath();
-        instance.properties = new Properties();
-        if (errorFilename != null) {
-            instance.properties.setProperty(Options.ERROR_FILE_NAME, errorFilename);
-        }
-        if (delim != null) {
-            instance.properties.setProperty(Options.BATCH_URI_DELIM, delim);
-        }
-
-        instance.properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
-        instance.properties.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(retryLimit));
-
-        instance.properties.setProperty(Options.QUERY_RETRY_INTERVAL, "2");
-        instance.properties.setProperty(Options.QUERY_RETRY_LIMIT, Integer.toString(retryLimit));
-
-        instance.handleRequestException(exception);
-        List<LogRecord> records = testLogger.getLogRecords();
-
-        boolean hasWarning = Level.WARNING.equals(records.get(0).getLevel());
-        boolean shouldRetryOrFailOnErrorIsFalse = instance.shouldRetry(exception) || 
-                ("failOnError is false. Encountered " + type + " at URI: " + instance.asString(uris)).equals(records.get(0).getMessage());
-        
-        return hasWarning && shouldRetryOrFailOnErrorIsFalse;
-    }
-
-    public File testWriteToError(String[] uris, String delim, File exportDir, String errorFilename, String message)
-            throws CorbException, IOException {
-        Request req = mock(Request.class);
-        RequestServerException serverException = new RequestServerException(message, req);
-        testHandleRequestException("RequestServerException", serverException, false, uris, delim, exportDir, errorFilename, 0);
-        File file = null;
-        try {
-            file = new File(exportDir, errorFilename);
-        } catch (Exception e) {
-        }
-        return file;
-    }
 
     @Test
     public void testWriteToErrorFileNullUris() throws CorbException, IOException {
         String[] uris = null;
-        File exportDir = TestUtils.createTempDirectory();
-        exportDir.deleteOnExit();
+        File exportDir = createTempDirectory();
         String filename = "testWriteToErrorFile_nullUris.error";
         String delim = null;
         String message = null;
@@ -491,8 +440,7 @@ public class AbstractTaskTest {
     @Test
     public void testWriteToErrorFileEmptyUris() throws CorbException, IOException {
         String[] uris = new String[]{};
-        File exportDir = TestUtils.createTempDirectory();
-        exportDir.deleteOnExit();
+        File exportDir = createTempDirectory();
         String filename = "testWriteToErrorFile_emptyUris.error";
         String delim = null;
         String message = null;
@@ -500,93 +448,129 @@ public class AbstractTaskTest {
         assertFalse(errorFile.exists());
     }
 
-    @Test
-    public void testWriteToErrorFileNullErrorFilename() throws CorbException, IOException {
+    @Test(expected = NullPointerException.class)
+    public void testWriteToErrorFileNullErrorFilename() {
         String[] uris = new String[]{URI};
-        File exportDir = TestUtils.createTempDirectory();
-        exportDir.deleteOnExit();
         String filename = null;
         String delim = null;
         String message = ERROR;
-        File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
-        assertNull(errorFile);
+
+        try {
+            File exportDir = createTempDirectory();
+
+            testWriteToError(uris, delim, exportDir, filename, message);
+
+        } catch (CorbException | IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
-    public void testWriteToErrorFileEmptyErrorFilename() throws CorbException, IOException {
+    public void testWriteToErrorFileEmptyErrorFilename() {
         String[] uris = new String[]{URI};
-        File exportDir = TestUtils.createTempDirectory();
-        exportDir.deleteOnExit();
         String filename = "";
         String delim = null;
         String message = ERROR;
-        File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
-        //testWriteToError constructs a File object that is the containing directory when filename is blank
-        assertFalse(errorFile.isFile());
+
+        try {
+            File exportDir = createTempDirectory();
+            File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
+            //testWriteToError constructs a File object that is the containing directory when filename is blank
+            assertFalse(errorFile.isFile());
+        } catch (CorbException | IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
-    public void testWriteToErrorFileNullBatchUridelim() throws CorbException, IOException {
+    public void testWriteToErrorFileNullBatchUridelim() {
         String[] uris = new String[]{URI};
-        File exportDir = TestUtils.createTempDirectory();
-        exportDir.deleteOnExit();
         String filename = "testWriteToErrorFile_nullBatchUridelim.err";
         String delim = null;
         String message = ERROR;
-        File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
-        assertTrue(TestUtils.readFile(errorFile).contains(Manager.DEFAULT_BATCH_URI_DELIM));
+
+        try {
+            File exportDir = createTempDirectory();
+            File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
+            assertTrue(TestUtils.readFile(errorFile).contains(Manager.DEFAULT_BATCH_URI_DELIM));
+        } catch (CorbException | IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
-    public void testWriteToErrorFileEmptyBatchUridelim() throws CorbException, IOException {
+    public void testWriteToErrorFileEmptyBatchUridelim() {
         String[] uris = new String[]{URI};
-        File exportDir = TestUtils.createTempDirectory();
-        exportDir.deleteOnExit();
         String filename = "testWriteToErrorFile_emptyBatchUridelim.err";
         String delim = null;
         String message = ERROR;
-        File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
-        assertTrue(TestUtils.readFile(errorFile).contains(Manager.DEFAULT_BATCH_URI_DELIM));
+
+        try {
+            File exportDir = createTempDirectory();
+            File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
+            assertTrue(TestUtils.readFile(errorFile).contains(Manager.DEFAULT_BATCH_URI_DELIM));
+        } catch (CorbException | IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
-    public void testWriteToErrorFileCustomBatchUridelim() throws CorbException, IOException {
+    public void testWriteToErrorFileCustomBatchUridelim() {
         String[] uris = new String[]{URI};
-        File exportDir = TestUtils.createTempDirectory();
         String filename = "testWriteToErrorFile_customBatchUridelim.err";
         String delim = "$";
         String message = ERROR;
-        File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
 
-        assertTrue(TestUtils.readFile(errorFile).contains(delim));
+        try {
+            File exportDir = createTempDirectory();
+            File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
+
+            assertTrue(TestUtils.readFile(errorFile).contains(delim));
+        } catch (CorbException | IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
-    public void testWriteToErrorFileNullMessage() throws CorbException, IOException {
+    public void testWriteToErrorFileNullMessage() {
         String[] uris = new String[]{URI};
-        File exportDir = TestUtils.createTempDirectory();
         String filename = "testWriteToErrorFile_customBatchUridelim.err";
         String delim = "|";
         String message = null;
-        File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
-        assertFalse(TestUtils.readFile(errorFile).contains(delim));
+
+        try {
+            File exportDir = createTempDirectory();
+            File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
+
+            assertFalse(TestUtils.readFile(errorFile).contains(delim));
+        } catch (CorbException | IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
-    public void testWriteToErrorFileEmptyMessage() throws CorbException, IOException {
+    public void testWriteToErrorFileEmptyMessage() {
         String[] uris = new String[]{URI};
-        File exportDir = TestUtils.createTempDirectory();
         String filename = "testWriteToErrorFile_customBatchUridelim.err";
         String delim = "~";
         String message = "";
-        File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
+        try {
+            File exportDir = createTempDirectory();
+            File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
 
-        assertFalse(TestUtils.readFile(errorFile).contains(delim));
+            assertFalse(TestUtils.readFile(errorFile).contains(delim));
+        } catch (CorbException | IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
-    /**
-     * Test of asString method, of class AbstractTask.
-     */
     @Test
     public void testAsString() {
         String[] uris = new String[]{FOO, BAR, BAZ};
@@ -611,9 +595,6 @@ public class AbstractTaskTest {
         assertEquals("", result);
     }
 
-    /**
-     * Test of cleanup method, of class AbstractTask.
-     */
     @Test
     public void testCleanup() {
         AbstractTask instance = new AbstractTaskImpl();
@@ -632,9 +613,6 @@ public class AbstractTaskTest {
         assertNull(instance.adhocQuery);
     }
 
-    /**
-     * Test of getProperty method, of class AbstractTask.
-     */
     @Test
     public void testGetProperty() {
         String key = Options.INIT_TASK;
@@ -661,9 +639,6 @@ public class AbstractTaskTest {
         clearSystemProperties();
     }
 
-    /**
-     * Test of getValueAsBytes method, of class AbstractTask.
-     */
     @Test
     public void testGetValueAsBytesXdmBinary() {
         XdmItem item = mock(XdmBinary.class);
@@ -681,6 +656,67 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         byte[] result = instance.getValueAsBytes(item);
         assertArrayEquals(value.getBytes(), result);
+    }
+
+    public File createTempDirectory() throws IOException {
+        File dir = TestUtils.createTempDirectory();
+        dir.deleteOnExit();
+        return dir;
+    }
+
+    public boolean testHandleRequestException(String type, RequestException exception, boolean fail, int retryLimit)
+            throws CorbException, IOException {
+        String[] uris = new String[]{URI};
+        return testHandleRequestException(type, exception, fail, uris, retryLimit);
+    }
+
+    public boolean testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, int retryLimit)
+            throws CorbException, IOException {
+        File exportDir = createTempDirectory();
+        File exportFile = File.createTempFile(ERROR, ".err", exportDir);
+        return testHandleRequestException(type, exception, fail, uris, null, exportDir, exportFile.getName(), retryLimit);
+    }
+
+    public boolean testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, String delim, File exportDir, String errorFilename, int retryLimit)
+            throws CorbException, IOException {
+        File dir = exportDir;
+        if (dir == null) {
+            dir = createTempDirectory();
+        }
+        AbstractTask instance = new AbstractTaskImpl();
+        instance.failOnError = fail;
+        instance.inputUris = uris;
+        instance.exportDir = dir.getAbsolutePath();
+        instance.properties = new Properties();
+        if (errorFilename != null) {
+            instance.properties.setProperty(Options.ERROR_FILE_NAME, errorFilename);
+        }
+        if (delim != null) {
+            instance.properties.setProperty(Options.BATCH_URI_DELIM, delim);
+        }
+
+        instance.properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
+        instance.properties.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(retryLimit));
+
+        instance.properties.setProperty(Options.QUERY_RETRY_INTERVAL, "2");
+        instance.properties.setProperty(Options.QUERY_RETRY_LIMIT, Integer.toString(retryLimit));
+
+        instance.handleRequestException(exception);
+        List<LogRecord> records = testLogger.getLogRecords();
+
+        boolean hasWarning = Level.WARNING.equals(records.get(0).getLevel());
+        boolean shouldRetryOrFailOnErrorIsFalse = instance.shouldRetry(exception)
+                || ("failOnError is false. Encountered " + type + " at URI: " + instance.asString(uris)).equals(records.get(0).getMessage());
+
+        return hasWarning && shouldRetryOrFailOnErrorIsFalse;
+    }
+
+    public File testWriteToError(String[] uris, String delim, File exportDir, String errorFilename, String message)
+            throws CorbException, IOException {
+        Request req = mock(Request.class);
+        RequestServerException serverException = new RequestServerException(message, req);
+        testHandleRequestException("RequestServerException", serverException, false, uris, delim, exportDir, errorFilename, 0);
+        return new File(exportDir, errorFilename);
     }
 
     @Test
