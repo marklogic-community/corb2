@@ -110,7 +110,7 @@ public class DiskQueueTest {
     }
 
     @Test
-    public void testDiskQueueLoadFromFile() throws IOException, Throwable {
+    public void testDiskQueueLoadFromFile() {
         String one = "one";
         String two = "two";
         String three = "three";
@@ -129,7 +129,7 @@ public class DiskQueueTest {
     }
 
     @Test
-    public void testFinalize() throws Exception {
+    public void testFinalize() {
         DiskQueue<String> instance = new DiskQueue<>(1);
         try {
             instance.finalize();
