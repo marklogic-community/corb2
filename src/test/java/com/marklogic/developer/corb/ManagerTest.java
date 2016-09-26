@@ -87,7 +87,7 @@ public class ManagerTest {
     public static final String PRE_BATCH_TASK = "com.marklogic.developer.corb.PreBatchUpdateFileTask";
     public static final String POST_BATCH_MODULE = "src/test/resources/postBatchModule.xqy|ADHOC";
     public static final String POST_BATCH_TASK = "com.marklogic.developer.corb.PostBatchUpdateFileTask";
-    public static String EXPORT_FILE_DIR = null;
+    private static String EXPORT_FILE_DIR = null;
     public static final String EXPORT_FILE_NAME = "exportFile.out";
     public static final String URIS_FILE = "src/test/resources/uris-file.txt";
     public static final String XQUERY_MODULE_FOO = "process-bar";
@@ -106,7 +106,7 @@ public class ManagerTest {
 
     @After
     public void tearDown() throws Exception {
-        FileUtils.deleteFile(ManagerTest.EXPORT_FILE_DIR);
+        FileUtils.deleteFile(EXPORT_FILE_DIR);
         clearSystemProperties();
         System.setErr(systemErr);
     }
