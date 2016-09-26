@@ -21,7 +21,6 @@ package com.marklogic.developer.corb;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.exceptions.RequestPermissionException;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.logging.Level;

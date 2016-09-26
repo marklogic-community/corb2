@@ -19,13 +19,8 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
-import com.marklogic.xcc.exceptions.RequestException;
-import com.marklogic.xcc.exceptions.XccConfigException;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.security.GeneralSecurityException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.Test;

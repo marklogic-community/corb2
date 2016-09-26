@@ -27,7 +27,6 @@ import static com.marklogic.developer.corb.TestUtils.createTempDirectory;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.exceptions.RequestPermissionException;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;

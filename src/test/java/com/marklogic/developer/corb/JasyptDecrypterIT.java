@@ -48,6 +48,7 @@ public class JasyptDecrypterIT {
     private final TestHandler testLogger = new TestHandler();
     private static final String TEMP_PREFIX = "temp";
     private static final String PROPERTIES_SUFFIX = ".properties";
+    private static final String TWO_SPACES = " ";
 
     @Test
     public void testInitDecrypter() {
@@ -65,8 +66,8 @@ public class JasyptDecrypterIT {
         clearSystemProperties();
         Properties props = new Properties();
         props.setProperty(Options.JASYPT_PROPERTIES_FILE, "does/not/exist");
-        props.setProperty(JasyptDecrypterTest.JASYPT_ALGORITHM, "MD5");
-        props.setProperty(JasyptDecrypterTest.JASYPT_PASSWORD, "secret");
+        props.setProperty(JASYPT_ALGORITHM, "MD5");
+        props.setProperty(JASYPT_PASSWORD, "secret");
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.properties = props;
         try {
@@ -78,15 +79,15 @@ public class JasyptDecrypterIT {
         assertNull(instance.decrypter);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.SEVERE, records.get(0).getLevel());
-        assertEquals(JasyptDecrypterTest.ERROR_NO_PASSWORD, records.get(0).getMessage());
+        assertEquals(ERROR_NO_PASSWORD, records.get(0).getMessage());
     }
 
     @Test
     public void testInitDecrypterAlgorithmIsBlank() {
         clearSystemProperties();
         Properties blankProps = new Properties();
-        blankProps.setProperty(JASYPT_ALGORITHM, "  ");
-        blankProps.setProperty(JASYPT_PASSWORD, "  ");
+        blankProps.setProperty(JASYPT_ALGORITHM, TWO_SPACES);
+        blankProps.setProperty(JASYPT_PASSWORD, TWO_SPACES);
         try {
             File blankPropsFile = File.createTempFile(TEMP_PREFIX, PROPERTIES_SUFFIX);
             blankPropsFile.deleteOnExit();
