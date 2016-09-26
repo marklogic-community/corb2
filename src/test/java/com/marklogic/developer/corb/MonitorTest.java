@@ -44,8 +44,7 @@ public class MonitorTest {
     private static final Logger LOG = Logger.getLogger(Monitor.class.getName());
 
     @Before
-    public void setUp()
-            throws Exception {
+    public void setUp() {
         clearSystemProperties();
         LOG.addHandler(testLogger);
     }
@@ -61,9 +60,6 @@ public class MonitorTest {
                 new LogRecord(Level.INFO, "CoRB2 has been paused. Resume execution by changing the state in the command file null to RESUME")));
     }
 
-    /**
-     * Test of calculateThreadsPerSecond method, of class Monitor.
-     */
     @Test
     public void testCalculateTransactionsPerSecond3args() {
         long amountCompleted = 10L;
@@ -74,9 +70,6 @@ public class MonitorTest {
         assertEquals(expResult, result, DOUBLE_DELTA);
     }
 
-    /**
-     * Test of calculateThreadsPerSecond method, of class Monitor.
-     */
     @Test
     public void testCalculateThreadsPerSecond4args() {
         long amountCompleted = 110L;
@@ -87,10 +80,7 @@ public class MonitorTest {
         double result = Monitor.calculateTransactionsPerSecond(amountCompleted, previouslyCompleted, currentMillis, previousMillis);
         assertEquals(expResult, result, DOUBLE_DELTA);
     }
-
-    /**
-     * Test of calculateThreadsPerSecond method, of class Monitor.
-     */
+    
     @Test
     public void testCalculateThreadsPerSecondFractional() {
         long amountCompleted = 10L;

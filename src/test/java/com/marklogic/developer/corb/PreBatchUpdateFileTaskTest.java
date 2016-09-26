@@ -21,7 +21,11 @@ package com.marklogic.developer.corb;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.exceptions.RequestPermissionException;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -32,9 +36,8 @@ import static org.mockito.Mockito.mock;
  */
 public class PreBatchUpdateFileTaskTest {
 
-    /**
-     * Test of getTopContent method, of class PreBatchUpdateFileTask.
-     */
+    private static final Logger LOG = Logger.getLogger(PreBatchUpdateFileTaskTest.class.getName());
+
     @Test
     public void testGetTopContent() {
         Properties props = new Properties();
@@ -67,58 +70,69 @@ public class PreBatchUpdateFileTaskTest {
         assertEquals(val, result);
     }
 
-    /**
-     * Test of writeTopContent method, of class PreBatchUpdateFileTask.
-     */
     @Test
-    public void testWriteTopContent() throws Exception {
-        String content = "foo,bar,baz";
-        File tempDir = TestUtils.createTempDirectory();
-        File tempFile = new File(tempDir, "topContent");
-        tempFile.createNewFile();
-        tempFile.deleteOnExit();
-        Properties props = new Properties();
-        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, content);
-        props.setProperty(Options.EXPORT_FILE_NAME, tempFile.getName());
+    public void testWriteTopContent() {
+        try {
+            String content = "foo,bar,baz";
+            File tempDir = TestUtils.createTempDirectory();
+            File tempFile = new File(tempDir, "topContent");
+            tempFile.createNewFile();
+            tempFile.deleteOnExit();
+            Properties props = new Properties();
+            props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, content);
+            props.setProperty(Options.EXPORT_FILE_NAME, tempFile.getName());
 
-        PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
-        instance.properties = props;
-        instance.exportDir = tempDir.toString();
-        instance.writeTopContent();
-        File partFile = new File(tempDir, instance.getPartFileName());
-        assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(partFile));
+            PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
+            instance.properties = props;
+            instance.exportDir = tempDir.toString();
+            instance.writeTopContent();
+            File partFile = new File(tempDir, instance.getPartFileName());
+            assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(partFile));
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
-    /**
-     * Test of call method, of class PreBatchUpdateFileTask.
-     */
     @Test(expected = NullPointerException.class)
-    public void testCallNpe() throws Exception {
+    public void testCallNpe() {
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
-        instance.call();
+        try {
+            instance.call();
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            if (ex instanceof NullPointerException) {
+                throw (NullPointerException) ex;
+            }
+        }
         fail();
     }
 
     @Test
-    public void testCall() throws Exception {
+    public void testCall() {
         String content = "foo,bar,baz";
-        File tempDir = TestUtils.createTempDirectory();
-        File tempFile = new File(tempDir, "topContent");
-        tempFile.createNewFile();
-        tempFile.deleteOnExit();
-        Properties props = new Properties();
-        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, content);
-        props.setProperty(Options.EXPORT_FILE_NAME, tempFile.getName());
+        try {    
+            File tempDir = TestUtils.createTempDirectory();
+            File tempFile = new File(tempDir, "topContent");
+            tempFile.createNewFile();
+            tempFile.deleteOnExit();
+            Properties props = new Properties();
+            props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, content);
+            props.setProperty(Options.EXPORT_FILE_NAME, tempFile.getName());
 
-        PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
-        instance.properties = props;
-        instance.exportDir = tempDir.toString();
-        File partFile = new File(tempDir, instance.getPartFileName());
-        instance.call();
+            PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
+            instance.properties = props;
+            instance.exportDir = tempDir.toString();
+            File partFile = new File(tempDir, instance.getPartFileName());
+            instance.call();
 
-        assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(partFile));
+            assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(partFile));
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
-    
+
     @Test
     public void testHasRetryableMessage() {
         Request req = mock(Request.class);

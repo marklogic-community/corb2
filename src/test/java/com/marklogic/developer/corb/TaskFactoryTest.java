@@ -21,6 +21,8 @@ package com.marklogic.developer.corb;
 import com.marklogic.xcc.ContentSource;
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -30,7 +32,8 @@ import static org.mockito.Mockito.mock;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class TaskFactoryTest {
-
+    
+    private static final Logger LOG = Logger.getLogger(TaskFactoryTest.class.getName());
     private static final String MODULE = "module";
 
     @Test(expected = NullPointerException.class)
@@ -317,18 +320,23 @@ public class TaskFactoryTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testNewInitTaskEmptyModule() throws IOException {
-        Manager manager = new Manager();
-        File emptyModule = File.createTempFile("testNewInitTask", "txt");
-        emptyModule.createNewFile();
-        emptyModule.deleteOnExit();
-        manager.options.setInitModule(emptyModule.getAbsolutePath() + "|ADHOC");
-        manager.options.setInitTaskClass(ExportBatchToFileTask.class);
-        manager.contentSource = mock(ContentSource.class);
-        TaskFactory instance = new TaskFactory(manager);
-        Task result = instance.newInitTask();
-        assertNotNull(result);
-        fail();
+    public void testNewInitTaskEmptyModule() {
+        try {
+            Manager manager = new Manager();
+            File emptyModule = File.createTempFile("testNewInitTask", "txt");
+            emptyModule.createNewFile();
+            emptyModule.deleteOnExit();
+            manager.options.setInitModule(emptyModule.getAbsolutePath() + "|ADHOC");
+            manager.options.setInitTaskClass(ExportBatchToFileTask.class);
+            manager.contentSource = mock(ContentSource.class);
+            TaskFactory instance = new TaskFactory(manager);
+            Task result = instance.newInitTask();
+            assertNotNull(result);
+            fail();
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test(expected = IllegalArgumentException.class)

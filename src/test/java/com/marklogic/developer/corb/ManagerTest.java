@@ -95,13 +95,6 @@ public class ManagerTest {
     public static final String PRE_BATCH_XQUERY_MODULE_FOO = "pre-bar";
     public static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
 
-    /**
-     * Perform pre-test initialization.
-     *
-     * @throws Exception if the initialization fails for some reason
-     *
-     * @generatedBy CodePro at 9/18/15 10:51 AM
-     */
     @Before
     public void setUp()
             throws Exception {
@@ -111,13 +104,6 @@ public class ManagerTest {
         EXPORT_FILE_DIR = tempDir.toString();
     }
 
-    /**
-     * Perform post-test clean-up.
-     *
-     * @throws Exception if the clean-up fails for some reason
-     *
-     * @generatedBy CodePro at 9/18/15 10:51 AM
-     */
     @After
     public void tearDown() throws Exception {
         FileUtils.deleteFile(ManagerTest.EXPORT_FILE_DIR);
@@ -1044,7 +1030,7 @@ public class ManagerTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testRunMissingURISMODULEFILEANDLOADER() throws IllegalArgumentException {
+    public void testRunMissingURISMODULEFILEANDLOADER() {
         Manager instance = new Manager();
         try {
             instance.run();
@@ -1058,7 +1044,7 @@ public class ManagerTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testRunGetURILoaderWithURISMODULENoContentSource() throws NullPointerException {
+    public void testRunGetURILoaderWithURISMODULENoContentSource() {
         Manager instance = new Manager();
         instance.options.setUrisModule("someFile1.xqy");
         try {
@@ -1073,7 +1059,7 @@ public class ManagerTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testRunGetURILoaderWithURISMODULEInvalidCollection() throws IllegalArgumentException {
+    public void testRunGetURILoaderWithURISMODULEInvalidCollection() {
         Manager instance = new Manager();
         instance.options.setUrisModule("someFile2.xqy");
         try {
@@ -1224,15 +1210,15 @@ public class ManagerTest {
             URIS_FILE};
         return args;
     }
-    
+
     public File createTempFile(List<String> lines) throws IOException {
         Path path = Files.createTempFile("tmp", "txt");
-            File file = path.toFile();
-            file.deleteOnExit();
-            Files.write(path, lines, Charset.forName("UTF-8"));
-            return file;
+        File file = path.toFile();
+        file.deleteOnExit();
+        Files.write(path, lines, Charset.forName("UTF-8"));
+        return file;
     }
-    
+
     public static Manager getMockManagerWithEmptyResults() throws RequestException {
         Manager manager = new MockManager();
 

@@ -22,6 +22,7 @@ import com.marklogic.developer.TestHandler;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -40,11 +41,9 @@ public class JasyptDecrypterTest {
 
     private static final Logger LOG = Logger.getLogger(JasyptDecrypter.class.getName());
     private final TestHandler testLogger = new TestHandler();
-    private static final String JASYPT_ALGORITHM = "jasypt.algorithm";
-    private static final String JASYPT_PASSWORD = "jasypt.password";
-    private static final String ERROR_NO_PASSWORD = "Unable to initialize jasypt decrypter. Couldn't find jasypt.password";
-    private static final String TEMP_PREFIX = "temp";
-    private static final String PROPERTIES_SUFFIX = ".properties";
+    public static final String JASYPT_ALGORITHM = "jasypt.algorithm";
+    public static final String JASYPT_PASSWORD = "jasypt.password";
+    public static final String ERROR_NO_PASSWORD = "Unable to initialize jasypt decrypter. Couldn't find jasypt.password";
     private static final String UNENCRYPTED_PASSWORD = "corbencrypt";
     
     @Before
@@ -58,103 +57,20 @@ public class JasyptDecrypterTest {
         clearSystemProperties();
     }
 
-    /**
-     * Test of init_decrypter method, of class JasyptDecrypter.
-     */
-    //@Test
-    public void testInitDecrypter() throws Exception {
-        JasyptDecrypter instance = new JasyptDecrypter();
-        instance.init_decrypter();
-    }
-
-    //@Test
-    public void testInitDecrypterBadJasyptPropertiesFilePath() throws Exception {
-        clearSystemProperties();
-        Properties props = new Properties();
-        props.setProperty(Options.JASYPT_PROPERTIES_FILE, "does/not/exist");
-        props.setProperty(JASYPT_ALGORITHM, "MD5");
-        props.setProperty(JASYPT_PASSWORD, "secret");
-        JasyptDecrypter instance = new JasyptDecrypter();
-        instance.properties = props;
-        instance.init_decrypter();
-        assertNull(instance.decrypter);
-        List<LogRecord> records = testLogger.getLogRecords();
-        assertEquals(Level.SEVERE, records.get(0).getLevel());
-        assertEquals(ERROR_NO_PASSWORD, records.get(0).getMessage());
-    }
-
     @Test
-    public void testInitDecrypterPropertiesAreBlank() throws Exception {
+    public void testInitDecrypterPropertiesAreBlank() {
         clearSystemProperties();
         Properties props = new Properties();
         props.setProperty(Options.JASYPT_PROPERTIES_FILE, " ");
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.properties = props;
-        instance.init_decrypter();
-        assertEquals(UNENCRYPTED_PASSWORD, instance.jaspytProperties.getProperty(JASYPT_PASSWORD));
-    }
-
-    //@Test
-    public void testInitDecrypterAlgorithmIsBlank() throws Exception {
-        clearSystemProperties();
-        Properties blankProps = new Properties();
-        blankProps.setProperty(JASYPT_ALGORITHM, "  ");
-        blankProps.setProperty(JASYPT_PASSWORD, "  ");
-        File blankPropsFile = File.createTempFile(TEMP_PREFIX, PROPERTIES_SUFFIX);
-        blankPropsFile.deleteOnExit();
-        FileOutputStream outputStream = new FileOutputStream(blankPropsFile);
-        blankProps.store(outputStream, "");
-        Properties props = new Properties();
-        props.setProperty(Options.JASYPT_PROPERTIES_FILE, blankPropsFile.getAbsolutePath());
-
-        JasyptDecrypter instance = new JasyptDecrypter();
-        instance.properties = props;
-        instance.init_decrypter();
-        assertNull(instance.decrypter);
-    }
-
-    //@Test
-    public void testInitDecrypterAlgorithmIsNotBlank() throws Exception {
-        clearSystemProperties();
-        String password = "password";
-        String alg = "PBEWithMD5AndTripleDES";
-        Properties blankProps = new Properties();
-        blankProps.setProperty(JASYPT_ALGORITHM, alg);
-        blankProps.setProperty(JASYPT_PASSWORD, password);
-        File blankPropsFile = File.createTempFile(TEMP_PREFIX, PROPERTIES_SUFFIX);
-        blankPropsFile.deleteOnExit();
-        FileOutputStream outputStream = new FileOutputStream(blankPropsFile);
-        blankProps.store(outputStream, "");
-        Properties props = new Properties();
-        props.setProperty(Options.JASYPT_PROPERTIES_FILE, blankPropsFile.getAbsolutePath());
-
-        JasyptDecrypter instance = new JasyptDecrypter();
-        instance.properties = props;
-        instance.init_decrypter();
-
-        assertEquals(alg, instance.jaspytProperties.getProperty(JASYPT_ALGORITHM));
-        assertEquals(password, instance.jaspytProperties.getProperty(JASYPT_PASSWORD));
-        assertNotNull(instance.decrypter);
-    }
-
-    //@Test
-    public void testInitDecrypterNoJasyptProperties() throws Exception {
-        clearSystemProperties();
-        Properties emptyProps = new Properties();
-        File emptyFile = File.createTempFile(TEMP_PREFIX, PROPERTIES_SUFFIX);
-        emptyFile.deleteOnExit();
-        try (FileOutputStream outputStream = new FileOutputStream(emptyFile)) {
-            emptyProps.store(outputStream, "");
+        try {
+            instance.init_decrypter();
+        } catch (IOException | ClassNotFoundException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
-        Properties props = new Properties();
-        props.setProperty(Options.JASYPT_PROPERTIES_FILE, emptyFile.getAbsolutePath());
-
-        JasyptDecrypter instance = new JasyptDecrypter();
-        instance.properties = props;
-        instance.init_decrypter();
-        List<LogRecord> records = testLogger.getLogRecords();
-        assertEquals(Level.SEVERE, records.get(0).getLevel());
-        assertEquals(ERROR_NO_PASSWORD, records.get(0).getMessage());
+        assertEquals(UNENCRYPTED_PASSWORD, instance.jaspytProperties.getProperty(JASYPT_PASSWORD));
     }
 
     @Test
@@ -168,9 +84,6 @@ public class JasyptDecrypterTest {
         assertEquals(UNENCRYPTED_PASSWORD, instance.jaspytProperties.getProperty(JASYPT_PASSWORD));
     }
 
-    /**
-     * Test of doDecrypt method, of class JasyptDecrypter.
-     */
     @Test
     public void testDoDecrypt() {
         String property = "prop1";

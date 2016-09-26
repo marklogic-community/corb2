@@ -53,46 +53,60 @@ public class DiskQueueTest {
     }
 
     @Test(expected = InvalidParameterException.class)
-    public void testDiskQueueTempDirNotDir() throws IOException {
-        File tmpFile = File.createTempFile("tmp", "txt");
-        new DiskQueue<>(0, tmpFile);
+    public void testDiskQueueTempDirNotDir() {
+        try {
+            File tmpFile = File.createTempFile("tmp", "txt");
+            new DiskQueue<>(0, tmpFile);
+
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
         fail();
     }
 
     @Test(expected = InvalidParameterException.class)
-    public void testDiskQueueTempFileDoesNotExist() throws IOException {
+    public void testDiskQueueTempFileDoesNotExist() {
         File tmpFile = new File("/does/not/exist");
         new DiskQueue<>(0, tmpFile);
         fail();
     }
 
     @Test(expected = InvalidParameterException.class)
-    public void testDiskQueueTempDirIsNull() throws IOException {
+    public void testDiskQueueTempDirIsNull() {
         File tmpFile = null;
         new DiskQueue<>(0, tmpFile);
         fail();
     }
 
     @Test(expected = InvalidParameterException.class)
-    public void testDiskQueueTempDirDoesNotExist() throws IOException {
-        File tmpFile = TestUtils.createTempDirectory();
-        tmpFile.delete();
-        new DiskQueue<>(0, tmpFile);
+    public void testDiskQueueTempDirDoesNotExist() {
+        try {
+            File tmpFile = TestUtils.createTempDirectory();
+            tmpFile.delete();
+            new DiskQueue<>(0, tmpFile);     
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
         fail();
     }
 
     @Test
-    public void testDiskQueueFinalizeWhileOpen() throws IOException, Throwable {
-        DiskQueue<String> instance = new DiskQueue<>(1);
-        instance.add("first");
-        instance.add("second");
-        instance.add("third");
-        assertEquals(3, instance.size());
-        instance.finalize();
-        List<LogRecord> records = testLogger.getLogRecords();
-        assertTrue(TestUtils.containsLogRecord(records,
-                new LogRecord(Level.WARNING,
-                        MessageFormat.format("{0} still had open file in finalize", DiskQueue.class.getSimpleName()))));
+    public void testDiskQueueFinalizeWhileOpen() {
+        try {
+            DiskQueue<String> instance = new DiskQueue<>(1);
+            instance.add("first");
+            instance.add("second");
+            instance.add("third");
+            assertEquals(3, instance.size());
+            instance.finalize();
+            List<LogRecord> records = testLogger.getLogRecords();
+            assertTrue(TestUtils.containsLogRecord(records,
+                    new LogRecord(Level.WARNING,
+                            MessageFormat.format("{0} still had open file in finalize", DiskQueue.class.getSimpleName()))));
+        } catch (Throwable ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
@@ -114,9 +128,6 @@ public class DiskQueueTest {
         assertEquals(0, instance.size());
     }
 
-    /**
-     * Test of finalize method, of class DiskQueue.
-     */
     @Test
     public void testFinalize() throws Exception {
         DiskQueue<String> instance = new DiskQueue<>(1);
@@ -127,9 +138,6 @@ public class DiskQueueTest {
         }
     }
 
-    /**
-     * Test of iterator method, of class DiskQueue.
-     */
     @Test(expected = RuntimeException.class)
     public void testIterator() {
         Queue<String> instance = new DiskQueue<>(1);
@@ -137,9 +145,6 @@ public class DiskQueueTest {
         fail();
     }
 
-    /**
-     * Test of size method, of class DiskQueue.
-     */
     @Test
     public void testSize() {
         Queue<String> instance = new DiskQueue<>(1);
@@ -149,9 +154,6 @@ public class DiskQueueTest {
         assertEquals(1, result);
     }
 
-    /**
-     * Test of offer method, of class DiskQueue.
-     */
     @Test
     public void testOffer() {
         Queue<String> instance = new DiskQueue<>(1);
@@ -166,9 +168,6 @@ public class DiskQueueTest {
         fail();
     }
 
-    /**
-     * Test of peek method, of class DiskQueue.
-     */
     @Test
     public void testPeek() {
         Queue<String> instance = new DiskQueue<>(1);
@@ -178,9 +177,6 @@ public class DiskQueueTest {
         assertEquals(item, instance.peek());
     }
 
-    /**
-     * Test of remove method, of class DiskQueue.
-     */
     @Test
     public void testRemove() {
         Queue<String> instance = new DiskQueue<>(1);
@@ -197,9 +193,6 @@ public class DiskQueueTest {
         fail();
     }
 
-    /**
-     * Test of poll method, of class DiskQueue.
-     */
     @Test
     public void testPoll() {
         Queue<String> instance = new DiskQueue<>(1);
@@ -216,9 +209,6 @@ public class DiskQueueTest {
         assertNull(result);
     }
 
-    /**
-     * Test of clear method, of class DiskQueue.
-     */
     @Test
     public void testClear() {
         Queue<String> instance = new DiskQueue<>(1);

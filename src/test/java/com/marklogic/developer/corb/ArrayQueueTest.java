@@ -32,10 +32,7 @@ public class ArrayQueueTest {
 
     private static final String FOO = "foo";
     private static final String BAR = "bar";
-    
-    /**
-     * Test of size method, of class ArrayQueue.
-     */
+
     @Test
     public void testSize() {
         Queue<String> instance = new ArrayQueue<>(10);
@@ -51,9 +48,6 @@ public class ArrayQueueTest {
         fail();
     }
 
-    /**
-     * Test of peek method, of class ArrayQueue.
-     */
     @Test
     public void testPeek() {
         Queue<String> instance = new ArrayQueue<>(10);
@@ -65,9 +59,6 @@ public class ArrayQueueTest {
         assertEquals(FOO, instance.peek());
     }
 
-    /**
-     * Test of poll method, of class ArrayQueue.
-     */
     @Test
     public void testPoll() {
         Queue<String> instance = new ArrayQueue<>(1);
@@ -79,9 +70,6 @@ public class ArrayQueueTest {
         assertTrue(instance.isEmpty());
     }
 
-    /**
-     * Test of offer method, of class ArrayQueue.
-     */
     @Test
     public void testOffer() {
         Queue<String> instance = new ArrayQueue<>(1);
@@ -90,13 +78,10 @@ public class ArrayQueueTest {
         assertFalse(instance.offer(FOO));
     }
 
-    /**
-     * Test of increment method, of class ArrayQueue.
-     */
     @Test
     public void testIncrement() {
         int i = 0;
-        ArrayQueue<String> instance = new ArrayQueue<String>(2);
+        ArrayQueue<String> instance = new ArrayQueue<>(2);
         assertEquals(0, instance.size());
         assertEquals(1, instance.increment(i));
         assertEquals(1, instance.increment(i));
@@ -105,12 +90,9 @@ public class ArrayQueueTest {
         assertEquals(1, instance.increment(i));
     }
 
-    /**
-     * Test of iterator method, of class ArrayQueue.
-     */
     @Test
     public void testIterator() {
-        ArrayQueue<String> instance = new ArrayQueue<String>(2);
+        ArrayQueue<String> instance = new ArrayQueue<>(2);
         instance.add(FOO);
         instance.add(BAR);
         Iterator<String> iterator = instance.iterator();
@@ -126,9 +108,6 @@ public class ArrayQueueTest {
         assertFalse(iterator.hasNext());
     }
 
-    /**
-     * Test of removeAt method, of class ArrayQueue.
-     */
     @Test
     public void testRemoveAt() {
         ArrayQueue<String> instance = new ArrayQueue<>(2);
@@ -140,10 +119,7 @@ public class ArrayQueueTest {
         instance.removeAt(0);
         assertTrue(instance.isEmpty());
     }
-
-    /**
-     * Test of removeAt method, of class ArrayQueue.
-     */
+    
     @Test
     public void testRemove() {
         Queue<String> instance = new ArrayQueue<>(2);
@@ -157,9 +133,6 @@ public class ArrayQueueTest {
         assertTrue(instance.isEmpty());
     }
 
-    /**
-     * Test of removeAt method, of class ArrayQueue.
-     */
     @Test(expected = IllegalStateException.class)
     public void testRemoveTwice() {
         Queue<String> instance = new ArrayQueue<>(2);
@@ -172,9 +145,6 @@ public class ArrayQueueTest {
         fail();
     }
 
-    /**
-     * Test of next() method, of class ArrayQueue
-     */
     @Test(expected = NoSuchElementException.class)
     public void testNextWhenEmpty() {
         Queue<String> instance = new ArrayQueue<>(2);
@@ -182,9 +152,6 @@ public class ArrayQueueTest {
         fail();
     }
     
-    /**
-     * Test of offer() method, of class ArrayQueue
-     */
     @Test (expected = NullPointerException.class)
     public void testOfferNull() {
         Queue<String> instance = new ArrayQueue<>(2);

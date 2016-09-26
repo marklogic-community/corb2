@@ -22,8 +22,11 @@ import com.marklogic.xcc.ContentSource;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Writer;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -34,11 +37,9 @@ import static org.mockito.Mockito.mock;
  */
 public class FileUrisLoaderTest {
 
+    private static final Logger LOG = Logger.getLogger(FileUrisLoaderTest.class.getName());
     private static final String URIS_FILE = "src/test/resources/uris-file.txt";
-    
-    /**
-     * Test of setOptions method, of class FileUrisLoader.
-     */
+
     @Test
     public void testSetOptionsNull() {
         TransformOptions options = null;
@@ -57,9 +58,6 @@ public class FileUrisLoaderTest {
         }
     }
 
-    /**
-     * Test of setContentSource method, of class FileUrisLoader.
-     */
     @Test
     public void testSetContentSourceNull() {
         ContentSource cs = null;
@@ -69,9 +67,6 @@ public class FileUrisLoaderTest {
         }
     }
 
-    /**
-     * Test of setCollection method, of class FileUrisLoader.
-     */
     @Test
     public void testSetCollectionNull() {
         String collection = null;
@@ -90,9 +85,6 @@ public class FileUrisLoaderTest {
         }
     }
 
-    /**
-     * Test of setProperties method, of class FileUrisLoader.
-     */
     @Test
     public void testSetPropertiesNull() {
         Properties properties = null;
@@ -111,11 +103,8 @@ public class FileUrisLoaderTest {
         }
     }
 
-    /**
-     * Test of open method, of class FileUrisLoader.
-     */
     @Test
-    public void testOpen() throws Exception {
+    public void testOpen() {
         try (FileUrisLoader instance = new FileUrisLoader()) {
             TransformOptions options = new TransformOptions();
             options.setUrisFile(URIS_FILE);
@@ -123,15 +112,21 @@ public class FileUrisLoaderTest {
             props.setProperty(Options.URIS_REPLACE_PATTERN, "object-id-2,test");
             instance.properties = props;
             instance.options = options;
-            instance.open();
-            assertNotNull(instance.br);
-            assertEquals("object-id-1", instance.next());
-            assertEquals("test", instance.next());
+            try {
+                instance.open();
+                assertNotNull(instance.br);
+                assertEquals("object-id-1", instance.next());
+                assertEquals("test", instance.next());
+            } catch (CorbException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                fail();
+            }
+
         }
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testOpenInvalidReplacePattern() throws Exception {
+    public void testOpenInvalidReplacePattern() throws CorbException {
         FileUrisLoader instance = new FileUrisLoader();
         TransformOptions options = new TransformOptions();
         options.setUrisFile(URIS_FILE);
@@ -148,7 +143,7 @@ public class FileUrisLoaderTest {
     }
 
     @Test(expected = CorbException.class)
-    public void testOpenFileDoesNotExist() throws Exception {
+    public void testOpenFileDoesNotExist() throws CorbException {
         FileUrisLoader instance = new FileUrisLoader();
         TransformOptions options = new TransformOptions();
         options.setUrisFile("does/not/exist");
@@ -161,9 +156,6 @@ public class FileUrisLoaderTest {
         fail();
     }
 
-    /**
-     * Test of getBatchRef method, of class FileUrisLoader.
-     */
     @Test
     public void testGetBatchRef() {
         try (FileUrisLoader instance = new FileUrisLoader()) {
@@ -171,9 +163,6 @@ public class FileUrisLoaderTest {
         }
     }
 
-    /**
-     * Test of getTotalCount method, of class FileUrisLoader.
-     */
     @Test
     public void testGetTotalCountDefaultValue() {
         try (FileUrisLoader instance = new FileUrisLoader()) {
@@ -182,21 +171,23 @@ public class FileUrisLoaderTest {
     }
 
     @Test
-    public void testGetTotalCount() throws CorbException {
+    public void testGetTotalCount() {
         try (FileUrisLoader instance = new FileUrisLoader()) {
             TransformOptions options = new TransformOptions();
             options.setUrisFile(URIS_FILE);
             instance.options = options;
-            instance.open();
+            try {
+                instance.open();
+            } catch (CorbException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                fail();
+            }
             assertEquals(8, instance.getTotalCount());
         }
     }
 
-    /**
-     * Test of hasNext method, of class FileUrisLoader.
-     */
     @Test(expected = CorbException.class)
-    public void testHasNextThrowException() throws Exception {
+    public void testHasNextThrowException() throws CorbException {
         try (FileUrisLoader instance = new FileUrisLoader()) {
             instance.hasNext();
         }
@@ -204,63 +195,70 @@ public class FileUrisLoaderTest {
     }
 
     @Test
-    public void testHasNext() throws Exception {
+    public void testHasNext() {
         try (FileUrisLoader instance = new FileUrisLoader()) {
             TransformOptions options = new TransformOptions();
             options.setUrisFile(URIS_FILE);
             instance.options = options;
-            instance.open();
-            
-            for (int i = 0; i < instance.getTotalCount(); i++) {
+            try {
+                instance.open();
+                for (int i = 0; i < instance.getTotalCount(); i++) {
+                    assertTrue(instance.hasNext());
+                }
+                //Verify that hasNext() does not advance the buffered reader to the next line
                 assertTrue(instance.hasNext());
+            } catch (CorbException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                fail();
             }
-            //Verify that hasNext() does not advance the buffered reader to the next line
-            assertTrue(instance.hasNext());
         }
     }
 
-    /**
-     * Test of next method, of class FileUrisLoader.
-     */
     @Test
-    public void testNext() throws Exception {
+    public void testNext() {
         try (FileUrisLoader instance = new FileUrisLoader()) {
             TransformOptions options = new TransformOptions();
             options.setUrisFile(URIS_FILE);
             instance.options = options;
-            instance.open();
-            //Verify that hasNext() does not advance the buffered reader to the next line
-            for (int i = 0; i < instance.getTotalCount(); i++) {
-                assertNotNull(instance.next());
+            try {
+                instance.open();
+                //Verify that hasNext() does not advance the buffered reader to the next line
+                for (int i = 0; i < instance.getTotalCount(); i++) {
+                    assertNotNull(instance.next());
+                }
+                assertFalse(instance.hasNext());
+                assertNull(instance.next());
+            } catch (CorbException ex) {
+                LOG.log(Level.SEVERE, null, ex);
             }
-            assertFalse(instance.hasNext());
-            assertNull(instance.next());
         }
     }
 
     @Test
-    public void testNextWithEmptyLine() throws Exception {
+    public void testNextWithEmptyLine() {
         try (FileUrisLoader instance = new FileUrisLoader()) {
             TransformOptions options = new TransformOptions();
-            File file = File.createTempFile("temp", ".txt");
-            file.deleteOnExit();
-            try (Writer writer = new FileWriter(file)) {
-                writer.append("foo\n\nbar");
-            }
-            options.setUrisFile(file.getAbsolutePath());
-            instance.options = options;
-            instance.open();
-            
-            assertEquals("foo", instance.next());
-            assertEquals("bar", instance.next());
-            assertFalse(instance.hasNext());
-            assertNull(instance.next());
+            try {
+                File file = File.createTempFile("temp", ".txt");
+                file.deleteOnExit();
+                try (Writer writer = new FileWriter(file)) {
+                    writer.append("foo\n\nbar");
+                }
+                options.setUrisFile(file.getAbsolutePath());
+                instance.options = options;
+                instance.open();
+
+                assertEquals("foo", instance.next());
+                assertEquals("bar", instance.next());
+                assertFalse(instance.hasNext());
+                assertNull(instance.next());
+            } catch (IOException | CorbException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                fail();
+            } 
         }
     }
 
-    /**
-     * Test of close method, of class FileUrisLoader.
-     */
     @Test
     public void testClose() {
         FileUrisLoader instance = new FileUrisLoader();
@@ -270,9 +268,6 @@ public class FileUrisLoaderTest {
         instance.close();
     }
 
-    /**
-     * Test of cleanup method, of class FileUrisLoader.
-     */
     @Test
     public void testCleanup() {
         FileUrisLoader instance = new FileUrisLoader();
@@ -291,9 +286,8 @@ public class FileUrisLoaderTest {
         assertNull(instance.cs);
         assertNull(instance.options);
         assertNull(instance.replacements);
-        // TODO should these  be reset? 
-        //assertNull(instance.nextLine);
-        //assertNull(instance.total);
+        assertNull(instance.nextLine);
+        assertEquals(0, instance.getTotalCount());
     }
 
 }

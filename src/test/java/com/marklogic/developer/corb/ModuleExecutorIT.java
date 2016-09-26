@@ -19,7 +19,15 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.exceptions.XccConfigException;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Rule;
@@ -30,12 +38,13 @@ import org.junit.contrib.java.lang.system.ExpectedSystemExit;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class ModuleExecutorIT {
-    
+
+    private static final Logger LOG = Logger.getLogger(ModuleExecutorIT.class.getName());
     @Rule
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Test
-    public void testRunMain() throws Exception {
+    public void testRunMain() {
         clearSystemProperties();
         String[] args = {};
         System.setProperty(Options.XCC_CONNECTION_URI, ModuleExecutorTest.XCC_CONNECTION_URI);
@@ -43,26 +52,37 @@ public class ModuleExecutorIT {
         System.setProperty(Options.EXPORT_FILE_NAME, ModuleExecutorTest.EXPORT_FILE_NAME);
         exit.expectSystemExit();
         ModuleExecutor.main(args);
-        String result = TestUtils.readFile(new File(ModuleExecutorTest.EXPORT_FILE_NAME));
-        assertEquals("/a/b/c\n", result);
+        String result;
+        try {
+            result = TestUtils.readFile(new File(ModuleExecutorTest.EXPORT_FILE_NAME));
+            assertEquals("/a/b/c\n", result);
+        } catch (FileNotFoundException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
-    public void testRunInline() throws Exception {
+    public void testRunInline() {
         clearSystemProperties();
         String[] args = {};
         System.setProperty(Options.XCC_CONNECTION_URI, ModuleExecutorTest.XCC_CONNECTION_URI);
         System.setProperty(Options.PROCESS_MODULE, "INLINE-JAVASCRIPT|var uri = '/d/e/f'; uri;");
         System.setProperty(Options.EXPORT_FILE_NAME, ModuleExecutorTest.EXPORT_FILE_NAME);
         ModuleExecutor executor = new ModuleExecutor();
-        executor.init(args);
-        executor.run();
-        String reportPath = executor.getProperty(Options.EXPORT_FILE_NAME);
-        File report = new File(reportPath);
-        boolean fileExists = report.exists();
-        assertTrue(fileExists);
-        String result = TestUtils.readFile(report);
-        assertEquals("/d/e/f\n", result);
+        try {
+            executor.init(args);
+            executor.run();
+            String reportPath = executor.getProperty(Options.EXPORT_FILE_NAME);
+            File report = new File(reportPath);
+            boolean fileExists = report.exists();
+            assertTrue(fileExists);
+            String result = TestUtils.readFile(report);
+            assertEquals("/d/e/f\n", result);
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
 }

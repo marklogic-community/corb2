@@ -35,9 +35,6 @@ import static org.mockito.Mockito.mock;
  */
 public class PausableThreadPoolExecutorTest {
 
-    /**
-     * Test of resume method, of class PausableThreadPoolExecutor.
-     */
     @Test
     public void testPauseIsPausedResumeIsRunning() {
         BlockingQueue<Runnable> queue = mock(BlockingQueue.class);

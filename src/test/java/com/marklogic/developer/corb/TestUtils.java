@@ -28,14 +28,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class TestUtils {
-
+    
+    private static final Logger LOG = Logger.getLogger(TestUtils.class.getName());
     private TestUtils() {
         //No need for an instance
     }
@@ -81,8 +84,9 @@ public class TestUtils {
 
     public static void clearFile(File file) {
         try (PrintWriter pw = new PrintWriter(file)) {
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            //Instantiating new PRintWriter wipes the file
+        } catch (FileNotFoundException ex) {
+            LOG.log(Level.SEVERE, null, ex);
         }
     }
 

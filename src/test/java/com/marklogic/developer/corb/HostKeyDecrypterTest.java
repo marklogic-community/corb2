@@ -21,11 +21,9 @@ package com.marklogic.developer.corb;
 import com.marklogic.developer.TestHandler;
 import com.marklogic.developer.corb.HostKeyDecrypter.OSType;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.NoSuchAlgorithmException;
@@ -54,6 +52,7 @@ public class HostKeyDecrypterTest {
     private static final Logger LOG = Logger.getLogger(HostKeyDecrypterTest.class.getName());
     private static final Logger HOST_KEY_DECRYPTER_LOG = Logger.getLogger(HostKeyDecrypter.class.getName());
     private static final String METHOD_GET_SN = "getSN";
+    
     @Before
     public void setUp() {
         clearSystemProperties();

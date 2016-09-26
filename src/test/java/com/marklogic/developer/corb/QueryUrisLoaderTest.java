@@ -51,6 +51,7 @@ public class QueryUrisLoaderTest {
     private String none = "none";
     private String root = "/root";
     private static final String ADHOC_SUFFIX = "|ADHOC";
+    private static final Logger LOG = Logger.getLogger(QueryUrisLoaderTest.class.getName());
 
     @Test(expected = NullPointerException.class)
     public void testOpenNullPropertiesAndNullOptions() throws CorbException {
@@ -68,7 +69,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testOpenWithBadUrisReplacePattern() throws CorbException {
+    public void testOpenWithBadUrisReplacePattern() {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -79,6 +80,8 @@ public class QueryUrisLoaderTest {
         instance.cs = contentSource;
         try {
             instance.open();
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
         } finally {
             instance.close();
         }
@@ -86,7 +89,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = CorbException.class)
-    public void testOpenBadUriCount() throws RequestException, CorbException {
+    public void testOpenBadUriCount() throws CorbException {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -99,20 +102,23 @@ public class QueryUrisLoaderTest {
         when(contentSource.newSession()).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(request);
         when(request.setNewStringVariable(anyString(), anyString())).thenReturn(var).thenReturn(var).thenReturn(var);
-        when(session.submitRequest(request)).thenReturn(seq);
-        when(seq.next()).thenReturn(item);
-        when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
-        when(xdmItem.asString()).thenReturn(none).thenReturn(none);
-        Properties props = new Properties();
-        props.setProperty(Options.URIS_REPLACE_PATTERN, "foo1,");
-        TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setUrisModule("/module");
-        transformOptions.setModuleRoot(root);
-        instance.properties = props;
-        instance.cs = contentSource;
-        instance.options = transformOptions;
         try {
+            when(session.submitRequest(request)).thenReturn(seq);
+            when(seq.next()).thenReturn(item);
+            when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
+            when(xdmItem.asString()).thenReturn(none).thenReturn(none);
+            Properties props = new Properties();
+            props.setProperty(Options.URIS_REPLACE_PATTERN, "foo1,");
+            TransformOptions transformOptions = new TransformOptions();
+            transformOptions.setUrisModule("/module");
+            transformOptions.setModuleRoot(root);
+            instance.properties = props;
+            instance.cs = contentSource;
+            instance.options = transformOptions;
+
             instance.open();
+        } catch (RequestException ex) {
+            LOG.log(Level.SEVERE, null, ex);
         } finally {
             instance.close();
         }
@@ -120,7 +126,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = CorbException.class)
-    public void testOpenInlineUriModule() throws RequestException, CorbException {
+    public void testOpenInlineUriModule() throws CorbException {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -133,20 +139,23 @@ public class QueryUrisLoaderTest {
         when(contentSource.newSession()).thenReturn(session);
         when(session.newAdhocQuery(anyString())).thenReturn(request);
         when(request.setNewStringVariable(anyString(), anyString())).thenReturn(var).thenReturn(var).thenReturn(var);
-        when(session.submitRequest(request)).thenReturn(seq);
-        when(seq.next()).thenReturn(item);
-        when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
-        when(xdmItem.asString()).thenReturn(none).thenReturn(none);
-        Properties props = new Properties();
-        props.setProperty(Options.URIS_REPLACE_PATTERN, "foo2,");
-        TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setUrisModule("INLINE-XQUERY|for $i in (1 to 5) return $i || '.xml'");
-        transformOptions.setModuleRoot(root);
-        instance.properties = props;
-        instance.cs = contentSource;
-        instance.options = transformOptions;
         try {
+            when(session.submitRequest(request)).thenReturn(seq);
+            when(seq.next()).thenReturn(item);
+            when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
+            when(xdmItem.asString()).thenReturn(none).thenReturn(none);
+            Properties props = new Properties();
+            props.setProperty(Options.URIS_REPLACE_PATTERN, "foo2,");
+            TransformOptions transformOptions = new TransformOptions();
+            transformOptions.setUrisModule("INLINE-XQUERY|for $i in (1 to 5) return $i || '.xml'");
+            transformOptions.setModuleRoot(root);
+            instance.properties = props;
+            instance.cs = contentSource;
+            instance.options = transformOptions;
+
             instance.open();
+        } catch (RequestException ex) {
+            LOG.log(Level.SEVERE, null, ex);
         } finally {
             instance.close();
         }
@@ -154,7 +163,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpenNoCodeInInline() throws RequestException, CorbException {
+    public void testOpenNoCodeInInline() {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -167,21 +176,24 @@ public class QueryUrisLoaderTest {
         when(contentSource.newSession()).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(request);
         when(request.setNewStringVariable(anyString(), anyString())).thenReturn(var).thenReturn(var).thenReturn(var);
-        when(session.submitRequest(request)).thenReturn(seq);
-        when(seq.next()).thenReturn(item);
-        when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
-        when(xdmItem.asString()).thenReturn(none).thenReturn(none);
-        Properties props = new Properties();
-        props.setProperty(Options.URIS_REPLACE_PATTERN, "foo3,");
-        TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setUrisModule("INLINE-XQUERY|");
-        transformOptions.setModuleRoot(root);
-
-        instance.properties = props;
-        instance.cs = contentSource;
-        instance.options = transformOptions;
         try {
+            when(session.submitRequest(request)).thenReturn(seq);
+            when(seq.next()).thenReturn(item);
+            when(item.getItem()).thenReturn(xdmItem).thenReturn(xdmItem);
+            when(xdmItem.asString()).thenReturn(none).thenReturn(none);
+            Properties props = new Properties();
+            props.setProperty(Options.URIS_REPLACE_PATTERN, "foo3,");
+            TransformOptions transformOptions = new TransformOptions();
+            transformOptions.setUrisModule("INLINE-XQUERY|");
+            transformOptions.setModuleRoot(root);
+
+            instance.properties = props;
+            instance.cs = contentSource;
+            instance.options = transformOptions;
+
             instance.open();
+        } catch (RequestException | CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
         } finally {
             instance.close();
         }
@@ -189,7 +201,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_adHocIsDirectory() throws CorbException {
+    public void testOpen_adHocIsDirectory() {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -200,6 +212,8 @@ public class QueryUrisLoaderTest {
         instance.cs = contentSource;
         try {
             instance.open();
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
         } finally {
             instance.close();
         }
@@ -207,20 +221,22 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_adHocIsEmpty() throws IOException, CorbException {
+    public void testOpen_adHocIsEmpty() {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         when(contentSource.newSession()).thenReturn(session);
         TransformOptions transformOptions = new TransformOptions();
-        File file = File.createTempFile("adhocXQuery", "xqy");
-        file.deleteOnExit();
-        transformOptions.setUrisModule(file.getAbsolutePath() + ADHOC_SUFFIX);
-        instance.options = transformOptions;
-        instance.cs = contentSource;
-
         try {
+            File file = File.createTempFile("adhocXQuery", "xqy");
+            file.deleteOnExit();
+            transformOptions.setUrisModule(file.getAbsolutePath() + ADHOC_SUFFIX);
+            instance.options = transformOptions;
+            instance.cs = contentSource;
+
             instance.open();
+        } catch (IOException | CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
         } finally {
             instance.close();
         }
@@ -288,7 +304,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_badAdhocFilenameIsEmpty() throws CorbException {
+    public void testOpen_badAdhocFilenameIsEmpty() {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -299,6 +315,8 @@ public class QueryUrisLoaderTest {
         instance.cs = contentSource;
         try {
             instance.open();
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
         } finally {
             instance.close();
         }
@@ -306,7 +324,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_maxOptsFromModuleZero() throws CorbException {
+    public void testOpen_maxOptsFromModuleZero() {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -320,6 +338,8 @@ public class QueryUrisLoaderTest {
         instance.cs = contentSource;
         try {
             instance.open();
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
         } finally {
             instance.close();
         }
@@ -327,7 +347,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_InvalidMaxOptsFromModuleZero() throws CorbException {
+    public void testOpen_InvalidMaxOptsFromModuleZero() {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -341,6 +361,8 @@ public class QueryUrisLoaderTest {
         instance.cs = contentSource;
         try {
             instance.open();
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
         } finally {
             instance.close();
         }
@@ -468,7 +490,6 @@ public class QueryUrisLoaderTest {
 
     @Test(expected = NoSuchElementException.class)
     public void testNext_noQueue() throws CorbException {
-
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.next();
         fail();
@@ -492,9 +513,6 @@ public class QueryUrisLoaderTest {
         assertNull(instance.session);
     }
 
-    /**
-     * Test of cleanup method, of class QueryUrisLoader.
-     */
     @Test
     public void testCleanup() {
         QueryUrisLoader instance = new QueryUrisLoader();

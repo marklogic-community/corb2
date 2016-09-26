@@ -33,9 +33,6 @@ public class AbstractUrisLoaderTest {
     private static final String FOO = "foo";
     private static final String BAR = "bar";
     
-    /**
-     * Test of setOptions method, of class AbstractUrisLoader.
-     */
     @Test
     public void testSetOptions() {
         TransformOptions options = new TransformOptions();
@@ -44,9 +41,6 @@ public class AbstractUrisLoaderTest {
         assertEquals(options, instance.options);
     }
 
-    /**
-     * Test of setContentSource method, of class AbstractUrisLoader.
-     */
     @Test
     public void testSetContentSource() {
         ContentSource cs = mock(ContentSource.class);
@@ -55,9 +49,6 @@ public class AbstractUrisLoaderTest {
         assertEquals(cs, instance.cs);
     }
 
-    /**
-     * Test of setCollection method, of class AbstractUrisLoader.
-     */
     @Test
     public void testSetCollection() {
         String collection = FOO;
@@ -66,9 +57,6 @@ public class AbstractUrisLoaderTest {
         assertEquals(collection, instance.collection);
     }
 
-    /**
-     * Test of setProperties method, of class AbstractUrisLoader.
-     */
     @Test
     public void testSetProperties() {
         Properties properties = new Properties();
@@ -77,18 +65,12 @@ public class AbstractUrisLoaderTest {
         assertEquals(properties, instance.properties);
     }
 
-    /**
-     * Test of getBatchRef method, of class AbstractUrisLoader.
-     */
     @Test
     public void testGetBatchRef() {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         assertNull(instance.getBatchRef());
     }
 
-    /**
-     * Test of getTotalCount method, of class AbstractUrisLoader.
-     */
     @Test
     public void testGetTotalCount() {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
@@ -96,9 +78,6 @@ public class AbstractUrisLoaderTest {
         assertEquals(0, result);
     }
 
-    /**
-     * Test of getProperty method, of class AbstractUrisLoader.
-     */
     @Test
     public void testGetProperty() {
         String key = FOO;
@@ -130,9 +109,6 @@ public class AbstractUrisLoaderTest {
         assertEquals(null, result);
     }
 
-    /**
-     * Test of cleanup method, of class AbstractUrisLoader.
-     */
     @Test
     public void testCleanup() {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
@@ -145,9 +121,6 @@ public class AbstractUrisLoaderTest {
         assertNull(instance.batchRef);
     }
 
-    /**
-     * Test of parseUriReplacePatterns method, of class AbstractUrisLoader.
-     */
     @Test(expected = IllegalArgumentException.class)
     public void testParseUriReplacePatternsUneven() {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
