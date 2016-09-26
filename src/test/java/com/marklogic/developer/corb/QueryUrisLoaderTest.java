@@ -201,7 +201,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_adHocIsDirectory() {
+    public void testOpenAdHocIsDirectory() {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -221,7 +221,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_adHocIsEmpty() {
+    public void testOpenAdHocIsEmpty() {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -304,7 +304,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_badAdhocFilenameIsEmpty() {
+    public void testOpenBadAdhocFilenameIsEmpty() {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -324,7 +324,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_maxOptsFromModuleZero() {
+    public void testOpenMaxOptsFromModuleZero() {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -347,7 +347,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpen_InvalidMaxOptsFromModuleZero() {
+    public void testOpenInvalidMaxOptsFromModuleZero() {
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -388,7 +388,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testHasNext_resultSequenceIsNull() {
+    public void testHasNextResultSequenceIsNull() {
         boolean result;
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
             result = instance.hasNext();
@@ -401,7 +401,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testHasNext_resultSequenceHasNext() {
+    public void testHasNextResultSequenceHasNext() {
         try {
             ContentSource contentSource = mock(ContentSource.class);
             Session session = mock(Session.class);
@@ -437,7 +437,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testHasNext_resultSequenceNotHasNext() {
+    public void testHasNextResultSequenceNotHasNext() {
         ResultSequence resultSequence = mock(ResultSequence.class);
         when(resultSequence.hasNext()).thenReturn(false);
         boolean result;
@@ -489,14 +489,14 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = NoSuchElementException.class)
-    public void testNext_noQueue() throws CorbException {
+    public void testNextNoQueue() throws CorbException {
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.next();
         fail();
     }
 
     @Test
-    public void testClose_nullSession() {
+    public void testCloseNullSession() {
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.close();
         assertTrue(instance.getQueue().isEmpty());
@@ -533,7 +533,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testGetProperty_nullProperties() {
+    public void testGetPropertyNullProperties() {
         String result;
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
             result = instance.getProperty(foo);
@@ -552,7 +552,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testGetProperty_exists() {
+    public void testGetPropertyExists() {
         String key = foo;
         String value = bar;
         String result;
@@ -572,7 +572,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testGetMaxOptionsFromModule_validValue() {
+    public void testGetMaxOptionsFromModuleValidValue() {
         QueryUrisLoader instance = new QueryUrisLoader();
         Properties props = new Properties();
         props.setProperty(Options.MAX_OPTS_FROM_MODULE, "42");
@@ -581,7 +581,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testGetMaxOptionsFromModule_invalidValue() {
+    public void testGetMaxOptionsFromModuleInvalidValue() {
         QueryUrisLoader instance = new QueryUrisLoader();
         Properties props = new Properties();
         props.setProperty(Options.MAX_OPTS_FROM_MODULE, "eleven");
