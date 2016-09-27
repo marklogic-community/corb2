@@ -83,7 +83,7 @@ public class ModuleExecutorTest {
     private PrintStream systemErr = System.err;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         clearSystemProperties();
         LOG.addHandler(testLogger);
         System.setOut(new PrintStream(outContent));
@@ -91,7 +91,7 @@ public class ModuleExecutorTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         // Add additional tear down code here
         clearSystemProperties();
         System.setOut(systemOut);
@@ -99,8 +99,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testModuleExecutor1()
-            throws Exception {
+    public void testModuleExecutor1() {
         clearSystemProperties();
         ModuleExecutor result = new ModuleExecutor();
         assertNotNull(result);
@@ -116,8 +115,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testGetContentSource1()
-            throws Exception {
+    public void testGetContentSource1() {
         clearSystemProperties();
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
         System.setProperty(Options.EXPORT_FILE_NAME, EXPORT_FILE_NAME);
