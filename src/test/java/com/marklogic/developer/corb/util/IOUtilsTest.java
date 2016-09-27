@@ -30,6 +30,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -39,22 +41,23 @@ import static org.junit.Assert.*;
  */
 public class IOUtilsTest {
 
+    private static final Logger LOG = Logger.getLogger(IOUtilsTest.class.getName());
     private final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
     private final String exampleContent;
     private static final String NULL_OUTPUTSTREAM_MSG = "null OutputStream";
-    
+
     public IOUtilsTest() throws IOException {
         exampleContent = cat(new FileReader(exampleContentFile));
     }
 
     @Test
-    public void testCloseQuietly() throws IOException {
+    public void testCloseQuietly() {
         Closeable obj = new StringReader("foo");
         IOUtils.closeQuietly(obj);
     }
 
     @Test
-    public void testCloseQuietlyThrows() throws IOException {
+    public void testCloseQuietlyThrows() {
         Closeable closeable = new Closeable() {
             @Override
             public void close() throws IOException {
@@ -66,7 +69,7 @@ public class IOUtilsTest {
     }
 
     @Test
-    public void testCloseQuietlyNull() throws IOException {
+    public void testCloseQuietlyNull() {
         Closeable closeable = null;
         IOUtils.closeQuietly(closeable);
         //did not throw IOException
@@ -87,12 +90,17 @@ public class IOUtilsTest {
     }
 
     @Test
-    public void testCopyReaderOutputStream() throws IOException {
-        Reader in = new FileReader(exampleContentFile);
-        OutputStream out = new ByteArrayOutputStream();
+    public void testCopyReaderOutputStream() {
+        try {
+            Reader in = new FileReader(exampleContentFile);
+            OutputStream out = new ByteArrayOutputStream();
 
-        long result = copy(in, out);
-        assertEquals(exampleContent.length(), result);
+            long result = copy(in, out);
+            assertEquals(exampleContent.length(), result);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test(expected = IOException.class)
@@ -110,39 +118,62 @@ public class IOUtilsTest {
     }
 
     @Test
-    public void testCatReader() throws IOException {
-        Reader reader = new FileReader(exampleContentFile);
-        String result = cat(reader);
-        assertEquals(exampleContent, result);
+    public void testCatReader() {
+        try {
+            Reader reader = new FileReader(exampleContentFile);
+            String result = cat(reader);
+            assertEquals(exampleContent, result);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
-    public void testCatInputStream() throws IOException {
-        InputStream is = new FileInputStream(exampleContentFile);
-        byte[] result = cat(is);
-        assertArrayEquals(exampleContent.getBytes(), result);
+    public void testCatInputStream() {
+        try {
+            InputStream is = new FileInputStream(exampleContentFile);
+            byte[] result = cat(is);
+            assertArrayEquals(exampleContent.getBytes(), result);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
-    public void testGetSizeInputStream() throws IOException {
+    public void testGetSizeInputStream() {
         long result = -1;
-        try (InputStream is = new FileInputStream(exampleContentFile);){   
+        try (InputStream is = new FileInputStream(exampleContentFile);) {
             result = getSize(is);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
         assertEquals(exampleContent.length(), result);
     }
 
     @Test
-    public void testGetSizeReader() throws IOException {
-        Reader reader = new FileReader(exampleContentFile);
-        long result = getSize(reader);
-        assertEquals(exampleContent.length(), result);
+    public void testGetSizeReader() {
+        try {
+            Reader reader = new FileReader(exampleContentFile);
+            long result = getSize(reader);
+            assertEquals(exampleContent.length(), result);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
-    public void testGetBytes() throws IOException {
-        byte[] result = FileUtilsTest.getBytes(exampleContentFile);
-        assertArrayEquals(exampleContent.getBytes(), result);
+    public void testGetBytes() {
+        try {
+            byte[] result = FileUtilsTest.getBytes(exampleContentFile);
+            assertArrayEquals(exampleContent.getBytes(), result);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     public static String cat(Reader r) throws IOException {
@@ -197,7 +228,7 @@ public class IOUtilsTest {
         long totalBytes = 0;
         int len;
         char[] buf = new char[BUFFER_SIZE];
-        byte[] bite = null;
+        byte[] bite;
         while ((len = source.read(buf)) > -1) {
             bite = new String(buf).getBytes();
             // len? different for char vs byte?
