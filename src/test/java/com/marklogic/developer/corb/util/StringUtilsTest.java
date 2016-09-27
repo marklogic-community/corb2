@@ -22,6 +22,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -31,6 +33,7 @@ import static org.junit.Assert.*;
  */
 public class StringUtilsTest {
 
+    private static final Logger LOG = Logger.getLogger(StringUtilsTest.class.getName());
     private static final String ADHOC_SUFFIX = "|ADHOC";
     private static final String INLINE_JAVASCRIPT_CODE = "var i = 0; return i;";
     private static final String UTILITIES_FILENAME = "Utilities.xqy";
@@ -72,9 +75,6 @@ public class StringUtilsTest {
         assertFalse(result);
     }
 
-    /**
-     * Test of getPathExtension method, of class Utilities.
-     */
     @Test
     public void testGetPathExtension() {
         String result = StringUtils.getPathExtension("dirA/dirB/filename.csv");
@@ -94,9 +94,6 @@ public class StringUtilsTest {
         assertEquals(path, result);
     }
 
-    /**
-     * Test of join method, of class Utilities.
-     */
     @Test
     public void testJoinListString() {
         List<String> items = Arrays.asList(new String[]{"a", "b", "c"});
@@ -113,14 +110,11 @@ public class StringUtilsTest {
 
     @Test
     public void testJoinEmptyList() {
-        List<String> items = new ArrayList<>();
+        List<String> items = new ArrayList<>(0);
         String result = StringUtils.join(items, DELIM);
         assertEquals("", result);
     }
 
-    /**
-     * Test of join method, of class Utilities.
-     */
     @Test
     public void testJoinObjectArrString() {
         Object[] items = new Object[2];
@@ -137,9 +131,6 @@ public class StringUtilsTest {
         StringUtils.join(items, DELIM);
     }
 
-    /**
-     * Test of join method, of class Utilities.
-     */
     @Test
     public void testJoinStringArrString() {
         String[] items = new String[]{"a", "b", "c"};
@@ -155,9 +146,6 @@ public class StringUtilsTest {
         StringUtils.join(items, delim);
     }
 
-    /**
-     * Test of stringToBoolean method, of class Utilities.
-     */
     @Test
     public void testStringToBooleanString() {
         assertFalse(StringUtils.stringToBoolean(""));
@@ -180,27 +168,18 @@ public class StringUtilsTest {
         assertTrue(StringUtils.stringToBoolean("Y"));
     }
 
-    /**
-     * Test of stringToBoolean method, of class Utilities.
-     */
     @Test
     public void testStringToBooleanStringBoolean() {
         assertFalse(StringUtils.stringToBoolean(null, false));
         assertTrue(StringUtils.stringToBoolean(null, true));
     }
 
-    /**
-     * Test of buildModulePath method, of class Utilities.
-     */
     @Test
     public void testBuildModulePathClass() {
         String result = StringUtils.buildModulePath(String.class);
         assertEquals("/java/lang/String.xqy", result);
     }
 
-    /**
-     * Test of buildModulePath method, of class Utilities.
-     */
     @Test
     public void testBuildModulePathPackageString() {
         Package modulePackage = this.getClass().getPackage();
@@ -217,19 +196,15 @@ public class StringUtilsTest {
 
     @Test
     public void testBuildModulePath() {
+        String fooUtilities = "/foo/Utilities.xqy";
         assertEquals(ABSOLUTE_UTILITIES_FILE, StringUtils.buildModulePath(SLASH, ABSOLUTE_UTILITIES_FILE));
         assertEquals(ABSOLUTE_UTILITIES_FILE, StringUtils.buildModulePath(SLASH, UTILITIES_FILENAME));
-        assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo", UTILITIES_FILENAME));
-        assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo", ABSOLUTE_UTILITIES_FILE));
-        assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo/", UTILITIES_FILENAME));
+        assertEquals(fooUtilities, StringUtils.buildModulePath("/foo", UTILITIES_FILENAME));
+        assertEquals(fooUtilities, StringUtils.buildModulePath("/foo", ABSOLUTE_UTILITIES_FILE));
+        assertEquals(fooUtilities, StringUtils.buildModulePath("/foo/", UTILITIES_FILENAME));
         assertEquals("/foo//", StringUtils.buildModulePath("/foo/", SLASH));
     }
 
-    /**
-     * Test of dumpHex method, of class Utilities.
-     *
-     * @throws java.lang.Exception
-     */
     @Test
     public void testDumpHex() throws Exception {
         String result = StringUtils.dumpHex("abcd", "UTF-8");
@@ -237,8 +212,12 @@ public class StringUtilsTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testDumpHexNull() throws Exception {
-        StringUtils.dumpHex(null, "UTF-8");
+    public void testDumpHexNull() {
+        try {
+            StringUtils.dumpHex(null, "UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
         fail();
     }
 
@@ -329,9 +308,6 @@ public class StringUtilsTest {
         assertFalse(StringUtils.isJavaScriptModule(INLINE_XQUERY_PREFIX + "var foo = 1; return foo;|ADHOC"));
     }
 
-    /**
-     * Test of isInlineModule method, of class StringUtils.
-     */
     @Test
     public void testIsInlineModule() {
         String code = INLINE_JAVASCRIPT_CODE;
@@ -350,9 +326,6 @@ public class StringUtilsTest {
         assertFalse(StringUtils.isInlineModule("INLINE-RUBY|" + code)); //wrong language
     }
 
-    /**
-     * Test of inlineModuleLanguage method, of class StringUtils.
-     */
     @Test
     public void testInlineModuleLanguageJAVASCRIPT() {
         String code = INLINE_JAVASCRIPT_CODE;
@@ -375,9 +348,6 @@ public class StringUtilsTest {
         assertEquals("", result);
     }
 
-    /**
-     * Test of inlineModuleCode method, of class StringUtils.
-     */
     @Test
     public void testInlineModuleCode() {
         String code = INLINE_JAVASCRIPT_CODE;
