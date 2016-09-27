@@ -52,7 +52,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
     public static final String SSL_KEYSTORE_PASSWORD = com.marklogic.developer.corb.Options.SSL_KEYSTORE_PASSWORD;
     public static final String SSL_KEYSTORE_TYPE = com.marklogic.developer.corb.Options.SSL_KEYSTORE_TYPE;
     public static final String SSL_PROPERTIES_FILE = com.marklogic.developer.corb.Options.SSL_PROPERTIES_FILE;
-    private static final String delimiter = ",";
+    private static final String DELIMITER = ",";
     
     /**
      * @return acceptable list of cipher suites
@@ -62,7 +62,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
         if (properties != null) {
             String cipherSuites = properties.getProperty(SSL_CIPHER_SUITES);
             if (isNotEmpty(cipherSuites)) {
-                String[] cipherSuitesList = cipherSuites.split(delimiter);
+                String[] cipherSuitesList = cipherSuites.split(DELIMITER);
                 LOG.log(Level.INFO, "Using cipher suites: {0}", cipherSuitesList);
                 return cipherSuitesList;
             }
@@ -78,7 +78,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
         if (properties != null) {
             String enabledProtocols = properties.getProperty(SSL_ENABLED_PROTOCOLS);
             if (isNotEmpty(enabledProtocols)) {
-                String[] enabledProtocolsList = enabledProtocols.split(delimiter);
+                String[] enabledProtocolsList = enabledProtocols.split(DELIMITER);
                 LOG.log(Level.INFO, "Using enabled protocols: {0}", enabledProtocolsList);
                 return enabledProtocolsList;
             }
