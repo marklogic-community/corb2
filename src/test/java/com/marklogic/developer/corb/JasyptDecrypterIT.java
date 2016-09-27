@@ -36,6 +36,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -45,10 +46,17 @@ import org.junit.Test;
 public class JasyptDecrypterIT {
 
     private static final Logger LOG = Logger.getLogger(JasyptDecrypterIT.class.getName());
+    private static final Logger JASYPT_DECRYPTER_LOG = Logger.getLogger(JasyptDecrypter.class.getName());
     private final TestHandler testLogger = new TestHandler();
     private static final String TEMP_PREFIX = "temp";
     private static final String PROPERTIES_SUFFIX = ".properties";
     private static final String TWO_SPACES = " ";
+
+    @Before
+    public void setUp() {
+        clearSystemProperties();
+        JASYPT_DECRYPTER_LOG.addHandler(testLogger);
+    }
 
     @Test
     public void testInitDecrypter() {

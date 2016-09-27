@@ -102,7 +102,6 @@ public class ManagerIT {
             Manager.main(args);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
-            fail();
         }
     }
 
@@ -147,7 +146,6 @@ public class ManagerIT {
             Manager.main(args);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
-            fail();
         }
     }
 

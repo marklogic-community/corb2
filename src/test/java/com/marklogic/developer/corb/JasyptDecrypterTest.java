@@ -20,8 +20,6 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
