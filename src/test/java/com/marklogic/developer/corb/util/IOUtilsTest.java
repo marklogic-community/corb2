@@ -91,10 +91,8 @@ public class IOUtilsTest {
 
     @Test
     public void testCopyReaderOutputStream() {
-        try {
-            Reader in = new FileReader(exampleContentFile);
+        try (Reader in = new FileReader(exampleContentFile)){       
             OutputStream out = new ByteArrayOutputStream();
-
             long result = copy(in, out);
             assertEquals(exampleContent.length(), result);
         } catch (IOException ex) {
@@ -112,15 +110,15 @@ public class IOUtilsTest {
 
     @Test(expected = IOException.class)
     public void testCopyReaderOutputStreamIsNull() throws IOException {
-        Reader in = new FileReader(exampleContentFile);
-        OutputStream out = null;
-        copy(in, out);
+        try (Reader in = new FileReader(exampleContentFile)) {
+            OutputStream out = null;
+            copy(in, out);
+        }
     }
 
     @Test
     public void testCatReader() {
-        try {
-            Reader reader = new FileReader(exampleContentFile);
+        try (Reader reader = new FileReader(exampleContentFile)) {         
             String result = cat(reader);
             assertEquals(exampleContent, result);
         } catch (IOException ex) {
@@ -131,8 +129,7 @@ public class IOUtilsTest {
 
     @Test
     public void testCatInputStream() {
-        try {
-            InputStream is = new FileInputStream(exampleContentFile);
+        try (InputStream is = new FileInputStream(exampleContentFile)) {
             byte[] result = cat(is);
             assertArrayEquals(exampleContent.getBytes(), result);
         } catch (IOException ex) {
@@ -155,8 +152,7 @@ public class IOUtilsTest {
 
     @Test
     public void testGetSizeReader() {
-        try {
-            Reader reader = new FileReader(exampleContentFile);
+        try (Reader reader = new FileReader(exampleContentFile)) {
             long result = getSize(reader);
             assertEquals(exampleContent.length(), result);
         } catch (IOException ex) {
