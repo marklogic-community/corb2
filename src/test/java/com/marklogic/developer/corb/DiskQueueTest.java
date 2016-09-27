@@ -134,6 +134,7 @@ public class DiskQueueTest {
         try {
             instance.finalize();
         } catch (Throwable ex) {
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
