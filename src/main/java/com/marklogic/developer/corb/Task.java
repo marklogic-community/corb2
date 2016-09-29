@@ -18,15 +18,10 @@
  */
 package com.marklogic.developer.corb;
 
-import java.util.Properties;
-
-/**
- * @author Bhagat Bandlamudi, MarkLogic Corporation
- * 
- */
-import java.util.concurrent.Callable;
-
 import com.marklogic.xcc.ContentSource;
+import java.util.concurrent.Callable;
+import java.util.Properties;
+import java.util.TimeZone;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
@@ -47,7 +42,9 @@ public interface Task extends Callable<String[]> {
 	void setAdhocQuery(String adhocQuery);
 
 	void setQueryLanguage(String language);
-
+    
+    void setTimeZone(TimeZone timeZone);
+    
 	/**
 	 * If additional data is sent from CUSTOM URI module, it is available in
 	 * properties with key @{value #URIS_BATCH_REF}

@@ -23,6 +23,7 @@ import static com.marklogic.developer.corb.Options.INIT_MODULE;
 import static com.marklogic.developer.corb.Options.POST_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
+import static com.marklogic.developer.corb.Options.XCC_TIME_ZONE;
 import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 import static com.marklogic.developer.corb.util.StringUtils.getInlineModuleCode;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
@@ -32,6 +33,8 @@ import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
+import java.util.TimeZone;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
@@ -164,8 +167,16 @@ public class TaskFactory {
             }
         }
         task.setModuleType(moduleType);
-        task.setContentSource(manager.contentSource);
-        task.setProperties(manager.properties);
+        task.setContentSource(manager.getContentSource());
+        
+        Properties managerProperties = manager.getProperties();
+        task.setProperties(managerProperties);
+        
+        String timeZoneId = managerProperties.getProperty(XCC_TIME_ZONE);
+        if (timeZoneId != null) {
+            TimeZone timeZone = TimeZone.getTimeZone(timeZoneId);
+            task.setTimeZone(timeZone);
+        }
         task.setInputURI(uris);
         task.setFailOnError(failOnError);
         task.setExportDir(manager.getOptions().getExportFileDir());

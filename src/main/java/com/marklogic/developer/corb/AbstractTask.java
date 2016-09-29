@@ -35,6 +35,7 @@ import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
+import com.marklogic.xcc.RequestOptions;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.QueryException;
@@ -55,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TimeZone;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
@@ -83,6 +85,7 @@ public abstract class AbstractTask implements Task {
 
     protected String adhocQuery;
     protected String language;
+    protected TimeZone timeZone;
     protected String exportDir;
 
     private static final Object SYNC_OBJ = new Object();
@@ -124,6 +127,11 @@ public abstract class AbstractTask implements Task {
         this.language = language;
     }
 
+    @Override
+    public void setTimeZone(TimeZone timeZone) {
+        this.timeZone = timeZone;
+    }
+    
     @Override
     public void setProperties(Properties properties) {
         this.properties = properties;
@@ -201,11 +209,13 @@ public abstract class AbstractTask implements Task {
             } else {
                 request = session.newModuleInvoke(moduleUri);
             }
-
+            RequestOptions requestOptions = request.getOptions();
             if (language != null) {
-                request.getOptions().setQueryLanguage(language);
+                requestOptions.setQueryLanguage(language);
             }
-
+            if (timeZone != null) {
+                requestOptions.setTimeZone(timeZone);
+            }
             if (inputUris != null && inputUris.length > 0) {
                 if (inputUris.length == 1) {
                     request.setNewStringVariable(URI, inputUris[0]);
@@ -231,7 +241,7 @@ public abstract class AbstractTask implements Task {
                     }
                 }
             }
-
+            
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);
             retryCount = 0;
@@ -341,6 +351,7 @@ public abstract class AbstractTask implements Task {
         inputUris = null;
         adhocQuery = null;
         language = null;
+        timeZone = null;
         exportDir = null;
     }
 

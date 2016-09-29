@@ -857,6 +857,17 @@ public final class Options {
     public static final String XCC_PORT = "XCC-PORT";
 
     /**
+     * The ID for the TimeZone that should be set on XCC RequestOption. 
+     * When a value is specified, it is parsed using TimeZone.getTimeZone() and 
+     * set on XCC RequestOption for each Task. Invalid ID values will produce the GMT TimeZone.
+     * If not specified, XCC uses the JVM default TimeZone.
+     * 
+     * @see java.util.TimeZone
+     * @since 2.4.0
+     */
+    public static final String XCC_TIME_ZONE = "XCC-TIME-ZONE";
+    
+    /**
      * Required if {@value #XCC_CONNECTION_URI} is not specified.
      */
     @Usage(description = "Required if XCC-CONNECTION-URI is not specified.")

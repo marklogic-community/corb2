@@ -21,6 +21,7 @@ package com.marklogic.developer.corb;
 import com.marklogic.xcc.ContentSource;
 import java.io.File;
 import java.io.IOException;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.Test;
@@ -32,7 +33,7 @@ import static org.mockito.Mockito.mock;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class TaskFactoryTest {
-    
+
     private static final Logger LOG = Logger.getLogger(TaskFactoryTest.class.getName());
     private static final String MODULE = "module";
 
@@ -108,6 +109,46 @@ public class TaskFactoryTest {
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newProcessTask(uris);
         assertNotNull(result);
+    }
+
+    @Test
+    public void testCustomTimeZone() {
+        String[] uris = new String[]{"testCustomTimeZone"};
+        String timeZoneID = "Africa/Conakry";
+        Manager manager = new Manager();
+        manager.options.setProcessModule(MODULE);
+        manager.getProperties().setProperty(Options.XCC_TIME_ZONE, timeZoneID);
+        manager.contentSource = mock(ContentSource.class);
+
+        TaskFactory instance = new TaskFactory(manager);
+        Task result = instance.newProcessTask(uris);
+        assertEquals(timeZoneID, ((AbstractTask) result).timeZone.getID());
+    }
+
+    @Test
+    public void testDefaultTimeZone() {
+        String[] uris = new String[]{"testDefaultTimeZone"};
+        Manager manager = new Manager();
+        manager.options.setProcessModule(MODULE);
+        manager.contentSource = mock(ContentSource.class);
+
+        TaskFactory instance = new TaskFactory(manager);
+        Task result = instance.newProcessTask(uris);
+        assertNull(((AbstractTask) result).timeZone);
+    }
+
+    @Test
+    public void testInvalidTimeZone() {
+        String[] uris = new String[]{"testInvalidTimeZone"};
+        String timeZoneID = "moon/darkside";
+        Manager manager = new Manager();
+        manager.options.setProcessModule(MODULE);
+        manager.getProperties().setProperty(Options.XCC_TIME_ZONE, timeZoneID);
+        manager.contentSource = mock(ContentSource.class);
+
+        TaskFactory instance = new TaskFactory(manager);
+        Task result = instance.newProcessTask(uris);
+        assertEquals(TimeZone.getTimeZone("GMT"), ((AbstractTask) result).timeZone);
     }
 
     @Test(expected = NullPointerException.class)
