@@ -11,6 +11,12 @@ Corb v2.2.0 or later requires [marklogic-xcc-8.0.*.jar or later](https://develop
 CoRB uses Java logger. To customize logging, specify a logging configuration file using Java system argument  
 `-Djava.util.logging.config.file=/path/to/logging.properties`
 
+### Getting Help
+To get help with CoRB
+* Subscribe to [CoRB2 mailing list](http://developer.marklogic.com/mailman/listinfo/corb2)
+* Post a message to [Stack Overflow[(http://stackoverflow.com/) with markogic tag. 
+* Submit issues or feature requests at https://github.com/marklogic/corb2/issues
+
 ### Building CoRB
 You can build CoRB in the same way as any Gradle project:
 
