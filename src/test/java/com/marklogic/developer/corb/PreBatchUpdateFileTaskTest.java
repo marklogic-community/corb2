@@ -18,48 +18,27 @@
  */
 package com.marklogic.developer.corb;
 
+import com.marklogic.xcc.Request;
+import com.marklogic.xcc.exceptions.RequestPermissionException;
 import java.io.File;
 import java.util.Properties;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class PreBatchUpdateFileTaskTest {
-    
-    public PreBatchUpdateFileTaskTest() {
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
-    
-    @Before
-    public void setUp() {
-    }
-    
-    @After
-    public void tearDown() {
-    }
 
     /**
      * Test of getTopContent method, of class PreBatchUpdateFileTask.
      */
     @Test
     public void testGetTopContent() {
-        System.out.println("getTopContent");
         Properties props = new Properties();
-        props.setProperty("EXPORT-FILE-TOP-CONTENT", "foo@" + Manager.URIS_BATCH_REF + "baz");
+        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "foo@" + Manager.URIS_BATCH_REF + "baz");
         props.setProperty(Manager.URIS_BATCH_REF, "bar");
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.properties = props;
@@ -67,9 +46,8 @@ public class PreBatchUpdateFileTaskTest {
         assertEquals("foobarbaz", result);
     }
 
-     @Test
+    @Test
     public void testGetTopContent_isNull() {
-        System.out.println("getTopContent");
         Properties props = new Properties();
         props.setProperty(Manager.URIS_BATCH_REF, "bar");
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
@@ -77,34 +55,32 @@ public class PreBatchUpdateFileTaskTest {
         String result = instance.getTopContent();
         assertNull(result);
     }
-    
-     @Test
+
+    @Test
     public void testGetTopContent_urisBatchRefIsNull() {
-        System.out.println("getTopContent");
         Properties props = new Properties();
         String val = "foo@" + Manager.URIS_BATCH_REF + "baz";
-        props.setProperty("EXPORT-FILE-TOP-CONTENT", val);
+        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, val);
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.properties = props;
         String result = instance.getTopContent();
         assertEquals(val, result);
     }
-    
+
     /**
      * Test of writeTopContent method, of class PreBatchUpdateFileTask.
      */
     @Test
     public void testWriteTopContent() throws Exception {
-        System.out.println("writeTopContent");
         String content = "foo,bar,baz";
         File tempDir = TestUtils.createTempDirectory();
         File tempFile = new File(tempDir, "topContent");
         tempFile.createNewFile();
         tempFile.deleteOnExit();
         Properties props = new Properties();
-        props.setProperty("EXPORT-FILE-TOP-CONTENT", content);
-        props.setProperty("EXPORT-FILE-NAME", tempFile.getName());
-        
+        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, content);
+        props.setProperty(Options.EXPORT_FILE_NAME, tempFile.getName());
+
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.properties = props;
         instance.exportDir = tempDir.toString();
@@ -116,31 +92,43 @@ public class PreBatchUpdateFileTaskTest {
     /**
      * Test of call method, of class PreBatchUpdateFileTask.
      */
-    @Test (expected = NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void testCall_npe() throws Exception {
-        System.out.println("call");
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.call();
+        fail();
     }
-    
-        @Test
+
+    @Test
     public void testCall() throws Exception {
-        System.out.println("writeTopContent");
         String content = "foo,bar,baz";
         File tempDir = TestUtils.createTempDirectory();
         File tempFile = new File(tempDir, "topContent");
         tempFile.createNewFile();
         tempFile.deleteOnExit();
         Properties props = new Properties();
-        props.setProperty("EXPORT-FILE-TOP-CONTENT", content);
-        props.setProperty("EXPORT-FILE-NAME", tempFile.getName());
-        
+        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, content);
+        props.setProperty(Options.EXPORT_FILE_NAME, tempFile.getName());
+
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.properties = props;
         instance.exportDir = tempDir.toString();
         File partFile = new File(tempDir, instance.getPartFileName());
         instance.call();
-        
+
         assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(partFile));
+    }
+    
+    @Test
+    public void testHasRetryableMessage() {
+        Request req = mock(Request.class);
+        AbstractTask instance = new PreBatchUpdateFileTask();
+        instance.properties = new Properties();
+        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_MESSAGE, "FOO,Authentication failure for user,BAR");
+        RequestPermissionException exception = new RequestPermissionException(AbstractTaskTest.REJECTED_MSG, req, AbstractTaskTest.USER_NAME, false);
+        assertFalse(instance.hasRetryableMessage(exception));
+
+        exception = new RequestPermissionException("Authentication failure for user 'user-name'", req, AbstractTaskTest.USER_NAME, false);
+        assertTrue(instance.hasRetryableMessage(exception));
     }
 }

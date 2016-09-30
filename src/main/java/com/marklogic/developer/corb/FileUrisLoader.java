@@ -25,27 +25,28 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
-import java.util.logging.Level;
+import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
 
 public class FileUrisLoader extends AbstractUrisLoader {
 
-	BufferedReader br = null;
-	String nextLine = null;
+	protected BufferedReader br;
+	protected String nextLine;
 	protected static final Logger LOG = Logger.getLogger(FileUrisLoader.class.getName());
-
+    private static final String EXCEPTION_MSG_PROBLEM_READING_URIS_FILE = "Problem while reading the uris file";
+    
 	@Override
 	public void open() throws CorbException {
         
 		parseUriReplacePatterns();
 		
 		try {
-			String fileName = options.getUrisFile();
+			String fileName = getOptions().getUrisFile();
 			LineNumberReader lnr = null;
 			try {
 				lnr = new LineNumberReader(new FileReader(fileName));
 				lnr.skip(Long.MAX_VALUE);
-				total = lnr.getLineNumber() + 1;
+				this.setTotalCount(lnr.getLineNumber() + 1);
 			} finally {
                 closeQuietly(lnr);
 			}
@@ -54,7 +55,7 @@ public class FileUrisLoader extends AbstractUrisLoader {
 			br = new BufferedReader(fr);
 
 		} catch (Exception exc) {
-			throw new CorbException("Problem loading data from uris file " + options.getUrisFile(), exc);
+			throw new CorbException("Problem loading data from uris file " + getOptions().getUrisFile(), exc);
 		}
 	}
 
@@ -72,7 +73,7 @@ public class FileUrisLoader extends AbstractUrisLoader {
 			try {
 				nextLine = readNextLine();
 			} catch (Exception exc) {
-				throw new CorbException("Problem while reading the uris file");
+				throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_URIS_FILE);
 			}
 		}
 		return nextLine != null;
@@ -88,7 +89,7 @@ public class FileUrisLoader extends AbstractUrisLoader {
 			try {
 				line = readNextLine();
 			} catch (Exception exc) {
-				throw new CorbException("Problem while reading the uris file");
+				throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_URIS_FILE);
 			}
 		}
 		for (int i = 0; line != null && i < replacements.length - 1; i += 2) {
@@ -105,7 +106,7 @@ public class FileUrisLoader extends AbstractUrisLoader {
 				br.close();
 				br = null;
 			} catch (Exception exc) {
-				LOG.log(Level.SEVERE, "while closing uris file reader", exc);
+				LOG.log(SEVERE, "while closing uris file reader", exc);
 			}
 		}
 		cleanup();

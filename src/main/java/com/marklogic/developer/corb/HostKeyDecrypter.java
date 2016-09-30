@@ -18,6 +18,8 @@
  */
 package com.marklogic.developer.corb;
 
+import static java.util.logging.Level.INFO;
+
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
@@ -33,8 +35,11 @@ import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.Scanner;
+import java.util.logging.Logger;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -44,21 +49,32 @@ import javax.xml.bind.DatatypeConverter;
 
 /**
  * Class that uses a private key associate with a particular host Key is
- * calculated based on SHA-256 hash of internal server ids Also has endpoint to
- * encrypt plaintext passwords
+ * calculated based on SHA-256 hash of internal server ids. Also has and
+ * endpoint to encrypt plaintext passwords
  *
  * @author Richard Kennedy
+ * @since 2.2.0
  */
 public class HostKeyDecrypter extends AbstractDecrypter {
 
     private static byte[] privateKey;
     private static final byte[] DEFAULT_BYTES = {45, 32, 67, 34, 67, 23, 21, 45, 7, 89, 3, 27, 39, 62, 15};
     private static final byte[] HARD_CODED_BYTES = {120, 26, 58, 29, 43, 77, 95, 103, 29, 86, 97, 105, 52, 16, 42, 63, 37, 100, 45, 109, 108, 79, 75, 71, 11, 46, 36, 62, 124, 12, 7, 127};
+    private static final String AES = "AES";
+    private static final String USAGE_FORMAT = "java -cp marklogic-corb-" + AbstractManager.VERSION + ".jar " + HostKeyDecrypter.class.getName() + "{0} ";
+    private static final String EXCEPTION_MGS_SERIAL_NOT_FOUND = "Unable to find serial number on {0}"; 
+    private static final String METHOD_TEST = "test";
+    private static final String METHOD_ENCRYPT = "encrypt";
     // currently only usage is encrypt
-    private static final String USAGE = "Encrypt:\n java -cp marklogic-corb-2.2.*.jar com.marklogic.developer.corb.HostKeyDecrypter encrypt clearText\n"
-            + "Test:\n java -cp marklogic-corb-2.2.*.jar com.marklogic.developer.corb.HostKeyDecrypter test";
+    protected static final String USAGE = "Encrypt:\n "
+            + MessageFormat.format(USAGE_FORMAT, new Object[]{METHOD_ENCRYPT + " clearText"})
+            + "\nTest:\n "
+            + MessageFormat.format(USAGE_FORMAT, new Object[]{METHOD_TEST});
 
+    protected static final Logger LOG = Logger.getLogger(HostKeyDecrypter.class.getName());
+        
     protected enum OSType {
+
         Windows {
             /**
              * get bios serial number on windows machine
@@ -86,10 +102,12 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                     if (!sn.isEmpty()) {
                         return sn.getBytes();
                     } else {
-                        throw new IllegalStateException("Unable to find serial number on Windows");
-                    }   
+                        throw new IllegalStateException(MessageFormat.format(EXCEPTION_MGS_SERIAL_NOT_FOUND, new Object[]{this.toString()}));
+                    }
                 } finally {
-                    if (sc != null) { sc.close(); } //Scanner doesn't implement Closable in 1.6
+                    if (sc != null) {
+                        sc.close();
+                    } //Scanner doesn't implement Closable in 1.6
                     closeOrThrowRuntime(br);
                 }
             }
@@ -114,7 +132,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                             return sn.getBytes();
                         }
                     }
-                    throw new IllegalStateException("Unable to find serial number on Linux");
+                    throw new IllegalStateException(MessageFormat.format(EXCEPTION_MGS_SERIAL_NOT_FOUND, new Object[]{this.toString()}));
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 } finally {
@@ -143,7 +161,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                             return sn.getBytes();
                         }
                     }
-                    throw new IllegalStateException("Unable to find serial number on Linux");
+                    throw new IllegalStateException(MessageFormat.format(EXCEPTION_MGS_SERIAL_NOT_FOUND, new Object[]{this.toString()}));
                 } catch (IOException e) {
                     throw new RuntimeException("Required to have lshal command installed on linux machine", e);
                 } finally {
@@ -157,7 +175,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                 return DEFAULT_BYTES;
             }
         };
-
+        
         public abstract byte[] getSN();
         
         private static void closeOrThrowRuntime(Closeable obj) {
@@ -169,11 +187,8 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                 }
             }
         }
-        
-        private static BufferedReader read(String command) {
-            OutputStream os = null;
-            InputStream is = null;
 
+        private static BufferedReader read(String command) {
             Runtime runtime = Runtime.getRuntime();
             Process process = null;
             try {
@@ -182,15 +197,13 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                 throw new RuntimeException(e);
             }
 
-            os = process.getOutputStream();
-            is = process.getInputStream();
-
+            OutputStream os = process.getOutputStream();
             try {
                 os.close();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-
+            InputStream is = process.getInputStream();
             return new BufferedReader(new InputStreamReader(is));
         }
     }
@@ -199,6 +212,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     protected void init_decrypter() throws IOException, ClassNotFoundException {
         try {
             privateKey = getPrivateKey();
+            LOG.log(INFO, "Initialized HostKeyDecrypter");
         } catch (NoSuchAlgorithmException e) {
             new RuntimeException("Error constructing private key", e);
         }
@@ -294,7 +308,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         OSType type = OSType.Other;
         if (osName != null) {
             String os = osName.toLowerCase(Locale.ENGLISH);
-            if ((os.contains("mac")) || (os.contains("darwin"))) {
+            if (os.contains("mac") || os.contains("darwin")) {
                 type = OSType.Mac;
             } else if (os.contains("win")) {
                 type = OSType.Windows;
@@ -320,11 +334,13 @@ public class HostKeyDecrypter extends AbstractDecrypter {
      * @throws SocketException
      * @throws UnknownHostException
      */
-    public static String encrypt(String plaintext) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, UnknownHostException, SocketException {
+    public static String encrypt(String plaintext)
+            throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
+            IllegalBlockSizeException, BadPaddingException, UnknownHostException, SocketException {
         // secret key based off of internal private key
         byte[] encryptionPrivateKey = getPrivateKey();
-        Key key = new SecretKeySpec(encryptionPrivateKey, "AES");
-        Cipher cipher = Cipher.getInstance("AES");
+        Key key = new SecretKeySpec(encryptionPrivateKey, AES);
+        Cipher cipher = Cipher.getInstance(AES);
         // encrypting with private key and random for initialization vector
         cipher.init(Cipher.ENCRYPT_MODE, key, new SecureRandom());
         byte[] encryptedVal = cipher.doFinal(plaintext.getBytes());
@@ -336,7 +352,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
      * decrypts encrypted password using private key internal to host and AES
      * 256 algorithm and returns plaintext password
      *
-     * @param String encryptedtext
+     * @param String encrypted text
      * @author Richard Kennedy
      * @throws NoSuchPaddingException
      * @throws NoSuchAlgorithmException
@@ -344,8 +360,8 @@ public class HostKeyDecrypter extends AbstractDecrypter {
      */
     private static String decrypt(String encryptedText) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
         byte[] encryptedTextBytes = DatatypeConverter.parseHexBinary(encryptedText);
-        SecretKeySpec secretSpec = new SecretKeySpec(privateKey, "AES");
-        Cipher cipher = Cipher.getInstance("AES");
+        SecretKeySpec secretSpec = new SecretKeySpec(privateKey, AES);
+        Cipher cipher = Cipher.getInstance(AES);
         cipher.init(Cipher.DECRYPT_MODE, secretSpec, new SecureRandom());
         byte[] decryptedTextBytes = null;
         try {
@@ -363,12 +379,12 @@ public class HostKeyDecrypter extends AbstractDecrypter {
      * @param args
      * @throws java.lang.Exception
      */
-    public static void main(String[] args) throws Exception {
+    public static void main(String... args) throws Exception {
         String method = (args != null && args.length > 0) ? args[0].trim() : "";
 
-        if (method.equals("encrypt") && args.length == 2) {
+        if (METHOD_ENCRYPT.equals(method) && args.length == 2) {
             System.out.println(encrypt(args[1].trim()));
-        } else if (method.equals("test")) {
+        } else if (METHOD_TEST.equals(method)) {
             HostKeyDecrypter decrypter = new HostKeyDecrypter();
             decrypter.init(System.getProperties());
             String original = "234Helloworld!!!";

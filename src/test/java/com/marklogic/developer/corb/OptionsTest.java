@@ -16,7 +16,7 @@
   * * The use of the Apache License does not indicate that this project is
   * * affiliated with the Apache Software Foundation.
  */
-package com.marklogic.developer.corb.util;
+package com.marklogic.developer.corb;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -25,35 +25,30 @@ import static org.junit.Assert.*;
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class NumberUtilsTest {
+public class OptionsTest {
 
     /**
-     * Test of toInt method, of class NumberUtils.
+     * Ensure that each Option has a @Usage annotation, used to generate
+     * commandline usage message
      */
     @Test
-    public void testToInt_String() {
-        int result = NumberUtils.toInt("6");
-        assertEquals(6, result);
+    public void testUsage() {
+        for (java.lang.reflect.Field field : Options.class.getDeclaredFields()) {
+            //Verify that all of the String constants
+            if (String.class.isInstance(field.getType())) {
+                Usage usage = field.getAnnotation(Usage.class);
+                System.out.println(field.getName());
+                assertNotNull(usage);
+            }
+        }
     }
 
     @Test
-    public void testToInt_String_invalid() {
-        int result = NumberUtils.toInt("six");
-        assertEquals(0, result);
-    }
-    
-    /**
-     * Test of toInt method, of class NumberUtils.
-     */
-    @Test
-    public void testToInt_String_int() {
-        int result = NumberUtils.toInt("7", -1);
-        assertEquals(7, result);
-    }
-    
-    @Test
-    public void testToInt_String_int_invalid() {
-        int result = NumberUtils.toInt("seven", -1);
-        assertEquals(-1, result);
+    public void testStaticFields() {
+        for (java.lang.reflect.Field field : Options.class.getDeclaredFields()) {
+            if (String.class.isInstance(field.getType())) {
+                assertTrue(java.lang.reflect.Modifier.isStatic(field.getModifiers()));
+            }
+        }
     }
 }

@@ -19,10 +19,6 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.xcc.ResultSequence;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -31,32 +27,12 @@ import static org.junit.Assert.*;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class TransformTest {
-    
-    public TransformTest() {
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
-    
-    @Before
-    public void setUp() {
-    }
-    
-    @After
-    public void tearDown() {
-    }
 
     /**
      * Test of processResult method, of class Transform.
      */
     @Test
     public void testProcessResult() throws Exception {
-        System.out.println("processResult");
         ResultSequence seq = null;
         Transform instance = new Transform();
         String result = instance.processResult(seq);
@@ -68,10 +44,10 @@ public class TransformTest {
      */
     @Test
     public void testCall() throws Exception {
-        System.out.println("call");
         Transform instance = new Transform();
         String[] result = instance.call();
-        assertNull(result);
+        assertNotNull(result);
+        assertTrue(result.length == 0);
     }
-    
+
 }

@@ -24,10 +24,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
 import java.util.Properties;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -38,31 +34,13 @@ import static org.mockito.Mockito.mock;
  */
 public class FileUrisLoaderTest {
 
-    public FileUrisLoaderTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
+    private static final String URIS_FILE = "src/test/resources/uris-file.txt";
+    
     /**
      * Test of setOptions method, of class FileUrisLoader.
      */
     @Test
     public void testSetOptions_null() {
-        System.out.println("setOptions");
         TransformOptions options = null;
         FileUrisLoader instance = new FileUrisLoader();
         instance.setOptions(options);
@@ -72,7 +50,6 @@ public class FileUrisLoaderTest {
 
     @Test
     public void testSetOptions() {
-        System.out.println("setOptions");
         TransformOptions options = mock(TransformOptions.class);
         FileUrisLoader instance = new FileUrisLoader();
         instance.setOptions(options);
@@ -85,7 +62,6 @@ public class FileUrisLoaderTest {
      */
     @Test
     public void testSetContentSource_null() {
-        System.out.println("setContentSource");
         ContentSource cs = null;
         FileUrisLoader instance = new FileUrisLoader();
         instance.setContentSource(cs);
@@ -98,7 +74,6 @@ public class FileUrisLoaderTest {
      */
     @Test
     public void testSetCollection_null() {
-        System.out.println("setCollection");
         String collection = null;
         FileUrisLoader instance = new FileUrisLoader();
         instance.setCollection(collection);
@@ -108,8 +83,7 @@ public class FileUrisLoaderTest {
 
     @Test
     public void testSetCollection() {
-        System.out.println("setCollection");
-        String collection = "foo";
+        String collection = "testSetCollection";
         FileUrisLoader instance = new FileUrisLoader();
         instance.setCollection(collection);
         assertEquals(collection, instance.collection);
@@ -121,7 +95,6 @@ public class FileUrisLoaderTest {
      */
     @Test
     public void testSetProperties_null() {
-        System.out.println("setProperties");
         Properties properties = null;
         FileUrisLoader instance = new FileUrisLoader();
         instance.setProperties(properties);
@@ -131,7 +104,6 @@ public class FileUrisLoaderTest {
 
     @Test
     public void testSetProperties_properties() {
-        System.out.println("setProperties");
         Properties properties = new Properties();
         FileUrisLoader instance = new FileUrisLoader();
         instance.setProperties(properties);
@@ -144,12 +116,11 @@ public class FileUrisLoaderTest {
      */
     @Test
     public void testOpen() throws Exception {
-        System.out.println("open");
         FileUrisLoader instance = new FileUrisLoader();
         TransformOptions options = new TransformOptions();
-        options.setUrisFile("src/test/resources/uris-file.txt");
+        options.setUrisFile(URIS_FILE);
         Properties props = new Properties();
-        props.setProperty("URIS-REPLACE-PATTERN", "object-id-2,test");
+        props.setProperty(Options.URIS_REPLACE_PATTERN, "object-id-2,test");
         instance.properties = props;
         instance.options = options;
         instance.open();
@@ -161,12 +132,11 @@ public class FileUrisLoaderTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testOpen_invalidReplacePattern() throws Exception {
-        System.out.println("open");
         FileUrisLoader instance = new FileUrisLoader();
         TransformOptions options = new TransformOptions();
-        options.setUrisFile("src/test/resources/uris-file.txt");
+        options.setUrisFile(URIS_FILE);
         Properties props = new Properties();
-        props.setProperty("URIS-REPLACE-PATTERN", "object-id-2,test,unevenPattern");
+        props.setProperty(Options.URIS_REPLACE_PATTERN, "object-id-2,test,unevenPattern");
         instance.properties = props;
         instance.options = options;
         try {
@@ -174,11 +144,11 @@ public class FileUrisLoaderTest {
         } finally {
             instance.close();
         }
+        fail();
     }
 
     @Test(expected = CorbException.class)
     public void testOpen_fileDoesNotExist() throws Exception {
-        System.out.println("open");
         FileUrisLoader instance = new FileUrisLoader();
         TransformOptions options = new TransformOptions();
         options.setUrisFile("does/not/exist");
@@ -188,6 +158,7 @@ public class FileUrisLoaderTest {
         } finally {
             instance.close();
         }
+        fail();
     }
 
     /**
@@ -195,7 +166,6 @@ public class FileUrisLoaderTest {
      */
     @Test
     public void testGetBatchRef() {
-        System.out.println("getBatchRef");
         FileUrisLoader instance = new FileUrisLoader();
         assertNull(instance.getBatchRef());
         instance.close();
@@ -206,7 +176,6 @@ public class FileUrisLoaderTest {
      */
     @Test
     public void testGetTotalCount_defaultValue() {
-        System.out.println("getTotalCount");
         FileUrisLoader instance = new FileUrisLoader();
         assertEquals(0, instance.getTotalCount());
         instance.close();
@@ -214,10 +183,9 @@ public class FileUrisLoaderTest {
 
     @Test
     public void testGetTotalCount() throws CorbException {
-        System.out.println("getTotalCount");
         FileUrisLoader instance = new FileUrisLoader();
         TransformOptions options = new TransformOptions();
-        options.setUrisFile("src/test/resources/uris-file.txt");
+        options.setUrisFile(URIS_FILE);
         instance.options = options;
         instance.open();
         assertEquals(8, instance.getTotalCount());
@@ -229,21 +197,20 @@ public class FileUrisLoaderTest {
      */
     @Test(expected = CorbException.class)
     public void testHasNext_throwException() throws Exception {
-        System.out.println("hasNext");
         FileUrisLoader instance = new FileUrisLoader();
         try {
             instance.hasNext();
         } finally {
             instance.close();
         }
+        fail();
     }
 
     @Test
     public void testHasNext() throws Exception {
-        System.out.println("hasNext");
         FileUrisLoader instance = new FileUrisLoader();
         TransformOptions options = new TransformOptions();
-        options.setUrisFile("src/test/resources/uris-file.txt");
+        options.setUrisFile(URIS_FILE);
         instance.options = options;
         instance.open();
 
@@ -260,10 +227,9 @@ public class FileUrisLoaderTest {
      */
     @Test
     public void testNext() throws Exception {
-        System.out.println("next");
         FileUrisLoader instance = new FileUrisLoader();
         TransformOptions options = new TransformOptions();
-        options.setUrisFile("src/test/resources/uris-file.txt");
+        options.setUrisFile(URIS_FILE);
         instance.options = options;
         instance.open();
         //Verify that hasNext() does not advance the buffered reader to the next line
@@ -277,7 +243,6 @@ public class FileUrisLoaderTest {
 
     @Test
     public void testNext_withEmptyLine() throws Exception {
-        System.out.println("next");
         FileUrisLoader instance = new FileUrisLoader();
         TransformOptions options = new TransformOptions();
         File file = File.createTempFile("temp", ".txt");
@@ -301,7 +266,6 @@ public class FileUrisLoaderTest {
      */
     @Test
     public void testClose() {
-        System.out.println("close");
         FileUrisLoader instance = new FileUrisLoader();
         instance.br = mock(BufferedReader.class);
         instance.close();
@@ -314,16 +278,15 @@ public class FileUrisLoaderTest {
      */
     @Test
     public void testCleanup() {
-        System.out.println("cleanup");
         FileUrisLoader instance = new FileUrisLoader();
         instance.br = mock(BufferedReader.class);
-        instance.collection = "foo";
+        instance.collection = "testCleanupCollection";
         instance.cs = mock(ContentSource.class);
-        instance.nextLine = "foo";
+        instance.nextLine = "testCleanup";
         instance.options = new TransformOptions();
         instance.properties = new Properties();
         instance.replacements = new String[]{};
-        instance.total = 100;
+        instance.setTotalCount(100);
         instance.close();
         instance.cleanup();
         assertNull(instance.br);

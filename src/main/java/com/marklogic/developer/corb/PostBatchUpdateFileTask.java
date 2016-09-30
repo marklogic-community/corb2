@@ -26,6 +26,7 @@ import static com.marklogic.developer.corb.Options.EXPORT_FILE_PART_EXT;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_SORT;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_SORT_COMPARATOR;
 import com.marklogic.developer.corb.util.FileUtils;
+import static com.marklogic.developer.corb.util.FileUtils.deleteFile;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
@@ -45,7 +46,8 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.logging.Level;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -96,7 +98,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             boolean useGzip = false;
 
             List<File> fragments = ExternalSort.sortInBatch(origFile, comparator, ExternalSort.DEFAULTMAXTEMPFILES, charset, tempFileStore, distinct, headerLineCount, useGzip);
-            LOG.log(Level.INFO, "Created {0} temp files for sort and dedup", fragments.size());
+            LOG.log(INFO, "Created {0} temp files for sort and dedup", fragments.size());
 
             copyHeaderIntoFile(origFile, headerLineCount, sortedFile);
             boolean append = true;
@@ -104,7 +106,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 
             FileUtils.moveFile(sortedFile, origFile);
         } catch (Exception exc) {
-            LOG.log(Level.WARNING, "Unexpected error while sorting the report file " + origFile.getPath() + ". The file can still be sorted locally after the job is finished.", exc);
+            LOG.log(WARNING, "Unexpected error while sorting the report file " + origFile.getPath() + ". The file can still be sorted locally after the job is finished.", exc);
         }
     }
     
@@ -196,7 +198,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             
             try {
                 if (outFile.exists()) {
-                    FileUtils.deleteFile(zipFile);
+                    deleteFile(zipFile);
 
                     fos = new FileOutputStream(zipFile);
                     zos = new ZipOutputStream(fos);
@@ -226,7 +228,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             moveFile(partZipFileName, outZipFileName);
 
             // now that we have everything, delete the uncompressed output file
-            FileUtils.deleteFile(outFile);
+            deleteFile(outFile);
         }
     }
 

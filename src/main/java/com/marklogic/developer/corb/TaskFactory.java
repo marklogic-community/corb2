@@ -18,10 +18,13 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.AbstractManager.getAdhocQuery;
 import static com.marklogic.developer.corb.Options.INIT_MODULE;
 import static com.marklogic.developer.corb.Options.POST_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
+import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
+import static com.marklogic.developer.corb.util.StringUtils.getInlineModuleCode;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
@@ -29,8 +32,6 @@ import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import java.util.HashMap;
 import java.util.Map;
-import static com.marklogic.developer.corb.util.StringUtils.getInlineModuleCode;
-import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
@@ -42,7 +43,8 @@ public class TaskFactory {
     protected Manager manager;
     private final Map<String, String> moduleToAdhocQueryMap = new HashMap<String, String>();
     private final Map<String, String> moduleToPathMap = new HashMap<String, String>();
-
+    private static final String EXCEPTION_MSG_UNABLE_READ_ADHOC = "Unable to read adhoc query ";
+    private static final String EXCEPTION_MSG_NULL_CONTENT = "null content source";
     /**
      * @param manager
      */
@@ -50,7 +52,7 @@ public class TaskFactory {
         this.manager = manager;
     }
 
-    public Task newProcessTask(String[] uris) {
+    public Task newProcessTask(String... uris) {
         return newProcessTask(uris, true);
     }
 
@@ -61,7 +63,7 @@ public class TaskFactory {
         }
         if (null != options.getProcessModule()
                 && (null == uris || uris.length == 0 || null == manager.getContentSource())) {
-            throw new NullPointerException("null content source or input uri");
+            throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT + " or input uri");
         }
         try {
             Task task = options.getProcessTaskClass() == null ? new Transform() : options.getProcessTaskClass().newInstance();
@@ -78,7 +80,7 @@ public class TaskFactory {
             return null;
         }
         if (null != options.getPreBatchModule() && null == manager.getContentSource()) {
-            throw new NullPointerException("null content source");
+            throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
             Task task = options.getPreBatchTaskClass() == null ? new Transform() : options.getPreBatchTaskClass().newInstance();
@@ -95,7 +97,7 @@ public class TaskFactory {
             return null;
         }
         if (null != options.getPostBatchModule() && null == manager.getContentSource()) {
-            throw new NullPointerException("null content source");
+            throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
             Task task = options.getPostBatchTaskClass() == null ? new Transform() : options.getPostBatchTaskClass().newInstance();
@@ -112,7 +114,7 @@ public class TaskFactory {
             return null;
         }
         if (null != options.getInitModule() && null == manager.getContentSource()) {
-            throw new NullPointerException("null content source");
+            throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
             Task task = options.getInitTaskClass() == null ? new Transform() : options.getInitTaskClass().newInstance();
@@ -123,7 +125,7 @@ public class TaskFactory {
         }
     }
 
-    private void setupTask(Task task, String moduleType, String module, String[] uris) {
+    private void setupTask(Task task, String moduleType, String module, String... uris) {
         setupTask(task, moduleType, module, uris, true);
     }
 
@@ -134,15 +136,15 @@ public class TaskFactory {
                 if (isInlineModule(module)) {
                     adhocQuery = getInlineModuleCode(module);
                     if (isEmpty(adhocQuery)) {
-                        throw new IllegalStateException("Unable to read adhoc query " + module);
+                        throw new IllegalStateException(EXCEPTION_MSG_UNABLE_READ_ADHOC + module);
                     }
                 } else {
                     adhocQuery = moduleToAdhocQueryMap.get(module);
                     if (adhocQuery == null) {
                         String modulePath = module.substring(0, module.indexOf('|'));
-                        adhocQuery = AbstractManager.getAdhocQuery(modulePath);
+                        adhocQuery = getAdhocQuery(modulePath);
                         if (isEmpty(adhocQuery)) {
-                            throw new IllegalStateException("Unable to read adhoc query " + module + " from classpath or filesystem");
+                            throw new IllegalStateException(EXCEPTION_MSG_UNABLE_READ_ADHOC + module + " from classpath or filesystem");
                         }
                         moduleToAdhocQueryMap.put(module, adhocQuery);
                     }

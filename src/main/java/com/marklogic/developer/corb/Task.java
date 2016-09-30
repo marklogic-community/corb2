@@ -50,13 +50,13 @@ public interface Task extends Callable<String[]> {
 
 	/**
 	 * If additional data is sent from CUSTOM URI module, it is available in
-	 * properties with key URIS_BATCH_REF
+	 * properties with key @{value #URIS_BATCH_REF}
 	 * 
 	 * @param props
 	 */
 	void setProperties(Properties props);
 
-	void setInputURI(String[] inputUri);
+	void setInputURI(String... inputUri);
 
 	void setFailOnError(boolean failOnError);
 	

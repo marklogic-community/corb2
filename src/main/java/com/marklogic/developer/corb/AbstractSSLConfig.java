@@ -33,8 +33,8 @@ import java.util.Properties;
  * @author rkennedy
  */
 public abstract class AbstractSSLConfig implements SSLConfig{
-	protected Properties properties = null;
-	protected Decrypter decrypter = null;
+	protected Properties properties;
+	protected Decrypter decrypter;
 	
     @Override
 	public void setProperties(Properties props){

@@ -1,11 +1,15 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
 plugins {
     id 'java' 
     id 'com.github.johnrengelman.shadow' version '1.2.3'
-    id "maven-publish"
-    id "eclipse"
-    id "idea"
-    id "jacoco"
-    id "com.jfrog.bintray" version "1.6"
+    id 'maven-publish'
+    id 'eclipse'
+    id 'idea'
+    id 'jacoco'
+    id 'com.jfrog.bintray' version '1.6'
+    id 'com.github.kt3k.coveralls' version '2.6.3'
 }
 
 sourceCompatibility = '1.6'
@@ -19,20 +23,50 @@ repositories {
     }
 }
 
+sourceSets {
+    integrationTest {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir file('src/test/java')
+        }
+        resources.srcDir file('src/test/resources')
+    }
+    performanceTest {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir file('src/test/java')
+        }
+        resources.srcDir file('src/test/resources')
+    }
+}
+
+configurations {
+    integrationTestCompile.extendsFrom testCompile
+    integrationTestRuntime.extendsFrom testRuntime
+    
+    performanceTestCompile.extendsFrom testCompile
+    performanceTestRuntime.extendsFrom testRuntime
+}
+
 dependencies {
-    compile 'com.marklogic:marklogic-xcc:8.0.4.2'
+    compile 'com.marklogic:marklogic-xcc:8.0.5'
     compile 'com.google.code.externalsortinginjava:externalsortinginjava:0.1.9'
     // if you want to compile without testing comment out the lines below
-    testCompile group: 'junit', name: 'junit', version: '4+'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile 'org.jasypt:jasypt:1.9.2'
-    testCompile 'com.github.stefanbirkner:system-rules:1.13.0' //facilitates tests for methods that invoke System.exit
+    testCompile 'com.github.stefanbirkner:system-rules:1.16.0' //facilitates tests for methods that invoke System.exit
     testCompile 'org.mockito:mockito-all:1.+'
 }
 
 test {
     testLogging {
-        events 'started','passed'
-    }  
+        events TestLogEvent.STARTED,TestLogEvent.PASSED
+    }
+    //we will run Integration and Performance tests in separate tasks
+    exclude '**/*IT.class'
+    exclude '**/*PT.class'
 }
 
 //disabling, because we want to incorporate externalsortingjava in uber jar and use as the artifact
@@ -52,14 +86,152 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allJava
 }
 
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled = true // coveralls plugin depends on xml format report
+        html.enabled = true
+    }
+}
+
+task integrationTest(type: Test, dependsOn: test) {
+    testClassesDir = sourceSets.integrationTest.output.classesDir
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    filter {
+        //include all integration tests
+        includeTestsMatching "*IT"
+    }
+    testLogging {
+        events TestLogEvent.STARTED,TestLogEvent.PASSED
+    }
+    //If you want to ensure that integration tests are run every time when you invoke
+    //this task, uncomment the following line.
+    //outputs.upToDateWhen { false }
+    jacoco {
+        //coverage report will include both unit and integration tests
+        append = true
+        destinationFile = file("$buildDir/jacoco/test.exec")
+    }
+    //generate the Jacoco report
+    finalizedBy { tasks.integrationTestReport }  
+}
+
+task integrationTestReport(type: JacocoReport) {
+    sourceSets sourceSets.main
+    executionData integrationTest
+}
+
+task performanceTest(type: Test) {
+    testClassesDir = sourceSets.performanceTest.output.classesDir
+    classpath = sourceSets.performanceTest.runtimeClasspath
+    filter {
+        //include all performance tests
+        includeTestsMatching "*PT"
+    }
+    testLogging {
+        events TestLogEvent.STARTED,TestLogEvent.PASSED
+    }
+    
+    //If you want to ensure that performance tests are run every time when you invoke
+    //this task, uncomment the following line.
+    outputs.upToDateWhen { false }
+}
+
+check.dependsOn jacocoTestReport
+//Ensure that the check task fails the build if there are failing integration tests.
+check.dependsOn integrationTest
+//Ensure that our unit tests are run before our integration tests
+integrationTest.mustRunAfter test
+integrationTest.onlyIf { !project.hasProperty('skipIntegrationTest') }
+//Ensure that the check task fails the build if there are failing performance tests.
+//check.dependsOn performanceTest
+//Ensure that our unit tests are run before our performance tests
+performanceTest.mustRunAfter integrationTest
+performanceTest.onlyIf { !project.hasProperty('skipPerformanceTest') }
+
+tasks.withType(Test) {
+    reports.html.destination = file("${reporting.baseDir}/${name}")
+    testLogging {
+        // set options for log level LIFECYCLE
+        events TestLogEvent.PASSED,
+               TestLogEvent.FAILED,
+               TestLogEvent.SKIPPED,
+               TestLogEvent.STANDARD_OUT
+        showExceptions true
+        exceptionFormat TestExceptionFormat.SHORT
+        showCauses true
+        showStackTraces true
+
+        // set options for log level DEBUG and INFO
+        debug {
+            events TestLogEvent.PASSED,
+                   TestLogEvent.FAILED,
+                   TestLogEvent.SKIPPED,
+                   TestLogEvent.STANDARD_OUT,
+                   TestLogEvent.STANDARD_ERROR
+            exceptionFormat TestExceptionFormat.FULL
+        }
+        info.events = debug.events
+        info.exceptionFormat = debug.exceptionFormat
+
+        afterSuite { desc, result ->
+            if (!desc.parent) { // will match the outermost suite
+                def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
+                def startItem = '|  ', endItem = '  |'
+                def repeatLength = startItem.length() + output.length() + endItem.length()
+                println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
+            }
+        }
+    }
+}
+
+tasks.coveralls {
+  dependsOn 'check'
+}
+
+def pomConfig = {
+    name "corb"
+    url 'https://github.com/marklogic/corb2'
+    scm {
+        url 'https://github.com/marklogic/corb2.git'
+    }
+    licenses {
+        license {
+            name "The Apache Software License, Version 2.0"
+            url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            distribution "repo"
+        }
+    }
+    developers {
+        developer {
+            name "Bhagat Bandlamudi"
+            email "bhagat.bandlamudi@marklogic.com"
+            organization "MarkLogic"
+        }
+        developer {
+            name "Mads Hansen"
+            email "mads.hansen@marklogic.com"
+            organization "MarkLogic"
+        }
+    }
+}
+
 publishing {
     publications {
         mainJava(MavenPublication) {
             from components.java
-        }
-        sourcesJava(MavenPublication) {
-            from components.java
             artifact sourcesJar
+            artifact javadocJar
+
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('description', 'CORB is a Java tool designed for bulk content-reprocessing of documents stored in MarkLogic.')
+                root.children().last() + pomConfig
+            }
         }
     }
 }
@@ -73,12 +245,18 @@ if (project.hasProperty("myBintrayUser")) {
     bintray {
         user = myBintrayUser
         key = myBintrayKey
-        publications = ['mainJava', 'sourcesJava']
+        publications = ['mainJava']
+        //dryRun = true
         pkg {
             repo = 'maven'
             name = project.name
             licenses = ['Apache-2.0']
+            userOrg = 'marklogic'
+            websiteUrl = 'https://github.com/marklogic/corb2'
+            issueTrackerUrl = 'https://github.com/marklogic/corb2/issues'
             vcsUrl = 'https://github.com/marklogic/corb2.git'
+            githubRepo = 'marklogic/corb2' 
+            githubReleaseNotesFile = 'README.md'
             version {
                 name = project.version
                 released = new Date()

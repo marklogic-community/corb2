@@ -25,9 +25,7 @@ import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.types.XdmItem;
 import java.io.File;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Rule;
@@ -44,17 +42,6 @@ public class ExportToFileTaskTest {
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
     
-    public ExportToFileTaskTest() {
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
-    
     @Before
     public void setUp() {
         clearSystemProperties();
@@ -70,7 +57,6 @@ public class ExportToFileTaskTest {
      */
     @Test
     public void testGetFileName() {
-        System.out.println("getFileName");
         ExportToFileTask instance = new ExportToFileTask();
         String expected = "https://github.com/marklogic/corb2";
         String[] uri = {expected};
@@ -81,7 +67,6 @@ public class ExportToFileTaskTest {
     
     @Test
     public void testGetFileName_withLeadingSlash() {
-        System.out.println("getFileName");
         ExportToFileTask instance = new ExportToFileTask();
         String expected = "/corb2";
         String[] uri = {expected};
@@ -92,9 +77,9 @@ public class ExportToFileTaskTest {
     
     @Test (expected = NullPointerException.class)
     public void testGetFileName_nullInputURI() {
-        System.out.println("getFileName");
         ExportToFileTask instance = new ExportToFileTask();
         instance.getFileName();
+        fail();
     }
 
     /**
@@ -102,7 +87,6 @@ public class ExportToFileTaskTest {
      */
     @Test
     public void testWriteToFile_nullSequence() throws Exception {
-        System.out.println("writeToFile");
         ResultSequence seq = null;
         ExportToFileTask instance = new ExportToFileTask();
         instance.exportDir = tempFolder.newFolder().toString();
@@ -111,23 +95,45 @@ public class ExportToFileTaskTest {
         instance.writeToFile(seq);
         File file = new File(instance.exportDir, instance.getFileName());
         assertFalse(file.exists());
-        file.delete();
     }
     
     @Test
-    public void testWriteToFile_silentFail() throws Exception {
-        System.out.println("writeToFile");
-        ResultSequence seq = null;
-        ExportToFileTask instance = new ExportToFileTask();
+    public void testWriteToFile() throws Exception {
+        ResultSequence seq = mock(ResultSequence.class);
+        ResultItem resultItem = mock(ResultItem.class);
+        XdmItem xdmItem = mock(XdmItem.class);
+        when(seq.hasNext()).thenReturn(Boolean.TRUE).thenReturn(Boolean.TRUE).thenReturn(Boolean.FALSE);
+        when(seq.next()).thenReturn(resultItem);
+        when(resultItem.getItem()).thenReturn(xdmItem);
+        when(xdmItem.asString()).thenReturn("testWriteToFile");
+        
+        ExportToFileTask instance = new ExportToFileTask(); 
+        instance.exportDir = tempFolder.newFolder().toString();
+        String[] uri = {"/testFile"};
+        instance.setInputURI(uri);
         instance.writeToFile(seq);
+        File file = new File(instance.exportDir, instance.getFileName());
+        assertTrue(file.exists());
     }
-
+    
+    @Test
+    public void testWriteToFile_noResults() throws Exception {
+        ResultSequence seq = mock(ResultSequence.class);
+        when(seq.hasNext()).thenReturn(Boolean.FALSE);      
+        ExportToFileTask instance = new ExportToFileTask(); 
+        instance.exportDir = tempFolder.newFolder().toString();
+        String[] uri = {"/testFile"};
+        instance.setInputURI(uri);
+        instance.writeToFile(seq);
+        File file = new File(instance.exportDir, instance.getFileName());
+        assertFalse(file.exists());
+    }
+    
     /**
      * Test of processResult method, of class ExportToFileTask.
      */
     @Test
     public void testProcessResult_noResults() throws Exception {
-        System.out.println("processResult");
         ResultSequence seq = null;
         ExportToFileTask instance = new ExportToFileTask();
         String result = instance.processResult(seq);
@@ -136,19 +142,17 @@ public class ExportToFileTaskTest {
 
     @Test (expected = NullPointerException.class)
     public void testProcessResult_nullInputUris() throws Exception {
-        System.out.println("processResult");
         ResultSequence seq = mock(ResultSequence.class);
         
         when(seq.hasNext()).thenReturn(true).thenReturn(false);
         ExportToFileTask instance = new ExportToFileTask();
    
-        String result = instance.processResult(seq);
-        assertEquals(TRUE, result);
+        instance.processResult(seq);
+        fail();
     }
     
     @Test
     public void testProcessResult() throws Exception {
-        System.out.println("processResult");
         ResultSequence seq = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         XdmItem item = mock(XdmItem.class);
@@ -169,7 +173,6 @@ public class ExportToFileTaskTest {
      */
     @Test
     public void testCleanup() {
-        System.out.println("cleanup");
         ExportToFileTask instance = new ExportToFileTask();
         instance.exportDir = "test";
         instance.cleanup();
@@ -181,9 +184,10 @@ public class ExportToFileTaskTest {
      */
     @Test
     public void testCall() throws Exception {
-        System.out.println("call");
         ExportToFileTask instance = new ExportToFileTask();
-        instance.call();
+        String[] result = instance.call();
+        assertNotNull(result);
+        assertTrue(result.length == 0);
     }
 
 }

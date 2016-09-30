@@ -19,10 +19,6 @@
 package com.marklogic.developer.corb;
 
 import javax.net.ssl.SSLContext;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -31,32 +27,12 @@ import static org.junit.Assert.*;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class TrustAnyoneSSLConfigTest {
-    
-    public TrustAnyoneSSLConfigTest() {
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
-    
-    @Before
-    public void setUp() {
-    }
-    
-    @After
-    public void tearDown() {
-    }
 
     /**
      * Test of getSSLContext method, of class TrustAnyoneSSLConfig.
      */
     @Test
     public void testGetSSLContext() throws Exception {
-        System.out.println("getSSLContext");
         TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
         SSLContext result = instance.getSSLContext();
         assertNotNull(result);
@@ -67,10 +43,10 @@ public class TrustAnyoneSSLConfigTest {
      */
     @Test
     public void testGetEnabledCipherSuites() {
-        System.out.println("getEnabledCipherSuites");
         TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
         String[] result = instance.getEnabledCipherSuites();
-        assertNull(result);
+        assertNotNull(result);
+        assertEquals(0, result.length);
     }
 
     /**
@@ -78,10 +54,10 @@ public class TrustAnyoneSSLConfigTest {
      */
     @Test
     public void testGetEnabledProtocols() {
-        System.out.println("getEnabledProtocols");
         TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
         String[] result = instance.getEnabledProtocols();
-        assertNull(result);
+        assertNotNull(result);
+        assertEquals(0, result.length);
     }
 
 }

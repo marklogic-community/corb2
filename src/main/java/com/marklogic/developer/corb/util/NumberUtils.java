@@ -22,8 +22,11 @@ package com.marklogic.developer.corb.util;
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class NumberUtils {
+public final class NumberUtils {
 
+    private NumberUtils() {
+    }
+    
     /**
      * <p>Convert a <code>String</code> to an <code>int</code>, returning
      * <code>zero</code> if the conversion fails.</p>

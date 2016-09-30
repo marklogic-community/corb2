@@ -39,6 +39,10 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
+/**
+ * 
+ * @since 2.2.0
+ */
 public class TwoWaySSLConfig extends AbstractSSLConfig {
 
     private static final Logger LOG = Logger.getLogger(TwoWaySSLConfig.class.getName());
@@ -49,7 +53,8 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
     public static final String SSL_KEYSTORE_PASSWORD = com.marklogic.developer.corb.Options.SSL_KEYSTORE_PASSWORD;
     public static final String SSL_KEYSTORE_TYPE = com.marklogic.developer.corb.Options.SSL_KEYSTORE_TYPE;
     public static final String SSL_PROPERTIES_FILE = com.marklogic.developer.corb.Options.SSL_PROPERTIES_FILE;
-
+    private static final String delimiter = ",";
+    
     /**
      * @return acceptable list of cipher suites
      */
@@ -58,7 +63,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
         if (properties != null) {
             String cipherSuites = properties.getProperty(SSL_CIPHER_SUITES);
             if (isNotEmpty(cipherSuites)) {
-                String[] cipherSuitesList = cipherSuites.split(",");
+                String[] cipherSuitesList = cipherSuites.split(delimiter);
                 LOG.log(Level.INFO, "Using cipher suites: {0}", cipherSuitesList);
                 return cipherSuitesList;
             }
@@ -74,7 +79,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
         if (properties != null) {
             String enabledProtocols = properties.getProperty(SSL_ENABLED_PROTOCOLS);
             if (isNotEmpty(enabledProtocols)) {
-                String[] enabledProtocolsList = enabledProtocols.split(",");
+                String[] enabledProtocolsList = enabledProtocols.split(delimiter);
                 LOG.log(Level.INFO, "Using enabled protocols: {0}", enabledProtocolsList);
                 return enabledProtocolsList;
             }

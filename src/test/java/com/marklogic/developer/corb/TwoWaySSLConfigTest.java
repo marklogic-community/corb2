@@ -20,12 +20,9 @@ package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import java.util.Properties;
-import javax.net.ssl.SSLContext;
 import org.junit.After;
-import org.junit.AfterClass;
 import static org.junit.Assert.*;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -33,25 +30,16 @@ import org.junit.Test;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class TwoWaySSLConfigTest {
-    
+
     public static final String SSL_PROPERTIES = "src/test/resources/SSL.properties";
-    
-    public TwoWaySSLConfigTest() {
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
+    public static final String SSLV3 = "SSLv3";
+    public static final String A_B_C = "a,b,c";
     
     @Before
     public void setUp() {
         clearSystemProperties();
     }
-    
+
     @After
     public void tearDown() {
         clearSystemProperties();
@@ -62,27 +50,24 @@ public class TwoWaySSLConfigTest {
      */
     @Test
     public void testGetEnabledCipherSuites_nullProperties() {
-        System.out.println("getEnabledCipherSuites");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         String[] result = instance.getEnabledCipherSuites();
         assertEquals(0, result.length);
     }
-    
+
     @Test
     public void testGetEnabledCipherSuites_nullCipherProperty() {
-        System.out.println("getEnabledCipherSuites");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.setProperties(new Properties());
         String[] result = instance.getEnabledCipherSuites();
         assertEquals(0, result.length);
     }
-    
+
     @Test
     public void testGetEnabledCipherSuites() {
-        System.out.println("getEnabledCipherSuites");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         Properties props = new Properties();
-        props.setProperty(TwoWaySSLConfig.SSL_CIPHER_SUITES, "a,b,c");
+        props.setProperty(TwoWaySSLConfig.SSL_CIPHER_SUITES, A_B_C);
         instance.setProperties(props);
         String[] result = instance.getEnabledCipherSuites();
         assertNotNull(result);
@@ -90,12 +75,12 @@ public class TwoWaySSLConfigTest {
         assertEquals("a", result[0]);
         assertEquals("c", result[2]);
     }
+
     /**
      * Test of getEnabledProtocols method, of class TwoWaySSLConfig.
      */
     @Test
     public void testGetEnabledProtocols_nullProperties() {
-        System.out.println("getEnabledProtocols");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         String[] result = instance.getEnabledProtocols();
         assertEquals(0, result.length);
@@ -103,19 +88,17 @@ public class TwoWaySSLConfigTest {
 
     @Test
     public void testGetEnabledProtocols_nullProtocols() {
-        System.out.println("getEnabledProtocols");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.setProperties(new Properties());
         String[] result = instance.getEnabledProtocols();
         assertEquals(0, result.length);
     }
-    
+
     @Test
     public void testGetEnabledProtocols_null() {
-        System.out.println("getEnabledProtocols");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         Properties props = new Properties();
-        props.setProperty(TwoWaySSLConfig.SSL_ENABLED_PROTOCOLS, "a,b,c");
+        props.setProperty(TwoWaySSLConfig.SSL_ENABLED_PROTOCOLS, A_B_C);
         instance.setProperties(props);
         String[] result = instance.getEnabledProtocols();
         assertNotNull(result);
@@ -123,63 +106,69 @@ public class TwoWaySSLConfigTest {
         assertEquals("a", result[0]);
         assertEquals("c", result[2]);
     }
-    
+
     /**
      * Test of loadPropertiesFile method, of class TwoWaySSLConfig.
      */
     @Test
     public void testLoadPropertiesFile_nullSSLPropertiesFile() throws Exception {
-        System.out.println("loadPropertiesFile");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.loadPropertiesFile();
         assertNotNull(instance.properties);
     }
 
-     @Test (expected = IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void testLoadPropertiesFile_directory() throws Exception {
-        System.out.println("loadPropertiesFile");
         System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, "src/test/resources");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.loadPropertiesFile();
+        fail();
     }
-    
+
     @Test
     public void testLoadPropertiesFile() throws Exception {
-        System.out.println("loadPropertiesFile");
         System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.loadPropertiesFile();
         assertNotNull(instance.properties);
-        assertEquals(instance.getEnabledCipherSuites()[1], "SSLv3");
+        assertEquals(instance.getEnabledCipherSuites()[1], SSLV3);
+    }
+
+    @Test
+    public void testLoadPropertiesFile_withNullProperties() throws Exception {
+        System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
+        TwoWaySSLConfig instance = new TwoWaySSLConfig();
+        instance.properties = null;
+        instance.loadPropertiesFile();
+        assertNotNull(instance.properties);
+        assertEquals(instance.getEnabledCipherSuites()[1], SSLV3);
     }
     
     @Test
     public void testLoadPropertiesFile_doesNotExist() throws Exception {
-        System.out.println("loadPropertiesFile");
         System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, "");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.loadPropertiesFile();
         assertNull(instance.properties);
     }
-    
+
     /**
      * Test of getSSLContext method, of class TwoWaySSLConfig.
      */
-    @Test (expected = IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void testGetSSLContext_NoProperties() throws Exception {
-        System.out.println("getSSLContext");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.getSSLContext();
+        fail();
     }
-   
- /* TODO: uncomment when building with JDK 1.7+, currently throwing NoSuchAlgorithm when building with 1.6
+    /* TODO: uncomment when building with JDK 1.7+, currently throwing NoSuchAlgorithm when building with 1.6
+
     @Test
     public void testGetSSLContext() throws Exception {
-        System.out.println("getSSLContext");
         System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         SSLContext context = instance.getSSLContext();
         assertNotNull(context);
     }
-*/
+     */
 }

@@ -30,6 +30,7 @@ import java.io.IOException;
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  */
 public class ExportToFileTask extends AbstractTask {
+    
 	protected String getFileName() {
 		String filename = inputUris[0].charAt(0) == '/' ? inputUris[0].substring(1) : inputUris[0];
 		String uriInPath = getProperty(EXPORT_FILE_URI_TO_PATH);

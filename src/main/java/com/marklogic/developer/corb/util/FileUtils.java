@@ -19,32 +19,26 @@
 package com.marklogic.developer.corb.util;
 
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.LineNumberReader;
-import java.io.OutputStream;
 import java.net.URL;
 
 /**
+ * Common file manipulation utilities
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class FileUtils {
-
-    public static final int BUFFER_SIZE = IOUtils.BUFFER_SIZE;
+public final class FileUtils {
 
     private FileUtils() {
     }
 
     /**
+     * Delete a file or folder and all of it's contents.
      *
-     * @param file
+     * @param file The file to be deleted.
      * @throws IOException
      */
     public static void deleteFile(File file) throws IOException {
@@ -74,7 +68,9 @@ public class FileUtils {
     }
 
     /**
-     * @param path
+     * Delete a file.
+     *
+     * @param path Path to the file to be deleted.
      * @throws IOException
      */
     public static void deleteFile(String path) throws IOException {
@@ -82,81 +78,29 @@ public class FileUtils {
     }
 
     /**
-     * @param contentFile
+     * Moves a file. If the destination already exists, deletes before moving
+     * source.
+     *
+     * @param source The file to be moved.
+     * @param dest The destination file.
+     */
+    public static void moveFile(final File source, final File dest) {
+        if (!source.getAbsolutePath().equals(dest.getAbsolutePath()) && source.exists()) {
+            if (dest.exists()) {
+                dest.delete();
+            }
+            source.renameTo(dest);
+        }
+    }
+
+    /**
+     * Determine how many lines are in the file. Returns 0 if the file is null
+     * or does not exist.
+     *
+     * @param file
      * @return
      * @throws IOException
      */
-    public static byte[] getBytes(File contentFile) throws IOException {
-        InputStream is = null;
-        ByteArrayOutputStream os = null;
-        byte[] buf = new byte[BUFFER_SIZE];
-        int read;
-        try {
-            is = new FileInputStream(contentFile);
-            try {
-                os = new ByteArrayOutputStream();
-                while ((read = is.read(buf)) > 0) {
-                    os.write(buf, 0, read);
-                }
-                return os.toByteArray();
-            } finally {
-                closeQuietly(os);
-            }
-        } finally {
-            closeQuietly(is);
-        }
-    }
-
-    /**
-     * @param source
-     * @param destination
-     * @throws IOException
-     */
-    public static void copy(final File source, final File destination) throws IOException {
-        InputStream inputStream = new FileInputStream(source);
-        try {
-            OutputStream outputStream = new FileOutputStream(destination);
-            try {
-                IOUtils.copy(inputStream, outputStream);
-            } finally {
-                closeQuietly(inputStream);
-            }
-        } finally {
-            closeQuietly(inputStream);
-        }
-    }
-
-    /**
-     * @param sourceFilePath
-     * @param destinationFilePath
-     * @throws IOException
-     * @throws FileNotFoundException
-     */
-    public static void copy(final String sourceFilePath, final String destinationFilePath) throws FileNotFoundException, IOException {
-        InputStream inputStream = new FileInputStream(sourceFilePath);
-        try {
-            OutputStream outputStream = new FileOutputStream(destinationFilePath);
-            try {
-                IOUtils.copy(inputStream, outputStream);
-            } finally {
-                closeQuietly(outputStream);
-            }
-        } finally {
-            closeQuietly(inputStream);
-        }
-    }
-
-    public static void moveFile(final File source, final File dest) {
-        if (!source.getAbsolutePath().equals(dest.getAbsolutePath())) {
-            if (source.exists()) {
-                if (dest.exists()) {
-                    dest.delete();
-                }
-                source.renameTo(dest);
-            }
-        }
-    }
-
     public static int getLineCount(final File file) throws IOException {
         if (file != null && file.exists()) {
             LineNumberReader lnr = null;
@@ -172,8 +116,9 @@ public class FileUtils {
     }
 
     /**
-     * Find the file with the given name. First checking for resources on the classpath, 
-     * then constructing a new File object.
+     * Find the file with the given name. First checking for resources on the
+     * classpath, then constructing a new File object.
+     *
      * @param filename
      * @return File
      */

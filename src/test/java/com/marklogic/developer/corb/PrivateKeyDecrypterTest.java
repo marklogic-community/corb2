@@ -19,9 +19,14 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
+import static com.marklogic.developer.corb.Options.PRIVATE_KEY_FILE;
+import static com.marklogic.developer.corb.PrivateKeyDecrypter.ENCRYPT_USAGE;
+import static com.marklogic.developer.corb.PrivateKeyDecrypter.GEN_KEYS_USAGE;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
@@ -29,9 +34,7 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -42,36 +45,41 @@ import static org.junit.Assert.*;
 public class PrivateKeyDecrypterTest {
 
     private final TestHandler testLogger = new TestHandler();
-    private static final String privateKeyPath = "src/test/resources/privateKey.pem";
-    private static final String publicKeyPath = "src/test/resources/publicKey.pem";
-    private static final String encryptedValue ="AsBDHqubo00eHVFPkWjV4AmOb8U4wbID6OXXO671cGXntKu4XmicvR0ax8OZgU3QzJDaYIeFzmToOJ3IQ5PzsIs8e0XREKVkOy+wz5RPYg7wBab+y7pmUrXJEPitJoi/jGn6ZwsU6AnImXckqd3NHUazbp7LF8tyC5GqsGL0nYY=";
+    private static final Logger LOG = Logger.getLogger(PrivateKeyDecrypter.class.getName());
+    private static final String PRIVATE_KEY_NAME = "privateKey.pem";
+    private static final String PRIVATE_KEY_PATH = "src/test/resources/" + PRIVATE_KEY_NAME;
+    private static final String PUBLIC_KEY_PATH = "src/test/resources/publicKey.pem";
+    private static final String ENCRYPTED_VALUE = "AsBDHqubo00eHVFPkWjV4AmOb8U4wbID6OXXO671cGXntKu4XmicvR0ax8OZgU3QzJDaYIeFzmToOJ3IQ5PzsIs8e0XREKVkOy+wz5RPYg7wBab+y7pmUrXJEPitJoi/jGn6ZwsU6AnImXckqd3NHUazbp7LF8tyC5GqsGL0nYY=";
     private static final String LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY = "PRIVATE-KEY-FILE property must be defined";
+    private static final String ACTION_GEN_KEYS = "gen-keys";
+    private static final String ACTION_ENCRYPT = "encrypt";
+    private static final String ALGORITHM = "RSA";
+    private static final String STRENGTH = "2048";
+    private static final String SECRET = "secret";
+    private static final String NEWLINE = "\n";
+    private static final String USAGE = GEN_KEYS_USAGE + NEWLINE + ENCRYPT_USAGE + NEWLINE;
+    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+    private PrintStream systemOut = System.out;
+    private PrintStream systemErr = System.err;
     
-    public PrivateKeyDecrypterTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
     @Before
     public void setUp() {
         clearSystemProperties();
-        Logger logger = Logger.getLogger(PrivateKeyDecrypter.class.getName());
-        logger.addHandler(testLogger);
+        LOG.addHandler(testLogger);
+        System.setOut(new PrintStream(outContent));
+        System.setErr(new PrintStream(errContent));
     }
 
     @After
     public void tearDown() {
         clearSystemProperties();
+        System.setOut(systemOut);
+        System.setErr(systemErr);
     }
 
     private void setSystemProperties() {
-        System.setProperty("PRIVATE-KEY-FILE", privateKeyPath);
+        System.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_PATH);
     }
 
     /**
@@ -79,14 +87,15 @@ public class PrivateKeyDecrypterTest {
      */
     @Test
     public void testInit_decrypter_initNotInvoked() throws Exception {
-        System.out.println("init_decrypter");
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init_decrypter();
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(Level.SEVERE, records.get(0).getLevel());
+        assertEquals(PRIVATE_KEY_FILE + " property must be defined", records.get(0).getMessage());
     }
 
     @Test
     public void testInit_decrypter_missingPrivateKeyFile() throws Exception {
-        System.out.println("init_decrypter");
         clearSystemProperties();
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
@@ -101,95 +110,89 @@ public class PrivateKeyDecrypterTest {
 
     @Test
     public void testInit_decrypter_withAlgorithm() throws Exception {
-        System.out.println("init_decrypter");
         clearSystemProperties();
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
-        instance.properties.setProperty("PRIVATE-KEY-ALGORITHM", "RSA");
+        instance.properties.setProperty(Options.PRIVATE_KEY_ALGORITHM, ALGORITHM);
         //init_decrypter() is invoked as part of init(), reset logs and measure only for this invocation
         testLogger.clear();
 
         instance.init_decrypter();
-        
+
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.SEVERE, records.get(0).getLevel());
         assertEquals(LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY, records.get(0).getMessage());
     }
-    
-      @Test
+
+    @Test
     public void testInit_decrypter_withEmptyPrivateKeyPath() throws Exception {
-        System.out.println("init_decrypter");
         clearSystemProperties();
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
-        instance.properties.setProperty("PRIVATE-KEY-FILE", "");
+        instance.properties.setProperty(PRIVATE_KEY_FILE, "");
         //init_decrypter() is invoked as part of init(), reset logs and measure only for this invocation
         testLogger.clear();
 
         instance.init_decrypter();
-        
+
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.SEVERE, records.get(0).getLevel());
         assertEquals(LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY, records.get(0).getMessage());
     }
-    
+
     @Test
     public void testInit_decrypter_withDirectoryAsPrivateKeyPath() throws Exception {
-        System.out.println("init_decrypter");
         clearSystemProperties();
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
-        instance.properties.setProperty("PRIVATE-KEY-FILE", privateKeyPath.replace("privateKey.pem", ""));
+        instance.properties.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_PATH.replace(PRIVATE_KEY_NAME, ""));
         //init_decrypter() is invoked as part of init(), reset logs and measure only for this invocation
         testLogger.clear();
 
         instance.init_decrypter();
-        
+
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.SEVERE, records.get(0).getLevel());
         assertEquals("Problem initializing PrivateKeyDecrypter", records.get(0).getMessage());
     }
-    
+
     @Test
     public void testInit_decrypter_withInvalidPrivateKeyPath() throws Exception {
-        System.out.println("init_decrypter");
         clearSystemProperties();
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
-        instance.properties.setProperty("PRIVATE-KEY-FILE", privateKeyPath + "/invalid");
+        instance.properties.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_PATH + "/invalid");
         //init_decrypter() is invoked as part of init(), reset logs and measure only for this invocation
         testLogger.clear();
 
         instance.init_decrypter();
-        
+
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.SEVERE, records.get(0).getLevel());
         assertEquals("Problem initializing PrivateKeyDecrypter", records.get(0).getMessage());
     }
-    
+
     @Test
     public void testInit_decrypter_loadPrivateKeyFromClasspath() throws Exception {
-        System.out.println("init_decrypter");
         clearSystemProperties();
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
-        instance.properties.setProperty("PRIVATE-KEY-FILE", "privateKey.pem");
+        instance.properties.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_NAME);
         //init_decrypter() is invoked as part of init(), reset logs and measure only for this invocation
         testLogger.clear();
 
         instance.init_decrypter();
-        
+
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.INFO, records.get(0).getLevel());
         assertEquals("Loading private key file {0} from classpath", records.get(0).getMessage());
     }
-    
+
     /**
      * Test of doDecrypt method, of class PrivateKeyDecrypter.
      */
     @Test
     public void testDoDecrypt_withoutPrivateKey() {
-        System.out.println("doDecrypt");
         String property = "key";
         String value = "value";
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
@@ -199,23 +202,21 @@ public class PrivateKeyDecrypterTest {
 
     @Test
     public void testDoDecrypt_withPrivateKey() throws IOException, ClassNotFoundException {
-        System.out.println("doDecrypt");
-        String value = "secret";
+        String value = SECRET;
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
-        instance.properties.setProperty("PRIVATE-KEY-FILE", privateKeyPath);
+        instance.properties.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_PATH);
         instance.init_decrypter();
-        String result = instance.doDecrypt("key", encryptedValue);
+        String result = instance.doDecrypt("key", ENCRYPTED_VALUE);
         assertEquals(value, result);
     }
-    
+
     @Test
     public void testDoDecrypt_unencryptedValue() throws IOException, ClassNotFoundException {
-        System.out.println("doDecrypt");
-        String value = "secret";
+        String value = SECRET;
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
         instance.init(null);
-        instance.properties.setProperty("PRIVATE-KEY-FILE", privateKeyPath);
+        instance.properties.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_PATH);
         instance.init_decrypter();
         String result = instance.doDecrypt("key", value);
         assertEquals(value, result);
@@ -226,141 +227,136 @@ public class PrivateKeyDecrypterTest {
      */
     @Test
     public void testMain_genKeys_noOptions() throws Exception {
-        System.out.println("main");
-        String[] args = {"gen-keys"};
+        String[] args = {ACTION_GEN_KEYS};
         PrivateKeyDecrypter.main(args);
+        assertEquals(GEN_KEYS_USAGE + NEWLINE, errContent.toString());
+    }
+    
+    private File createTempFile() throws IOException {
+        File temp = File.createTempFile("pub", "pem");
+        temp.deleteOnExit();
+        return temp;
     }
     
     @Test
     public void testMain_genKeys() throws Exception {
-        System.out.println("main");
-        File tempPublic = File.createTempFile("pub", "pem");
-        tempPublic.delete();
-        tempPublic.deleteOnExit();
-        File tempPrivate = File.createTempFile("pub", "pem");
-        tempPrivate.delete();
-        tempPrivate.deleteOnExit();
-        String[] args = {"gen-keys", tempPrivate.toString(), tempPublic.toString(), "RSA", "2048"};
+        File tempPublic = createTempFile();
+        File tempPrivate = createTempFile();
+        String[] args = {ACTION_GEN_KEYS, tempPrivate.toString(), tempPublic.toString(), ALGORITHM, STRENGTH};
         PrivateKeyDecrypter.main(args);
         assertTrue(tempPublic.exists());
         assertTrue(tempPrivate.exists());
     }
-    
+
     @Test
     public void testMain_genKeys_emptyPrivateKeyPath() throws Exception {
-        System.out.println("main");
-        File tempPublic = File.createTempFile("pub", "pem");
+        File tempPublic = createTempFile();
         tempPublic.delete();
-        tempPublic.deleteOnExit();
-        File tempPrivate = File.createTempFile("pub", "pem");
+        File tempPrivate = createTempFile();
         tempPrivate.delete();
-        tempPrivate.deleteOnExit();
-        String[] args = {"gen-keys", "", tempPublic.toString(), "RSA", "2048"};
+        String[] args = {ACTION_GEN_KEYS, "", tempPublic.toString(), ALGORITHM, STRENGTH};
         PrivateKeyDecrypter.main(args);
         assertFalse(tempPublic.exists());
         assertFalse(tempPrivate.exists());
     }
+
     @Test
     public void testMain_genKeys_emptyPublicKeyPath() throws Exception {
-        System.out.println("main");
-        File tempPublic = File.createTempFile("pub", "pem");
+        File tempPublic = createTempFile();
         tempPublic.delete();
-        tempPublic.deleteOnExit();
-        File tempPrivate = File.createTempFile("pub", "pem");
+        File tempPrivate = createTempFile();
         tempPrivate.delete();
-        tempPrivate.deleteOnExit();
-        String[] args = {"gen-keys", tempPrivate.toString(), "", "RSA", "2048"};
+        String[] args = {ACTION_GEN_KEYS, tempPrivate.toString(), "", ALGORITHM, STRENGTH};
         PrivateKeyDecrypter.main(args);
         assertFalse(tempPublic.exists());
         assertFalse(tempPrivate.exists());
     }
+
     @Test
     public void testMain_genKeys_emptyArgValues() throws Exception {
-        System.out.println("main");
-        File tempPublic = File.createTempFile("pub", "pem");
+        File tempPublic = createTempFile();
         tempPublic.delete();
-        tempPublic.deleteOnExit();
-        File tempPrivate = File.createTempFile("pub", "pem");
+        File tempPrivate = createTempFile();
         tempPrivate.delete();
-        tempPrivate.deleteOnExit();
-        String[] args = {"gen-keys", "", "", "", ""};
+        String[] args = {ACTION_GEN_KEYS, "", "", "", ""};
         PrivateKeyDecrypter.main(args);
         assertFalse(tempPublic.exists());
         assertFalse(tempPrivate.exists());
     }
+
     @Test
     public void testMain_encrypt() throws Exception {
-        System.out.println("main");
-        String[] args = {"encrypt"};
+        String[] args = {ACTION_ENCRYPT};
         PrivateKeyDecrypter.main(args);
+        assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
     }
 
     @Test
     public void testMain_encrypt_allParameters() throws Exception {
-        System.out.println("main");
-        String[] args = {"encrypt", publicKeyPath, "secret", "RSA"};
+        String[] args = {ACTION_ENCRYPT, PUBLIC_KEY_PATH, SECRET, ALGORITHM};
         setSystemProperties();
         PrivateKeyDecrypter.main(args);
+        assertTrue(outContent.toString().startsWith("Input: " + SECRET + "\nOutput: "));
     }
 
     //TODO: test with an algorithm other than RSA
     @Test(expected = NoSuchAlgorithmException.class)
     public void testMain_encrypt_invalidAlgorithm() throws Exception {
-        System.out.println("main");
-        String[] args = {"encrypt", publicKeyPath, "secret", "badAlgorithm"};
+        String[] args = {ACTION_ENCRYPT, PUBLIC_KEY_PATH, SECRET, "badAlgorithm"};
         setSystemProperties();
         PrivateKeyDecrypter.main(args);
+        fail();
     }
 
     @Test(expected = InvalidKeySpecException.class)
     public void testMain_encrypt_invalidPublicKey() throws Exception {
-        System.out.println("main");
-        String[] args = {"encrypt", privateKeyPath, "secret", "RSA"};
+        String[] args = {ACTION_ENCRYPT, PRIVATE_KEY_PATH, SECRET, ALGORITHM};
         setSystemProperties();
         PrivateKeyDecrypter.main(args);
+        fail();
     }
 
     @Test
     public void testMain_encrypt_blankValue() throws Exception {
-        System.out.println("main");
-        String[] args = {"encrypt", privateKeyPath, "", "RSA"};
+        String[] args = {ACTION_ENCRYPT, PRIVATE_KEY_PATH, "", ALGORITHM};
         setSystemProperties();
         PrivateKeyDecrypter.main(args);
+        assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
     }
 
     @Test
     public void testMain_encrypt_nullKey() throws Exception {
-        System.out.println("main");
-        String[] args = {"encrypt", "", "secret", "RSA"};
+        String[] args = {ACTION_ENCRYPT, "", SECRET, ALGORITHM};
         setSystemProperties();
         PrivateKeyDecrypter.main(args);
+        assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
     }
 
     @Test
     public void testMain_invalidFirstArg() throws Exception {
-        System.out.println("main");
         String[] args = {"invalidUsage"};
         PrivateKeyDecrypter.main(args);
+        assertEquals(USAGE, outContent.toString());
     }
 
     @Test
     public void testMain_nullArgs() throws Exception {
-        System.out.println("main");
         String[] args = null;
         PrivateKeyDecrypter.main(args);
+        assertEquals(USAGE, outContent.toString());
     }
 
     @Test
     public void testMain_emptyArgsArray() throws Exception {
-        System.out.println("main");
         String[] args = {};
         PrivateKeyDecrypter.main(args);
+        assertEquals(USAGE, outContent.toString());
     }
 
     @Test
     public void testMain_blankArgsArray() throws Exception {
-        System.out.println("main");
-        String[] args = {"encrypt", "", "", ""};
+        String[] args = {ACTION_ENCRYPT, "", "", ""};
         PrivateKeyDecrypter.main(args);
+        assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
     }
 }

@@ -30,19 +30,23 @@ import java.util.Properties;
  */
 public abstract class AbstractUrisLoader implements UrisLoader {
 
-    TransformOptions options;
-    ContentSource cs;
-    String collection;
-    Properties properties;
-    int total = 0;
-    String[] replacements = new String[0];
-    String batchRef = null;
+    protected TransformOptions options;
+    protected ContentSource cs;
+    protected String collection;
+    protected Properties properties;
+    private int total = 0;
+    protected String[] replacements = new String[0];
+    protected String batchRef;
 
     @Override
     public void setOptions(TransformOptions options) {
         this.options = options;
     }
 
+    public TransformOptions getOptions() {
+        return options;
+    }
+    
     @Override
     public void setContentSource(ContentSource cs) {
         this.cs = cs;
@@ -62,12 +66,20 @@ public abstract class AbstractUrisLoader implements UrisLoader {
     public String getBatchRef() {
         return batchRef;
     }
-
+    
+    public void setBatchRef(String batchRef) {
+        this.batchRef = batchRef;
+    }
+    
     @Override
     public int getTotalCount() {
         return this.total;
     }
-
+    
+    public void setTotalCount(int totalCount) {
+        this.total = totalCount;
+    }
+    
     public String getProperty(String key) {
         String val = System.getProperty(key);
         if (val == null && properties != null) {

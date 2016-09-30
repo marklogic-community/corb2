@@ -18,13 +18,20 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Manager.DEFAULT_BATCH_URI_DELIM;
+import static com.marklogic.developer.corb.Manager.URIS_BATCH_REF;
 import static com.marklogic.developer.corb.Options.BATCH_URI_DELIM;
 import static com.marklogic.developer.corb.Options.ERROR_FILE_NAME;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_LIMIT;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_INTERVAL;
+import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_CODES;
+import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_MESSAGE;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_INTERVAL;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import com.marklogic.developer.corb.util.StringUtils;
+import static com.marklogic.developer.corb.util.StringUtils.commaSeparatedValuesToList;
+import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 import com.marklogic.xcc.ContentSource;
@@ -33,6 +40,7 @@ import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.QueryException;
 import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.exceptions.RequestPermissionException;
 import com.marklogic.xcc.exceptions.RetryableQueryException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmBinary;
@@ -42,10 +50,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Level;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 
 /**
@@ -54,76 +64,75 @@ import java.util.logging.Logger;
  *
  */
 public abstract class AbstractTask implements Task {
-	private static final Object ERROR_SYNC_OBJ = new Object();
-	
-	protected static final String TRUE = "true";
-	protected static final String FALSE = "false";
+
+    private static final Object ERROR_SYNC_OBJ = new Object();
+
+    protected static final String TRUE = "true";
+    protected static final String FALSE = "false";
     private static final String URI = "URI";
-	protected static final byte[] NEWLINE = 
-			System.getProperty("line.separator") != null ? System.getProperty("line.separator").getBytes() : "\n".getBytes();
-	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+    protected static final byte[] NEWLINE
+            = System.getProperty("line.separator") != null ? System.getProperty("line.separator").getBytes() : "\n".getBytes();
+    private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
-	protected ContentSource cs;
-	protected String moduleType;
-	protected String moduleUri;
-	protected Properties properties;
-	protected String[] inputUris;
+    protected ContentSource cs;
+    protected String moduleType;
+    protected String moduleUri;
+    protected Properties properties = new Properties();
+    protected String[] inputUris;
 
-	protected String adhocQuery;
-	protected String language;
-	
-	protected String exportDir;
+    protected String adhocQuery;
+    protected String language;
+    protected String exportDir;
 
-	private static final Object SYNC_OBJ = new Object();
-	protected static final Map<String, Set<String>> MODULE_PROPS = new HashMap<String, Set<String>>();
+    private static final Object SYNC_OBJ = new Object();
+    protected static final Map<String, Set<String>> MODULE_PROPS = new HashMap<String, Set<String>>();
 
-	protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
-	protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
-	
-	protected static final int DEFAULT_QUERY_RETRY_LIMIT = 2;
-	protected static final int DEFAULT_QUERY_RETRY_INTERVAL = 15;
+    protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
+    protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
+    protected static final int DEFAULT_QUERY_RETRY_INTERVAL = 20;
+    protected static final int DEFAULT_QUERY_RETRY_LIMIT = 2;
 
-	protected int connectRetryCount = 0;
-	
-	protected boolean failOnError = true; 
+    protected int retryCount = 0;
+    protected boolean failOnError = true;
 
-	private static final Logger LOG = Logger.getLogger(AbstractTask.class.getName());
+    private static final Logger LOG = Logger.getLogger(AbstractTask.class.getName());
+    private static final String AT_URI = " at URI: ";
 
-	@Override
-	public void setContentSource(ContentSource cs) {
-		this.cs = cs;
-	}
+    @Override
+    public void setContentSource(ContentSource cs) {
+        this.cs = cs;
+    }
 
-	@Override
-	public void setModuleType(String moduleType) {
-		this.moduleType = moduleType;
-	}
+    @Override
+    public void setModuleType(String moduleType) {
+        this.moduleType = moduleType;
+    }
 
-	@Override
-	public void setModuleURI(String moduleUri) {
-		this.moduleUri = moduleUri;
-	}
+    @Override
+    public void setModuleURI(String moduleUri) {
+        this.moduleUri = moduleUri;
+    }
 
-	@Override
-	public void setAdhocQuery(String adhocQuery) {
-		this.adhocQuery = adhocQuery;
-	}
+    @Override
+    public void setAdhocQuery(String adhocQuery) {
+        this.adhocQuery = adhocQuery;
+    }
 
-	@Override
-	public void setQueryLanguage(String language) {
-		this.language = language;
-	}
+    @Override
+    public void setQueryLanguage(String language) {
+        this.language = language;
+    }
 
-	@Override
-	public void setProperties(Properties properties) {
-		this.properties = properties;
-	}
+    @Override
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
 
-	@Override
-	public void setInputURI(String[] inputUri) {
-		this.inputUris = inputUri != null ? inputUri.clone() : new String[]{};
-	}
-	
+    @Override
+    public void setInputURI(String... inputUri) {
+        this.inputUris = inputUri != null ? inputUri.clone() : new String[]{};
+    }
+
     @Override
     public void setFailOnError(boolean failOnError) {
         this.failOnError = failOnError;
@@ -143,166 +152,181 @@ public abstract class AbstractTask implements Task {
     }
 
     @Override
-	public String[] call() throws Exception {
-		try {
-			return invokeModule();
-		} finally {
-			cleanup();
-		}
-	}
+    public String[] call() throws Exception {
+        try {
+            return invokeModule();
+        } finally {
+            cleanup();
+        }
+    }
 
-	protected String[] invokeModule() throws CorbException {
-		if (moduleUri == null && adhocQuery == null) {
-			return null;
-		}
+    protected String[] invokeModule() throws CorbException {
+        if (moduleUri == null && adhocQuery == null) {
+            return new String[0];
+        }
 
-		Session session = null;
-		ResultSequence seq = null;
-		Thread.yield();// try to avoid thread starvation
-		try {
-			session = newSession();
-			Request request = null;
+        Session session = null;
+        ResultSequence seq = null;
+        Thread.yield();// try to avoid thread starvation
+        try {
+            session = newSession();
+            Request request;
 
-			Set<String> modulePropNames = MODULE_PROPS.get(moduleType);
-			if (modulePropNames == null) {
-				synchronized (SYNC_OBJ) {
-					modulePropNames = MODULE_PROPS.get(moduleType);
-					if (modulePropNames == null) {
-						HashSet<String> propSet = new HashSet<String>();
-						if (properties != null) {
-							for (String propName : properties.stringPropertyNames()) {
-								if (propName.startsWith(moduleType + ".")) {
-									propSet.add(propName);
-								}
-							}
-						}
-						for (String propName : System.getProperties().stringPropertyNames()) {
-							if (propName.startsWith(moduleType + ".")) {
-								propSet.add(propName);
-							}
-						}
-						MODULE_PROPS.put(moduleType, modulePropNames = propSet);
-					}
-				}
-			}
+            Set<String> modulePropNames = MODULE_PROPS.get(moduleType);
+            if (modulePropNames == null) {
+                synchronized (SYNC_OBJ) {
+                    modulePropNames = MODULE_PROPS.get(moduleType);
+                    if (modulePropNames == null) {
+                        Set<String> propSet = new HashSet<String>();
+                        if (properties != null) {
+                            for (String propName : properties.stringPropertyNames()) {
+                                if (propName.startsWith(moduleType + ".")) {
+                                    propSet.add(propName);
+                                }
+                            }
+                        }
+                        for (String propName : System.getProperties().stringPropertyNames()) {
+                            if (propName.startsWith(moduleType + ".")) {
+                                propSet.add(propName);
+                            }
+                        }
+                        MODULE_PROPS.put(moduleType, modulePropNames = propSet);
+                    }
+                }
+            }
 
-			if (moduleUri == null) {
-				request = session.newAdhocQuery(adhocQuery);
-			} else {
-				request = session.newModuleInvoke(moduleUri);
-			}
+            if (moduleUri == null) {
+                request = session.newAdhocQuery(adhocQuery);
+            } else {
+                request = session.newModuleInvoke(moduleUri);
+            }
 
-			if (language != null) {
-				request.getOptions().setQueryLanguage(language);
-			}
+            if (language != null) {
+                request.getOptions().setQueryLanguage(language);
+            }
 
-			if (inputUris != null && inputUris.length > 0) {
-				if (inputUris.length == 1) {
-					request.setNewStringVariable(URI, inputUris[0]);
-				} else {
-					String delim = getProperty(BATCH_URI_DELIM);
-					if (delim == null || delim.length() == 0) {
-						delim = Manager.DEFAULT_BATCH_URI_DELIM;
-					}
-					StringBuffer buff = new StringBuffer();
-					for (String uri : inputUris) {
-						if (buff.length() > 0) {
-							buff.append(delim);
-						}
-						buff.append(uri);
-					}
-					request.setNewStringVariable(URI, buff.toString());
-				}
-			}
+            if (inputUris != null && inputUris.length > 0) {
+                if (inputUris.length == 1) {
+                    request.setNewStringVariable(URI, inputUris[0]);
+                } else {
+                    String delim = getProperty(BATCH_URI_DELIM);
+                    if (isEmpty(delim)) {
+                        delim = DEFAULT_BATCH_URI_DELIM;
+                    }
+                    request.setNewStringVariable(URI, StringUtils.join(inputUris, delim));
+                }
+            }
 
-			if (properties != null && properties.containsKey(Manager.URIS_BATCH_REF)) {
-				request.setNewStringVariable(Manager.URIS_BATCH_REF, properties.getProperty(Manager.URIS_BATCH_REF));
-			}
+            if (properties != null && properties.containsKey(URIS_BATCH_REF)) {
+                request.setNewStringVariable(URIS_BATCH_REF, properties.getProperty(URIS_BATCH_REF));
+            }
 
-			for (String propName : modulePropNames) {
-				if (propName.startsWith(moduleType + ".")) {
-					String varName = propName.substring(moduleType.length() + 1);
-					String value = getProperty(propName);
-					if (value != null) {
-						request.setNewStringVariable(varName, value);
-					}
-				}
-			}
+            for (String propName : modulePropNames) {
+                if (propName.startsWith(moduleType + ".")) {
+                    String varName = propName.substring(moduleType.length() + 1);
+                    String value = getProperty(propName);
+                    if (value != null) {
+                        request.setNewStringVariable(varName, value);
+                    }
+                }
+            }
 
-			Thread.yield();// try to avoid thread starvation
-			seq = session.submitRequest(request);
-			connectRetryCount = 0;
-			// no need to hold on to the session as results will be cached.
-			session.close();
-			Thread.yield();// try to avoid thread starvation
+            Thread.yield();// try to avoid thread starvation
+            seq = session.submitRequest(request);
+            retryCount = 0;
+            // no need to hold on to the session as results will be cached.
+            session.close();
+            Thread.yield();// try to avoid thread starvation
 
-			processResult(seq);
-			seq.close();
-			Thread.yield();// try to avoid thread starvation
+            processResult(seq);
+            seq.close();
+            Thread.yield();// try to avoid thread starvation
 
-			return inputUris;
-		} catch (RequestException exc) {
-      return handleRequestException(exc);  
-    } catch (Exception exc) {
-			throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
-		} finally {
-			if (null != session && !session.isClosed()) {
-				session.close();
-				session = null;
-			}
-			if (null != seq && !seq.isClosed()) {
-				seq.close();
-				seq = null;
-			}
-			Thread.yield();// try to avoid thread starvation
-		}
-	}
-	
-    protected String[] handleRequestException(RequestException exc) throws CorbException {
-        String name = exc.getClass().getSimpleName();
-        if (exc instanceof ServerConnectionException
-                || exc instanceof RetryableQueryException
-                || (exc instanceof QueryException && ((QueryException) exc).isRetryable())) {
-            int retryLimit = exc instanceof ServerConnectionException ? this.getConnectRetryLimit() : this.getQueryRetryLimit();
-            int retryInterval = exc instanceof ServerConnectionException ? this.getConnectRetryInterval() : this.getQueryRetryInterval();
-            if (connectRetryCount < retryLimit) {
-                connectRetryCount++;
-                LOG.log(Level.WARNING,
-                        "Encountered " + name + " from Marklogic Server. Retrying attempt {0} after {1} seconds..: {2} at URI: {3}",
-                        new Object[]{connectRetryCount, retryInterval, exc.getMessage(), asString(inputUris)});
+            return inputUris;
+        } catch (RequestException exc) {
+            return handleRequestException(exc);
+        } catch (Exception exc) {
+            throw new CorbException(exc.getMessage() + AT_URI + asString(inputUris), exc);
+        } finally {
+            if (null != session && !session.isClosed()) {
+                session.close();
+                session = null;
+            }
+            if (null != seq && !seq.isClosed()) {
+                seq.close();
+                seq = null;
+            }
+            Thread.yield();// try to avoid thread starvation
+        }
+    }
+
+    protected boolean shouldRetry(RequestException requestException) {
+        return requestException instanceof ServerConnectionException
+                || requestException instanceof RetryableQueryException
+                || requestException instanceof RequestPermissionException && shouldRetry((RequestPermissionException) requestException)
+                || requestException instanceof QueryException && shouldRetry((QueryException) requestException)
+                || hasRetryableMessage(requestException);
+    }
+
+    protected boolean hasRetryableMessage(RequestException requestException) {
+        String message = requestException.getMessage();
+        List<String> retryableMessages = commaSeparatedValuesToList(getProperty(QUERY_RETRY_ERROR_MESSAGE));
+        for (String messageFragment : retryableMessages) {
+            if (message.contains(messageFragment)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected boolean shouldRetry(QueryException queryException) {
+        String errorCode = queryException.getCode();
+        List<String> retryableErrorCodes = commaSeparatedValuesToList(getProperty(QUERY_RETRY_ERROR_CODES));
+        return queryException.isRetryable() || retryableErrorCodes.contains(errorCode);
+    }
+
+    protected boolean shouldRetry(RequestPermissionException requestPermissionException) {
+        return requestPermissionException.isRetryAdvised();
+    }
+
+    protected String[] handleRequestException(RequestException requestException) throws CorbException {
+        String name = requestException.getClass().getSimpleName();
+
+        if (shouldRetry(requestException)) {
+            int retryLimit = requestException instanceof ServerConnectionException ? this.getConnectRetryLimit() : this.getQueryRetryLimit();
+            int retryInterval = requestException instanceof ServerConnectionException ? this.getConnectRetryInterval() : this.getQueryRetryInterval();
+            if (retryCount < retryLimit) {
+                retryCount++;
+                LOG.log(WARNING,
+                        "Encountered " + name + " from Marklogic Server. Retrying attempt {0} after {1} seconds..: {2}{3}{4}",
+                        new Object[]{retryCount, retryInterval, requestException.getMessage(), AT_URI, asString(inputUris)});
                 try {
                     Thread.sleep(retryInterval * 1000L);
-                } catch (Exception exc2) {
+                } catch (Exception ex) {
                 }
                 return invokeModule();
-            } else if (exc instanceof ServerConnectionException || failOnError) {
-                throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
+            } else if (requestException instanceof ServerConnectionException || failOnError) {
+                throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
             } else {
-                LOG.log(Level.WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
-                writeToErrorFile(inputUris, exc.getMessage());
+                LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
+                writeToErrorFile(inputUris, requestException.getMessage());
                 return inputUris;
             }
         } else if (failOnError) {
-            throw new CorbException(exc.getMessage() + " at URI: " + asString(inputUris), exc);
+            throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
         } else {
-            LOG.log(Level.WARNING, "failOnError is false. Encountered " + name + " at URI: " + asString(inputUris), exc);
-            writeToErrorFile(inputUris, exc.getMessage());
+            LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
+            writeToErrorFile(inputUris, requestException.getMessage());
             return inputUris;
         }
     }
 
-    protected String asString(String[] uris) {
-        if (uris == null || uris.length == 0) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < uris.length; i++) {
-            if (i > 0) {
-                sb.append(',');
-            }
-            sb.append(uris[i]);
-        }
-        return sb.toString();
+    private String failOnErrorIsFalseMessage(final String name, final String... inputUris) {
+        return "failOnError is false. Encountered " + name + AT_URI + asString(inputUris);
+    }
+
+    protected String asString(String... uris) {
+        return uris == null ? "" : StringUtils.join(uris, ",");
     }
 
     protected abstract String processResult(ResultSequence seq) throws CorbException;
@@ -327,7 +351,7 @@ public abstract class AbstractTask implements Task {
         return trim(val);
     }
 
-    protected byte[] getValueAsBytes(XdmItem item) {
+    static protected byte[] getValueAsBytes(XdmItem item) {
         if (item instanceof XdmBinary) {
             return ((XdmBinary) item).asBinaryData();
         } else if (item != null) {
@@ -371,7 +395,7 @@ public abstract class AbstractTask implements Task {
             try {
                 intVal = Integer.parseInt(value);
             } catch (Exception exc) {
-                LOG.log(Level.WARNING, "Unable to parse '{0}' value '{1}' as an int", new Object[]{key, value});
+                LOG.log(WARNING, "Unable to parse '{0}' value '{1}' as an int", new Object[]{key, value});
             }
         }
         return intVal;
@@ -383,13 +407,13 @@ public abstract class AbstractTask implements Task {
         }
 
         String errorFileName = getProperty(ERROR_FILE_NAME);
-        if (errorFileName == null || errorFileName.length() == 0) {
+        if (isEmpty(errorFileName)) {
             return;
         }
 
         String delim = getProperty(BATCH_URI_DELIM);
-        if (delim == null || delim.length() == 0) {
-            delim = Manager.DEFAULT_BATCH_URI_DELIM;
+        if (isEmpty(delim)) {
+            delim = DEFAULT_BATCH_URI_DELIM;
         }
 
         synchronized (ERROR_SYNC_OBJ) {
@@ -406,7 +430,7 @@ public abstract class AbstractTask implements Task {
                 }
                 writer.flush();
             } catch (Exception exc) {
-                LOG.log(Level.SEVERE, "Problem writing uris to " + ERROR_FILE_NAME, exc);
+                LOG.log(SEVERE, "Problem writing uris to " + ERROR_FILE_NAME, exc);
             } finally {
                 closeQuietly(writer);
             }

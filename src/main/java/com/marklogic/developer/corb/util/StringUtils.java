@@ -19,9 +19,11 @@
 package com.marklogic.developer.corb.util;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,9 +32,11 @@ import java.util.regex.Pattern;
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class StringUtils {
+public final class StringUtils {
 
     public static final String EMPTY = "";
+    public static final String SLASH = "/";
+    public static final String XQUERY_EXTENSION = ".xqy";
     private static final String ADHOC_PATTERN = "(?i).*\\|ADHOC";
     private static final String JAVASCRIPT_MODULE_FILENAME_PATTERN = "(?i).*\\.s?js(\\|ADHOC)?$";
     private static final String INLINE_MODULE_PATTERN = "(?i)INLINE-(JAVASCRIPT|XQUERY)\\|(.*?)(\\|ADHOC)?$";
@@ -40,20 +44,6 @@ public class StringUtils {
     private static final Pattern COMPILED_INLINE_MODULE_PATTERN = Pattern.compile(INLINE_MODULE_PATTERN);
 
     private StringUtils() {
-    }
-
-    /**
-     * Replace all occurrences of the following characters [&, <, >] with their
-     * corresponding entities.
-     *
-     * @param str
-     * @return
-     */
-    public static String escapeXml(String str) {
-        if (str == null) {
-            return "";
-        }
-        return str.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
     }
 
     /**
@@ -76,8 +66,9 @@ public class StringUtils {
         if (str == null) {
             return defaultValue;
         }
-        String lcStr = str.toLowerCase();
-        return !(str.equals("") || str.equals("0") || lcStr.equals("f") || lcStr.equals("false") || lcStr.equals("n") || lcStr.equals("no"));
+        String lcStr = str.trim().toLowerCase();
+        return !("".equals(lcStr) || "0".equals(lcStr) || "f".equals(lcStr) || "false".contains(lcStr) || 
+                "n".equals(lcStr) || "no".equals(lcStr));
     }
 
     /**
@@ -130,7 +121,7 @@ public class StringUtils {
      * @return
      */
     public static String buildModulePath(Class<?> clazz) {
-        return "/" + clazz.getName().replace('.', '/') + ".xqy";
+        return SLASH + clazz.getName().replace('.', '/') + XQUERY_EXTENSION;
     }
 
     /**
@@ -140,19 +131,21 @@ public class StringUtils {
      * @return
      */
     public static String buildModulePath(Package modulePackage, String name) {
-        return "/" + modulePackage.getName().replace('.', '/') + "/" + name + (name.endsWith(".xqy") ? "" : ".xqy");
+        return SLASH + modulePackage.getName().replace('.', '/') + SLASH + name + (name.endsWith(XQUERY_EXTENSION) ? "" : XQUERY_EXTENSION);
     }
 
     public static String buildModulePath(String root, String module) {
-        if (!root.endsWith("/")) {
-            root += "/";
+        String moduleRoot = root;
+        String modulePath = module;
+        if (!root.endsWith(SLASH)) {
+            moduleRoot += SLASH;
         }
 
-        if (module.startsWith("/") && module.length() > 1) {
-            module = module.substring(1);
+        if (module.startsWith(SLASH) && module.length() > 1) {
+            modulePath = module.substring(1);
         }
 
-        return root + module;
+        return moduleRoot + modulePath;
     }
 
     /**
@@ -198,7 +191,8 @@ public class StringUtils {
      * Checks if a CharSequence is null or whitespace-only characters
      *
      * @param value
-     * @return
+     * @return {@code true} if the value is null, empty, or whitespace-only 
+     * characters; {@code false} otherwise.
      */
     public static boolean isBlank(final CharSequence value) {
         int length;
@@ -206,7 +200,7 @@ public class StringUtils {
             return true;
         }
         for (int i = 0; i < length; i++) {
-            if (Character.isWhitespace(value.charAt(i)) == false) {
+            if (!Character.isWhitespace(value.charAt(i))) {
                 return false;
             }
         }
@@ -224,21 +218,44 @@ public class StringUtils {
     }
 
     /**
-     * Removes control characters (char <= 32) from both ends of the string. If
+     * Splits the provided value into an Array using the specified regex.
+     * @param value
+     * @param regex
+     * @return An Array of String, an empty Array if the value is null.
+     */
+    public static String[] split(final String value, String regex) {
+        return value == null ? new String[0] : value.split(regex);
+    }
+    
+    /**
+     * Split a CSV and return List of values
+     * @param value
+     * @return 
+     */
+    public static List<String> commaSeparatedValuesToList(String value) {
+        List<String> values = new ArrayList<String>();    
+        for (String item : split(value, ",")) {
+            values.add(item.trim());
+        }
+        return values;
+    }
+    
+    /**
+     * Removes control characters (char &lt;= 32) from both ends of the string. If
      * null, returns null. @param value @return @param value @return the trimmed
      * string, or {@code null} if null String
      *
-     * i
-     * nput
+     * @param value
+     * @return
      */
     public static String trim(final String value) {
         return value == null ? null : value.trim();
     }
 
     /**
-     * Removes control characters (char <= 32) from both ends of the string. If
+     * Removes control characters (char &lt;= 32) from both ends of the string. If
      * null, returns null. @param value @return @param value @return the trimmed
-     * String or an empty String if {@code nul
+     * String or an empty String if {@code null}
      *
      * @param value
      * @return 
@@ -248,17 +265,17 @@ public class StringUtils {
     }
 
     public static boolean isAdhoc(final String value) {
-        return (value != null && value.matches(ADHOC_PATTERN));
+        return value != null && value.matches(ADHOC_PATTERN);
     }
 
     public static boolean isJavaScriptModule(final String value) {
-        return (value != null
+        return value != null
                 && (value.matches(JAVASCRIPT_MODULE_FILENAME_PATTERN)
-                    || inlineModuleLanguage(value).equalsIgnoreCase("javascript")));
+                    || inlineModuleLanguage(value).equalsIgnoreCase("javascript"));
     }
 
     public static boolean isInlineModule(final String value) {
-        return (value != null && value.matches(INLINE_MODULE_PATTERN));
+        return value != null && value.matches(INLINE_MODULE_PATTERN);
     }
 
     public static boolean isInlineOrAdhoc(final String value) {

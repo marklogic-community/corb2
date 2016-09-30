@@ -26,6 +26,7 @@ import static com.marklogic.developer.corb.Options.URIS_MODULE;
 import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
 import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 import static com.marklogic.developer.corb.util.StringUtils.getInlineModuleCode;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
@@ -39,7 +40,11 @@ import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
+import java.util.NoSuchElementException;
+import java.util.Queue;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -48,15 +53,13 @@ public class QueryUrisLoader extends AbstractUrisLoader {
     private static final int DEFAULT_MAX_OPTS_FROM_MODULE = 10;
     private static final Pattern MODULE_CUSTOM_INPUT = Pattern.compile("("
             + PRE_BATCH_MODULE + "|" + PROCESS_MODULE + "|" + XQUERY_MODULE + "|" + POST_BATCH_MODULE
-            + ")\\.[A-Za-z0-9]+=.*");
+            + ")\\.[A-Za-z0-9_-]+=.*");
+    private Queue<String> queue;
 
-    Session session;
-    ResultSequence res;
+    protected Session session;
+    protected ResultSequence res;
 
     private static final Logger LOG = Logger.getLogger(QueryUrisLoader.class.getName());
-
-    public QueryUrisLoader() {
-    }
 
     @Override
     public void open() throws CorbException {
@@ -65,6 +68,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             propertyNames.addAll(properties.stringPropertyNames());
         }
         propertyNames.addAll(System.getProperties().stringPropertyNames());
+
         parseUriReplacePatterns();
 
         try {
@@ -72,11 +76,11 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             opts.setCacheResult(false);
             // this should be a noop, but xqsync does it
             opts.setResultBufferSize(0);
-            LOG.log(Level.INFO, "buffer size = {0}, caching = {1}",
+            LOG.log(INFO, "buffer size = {0}, caching = {1}",
                     new Object[]{opts.getResultBufferSize(), opts.getCacheResult()});
 
             session = cs.newSession();
-            Request req = null;
+            Request req;
             String urisModule = options.getUrisModule();
             if (isInlineOrAdhoc(urisModule)) {
                 String adhocQuery;
@@ -85,14 +89,14 @@ public class QueryUrisLoader extends AbstractUrisLoader {
                     if (isEmpty(adhocQuery)) {
                         throw new IllegalStateException("Unable to read inline module");
                     }
-                    LOG.log(Level.INFO, "invoking inline uris module");
+                    LOG.log(INFO, "invoking inline uris module");
                 } else {
                     String queryPath = urisModule.substring(0, urisModule.indexOf('|'));
                     adhocQuery = AbstractManager.getAdhocQuery(queryPath);
                     if (isEmpty(adhocQuery)) {
                         throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
                     }
-                    LOG.log(Level.INFO, "invoking adhoc uris module {0}", queryPath);
+                    LOG.log(INFO, "invoking adhoc uris module {0}", queryPath);
                 }
                 req = session.newAdhocQuery(adhocQuery);
                 if (isJavaScriptModule(urisModule)) {
@@ -101,7 +105,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             } else {
                 String root = options.getModuleRoot();
                 String modulePath = buildModulePath(root, urisModule);
-                LOG.log(Level.INFO, "invoking uris module {0}", modulePath);
+                LOG.log(INFO, "invoking uris module {0}", modulePath);
                 req = session.newModuleInvoke(modulePath);
             }
             // NOTE: collection will be treated as a CWSV
@@ -127,43 +131,92 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             ResultItem next = res.next();
 
             int maxOpts = this.getMaxOptionsFromModule();
-            for (int i = 0; i < maxOpts && next != null && batchRef == null && !(next.getItem().asString().matches("\\d+")); i++) {
+            for (int i = 0; i < maxOpts && next != null && getBatchRef() == null && !(next.getItem().asString().matches("\\d+")); i++) {
                 String value = next.getItem().asString();
                 if (MODULE_CUSTOM_INPUT.matcher(value).matches()) {
                     int idx = value.indexOf('=');
                     properties.put(value.substring(0, idx).replace(XQUERY_MODULE + ".", PROCESS_MODULE + "."), value.substring(idx + 1));
                 } else {
-                    batchRef = value;
+                    setBatchRef(value);
                 }
                 next = res.next();
             }
 
             try {
-                total = Integer.parseInt(next.getItem().asString());
+                setTotalCount(Integer.parseInt(next.getItem().asString()));
             } catch (NumberFormatException exc) {
                 throw new CorbException("Uris module " + options.getUrisModule() + " does not return total URI count");
             }
+
+            queue = getQueue();
+
+            int i = 0;
+            String uri;
+            while (res != null && res.hasNext()) {
+                uri = res.next().asString();
+                if (isBlank(uri)) {
+                  continue;
+                }
+                
+                if (queue.isEmpty()) {
+                    LOG.log(INFO, "received first uri: {0}", uri);
+                }
+                //apply replacements (if any) - can be helpful in reducing in-memory footprint for ArrayQueue
+                for (int j = 0; j < replacements.length - 1; j += 2) {
+                    uri = uri.replaceAll(replacements[j], replacements[j + 1]);
+                }
+                
+                if (!queue.add(uri)) {
+                	LOG.log(SEVERE,"Unabled to add uri {0} to queue. Received uris {1} which is more than expected {2}",new Object[]{uri,(i+1),getTotalCount()});
+                } else if (i >= getTotalCount()) {
+                	LOG.log(WARNING,"Received uri {0} at index {1} which is more than expected {2}",new Object[]{uri,(i+1),getTotalCount()});
+                }
+                
+                logQueueStatus(i, uri, getTotalCount());
+                i++;
+            }
+
         } catch (RequestException exc) {
             throw new CorbException("While invoking Uris Module", exc);
+        } finally {
+            closeRequestAndSession();
         }
+    }
+
+    protected Queue<String> getQueue() {
+        Queue<String> queue;
+        if (options != null && options.shouldUseDiskQueue()) {
+            queue = new DiskQueue<String>(options.getDiskQueueMaxInMemorySize(), options.getDiskQueueTempDir());
+        } else {
+            queue = new ArrayQueue<String>(getTotalCount());
+        }
+        return queue;
     }
 
     @Override
     public boolean hasNext() throws CorbException {
-        return res != null && res.hasNext();
+        return queue != null && !queue.isEmpty();
     }
 
     @Override
     public String next() throws CorbException {
-        String next = res.next().asString();
-        for (int i = 0; i < replacements.length - 1; i += 2) {
-            next = next.replaceAll(replacements[i], replacements[i + 1]);
+        if (queue == null) {
+            throw new NoSuchElementException();
         }
-        return next;
+        return queue.remove();
     }
 
     @Override
     public void close() {
+        closeRequestAndSession();
+        if (queue != null) {
+            queue.clear();
+            queue = null;
+        }
+        cleanup();
+    }
+
+    private void closeRequestAndSession() {
         if (session != null) {
             LOG.info("closing uris session");
             try {
@@ -176,7 +229,6 @@ public class QueryUrisLoader extends AbstractUrisLoader {
                 session = null;
             }
         }
-        cleanup();
     }
 
     protected int getMaxOptionsFromModule() {
@@ -186,9 +238,26 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             try {
                 max = Integer.parseInt(maxStr);
             } catch (NumberFormatException ex) {
-                LOG.log(Level.WARNING, "Unable to parse MaxOptionsFromModule value: {0}, using default value: {1}", new Object[]{maxStr, DEFAULT_MAX_OPTS_FROM_MODULE});
+                LOG.log(WARNING, "Unable to parse MaxOptionsFromModule value: {0}, using default value: {1}",
+                        new Object[]{maxStr, DEFAULT_MAX_OPTS_FROM_MODULE});
             }
         }
         return max;
+    }
+
+    protected void logQueueStatus(int currentIndex, String uri, int total) {
+        if (0 == currentIndex % 50000) {
+            long freeMemory = Runtime.getRuntime().freeMemory();
+            if (freeMemory < (16 * 1024 * 1024)) {
+                LOG.log(WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
+            }
+        }
+        if (0 == currentIndex % 25000) {
+            LOG.log(INFO, "queued {0}/{1}: {2}", new Object[]{currentIndex, total, uri});
+        }
+        if (currentIndex > total) {
+            LOG.log(WARNING, "expected {0}, got {1}", new Object[]{total, currentIndex});
+            LOG.warning("check your uri module!");
+        }
     }
 }
