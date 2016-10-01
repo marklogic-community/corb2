@@ -5,6 +5,7 @@
 [![Travis-ci gradle build status](https://travis-ci.org/marklogic/corb2.svg?branch=development)](https://travis-ci.org/marklogic/corb2)
 [![CircleCI maven build status](https://circleci.com/gh/marklogic/corb2/tree/development.svg?style=shield)](https://circleci.com/gh/marklogic/corb2/tree/development)
 [![Codecov code coverage](https://codecov.io/gh/marklogic/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic/corb2/branch/development)
+[![SonarQube TechDebt](https://img.shields.io/sonar/http/sonarqube.com/com.marklogic%3Amarklogic-corb/tech_debt.svg)](https://sonarqube.com/component_measures/domain/Maintainability?id=com.marklogic%3Amarklogic-corb)
 [![SonarQube Quality](https://sonarqube.com/api/badges/gate?key=com.marklogic%3Amarklogic-corb)](https://sonarqube.com/overview?id=com.marklogic%3Amarklogic-corb)
 [![Codacy Grade Badge](https://api.codacy.com/project/badge/Grade/c0195f063ae34c7ea17bb4c97ab7ff2c)](https://www.codacy.com/app/mads-hansen/corb2?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marklogic/corb2&amp;utm_campaign=Badge_Grade)
 
@@ -27,7 +28,7 @@ CoRB uses Java logger. To customize logging, specify a logging configuration fil
 ### Getting Help
 
 To get help with CoRB
- 
+
 * Subscribe to the [CoRB2 mailing list](http://developer.marklogic.com/mailman/listinfo/corb2)
 * [Post a question to Stack Overflow](http://stackoverflow.com/questions/ask?tags=marklogic+corb) with the [<code>markogic</code>](https://stackoverflow.com/questions/tagged/marklogic) and [<code>corb</code>](https://stackoverflow.com/questions/tagged/corb) tags.  
 * Submit issues or feature requests at https://github.com/marklogic/corb2/issues
@@ -37,8 +38,11 @@ To get help with CoRB
 You can build CoRB in the same way as any Gradle project:
 
 1. Clone the corb2 repository on your machine.
-2. Execute a Gradle build in the directory containing the build.gradle file.
+```
+git clone https://github.com/marklogic/corb2/
+```
 
+2. Execute a Gradle build in the directory containing the build.gradle file.
 ```
 ./gradlew build
 ```
