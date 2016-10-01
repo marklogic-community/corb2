@@ -7,6 +7,7 @@
 [![Codecov code coverage](https://codecov.io/gh/marklogic/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic/corb2/branch/development)
 [![SonarQube Quality](https://sonarqube.com/api/badges/gate?key=com.marklogic%3Amarklogic-corb)](https://sonarqube.com/overview?id=com.marklogic%3Amarklogic-corb)
 [![Codacy Grade Badge](https://api.codacy.com/project/badge/Grade/c0195f063ae34c7ea17bb4c97ab7ff2c)](https://www.codacy.com/app/mads-hansen/corb2?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marklogic/corb2&amp;utm_campaign=Badge_Grade)
+
 ### User Guide
 This document provides a comprehensive overview of CoRB2. For additional information, please refer to the CoRB2 [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc). This document also covers the less robust [ModuleExecutor Tool](#moduleexecutor-tool), which can be used when only a single staged query is necessary. The ModuleExecutor Tool is provided as part of the CoRB2 distribution.
 
@@ -15,16 +16,22 @@ This document provides a comprehensive overview of CoRB2. For additional informa
 Download the latest release directly from https://github.com/marklogic/corb2/releases or resolve dependencies through [Maven Central](http://mvnrepository.com/artifact/com.marklogic/marklogic-corb) or [JCenter](https://bintray.com/marklogic/maven/marklogic-corb/view).
 
 - CoRB v2.4.0 (or later) requires Java 8 (or later) to run.
-
 - [CoRB v2.3.2](https://github.com/marklogic/corb2/releases/tag/2.3.2) is the last release compatable with Java 7 and 6.
 - [CoRB v2.2.0](https://github.com/marklogic/corb2/releases/tag/2.2.0) (or later) requires [marklogic-xcc 8.0.* (or later)](https://developer.marklogic.com/products/xcc) to run.
 
 
 > Note: marklogic-xcc 8 is backwards compatible to MarkLogic 5 and runs on Java 1.6 or later.
 
-
 CoRB uses Java logger. To customize logging, specify a logging configuration file using Java system argument  
 `-Djava.util.logging.config.file=/path/to/logging.properties`
+### Getting Help
+ 
+To get help with CoRB
+ 
+* Subscribe to [CoRB2 mailing list](http://developer.marklogic.com/mailman/listinfo/corb2)
+* Post a message to [Stack Overflow](http://stackoverflow.com/questions/ask?tags=marklogic+corb) with the markogic and corb tags.  
+* Submit issues or feature requests at https://github.com/marklogic/corb2/issues
+ 
 
 ### Building CoRB
 You can build CoRB in the same way as any Gradle project:
