@@ -117,7 +117,7 @@ public class Monitor implements Runnable {
 
             if (completed >= taskCount) {
                 if (pool.getActiveCount() > 0 || (pool.getTaskCount() - pool.getCompletedTaskCount()) > 0) {
-                    LOG.log(SEVERE, "Thread pool is still active with all the tasks completed and received. We shouldn't see this message.");
+                    LOG.log(WARNING, "Thread pool is still active with all the tasks completed and received. We shouldn't see this message.");
                 }
                 break;
             } else if (future == null && pool.getActiveCount() == 0) {
