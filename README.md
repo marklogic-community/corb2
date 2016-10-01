@@ -19,7 +19,7 @@ CoRB uses Java logger. To customize logging, specify a logging configuration fil
 ### Getting Help
 To get help with CoRB
 * Subscribe to [CoRB2 mailing list](http://developer.marklogic.com/mailman/listinfo/corb2)
-* Post a message to [Stack Overflow](http://stackoverflow.com/questions/ask?tags=marklogic) with markogic tag. 
+* Post a message to [Stack Overflow](http://stackoverflow.com/questions/ask?tags=marklogic+corb) with markogic tag. 
 * Submit issues or feature requests at https://github.com/marklogic/corb2/issues
 
 ### Building CoRB
