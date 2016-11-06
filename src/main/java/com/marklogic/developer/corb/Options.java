@@ -923,14 +923,14 @@ public final class Options {
     /**
      * @since 2.4.0
      */
-    @Usage(description = "Path to a W3C XML Schema to be used by com.marklogic.developer.corb.StreamingXMLUrisLoader "
+    @Usage(description = "Path to a W3C XML Schema to be used by com.marklogic.developer.corb.FileUrisStreamingXMLLoader "
             + "or com.marklogic.developer.corb.FileUrisXMLLoader to validate an XML-FILE.")
     public static final String XML_SCHEMA = "XML-SCHEMA";
 
     /**
      * @since 2.4.0
      */
-    @Usage(description = "PTemporary directory used by com.marklogic.developer.corb.StreamingXMLUrisLoader "
+    @Usage(description = "Temporary directory used by com.marklogic.developer.corb.FileUrisStreamingXMLLoader "
             + "to store files extracted from the XML-FILE.")
     public static final String XML_TEMP_DIR = "XML-TEMP-DIR";
 
