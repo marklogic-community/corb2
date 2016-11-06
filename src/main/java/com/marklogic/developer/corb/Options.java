@@ -803,12 +803,12 @@ public final class Options {
             + "reduce java heap size in very large batch jobs, as the CoRB java "
             + "client holds all the URIS in memory while processing is in progress. "
             + "If truncated, PROCESS-MODULE needs to reconstruct the URI before "
-            + "trying to duse fn:doc() to fetch the document. "
+            + "trying to use fn:doc() to fetch the document. "
             + "Usage: URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2,...)"
             + "Example:"
             + "URIS-REPLACE-PATTERN=/com/marklogic/sample/,,.xml, - Replace /com/marklogic/sample/ "
-            + "and .xml with empty strings. So, CoRB client only needs to cache the id '1234' i"
-            + "nstead of the entire URI /com/marklogic/sample/1234.xml. In the transform "
+            + "and .xml with empty strings. So, CoRB client only needs to cache the id '1234' "
+            + "instead of the entire URI /com/marklogic/sample/1234.xml. In the transform "
             + "PROCESS-MODULE, we need to do let $URI := fn:concat(\"/com/marklogic/sample/\",$URI,\".xml\")")
     public static final String URIS_REPLACE_PATTERN = "URIS-REPLACE-PATTERN";
 
@@ -857,16 +857,16 @@ public final class Options {
     public static final String XCC_PORT = "XCC-PORT";
 
     /**
-     * The ID for the TimeZone that should be set on XCC RequestOption. 
-     * When a value is specified, it is parsed using TimeZone.getTimeZone() and 
-     * set on XCC RequestOption for each Task. Invalid ID values will produce the GMT TimeZone.
-     * If not specified, XCC uses the JVM default TimeZone.
-     * 
+     * The ID for the TimeZone that should be set on XCC RequestOption. When a
+     * value is specified, it is parsed using TimeZone.getTimeZone() and set on
+     * XCC RequestOption for each Task. Invalid ID values will produce the GMT
+     * TimeZone. If not specified, XCC uses the JVM default TimeZone.
+     *
      * @see java.util.TimeZone
      * @since 2.4.0
      */
     public static final String XCC_TIME_ZONE = "XCC-TIME-ZONE";
-    
+
     /**
      * Required if {@value #XCC_CONNECTION_URI} is not specified.
      */
@@ -919,6 +919,20 @@ public final class Options {
             + "string as node to do further processing with the node. If not specified, "
             + "the default behavior is to select the child elements of the document element (i.e. /*/*)")
     public static final String XML_NODE = "XML-NODE";
+
+    /**
+     * @since 2.4.0
+     */
+    @Usage(description = "Path to a W3C XML Schema to be used by com.marklogic.developer.corb.StreamingXMLUrisLoader "
+            + "or com.marklogic.developer.corb.FileUrisXMLLoader to validate an XML-FILE.")
+    public static final String XML_SCHEMA = "XML-SCHEMA";
+
+    /**
+     * @since 2.4.0
+     */
+    @Usage(description = "PTemporary directory used by com.marklogic.developer.corb.StreamingXMLUrisLoader "
+            + "to store files extracted from the XML-FILE.")
+    public static final String XML_TEMP_DIR = "XML-TEMP-DIR";
 
     /**
      *

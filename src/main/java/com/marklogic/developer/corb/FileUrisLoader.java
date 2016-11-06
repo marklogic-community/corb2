@@ -109,7 +109,6 @@ public class FileUrisLoader extends AbstractUrisLoader {
     @Override
     protected void cleanup() {
         super.cleanup();
-        this.setTotalCount(0);
         nextLine = null;
         br = null;
     }

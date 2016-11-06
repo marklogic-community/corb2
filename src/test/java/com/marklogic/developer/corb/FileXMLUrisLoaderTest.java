@@ -342,7 +342,7 @@ public class FileXMLUrisLoaderTest {
         }
     }
 
-    @Test(expected = CorbException.class)
+    @Test(expected = NullPointerException.class)
     public void testHasNextThrowException() throws CorbException {
         try (FileUrisXMLLoader instance = new FileUrisXMLLoader()) {
             instance.hasNext();
