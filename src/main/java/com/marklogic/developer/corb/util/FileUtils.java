@@ -23,6 +23,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.net.URL;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import static java.nio.file.FileVisitResult.CONTINUE;
+import static java.nio.file.FileVisitResult.TERMINATE;
+import java.nio.file.SimpleFileVisitor;
 
 /**
  * Common file manipulation utilities
@@ -41,29 +48,7 @@ public final class FileUtils {
      * @throws IOException
      */
     public static void deleteFile(File file) throws IOException {
-        if (!file.exists()) {
-            return;
-        }
-        boolean success;
-        if (!file.isDirectory()) {
-            success = file.delete();
-            if (!success) {
-                throw new IOException("error deleting " + file.getCanonicalPath());
-            }
-            return;
-        }
-        // directory, so recurse
-        File[] children = file.listFiles();
-        if (children != null) {
-            for (File children1 : children) {
-                // recurse
-                deleteFile(children1);
-            }
-        }
-        // now this directory should be empty
-        if (file.exists()) {
-            file.delete();
-        }
+        delete(file.toPath());
     }
 
     /**
@@ -74,6 +59,37 @@ public final class FileUtils {
      */
     public static void deleteFile(String path) throws IOException {
         deleteFile(new File(path));
+    }
+
+    public static void delete(final Path path) throws IOException {
+        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs)
+                    throws IOException {
+                Files.delete(file);
+                return CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(final Path file, final IOException e) {
+                return handleException(e);
+            }
+
+            private FileVisitResult handleException(final IOException e) {
+                
+                return TERMINATE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(final Path dir, final IOException e)
+                    throws IOException {
+                if (e != null) {
+                    return handleException(e);
+                }
+                Files.delete(dir);
+                return CONTINUE;
+            }
+        });
     }
 
     /**
@@ -102,7 +118,7 @@ public final class FileUtils {
      */
     public static int getLineCount(final File file) throws IOException {
         if (file != null && file.exists()) {
-            try (LineNumberReader lnr = new LineNumberReader(new FileReader(file))) {            
+            try (LineNumberReader lnr = new LineNumberReader(new FileReader(file))) {
                 lnr.skip(Long.MAX_VALUE);
                 return lnr.getLineNumber();
             }
@@ -128,5 +144,5 @@ public final class FileUtils {
         }
         return file;
     }
-    
+
 }
