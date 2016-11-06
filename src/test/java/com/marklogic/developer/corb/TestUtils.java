@@ -36,7 +36,7 @@ import java.util.logging.Logger;
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class TestUtils {
+public final class TestUtils {
     
     private static final Logger LOG = Logger.getLogger(TestUtils.class.getName());
     private TestUtils() {
