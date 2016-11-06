@@ -61,7 +61,7 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile 'org.jasypt:jasypt:1.9.2'
     testCompile 'com.github.stefanbirkner:system-rules:1.16.1' //facilitates tests for methods that invoke System.exit
-    testCompile 'org.mockito:mockito-all:1.+'
+    testCompile 'org.mockito:mockito-all:1.10.19'
 }
 
 test {
