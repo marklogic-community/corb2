@@ -165,6 +165,11 @@ public abstract class AbstractManager {
         init(args, null);
     }
 
+    public void init(Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException {
+        String[] args = {};
+        init(args, props);
+    }
+    
     public abstract void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException;
 
     /**
