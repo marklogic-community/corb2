@@ -110,7 +110,7 @@ public class FileUtilsTest {
         assertFalse(new File(filename).exists());
     }
 
-    @Test(expected = IOException.class)
+    @Test(expected = NullPointerException.class)
     public void testDeleteFileCannotDelete() throws IOException {
         File exceptionalFile = mock(File.class);
         when(exceptionalFile.exists()).thenReturn(true);
