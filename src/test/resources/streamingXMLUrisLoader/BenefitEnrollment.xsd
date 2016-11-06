@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://bem.corb.developer.marklogic.com" xmlns:bem="http://bem.corb.developer.marklogic.com">
+  <xs:element name="BenefitEnrollmentRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:FileInformation"/>
+        <xs:element maxOccurs="unbounded" ref="bem:BenefitEnrollmentMaintenance"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="FileInformation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:InterchangeSenderID"/>
+        <xs:element ref="bem:InterchangeReceiverID"/>
+        <xs:element ref="bem:GroupSenderID"/>
+        <xs:element ref="bem:GroupReceiverID"/>
+        <xs:element ref="bem:GroupControlNumber"/>
+        <xs:element ref="bem:GroupTimeStamp"/>
+        <xs:element ref="bem:VersionNumber"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="InterchangeSenderID" type="xs:NCName"/>
+  <xs:element name="InterchangeReceiverID" type="xs:NCName"/>
+  <xs:element name="GroupSenderID" type="xs:NMTOKEN"/>
+  <xs:element name="GroupReceiverID" type="xs:NCName"/>
+  <xs:element name="GroupControlNumber" type="xs:integer"/>
+  <xs:element name="GroupTimeStamp" type="xs:dateTime"/>
+  <xs:element name="VersionNumber" type="xs:integer"/>
+  <xs:element name="BenefitEnrollmentMaintenance">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:TransactionInformation"/>
+        <xs:element ref="bem:Sponsor"/>
+        <xs:element ref="bem:Issuer"/>
+        <xs:element maxOccurs="unbounded" ref="bem:Member"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="TransactionInformation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:ControlNumber"/>
+        <xs:element ref="bem:CurrentTimeStamp"/>
+        <xs:element ref="bem:ExchangeCode"/>
+        <xs:element ref="bem:TransactionCode"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ControlNumber" type="xs:integer"/>
+  <xs:element name="CurrentTimeStamp" type="xs:string"/>
+  <xs:element name="ExchangeCode" type="xs:NCName"/>
+  <xs:element name="TransactionCode" type="xs:NCName"/>
+  <xs:element name="Sponsor">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:Name"/>
+        <xs:element ref="bem:OtherIdentifier"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="OtherIdentifier" type="xs:integer"/>
+  <xs:element name="Issuer">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:Name"/>
+        <xs:element ref="bem:TaxPayerIdentificationNumber"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="TaxPayerIdentificationNumber" type="xs:integer"/>
+  <xs:element name="Member">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:MemberInformation"/>
+        <xs:element ref="bem:SubscriberID"/>
+        <xs:element ref="bem:MemberAdditionalIdentifier"/>
+        <xs:element minOccurs="0" ref="bem:PaymentTransactionID"/>
+        <xs:element ref="bem:MemberRelatedDates"/>
+        <xs:element ref="bem:MemberNameInformation"/>
+        <xs:element ref="bem:HealthCoverage"/>
+        <xs:element maxOccurs="unbounded" ref="bem:AdditionalInfo"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="MemberInformation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:SubscriberIndicator"/>
+        <xs:element ref="bem:IndividualRelationshipCode"/>
+        <xs:element ref="bem:MaintenanceTypeCode"/>
+        <xs:element ref="bem:MaintenanceReasonCode"/>
+        <xs:element ref="bem:BenefitStatusCode"/>
+        <xs:element minOccurs="0" ref="bem:EmploymentStatusCode"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SubscriberIndicator" type="xs:NCName"/>
+  <xs:element name="IndividualRelationshipCode" type="xs:integer"/>
+  <xs:element name="MaintenanceTypeCode" type="xs:integer"/>
+  <xs:element name="MaintenanceReasonCode" type="xs:integer"/>
+  <xs:element name="BenefitStatusCode" type="xs:NCName"/>
+  <xs:element name="EmploymentStatusCode" type="xs:NCName"/>
+  <xs:element name="SubscriberID" type="xs:integer"/>
+  <xs:element name="MemberAdditionalIdentifier">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:ExchangeAssignedMemberID"/>
+        <xs:choice>
+          <xs:element ref="bem:IssuerAssignedMemberID"/>
+          <xs:element ref="bem:IssuerAssignedSubscriberID"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ExchangeAssignedMemberID" type="xs:integer"/>
+  <xs:element name="IssuerAssignedMemberID" type="xs:integer"/>
+  <xs:element name="IssuerAssignedSubscriberID" type="xs:integer"/>
+  <xs:element name="PaymentTransactionID" type="xs:NCName"/>
+  <xs:element name="MemberRelatedDates">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:EligibilityBeginDate"/>
+        <xs:element ref="bem:EligibilityEndDate"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="EligibilityBeginDate" type="xs:date"/>
+  <xs:element name="EligibilityEndDate" type="xs:date"/>
+  <xs:element name="MemberNameInformation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:MemberName"/>
+        <xs:element ref="bem:MemberResidenceAddress"/>
+        <xs:element ref="bem:MemberDemographics"/>
+        <xs:element minOccurs="0" ref="bem:TobaccoUseCode"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="MemberName">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:LastName"/>
+        <xs:element ref="bem:FirstName"/>
+        <xs:element minOccurs="0" ref="bem:MiddleName"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="LastName" type="xs:NCName"/>
+  <xs:element name="FirstName" type="xs:NCName"/>
+  <xs:element name="MiddleName" type="xs:NCName"/>
+  <xs:element name="MemberResidenceAddress">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:Addressline1"/>
+        <xs:element ref="bem:CityName"/>
+        <xs:element ref="bem:StateCode"/>
+        <xs:element ref="bem:PostalCode"/>
+        <xs:element ref="bem:CountyCode"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Addressline1" type="xs:string"/>
+  <xs:element name="CityName" type="xs:NCName"/>
+  <xs:element name="StateCode" type="xs:NCName"/>
+  <xs:element name="PostalCode" type="xs:integer"/>
+  <xs:element name="CountyCode" type="xs:integer"/>
+  <xs:element name="MemberDemographics">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:BirthDate"/>
+        <xs:element ref="bem:GenderCode"/>
+        <xs:element minOccurs="0" ref="bem:MaritalStatusCode"/>
+        <xs:element minOccurs="0" ref="bem:RaceEthnicityCode"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="BirthDate" type="xs:date"/>
+  <xs:element name="GenderCode" type="xs:NCName"/>
+  <xs:element name="MaritalStatusCode" type="xs:NCName"/>
+  <xs:element name="RaceEthnicityCode" type="xs:NMTOKEN"/>
+  <xs:element name="TobaccoUseCode" type="xs:NCName"/>
+  <xs:element name="HealthCoverage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:HealthCoverageInformation"/>
+        <xs:element ref="bem:HealthCoverageDates"/>
+        <xs:element ref="bem:HealthCoveragePolicyNumber"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="HealthCoverageInformation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:HealthCoverageMaintenanceTypeCode"/>
+        <xs:element ref="bem:InsuranceLineCode"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="HealthCoverageMaintenanceTypeCode" type="xs:integer"/>
+  <xs:element name="InsuranceLineCode" type="xs:NCName"/>
+  <xs:element name="HealthCoverageDates">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:BenefitBeginDate"/>
+        <xs:element ref="bem:BenefitEndDate"/>
+        <xs:element ref="bem:LastPremiumPaidDate"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="BenefitBeginDate" type="xs:date"/>
+  <xs:element name="BenefitEndDate" type="xs:date"/>
+  <xs:element name="LastPremiumPaidDate" type="xs:date"/>
+  <xs:element name="HealthCoveragePolicyNumber">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="bem:GroupPolicyNumber"/>
+        <xs:element ref="bem:ContractCode"/>
+        <xs:element ref="bem:InternalControlNumber"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GroupPolicyNumber" type="xs:integer"/>
+  <xs:element name="ContractCode" type="xs:NMTOKEN"/>
+  <xs:element name="InternalControlNumber" type="xs:integer"/>
+  <xs:element name="AdditionalInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:element ref="bem:APTCAmount"/>
+          <xs:element ref="bem:AdditionalMaintenanceReason"/>
+          <xs:element ref="bem:PremiumAmount1"/>
+          <xs:element ref="bem:RatingArea"/>
+          <xs:element ref="bem:SourceExchangeID"/>
+          <xs:element ref="bem:TotalIndividualResponsibilityAmount"/>
+          <xs:element ref="bem:TotalPremiumAmount"/>
+        </xs:choice>
+        <xs:element ref="bem:EffectiveStartDate"/>
+        <xs:element ref="bem:EffectiveEndDate"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="APTCAmount" type="xs:decimal"/>
+  <xs:element name="AdditionalMaintenanceReason" type="xs:string"/>
+  <xs:element name="PremiumAmount1" type="xs:decimal"/>
+  <xs:element name="RatingArea" type="xs:NCName"/>
+  <xs:element name="SourceExchangeID" type="xs:NCName"/>
+  <xs:element name="TotalIndividualResponsibilityAmount" type="xs:decimal"/>
+  <xs:element name="TotalPremiumAmount" type="xs:decimal"/>
+  <xs:element name="EffectiveStartDate" type="xs:date"/>
+  <xs:element name="EffectiveEndDate" type="xs:date"/>
+  <xs:element name="Name" type="xs:string"/>
+</xs:schema>

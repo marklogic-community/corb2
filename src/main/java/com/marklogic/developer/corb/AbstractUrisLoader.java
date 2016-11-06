@@ -95,6 +95,7 @@ public abstract class AbstractUrisLoader implements UrisLoader {
         properties = null;
         replacements = null;
         batchRef = null;
+        total = 0;
     }
 
     protected void parseUriReplacePatterns() {
