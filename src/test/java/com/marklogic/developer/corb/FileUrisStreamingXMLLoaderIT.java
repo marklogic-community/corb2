@@ -41,7 +41,7 @@ import org.junit.Before;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class FileUrisStreamingXMLLoaderIT {
-
+    private static final String STREAMING_XML_LOADER = "com.marklogic.developer.corb.FileUrisStreamingXMLLoader";
     private static final String LARGE_PREFIX = "LARGE.";
     private static final String LARGE_BUU_FILENAME = LARGE_PREFIX + BUU_FILENAME;
     private static final int LARGE_COPIES_OF_BEM = 10000;
@@ -134,14 +134,14 @@ public class FileUrisStreamingXMLLoaderIT {
         properties.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
         properties.setProperty(Options.THREAD_COUNT, Integer.toString(10));
         properties.setProperty(Options.XML_FILE, BUU_DIR + BUU_FILENAME);
-        properties.setProperty(Options.URIS_LOADER, "com.marklogic.developer.corb.StreamingXMLUrisLoader");
+        properties.setProperty(Options.URIS_LOADER, STREAMING_XML_LOADER);
         properties.setProperty(Options.PRE_BATCH_TASK, "com.marklogic.developer.corb.PreBatchUpdateFileTask");
         properties.setProperty(Options.PROCESS_TASK, "com.marklogic.developer.corb.ExportBatchToFileTask");
         properties.setProperty(Options.POST_BATCH_TASK, "com.marklogic.developer.corb.PostBatchUpdateFileTask");
 
         properties.setProperty(Options.PROCESS_MODULE, BUU_DIR + "processMultiply.xqy|ADHOC");
         properties.setProperty(Options.PROCESS_MODULE + ".COPIES", Integer.toString(copies));
-        properties.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "<bem:BenefitEnrollmentRequest xmlns:bem=\"http://bem.dsh.cms.gov\">");
+        properties.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "<bem:BenefitEnrollmentRequest xmlns:bem=\"http://bem.corb.developer.marklogic.com\">");
         properties.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "</bem:BenefitEnrollmentRequest>");
         properties.setProperty(Options.EXPORT_FILE_DIR, BUU_DIR);
         properties.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
@@ -163,7 +163,7 @@ public class FileUrisStreamingXMLLoaderIT {
         properties.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
         properties.setProperty(Options.XML_FILE, BUU_DIR + BUU_FILENAME);
         properties.setProperty(Options.XML_SCHEMA, BUU_DIR + BUU_SCHEMA);
-        properties.setProperty(Options.URIS_LOADER, "com.marklogic.developer.corb.StreamingXMLUrisLoader");
+        properties.setProperty(Options.URIS_LOADER, STREAMING_XML_LOADER);
         properties.setProperty(Options.PRE_BATCH_MODULE, BUU_DIR + "preBatch.xqy|ADHOC");
         properties.setProperty(Options.PROCESS_TASK, "com.marklogic.developer.corb.ExportBatchToFileTask");
         properties.setProperty(Options.PROCESS_MODULE, BUU_DIR + "process.xqy|ADHOC");
