@@ -41,6 +41,7 @@ import org.junit.Before;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class FileUrisStreamingXMLLoaderIT {
+
     private static final String STREAMING_XML_LOADER = "com.marklogic.developer.corb.FileUrisStreamingXMLLoader";
     private static final String LARGE_PREFIX = "LARGE.";
     private static final String LARGE_BUU_FILENAME = LARGE_PREFIX + BUU_FILENAME;
@@ -65,9 +66,6 @@ public class FileUrisStreamingXMLLoaderIT {
         }
     }
 
-    public FileUrisStreamingXMLLoaderIT() {
-    }
-
     @Test
     public void testInvalidLarge() {
         Properties properties = getBUUProperties();
@@ -75,9 +73,6 @@ public class FileUrisStreamingXMLLoaderIT {
 
         try {
             testStreamingXMLUrisLoader(LARGE_BUU_FILENAME, properties);
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            //We expect invalid content to throw a CorbException when it fails schema validation
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -109,22 +104,29 @@ public class FileUrisStreamingXMLLoaderIT {
         }
     }
 
-    public int testStreamingXMLUrisLoader(String filename, Properties properties) throws Exception {
-        String exportFileName = filename + "IT_report.txt";
-        String exportFileDir = ManagerTest.EXPORT_FILE_DIR;
+    public int testStreamingXMLUrisLoader(String filename, Properties properties) {
+        int lineCount = -1;
+        try {
+            String exportFileName = filename + "IT_report.txt";
+            String exportFileDir = ManagerTest.EXPORT_FILE_DIR;
 
-        File report = new File(exportFileDir + SLASH + exportFileName);
-        report.deleteOnExit();
+            File report = new File(exportFileDir + SLASH + exportFileName);
+            report.deleteOnExit();
 
-        properties.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
+            properties.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
 
-        //First, verify the output using run()
-        Manager manager = new Manager();
-        manager.init(properties);
-        manager.run();
+            //First, verify the output using run()
+            Manager manager = new Manager();
+            manager.init(properties);
+            manager.run();
 
-        int lineCount = FileUtils.getLineCount(report);
-        clearFile(report);
+            lineCount = FileUtils.getLineCount(report);
+            clearFile(report);
+
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
         return lineCount;
     }
 

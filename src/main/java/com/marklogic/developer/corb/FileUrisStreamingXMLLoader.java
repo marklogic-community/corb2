@@ -20,6 +20,7 @@ package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.XML_FILE;
 import com.marklogic.developer.corb.util.FileUtils;
+import com.marklogic.developer.corb.util.IOUtils;
 import com.marklogic.developer.corb.util.StringUtils;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -29,6 +30,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
@@ -63,6 +65,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
     private static final String SLASH = "/";
     private File xmlFile;
     private Path tempDir;
+    private DirectoryStream<Path> directoryStream;
     private Iterator<Path> files;
     FileAttribute<?>[] fileAttributes = new FileAttribute<?>[0];
     StreamingXPath streamingXPath;
@@ -97,7 +100,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         try {
             String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
             Files.deleteIfExists(path);
-            return content; //+ getOriginalFileNameProcessingInstruction(xmlFile);
+            return content;
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
@@ -117,7 +120,8 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
     }
     
     @Override
-    public void close() {
+    public void close() {     
+        IOUtils.closeQuietly(directoryStream);     
         cleanup();
     }
 
@@ -131,7 +135,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    protected Iterator<Path> read(Path xmlFile) throws XMLStreamException, FileNotFoundException, IOException {
+    protected Iterator<Path> read(Path xmlFile) throws XMLStreamException, IOException {
         int extractedDocumentCount = 0;
 
         XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
@@ -152,7 +156,8 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         }
         this.setTotalCount(extractedDocumentCount);
         
-        return Files.newDirectoryStream(tempDir).iterator();
+        directoryStream = Files.newDirectoryStream(tempDir);
+        return directoryStream.iterator();
     }
 
     /**
@@ -164,11 +169,11 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         Path dir;
         String tempDirOption = getProperty(Options.XML_TEMP_DIR);
         if (!StringUtils.isBlank(tempDirOption)) {
-            File tempDir = new File(tempDirOption);
-            if (!(tempDir.exists() && tempDir.isDirectory() && tempDir.canWrite())) {
+            File temporaryDirectory = new File(tempDirOption);
+            if (!(temporaryDirectory.exists() && temporaryDirectory.isDirectory() && temporaryDirectory.canWrite())) {
                 throw new InvalidParameterException(this.getClass().getSimpleName() + " temporary directory must exist and be writable");
             }
-            dir = tempDir.toPath();
+            dir = temporaryDirectory.toPath();
         } else {
             dir = Files.createTempDirectory(xmlFile.getName(), fileAttributes);
         }
