@@ -51,24 +51,25 @@ public class StreamingXPath {
         regexPath = Pattern.compile(regex);
     }
 
-    protected String normalizeAxes(String xpath) {
+    protected String normalizeAxes(final String xpath) {
+        String normalizedXPath = xpath;
         // +replace axis /descendant:: with //
-        if (xpath.contains("descendant::")) {
-            xpath = xpath.replaceAll(SLASH + "descendant::", DOUBLE_SLASH);
+        if (normalizedXPath.contains("descendant::")) {
+            normalizedXPath = normalizedXPath.replaceAll(SLASH + "descendant::", DOUBLE_SLASH);
         }
         // +replace /child:: with ""
-        if (xpath.contains("child::")) {
-            xpath = xpath.replaceAll(SLASH + "child::", SLASH);
+        if (normalizedXPath.contains("child::")) {
+            normalizedXPath = normalizedXPath.replaceAll(SLASH + "child::", SLASH);
         }
         ///*/self::foo == /*|foo will be less specific and grab false-positives, but better than nothing
-        if (xpath.contains(SLASH + "self::")) {
-            xpath = xpath.replaceAll(SLASH + "self::", "|");
+        if (normalizedXPath.contains(SLASH + "self::")) {
+            normalizedXPath = normalizedXPath.replaceAll(SLASH + "self::", "|");
         }
         // if match pattern specified (only an element name or partial), then prepend //
-        if (!xpath.startsWith(SLASH)) {
-            xpath = DOUBLE_SLASH + xpath;
+        if (!normalizedXPath.startsWith(SLASH)) {
+            normalizedXPath = DOUBLE_SLASH + normalizedXPath;
         }
-        return xpath;
+        return normalizedXPath;
     }
 
     /**
