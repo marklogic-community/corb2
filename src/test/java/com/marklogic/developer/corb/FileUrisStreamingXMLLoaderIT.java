@@ -46,23 +46,24 @@ public class FileUrisStreamingXMLLoaderIT {
     private static final String LARGE_PREFIX = "LARGE.";
     private static final String LARGE_BUU_FILENAME = LARGE_PREFIX + BUU_FILENAME;
     private static final int LARGE_COPIES_OF_BEM = 10000;
+    private String EXPORT_FILE_DIR;
     private static final Logger LOG = Logger.getLogger(FileUrisStreamingXMLLoaderIT.class.getName());
 
     @Before
     public void setUp() throws IOException {
         clearSystemProperties();
         File tempDir = TestUtils.createTempDirectory();
-        ManagerTest.EXPORT_FILE_DIR = tempDir.toString();
+        EXPORT_FILE_DIR = tempDir.toString();
         generateLargeInput(LARGE_COPIES_OF_BEM);
     }
 
     @After
     public void tearDown() throws IOException {
-        FileUtils.deleteFile(ManagerTest.EXPORT_FILE_DIR);
+        FileUtils.deleteFile(EXPORT_FILE_DIR);
         clearSystemProperties();
         File largeFile = new File(BUU_DIR + LARGE_BUU_FILENAME);
-        if (largeFile.exists()) {
-            largeFile.delete();
+        if (largeFile.exists() && !largeFile.delete()) {
+            LOG.log(Level.WARNING, "Unable to delete directory");
         }
     }
 
@@ -108,7 +109,7 @@ public class FileUrisStreamingXMLLoaderIT {
         int lineCount = -1;
         try {
             String exportFileName = filename + "IT_report.txt";
-            String exportFileDir = ManagerTest.EXPORT_FILE_DIR;
+            String exportFileDir = EXPORT_FILE_DIR;
 
             File report = new File(exportFileDir + SLASH + exportFileName);
             report.deleteOnExit();
@@ -162,7 +163,7 @@ public class FileUrisStreamingXMLLoaderIT {
     public Properties getBUUProperties() {
         Properties properties = new Properties();
         properties.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
-        properties.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        properties.setProperty(Options.EXPORT_FILE_DIR, EXPORT_FILE_DIR);
         properties.setProperty(Options.XML_FILE, BUU_DIR + BUU_FILENAME);
         properties.setProperty(Options.XML_SCHEMA, BUU_DIR + BUU_SCHEMA);
         properties.setProperty(Options.URIS_LOADER, STREAMING_XML_LOADER);
