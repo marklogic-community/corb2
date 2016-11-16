@@ -1,0 +1,5 @@
+{
+  "user-name" : "%%NAME%%-reader",
+  "password" : "%%NAME%%-reader-password",
+  "role" : [ "%%NAME%%-reader" ]
+}

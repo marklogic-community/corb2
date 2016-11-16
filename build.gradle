@@ -10,10 +10,19 @@ plugins {
     id 'jacoco'
     id 'com.jfrog.bintray' version '1.6'
     id 'com.github.kt3k.coveralls' version '2.6.3'
+    id "com.marklogic.ml-gradle" version "2.4.0"
 }
 
 ext {
     externalsortinginjavaVersion = '0.2.2'
+
+  // we don't need a REST server, only an XCC server
+    mlAppDeployer.getCommands().remove(mlAppDeployer.getCommand("DeployRestApiServersCommand"))
+    mlAppConfig {
+      name = project.name
+      customTokens.put("%%XDBC_PORT%%", "8223")
+      createTriggersDatabase = false
+    }
 }
 
 sourceCompatibility = '1.8'

@@ -1,0 +1,5 @@
+{
+  "role-name" : "%%NAME%%-reader",
+  "description" : "Can view documents, but not edit",
+  "role" : [ "rest-reader", "%%NAME%%-nobody" ]
+}

@@ -72,7 +72,7 @@ public class ModuleExecutorTest {
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
     private final TestHandler testLogger = new TestHandler();
     private static final Logger LOG = Logger.getLogger(ModuleExecutor.class.getName());
-    public static final String XCC_CONNECTION_URI = "xcc://admin:admin@localhost:2223/FFE";
+    public static final String XCC_CONNECTION_URI = "xcc://marklogic-corb-admin:marklogic-corb-admin-password@localhost:8223/marklogic-corb-content";
     public static final String OPTIONS_FILE = "src/test/resources/helloWorld.properties";
     public static final String EXPORT_FILE_NAME = "src/test/resources/helloWorld.txt";
     public static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";

@@ -76,7 +76,7 @@ public class ManagerTest {
     private static final Logger MANAGER_LOGGER = Logger.getLogger(Manager.class.getName());
     private static final Logger LOG = Logger.getLogger(ManagerTest.class.getName());
     private PrintStream systemErr = System.err;
-    public static final String XCC_CONNECTION_URI = "xcc://admin:admin@localhost:2223/FFE";
+    public static final String XCC_CONNECTION_URI = "xcc://marklogic-corb-admin:marklogic-corb-admin-password@localhost:8223/marklogic-corb-content";
     public static final String COLLECTION_NAME = "StringPassedToTheURIsModule";
     public static final String XQUERY_MODULE = "src/test/resources/transform.xqy|ADHOC";
     public static final String THREAD_COUNT = "2";

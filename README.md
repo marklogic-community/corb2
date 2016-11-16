@@ -37,25 +37,38 @@ To get help with CoRB
 ### Building CoRB
 You can build CoRB in the same way as any Gradle project:
 
-1. Clone the corb2 repository on your machine.
+1. Clone the corb2 repository on your machine:  
+    
+    
 ```
 git clone https://github.com/marklogic/corb2/
 ```
 
-2. Execute a Gradle build in the directory containing the build.gradle file.
+2. (optional) If you have a local MarkLogic instance, you can setup a test database and XDBC server for the integration tests by executing the ml-gradle 
+[mlDeploy](https://github.com/rjrudin/ml-gradle/wiki/All-tasks#ml-gradle-deploy-tasks) task:  
+    
+    
+```
+./gradlew mlDeploy
+```  
+
+3. Execute the build task  
+     
+    
 ```
 ./gradlew build
-```
-
-You might want to skip the integration tests until you have configured a test database
-(the integration tests require a live MarkLogic database):
-
+```  
+    
+    
+    If you don't have a local MarkLogic instance and/or want to skip the integration tests:  
+    
+       
 ```
 ./gradlew build -x integrationTest
 ```
 
 #### Building CoRB with Maven
-CoRB also has a Maven pom.xml and can be built with standard Maven commands
+CoRB also has a Maven pom.xml and can be built with standard Maven commands:
 
 ```
 mvn package

@@ -1,0 +1,5 @@
+{
+  "role-name" : "%%NAME%%-nobody",
+  "description" : "Unauthenticated user",
+  "role" : [ ]
+}
