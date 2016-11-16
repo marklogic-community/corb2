@@ -2,25 +2,25 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    id 'java' 
+    id 'com.jfrog.bintray' version '1.6'
     id 'com.github.johnrengelman.shadow' version '1.2.3'
-    id 'maven-publish'
+    id 'com.github.kt3k.coveralls' version '2.6.3'
+    id 'com.marklogic.ml-gradle' version '2.4.0'
     id 'eclipse'
     id 'idea'
     id 'jacoco'
-    id 'com.jfrog.bintray' version '1.6'
-    id 'com.github.kt3k.coveralls' version '2.6.3'
-    id "com.marklogic.ml-gradle" version "2.4.0"
+    id 'java' 
+    id 'maven-publish'
 }
 
 ext {
     externalsortinginjavaVersion = '0.2.2'
 
   // we don't need a REST server, only an XCC server
-    mlAppDeployer.getCommands().remove(mlAppDeployer.getCommand("DeployRestApiServersCommand"))
+    mlAppDeployer.getCommands().remove(mlAppDeployer.getCommand('DeployRestApiServersCommand'))
     mlAppConfig {
       name = project.name
-      customTokens.put("%%XDBC_PORT%%", "8223")
+      customTokens.put('%%XDBC_PORT%%', '8223')
       createTriggersDatabase = false
     }
 }
@@ -64,7 +64,7 @@ configurations {
 }
 
 dependencies {
-    compile 'com.marklogic:marklogic-xcc:8.0.5'
+    compile 'com.marklogic:marklogic-xcc:8.0.6'
     compile "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
     // if you want to compile without testing comment out the lines below
     testCompile group: 'junit', name: 'junit', version: '4.12'
