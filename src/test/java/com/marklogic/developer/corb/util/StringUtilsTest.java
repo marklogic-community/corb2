@@ -327,7 +327,7 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testInlineModuleLanguageJAVASCRIPT() {
+    public void testInlineModuleLanguageJavaScript() {
         String code = INLINE_JAVASCRIPT_CODE;
         String value = INLINE_JAVASCRIPT_PREFIX + code + ADHOC_SUFFIX;
         String result = StringUtils.inlineModuleLanguage(value);
@@ -335,7 +335,7 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testInlineModuleLanguageXQUERY() {
+    public void testInlineModuleLanguageXQuery() {
         String code = "for $i in (1 to 10) return $i";
         String value = INLINE_XQUERY_PREFIX + code;
         String result = StringUtils.inlineModuleLanguage(value);
