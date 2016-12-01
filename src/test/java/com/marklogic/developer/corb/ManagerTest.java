@@ -47,7 +47,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
@@ -1211,6 +1213,29 @@ public class ManagerTest {
         return args;
     }
 
+    public static Properties getDefaultProperties() {
+        Properties properties = new Properties();
+        properties.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
+        properties.setProperty(Options.COLLECTION_NAME, ManagerTest.COLLECTION_NAME);
+        properties.setProperty(Options.PROCESS_MODULE, ManagerTest.XQUERY_MODULE);
+        properties.setProperty(Options.THREAD_COUNT, ManagerTest.THREAD_COUNT);
+        properties.setProperty(Options.MODULE_ROOT, ManagerTest.MODULES_ROOT);
+        properties.setProperty(Options.MODULES_DATABASE, ManagerTest.MODULES_DATABASE);
+        properties.setProperty(Options.INSTALL, Boolean.toString(false));
+        properties.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
+        properties.setProperty(Options.PRE_BATCH_MODULE, ManagerTest.PRE_BATCH_MODULE);
+        properties.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
+        properties.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
+        properties.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
+        properties.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        properties.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
+        return properties;
+    }
+    
+    public static void setDefaultSystemProperties() {
+        System.getProperties().putAll(getDefaultProperties());
+    }
+    
     public File createTempFile(List<String> lines) throws IOException {
         Path path = Files.createTempFile("tmp", "txt");
         File file = path.toFile();

@@ -79,19 +79,21 @@ public class ManagerIT {
 
     @Test
     public void testManagerUsingProgArgs() {
+
+        clearSystemProperties();
+        String exportFileName = "testManagerUsingProgArgs.txt";
+        String exportFileDir = ManagerTest.EXPORT_FILE_DIR;
+        String[] args = ManagerTest.getDefaultArgs();
+        args[14] = exportFileName;
+        args[15] = null;
+        File report = new File(exportFileDir + SLASH + exportFileName);
+        report.deleteOnExit();
+        Manager manager = new Manager();
         try {
-            clearSystemProperties();
-            String exportFileName = "testManagerUsingProgArgs.txt";
-            String exportFileDir = ManagerTest.EXPORT_FILE_DIR;
-            String[] args = ManagerTest.getDefaultArgs();
-            args[14] = exportFileName;
-            args[15] = null;
-            File report = new File(exportFileDir + SLASH + exportFileName);
-            report.deleteOnExit();
             //First, verify the output using run()
-            Manager manager = new Manager();
             manager.init(args);
             manager.run();
+
             byte[] out = getBytes(report);
             String corbOutput = new String(out).trim();
             boolean passed = EXPECTED_OUTPUT.equals(corbOutput);
@@ -109,20 +111,8 @@ public class ManagerIT {
     public void testManagerUsingSysProps() {
         clearSystemProperties();
         String exportFileName = "testManagerUsingSysProps2.txt";
-        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty(Options.COLLECTION_NAME, ManagerTest.COLLECTION_NAME);
-        System.setProperty(Options.XQUERY_MODULE, ManagerTest.XQUERY_MODULE);
-        System.setProperty(Options.THREAD_COUNT, ManagerTest.THREAD_COUNT);
+        ManagerTest.setDefaultSystemProperties();
         System.setProperty(Options.URIS_MODULE, "src/test/resources/selector.xqy|ADHOC");
-        System.setProperty(Options.MODULE_ROOT, ManagerTest.MODULES_ROOT);
-        System.setProperty(Options.MODULES_DATABASE, ManagerTest.MODULES_DATABASE);
-        System.setProperty(Options.INSTALL, Boolean.toString(false));
-        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
-        System.setProperty(Options.PRE_BATCH_MODULE, ManagerTest.PRE_BATCH_MODULE);
-        System.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
-        System.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
-        System.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
-        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
         System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
 
         File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName);
@@ -131,7 +121,6 @@ public class ManagerIT {
         Manager manager = new Manager();
         String[] args = {};
         try {
-
             //First, verify the output by executing run()
             manager.init(args);
             manager.run();
@@ -154,28 +143,17 @@ public class ManagerIT {
         clearSystemProperties();
         int uriCount = 100;
         String exportFilename = "testManagerUsingSysProps1.txt";
-        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty(Options.COLLECTION_NAME, ManagerTest.COLLECTION_NAME);
-        System.setProperty(Options.XQUERY_MODULE, ManagerTest.XQUERY_MODULE);
-        System.setProperty(Options.THREAD_COUNT, "4");
-        System.setProperty(Options.URIS_MODULE, "src/test/resources/selectorLargeList.xqy|ADHOC");
-        System.setProperty(Options.URIS_MODULE + ".count", String.valueOf(uriCount));
-        System.setProperty(Options.MODULE_ROOT, ManagerTest.MODULES_ROOT);
-        System.setProperty(Options.MODULES_DATABASE, ManagerTest.MODULES_DATABASE);
-        System.setProperty(Options.INSTALL, Boolean.toString(false));
-        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
-        System.setProperty(Options.PRE_BATCH_MODULE, ManagerTest.PRE_BATCH_MODULE);
-        System.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
-        System.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
-        System.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
-        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
-        System.setProperty(Options.EXPORT_FILE_NAME, exportFilename);
-        System.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10));
-        System.setProperty(Options.DISK_QUEUE_TEMP_DIR, "/var/tmp");
-        String[] args = {};
+        Properties properties = ManagerTest.getDefaultProperties();
+        properties.setProperty(Options.THREAD_COUNT, "4");
+        properties.setProperty(Options.URIS_MODULE, "src/test/resources/selectorLargeList.xqy|ADHOC");
+        properties.setProperty(Options.URIS_MODULE + ".count", String.valueOf(uriCount));
+        properties.setProperty(Options.EXPORT_FILE_NAME, exportFilename);
+        properties.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10));
+        properties.setProperty(Options.DISK_QUEUE_TEMP_DIR, "/var/tmp");
+
         Manager manager = new Manager();
         try {
-            manager.init(args);
+            manager.init(properties);
             manager.run();
             File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFilename);
             report.deleteOnExit();
@@ -199,12 +177,13 @@ public class ManagerIT {
         try {
             manager.init(args);
             manager.run();
+
             File report = new File(exportFileName);
             report.deleteOnExit();
-            boolean fileExists = report.exists();
-            assertTrue(fileExists);
-            byte[] out = getBytes(report);
 
+            assertTrue(report.exists());
+
+            byte[] out = getBytes(report);
             String corbOutput = new String(out).trim();
             boolean passed = EXPECTED_OUTPUT.equals(corbOutput);
             clearFile(report);
@@ -223,19 +202,7 @@ public class ManagerIT {
     public void testManagerUsingInputFile() {
         clearSystemProperties();
         String exportFileName = "testManagerUsingInputFile.txt";
-        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty(Options.COLLECTION_NAME, ManagerTest.COLLECTION_NAME);
-        System.setProperty(Options.XQUERY_MODULE, ManagerTest.XQUERY_MODULE);
-        System.setProperty(Options.THREAD_COUNT, ManagerTest.THREAD_COUNT);
-        System.setProperty(Options.MODULE_ROOT, ManagerTest.MODULES_ROOT);
-        System.setProperty(Options.MODULES_DATABASE, ManagerTest.MODULES_DATABASE);
-        System.setProperty(Options.INSTALL, Boolean.toString(false));
-        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
-        System.setProperty(Options.PRE_BATCH_MODULE, ManagerTest.PRE_BATCH_MODULE);
-        System.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
-        System.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
-        System.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
-        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        ManagerTest.setDefaultSystemProperties();
         System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
         System.setProperty(Options.URIS_FILE, "src/test/resources/uriInputFile.txt");
         String[] args = {};
@@ -244,13 +211,14 @@ public class ManagerIT {
         try {
             manager.init(args);
             manager.run();
+
             String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
             File report = new File(exportFilePath);
             report.deleteOnExit();
-            boolean fileExists = report.exists();
-            assertTrue(fileExists);
-            byte[] out = getBytes(report);
 
+            assertTrue(report.exists());
+
+            byte[] out = getBytes(report);
             String corbOutput = new String(out).trim();
             String expectedOutput = "This is being returned from the PRE-BATCH-MODULE which is often used for column headers.\n"
                     + "This is a file generated by the XQUERY-MODULE (Transform) which typically contains a report.  This information [Hello from the URIS-FILE!] was passed from the Selector.\n"
@@ -272,32 +240,20 @@ public class ManagerIT {
     public void testManagersPreBatchTask() {
         clearSystemProperties();
         String exportFileName = "testManagersPreBatchTask.txt";
-        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty(Options.COLLECTION_NAME, ManagerTest.COLLECTION_NAME);
-        System.setProperty(Options.XQUERY_MODULE, ManagerTest.XQUERY_MODULE);
-        System.setProperty(Options.THREAD_COUNT, ManagerTest.THREAD_COUNT);
-        System.setProperty(Options.MODULE_ROOT, ManagerTest.MODULES_ROOT);
-        System.setProperty(Options.MODULES_DATABASE, ManagerTest.MODULES_DATABASE);
-        System.setProperty(Options.INSTALL, Boolean.toString(false));
-        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
-        System.setProperty(Options.PRE_BATCH_MODULE, ManagerTest.PRE_BATCH_MODULE);
-        System.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
-        System.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
-        System.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
-        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        ManagerTest.setDefaultSystemProperties();
         System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
-        System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         String[] args = {};
         //First, verify output executing run()
         Manager manager = new Manager();
         try {
             manager.init(args);
             manager.run();
+
             String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
             File report = new File(exportFilePath);
             report.deleteOnExit();
-            boolean fileExists = report.exists();
-            assertTrue(fileExists);
+
+            assertTrue(report.exists());
             byte[] out = getBytes(report);
             String corbOutput = new String(out).trim();
             String expectedOutput = "This is being returned from the PRE-BATCH-MODULE which is often used for column headers.";
@@ -318,31 +274,18 @@ public class ManagerIT {
     public void testManagersPostBatchTask() {
         clearSystemProperties();
         String exportFileName = "testManagersPostBatchTask.txt";
-        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty(Options.COLLECTION_NAME, ManagerTest.COLLECTION_NAME);
-        System.setProperty(Options.XQUERY_MODULE, ManagerTest.XQUERY_MODULE);
-        System.setProperty(Options.THREAD_COUNT, ManagerTest.THREAD_COUNT);
-        System.setProperty(Options.MODULE_ROOT, ManagerTest.MODULES_ROOT);
-        System.setProperty(Options.MODULES_DATABASE, ManagerTest.MODULES_DATABASE);
-        System.setProperty(Options.INSTALL, Boolean.toString(false));
-        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
-        System.setProperty(Options.PRE_BATCH_MODULE, ManagerTest.PRE_BATCH_MODULE);
-        System.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
-        System.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
-        System.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
-        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        ManagerTest.setDefaultSystemProperties();
         System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
-        System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         String[] args = {};
         //First, verify the output using run()
         Manager manager = new Manager();
         try {
             manager.init(args);
             manager.run();
+
             String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
             File report = new File(exportFilePath);
-            boolean fileExists = report.exists();
-            assertTrue(fileExists);
+            assertTrue(report.exists());
             byte[] out = getBytes(report);
             String corbOutput = new String(out).trim();
             String expectedOutput = POST_XQUERY_MODULE_OUTPUT;
@@ -363,21 +306,8 @@ public class ManagerIT {
     public void testManagersPostBatchTaskZip() {
         clearSystemProperties();
         String exportFileName = "testManagersPostBatchTaskZip.txt";
-        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty(Options.COLLECTION_NAME, ManagerTest.COLLECTION_NAME);
-        System.setProperty(Options.XQUERY_MODULE, ManagerTest.XQUERY_MODULE);
-        System.setProperty(Options.THREAD_COUNT, ManagerTest.THREAD_COUNT);
-        System.setProperty(Options.MODULE_ROOT, ManagerTest.MODULES_ROOT);
-        System.setProperty(Options.MODULES_DATABASE, ManagerTest.MODULES_DATABASE);
-        System.setProperty(Options.INSTALL, Boolean.toString(false));
-        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
-        System.setProperty(Options.PRE_BATCH_MODULE, ManagerTest.PRE_BATCH_MODULE);
-        System.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
-        System.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
-        System.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
-        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        ManagerTest.setDefaultSystemProperties();
         System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
-        System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         System.setProperty(Options.EXPORT_FILE_AS_ZIP, Boolean.toString(true));
         String[] args = {};
         //First, verify the output using run()
@@ -385,11 +315,12 @@ public class ManagerIT {
         try {
             manager.init(args);
             manager.run();
+
             String zippedExportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName + ".zip";
             File report = new File(zippedExportFilePath);
-            boolean fileExists = report.exists();
+
             clearFile(report);
-            assertTrue(fileExists);
+            assertTrue(report.exists());
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -403,33 +334,22 @@ public class ManagerIT {
     public void testManagerJavaScriptTransform() {
         clearSystemProperties();
         String exportFileName = "testManagerJavaScriptTransform.txt";
-        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty(Options.COLLECTION_NAME, ManagerTest.COLLECTION_NAME);
-        System.setProperty(Options.XQUERY_MODULE, "src/test/resources/mod-print-uri.sjs|ADHOC");
-        System.setProperty(Options.THREAD_COUNT, ManagerTest.THREAD_COUNT);
-        System.setProperty(Options.MODULE_ROOT, ManagerTest.MODULES_ROOT);
-        System.setProperty(Options.MODULES_DATABASE, ManagerTest.MODULES_DATABASE);
-        System.setProperty(Options.INSTALL, Boolean.toString(false));
-        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
-        System.setProperty(Options.PRE_BATCH_MODULE, ManagerTest.PRE_BATCH_MODULE);
-        System.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
-        System.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
-        System.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
-        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
-        System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
-        System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
+        ManagerTest.setDefaultSystemProperties();
+        System.setProperty(Options.PROCESS_MODULE, "src/test/resources/mod-print-uri.sjs|ADHOC");
         System.setProperty("XQUERY-MODULE.foo", "bar1");
+        System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
         String[] args = {};
         //First, verify the output using run()
         Manager manager = new Manager();
         try {
             manager.init(args);
             manager.run();
+
             String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
             File report = new File(exportFilePath);
             report.deleteOnExit();
-            boolean fileExists = report.exists();
-            assertTrue(fileExists);
+
+            assertTrue(report.exists());
             byte[] out = getBytes(report);
             String corbOutput = new String(out).trim();
             String expectedOutput = "object-id-1=bar1";
@@ -491,7 +411,7 @@ public class ManagerIT {
                     props.store(fos, null);
                 }
             } catch (IOException ex) {
-                Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+                LOG.log(Level.SEVERE, null, ex);
             }
         };
         Runnable resume = () -> {
@@ -502,7 +422,7 @@ public class ManagerIT {
             try (final FileOutputStream fos = new FileOutputStream(commandFile1)) {
                 props.store(fos, null);
             } catch (IOException ex) {
-                Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+                LOG.log(Level.SEVERE, null, ex);
             }
         };
         ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
@@ -549,7 +469,7 @@ public class ManagerIT {
                     props.store(fos, null);
                 }
             } catch (IOException ex) {
-                Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+                LOG.log(Level.SEVERE, null, ex);
             }
         };
         Runnable resume = () -> {
@@ -558,7 +478,7 @@ public class ManagerIT {
             try (final FileOutputStream fos = new FileOutputStream(commandFile1)) {
                 props.store(fos, null);
             } catch (IOException ex) {
-                Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+                LOG.log(Level.SEVERE, null, ex);
             }
         };
         ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
@@ -605,7 +525,7 @@ public class ManagerIT {
                     props.store(fos, null);
                 }
             } catch (IOException ex) {
-                Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+                LOG.log(Level.SEVERE, null, ex);
             }
         };
         ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
@@ -638,7 +558,7 @@ public class ManagerIT {
         System.setProperty(Options.EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
         System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
         System.setProperty(Options.COMMAND_FILE, commandFile.getAbsolutePath());
-        
+
         Runnable adjustThreads = () -> {
             File commandFile1 = new File(System.getProperty(Options.COMMAND_FILE));
             try {
@@ -649,10 +569,10 @@ public class ManagerIT {
                     props.store(fos, null);
                 }
             } catch (IOException ex) {
-                Logger.getLogger(ManagerTest.class.getName()).log(Level.SEVERE, null, ex);
+                LOG.log(Level.SEVERE, null, ex);
             }
         };
-        
+
         Manager instance = new Manager();
         try {
             instance.init(new String[0]);
