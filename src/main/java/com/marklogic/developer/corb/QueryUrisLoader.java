@@ -47,7 +47,6 @@ import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 
 public class QueryUrisLoader extends AbstractUrisLoader {
 
