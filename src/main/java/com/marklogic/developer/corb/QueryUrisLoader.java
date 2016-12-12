@@ -47,6 +47,7 @@ import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 
 public class QueryUrisLoader extends AbstractUrisLoader {
 
@@ -57,17 +58,12 @@ public class QueryUrisLoader extends AbstractUrisLoader {
     private Queue<String> queue;
 
     protected Session session;
-    protected ResultSequence res;
+    protected ResultSequence resultSequence;
 
     private static final Logger LOG = Logger.getLogger(QueryUrisLoader.class.getName());
 
     @Override
     public void open() throws CorbException {
-        List<String> propertyNames = new ArrayList<>();
-        if (properties != null) {
-            propertyNames.addAll(properties.stringPropertyNames());
-        }
-        propertyNames.addAll(System.getProperties().stringPropertyNames());
 
         parseUriReplacePatterns();
 
@@ -80,7 +76,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
                     new Object[]{opts.getResultBufferSize(), opts.getCacheResult()});
 
             session = cs.newSession();
-            Request req;
+            Request request;
             String urisModule = options.getUrisModule();
             if (isInlineOrAdhoc(urisModule)) {
                 String adhocQuery;
@@ -98,7 +94,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
                     }
                     LOG.log(INFO, "invoking adhoc uris module {0}", queryPath);
                 }
-                req = session.newAdhocQuery(adhocQuery);
+                request = session.newAdhocQuery(adhocQuery);
                 if (isJavaScriptModule(urisModule)) {
                     opts.setQueryLanguage("javascript");
                 }
@@ -106,75 +102,23 @@ public class QueryUrisLoader extends AbstractUrisLoader {
                 String root = options.getModuleRoot();
                 String modulePath = buildModulePath(root, urisModule);
                 LOG.log(INFO, "invoking uris module {0}", modulePath);
-                req = session.newModuleInvoke(modulePath);
+                request = session.newModuleInvoke(modulePath);
             }
             // NOTE: collection will be treated as a CWSV
-            req.setNewStringVariable("URIS", collection);
+            request.setNewStringVariable("URIS", collection);
             // TODO support DIRECTORY as type
-            req.setNewStringVariable("TYPE", TransformOptions.COLLECTION_TYPE);
-            req.setNewStringVariable("PATTERN", "[,\\s]+");
+            request.setNewStringVariable("TYPE", TransformOptions.COLLECTION_TYPE);
+            request.setNewStringVariable("PATTERN", "[,\\s]+");
 
-            // custom inputs
-            for (String propName : propertyNames) {
-                if (propName.startsWith(URIS_MODULE + ".")) {
-                    String varName = propName.substring((URIS_MODULE + ".").length());
-                    String value = getProperty(propName);
-                    if (value != null) {
-                        req.setNewStringVariable(varName, value);
-                    }
-                }
-            }
+            setCustomInputs(request);
 
-            req.setOptions(opts);
+            request.setOptions(opts);
 
-            res = session.submitRequest(req);
-            ResultItem next = res.next();
+            resultSequence = session.submitRequest(request);
 
-            int maxOpts = this.getMaxOptionsFromModule();
-            for (int i = 0; i < maxOpts && next != null && getBatchRef() == null && !(next.getItem().asString().matches("\\d+")); i++) {
-                String value = next.getItem().asString();
-                if (MODULE_CUSTOM_INPUT.matcher(value).matches()) {
-                    int idx = value.indexOf('=');
-                    properties.put(value.substring(0, idx).replace(XQUERY_MODULE + ".", PROCESS_MODULE + "."), value.substring(idx + 1));
-                } else {
-                    setBatchRef(value);
-                }
-                next = res.next();
-            }
+            preProcess(resultSequence);
 
-            try {
-                setTotalCount(Integer.parseInt(next.getItem().asString()));
-            } catch (NumberFormatException exc) {
-                throw new CorbException("Uris module " + options.getUrisModule() + " does not return total URI count");
-            }
-
-            queue = getQueue();
-
-            int i = 0;
-            String uri;
-            while (res != null && res.hasNext()) {
-                uri = res.next().asString();
-                if (isBlank(uri)) {
-                  continue;
-                }
-                
-                if (queue.isEmpty()) {
-                    LOG.log(INFO, "received first uri: {0}", uri);
-                }
-                //apply replacements (if any) - can be helpful in reducing in-memory footprint for ArrayQueue
-                for (int j = 0; j < replacements.length - 1; j += 2) {
-                    uri = uri.replaceAll(replacements[j], replacements[j + 1]);
-                }
-                
-                if (!queue.add(uri)) {
-                	LOG.log(SEVERE,"Unabled to add uri {0} to queue. Received uris {1} which is more than expected {2}",new Object[]{uri,(i+1),getTotalCount()});
-                } else if (i >= getTotalCount()) {
-                	LOG.log(WARNING,"Received uri {0} at index {1} which is more than expected {2}",new Object[]{uri,(i+1),getTotalCount()});
-                }
-                
-                logQueueStatus(i, uri, getTotalCount());
-                i++;
-            }
+            queue = createAndPopulateQueue(resultSequence);
 
         } catch (RequestException exc) {
             throw new CorbException("While invoking Uris Module", exc);
@@ -183,6 +127,113 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         }
     }
 
+    protected void preProcess(ResultSequence resultSequence) throws CorbException {
+        ResultItem nextResultItem = collectCustomInputs(resultSequence);
+        try {
+            setTotalCount(Integer.parseInt(nextResultItem.getItem().asString()));
+        } catch (NumberFormatException exc) {
+            throw new CorbException("Uris module " + options.getUrisModule() + " does not return total URI count");
+        }
+    }
+
+    /**
+     * Collect any custom input options or batchRef value in the ResultSequence
+     * that precede the count of URIs.
+     *
+     * @param resultSequence
+     * @return the next ResultItem to retrieve from the ResultSequence
+     */
+    protected ResultItem collectCustomInputs(ResultSequence resultSequence) {
+        ResultItem nextResultItem = resultSequence.next();
+        int maxOpts = this.getMaxOptionsFromModule();
+        for (int i = 0; i < maxOpts
+                && nextResultItem != null
+                && getBatchRef() == null
+                && !(nextResultItem.getItem().asString().matches("\\d+")); i++) {
+            String value = nextResultItem.getItem().asString();
+            if (MODULE_CUSTOM_INPUT.matcher(value).matches()) {
+                int idx = value.indexOf('=');
+                properties.put(value.substring(0, idx).replace(XQUERY_MODULE + ".", PROCESS_MODULE + "."), value.substring(idx + 1));
+            } else {
+                setBatchRef(value);
+            }
+            nextResultItem = resultSequence.next();
+        }
+        return nextResultItem;
+    }
+
+    /**
+     * Collect all {@value #URIS_MODULE} properties from the properties and
+     * System.properties (in that order, so System.properties will take
+     * precedence over properties) and set as NewStringVariable for each
+     * property the Request object.
+     *
+     * @param request
+     */
+    protected void setCustomInputs(Request request) {
+        List<String> propertyNames = new ArrayList<>();
+        // gather all of the p
+        if (properties != null) {
+            propertyNames.addAll(properties.stringPropertyNames());
+        }
+        propertyNames.addAll(System.getProperties().stringPropertyNames());
+        // custom inputs
+        for (String propName : propertyNames) {
+            if (propName.startsWith(URIS_MODULE + ".")) {
+                String varName = propName.substring((URIS_MODULE + ".").length());
+                String value = getProperty(propName);
+                if (value != null) {
+                    request.setNewStringVariable(varName, value);
+                }
+            }
+        }
+    }
+
+    /**
+     * Instantiate a new queue and populate with items from the ResultSequence.
+     *
+     * @param resultSequence
+     * @return
+     */
+    protected Queue<String> createAndPopulateQueue(ResultSequence resultSequence) {
+        Queue<String> queue = getQueue();
+        return populateQueue(queue, resultSequence);
+    }
+
+    protected Queue<String> populateQueue(Queue<String> queue, ResultSequence resultSequence) {
+        int i = 0;
+        String uri;
+        while (resultSequence != null && resultSequence.hasNext()) {
+            uri = resultSequence.next().asString();
+            if (isBlank(uri)) {
+                continue;
+            }
+
+            if (queue.isEmpty()) {
+                LOG.log(INFO, "received first uri: {0}", uri);
+            }
+            //apply replacements (if any) - can be helpful in reducing in-memory footprint for ArrayQueue
+            for (int j = 0; j < replacements.length - 1; j += 2) {
+                uri = uri.replaceAll(replacements[j], replacements[j + 1]);
+            }
+
+            if (!queue.offer(uri)) {
+                LOG.log(SEVERE, "Unabled to add uri {0} to queue. Received uris {1} which is more than expected {2}", new Object[]{uri, (i + 1), getTotalCount()});
+            } else if (i >= getTotalCount()) {
+                LOG.log(WARNING, "Received uri {0} at index {1} which is more than expected {2}", new Object[]{uri, (i + 1), getTotalCount()});
+            }
+
+            logQueueStatus(i, uri, getTotalCount());
+            i++;
+        }
+        return queue;
+    }
+
+    /**
+     * Factory method that will produce a new Queue.
+     *
+     * @return
+     */
     protected Queue<String> getQueue() {
         Queue<String> queue;
         if (options != null && options.shouldUseDiskQueue()) {
@@ -220,9 +271,9 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         if (session != null) {
             LOG.info("closing uris session");
             try {
-                if (res != null) {
-                    res.close();
-                    res = null;
+                if (resultSequence != null) {
+                    resultSequence.close();
+                    resultSequence = null;
                 }
             } finally {
                 session.close();
