@@ -29,6 +29,9 @@ import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  *
@@ -134,9 +137,10 @@ public class TwoWaySSLConfigTest {
     }
 
     @Test
-    public void testLoadPropertiesFile() {
+    public void testLoadPropertiesFileWithEmptyProperties() {
         System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
+        instance.properties = new Properties();
         instance.loadPropertiesFile();
         assertNotNull(instance.properties);
         assertEquals(instance.getEnabledCipherSuites()[1], SSLV3);
@@ -191,4 +195,43 @@ public class TwoWaySSLConfigTest {
         }
     }
 
+    @Test
+    public void testGetSSLContextWithEncryptedValues() {
+
+        Decrypter mockDecrypter = mock(Decrypter.class);
+        when(mockDecrypter.decrypt(anyString(), anyString())).thenReturn("changeit");
+
+        System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
+        TwoWaySSLConfig instance = new TwoWaySSLConfig();
+        instance.decrypter = mockDecrypter;
+        try {
+            SSLContext context = instance.getSSLContext();
+            assertNotNull(context);
+        } catch (NoSuchAlgorithmException | KeyManagementException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        } finally {
+            System.clearProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE);
+        }
+    }
+
+    @Test
+    public void testGetSSLContextWithNullUnencryptedValues() {
+
+        Decrypter mockDecrypter = mock(Decrypter.class);
+        when(mockDecrypter.decrypt(anyString(), anyString())).thenReturn(null);
+
+        System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
+        TwoWaySSLConfig instance = new TwoWaySSLConfig();
+        instance.decrypter = mockDecrypter;
+        try {
+            SSLContext context = instance.getSSLContext();
+            assertNotNull(context);
+        } catch (NoSuchAlgorithmException | KeyManagementException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        } finally {
+            System.clearProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE);
+        }
+    }
 }
