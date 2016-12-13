@@ -112,7 +112,7 @@ public class ExportToFileTaskTest {
     }
 
     @Test
-    public void testGetFileNameEmptyExportFileUriToPathFalse() {
+    public void testGetFileNameSlashBookendExportFileUriToPathFalse() {
         ExportToFileTask instance = new ExportToFileTask();
         instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(false));
         String expected = SLASH + FOO + SLASH;
@@ -123,7 +123,7 @@ public class ExportToFileTaskTest {
     }
 
     @Test
-    public void testGetFileNameEmptyExportFileUriToPathTrue() {
+    public void testGetFileNameSlashBookendExportFileUriToPathTrue() {
         ExportToFileTask instance = new ExportToFileTask();
         instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(true));
         String expected = SLASH + FOO + SLASH;
@@ -133,7 +133,7 @@ public class ExportToFileTaskTest {
         assertEquals(FOO + SLASH, filename);
     }
 
-        @Test
+    @Test
     public void testGetFileNameTrailingSlashEmptyExportFileUriToPathTrue() {
         ExportToFileTask instance = new ExportToFileTask();
         instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(true));
@@ -143,7 +143,7 @@ public class ExportToFileTaskTest {
         String filename = instance.getFileName();
         assertEquals(FOO + SLASH, filename);
     }
-    
+
     @Test(expected = NullPointerException.class)
     public void testGetFileNameNullInputURI() {
         ExportToFileTask instance = new ExportToFileTask();
