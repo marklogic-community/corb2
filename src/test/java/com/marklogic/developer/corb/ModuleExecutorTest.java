@@ -511,7 +511,7 @@ public class ModuleExecutorTest {
             RequestOptions opts = new RequestOptions();
             opts.setCacheResult(false);
             Session session = executor.contentSource.newSession();
-            Request req = null;
+            Request req ;
             TransformOptions options = executor.getOptions();
             Properties properties = executor.getProperties();
 
