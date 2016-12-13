@@ -43,6 +43,8 @@ import static org.mockito.Mockito.when;
 public class ExportToFileTaskTest {
 
     private static final Logger LOG = Logger.getLogger(ExportToFileTaskTest.class.getName());
+    public static final String FOO = "foo";
+    public static final String SLASH = "/";
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
@@ -69,13 +71,79 @@ public class ExportToFileTaskTest {
     @Test
     public void testGetFileNameWithLeadingSlash() {
         ExportToFileTask instance = new ExportToFileTask();
-        String expected = "/corb2";
+        String expected = SLASH + FOO;
         String[] uri = {expected};
         instance.setInputURI(uri);
         String filename = instance.getFileName();
-        assertEquals("corb2", filename);
+        assertEquals(FOO, filename);
     }
 
+    @Test
+    public void testGetFileNameWithoutSlashAndExportFileUriToPathFalse() {
+        ExportToFileTask instance = new ExportToFileTask();
+        instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(false));
+        String expected = FOO;
+        String[] uri = {expected};
+        instance.setInputURI(uri);
+        String filename = instance.getFileName();
+        assertEquals(FOO, filename);
+    }
+
+    @Test
+    public void testGetFileNameSlashAndExportFileUriToPathFalse() {
+        ExportToFileTask instance = new ExportToFileTask();
+        instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(false));
+        String expected = SLASH;
+        String[] uri = {expected};
+        instance.setInputURI(uri);
+        String filename = instance.getFileName();
+        assertEquals("", filename);
+    }
+
+    @Test
+    public void testGetFileNameExportFileUriToPathFalse() {
+        ExportToFileTask instance = new ExportToFileTask();
+        instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(false));
+        String expected = SLASH + FOO + SLASH + FOO;
+        String[] uri = {expected};
+        instance.setInputURI(uri);
+        String filename = instance.getFileName();
+        assertEquals(FOO, filename);
+    }
+
+    @Test
+    public void testGetFileNameEmptyExportFileUriToPathFalse() {
+        ExportToFileTask instance = new ExportToFileTask();
+        instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(false));
+        String expected = SLASH + FOO + SLASH;
+        String[] uri = {expected};
+        instance.setInputURI(uri);
+        String filename = instance.getFileName();
+        assertEquals(FOO + SLASH, filename);
+    }
+
+    @Test
+    public void testGetFileNameEmptyExportFileUriToPathTrue() {
+        ExportToFileTask instance = new ExportToFileTask();
+        instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(true));
+        String expected = SLASH + FOO + SLASH;
+        String[] uri = {expected};
+        instance.setInputURI(uri);
+        String filename = instance.getFileName();
+        assertEquals(FOO + SLASH, filename);
+    }
+
+        @Test
+    public void testGetFileNameTrailingSlashEmptyExportFileUriToPathTrue() {
+        ExportToFileTask instance = new ExportToFileTask();
+        instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(true));
+        String expected = FOO + SLASH;
+        String[] uri = {expected};
+        instance.setInputURI(uri);
+        String filename = instance.getFileName();
+        assertEquals(FOO + SLASH, filename);
+    }
+    
     @Test(expected = NullPointerException.class)
     public void testGetFileNameNullInputURI() {
         ExportToFileTask instance = new ExportToFileTask();
