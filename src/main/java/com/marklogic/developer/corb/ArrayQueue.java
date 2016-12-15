@@ -83,7 +83,8 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
         ++count;
     }
 
-    protected final int increment(int i) {
+    protected final int increment(int index) {
+        int i = index;
         return (++i == queue.length) ? 0 : i;
     }
 
@@ -101,7 +102,8 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
         return x;
     }
 
-    protected void removeAt(int i) {
+    protected void removeAt(int index) {
+        int i = index;
         final char[][] items = this.queue;
         // if removing front item, just advance
         if (i == takeIndex) {
