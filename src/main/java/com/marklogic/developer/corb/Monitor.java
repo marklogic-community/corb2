@@ -118,8 +118,11 @@ public class Monitor implements Runnable {
             if (completed >= taskCount) {
                 if (pool.getActiveCount() > 0 || (pool.getTaskCount() - pool.getCompletedTaskCount()) > 0) {
                     LOG.log(WARNING, "Thread pool is still active with all the tasks completed and received. We shouldn't see this message.");
+                    //wait for the ThreadPool numbers to align
+                } else {
+                    //everyone agrees; all tasks are completed and the threadPool reports all tasks are complete.
+                    break;
                 }
-                break;
             } else if (future == null && pool.getActiveCount() == 0) {
                 LOG.log(WARNING, "No active tasks found with {0} tasks remains to be completed", (taskCount - completed));
             }
