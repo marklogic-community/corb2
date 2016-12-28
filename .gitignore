@@ -4,6 +4,7 @@
 .classpath
 build/
 .gradle/
+.idea
 .project
 /.nb-gradle/
 /eclipse_bin/
