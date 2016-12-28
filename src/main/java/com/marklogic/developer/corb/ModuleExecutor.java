@@ -26,6 +26,7 @@ import static com.marklogic.developer.corb.Options.MODULE_ROOT;
 import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
+import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
@@ -37,24 +38,19 @@ import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
-import com.marklogic.xcc.exceptions.XccConfigException;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.URISyntaxException;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
 
 /**
- * This class replaces RunXQuery. It can run both XQuery and JavaScript and when
- * built, doesn't wrap the XCC connection jar as RunXQuery does.
+ * This class can be used to execute either an XQuery or JavaScript module in MarkLogic.
  *
  * @author matthew.heckel MarkLogic Corportation
  *
@@ -62,8 +58,9 @@ import java.util.logging.Logger;
 public class ModuleExecutor extends AbstractManager {
 
     protected static final String NAME = ModuleExecutor.class.getSimpleName();
+    protected static final String PROPERTY_LINE_SEPARATOR = "line.separator";
     private static final byte[] NEWLINE
-            = System.getProperty("line.separator") != null ? System.getProperty("line.separator").getBytes() : "\n".getBytes();
+            = System.getProperty(PROPERTY_LINE_SEPARATOR) != null ? System.getProperty(PROPERTY_LINE_SEPARATOR).getBytes() : "\n".getBytes();
     protected static final Logger LOG = Logger.getLogger(ModuleExecutor.class.getName());
     private static final String TAB = "\t";
 
@@ -91,35 +88,14 @@ public class ModuleExecutor extends AbstractManager {
         }
     }
 
+    /**
+     *
+     * @param args
+     * @throws com.marklogic.developer.corb.CorbException
+     */
     @Override
-    public void init(String[] commandlineArgs, Properties props)
-            throws IOException, URISyntaxException, ClassNotFoundException,
-            InstantiationException, IllegalAccessException, XccConfigException,
-            GeneralSecurityException {
-        String[] args = commandlineArgs;
-        if (args == null) {
-            args = new String[0];
-        }
-
-        if (props == null || props.isEmpty()) {
-            initPropertiesFromOptionsFile();
-        } else {
-            this.properties = props;
-        }
-        initDecrypter();
-        initSSLConfig();
-
-        initURI(args.length > 0 ? args[0] : null);
-
-        initOptions(args);
-
-        logRuntimeArgs();
-
-        prepareContentSource();
-        registerStatusInfo();
-    }
-
-    protected void initOptions(String... args) {
+    protected void initOptions(String... args) throws CorbException {
+        super.initOptions(args);
         String processModule = getOption(args.length > 1 ? args[1] : null, PROCESS_MODULE);
         String moduleRoot = getOption(args.length > 2 ? args[2] : null, MODULE_ROOT);
         String modulesDatabase = getOption(args.length > 3 ? args[3] : null, MODULES_DATABASE);
@@ -135,7 +111,11 @@ public class ModuleExecutor extends AbstractManager {
         if (modulesDatabase != null) {
             options.setModulesDatabase(modulesDatabase);
         }
-        //TODO: normalize XQUERY-MODULE properties
+        
+        //Check legacy properties keys, for backwards compatibility
+        if (processModule == null) {
+            processModule = getOption(XQUERY_MODULE);
+        }
         if (null == options.getProcessModule()) {
             throw new NullPointerException(PROCESS_MODULE + " must be specified");
         }
@@ -156,13 +136,7 @@ public class ModuleExecutor extends AbstractManager {
             }
         }
 
-        // delete the export file if it exists
-        if (exportFileName != null) {
-            File exportFile = new File(exportFileDir, exportFileName);
-            if (exportFile.exists()) {
-                exportFile.delete();
-            }
-        }
+        deleteFileIfExists(exportFileDir, exportFileName);          
     }
 
     @Override

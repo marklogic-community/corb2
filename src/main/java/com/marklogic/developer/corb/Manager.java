@@ -62,14 +62,11 @@ import com.marklogic.xcc.ContentCreateOptions;
 import com.marklogic.xcc.ContentFactory;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
-import com.marklogic.xcc.exceptions.XccConfigException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.net.URISyntaxException;
-import java.security.GeneralSecurityException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -132,7 +129,7 @@ public class Manager extends AbstractManager {
             manager.usage();
             System.exit(EXIT_CODE_INIT_ERROR);
         }
-        //now we can start corb. 
+        //now we can start corb.
         try {
             int count = manager.run();
             if (manager.execError) {
@@ -151,34 +148,19 @@ public class Manager extends AbstractManager {
     }
 
     @Override
-    public void init(String[] commandline_args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException {
+    public void init(String[] commandline_args, Properties props) throws CorbException {
+        super.init(commandline_args, props);
+
+        prepareModules();
+
         String[] args = commandline_args;
         if (args == null) {
             args = new String[0];
         }
-        if (props == null || props.isEmpty()) {
-            initPropertiesFromOptionsFile();
-        } else {
-            this.properties = props;
-        }
-
-        initDecrypter();
-        initSSLConfig();
-
-        initURI(args.length > 0 ? args[0] : null);
-
         String collectionName = getOption(args.length > 1 ? args[1] : null, COLLECTION_NAME);
         this.collection = collectionName == null ? "" : collectionName;
 
-        initOptions(args);
-
-        logRuntimeArgs();
-
-        prepareContentSource();
-        registerStatusInfo();
-        prepareModules();
-
-        //This is relavant for unit tests only. clear the static map so it gets re-initialized for fresh run
+        //This is relevant for unit tests only. clear the static map so it gets re-initialized for fresh run
         if (AbstractTask.MODULE_PROPS != null) {
             AbstractTask.MODULE_PROPS.clear();
         }
@@ -198,8 +180,10 @@ public class Manager extends AbstractManager {
         }
     }
 
-    protected void initOptions(String... args) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        // gather inputs		
+    @Override
+    protected void initOptions(String... args) throws CorbException {
+        super.initOptions(args);
+        // gather inputs
         String processModule = getOption(args.length > 2 ? args[2] : null, PROCESS_MODULE);
         String threadCount = getOption(args.length > 3 ? args[3] : null, THREAD_COUNT);
         String urisModule = getOption(args.length > 4 ? args[4] : null, URIS_MODULE);
@@ -217,7 +201,11 @@ public class Manager extends AbstractManager {
 
         String urisLoader = getOption(URIS_LOADER);
         if (urisLoader != null) {
-            options.setUrisLoaderClass(getUrisLoaderCls(urisLoader));
+            try {
+                options.setUrisLoaderClass(getUrisLoaderCls(urisLoader));
+            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException ex) {
+                throw new CorbException("Unable to instantiate UrisLoader Class: " + urisLoader, ex);
+            }
         }
 
         String initModule = getOption(INIT_MODULE);
@@ -233,7 +221,7 @@ public class Manager extends AbstractManager {
 
         String numTpsForETC = getOption(NUM_TPS_FOR_ETC);
 
-        //Check legacy properties keys, for backwards compatability
+        //Check legacy properties keys, for backwards compatibility
         if (processModule == null) {
             processModule = getOption(XQUERY_MODULE);
         }
@@ -296,32 +284,35 @@ public class Manager extends AbstractManager {
         if (initModule != null) {
             options.setInitModule(initModule);
         }
-        if (initTask != null) {
-            options.setInitTaskClass(getTaskCls(INIT_TASK, initTask));
+        if (preBatchModule != null) {
+            options.setPreBatchModule(preBatchModule);
+        }
+        if (postBatchModule != null) {
+            options.setPostBatchModule(postBatchModule);
         }
 
         // java class for processing individual tasks.
         // If specified, it is used instead of xquery module, but xquery module is
         // still required.
-        if (processTask != null) {
-            options.setProcessTaskClass(getTaskCls(PROCESS_TASK, processTask));
+        try {
+            if (initTask != null) {
+                options.setInitTaskClass(getTaskCls(INIT_TASK, initTask));
+            }
+            if (processTask != null) {
+                options.setProcessTaskClass(getTaskCls(PROCESS_TASK, processTask));
+            }
+            if (preBatchTask != null) {
+                options.setPreBatchTaskClass(getTaskCls(PRE_BATCH_TASK, preBatchTask));
+            }
+            if (postBatchTask != null) {
+                options.setPostBatchTaskClass(getTaskCls(POST_BATCH_TASK, postBatchTask));
+            }
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
+            throw new CorbException("Unable to instantiate class", ex);
         }
+        
         if (null == options.getProcessTaskClass() && null == options.getProcessModule()) {
             throw new NullPointerException(PROCESS_TASK + " or " + PROCESS_MODULE + " must be specified");
-        }
-
-        if (preBatchModule != null) {
-            options.setPreBatchModule(preBatchModule);
-        }
-        if (preBatchTask != null) {
-            options.setPreBatchTaskClass(getTaskCls(PRE_BATCH_TASK, preBatchTask));
-        }
-
-        if (postBatchModule != null) {
-            options.setPostBatchModule(postBatchModule);
-        }
-        if (postBatchTask != null) {
-            options.setPostBatchTaskClass(getTaskCls(POST_BATCH_TASK, postBatchTask));
         }
 
         if (options.getPostBatchTaskClass() == null) {
@@ -356,16 +347,6 @@ public class Manager extends AbstractManager {
         deleteFileIfExists(exportFileDir, errorFileName);
 
         normalizeLegacyProperties();
-    }
-
-    protected boolean deleteFileIfExists(String directory, String filename) {
-        if (filename != null) {
-            File file = new File(directory, filename);
-            if (file.exists()) {
-                return file.delete();
-            }
-        }
-        return false;
     }
 
     protected void normalizeLegacyProperties() {
@@ -404,7 +385,7 @@ public class Manager extends AbstractManager {
                 //First check for an exact match of the keys
                 if (!properties.containsKey(normalizedKey) && key.equals(legacyKey)) {
                     normalizedProperties.setProperty(normalizedKey, value);
-                    //Then look for custom inputs with the base property as a prefix    
+                    //Then look for custom inputs with the base property as a prefix
                 } else if (!properties.containsKey(normalizedCustomInputKey)
                         && key.startsWith(legacyKeyPrefix) && value != null) {
                     normalizedProperties.setProperty(normalizedCustomInputKey, value);
@@ -527,7 +508,7 @@ public class Manager extends AbstractManager {
      * @throws IOException,RequestException
      *
      */
-    private void prepareModules() throws IOException, RequestException {
+    private void prepareModules() throws CorbException {
         String[] resourceModules = new String[]{options.getInitModule(), options.getUrisModule(),
             options.getProcessModule(), options.getPreBatchModule(), options.getPostBatchModule()};
         String modulesDatabase = options.getModulesDatabase();
@@ -544,8 +525,7 @@ public class Manager extends AbstractManager {
                 if (!options.isDoInstall()) {
                     LOG.log(INFO, "Skipping module installation: {0}", resourceModule);
                     continue;
-                } // Next check: if XCC is configured for the filesystem, warn
-                // user
+                } // Next check: if XCC is configured for the filesystem, warn user
                 else if (options.getModulesDatabase().isEmpty()) {
                     LOG.warning("XCC configured for the filesystem: please install modules manually");
                     return;
@@ -573,8 +553,7 @@ public class Manager extends AbstractManager {
                 }
             }
         } catch (IOException | RequestException e) {
-            LOG.log(SEVERE, MessageFormat.format("error while reading modules {0}", e.getMessage()), e);
-            throw e;
+            throw new CorbException("error while reading modules {0}", e);
         }
     }
 

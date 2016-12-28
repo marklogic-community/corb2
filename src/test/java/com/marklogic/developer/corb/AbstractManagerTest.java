@@ -23,7 +23,6 @@ import static com.marklogic.developer.corb.ManagerTest.getMockManagerWithEmptyRe
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.SecurityOptions;
 import com.marklogic.xcc.exceptions.RequestException;
-import com.marklogic.xcc.exceptions.XccConfigException;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -31,7 +30,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -59,6 +57,7 @@ public class AbstractManagerTest {
     private static final Logger LOG = Logger.getLogger(AbstractManagerTest.class.getName());
     private final TestHandler testLogger = new TestHandler();
     private static final String XCC_CONNECTION_URI = "xcc://foo:bar@localhost:8008/baz";
+    private static final String PROPERTY_XCC_HTTPCOMPLIANT = "xcc.httpcompliant";
     private static final String PROPERTIES_FILE_NAME = "helloWorld.properties";
     private static final String PROPERTIES_FILE_DIR = "src/test/resources/";
     private static final String PROPERTIES_FILE_PATH = PROPERTIES_FILE_DIR + "/" + PROPERTIES_FILE_NAME;
@@ -74,18 +73,26 @@ public class AbstractManagerTest {
     private String port = "80";
     private PrintStream systemErr = System.err;
 
+    private String originalValue;
+
     @Before
     public void setUp() throws FileNotFoundException {
         ABSTRACT_MANAGER_LOG.addHandler(testLogger);
         clearSystemProperties();
         String text = TestUtils.readFile(SELECTOR_FILE_PATH);
         selectorAsText = text.trim();
+        originalValue = System.getProperty(PROPERTY_XCC_HTTPCOMPLIANT);
     }
 
     @After
     public void tearDown() {
         clearSystemProperties();
         System.setErr(systemErr);
+        if (originalValue != null) {
+            System.setProperty(PROPERTY_XCC_HTTPCOMPLIANT, originalValue);
+        } else {
+            System.clearProperty(PROPERTY_XCC_HTTPCOMPLIANT);
+        }
     }
 
     @Test
@@ -111,7 +118,7 @@ public class AbstractManagerTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testLoadPropertiesFileStringBooleanMissingFileThrowsException()  {
+    public void testLoadPropertiesFileStringBooleanMissingFileThrowsException() {
         try {
             AbstractManager.loadPropertiesFile(INVALID_FILE_PATH, true);
         } catch (IOException ex) {
@@ -211,13 +218,13 @@ public class AbstractManagerTest {
         try {
             instance = getMockManagerWithEmptyResults();
             instance.properties = props;
-        instance.logProperties();
-        List<LogRecord> records = testLogger.getLogRecords();
-        assertEquals(props.size(), records.size());
+            instance.logProperties();
+            List<LogRecord> records = testLogger.getLogRecords();
+            assertEquals(props.size(), records.size());
         } catch (RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
-        }      
+        }
     }
 
     @Test
@@ -311,7 +318,20 @@ public class AbstractManagerTest {
             AbstractManager instance = new AbstractManagerImpl();
             instance.init(args);
             assertNull(instance.properties);
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testInitProperties() {
+        try {
+            Properties props = new Properties();
+            AbstractManager instance = new AbstractManagerImpl();
+            instance.init(props);
+            assertTrue(instance.properties.isEmpty());
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -325,7 +345,7 @@ public class AbstractManagerTest {
         AbstractManager instance = new AbstractManagerImpl();
         try {
             instance.init(args, props);
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -338,7 +358,7 @@ public class AbstractManagerTest {
         AbstractManager instance = new AbstractManagerImpl();
         try {
             instance.initDecrypter();
-        } catch (ClassNotFoundException | IOException | InstantiationException | IllegalAccessException ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -351,7 +371,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty(Options.DECRYPTER, JasyptDecrypter.class.getName());
         try {
             instance.initDecrypter();
-        } catch (ClassNotFoundException | IOException | InstantiationException | IllegalAccessException ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -364,10 +384,49 @@ public class AbstractManagerTest {
         instance.properties.setProperty(Options.DECRYPTER, String.class.getName());
         try {
             instance.initDecrypter();
-        } catch (ClassNotFoundException | IOException | InstantiationException | IllegalAccessException ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
+    }
+
+    @Test
+    public void testInitOptionsWithXCCHTTPCompliantTrue() {
+        String[] args = {};    
+        AbstractManager instance = AbstractManagerImpl.instanceWithXccHttpCompliantValue(Boolean.toString(true));
+        try {
+            instance.initOptions(args);
+            assertEquals(Boolean.toString(true), System.getProperty(PROPERTY_XCC_HTTPCOMPLIANT));
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testInitOptionsWithXCCHTTPCompliantFalse() {
+        String[] args = {};    
+        AbstractManager instance = AbstractManagerImpl.instanceWithXccHttpCompliantValue(Boolean.toString(false));
+        try {
+            instance.initOptions(args);
+            assertEquals(Boolean.toString(false), System.getProperty(PROPERTY_XCC_HTTPCOMPLIANT));
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testInitOptionsWithXCCHTTPCompliantBlank() {
+        String[] args = {};
+        AbstractManager instance = AbstractManagerImpl.instanceWithXccHttpCompliantValue(AbstractManager.SPACE);
+        try {
+            instance.initOptions(args);
+            assertEquals(originalValue, System.getProperty(PROPERTY_XCC_HTTPCOMPLIANT));
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
@@ -375,7 +434,7 @@ public class AbstractManagerTest {
         AbstractManager instance = new AbstractManagerImpl();
         try {
             instance.initSSLConfig();
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -388,7 +447,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty(Options.SSL_CONFIG_CLASS, String.class.getName());
         try {
             instance.initSSLConfig();
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
@@ -399,7 +458,7 @@ public class AbstractManagerTest {
         AbstractManager instance = new AbstractManagerImpl();
         try {
             instance.initURI(XCC_CONNECTION_URI);
-        } catch (InstantiationException | URISyntaxException ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -415,7 +474,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty(Options.XCC_PORT, port);
         try {
             instance.initURI(XCC_CONNECTION_URI);
-        } catch (InstantiationException | URISyntaxException ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -428,7 +487,7 @@ public class AbstractManagerTest {
         System.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
         try {
             instance.initURI(null);
-        } catch (InstantiationException | URISyntaxException ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -442,21 +501,17 @@ public class AbstractManagerTest {
         AbstractManager instance = new AbstractManagerImpl();
         try {
             instance.initURI(uriArg);
-        } catch (InstantiationException | URISyntaxException ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
         assertEquals(uriArg, instance.connectionUri.toString());
     }
 
-    @Test(expected = InstantiationException.class)
-    public void testInitURINullURI() throws InstantiationException {
+    @Test(expected = CorbException.class)
+    public void testInitURINullURI() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
-        try {
-            instance.initURI(null);
-        } catch (URISyntaxException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
+        instance.initURI(null);
         fail();
     }
 
@@ -470,7 +525,7 @@ public class AbstractManagerTest {
         try {
             instance.initURI(null);
             assertEquals("xcc://username:password@localhost:80", instance.connectionUri.toString());
-        } catch (InstantiationException | URISyntaxException ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -485,7 +540,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty(Options.XCC_PORT, port);
         try {
             instance.initURI(null);
-        } catch (InstantiationException | URISyntaxException ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -502,7 +557,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty(Options.XCC_DBNAME, "documents database");
         try {
             instance.initURI(null);
-        } catch (InstantiationException | URISyntaxException ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -519,58 +574,42 @@ public class AbstractManagerTest {
         instance.properties.setProperty(Options.XCC_DBNAME, "documents%20database");
         try {
             instance.initURI(null);
-        } catch (InstantiationException | URISyntaxException ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
         assertEquals("xcc://username:p%40assword%2B%3A@localhost:80/documents%20database", instance.connectionUri.toString());
     }
 
-    @Test(expected = InstantiationException.class)
-    public void testInitURINullURIWithPassword() throws InstantiationException {
+    @Test(expected = CorbException.class)
+    public void testInitURINullURIWithPassword() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.XCC_PASSWORD, password);
-        try {
-            instance.initURI(null);
-        } catch (URISyntaxException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
+        instance.initURI(null);
         fail();
     }
 
-    @Test(expected = InstantiationException.class)
-    public void testInitURINullURIWithPort() throws InstantiationException {
+    @Test(expected = CorbException.class)
+    public void testInitURINullURIWithPort() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.XCC_PORT, port);
-        try {
-            instance.initURI(null);
-        } catch (URISyntaxException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
+        instance.initURI(null);
         fail();
     }
 
-    @Test(expected = InstantiationException.class)
-    public void testInitURINullURIWithHostname() throws InstantiationException {
+    @Test(expected = CorbException.class)
+    public void testInitURINullURIWithHostname() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.XCC_HOSTNAME, host);
-        try {
-            instance.initURI(null);
-        } catch (URISyntaxException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
+        instance.initURI(null);
         fail();
     }
 
-    @Test(expected = InstantiationException.class)
-    public void testInitURINullURIWithUsername() throws InstantiationException {
+    @Test(expected = CorbException.class)
+    public void testInitURINullURIWithUsername() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.XCC_USERNAME, username);
-        try {
-            instance.initURI(null);
-        } catch (URISyntaxException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
+        instance.initURI(null);
         fail();
     }
 
@@ -605,11 +644,10 @@ public class AbstractManagerTest {
 
     @Test(expected = NullPointerException.class)
     public void testPrepareContentSourceNull() {
-        System.out.println("prepareContentSource");
         AbstractManager instance = new AbstractManagerImpl();
         try {
             instance.prepareContentSource();
-        } catch (XccConfigException | GeneralSecurityException ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
@@ -622,7 +660,7 @@ public class AbstractManagerTest {
             instance.connectionUri = new URI("xccs://user:pass@localhost:8001");
             instance.sslConfig = mock(SSLConfig.class);
             instance.prepareContentSource();
-        } catch (URISyntaxException | XccConfigException | GeneralSecurityException ex) {
+        } catch (CorbException | URISyntaxException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -630,14 +668,14 @@ public class AbstractManagerTest {
         assertNotNull(instance.contentSource);
     }
 
-    @Test(expected = XccConfigException.class)
-    public void testPrepareContentSourceNoScheme() throws XccConfigException {
+    @Test(expected = CorbException.class)
+    public void testPrepareContentSourceNoScheme() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
         try {
             instance.connectionUri = new URI("//user:pass@localhost:8001");
             instance.sslConfig = mock(SSLConfig.class);
             instance.prepareContentSource();
-        } catch (GeneralSecurityException | URISyntaxException ex) {
+        } catch (URISyntaxException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
@@ -702,12 +740,19 @@ public class AbstractManagerTest {
     public static class AbstractManagerImpl extends AbstractManager {
 
         @Override
-        public void init(String[] args, Properties props) throws IOException,
-                URISyntaxException, ClassNotFoundException, InstantiationException,
-                IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException {
+        public void init(String[] args, Properties props) throws CorbException {
             this.properties = props;
         }
 
+        public static AbstractManager instanceWithXccHttpCompliantValue(String xccHttpCompliantValue) {
+            System.clearProperty(PROPERTY_XCC_HTTPCOMPLIANT);
+            
+            Properties properties = new Properties();
+            properties.setProperty(Options.XCC_HTTPCOMPLIANT, xccHttpCompliantValue);
+            AbstractManager instance = new AbstractManagerImpl();
+            instance.properties = properties;
+            return instance;
+        }
     }
 
 }

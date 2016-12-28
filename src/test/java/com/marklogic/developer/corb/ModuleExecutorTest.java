@@ -47,7 +47,6 @@ import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.types.XdmItem;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -496,7 +495,7 @@ public class ModuleExecutorTest {
             executor = getMockModuleExecutorWithEmptyResults();
             executor.init(new String[0], props);
             return executor;
-        } catch (RequestException | IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -511,7 +510,7 @@ public class ModuleExecutorTest {
             RequestOptions opts = new RequestOptions();
             opts.setCacheResult(false);
             Session session = executor.contentSource.newSession();
-            Request req ;
+            Request req;
             TransformOptions options = executor.getOptions();
             Properties properties = executor.getProperties();
 
@@ -542,8 +541,6 @@ public class ModuleExecutorTest {
 
         } catch (RequestException exc) {
             throw new CorbException("While invoking XQuery Module", exc);
-        } catch (XccConfigException | GeneralSecurityException | IllegalStateException exd) {
-            throw new CorbException("While invoking XCC...", exd);
         }
         return res;
     }
@@ -564,29 +561,21 @@ public class ModuleExecutorTest {
         fail();
     }
 
-    @Test(expected = InstantiationException.class)
-    public void testInitStringArrNullProperties() throws InstantiationException {
+    @Test(expected = CorbException.class)
+    public void testInitStringArrNullProperties() throws CorbException {
         String[] args = null;
         Properties props = null;
         ModuleExecutor instance = new ModuleExecutor();
-        try {
-            instance.init(args, props);
-        } catch (IOException | URISyntaxException | ClassNotFoundException | IllegalAccessException | XccConfigException | GeneralSecurityException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
+        instance.init(args, props);
         fail();
     }
 
-    @Test(expected = InstantiationException.class)
-    public void testInitStringArrEmptyProperties() throws InstantiationException {
+    @Test(expected = CorbException.class)
+    public void testInitStringArrEmptyProperties() throws CorbException {
         String[] args = null;
         Properties props = new Properties();
         ModuleExecutor instance = new ModuleExecutor();
-        try {
-            instance.init(args, props);
-        } catch (IOException | URISyntaxException | ClassNotFoundException | IllegalAccessException | XccConfigException | GeneralSecurityException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
+        instance.init(args, props);
         fail();
     }
 
@@ -594,7 +583,12 @@ public class ModuleExecutorTest {
     public void testInitOptionsMissingPROCESSMODULE() {
         String[] args = new String[]{};
         ModuleExecutor instance = new ModuleExecutor();
-        instance.initOptions(args);
+        try {
+            instance.initOptions(args);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
         fail();
     }
 
@@ -606,7 +600,7 @@ public class ModuleExecutorTest {
             ModuleExecutor instance = new ModuleExecutor();
             instance.initOptions(args);
             assertEquals(exportDir, instance.properties.getProperty(Options.EXPORT_FILE_DIR));
-        } catch (IOException ex) {
+        } catch (CorbException | IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -617,7 +611,12 @@ public class ModuleExecutorTest {
         String exportDir = "does/not/exist";
         String[] args = new String[]{FOO, "processModule", "", "", exportDir};
         ModuleExecutor instance = new ModuleExecutor();
-        instance.initOptions(args);
+        try {
+            instance.initOptions(args);
+        } catch (CorbException ex) {
+            Logger.getLogger(ModuleExecutorTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail();
+        }
         fail();
     }
 
@@ -720,9 +719,10 @@ public class ModuleExecutorTest {
 
     private static class MockModuleExecutor extends ModuleExecutor {
 
-        //Want to retain the mock contentSource that we set in our tests
+        
         @Override
-        protected void prepareContentSource() throws XccConfigException, GeneralSecurityException {
+        protected void prepareContentSource() throws CorbException {
+            //Want to retain the mock contentSource that we set in our tests
         }
     }
 
@@ -737,7 +737,7 @@ public class ModuleExecutorTest {
 
     private static class MockModuleExecutorResults extends MockModuleExecutor {
 
-        public List<String> results = new ArrayList();
+        public List<String> results = new ArrayList<>();
 
         @Override
         protected void writeToFile(ResultSequence res) {
