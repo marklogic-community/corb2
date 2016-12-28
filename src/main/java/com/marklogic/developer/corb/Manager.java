@@ -157,7 +157,7 @@ public class Manager extends AbstractManager {
         if (args == null) {
             args = new String[0];
         }
-        String collectionName = getOption(args.length > 1 ? args[1] : null, COLLECTION_NAME);
+        String collectionName = getOption(args, 1, COLLECTION_NAME);
         this.collection = collectionName == null ? "" : collectionName;
 
         //This is relevant for unit tests only. clear the static map so it gets re-initialized for fresh run
@@ -184,20 +184,20 @@ public class Manager extends AbstractManager {
     protected void initOptions(String... args) throws CorbException {
         super.initOptions(args);
         // gather inputs
-        String processModule = getOption(args.length > 2 ? args[2] : null, PROCESS_MODULE);
-        String threadCount = getOption(args.length > 3 ? args[3] : null, THREAD_COUNT);
-        String urisModule = getOption(args.length > 4 ? args[4] : null, URIS_MODULE);
-        String moduleRoot = getOption(args.length > 5 ? args[5] : null, MODULE_ROOT);
-        String modulesDatabase = getOption(args.length > 6 ? args[6] : null, MODULES_DATABASE);
-        String install = getOption(args.length > 7 ? args[7] : null, INSTALL);
-        String processTask = getOption(args.length > 8 ? args[8] : null, PROCESS_TASK);
-        String preBatchModule = getOption(args.length > 9 ? args[9] : null, PRE_BATCH_MODULE);
-        String preBatchTask = getOption(args.length > 10 ? args[10] : null, PRE_BATCH_TASK);
-        String postBatchModule = getOption(args.length > 11 ? args[11] : null, POST_BATCH_MODULE);
-        String postBatchTask = getOption(args.length > 12 ? args[12] : null, POST_BATCH_TASK);
-        String exportFileDir = getOption(args.length > 13 ? args[13] : null, EXPORT_FILE_DIR);
-        String exportFileName = getOption(args.length > 14 ? args[14] : null, EXPORT_FILE_NAME);
-        String urisFile = getOption(args.length > 15 ? args[15] : null, URIS_FILE);
+        String processModule = getOption(args, 2, PROCESS_MODULE);
+        String threadCount = getOption(args, 3, THREAD_COUNT);
+        String urisModule = getOption(args, 4, URIS_MODULE);
+        String moduleRoot = getOption(args, 5, MODULE_ROOT);
+        String modulesDatabase = getOption(args, 6, MODULES_DATABASE);
+        String install = getOption(args, 7, INSTALL);
+        String processTask = getOption(args, 8, PROCESS_TASK);
+        String preBatchModule = getOption(args, 9, PRE_BATCH_MODULE);
+        String preBatchTask = getOption(args, 10, PRE_BATCH_TASK);
+        String postBatchModule = getOption(args, 11, POST_BATCH_MODULE);
+        String postBatchTask = getOption(args, 12, POST_BATCH_TASK);
+        String exportFileDir = getOption(args, 13, EXPORT_FILE_DIR);
+        String exportFileName = getOption(args, 14, EXPORT_FILE_NAME);
+        String urisFile = getOption(args, 15, URIS_FILE);
 
         String urisLoader = getOption(URIS_LOADER);
         if (urisLoader != null) {
@@ -310,7 +310,7 @@ public class Manager extends AbstractManager {
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
             throw new CorbException("Unable to instantiate class", ex);
         }
-        
+
         if (null == options.getProcessTaskClass() && null == options.getProcessModule()) {
             throw new NullPointerException(PROCESS_TASK + " or " + PROCESS_MODULE + " must be specified");
         }

@@ -50,7 +50,8 @@ import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
 
 /**
- * This class can be used to execute either an XQuery or JavaScript module in MarkLogic.
+ * This class can be used to execute either an XQuery or JavaScript module in
+ * MarkLogic.
  *
  * @author matthew.heckel MarkLogic Corportation
  *
@@ -96,11 +97,11 @@ public class ModuleExecutor extends AbstractManager {
     @Override
     protected void initOptions(String... args) throws CorbException {
         super.initOptions(args);
-        String processModule = getOption(args.length > 1 ? args[1] : null, PROCESS_MODULE);
-        String moduleRoot = getOption(args.length > 2 ? args[2] : null, MODULE_ROOT);
-        String modulesDatabase = getOption(args.length > 3 ? args[3] : null, MODULES_DATABASE);
-        String exportFileDir = getOption(args.length > 4 ? args[4] : null, EXPORT_FILE_DIR);
-        String exportFileName = getOption(args.length > 5 ? args[5] : null, EXPORT_FILE_NAME);
+        String processModule = getOption(args, 1, PROCESS_MODULE);
+        String moduleRoot = getOption(args, 2, MODULE_ROOT);
+        String modulesDatabase = getOption(args, 3, MODULES_DATABASE);
+        String exportFileDir = getOption(args, 4, EXPORT_FILE_DIR);
+        String exportFileName = getOption(args, 5, EXPORT_FILE_NAME);
 
         if (moduleRoot != null) {
             options.setModuleRoot(moduleRoot);
@@ -111,7 +112,7 @@ public class ModuleExecutor extends AbstractManager {
         if (modulesDatabase != null) {
             options.setModulesDatabase(modulesDatabase);
         }
-        
+
         //Check legacy properties keys, for backwards compatibility
         if (processModule == null) {
             processModule = getOption(XQUERY_MODULE);
@@ -136,7 +137,7 @@ public class ModuleExecutor extends AbstractManager {
             }
         }
 
-        deleteFileIfExists(exportFileDir, exportFileName);          
+        deleteFileIfExists(exportFileDir, exportFileName);
     }
 
     @Override

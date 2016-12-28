@@ -327,11 +327,25 @@ public abstract class AbstractManager {
      * Retrieve the value of the specified key from either the System
      * properties, or the properties object.
      *
-     * @param propName
+     * @param propertyName
      * @return the trimmed property value
      */
-    protected String getOption(String propName) {
-        return getOption(null, propName);
+    protected String getOption(String propertyName) {
+        return getOption(null, propertyName);
+    }
+
+    /**
+     * Retrieve either the value from the commandline arguments at the argIndex,
+     * or the first property value from the System.properties or properties object
+     * that is not empty or null.
+     * @param commandlineArgs
+     * @param argIndex
+     * @param propertyName
+     * @return the trimmed property value
+     */
+    protected String getOption(String[] commandlineArgs, int argIndex, String propertyName) {
+        String argValue = commandlineArgs.length > argIndex ? commandlineArgs[argIndex] : null;
+        return getOption(argValue, propertyName);
     }
 
     /**
@@ -339,17 +353,17 @@ public abstract class AbstractManager {
      * System.properties or properties object that is not empty or null.
      *
      * @param argVal
-     * @param propName
+     * @param propertyName
      * @return the trimmed property value
      */
-    protected String getOption(String argVal, String propName) {
+    protected String getOption(String argVal, String propertyName) {
         if (isNotBlank(argVal)) {
             return argVal.trim();
-        } else if (isNotBlank(System.getProperty(propName))) {
-            return System.getProperty(propName).trim();
-        } else if (this.properties.containsKey(propName) && isNotBlank(this.properties.getProperty(propName))) {
-            String val = this.properties.getProperty(propName).trim();
-            this.properties.remove(propName); //remove from properties file as we would like to keep the properties file simple.
+        } else if (isNotBlank(System.getProperty(propertyName))) {
+            return System.getProperty(propertyName).trim();
+        } else if (this.properties.containsKey(propertyName) && isNotBlank(this.properties.getProperty(propertyName))) {
+            String val = this.properties.getProperty(propertyName).trim();
+            this.properties.remove(propertyName); //remove from properties file as we would like to keep the properties file simple.
             return val;
         }
         return null;
