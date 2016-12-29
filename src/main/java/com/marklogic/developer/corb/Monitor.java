@@ -124,7 +124,7 @@ public class Monitor implements Runnable {
                     break;
                 }
             } else if (future == null && pool.getActiveCount() == 0) {
-                LOG.log(WARNING, "No active tasks found with {0} tasks remains to be completed", (taskCount - completed));
+                LOG.log(WARNING, "No active tasks found with {0} tasks remains to be completed", taskCount - completed);
             }
         }
         LOG.info("waiting for pool to terminate");
