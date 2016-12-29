@@ -22,13 +22,16 @@ import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
 public final class IOUtils {
-
+    
+    private static final Logger LOG = Logger.getLogger(IOUtils.class.getName());
     public static final int BUFFER_SIZE = 32 * 1024;
 
     private IOUtils() {
@@ -56,6 +59,7 @@ public final class IOUtils {
             try {
                 obj.close();
             } catch (IOException ex) {
+                LOG.log(Level.WARNING, "IOException thrown closing object", ex);
                 // Ignore
             }
         }
