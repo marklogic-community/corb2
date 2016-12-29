@@ -170,8 +170,8 @@ public abstract class AbstractManager {
         init(args, props);
     }
 
-    public void init(String[] commandline_args, Properties props) throws CorbException {
-        String[] args = commandline_args;
+    public void init(String[] commandlineArgs, Properties props) throws CorbException {
+        String[] args = commandlineArgs;
         if (args == null) {
             args = new String[0];
         }
