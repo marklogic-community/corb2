@@ -26,7 +26,10 @@ after_success:
   - ./gradlew jacocoTestReport coveralls -PskipIntegrationTest -PskipPerformanceTest
 
 addons:
-  sonarqube: true
+  sonarqube:
+      branches: 
+        - master
+        - development
   coverity_scan:
     project:
       name: "marklogic/corb2"
