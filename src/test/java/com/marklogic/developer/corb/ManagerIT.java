@@ -406,9 +406,10 @@ public class ManagerIT {
             props.put(Options.COMMAND, SLOW_CMD);
             File commandFile1 = new File(System.getProperty(Options.COMMAND_FILE));
             try {
-                commandFile1.createNewFile();
-                try (final FileOutputStream fos = new FileOutputStream(commandFile1)) {
-                    props.store(fos, null);
+                if (commandFile1.createNewFile()) {
+                    try (final FileOutputStream fos = new FileOutputStream(commandFile1)) {
+                        props.store(fos, null);
+                    }
                 }
             } catch (IOException ex) {
                 LOG.log(Level.SEVERE, null, ex);
@@ -464,9 +465,10 @@ public class ManagerIT {
             props.put(Options.COMMAND, SLOW_CMD);
             File commandFile1 = new File(System.getProperty(Options.COMMAND_FILE));
             try {
-                commandFile1.createNewFile();
-                try (final FileOutputStream fos = new FileOutputStream(commandFile1)) {
-                    props.store(fos, null);
+                if (commandFile1.createNewFile()) {
+                    try (final FileOutputStream fos = new FileOutputStream(commandFile1)) {
+                        props.store(fos, null);
+                    }
                 }
             } catch (IOException ex) {
                 LOG.log(Level.SEVERE, null, ex);
@@ -520,9 +522,10 @@ public class ManagerIT {
             props.put(Options.COMMAND, "STOP");
             File commandFile1 = new File(System.getProperty(Options.COMMAND_FILE));
             try {
-                commandFile1.createNewFile();
-                try (final FileOutputStream fos = new FileOutputStream(commandFile1)) {
-                    props.store(fos, null);
+                if (commandFile1.createNewFile()) {
+                    try (final FileOutputStream fos = new FileOutputStream(commandFile1)) {
+                        props.store(fos, null);
+                    }
                 }
             } catch (IOException ex) {
                 LOG.log(Level.SEVERE, null, ex);
@@ -562,11 +565,12 @@ public class ManagerIT {
         Runnable adjustThreads = () -> {
             File commandFile1 = new File(System.getProperty(Options.COMMAND_FILE));
             try {
-                commandFile1.createNewFile();
-                Properties props = new Properties();
-                props.put(Options.THREAD_COUNT, Integer.toString(1));
-                try (final FileOutputStream fos = new FileOutputStream(commandFile1)) {
-                    props.store(fos, null);
+                if (commandFile1.createNewFile()) {
+                    Properties props = new Properties();
+                    props.put(Options.THREAD_COUNT, Integer.toString(1));
+                    try (final FileOutputStream fos = new FileOutputStream(commandFile1)) {
+                        props.store(fos, null);
+                    }
                 }
             } catch (IOException ex) {
                 LOG.log(Level.SEVERE, null, ex);
