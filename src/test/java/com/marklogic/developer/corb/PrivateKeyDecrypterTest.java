@@ -305,11 +305,11 @@ public class PrivateKeyDecrypterTest {
     public void testMainGenKeysEmptyPrivateKeyPath() {
         try {
             File tempPublic = createTempFile();
-            tempPublic.delete();
             File tempPrivate = createTempFile();
-            tempPrivate.delete();
-            String[] args = {ACTION_GEN_KEYS, "", tempPublic.toString(), ALGORITHM, STRENGTH};
-            PrivateKeyDecrypter.main(args);
+            if (tempPublic.delete() && tempPrivate.delete()) {
+                String[] args = {ACTION_GEN_KEYS, "", tempPublic.toString(), ALGORITHM, STRENGTH};
+                PrivateKeyDecrypter.main(args);
+            }
             assertFalse(tempPublic.exists());
             assertFalse(tempPrivate.exists());
         } catch (Exception ex) {
@@ -322,11 +322,11 @@ public class PrivateKeyDecrypterTest {
     public void testMainGenKeysEmptyPublicKeyPath() {
         try {
             File tempPublic = createTempFile();
-            tempPublic.delete();
             File tempPrivate = createTempFile();
-            tempPrivate.delete();
-            String[] args = {ACTION_GEN_KEYS, tempPrivate.toString(), "", ALGORITHM, STRENGTH};
-            PrivateKeyDecrypter.main(args);
+            if (tempPublic.delete() && tempPrivate.delete()) {
+                String[] args = {ACTION_GEN_KEYS, tempPrivate.toString(), "", ALGORITHM, STRENGTH};
+                PrivateKeyDecrypter.main(args);
+            }
             assertFalse(tempPublic.exists());
             assertFalse(tempPrivate.exists());
         } catch (Exception ex) {
@@ -377,7 +377,6 @@ public class PrivateKeyDecrypterTest {
         }
     }
 
-    //TODO: test with an algorithm other than RSA
     @Test(expected = NoSuchAlgorithmException.class)
     public void testMainEncryptInvalidAlgorithm() throws Exception {
         String[] args = {ACTION_ENCRYPT, PUBLIC_KEY_PATH, SECRET, "badAlgorithm"};
