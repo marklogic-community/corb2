@@ -82,8 +82,9 @@ public class DiskQueueTest {
     public void testDiskQueueTempDirDoesNotExist() {
         try {
             File tmpFile = TestUtils.createTempDirectory();
-            tmpFile.delete();
-            new DiskQueue<>(0, tmpFile);     
+            if (tmpFile.delete()) {
+                new DiskQueue<>(0, tmpFile);
+            }
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }

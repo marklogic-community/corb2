@@ -748,6 +748,7 @@ public class QueryUrisLoaderTest {
         try {
             assertFalse(instance.hasNext());
         } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -759,6 +760,7 @@ public class QueryUrisLoaderTest {
             instance.getQueue();
             assertFalse(instance.hasNext());
         } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }

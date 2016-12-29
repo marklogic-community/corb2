@@ -602,10 +602,10 @@ public class ManagerTest {
         Properties props = new Properties();
         props.setProperty(Options.ERROR_FILE_NAME, errorFilename);
         try {
-            errorFile.createNewFile();
-            exportFile.createNewFile();
-            Manager instance = getMockManagerWithEmptyResults();
-            instance.init(args, props);
+            if (errorFile.createNewFile() && exportFile.createNewFile()) {
+                Manager instance = getMockManagerWithEmptyResults();
+                instance.init(args, props);
+            }
             assertFalse(errorFile.exists());
             assertFalse(exportFile.exists());
         } catch (CorbException | IOException | RequestException ex) {
@@ -1179,7 +1179,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testSetThreadCount_InvalidValue() {
+    public void testSetThreadCountWithInvalidValue() {
         Manager instance = new Manager();
         instance.setThreadCount(-5);
         assertEquals(1, instance.options.getThreadCount());
@@ -1188,7 +1188,7 @@ public class ManagerTest {
     }
 
     public static String[] getDefaultArgs() {
-        String[] args = {XCC_CONNECTION_URI,
+        return new String[] {XCC_CONNECTION_URI,
             COLLECTION_NAME,
             XQUERY_MODULE,
             THREAD_COUNT,
@@ -1204,7 +1204,6 @@ public class ManagerTest {
             EXPORT_FILE_DIR,
             EXPORT_FILE_NAME,
             URIS_FILE};
-        return args;
     }
 
     public static Properties getDefaultProperties() {
@@ -1225,11 +1224,11 @@ public class ManagerTest {
         properties.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         return properties;
     }
-    
+
     public static void setDefaultSystemProperties() {
         System.getProperties().putAll(getDefaultProperties());
     }
-    
+
     public File createTempFile(List<String> lines) throws IOException {
         Path path = Files.createTempFile("tmp", "txt");
         File file = path.toFile();

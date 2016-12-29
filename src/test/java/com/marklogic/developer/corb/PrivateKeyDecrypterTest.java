@@ -91,7 +91,7 @@ public class PrivateKeyDecrypterTest {
             assertEquals(Level.SEVERE, records.get(0).getLevel());
             assertEquals(PRIVATE_KEY_FILE + " property must be defined", records.get(0).getMessage());
         } catch (IOException | ClassNotFoundException ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -110,7 +110,7 @@ public class PrivateKeyDecrypterTest {
             assertEquals(Level.SEVERE, records.get(0).getLevel());
             assertEquals(LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY, records.get(0).getMessage());
         } catch (IOException | ClassNotFoundException ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -131,7 +131,7 @@ public class PrivateKeyDecrypterTest {
             assertEquals(Level.SEVERE, records.get(0).getLevel());
             assertEquals(LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY, records.get(0).getMessage());
         } catch (IOException | ClassNotFoundException ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -152,7 +152,7 @@ public class PrivateKeyDecrypterTest {
             assertEquals(Level.SEVERE, records.get(0).getLevel());
             assertEquals(LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY, records.get(0).getMessage());
         } catch (IOException | ClassNotFoundException ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -173,7 +173,7 @@ public class PrivateKeyDecrypterTest {
             assertEquals(Level.SEVERE, records.get(0).getLevel());
             assertEquals("Problem initializing PrivateKeyDecrypter", records.get(0).getMessage());
         } catch (IOException | ClassNotFoundException ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -194,7 +194,7 @@ public class PrivateKeyDecrypterTest {
             assertEquals(Level.SEVERE, records.get(0).getLevel());
             assertEquals("Problem initializing PrivateKeyDecrypter", records.get(0).getMessage());
         } catch (IOException | ClassNotFoundException ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -216,7 +216,7 @@ public class PrivateKeyDecrypterTest {
             String message = records.get(0).getMessage();
             assertTrue(message.startsWith("Loading private key file ") && message.contains("from classpath"));
         } catch (IOException | ClassNotFoundException ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -244,7 +244,7 @@ public class PrivateKeyDecrypterTest {
             String result = instance.doDecrypt("key", ENCRYPTED_VALUE);
             assertEquals(value, result);
         } catch (IOException | ClassNotFoundException ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -260,7 +260,7 @@ public class PrivateKeyDecrypterTest {
             String result = instance.doDecrypt("key", value);
             assertEquals(value, result);
         } catch (IOException | ClassNotFoundException ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -275,7 +275,7 @@ public class PrivateKeyDecrypterTest {
             PrivateKeyDecrypter.main(args);
             assertEquals(GEN_KEYS_USAGE + NEWLINE, errContent.toString());
         } catch (Exception ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -296,7 +296,7 @@ public class PrivateKeyDecrypterTest {
             assertTrue(tempPublic.exists());
             assertTrue(tempPrivate.exists());
         } catch (Exception ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -313,7 +313,7 @@ public class PrivateKeyDecrypterTest {
             assertFalse(tempPublic.exists());
             assertFalse(tempPrivate.exists());
         } catch (Exception ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -330,7 +330,7 @@ public class PrivateKeyDecrypterTest {
             assertFalse(tempPublic.exists());
             assertFalse(tempPrivate.exists());
         } catch (Exception ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -339,15 +339,15 @@ public class PrivateKeyDecrypterTest {
     public void testMainGenKeysEmptyArgValues() {
         try {
             File tempPublic = createTempFile();
-            tempPublic.delete();
             File tempPrivate = createTempFile();
-            tempPrivate.delete();
-            String[] args = {ACTION_GEN_KEYS, "", "", "", ""};
-            PrivateKeyDecrypter.main(args);
+            if (tempPublic.delete() && tempPrivate.delete()) {
+                String[] args = {ACTION_GEN_KEYS, "", "", "", ""};
+                PrivateKeyDecrypter.main(args);
+            }
             assertFalse(tempPublic.exists());
             assertFalse(tempPrivate.exists());
         } catch (Exception ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -359,7 +359,7 @@ public class PrivateKeyDecrypterTest {
             PrivateKeyDecrypter.main(args);
             assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
         } catch (Exception ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -372,7 +372,7 @@ public class PrivateKeyDecrypterTest {
             PrivateKeyDecrypter.main(args);
             assertTrue(outContent.toString().startsWith("Input: " + SECRET + "\nOutput: "));
         } catch (Exception ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -401,7 +401,7 @@ public class PrivateKeyDecrypterTest {
             PrivateKeyDecrypter.main(args);
             assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
         } catch (Exception ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -414,7 +414,7 @@ public class PrivateKeyDecrypterTest {
             PrivateKeyDecrypter.main(args);
             assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
         } catch (Exception ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -426,7 +426,7 @@ public class PrivateKeyDecrypterTest {
             PrivateKeyDecrypter.main(args);
             assertEquals(USAGE, outContent.toString());
         } catch (Exception ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -438,7 +438,7 @@ public class PrivateKeyDecrypterTest {
             PrivateKeyDecrypter.main(args);
             assertEquals(USAGE, outContent.toString());
         } catch (Exception ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -450,7 +450,7 @@ public class PrivateKeyDecrypterTest {
             PrivateKeyDecrypter.main(args);
             assertEquals(USAGE, outContent.toString());
         } catch (Exception ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
@@ -462,7 +462,7 @@ public class PrivateKeyDecrypterTest {
             PrivateKeyDecrypter.main(args);
             assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
         } catch (Exception ex) {
-            Logger.getLogger(PrivateKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }

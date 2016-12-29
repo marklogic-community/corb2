@@ -204,7 +204,7 @@ public class FileXMLUrisLoaderTest {
     }
 
     @Test
-    public void testSelectAttributes() throws Exception {
+    public void testSelectAttributes() {
         List<String> nodes;
         try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
             instance.properties.setProperty(Options.XML_NODE, "/root/a/@*");
@@ -351,9 +351,10 @@ public class FileXMLUrisLoaderTest {
     }
 
     @Test
-    public void testHasNext() throws Exception {
+    public void testHasNext() {
         try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
             instance.properties.remove(Options.XML_NODE);
+            try {
             instance.open();
 
             for (int i = 0; i < instance.getTotalCount(); i++) {
@@ -361,6 +362,10 @@ public class FileXMLUrisLoaderTest {
             }
             //Verify that hasNext() does not advance the buffered reader to the next line
             assertTrue(instance.hasNext());
+            } catch (CorbException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                fail();
+            }
         }
     }
 
