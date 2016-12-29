@@ -148,12 +148,12 @@ public class Manager extends AbstractManager {
     }
 
     @Override
-    public void init(String[] commandline_args, Properties props) throws CorbException {
-        super.init(commandline_args, props);
+    public void init(String[] commandlineArgs, Properties props) throws CorbException {
+        super.init(commandlineArgs, props);
 
         prepareModules();
 
-        String[] args = commandline_args;
+        String[] args = commandlineArgs;
         if (args == null) {
             args = new String[0];
         }
