@@ -206,9 +206,13 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testDumpHex() throws Exception {
-        String result = StringUtils.dumpHex("abcd", "UTF-8");
-        assertEquals("61 62 63 64", result);
+    public void testDumpHex() {
+        try {
+            String result = StringUtils.dumpHex("abcd", "UTF-8");
+            assertEquals("61 62 63 64", result);
+        } catch (UnsupportedEncodingException ex) {
+            fail();
+        }   
     }
 
     @Test(expected = NullPointerException.class)
