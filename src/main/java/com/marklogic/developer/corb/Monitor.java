@@ -201,15 +201,15 @@ public class Monitor implements Runnable {
         return tpsForETC;
     }
 
-    static protected double calculateTransactionsPerSecond(long amountCompleted, long currentMillis, long previousMillis) {
+    protected static double calculateTransactionsPerSecond(long amountCompleted, long currentMillis, long previousMillis) {
         return calculateTransactionsPerSecond(amountCompleted, 0, currentMillis, previousMillis);
     }
 
-    static protected double calculateTransactionsPerSecond(long amountCompleted, long previouslyCompleted, long currentMillis, long previousMillis) {
+    protected static double calculateTransactionsPerSecond(long amountCompleted, long previouslyCompleted, long currentMillis, long previousMillis) {
         return (amountCompleted - previouslyCompleted) * 1000d / (currentMillis - previousMillis);
     }
 
-    static protected String getProgressMessage(long completed, long taskCount, double tps, double curTps, double tpsForETC, int threads, boolean isPaused) {
+    protected static String getProgressMessage(long completed, long taskCount, double tps, double curTps, double tpsForETC, int threads, boolean isPaused) {
         String etc = getEstimatedTimeCompletion(taskCount, completed, tpsForETC, isPaused);
         return completed + "/" + taskCount + ", "
                 + formatTransactionsPerSecond(tps) + " tps(avg), "
@@ -218,7 +218,7 @@ public class Monitor implements Runnable {
                 + threads + " active threads.";
     }
 
-    static protected String getEstimatedTimeCompletion(double taskCount, double completed, double tpsForETC, boolean isPaused) {
+    protected static String getEstimatedTimeCompletion(double taskCount, double completed, double tpsForETC, boolean isPaused) {
         double ets = (tpsForETC != 0) ? (taskCount - completed) / tpsForETC : -1;
         int hours = (int) ets / 3600;
         int minutes = (int) (ets % 3600) / 60;
@@ -234,7 +234,7 @@ public class Monitor implements Runnable {
      * @param n
      * @return
      */
-    static protected String formatTransactionsPerSecond(Number n) {
+    protected static String formatTransactionsPerSecond(Number n) {
         NumberFormat format = DecimalFormat.getInstance();
         format.setRoundingMode(RoundingMode.HALF_UP);
         format.setMinimumFractionDigits(0);
