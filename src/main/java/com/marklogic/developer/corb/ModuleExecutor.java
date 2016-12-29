@@ -103,24 +103,24 @@ public class ModuleExecutor extends AbstractManager {
         String exportFileDir = getOption(args, 4, EXPORT_FILE_DIR);
         String exportFileName = getOption(args, 5, EXPORT_FILE_NAME);
 
-        if (moduleRoot != null) {
-            options.setModuleRoot(moduleRoot);
-        }
-        if (processModule != null) {
-            options.setProcessModule(processModule);
-        }
-        if (modulesDatabase != null) {
-            options.setModulesDatabase(modulesDatabase);
-        }
-
         //Check legacy properties keys, for backwards compatibility
         if (processModule == null) {
             processModule = getOption(XQUERY_MODULE);
         }
+        if (processModule != null) {
+            options.setProcessModule(processModule);
+        }
         if (null == options.getProcessModule()) {
             throw new NullPointerException(PROCESS_MODULE + " must be specified");
         }
-
+        
+        if (modulesDatabase != null) {
+            options.setModulesDatabase(modulesDatabase);
+        }
+        if (moduleRoot != null) {
+            options.setModuleRoot(moduleRoot);
+        }
+        
         if (!this.properties.containsKey(EXPORT_FILE_DIR) && exportFileDir != null) {
             this.properties.put(EXPORT_FILE_DIR, exportFileDir);
         }
@@ -144,19 +144,19 @@ public class ModuleExecutor extends AbstractManager {
     protected void usage() {
         super.usage();
         List<String> args = new ArrayList<>(5);
-        String xcc_connection_uri = "xcc://user:password@host:port/[ database ]";
-        String options_file = "myjob.properties";
+        String xccConnectionUri = "xcc://user:password@host:port/[ database ]";
+        String optionsFile = "myjob.properties";
         PrintStream err = System.err;
 
         err.println("usage 1:");
         args.add(NAME);
-        args.add(xcc_connection_uri);
+        args.add(xccConnectionUri);
         args.add("process-module [module-root [modules-database [ export-file-name ] ] ]");
         err.println(TAB + StringUtils.join(args, SPACE));
 
         err.println("\nusage 2:");
         args.clear();
-        args.add(buildSystemPropertyArg(XCC_CONNECTION_URI, xcc_connection_uri));
+        args.add(buildSystemPropertyArg(XCC_CONNECTION_URI, xccConnectionUri));
         args.add(buildSystemPropertyArg(PROCESS_MODULE, "module-name.xqy"));
         args.add(buildSystemPropertyArg("...", null));
         args.add(NAME);
@@ -164,15 +164,15 @@ public class ModuleExecutor extends AbstractManager {
 
         err.println("\nusage 3:");
         args.clear();
-        args.add(buildSystemPropertyArg(OPTIONS_FILE, options_file));
+        args.add(buildSystemPropertyArg(OPTIONS_FILE, optionsFile));
         args.add(NAME);
         err.println(TAB + StringUtils.join(args, SPACE));
 
         err.println("\nusage 4:");
         args.clear();
-        args.add(buildSystemPropertyArg(OPTIONS_FILE, options_file));
+        args.add(buildSystemPropertyArg(OPTIONS_FILE, optionsFile));
         args.add(NAME);
-        args.add(xcc_connection_uri);
+        args.add(xccConnectionUri);
         err.println(TAB + StringUtils.join(args, SPACE));
     }
 
