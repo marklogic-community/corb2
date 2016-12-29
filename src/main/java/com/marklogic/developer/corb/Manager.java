@@ -433,7 +433,7 @@ public class Manager extends AbstractManager {
                 + " [ export-file-dir [ export-file-name" + " [ uris-file ] ] ] ] ] ] ] ] ] ] ] ] ]");
 
         err.println("\nusage 2:");
-        args.add(buildSystemPropertyArg(XCC_CONNECTION_URI, xcc_connection_uri));
+        args.add(buildSystemPropertyArg(XCC_CONNECTION_URI, xccConnectionUri));
         args.add(buildSystemPropertyArg(PROCESS_MODULE, "module-name.xqy"));
         args.add(buildSystemPropertyArg(THREAD_COUNT, threadCount));
         args.add(buildSystemPropertyArg(URIS_MODULE, "get-uris.xqy"));
