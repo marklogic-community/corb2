@@ -211,6 +211,7 @@ public class StringUtilsTest {
             String result = StringUtils.dumpHex("abcd", "UTF-8");
             assertEquals("61 62 63 64", result);
         } catch (UnsupportedEncodingException ex) {
+            LOG.log(Level.SEVERE, null, ex);
             fail();
         }   
     }
