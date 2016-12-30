@@ -67,11 +67,11 @@ public class AbstractManagerTest {
     private static final String KEY = "key";
     private static final String VALUE = "value";
     private String selectorAsText;
-    private String username = "username";
-    private String password = "password";
-    private String host = "localhost";
-    private String port = "80";
-    private PrintStream systemErr = System.err;
+    private final String username = "username";
+    private final String password = "password";
+    private final String host = "localhost";
+    private final String port = "80";
+    private final PrintStream systemErr = System.err;
 
     private String originalValue;
 
