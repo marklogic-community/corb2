@@ -484,39 +484,27 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testWriteToErrorFileNullBatchUridelim() {
-        String[] uris = new String[]{URI};
-        String filename = "testWriteToErrorFile_nullBatchUridelim.err";
-        String delim = null;
-        String message = ERROR;
-
-        try {
-            File exportDir = createTempDirectory();
-            File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
-            assertTrue(TestUtils.readFile(errorFile).contains(Manager.DEFAULT_BATCH_URI_DELIM));
-        } catch (CorbException | IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+    public void testWriteToErrorFileNullBatchUriDelim() {
+        testWriteToErrorFileDefaultDelimiter(null);
     }
 
     @Test
-    public void testWriteToErrorFileEmptyBatchUridelim() {
-        String[] uris = new String[]{URI};
-        String filename = "testWriteToErrorFile_emptyBatchUridelim.err";
-        String delim = null;
-        String message = ERROR;
+    public void testWriteToErrorFileEmptyBatchUriDelim() {
+        testWriteToErrorFileDefaultDelimiter("");
+    }
 
+    public void testWriteToErrorFileDefaultDelimiter(String delimiter) {
+        String[] uris = new String[]{URI};
         try {
             File exportDir = createTempDirectory();
-            File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
+            File errorFile = testWriteToError(uris, delimiter, exportDir, "testWriteToErrorFile.err", ERROR);
             assertTrue(TestUtils.readFile(errorFile).contains(Manager.DEFAULT_BATCH_URI_DELIM));
         } catch (CorbException | IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
-
+    
     @Test
     public void testWriteToErrorFileCustomBatchUridelim() {
         String[] uris = new String[]{URI};

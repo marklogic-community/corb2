@@ -141,8 +141,7 @@ public class ModuleExecutorTest {
         } else if (StringUtils.isNotBlank(System.getProperty(propName))) {
             return System.getProperty(propName).trim();
         } else if (StringUtils.isNotBlank(properties.getProperty(propName))) {
-            String val = properties.getProperty(propName).trim();
-            return val;
+            return properties.getProperty(propName).trim();
         }
         return null;
     }
@@ -260,9 +259,9 @@ public class ModuleExecutorTest {
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
         System.setProperty(Options.PROCESS_MODULE, "src/test/resources/transform2.xqy|ADHOC");
         Properties props = getProperties();
-        String[] args = {props.getProperty(Options.XCC_CONNECTION_URI)};
-
+        
         try {
+            String[] args = {props.getProperty(Options.XCC_CONNECTION_URI)};
             ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
             executor.init(args);
             ResultSequence resSeq = run(executor);
@@ -341,20 +340,7 @@ public class ModuleExecutorTest {
         System.setProperty(Options.PROCESS_MODULE, PROCESS_MODULE);
         System.setProperty(Options.EXPORT_FILE_NAME, EXPORT_FILE_NAME);
         String[] args = {};
-        try {
-            ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
-            executor.init(args);
-            executor.run();
-
-            String reportPath = executor.getProperty(Options.EXPORT_FILE_NAME);
-            File report = new File(reportPath);
-            boolean fileExists = report.exists();
-            clearFile(report);
-            assertTrue(fileExists);
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        testRun(args);
     }
 
     @Test
@@ -368,20 +354,7 @@ public class ModuleExecutorTest {
             "",
             EXPORT_FILE_NAME
         };
-        try {
-            ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
-            executor.init(args);
-            executor.run();
-
-            String reportPath = executor.getProperty(Options.EXPORT_FILE_NAME);
-            File report = new File(reportPath);
-            boolean fileExists = report.exists();
-            clearFile(report);
-            assertTrue(fileExists);
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        testRun(args);
     }
 
     @Test
@@ -394,6 +367,10 @@ public class ModuleExecutorTest {
         System.setProperty(Options.JASYPT_PROPERTIES_FILE, "src/test/resources/jasypt.properties");
         System.setProperty("PROCESS-MODULE.foo", "bar");
         System.setProperty(Options.EXPORT_FILE_NAME, EXPORT_FILE_NAME);
+        testRun(args);
+    }
+
+    public void testRun(String[] args) {
         try {
             ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
             executor.init(args);
@@ -434,7 +411,6 @@ public class ModuleExecutorTest {
     public void testRunAdhocIsEmpty() {
         try {
             File emptyModule = File.createTempFile("emptyModule", "txt");
-            emptyModule.createNewFile();
             emptyModule.deleteOnExit();
             clearSystemProperties();
             String[] args = {};
@@ -444,7 +420,6 @@ public class ModuleExecutorTest {
             ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
             executor.init(args);
             executor.run();
-
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             if (ex instanceof IllegalStateException) {
@@ -717,7 +692,6 @@ public class ModuleExecutorTest {
 
     private static class MockModuleExecutor extends ModuleExecutor {
 
-        
         @Override
         protected void prepareContentSource() throws CorbException {
             //Want to retain the mock contentSource that we set in our tests
@@ -735,7 +709,7 @@ public class ModuleExecutorTest {
 
     private static class MockModuleExecutorResults extends MockModuleExecutor {
 
-        public List<String> results = new ArrayList<>();
+        private List<String> results = new ArrayList<>();
 
         @Override
         protected void writeToFile(ResultSequence res) {

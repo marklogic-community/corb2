@@ -207,7 +207,6 @@ public class TaskFactoryTest {
     @Test
     public void testNewPreBatchTaskWithClassModuleAndSource() {
         Manager manager = new Manager();
-        //manager.options.setPreBatchTaskClass(ExportBatchToFileTask.class);
         manager.options.setPreBatchModule(MODULE);
         manager.contentSource = mock(ContentSource.class);
         TaskFactory instance = new TaskFactory(manager);
@@ -220,7 +219,6 @@ public class TaskFactoryTest {
         Manager manager = new Manager();
         manager.options.setPreBatchTaskClass(ExportBatchToFileTask.class);
         manager.options.setPreBatchModule(MODULE);
-
         TaskFactory instance = new TaskFactory(manager);
         instance.newPreBatchTask();
         fail();
@@ -365,7 +363,6 @@ public class TaskFactoryTest {
         try {
             Manager manager = new Manager();
             File emptyModule = File.createTempFile("testNewInitTask", "txt");
-            emptyModule.createNewFile();
             emptyModule.deleteOnExit();
             manager.options.setInitModule(emptyModule.getAbsolutePath() + "|ADHOC");
             manager.options.setInitTaskClass(ExportBatchToFileTask.class);

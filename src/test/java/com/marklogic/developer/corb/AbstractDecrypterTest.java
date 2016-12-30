@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -176,12 +177,12 @@ public class AbstractDecrypterTest {
 
         @Override
         public void init_decrypter() throws IOException, ClassNotFoundException {
-
+            //required to satisfy the interface
         }
 
         @Override
         public String doDecrypt(String property, String value) {
-            return value.toUpperCase();
+            return value.toUpperCase(Locale.ENGLISH);
         }
     }
 

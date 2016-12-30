@@ -91,7 +91,7 @@ public class AbstractUrisLoaderTest {
     }
 
     @Test
-    public void testGetProperty_systemPropAndNullProperties() {
+    public void testGetPropertySystemPropAndNullProperties() {
         String key = FOO;
         String value = BAR;
         System.setProperty(key, value);
@@ -102,7 +102,7 @@ public class AbstractUrisLoaderTest {
     }
     
     @Test
-    public void testGetProperty_isNull() {
+    public void testGetPropertyIsNull() {
         String key = FOO;
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         String result = instance.getProperty(key);
@@ -155,12 +155,12 @@ public class AbstractUrisLoaderTest {
 
         @Override
         public void open() {
-
+            //needed to implement interface
         }
 
         @Override
         public void close() {
-
+            //needed to implement interface
         }
     }
 

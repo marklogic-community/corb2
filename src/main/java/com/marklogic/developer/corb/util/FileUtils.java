@@ -64,8 +64,7 @@ public final class FileUtils {
     public static void delete(final Path path) throws IOException {
         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
             @Override
-            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs)
-                    throws IOException {
+            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
                 Files.delete(file);
                 return CONTINUE;
             }
@@ -75,14 +74,12 @@ public final class FileUtils {
                 return handleException(e);
             }
 
-            private FileVisitResult handleException(final IOException e) {
-                
+            private FileVisitResult handleException(final IOException e) {         
                 return TERMINATE;
             }
 
             @Override
-            public FileVisitResult postVisitDirectory(final Path dir, final IOException e)
-                    throws IOException {
+            public FileVisitResult postVisitDirectory(final Path dir, final IOException e) throws IOException {
                 if (e != null) {
                     return handleException(e);
                 }

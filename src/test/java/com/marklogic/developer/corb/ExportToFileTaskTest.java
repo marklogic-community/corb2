@@ -154,23 +154,20 @@ public class ExportToFileTaskTest {
     @Test
     public void testWriteToFileNullSequence() {
         ResultSequence seq = null;
-        ExportToFileTask instance = new ExportToFileTask();
-        String[] uri = {"/testFile"};
-        try {
-            instance.exportDir = tempFolder.newFolder().toString();
-            instance.setInputURI(uri);
-            instance.writeToFile(seq);
-            File file = new File(instance.exportDir, instance.getFileName());
-            assertFalse(file.exists());
-        } catch (IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        File file = testWriteEmptyResults(seq);
+        assertFalse(file.exists());
+    }
+
+    @Test
+    public void testWriteToFileNoResults() {
+        ResultSequence seq = mock(ResultSequence.class);
+        when(seq.hasNext()).thenReturn(Boolean.FALSE);
+        File file = testWriteEmptyResults(seq);
+        assertFalse(file.exists());
     }
 
     @Test
     public void testWriteToFile() {
-        String[] uri = {"/testFile"};
         ResultSequence seq = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         XdmItem xdmItem = mock(XdmItem.class);
@@ -178,37 +175,24 @@ public class ExportToFileTaskTest {
         when(seq.next()).thenReturn(resultItem);
         when(resultItem.getItem()).thenReturn(xdmItem);
         when(xdmItem.asString()).thenReturn("testWriteToFile");
-
-        ExportToFileTask instance = new ExportToFileTask();
-        try {
-            instance.exportDir = tempFolder.newFolder().toString();
-            instance.setInputURI(uri);
-            instance.writeToFile(seq);
-            File file = new File(instance.exportDir, instance.getFileName());
-            assertTrue(file.exists());
-        } catch (IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        File file = testWriteEmptyResults(seq);
+        assertTrue(file.exists());
     }
 
-    @Test
-    public void testWriteToFileNoResults() {
-        String[] uri = {"/testFile"};
-        ResultSequence seq = mock(ResultSequence.class);
-        when(seq.hasNext()).thenReturn(Boolean.FALSE);
+    public File testWriteEmptyResults(ResultSequence resultSequence) {
+        File file = null;
         ExportToFileTask instance = new ExportToFileTask();
-
+        String[] uri = {"/testFile"};
         try {
             instance.exportDir = tempFolder.newFolder().toString();
             instance.setInputURI(uri);
-            instance.writeToFile(seq);
-            File file = new File(instance.exportDir, instance.getFileName());
-            assertFalse(file.exists());
+            instance.writeToFile(resultSequence);
+            file = new File(instance.exportDir, instance.getFileName());
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
+        return file;
     }
 
     @Test

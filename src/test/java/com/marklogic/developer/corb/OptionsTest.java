@@ -37,7 +37,6 @@ public class OptionsTest {
             //Verify that all of the String constants
             if (String.class.isInstance(field.getType())) {
                 Usage usage = field.getAnnotation(Usage.class);
-                System.out.println(field.getName());
                 assertNotNull(usage);
             }
         }

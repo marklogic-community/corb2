@@ -54,9 +54,6 @@ public class TwoWaySSLConfigTest {
         clearSystemProperties();
     }
 
-    /**
-     * Test of getEnabledCipherSuites method, of class TwoWaySSLConfig.
-     */
     @Test
     public void testGetEnabledCipherSuitesNullProperties() {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
@@ -85,9 +82,6 @@ public class TwoWaySSLConfigTest {
         assertEquals("c", result[2]);
     }
 
-    /**
-     * Test of getEnabledProtocols method, of class TwoWaySSLConfig.
-     */
     @Test
     public void testGetEnabledProtocolsNullProperties() {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
@@ -116,9 +110,6 @@ public class TwoWaySSLConfigTest {
         assertEquals("c", result[2]);
     }
 
-    /**
-     * Test of loadPropertiesFile method, of class TwoWaySSLConfig.
-     */
     @Test
     public void testLoadPropertiesFileNullSSLPropertiesFile() {
         System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
@@ -173,7 +164,6 @@ public class TwoWaySSLConfigTest {
             System.clearProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE);
             TwoWaySSLConfig instance = new TwoWaySSLConfig();
             instance.getSSLContext();
-
         } catch (NoSuchAlgorithmException | KeyManagementException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -197,29 +187,17 @@ public class TwoWaySSLConfigTest {
 
     @Test
     public void testGetSSLContextWithEncryptedValues() {
-
-        Decrypter mockDecrypter = mock(Decrypter.class);
-        when(mockDecrypter.decrypt(anyString(), anyString())).thenReturn("changeit");
-
-        System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
-        TwoWaySSLConfig instance = new TwoWaySSLConfig();
-        instance.decrypter = mockDecrypter;
-        try {
-            SSLContext context = instance.getSSLContext();
-            assertNotNull(context);
-        } catch (NoSuchAlgorithmException | KeyManagementException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        } finally {
-            System.clearProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE);
-        }
+        testGetSSLContext("changeit");
     }
 
     @Test
     public void testGetSSLContextWithNullUnencryptedValues() {
+        testGetSSLContext(null);
+    }
 
+    public void testGetSSLContext(String valueToReturn) {
         Decrypter mockDecrypter = mock(Decrypter.class);
-        when(mockDecrypter.decrypt(anyString(), anyString())).thenReturn(null);
+        when(mockDecrypter.decrypt(anyString(), anyString())).thenReturn(valueToReturn);
 
         System.setProperty(TwoWaySSLConfig.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
         TwoWaySSLConfig instance = new TwoWaySSLConfig();

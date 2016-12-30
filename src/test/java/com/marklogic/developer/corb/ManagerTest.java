@@ -93,8 +93,7 @@ public class ManagerTest {
     public static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
 
     @Before
-    public void setUp()
-            throws Exception {
+    public void setUp() throws IOException {
         clearSystemProperties();
         MANAGER_LOGGER.addHandler(testLogger);
         File tempDir = TestUtils.createTempDirectory();
@@ -102,7 +101,7 @@ public class ManagerTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() throws IOException {
         FileUtils.deleteFile(ManagerTest.EXPORT_FILE_DIR);
         clearSystemProperties();
         System.setErr(systemErr);
@@ -469,23 +468,23 @@ public class ManagerTest {
         args[2] = null; //process-module
         args[11] = null; //pre-batch-module
         args[13] = null; //post-batch-module
-
+        String propertySuffix = ".foo";
         Properties props = new Properties();
         props.setProperty(Options.XQUERY_MODULE, PROCESS_MODULE);
-        props.setProperty("XQUERY-MODULE.foo", XQUERY_MODULE_FOO);
+        props.setProperty(Options.XQUERY_MODULE + propertySuffix, XQUERY_MODULE_FOO);
         props.setProperty(Options.PRE_BATCH_XQUERY_MODULE, PRE_BATCH_MODULE);
-        props.setProperty("PRE-BATCH-XQUERY-MODULE.foo", PRE_BATCH_XQUERY_MODULE_FOO);
+        props.setProperty(Options.PRE_BATCH_XQUERY_MODULE + propertySuffix, PRE_BATCH_XQUERY_MODULE_FOO);
         props.setProperty(Options.POST_BATCH_XQUERY_MODULE, POST_BATCH_MODULE);
-        props.setProperty("POST-BATCH-XQUERY-MODULE.foo", POST_BATCH_XQUERY_MODULE_FOO);
+        props.setProperty(Options.POST_BATCH_XQUERY_MODULE + propertySuffix, POST_BATCH_XQUERY_MODULE_FOO);
         try {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
-            assertEquals(XQUERY_MODULE_FOO, instance.properties.getProperty("PROCESS-MODULE.foo"));
+            assertEquals(XQUERY_MODULE_FOO, instance.properties.getProperty(Options.PROCESS_MODULE + propertySuffix));
             assertEquals(PRE_BATCH_MODULE, instance.options.getPreBatchModule());
-            assertEquals(PRE_BATCH_XQUERY_MODULE_FOO, instance.properties.getProperty("PRE-BATCH-MODULE.foo"));
+            assertEquals(PRE_BATCH_XQUERY_MODULE_FOO, instance.properties.getProperty(Options.PRE_BATCH_MODULE + propertySuffix));
             assertEquals(POST_BATCH_MODULE, instance.options.getPostBatchModule());
-            assertEquals(POST_BATCH_XQUERY_MODULE_FOO, instance.properties.getProperty("POST-BATCH-MODULE.foo"));
+            assertEquals(POST_BATCH_XQUERY_MODULE_FOO, instance.properties.getProperty(Options.POST_BATCH_MODULE + propertySuffix));
         } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -638,7 +637,6 @@ public class ManagerTest {
     public void testInitOptionsDefaultOptions() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
-        //args[2] = null;
         args[3] = null;
         args[4] = null;
         args[5] = null;
@@ -788,7 +786,7 @@ public class ManagerTest {
         String legacyValue2 = "legacyVal2";
         Properties props = new Properties();
         props.setProperty(Options.XQUERY_MODULE, legacyValue1);
-        props.setProperty("XQUERY-MODULE.bar", legacyValue2);
+        props.setProperty(Options.XQUERY_MODULE + ".bar", legacyValue2);
 
         try {
             Manager manager = getMockManagerWithEmptyResults();
@@ -796,7 +794,7 @@ public class ManagerTest {
             manager.normalizeLegacyProperties();
 
             assertEquals(legacyValue1, manager.properties.getProperty(Options.PROCESS_MODULE));
-            assertEquals(legacyValue2, manager.properties.getProperty("PROCESS-MODULE.bar"));
+            assertEquals(legacyValue2, manager.properties.getProperty(Options.PROCESS_MODULE + ".bar"));
         } catch (RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -833,13 +831,12 @@ public class ManagerTest {
     @Test
     public void testCommandFileWatcherRun() {
         try {
-            List<String> lines = Arrays.asList("THREAD-COUNT=100");
-            File file = createTempFile(lines);
+            File file = createTempFile("THREAD-COUNT=100");
             Manager manager = new Manager();
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.run();
             assertEquals(100, manager.options.getThreadCount());
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -862,13 +859,12 @@ public class ManagerTest {
     @Test
     public void testCommandFileWatcherOnChangeFileIsPaused() {
         try {
-            List<String> lines = Arrays.asList("COMMAND=PAUSE");
-            File file = createTempFile(lines);
+            File file = createTempFile("COMMAND=PAUSE");
             Manager manager = new Manager();
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.onChange(file);
             assertTrue(testLogger.getLogRecords().isEmpty());
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -877,13 +873,12 @@ public class ManagerTest {
     @Test
     public void testCommandFileWatcherOnChangeFileIsStop() {
         try {
-            List<String> lines = Arrays.asList("COMMAND=STOP");
-            File file = createTempFile(lines);
+            File file = createTempFile("COMMAND=STOP");
             Manager manager = new Manager();
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.onChange(file);
             assertTrue(manager.stopCommand);
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -891,29 +886,22 @@ public class ManagerTest {
 
     @Test
     public void testCommandFileWatcherOnChangeThreadCount() {
-        try {
-            List<String> lines = Arrays.asList("THREAD-COUNT=11");
-            File file = createTempFile(lines);
-            Manager manager = new Manager();
-            Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
-            fileWatcher.onChange(file);
-            assertEquals(11, manager.options.getThreadCount());
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        commandFileWatcherOnChangeThreadCount(11, 11);
     }
 
     @Test
     public void testCommandFileWatcherOnChangeThreadCountIsZero() {
+        commandFileWatcherOnChangeThreadCount(0, 1);
+    }
+
+    public void commandFileWatcherOnChangeThreadCount(int threads, int expectedThreadCount) {
         try {
-            List<String> lines = Arrays.asList("THREAD-COUNT=0");
-            File file = createTempFile(lines);
+            File file = createTempFile("THREAD-COUNT=" + Integer.toString(threads));
             Manager manager = new Manager();
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.onChange(file);
-            assertEquals(1, manager.options.getThreadCount());
-        } catch (Exception ex) {
+            assertEquals(expectedThreadCount, manager.options.getThreadCount());
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -1188,7 +1176,7 @@ public class ManagerTest {
     }
 
     public static String[] getDefaultArgs() {
-        return new String[] {XCC_CONNECTION_URI,
+        return new String[]{XCC_CONNECTION_URI,
             COLLECTION_NAME,
             XQUERY_MODULE,
             THREAD_COUNT,
@@ -1227,6 +1215,11 @@ public class ManagerTest {
 
     public static void setDefaultSystemProperties() {
         System.getProperties().putAll(getDefaultProperties());
+    }
+
+    public File createTempFile(String content) throws IOException {
+        List<String> lines = Arrays.asList(content);
+        return createTempFile(lines);
     }
 
     public File createTempFile(List<String> lines) throws IOException {
