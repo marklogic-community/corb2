@@ -199,7 +199,8 @@ public abstract class AbstractTask implements Task {
                                 propSet.add(propName);
                             }
                         }
-                        MODULE_PROPS.put(moduleType, modulePropNames = propSet);
+                        modulePropNames = propSet;
+                        MODULE_PROPS.put(moduleType, modulePropNames);
                     }
                 }
             }
