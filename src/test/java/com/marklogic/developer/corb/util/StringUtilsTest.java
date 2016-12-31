@@ -96,7 +96,7 @@ public class StringUtilsTest {
 
     @Test
     public void testJoinListString() {
-        List<String> items = Arrays.asList(new String[]{"a", "b", "c"});
+        List<String> items = Arrays.asList("a", "b", "c");
         String result = StringUtils.join(items, DELIM);
         assertEquals(A_B_C, result);
     }

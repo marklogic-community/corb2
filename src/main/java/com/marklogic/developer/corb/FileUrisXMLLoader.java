@@ -18,10 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-/**
- *
- * @author Praveen Venkata
- */
 import static com.marklogic.developer.corb.Options.XML_FILE;
 import static com.marklogic.developer.corb.Options.XML_NODE;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
@@ -40,7 +36,6 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.Map;
@@ -53,6 +48,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
+ * @author Praveen Venkata
  * @since 2.3.1
  */
 public class FileUrisXMLLoader extends AbstractUrisLoader {

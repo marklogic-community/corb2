@@ -131,7 +131,7 @@ public abstract class AbstractTask implements Task {
     public void setTimeZone(TimeZone timeZone) {
         this.timeZone = timeZone;
     }
-    
+
     @Override
     public void setProperties(Properties properties) {
         this.properties = properties;
@@ -242,7 +242,7 @@ public abstract class AbstractTask implements Task {
                     }
                 }
             }
-            
+
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);
             retryCount = 0;
@@ -398,7 +398,7 @@ public abstract class AbstractTask implements Task {
      * Retrieves an int value.
      *
      * @param key The key name.
-     * @return The requested value (<code>-1</code> if not found or could not
+     * @return The requested value ({@code -1} if not found or could not
      * parse value as int).
      */
     protected int getIntProperty(String key) {
@@ -429,8 +429,8 @@ public abstract class AbstractTask implements Task {
             delim = DEFAULT_BATCH_URI_DELIM;
         }
 
-        synchronized (ERROR_SYNC_OBJ) {      
-            try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, errorFileName), true))){              
+        synchronized (ERROR_SYNC_OBJ) {
+            try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, errorFileName), true))){
                 for (String uri : uris) {
                     writer.write(uri.getBytes());
                     if (isNotEmpty(message)) {
@@ -442,7 +442,7 @@ public abstract class AbstractTask implements Task {
                 writer.flush();
             } catch (Exception exc) {
                 LOG.log(SEVERE, "Problem writing uris to " + ERROR_FILE_NAME, exc);
-            } 
+            }
         }
     }
 

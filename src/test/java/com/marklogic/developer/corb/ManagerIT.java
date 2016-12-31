@@ -431,7 +431,7 @@ public class ManagerIT {
 
         Manager instance = new Manager();
         try {
-            instance.init(new String[0]);
+            instance.init();
             instance.run();
             int lineCount = FileUtils.getLineCount(exportFile);
             assertEquals(8, lineCount);
@@ -488,7 +488,7 @@ public class ManagerIT {
 
         Manager instance = new Manager();
         try {
-            instance.init(new String[0]);
+            instance.init();
             instance.run();
             int lineCount = FileUtils.getLineCount(exportFile);
             assertEquals(8, lineCount);
@@ -533,7 +533,7 @@ public class ManagerIT {
         ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
         service.schedule(stop, 1, TimeUnit.SECONDS);
         exit.expectSystemExitWithStatus(Manager.EXIT_CODE_STOP_COMMAND);
-        Manager.main(new String[0]);
+        Manager.main();
         try {
             int lineCount = FileUtils.getLineCount(exportFile);
             assertNotEquals(8, lineCount);
@@ -578,7 +578,7 @@ public class ManagerIT {
 
         Manager instance = new Manager();
         try {
-            instance.init(new String[0]);
+            instance.init();
 
             ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
             service.schedule(adjustThreads, 1, TimeUnit.SECONDS);

@@ -37,7 +37,7 @@ import java.util.logging.Logger;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public final class TestUtils {
-    
+
     private static final Logger LOG = Logger.getLogger(TestUtils.class.getName());
     private TestUtils() {
         //No need for an instance
@@ -91,7 +91,7 @@ public final class TestUtils {
     }
 
     public static File createTempDirectory() throws IOException {
-        return Files.createTempDirectory("temp", new FileAttribute<?>[0]).toFile();
+        return Files.createTempDirectory("temp").toFile();
     }
 
     public static boolean containsLogRecord(List<LogRecord> logRecords, LogRecord logRecord) {

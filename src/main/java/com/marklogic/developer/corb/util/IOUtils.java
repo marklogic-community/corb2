@@ -38,11 +38,11 @@ public final class IOUtils {
     }
 
     /**
-     * Tests whether the <code>InputStream</code> is a directory. A Directory
+     * Tests whether the {@code InputStream} is a directory. A Directory
      * will be a ByteArrayInputStream and a File will be a BufferedInputStream.
      *
      * @param is
-     * @return <code>true</code> if the InputStream class is
+     * @return {@code true} if the InputStream class is
      * ByteArrayInputStream
      */
     public static boolean isDirectory(InputStream is) {
@@ -50,7 +50,7 @@ public final class IOUtils {
     }
 
     /**
-     * Null-safe close operation of a <code>Closeable</code> object.
+     * Null-safe close operation of a {@code Closeable} object.
      *
      * @param obj Closable object to be closed.
      */

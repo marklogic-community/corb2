@@ -69,9 +69,9 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     private static final String METHOD_ENCRYPT = "encrypt";
     // currently only usage is encrypt
     protected static final String USAGE = "Encrypt:\n "
-            + MessageFormat.format(USAGE_FORMAT, new Object[]{METHOD_ENCRYPT + " clearText"})
+            + MessageFormat.format(USAGE_FORMAT, METHOD_ENCRYPT + " clearText")
             + "\nTest:\n "
-            + MessageFormat.format(USAGE_FORMAT, new Object[]{METHOD_TEST});
+            + MessageFormat.format(USAGE_FORMAT, METHOD_TEST);
 
     protected static final Logger LOG = Logger.getLogger(HostKeyDecrypter.class.getName());
 
@@ -177,7 +177,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
 
             OutputStream os = process.getOutputStream();
             closeOrThrowRuntime(os);
-            
+
             InputStream is = process.getInputStream();
             return new BufferedReader(new InputStreamReader(is));
         }
@@ -327,7 +327,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
      * decrypts encrypted password using private key internal to host and AES
      * 256 algorithm and returns plaintext password
      *
-     * @param String encrypted text
+     * @param  encryptedText
      * @author Richard Kennedy
      * @throws NoSuchPaddingException
      * @throws NoSuchAlgorithmException

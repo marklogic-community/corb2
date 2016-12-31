@@ -43,10 +43,10 @@ public final class Options {
      * option {@value #BATCH_URI_DELIM}.
      * </p>
      * Sample code for transform:
-     * <pre><code>
+     * <pre>{@code
      * declare variable URI as xs:string exernal;
      * let $all-uris := fn:tokenize($URI,";")
-     * </code></pre>
+     * }</pre>
      */
     @Usage(description = "The number of uris to be executed in single transform. "
             + "Default value is 1. If greater than 1, the PROCESS-MODULE will "
@@ -867,11 +867,11 @@ public final class Options {
     public static final String XCC_PORT = "XCC-PORT";
 
     /**
-     * The ID for the TimeZone that should be set on XCC RequestOption. 
-     * When a value is specified, it is parsed using TimeZone.getTimeZone() and 
+     * The ID for the TimeZone that should be set on XCC RequestOption.
+     * When a value is specified, it is parsed using TimeZone.getTimeZone() and
      * set on XCC RequestOption for each Task. Invalid ID values will produce the GMT TimeZone.
      * If not specified, XCC uses the JVM default TimeZone.
-     * 
+     *
      * @see java.util.TimeZone
      * @since 2.4.0
      */
@@ -880,7 +880,7 @@ public final class Options {
         " XCC RequestOption for each Task. Invalid ID values will produce the GMT\n" +
         " TimeZone. If not specified, XCC uses the JVM default TimeZone.")
     public static final String XCC_TIME_ZONE = "XCC-TIME-ZONE";
-    
+
     /**
      * Required if {@value #XCC_CONNECTION_URI} is not specified.
      */

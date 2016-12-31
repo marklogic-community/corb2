@@ -162,7 +162,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
     }
 
     /**
-     * Collect all {@value #URIS_MODULE} properties from the properties and
+     * Collect all {@value Options#URIS_MODULE} properties from the properties and
      * System.properties (in that order, so System.properties will take
      * precedence over properties) and set as NewStringVariable for each
      * property the Request object.

@@ -170,7 +170,7 @@ public class FileUtilsTest {
 
     public static File createTempDirectory()
             throws IOException {
-        return Files.createTempDirectory("temp", new FileAttribute<?>[0]).toFile();
+        return Files.createTempDirectory("temp").toFile();
     }
 
     /**
@@ -203,7 +203,7 @@ public class FileUtilsTest {
     }
 
     /**
-     * Read the <code>byte[]</code> of a file.
+     * Read the {@code byte[]} of a file.
      *
      * @param contentFile
      * @return

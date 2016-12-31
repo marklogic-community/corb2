@@ -58,7 +58,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * The class <code>ModuleExecutorTest</code> contains tests for the class
+ * The class {@code ModuleExecutorTest} contains tests for the class
  * <code>{@link ModuleExecutor}</code>.
  *
  * @author matthew.heckel
@@ -671,11 +671,11 @@ public class ModuleExecutorTest {
         XdmItem uriCount = mock(XdmItem.class);
 
         when(contentSource.newSession()).thenReturn(session);
-        when(contentSource.newSession((String) any())).thenReturn(session);
+        when(contentSource.newSession(any())).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(moduleInvoke).thenReturn(moduleInvoke);
         when(session.newAdhocQuery(anyString())).thenReturn(adhocQuery);
 
-        when(session.submitRequest((Request) any())).thenReturn(res);
+        when(session.submitRequest(any())).thenReturn(res);
         //First, return false when registerInfo() is calling.
         when(res.hasNext()).thenReturn(Boolean.FALSE).thenReturn(Boolean.TRUE).thenReturn(Boolean.TRUE).thenReturn(Boolean.FALSE);
         when(res.next()).thenReturn(resultItem).thenReturn(uriCountResult).thenReturn(resultItem).thenReturn(null);

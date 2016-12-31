@@ -45,6 +45,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
@@ -63,7 +64,7 @@ import static org.mockito.Mockito.when;
 import org.mockito.exceptions.base.MockitoException;
 
 /**
- * The class <code>ManagerTest</code> contains tests for the class
+ * The class {@code ManagerTest} contains tests for the class
  * <code>{@link Manager}</code>.
  *
  * @author matthew.heckel
@@ -1306,7 +1307,7 @@ public class ManagerTest {
     }
 
     public File createTempFile(String content) throws IOException {
-        List<String> lines = Arrays.asList(content);
+        List<String> lines = Collections.singletonList(content);
         return createTempFile(lines);
     }
 
@@ -1331,9 +1332,9 @@ public class ManagerTest {
         XdmItem uriCount = mock(XdmItem.class);
 
         when(contentSource.newSession()).thenReturn(session);
-        when(contentSource.newSession((String) any())).thenReturn(session);
+        when(contentSource.newSession(any())).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(moduleInvoke);
-        when(session.submitRequest((Request) any())).thenReturn(res);
+        when(session.submitRequest(any())).thenReturn(res);
         when(res.next()).thenReturn(resultItem).thenReturn(uriCountResult).thenReturn(null);
         when(resultItem.getItem()).thenReturn(batchRefItem);
         when(uriCountResult.getItem()).thenReturn(uriCount);
