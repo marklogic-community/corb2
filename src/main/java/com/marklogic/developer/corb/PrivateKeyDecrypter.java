@@ -91,7 +91,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
             algorithm = DEFAULT_ALGORITHM;
         }
 
-        String filename = trim(getProperty(PRIVATE_KEY_FILE));
+        String filename = getProperty(PRIVATE_KEY_FILE);
         if (isNotBlank(filename)) {
             InputStream is = null;
             try {
