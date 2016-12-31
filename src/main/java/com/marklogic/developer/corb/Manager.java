@@ -834,7 +834,7 @@ public class Manager extends AbstractManager {
 
         public void onChange(File file) {
 
-            try (InputStream in = new FileInputStream(file);) {
+            try (InputStream in = new FileInputStream(file)) {
 
                 Properties commandFile = new Properties();
                 commandFile.load(in);

@@ -60,7 +60,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     protected static final String DESCENDING = "(?i)^desc.*";
     protected static final String DISTINCT = "(?i).*(distinct|uniq).*";
     private static final Logger LOG = Logger.getLogger(PostBatchUpdateFileTask.class.getName());
-     
+
     protected void sortAndRemoveDuplicates() {
         File origFile = new File(exportDir, getPartFileName());
         if (!origFile.exists()) {
@@ -91,7 +91,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
                 comparator = Collections.reverseOrder();
             }
 
-            boolean distinct = isBlank(sort) ? false : sort.matches(DISTINCT);
+            boolean distinct = !isBlank(sort) && sort.matches(DISTINCT);
 
             Charset charset = Charset.defaultCharset();
             boolean useGzip = false;
@@ -108,7 +108,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             LOG.log(WARNING, "Unexpected error while sorting the report file " + origFile.getPath() + ". The file can still be sorted locally after the job is finished.", exc);
         }
     }
-    
+
     @SuppressWarnings("unchecked")
 	protected Class<? extends Comparator<String>> getComparatorCls(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         Class<?> cls = Class.forName(className);
@@ -119,9 +119,9 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             throw new IllegalArgumentException("Comparator must be of type java.util.Comparator");
         }
     }
-    
+
     protected void copyHeaderIntoFile(File inputFile, int headerLineCount, File outputFile) throws IOException {
-   
+
         try (BufferedReader reader = new BufferedReader(new FileReader(inputFile));
             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, false))) {
             String line;
@@ -132,7 +132,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
                 currentLine++;
             }
             writer.flush();
-        }      
+        }
     }
 
     protected String getBottomContent() {
@@ -142,25 +142,25 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     protected void writeBottomContent() throws IOException {
         String bottomContent = getBottomContent();
         bottomContent = trimToEmpty(bottomContent);
-        if (isNotEmpty(bottomContent)) {      
+        if (isNotEmpty(bottomContent)) {
             try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, getPartFileName()), true))) {
                 writer.write(bottomContent.getBytes());
                 writer.write(NEWLINE);
                 writer.flush();
-            } 
+            }
         }
     }
-    
-    protected void moveFile(String srcFilename, String destFilename) throws IOException {
+
+    protected void moveFile(String srcFilename, String destFilename) {
         File srcFile = new File(exportDir, srcFilename);
         File destFile = new File(exportDir, destFilename);
         FileUtils.moveFile(srcFile, destFile);
     }
-    
-    protected void moveFile() throws IOException {
+
+    protected void moveFile() {
         moveFile(getPartFileName(), getFileName());
     }
-    
+
     protected String getPartExt() {
         String partExt = getProperty(EXPORT_FILE_PART_EXT);
         if (isEmpty(partExt)) {
@@ -170,7 +170,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
         }
         return partExt;
     }
-       
+
     protected void compressFile() throws IOException {
         if ("true".equalsIgnoreCase(getProperty(EXPORT_FILE_AS_ZIP))) {
             String outFileName = getFileName();
@@ -180,11 +180,11 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 
             File outFile = new File(exportDir, outFileName);
             File zipFile = new File(exportDir, partZipFileName);
-            
+
             if (outFile.exists()) {
                 deleteFile(zipFile);
 
-                try (FileOutputStream fos = new FileOutputStream(zipFile); 
+                try (FileOutputStream fos = new FileOutputStream(zipFile);
                         ZipOutputStream zos = new ZipOutputStream(fos)) {
                     ZipEntry ze = new ZipEntry(outFileName);
                     zos.putNextEntry(ze);
@@ -197,9 +197,9 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
                     }
                     zos.closeEntry();
                     zos.flush();
-                } 
+                }
             }
-           
+
             // move the file if required
             moveFile(partZipFileName, outZipFileName);
 

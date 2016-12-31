@@ -104,7 +104,7 @@ public class ModuleExecutorTest {
 
     private Properties loadProperties(URL filePath) throws IOException {
         Properties prop = new Properties();
-        try (InputStream input = filePath.openStream();) {
+        try (InputStream input = filePath.openStream()) {
             // load a properties file
             prop.load(input);
         }
@@ -259,7 +259,7 @@ public class ModuleExecutorTest {
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
         System.setProperty(Options.PROCESS_MODULE, "src/test/resources/transform2.xqy|ADHOC");
         Properties props = getProperties();
-        
+
         try {
             String[] args = {props.getProperty(Options.XCC_CONNECTION_URI)};
             ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();

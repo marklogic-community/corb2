@@ -288,8 +288,7 @@ public class ManagerIT {
             assertTrue(report.exists());
             byte[] out = getBytes(report);
             String corbOutput = new String(out).trim();
-            String expectedOutput = POST_XQUERY_MODULE_OUTPUT;
-            boolean passed = corbOutput.endsWith(expectedOutput);
+            boolean passed = corbOutput.endsWith(POST_XQUERY_MODULE_OUTPUT);
 
             clearFile(report);
             assertTrue(passed);

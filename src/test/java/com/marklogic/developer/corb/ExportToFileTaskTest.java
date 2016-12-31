@@ -86,7 +86,7 @@ public class ExportToFileTaskTest {
         String[] uri = {expected};
         instance.setInputURI(uri);
         String filename = instance.getFileName();
-        assertEquals(FOO, filename);
+        assertEquals(expected, filename);
     }
 
     @Test

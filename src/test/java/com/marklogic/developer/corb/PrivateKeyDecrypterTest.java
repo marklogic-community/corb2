@@ -236,13 +236,12 @@ public class PrivateKeyDecrypterTest {
     @Test
     public void testDoDecryptWithPrivateKey() {
         try {
-            String value = SECRET;
             PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
             instance.init(null);
             instance.properties.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_PATH);
             instance.init_decrypter();
             String result = instance.doDecrypt("key", ENCRYPTED_VALUE);
-            assertEquals(value, result);
+            assertEquals(SECRET, result);
         } catch (IOException | ClassNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public final class IOUtils {
-    
+
     private static final Logger LOG = Logger.getLogger(IOUtils.class.getName());
     public static final int BUFFER_SIZE = 32 * 1024;
 
@@ -45,7 +45,7 @@ public final class IOUtils {
      * @return <code>true</code> if the InputStream class is
      * ByteArrayInputStream
      */
-    public static final boolean isDirectory(InputStream is) {
+    public static boolean isDirectory(InputStream is) {
         return is instanceof ByteArrayInputStream;
     }
 

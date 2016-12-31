@@ -32,7 +32,7 @@ public class AbstractUrisLoaderTest {
 
     private static final String FOO = "foo";
     private static final String BAR = "bar";
-    
+
     @Test
     public void testSetOptions() {
         TransformOptions options = new TransformOptions();
@@ -98,14 +98,13 @@ public class AbstractUrisLoaderTest {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         String result = instance.getProperty(key);
         System.clearProperty(key);
-        assertEquals(value, result);       
+        assertEquals(value, result);
     }
-    
+
     @Test
     public void testGetPropertyIsNull() {
-        String key = FOO;
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        String result = instance.getProperty(key);
+        String result = instance.getProperty(FOO);
         assertEquals(null, result);
     }
 

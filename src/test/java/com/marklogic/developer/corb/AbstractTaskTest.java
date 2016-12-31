@@ -130,8 +130,7 @@ public class AbstractTaskTest {
 
     @Test
     public void testSetProperties() {
-        Properties props = new Properties();
-        Properties properties = props;
+        Properties properties = new Properties();
         AbstractTask instance = new AbstractTaskImpl();
         instance.setProperties(properties);
         assertEquals(properties, instance.properties);
@@ -185,10 +184,9 @@ public class AbstractTaskTest {
         ContentSource cs = mock(ContentSource.class);
         Session session = mock(Session.class);
         when(cs.newSession()).thenReturn(session);
-        Session expResult = session;
         instance.cs = cs;
         Session result = instance.newSession();
-        assertEquals(expResult, result);
+        assertEquals(session, result);
     }
 
     @Test
@@ -452,12 +450,11 @@ public class AbstractTaskTest {
         String[] uris = new String[]{URI};
         String filename = null;
         String delim = null;
-        String message = ERROR;
 
         try {
             File exportDir = createTempDirectory();
 
-            testWriteToError(uris, delim, exportDir, filename, message);
+            testWriteToError(uris, delim, exportDir, filename, ERROR);
 
         } catch (CorbException | IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -470,11 +467,10 @@ public class AbstractTaskTest {
         String[] uris = new String[]{URI};
         String filename = "";
         String delim = null;
-        String message = ERROR;
 
         try {
             File exportDir = createTempDirectory();
-            File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
+            File errorFile = testWriteToError(uris, delim, exportDir, filename, ERROR);
             //testWriteToError constructs a File object that is the containing directory when filename is blank
             assertFalse(errorFile.isFile());
         } catch (CorbException | IOException ex) {
@@ -504,17 +500,16 @@ public class AbstractTaskTest {
             fail();
         }
     }
-    
+
     @Test
     public void testWriteToErrorFileCustomBatchUridelim() {
         String[] uris = new String[]{URI};
         String filename = "testWriteToErrorFile_customBatchUridelim.err";
         String delim = "$";
-        String message = ERROR;
 
         try {
             File exportDir = createTempDirectory();
-            File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
+            File errorFile = testWriteToError(uris, delim, exportDir, filename, ERROR);
 
             assertTrue(TestUtils.readFile(errorFile).contains(delim));
         } catch (CorbException | IOException ex) {
@@ -630,8 +625,7 @@ public class AbstractTaskTest {
     public void testGetValueAsBytesXdmBinary() {
         XdmItem item = mock(XdmBinary.class);
 
-        AbstractTask instance = new AbstractTaskImpl();
-        byte[] result = instance.getValueAsBytes(item);
+        byte[] result = AbstractTaskImpl.getValueAsBytes(item);
         assertNull(result);
     }
 
@@ -640,8 +634,7 @@ public class AbstractTaskTest {
         XdmItem item = mock(XdmItem.class);
         String value = FOO;
         when(item.asString()).thenReturn(value);
-        AbstractTask instance = new AbstractTaskImpl();
-        byte[] result = instance.getValueAsBytes(item);
+        byte[] result = AbstractTaskImpl.getValueAsBytes(item);
         assertArrayEquals(value.getBytes(), result);
     }
 
@@ -709,8 +702,7 @@ public class AbstractTaskTest {
     @Test
     public void testGetValueAsBytesDefault() {
         XdmItem item = null;
-        AbstractTask instance = new AbstractTaskImpl();
-        byte[] result = instance.getValueAsBytes(item);
+        byte[] result = AbstractTaskImpl.getValueAsBytes(item);
         assertArrayEquals(new byte[]{}, result);
     }
 

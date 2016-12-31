@@ -54,7 +54,7 @@ public class FileUtilsTest {
         File out = File.createTempFile("copiedFile", TEXT_FILE_EXT);
         out.deleteOnExit();
         copy(exampleContentFile, out);
-        
+
         assertArrayEquals(getBytes(exampleContentFile), getBytes(out));
     }
 
@@ -170,7 +170,7 @@ public class FileUtilsTest {
 
     public static File createTempDirectory()
             throws IOException {
-        return Files.createTempDirectory("temp", new FileAttribute<?>[0]).toFile(); 
+        return Files.createTempDirectory("temp", new FileAttribute<?>[0]).toFile();
     }
 
     /**
@@ -181,7 +181,7 @@ public class FileUtilsTest {
      * @throws IOException
      */
     public static void copy(final File source, final File destination) throws IOException {
-        try (InputStream inputStream = new FileInputStream(source); 
+        try (InputStream inputStream = new FileInputStream(source);
                 OutputStream outputStream = new FileOutputStream(destination)) {
             IOUtilsTest.copy(inputStream, outputStream);
         }
@@ -195,11 +195,11 @@ public class FileUtilsTest {
      * @throws IOException
      * @throws FileNotFoundException
      */
-    public static void copy(final String sourceFilePath, final String destinationFilePath) throws FileNotFoundException, IOException {
-        try (InputStream inputStream = new FileInputStream(sourceFilePath); 
-                OutputStream outputStream = new FileOutputStream(destinationFilePath)) {    
+    public static void copy(final String sourceFilePath, final String destinationFilePath) throws IOException {
+        try (InputStream inputStream = new FileInputStream(sourceFilePath);
+                OutputStream outputStream = new FileOutputStream(destinationFilePath)) {
             IOUtilsTest.copy(inputStream, outputStream);
-        }        
+        }
     }
 
     /**
@@ -213,13 +213,13 @@ public class FileUtilsTest {
 
         byte[] buf = new byte[BUFFER_SIZE];
         int read;
-        
-        try (InputStream is = new FileInputStream(contentFile); 
+
+        try (InputStream is = new FileInputStream(contentFile);
                 ByteArrayOutputStream os = new ByteArrayOutputStream()) {
             while ((read = is.read(buf)) > 0) {
                 os.write(buf, 0, read);
             }
             return os.toByteArray();
-        }   
+        }
     }
 }

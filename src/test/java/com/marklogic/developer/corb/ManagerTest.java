@@ -973,7 +973,7 @@ public class ManagerTest {
             fail();
         }
     }
-    
+
     @Test(expected = CorbException.class)
     public void testInsertModuleAndThrowException() throws CorbException {
         Session session = mock(Session.class);

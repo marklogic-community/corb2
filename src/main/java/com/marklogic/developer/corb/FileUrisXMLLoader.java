@@ -66,7 +66,7 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
     private Map<Integer, Node> nodeMap;
     private TransformerFactory transformerFactory;
     private static final String YES = "yes";
-    
+
     @Override
     public void open() throws CorbException {
 
@@ -131,7 +131,7 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
         return sw.toString();
     }
 
-    private String readNextNode() throws IOException, CorbException {
+    private String readNextNode() throws CorbException {
         if (nodeIterator.hasNext()) {
             Node nextNode = nodeIterator.next();
             short nextNodeType = nextNode.getNodeType();

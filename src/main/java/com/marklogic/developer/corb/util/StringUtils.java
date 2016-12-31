@@ -48,7 +48,7 @@ public final class StringUtils {
     private static final Pattern COMPILED_INLINE_MODULE_PATTERN = Pattern.compile(INLINE_MODULE_PATTERN);
     private static final String UTF_8_NOT_SUPPORTED = UTF_8 + " not supported";
     private static final Logger LOG = Logger.getLogger(StringUtils.class.getName());
-    
+
     private StringUtils() {
     }
 
@@ -57,7 +57,7 @@ public final class StringUtils {
      * @param str
      * @return
      */
-    public static final boolean stringToBoolean(String str) {
+    public static boolean stringToBoolean(String str) {
         // let the caller decide: should an unset string be true or false?
         return stringToBoolean(str, false);
     }
@@ -68,12 +68,12 @@ public final class StringUtils {
      * @param defaultValue
      * @return
      */
-    public static final boolean stringToBoolean(String str, boolean defaultValue) {
+    public static boolean stringToBoolean(String str, boolean defaultValue) {
         if (str == null) {
             return defaultValue;
         }
         String lcStr = str.trim().toLowerCase();
-        return !("".equals(lcStr) || "0".equals(lcStr) || "f".equals(lcStr) || "false".contains(lcStr) || 
+        return !("".equals(lcStr) || "0".equals(lcStr) || "f".equals(lcStr) || "false".contains(lcStr) ||
                 "n".equals(lcStr) || "no".equals(lcStr));
     }
 
@@ -197,7 +197,7 @@ public final class StringUtils {
      * Checks if a CharSequence is null or whitespace-only characters
      *
      * @param value
-     * @return {@code true} if the value is null, empty, or whitespace-only 
+     * @return {@code true} if the value is null, empty, or whitespace-only
      * characters; {@code false} otherwise.
      */
     public static boolean isBlank(final CharSequence value) {
@@ -232,20 +232,20 @@ public final class StringUtils {
     public static String[] split(final String value, String regex) {
         return value == null ? new String[0] : value.split(regex);
     }
-    
+
     /**
      * Split a CSV and return List of values
      * @param value
-     * @return 
+     * @return
      */
     public static List<String> commaSeparatedValuesToList(String value) {
-        List<String> values = new ArrayList<>();    
+        List<String> values = new ArrayList<>();
         for (String item : split(value, ",")) {
             values.add(item.trim());
         }
         return values;
     }
-    
+
     /**
      * Removes control characters (char &lt;= 32) from both ends of the string. If
      * null, returns null. @param value @return @param value @return the trimmed
@@ -264,7 +264,7 @@ public final class StringUtils {
      * String or an empty String if {@code null}
      *
      * @param value
-     * @return 
+     * @return
      */
     public static String trimToEmpty(final String value) {
         return value == null ? EMPTY : value.trim();
@@ -287,7 +287,7 @@ public final class StringUtils {
     public static boolean isInlineOrAdhoc(final String value) {
         return StringUtils.isInlineModule(value) || isAdhoc(value);
     }
-    
+
     public static String inlineModuleLanguage(final String value) {
         String language = "";
         if (isInlineModule(value)) {
@@ -309,7 +309,7 @@ public final class StringUtils {
         }
         return code;
     }
-    
+
     /**
      * Build an XCC URI from the values provided. Values will be URLEncoded, if it does not appear that they have already been URLEncoded.
      * @param username
@@ -317,44 +317,44 @@ public final class StringUtils {
      * @param host
      * @param port
      * @param dbname
-     * @return 
+     * @return
      */
     public static String getXccUri(String username, String password, String host, String port, String dbname) {
         return "xcc://" + urlEncodeIfNecessary(username) + ":" + urlEncodeIfNecessary(password) + "@" + host + ":" + port + (dbname == null ? "" : "/" + urlEncodeIfNecessary(dbname));
     }
-    
+
     /**
      * Indicate whether any items in the array of String objects are null.
      * @param args
-     * @return 
+     * @return
      */
     public static boolean anyIsNull(String... args) {
         return Arrays.asList(args).contains(null);
     }
-    
+
     /**
      * If the given string is not URLEncoded, encode it. Otherwise, return the original value.
      * @param arg
-     * @return 
+     * @return
      */
     protected static String urlEncodeIfNecessary(String arg) {
-        return isUrlEncoded(arg) ? arg : urlEncode(arg);       
+        return isUrlEncoded(arg) ? arg : urlEncode(arg);
     }
-    
+
     /**
-     * Determines whether the value is URLEncoded by evaluating whether the 
+     * Determines whether the value is URLEncoded by evaluating whether the
      * length of the URLDecoded value is the same.
      * @param arg
-     * @return 
+     * @return
      */
     public static boolean isUrlEncoded(String arg) {
-        return arg.length() != urlDecode(arg).length();  
+        return arg.length() != urlDecode(arg).length();
     }
-    
+
     /**
      * URLEncode the given value
      * @param arg
-     * @return 
+     * @return
      */
     protected static String urlEncode(String arg) {
         try {
@@ -364,11 +364,11 @@ public final class StringUtils {
             throw new AssertionError(UTF_8_NOT_SUPPORTED);
         }
     }
-    
+
     /**
      * URLDecode the given value
      * @param arg
-     * @return 
+     * @return
      */
     protected static String urlDecode(String arg) {
         try {

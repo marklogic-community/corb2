@@ -130,7 +130,7 @@ public class Monitor implements Runnable {
         LOG.log(INFO, "completed all tasks {0}/{1}", new Object[]{completed, taskCount});
     }
 
-    private long showProgress() throws InterruptedException {
+    private long showProgress() {
         long current = System.currentTimeMillis();
         if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
             if (pool.isPaused()) {
@@ -198,16 +198,16 @@ public class Monitor implements Runnable {
         }
         return transactionsPerSecondForETC;
     }
-    
+
     /**
      * Determine if the given double value is equal to zero
      * @param value
-     * @return 
+     * @return
      */
     protected static boolean isZero(double value) {
         return Double.compare(value, 0.0) == 0;
     }
-    
+
     protected static double calculateTransactionsPerSecond(long amountCompleted, long currentMillis, long previousMillis) {
         return calculateTransactionsPerSecond(amountCompleted, 0, currentMillis, previousMillis);
     }
