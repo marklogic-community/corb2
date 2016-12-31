@@ -336,9 +336,9 @@ public class PostBatchUpdateFileTaskTest {
         file.deleteOnExit();
         try (FileWriter writer = new FileWriter(file, true)) {
             writer.append("z...\n");
-            String d_dot_dot_dot_newline = "d....\n";
-            writer.append(d_dot_dot_dot_newline);
-            writer.append(d_dot_dot_dot_newline);
+            String dDots = "d....\n";
+            writer.append(dDots);
+            writer.append(dDots);
             writer.append("a.....\n");
             writer.append(B);
             writer.flush();
