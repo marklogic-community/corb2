@@ -298,8 +298,9 @@ public class QueryUrisLoader extends AbstractUrisLoader {
     protected void logQueueStatus(int currentIndex, String uri, int total) {
         if (0 == currentIndex % 50000) {
             long freeMemory = Runtime.getRuntime().freeMemory();
-            if (freeMemory < (16 * 1024 * 1024)) {
-                LOG.log(WARNING, "free memory: {0} MiB", (freeMemory / (1024 * 1024)));
+            long megabytes = 1024 * 1024;
+            if (freeMemory < (16 * megabytes)) {
+                LOG.log(WARNING, "free memory: {0} MiB", freeMemory / megabytes);
             }
         }
         if (0 == currentIndex % 25000) {
