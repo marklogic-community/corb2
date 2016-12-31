@@ -195,8 +195,8 @@ public class QueryUrisLoader extends AbstractUrisLoader {
      * @return
      */
     protected Queue<String> createAndPopulateQueue(ResultSequence resultSequence) {
-        Queue<String> queue = getQueue();
-        return populateQueue(queue, resultSequence);
+        Queue<String> uriQueue = createQueue();
+        return populateQueue(uriQueue, resultSequence);
     }
 
     protected Queue<String> populateQueue(Queue<String> queue, ResultSequence resultSequence) {
@@ -217,9 +217,9 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             }
 
             if (!queue.offer(uri)) {
-                LOG.log(SEVERE, "Unabled to add uri {0} to queue. Received uris {1} which is more than expected {2}", new Object[]{uri, (i + 1), getTotalCount()});
+                LOG.log(SEVERE, "Unabled to add uri {0} to queue. Received uris {1} which is more than expected {2}", new Object[]{uri, i + 1, getTotalCount()});
             } else if (i >= getTotalCount()) {
-                LOG.log(WARNING, "Received uri {0} at index {1} which is more than expected {2}", new Object[]{uri, (i + 1), getTotalCount()});
+                LOG.log(WARNING, "Received uri {0} at index {1} which is more than expected {2}", new Object[]{uri, i + 1, getTotalCount()});
             }
 
             logQueueStatus(i, uri, getTotalCount());
@@ -233,14 +233,14 @@ public class QueryUrisLoader extends AbstractUrisLoader {
      *
      * @return
      */
-    protected Queue<String> getQueue() {
-        Queue<String> queue;
+    protected Queue<String> createQueue() {
+        Queue<String> uriQueue;
         if (options != null && options.shouldUseDiskQueue()) {
-            queue = new DiskQueue<>(options.getDiskQueueMaxInMemorySize(), options.getDiskQueueTempDir());
+            uriQueue = new DiskQueue<>(options.getDiskQueueMaxInMemorySize(), options.getDiskQueueTempDir());
         } else {
-            queue = new ArrayQueue<>(getTotalCount());
+            uriQueue = new ArrayQueue<>(getTotalCount());
         }
-        return queue;
+        return uriQueue;
     }
 
     @Override
