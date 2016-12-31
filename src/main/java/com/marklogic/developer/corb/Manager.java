@@ -864,7 +864,7 @@ public class Manager extends AbstractManager {
 
     public static class CallerBlocksPolicy implements RejectedExecutionHandler {
 
-        private transient BlockingQueue<Runnable> queue;
+        private BlockingQueue<Runnable> queue;
 
         private boolean warning;
 
