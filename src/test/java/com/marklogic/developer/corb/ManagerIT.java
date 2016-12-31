@@ -77,6 +77,25 @@ public class ManagerIT {
         clearSystemProperties();
     }
 
+    public boolean testManager(String[] args, File report) {
+        boolean passed = false;
+        Manager manager = new Manager();
+        try {
+            //First, verify the output using run()
+            manager.init(args);
+            manager.run();
+
+            byte[] out = getBytes(report);
+            String corbOutput = new String(out).trim();
+            passed = EXPECTED_OUTPUT.equals(corbOutput);
+            clearFile(report);
+
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
+        return passed;
+    }
+
     @Test
     public void testManagerUsingProgArgs() {
 
@@ -88,23 +107,12 @@ public class ManagerIT {
         args[15] = null;
         File report = new File(exportFileDir + SLASH + exportFileName);
         report.deleteOnExit();
-        Manager manager = new Manager();
-        try {
-            //First, verify the output using run()
-            manager.init(args);
-            manager.run();
+        boolean passed = testManager(args, report);
+        assertTrue(passed);
 
-            byte[] out = getBytes(report);
-            String corbOutput = new String(out).trim();
-            boolean passed = EXPECTED_OUTPUT.equals(corbOutput);
-            clearFile(report);
-            assertTrue(passed);
-            //Then verify the exit code when invoking the main()
-            exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
-            Manager.main(args);
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
+        //Then verify the exit code when invoking the main()
+        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
+        Manager.main(args);
     }
 
     @Test
@@ -114,28 +122,16 @@ public class ManagerIT {
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(Options.URIS_MODULE, "src/test/resources/selector.xqy|ADHOC");
         System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
-
+        String[] args = null;
         File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName);
         report.deleteOnExit();
 
-        Manager manager = new Manager();
-        String[] args = {};
-        try {
-            //First, verify the output by executing run()
-            manager.init(args);
-            manager.run();
+        boolean passed = testManager(args, report);
+        assertTrue(passed);
 
-            byte[] out = getBytes(report);
-            String corbOutput = new String(out).trim();
-            boolean passed = EXPECTED_OUTPUT.equals(corbOutput);
-            clearFile(report);
-            assertTrue(passed);
-            //Then verify the exit code when using the main() method
-            exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
-            Manager.main(args);
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
+        //Then verify the exit code when invoking the main()
+        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
+        Manager.main(args);
     }
 
     @Test
@@ -172,28 +168,13 @@ public class ManagerIT {
         System.setProperty(Options.OPTIONS_FILE, "src/test/resources/helloWorld.properties");
         System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
         String[] args = {};
-        //First, verify the output using run()
-        Manager manager = new Manager();
-        try {
-            manager.init(args);
-            manager.run();
+        File report = new File(exportFileName);
+        report.deleteOnExit();
 
-            File report = new File(exportFileName);
-            report.deleteOnExit();
+        boolean passed = testManager(args, report);
+        assertTrue(passed);
 
-            assertTrue(report.exists());
-
-            byte[] out = getBytes(report);
-            String corbOutput = new String(out).trim();
-            boolean passed = EXPECTED_OUTPUT.equals(corbOutput);
-            clearFile(report);
-
-            assertTrue(passed);
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
-        //Then verify the exit code when using the main() method
+        //Then verify the exit code when invoking the main()
         exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
         Manager.main(args);
     }
@@ -206,32 +187,13 @@ public class ManagerIT {
         System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
         System.setProperty(Options.URIS_FILE, "src/test/resources/uriInputFile.txt");
         String[] args = {};
-        //First, verify the output using run()
-        Manager manager = new Manager();
-        try {
-            manager.init(args);
-            manager.run();
+        String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
+        File report = new File(exportFilePath);
+        report.deleteOnExit();
+        boolean passed = testManager(args, report);
+        assertTrue(passed);
 
-            String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
-            File report = new File(exportFilePath);
-            report.deleteOnExit();
-
-            assertTrue(report.exists());
-
-            byte[] out = getBytes(report);
-            String corbOutput = new String(out).trim();
-            String expectedOutput = "This is being returned from the PRE-BATCH-MODULE which is often used for column headers.\n"
-                    + "This is a file generated by the XQUERY-MODULE (Transform) which typically contains a report.  This information [Hello from the URIS-FILE!] was passed from the Selector.\n"
-                    + POST_XQUERY_MODULE_OUTPUT;
-            boolean passed = expectedOutput.equals(corbOutput);
-            clearFile(report);
-
-            assertTrue(passed);
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
-        //Then verify the exit code when using the main() method
+        //Then verify the exit code when invoking the main()
         exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
         Manager.main(args);
     }
@@ -243,31 +205,11 @@ public class ManagerIT {
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
         String[] args = {};
-        //First, verify output executing run()
-        Manager manager = new Manager();
-        try {
-            manager.init(args);
-            manager.run();
+        String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
+        File report = new File(exportFilePath);
+        report.deleteOnExit();
+        testManager(args, report);
 
-            String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
-            File report = new File(exportFilePath);
-            report.deleteOnExit();
-
-            assertTrue(report.exists());
-            byte[] out = getBytes(report);
-            String corbOutput = new String(out).trim();
-            String expectedOutput = "This is being returned from the PRE-BATCH-MODULE which is often used for column headers.";
-            boolean passed = corbOutput.startsWith(expectedOutput);
-            clearFile(report);
-
-            assertTrue(passed);
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
-        //Then, verify the exit code running main()
-        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
-        Manager.main(args);
     }
 
     @Test
@@ -277,28 +219,10 @@ public class ManagerIT {
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
         String[] args = {};
-        //First, verify the output using run()
-        Manager manager = new Manager();
-        try {
-            manager.init(args);
-            manager.run();
-
-            String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
-            File report = new File(exportFilePath);
-            assertTrue(report.exists());
-            byte[] out = getBytes(report);
-            String corbOutput = new String(out).trim();
-            boolean passed = corbOutput.endsWith(POST_XQUERY_MODULE_OUTPUT);
-
-            clearFile(report);
-            assertTrue(passed);
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
-        //Then verify the exit code when using the main() method
-        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
-        Manager.main(args);
+        String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
+        File report = new File(exportFilePath);
+        report.deleteOnExit();
+        testManager(args, report);
     }
 
     @Test
@@ -338,28 +262,15 @@ public class ManagerIT {
         System.setProperty("XQUERY-MODULE.foo", "bar1");
         System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
         String[] args = {};
-        //First, verify the output using run()
-        Manager manager = new Manager();
-        try {
-            manager.init(args);
-            manager.run();
 
-            String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
-            File report = new File(exportFilePath);
-            report.deleteOnExit();
+        String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
+        File report = new File(exportFilePath);
+        report.deleteOnExit();
 
-            assertTrue(report.exists());
-            byte[] out = getBytes(report);
-            String corbOutput = new String(out).trim();
-            String expectedOutput = "object-id-1=bar1";
-            boolean passed = corbOutput.contains(expectedOutput);
-            clearFile(report);
-            assertTrue(passed);
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
-        //Then verify the exit code when using the main() method
+        boolean passed = testManager(args, report);
+        assertTrue(passed);
+
+        //Then verify the exit code when invoking the main()
         exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
         Manager.main(args);
     }
