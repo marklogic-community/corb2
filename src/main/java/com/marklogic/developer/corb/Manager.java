@@ -545,7 +545,7 @@ public class Manager extends AbstractManager {
                 else {
                     LOG.log(WARNING, "looking for {0} as resource", resourceModule);
                     String moduleUri = options.getModuleRoot() + resourceModule;
-                    try (InputStream is = this.getClass().getResourceAsStream('/' +  resourceModule)) {
+                    try (InputStream is = this.getClass().getResourceAsStream('/' + resourceModule)) {
                         if (null == is) {
                             throw new NullPointerException(resourceModule + " could not be found on the filesystem," + " or in package resources");
                         }
@@ -656,50 +656,8 @@ public class Manager extends AbstractManager {
             // now start process tasks
             monitor.setTaskCount(expectedTotalCount);
             monitorThread.start();
-            Level memoryLogLevel = INFO;
-            long lastMessageMillis = System.currentTimeMillis();
-            final long totalMemory = Runtime.getRuntime().totalMemory();
-            long freeMemory;
-            String uri;
-            List<String> uriBatch = new ArrayList<>(options.getBatchSize());
 
-            while (urisLoader.hasNext()) {
-                // check pool occasionally, for fast-fail
-                if (null == pool) {
-                    break;
-                }
-
-                uri = urisLoader.next();
-                if (isBlank(uri)) {
-                    continue;
-                }
-                uriBatch.add(uri);
-
-                if (uriBatch.size() >= options.getBatchSize() || urisCount >= expectedTotalCount || !urisLoader.hasNext()) {
-                    String[] uris = uriBatch.toArray(new String[uriBatch.size()]);
-                    uriBatch.clear();
-                    completionService.submit(taskFactory.newProcessTask(uris, options.isFailOnError()));
-                }
-
-                urisCount++;
-
-                if (0 == urisCount % 25000) {
-                    LOG.log(INFO, "received {0}/{1}: {2}", new Object[]{urisCount, expectedTotalCount, uri});
-
-                    if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
-                        LOG.warning("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
-                        freeMemory = Runtime.getRuntime().freeMemory();
-                        if (freeMemory < totalMemory * 0.2d) {
-                            memoryLogLevel = WARNING;
-                        } else {
-                            memoryLogLevel = INFO;
-                        }
-                        final int megabytes = 1024 * 1024;
-                        LOG.log(memoryLogLevel, "free memory: {0} MiB" + " of " + totalMemory / megabytes, freeMemory / megabytes);
-                    }
-                    lastMessageMillis = System.currentTimeMillis();
-                }
-            }
+            urisCount = submitUriTasks(urisLoader, taskFactory, expectedTotalCount);
 
             if (urisCount == expectedTotalCount) {
                 LOG.log(INFO, "queue is populated with {0} tasks", urisCount);
@@ -715,6 +673,65 @@ public class Manager extends AbstractManager {
             throw exc;
         }
 
+        return urisCount;
+    }
+
+    /**
+     * Submit batches of the URIs to be processed. Filter out blank entries and 
+     * return the total number of URIs.
+     *
+     * @param urisLoader
+     * @param taskFactory
+     * @param expectedTotalCount
+     * @return
+     * @throws CorbException
+     */
+    protected int submitUriTasks(UrisLoader urisLoader, TaskFactory taskFactory, int expectedTotalCount) throws CorbException {
+        int urisCount = 0;
+        Level memoryLogLevel;
+        long lastMessageMillis = System.currentTimeMillis();
+        final long totalMemory = Runtime.getRuntime().totalMemory();
+        long freeMemory;
+        String uri;
+        List<String> uriBatch = new ArrayList<>(options.getBatchSize());
+
+        while (urisLoader.hasNext()) {
+            // check pool occasionally, for fast-fail
+            if (null == pool) {
+                break;
+            }
+
+            uri = urisLoader.next();
+            if (isBlank(uri)) {
+                continue;
+            }
+            uriBatch.add(uri);
+
+            if (uriBatch.size() >= options.getBatchSize() || urisCount >= expectedTotalCount || !urisLoader.hasNext()) {
+                String[] uris = uriBatch.toArray(new String[uriBatch.size()]);
+                uriBatch.clear();
+                completionService.submit(taskFactory.newProcessTask(uris, options.isFailOnError()));
+            }
+
+            urisCount++;
+
+            if (0 == urisCount % 25000) {
+                LOG.log(INFO, "received {0}/{1}: {2}", new Object[]{urisCount, expectedTotalCount, uri});
+
+                if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
+                    LOG.warning("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
+                    freeMemory = Runtime.getRuntime().freeMemory();
+                    if (freeMemory < totalMemory * 0.2d) {
+                        memoryLogLevel = WARNING;
+                    } else {
+                        memoryLogLevel = INFO;
+                    }
+                    final int megabytes = 1024 * 1024;
+                    LOG.log(memoryLogLevel, "free memory: {0} MiB" + " of " + totalMemory / megabytes, freeMemory / megabytes);
+                }
+                lastMessageMillis = System.currentTimeMillis();
+            }
+        }
         return urisCount;
     }
 
