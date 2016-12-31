@@ -27,6 +27,7 @@ import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
 import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.xcc.AdhocQuery;
+import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ContentSourceFactory;
 import com.marklogic.xcc.ModuleInvoke;
@@ -50,9 +51,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import org.mockito.Mockito;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
@@ -930,6 +933,91 @@ public class ManagerTest {
         Manager manager = new Manager();
         Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
         fileWatcher.onChange(file);
+    }
+
+    @Test
+    public void testInsertModule() {
+        Session session = mock(Session.class);
+        Manager manager = new Manager();
+        manager.options.setDoInstall(true);
+        try {
+            manager.insertModule(session, "src/test/resources/transform.xqy");
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testInsertModuleLoadedFromClassloader() {
+        Session session = mock(Session.class);
+        Manager manager = new Manager();
+        manager.options.setDoInstall(true);
+        try {
+            manager.insertModule(session, "/transform.xqy");
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testInsertModuleLoadedFromClassloaderNotFound() {
+        Session session = mock(Session.class);
+        Manager manager = new Manager();
+        manager.options.setDoInstall(true);
+        try {
+            manager.insertModule(session, "transform.xqy");
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+    
+    @Test(expected = CorbException.class)
+    public void testInsertModuleAndThrowException() throws CorbException {
+        Session session = mock(Session.class);
+        try {
+            Mockito.doThrow(RequestException.class).when(session).insertContent(any(Content.class));
+            Manager manager = new Manager();
+            manager.options.setDoInstall(true);
+            manager.insertModule(session, "src/test/resources/transform.xqy");
+        } catch (RequestException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+
+    }
+
+    @Test
+    public void testSetPoolSizeGrow() {
+        int size = 5;
+        ThreadPoolExecutor threadPool = testSetPoolSize(5, size);
+        assertEquals(size, threadPool.getMaximumPoolSize());
+        assertEquals(size, threadPool.getCorePoolSize());
+    }
+
+    @Test
+    public void testSetPoolSizeShrink() {
+        int size = 1;
+        ThreadPoolExecutor threadPool = testSetPoolSize(5, size);
+        assertEquals(size, threadPool.getMaximumPoolSize());
+        assertEquals(size, threadPool.getCorePoolSize());
+    }
+
+    @Test
+    public void testSetPoolSizeShrinkNegative() {
+        int initialSize = 5;
+        ThreadPoolExecutor threadPool = testSetPoolSize(initialSize, -1);
+        assertEquals(initialSize, threadPool.getMaximumPoolSize());
+        assertEquals(initialSize, threadPool.getCorePoolSize());
+    }
+
+    public ThreadPoolExecutor testSetPoolSize(int initialSize, int size) {
+        ThreadPoolExecutor threadPool = new ThreadPoolExecutor(initialSize, initialSize, 100, TimeUnit.MILLISECONDS, mock(BlockingQueue.class));
+        Manager instance = new Manager();
+        instance.setPoolSize(threadPool, size);
+        return threadPool;
     }
 
     @Test

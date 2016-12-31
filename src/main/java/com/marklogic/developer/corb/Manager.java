@@ -505,7 +505,7 @@ public class Manager extends AbstractManager {
     }
 
     /**
-     * @throws IOException,RequestException
+     * @throws CorbException
      *
      */
     private void prepareModules() throws CorbException {
@@ -514,46 +514,48 @@ public class Manager extends AbstractManager {
         String modulesDatabase = options.getModulesDatabase();
         LOG.log(INFO, "checking modules, database: {0}", modulesDatabase);
 
-        ContentCreateOptions opts = ContentCreateOptions.newTextInstance();
         try (Session session = contentSource.newSession(modulesDatabase)) {
             for (String resourceModule : resourceModules) {
-                if (resourceModule == null || isInlineOrAdhoc(resourceModule)) {
-                    continue;
-                }
+                insertModule(session, resourceModule);
+            }
+        }
+    }
 
-                // Start by checking install flag.
-                if (!options.isDoInstall()) {
-                    LOG.log(INFO, "Skipping module installation: {0}", resourceModule);
-                    continue;
-                } // Next check: if XCC is configured for the filesystem, warn user
-                else if (options.getModulesDatabase().isEmpty()) {
-                    LOG.warning("XCC configured for the filesystem: please install modules manually");
-                    return;
-                } // Finally, if it's configured for a database, install.
+    protected void insertModule(Session session, String resourceModule) throws CorbException {
+        if (resourceModule == null || isInlineOrAdhoc(resourceModule)) {
+            return;
+        }
+        try {
+            // Start by checking install flag.
+            if (!options.isDoInstall()) {
+                LOG.log(INFO, "Skipping module installation: {0}", resourceModule);
+            } // Next check: if XCC is configured for the filesystem, warn user
+            else if (options.getModulesDatabase().isEmpty()) {
+                LOG.warning("XCC configured for the filesystem: please install modules manually");
+            } // Finally, if it's configured for a database, install.
+            else {
+                ContentCreateOptions contentCreateOptions = ContentCreateOptions.newTextInstance();
+                File file = new File(resourceModule);
+                Content content;
+                // If not installed, are the specified files on the filesystem?
+                if (file.exists()) {
+                    String moduleUri = options.getModuleRoot() + file.getName();
+                    content = ContentFactory.newContent(moduleUri, file, contentCreateOptions);
+                } // finally, check package
                 else {
-                    File f = new File(resourceModule);
-                    Content c;
-                    // If not installed, are the specified files on the
-                    // filesystem?
-                    if (f.exists()) {
-                        String moduleUri = options.getModuleRoot() + f.getName();
-                        c = ContentFactory.newContent(moduleUri, f, opts);
-                    } // finally, check package
-                    else {
-                        LOG.log(WARNING, "looking for {0} as resource", resourceModule);
-                        String moduleUri = options.getModuleRoot() + resourceModule;
-                        try (InputStream is = this.getClass().getResourceAsStream(resourceModule)) {
-                            if (null == is) {
-                                throw new NullPointerException(resourceModule + " could not be found on the filesystem," + " or in package resources");
-                            }
-                            c = ContentFactory.newContent(moduleUri, is, opts);
+                    LOG.log(WARNING, "looking for {0} as resource", resourceModule);
+                    String moduleUri = options.getModuleRoot() + resourceModule;
+                    try (InputStream is = this.getClass().getResourceAsStream(resourceModule)) {
+                        if (null == is) {
+                            throw new NullPointerException(resourceModule + " could not be found on the filesystem," + " or in package resources");
                         }
+                        content = ContentFactory.newContent(moduleUri, is, contentCreateOptions);
                     }
-                    session.insertContent(c);
                 }
+                session.insertContent(content);
             }
         } catch (IOException | RequestException e) {
-            throw new CorbException("error while reading modules {0}", e);
+            throw new CorbException(MessageFormat.format("error while reading module {0}", resourceModule), e);
         }
     }
 
@@ -656,7 +658,7 @@ public class Manager extends AbstractManager {
             monitorThread.start();
             Level memoryLogLevel = INFO;
             long lastMessageMillis = System.currentTimeMillis();
-            final long RAM_TOTAL = Runtime.getRuntime().totalMemory();
+            final long totalMemory = Runtime.getRuntime().totalMemory();
             long freeMemory;
             String uri;
             List<String> uriBatch = new ArrayList<>(options.getBatchSize());
@@ -687,12 +689,13 @@ public class Manager extends AbstractManager {
                     if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
                         LOG.warning("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
                         freeMemory = Runtime.getRuntime().freeMemory();
-                        if (freeMemory < RAM_TOTAL * 0.2d) {
+                        if (freeMemory < totalMemory * 0.2d) {
                             memoryLogLevel = WARNING;
                         } else {
                             memoryLogLevel = INFO;
                         }
-                        LOG.log(memoryLogLevel, "free memory: {0} MiB" + " of " + RAM_TOTAL / (1024 * 1024), (freeMemory / (1024 * 1024)));
+                        final int megabytes = 1024 * 1024;
+                        LOG.log(memoryLogLevel, "free memory: {0} MiB" + " of " + totalMemory / megabytes, freeMemory / megabytes);
                     }
                     lastMessageMillis = System.currentTimeMillis();
                 }
@@ -719,26 +722,30 @@ public class Manager extends AbstractManager {
         if (threadCount > 0) {
             if (threadCount != options.getThreadCount()) {
                 options.setThreadCount(threadCount);
-                if (pool != null) {
-                    int currentMaxPoolSize = pool.getMaximumPoolSize();
-                    try {
-                        if (threadCount < currentMaxPoolSize) {
-                            //shrink the core first then max
-                            pool.setCorePoolSize(threadCount);
-                            pool.setMaximumPoolSize(threadCount);
-                        } else {
-                            //grow max first, then core
-                            pool.setMaximumPoolSize(threadCount);
-                            pool.setCorePoolSize(threadCount);
-                        }
-                        LOG.log(INFO, "Changed {0} to {1}", new Object[]{THREAD_COUNT, threadCount});
-                    } catch (IllegalArgumentException ex) {
-                        LOG.log(WARNING, "Unable to change thread count", ex);
-                    }
-                }
+                setPoolSize(pool, threadCount);
             }
         } else {
             LOG.log(WARNING, THREAD_COUNT + " must be a positive integer value");
+        }
+    }
+
+    protected void setPoolSize(ThreadPoolExecutor threadPool, int threadCount) {
+        if (threadPool != null) {
+            int currentMaxPoolSize = threadPool.getMaximumPoolSize();
+            try {
+                if (threadCount < currentMaxPoolSize) {
+                    //shrink the core first then max
+                    threadPool.setCorePoolSize(threadCount);
+                    threadPool.setMaximumPoolSize(threadCount);
+                } else {
+                    //grow max first, then core
+                    threadPool.setMaximumPoolSize(threadCount);
+                    threadPool.setCorePoolSize(threadCount);
+                }
+                LOG.log(INFO, "Changed {0} to {1}", new Object[]{THREAD_COUNT, threadCount});
+            } catch (IllegalArgumentException ex) {
+                LOG.log(WARNING, "Unable to change thread count", ex);
+            }
         }
     }
 
