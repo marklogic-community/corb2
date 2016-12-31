@@ -23,7 +23,6 @@ import static com.marklogic.developer.corb.Options.PRIVATE_KEY_FILE;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
