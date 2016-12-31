@@ -503,7 +503,7 @@ public class QueryUrisLoaderTest {
     public void testCloseNullSession() {
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.close();
-        assertTrue(instance.getQueue().isEmpty());
+        assertTrue(instance.createQueue().isEmpty());
         assertNull(instance.session);
     }
 
@@ -692,29 +692,29 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testGetQueueDiskQueue() {
+    public void testCreateQueueDiskQueue() {
         TransformOptions options = new TransformOptions();
         options.setUseDiskQueue(true);
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.setOptions(options);
-        Queue<String> queue = instance.getQueue();
+        Queue<String> queue = instance.createQueue();
         assertTrue(queue instanceof DiskQueue);
     }
 
     @Test
-    public void testGetQueueArrayQueue() {
+    public void testCreateQueueArrayQueue() {
         TransformOptions options = new TransformOptions();
         options.setUseDiskQueue(false);
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.setOptions(options);
-        Queue<String> queue = instance.getQueue();
+        Queue<String> queue = instance.createQueue();
         assertTrue(queue instanceof ArrayQueue);
     }
 
     @Test
-    public void testGetQueue() {
+    public void testCreateQueue() {
         QueryUrisLoader instance = new QueryUrisLoader();
-        Queue<String> queue = instance.getQueue();
+        Queue<String> queue = instance.createQueue();
         assertTrue(queue instanceof ArrayQueue);
     }
 
@@ -757,7 +757,7 @@ public class QueryUrisLoaderTest {
     public void testHasNextEmptyQueue() {
         QueryUrisLoader instance = new QueryUrisLoader();
         try {
-            instance.getQueue();
+            instance.createQueue();
             assertFalse(instance.hasNext());
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
