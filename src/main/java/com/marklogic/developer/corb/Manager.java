@@ -545,7 +545,7 @@ public class Manager extends AbstractManager {
                 else {
                     LOG.log(WARNING, "looking for {0} as resource", resourceModule);
                     String moduleUri = options.getModuleRoot() + resourceModule;
-                    try (InputStream is = this.getClass().getResourceAsStream(resourceModule)) {
+                    try (InputStream is = this.getClass().getResourceAsStream('/' +  resourceModule)) {
                         if (null == is) {
                             throw new NullPointerException(resourceModule + " could not be found on the filesystem," + " or in package resources");
                         }

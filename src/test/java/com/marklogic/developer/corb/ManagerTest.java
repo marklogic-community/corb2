@@ -954,7 +954,7 @@ public class ManagerTest {
         Manager manager = new Manager();
         manager.options.setDoInstall(true);
         try {
-            manager.insertModule(session, "/transform.xqy");
+            manager.insertModule(session, "transform.xqy");
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -967,7 +967,7 @@ public class ManagerTest {
         Manager manager = new Manager();
         manager.options.setDoInstall(true);
         try {
-            manager.insertModule(session, "transform.xqy");
+            manager.insertModule(session, "transformDoesNotExist.xqy");
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
