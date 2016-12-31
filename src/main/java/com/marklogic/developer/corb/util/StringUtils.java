@@ -26,8 +26,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,7 +44,6 @@ public final class StringUtils {
     private static final Pattern INLINE_MODULE_PATTERN = Pattern.compile("(?i)INLINE-(JAVASCRIPT|XQUERY)\\|(.*?)(\\|ADHOC)?$");
     private static final String UTF_8 = "UTF-8";
     private static final String UTF_8_NOT_SUPPORTED = UTF_8 + " not supported";
-    private static final Logger LOG = Logger.getLogger(StringUtils.class.getName());
 
     private StringUtils() {
     }
