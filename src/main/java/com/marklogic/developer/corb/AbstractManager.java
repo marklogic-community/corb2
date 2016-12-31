@@ -401,16 +401,16 @@ public abstract class AbstractManager {
                 + "If specified in more than one place, a command line parameter takes precedence over "
                 + "a Java system property, which take precedence over a property "
                 + "from the OPTIONS-FILE properties file.\n\n"
-                + "CoRB2 Options:\n");
+                + "CoRB2 Options:\n"); // NOPMD
 
         for (java.lang.reflect.Field field : Options.class.getDeclaredFields()) {
             Usage usage = field.getAnnotation(Usage.class);
             if (usage != null && StringUtils.isNotEmpty(usage.description())) {
-                err.println(field.getName() + "\n\t" + usage.description());
+                err.println(field.getName() + "\n\t" + usage.description()); // NOPMD
             }
         }
 
-        err.println("\nPlease report issues at: https://github.com/marklogic/corb2/issues\n");
+        err.println("\nPlease report issues at: https://github.com/marklogic/corb2/issues\n"); // NOPMD
     }
 
     protected String buildSystemPropertyArg(String property, String value) {

@@ -426,11 +426,11 @@ public class Manager extends AbstractManager {
         String optionsFile = "myjob.properties";
         PrintStream err = System.err; // NOPMD
 
-        err.println("usage 1:");
+        err.println("usage 1:"); // NOPMD
         err.println(TAB + NAME + ' ' + xccConnectionUri + " input-selector module-name.xqy"
                 + " [ thread-count [ uris-module [ module-root" + " [ modules-database [ install [ process-task"
                 + " [ pre-batch-module [ pre-batch-task" + " [ post-batch-module  [ post-batch-task"
-                + " [ export-file-dir [ export-file-name" + " [ uris-file ] ] ] ] ] ] ] ] ] ] ] ] ]");
+                + " [ export-file-dir [ export-file-name" + " [ uris-file ] ] ] ] ] ] ] ] ] ] ] ] ]"); // NOPMD
 
         err.println("\nusage 2:");
         args.add(buildSystemPropertyArg(XCC_CONNECTION_URI, xccConnectionUri));
@@ -440,21 +440,21 @@ public class Manager extends AbstractManager {
         args.add(buildSystemPropertyArg(POST_BATCH_MODULE, "post-batch.xqy"));
         args.add(buildSystemPropertyArg("... ", null));
         args.add(NAME);
-        err.println(TAB + StringUtils.join(args, SPACE));
+        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
 
-        err.println("\nusage 3:");
+        err.println("\nusage 3:"); // NOPMD
         args.clear();
         args.add(buildSystemPropertyArg(OPTIONS_FILE, optionsFile));
         args.add(NAME);
-        err.println(TAB + StringUtils.join(args, SPACE));
+        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
 
-        err.println("\nusage 4:");
+        err.println("\nusage 4:"); // NOPMD
         args.clear();
         args.add(buildSystemPropertyArg(OPTIONS_FILE, optionsFile));
         args.add(buildSystemPropertyArg(THREAD_COUNT, threadCount));
         args.add(NAME);
         args.add(xccConnectionUri);
-        err.println(TAB + StringUtils.join(args, SPACE));
+        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
     }
 
     public int run() throws Exception {

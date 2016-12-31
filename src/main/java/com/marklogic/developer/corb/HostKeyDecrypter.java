@@ -343,7 +343,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
             decryptedTextBytes = cipher.doFinal(encryptedTextBytes);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "decryption failed", e);
-            e.printStackTrace();
+            e.printStackTrace(); //NOPMD
         }
         return new String(decryptedTextBytes);
     }
@@ -359,17 +359,17 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         String method = (args != null && args.length > 0) ? args[0].trim() : "";
 
         if (METHOD_ENCRYPT.equals(method) && args.length == 2) {
-            System.out.println(encrypt(args[1].trim()));
+            System.out.println(encrypt(args[1].trim())); // NOPMD
         } else if (METHOD_TEST.equals(method)) {
             HostKeyDecrypter decrypter = new HostKeyDecrypter();
             decrypter.init(System.getProperties());
             String original = "234Helloworld!!!";
-            System.out.println("Password is :" + original);
+            System.out.println("Password is :" + original); // NOPMD
             String password = encrypt(original);
-            System.out.println("Encrypted Password is :" + password);
-            System.out.println("Decrypted password:" + decrypter.doDecrypt("Property", password));
+            System.out.println("Encrypted Password is :" + password); // NOPMD
+            System.out.println("Decrypted password:" + decrypter.doDecrypt("Property", password)); // NOPMD
         } else {
-            System.out.println(USAGE);
+            System.out.println(USAGE); // NOPMD
         }
     }
 }

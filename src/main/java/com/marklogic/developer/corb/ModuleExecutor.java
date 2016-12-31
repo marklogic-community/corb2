@@ -148,32 +148,32 @@ public class ModuleExecutor extends AbstractManager {
         String optionsFile = "myjob.properties";
         PrintStream err = System.err; // NOPMD
 
-        err.println("usage 1:");
+        err.println("usage 1:"); // NOPMD
         args.add(NAME);
         args.add(xccConnectionUri);
         args.add("process-module [module-root [modules-database [ export-file-name ] ] ]");
-        err.println(TAB + StringUtils.join(args, SPACE));
+        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
 
-        err.println("\nusage 2:");
+        err.println("\nusage 2:"); // NOPMD
         args.clear();
         args.add(buildSystemPropertyArg(XCC_CONNECTION_URI, xccConnectionUri));
         args.add(buildSystemPropertyArg(PROCESS_MODULE, "module-name.xqy"));
         args.add(buildSystemPropertyArg("...", null));
         args.add(NAME);
-        err.println(TAB + StringUtils.join(args, SPACE));
+        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
 
-        err.println("\nusage 3:");
+        err.println("\nusage 3:"); // NOPMD
         args.clear();
         args.add(buildSystemPropertyArg(OPTIONS_FILE, optionsFile));
         args.add(NAME);
-        err.println(TAB + StringUtils.join(args, SPACE));
+        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
 
-        err.println("\nusage 4:");
+        err.println("\nusage 4:"); // NOPMD
         args.clear();
         args.add(buildSystemPropertyArg(OPTIONS_FILE, optionsFile));
         args.add(NAME);
         args.add(xccConnectionUri);
-        err.println(TAB + StringUtils.join(args, SPACE));
+        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
     }
 
     @Override
