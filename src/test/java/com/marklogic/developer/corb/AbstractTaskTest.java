@@ -148,7 +148,7 @@ public class AbstractTaskTest {
     public void testSetInputURINull() {
         AbstractTask instance = new AbstractTaskImpl();
         assertNull(instance.inputUris);
-        instance.setInputURI(null);
+        instance.setInputURI((String[]) null);
         assertNotNull(instance.inputUris);
     }
 

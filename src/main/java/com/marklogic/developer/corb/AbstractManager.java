@@ -67,7 +67,7 @@ public abstract class AbstractManager {
 
     public static final String VERSION = "2.4.0";
 
-    protected static final String VERSION_MSG = "version " + VERSION + " on " + System.getProperty("java.version") + " (" + System.getProperty("java.runtime.name") + ")";
+    protected static final String VERSION_MSG = "version " + VERSION + " on " + System.getProperty("java.version") + " (" + System.getProperty("java.runtime.name") + ')';
     protected static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server';\n";
     protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\";\n";
 
@@ -98,7 +98,7 @@ public abstract class AbstractManager {
     protected static Properties loadPropertiesFile(String filename, boolean exceptionIfNotFound, Properties props) throws IOException {
         String name = trim(filename);
         if (isNotBlank(name)) {
-            try (InputStream is = Manager.class.getResourceAsStream("/" + name)) {
+            try (InputStream is = Manager.class.getResourceAsStream('/' + name)) {
                 if (is != null) {
                     LOG.log(INFO, "Loading {0} from classpath", name);
                     props.load(is);
@@ -121,7 +121,7 @@ public abstract class AbstractManager {
     public static String getAdhocQuery(String module) {
 
         try {
-            InputStream is = TaskFactory.class.getResourceAsStream("/" + module);
+            InputStream is = TaskFactory.class.getResourceAsStream('/' + module);
             if (is == null) {
                 File f = new File(module);
                 if (f.exists() && !f.isDirectory()) {

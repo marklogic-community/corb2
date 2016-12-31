@@ -48,11 +48,11 @@ public class HostKeyDecrypterTest {
     private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
     private PrintStream systemOut = System.out;
     private PrintStream systemErr = System.err;
-    private static final String USAGE = HostKeyDecrypter.USAGE + "\n";
+    private static final String USAGE = HostKeyDecrypter.USAGE + '\n';
     private static final Logger LOG = Logger.getLogger(HostKeyDecrypterTest.class.getName());
     private static final Logger HOST_KEY_DECRYPTER_LOG = Logger.getLogger(HostKeyDecrypter.class.getName());
     private static final String METHOD_GET_SN = "getSN";
-    
+
     @Before
     public void setUp() {
         clearSystemProperties();
@@ -134,7 +134,7 @@ public class HostKeyDecrypterTest {
         } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
             Logger.getLogger(HostKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
             assertTrue(ex.getCause() instanceof RuntimeException);
-        }     
+        }
     }
 
     @Test
@@ -179,13 +179,13 @@ public class HostKeyDecrypterTest {
     }
 
     /* Illegal key size thrown if JCE is not loaded
-    
+
     @Test
     public void testMain() throws Exception {
         String[] args = {"encrypt", "foo"};
         HostKeyDecrypter.main(args);
     }
-    
+
     @Test
     public void testMain_test() throws Exception {
         String[] args = {"test"};

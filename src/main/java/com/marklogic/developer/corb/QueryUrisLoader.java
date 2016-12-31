@@ -51,8 +51,8 @@ import java.util.regex.Pattern;
 public class QueryUrisLoader extends AbstractUrisLoader {
 
     private static final int DEFAULT_MAX_OPTS_FROM_MODULE = 10;
-    private static final Pattern MODULE_CUSTOM_INPUT = Pattern.compile("("
-            + PRE_BATCH_MODULE + "|" + PROCESS_MODULE + "|" + XQUERY_MODULE + "|" + POST_BATCH_MODULE
+    private static final Pattern MODULE_CUSTOM_INPUT = Pattern.compile('('
+            + PRE_BATCH_MODULE + '|' + PROCESS_MODULE + '|' + XQUERY_MODULE + '|' + POST_BATCH_MODULE
             + ")\\.[A-Za-z0-9_-]+=.*");
     private Queue<String> queue;
 
@@ -152,7 +152,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             String value = nextResultItem.getItem().asString();
             if (MODULE_CUSTOM_INPUT.matcher(value).matches()) {
                 int idx = value.indexOf('=');
-                properties.put(value.substring(0, idx).replace(XQUERY_MODULE + ".", PROCESS_MODULE + "."), value.substring(idx + 1));
+                properties.put(value.substring(0, idx).replace(XQUERY_MODULE + '.', PROCESS_MODULE + '.'), value.substring(idx + 1));
             } else {
                 setBatchRef(value);
             }
@@ -178,8 +178,8 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         propertyNames.addAll(System.getProperties().stringPropertyNames());
         // custom inputs
         for (String propName : propertyNames) {
-            if (propName.startsWith(URIS_MODULE + ".")) {
-                String varName = propName.substring((URIS_MODULE + ".").length());
+            if (propName.startsWith(URIS_MODULE + '.')) {
+                String varName = propName.substring((URIS_MODULE + '.').length());
                 String value = getProperty(propName);
                 if (value != null) {
                     request.setNewStringVariable(varName, value);

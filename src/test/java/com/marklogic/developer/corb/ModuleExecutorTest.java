@@ -476,7 +476,7 @@ public class ModuleExecutorTest {
     }
 
     private ResultSequence run(ModuleExecutor executor) throws CorbException {
-        ResultSequence res = null;
+        ResultSequence res;
         try {
             executor.prepareContentSource();
 
@@ -501,8 +501,8 @@ public class ModuleExecutorTest {
             }
             req = session.newAdhocQuery(adhocQuery);
             for (String propName : propertyNames) {
-                if (propName.startsWith(Options.PROCESS_MODULE + ".")) {
-                    String varName = propName.substring((Options.PROCESS_MODULE + ".").length());
+                if (propName.startsWith(Options.PROCESS_MODULE + '.')) {
+                    String varName = propName.substring((Options.PROCESS_MODULE + '.').length());
                     String value = properties.getProperty(propName);
                     if (value != null) {
                         req.setNewStringVariable(varName, value);

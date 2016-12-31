@@ -48,6 +48,8 @@ import java.util.List;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -56,9 +58,9 @@ import java.util.zip.ZipOutputStream;
  */
 public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     public static final String DISTINCT_FILE_SUFFIX = ".distinct";
-    protected static final String SORT_DIRECTION = "(?i)^(a|de)sc.*";
-    protected static final String DESCENDING = "(?i)^desc.*";
-    protected static final String DISTINCT = "(?i).*(distinct|uniq).*";
+    protected static final Pattern SORT_DIRECTION_PATTERN = Pattern.compile("(?i)^(a|de)sc.*");
+    protected static final Pattern DESCENDING_PATTERN = Pattern.compile("(?i)^desc.*");
+    protected static final Pattern DISTINCT_PATTERN = Pattern.compile("(?i).*(distinct|uniq).*");
     private static final Logger LOG = Logger.getLogger(PostBatchUpdateFileTask.class.getName());
 
     protected void sortAndRemoveDuplicates() {
@@ -72,7 +74,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             String comparatorCls = getProperty(EXPORT_FILE_SORT_COMPARATOR);
 
             //You must either specify asc/desc or provide your own comparator
-            if ((sort == null || !sort.matches(SORT_DIRECTION)) && isBlank(comparatorCls)) {
+            if ((sort == null || !SORT_DIRECTION_PATTERN.matcher(sort).matches()) && isBlank(comparatorCls)) {
                 return;
             }
 
@@ -87,11 +89,11 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             Comparator<String> comparator = ExternalSort.defaultcomparator;
             if (isNotBlank(comparatorCls)) {
                 comparator = getComparatorCls(comparatorCls).newInstance();
-            } else if (sort.matches(DESCENDING)) {
+            } else if (DESCENDING_PATTERN.matcher(sort).matches()) {
                 comparator = Collections.reverseOrder();
             }
 
-            boolean distinct = !isBlank(sort) && sort.matches(DISTINCT);
+            boolean distinct = !isBlank(sort) && DISTINCT_PATTERN.matcher(sort).matches();
 
             Charset charset = Charset.defaultCharset();
             boolean useGzip = false;
@@ -166,7 +168,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
         if (isEmpty(partExt)) {
             partExt = ".part";
         } else if (!partExt.startsWith(".")) {
-            partExt = "." + partExt;
+            partExt = '.' + partExt;
         }
         return partExt;
     }

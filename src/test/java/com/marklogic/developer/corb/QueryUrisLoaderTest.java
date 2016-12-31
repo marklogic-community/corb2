@@ -563,8 +563,8 @@ public class QueryUrisLoaderTest {
         when(resultSequence.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(resultSequence.next()).thenReturn(resultItem);
         when(resultItem.getItem()).thenReturn(xdmItem);
-        when(xdmItem.asString()).thenReturn(PROCESS_MODULE + "." + foo + "=" + bar)
-                .thenReturn(PROCESS_MODULE + "." + foo + "=" + bar)
+        when(xdmItem.asString()).thenReturn(PROCESS_MODULE + '.' + foo + '=' + bar)
+                .thenReturn(PROCESS_MODULE + '.' + foo + '=' + bar)
                 .thenReturn(none)
                 .thenReturn(none)
                 .thenReturn(Integer.toString(0));
@@ -574,7 +574,7 @@ public class QueryUrisLoaderTest {
         instance.setProperties(properties);
         instance.collectCustomInputs(resultSequence);
 
-        assertTrue(instance.properties.getProperty(PROCESS_MODULE + "." + foo).equals(bar));
+        assertTrue(instance.properties.getProperty(PROCESS_MODULE + '.' + foo).equals(bar));
         assertNotNull(instance.getBatchRef());
     }
 

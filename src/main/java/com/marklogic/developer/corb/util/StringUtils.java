@@ -41,11 +41,10 @@ public final class StringUtils {
     public static final String EMPTY = "";
     public static final String SLASH = "/";
     public static final String XQUERY_EXTENSION = ".xqy";
-    private static final String ADHOC_PATTERN = "(?i).*\\|ADHOC";
-    private static final String JAVASCRIPT_MODULE_FILENAME_PATTERN = "(?i).*\\.s?js(\\|ADHOC)?$";
-    private static final String INLINE_MODULE_PATTERN = "(?i)INLINE-(JAVASCRIPT|XQUERY)\\|(.*?)(\\|ADHOC)?$";
+    private static final Pattern ADHOC_PATTERN = Pattern.compile("(?i).*\\|ADHOC");
+    private static final Pattern JAVASCRIPT_MODULE_FILENAME_PATTERN = Pattern.compile("(?i).*\\.s?js(\\|ADHOC)?$");
+    private static final Pattern INLINE_MODULE_PATTERN = Pattern.compile("(?i)INLINE-(JAVASCRIPT|XQUERY)\\|(.*?)(\\|ADHOC)?$");
     private static final String UTF_8 = "UTF-8";
-    private static final Pattern COMPILED_INLINE_MODULE_PATTERN = Pattern.compile(INLINE_MODULE_PATTERN);
     private static final String UTF_8_NOT_SUPPORTED = UTF_8 + " not supported";
     private static final Logger LOG = Logger.getLogger(StringUtils.class.getName());
 
@@ -73,7 +72,7 @@ public final class StringUtils {
             return defaultValue;
         }
         String lcStr = str.trim().toLowerCase();
-        return !("".equals(lcStr) || "0".equals(lcStr) || "f".equals(lcStr) || "false".contains(lcStr) ||
+        return !(lcStr.isEmpty() || "0".equals(lcStr) || "f".equals(lcStr) || "false".contains(lcStr) ||
                 "n".equals(lcStr) || "no".equals(lcStr));
     }
 
@@ -271,17 +270,17 @@ public final class StringUtils {
     }
 
     public static boolean isAdhoc(final String value) {
-        return value != null && value.matches(ADHOC_PATTERN);
+        return value != null && ADHOC_PATTERN.matcher(value).matches();
     }
 
     public static boolean isJavaScriptModule(final String value) {
         return value != null
-                && (value.matches(JAVASCRIPT_MODULE_FILENAME_PATTERN)
+                && (JAVASCRIPT_MODULE_FILENAME_PATTERN.matcher(value).matches()
                     || "javascript".equalsIgnoreCase(inlineModuleLanguage(value)));
     }
 
     public static boolean isInlineModule(final String value) {
-        return value != null && value.matches(INLINE_MODULE_PATTERN);
+        return value != null && INLINE_MODULE_PATTERN.matcher(value).matches();
     }
 
     public static boolean isInlineOrAdhoc(final String value) {
@@ -291,7 +290,7 @@ public final class StringUtils {
     public static String inlineModuleLanguage(final String value) {
         String language = "";
         if (isInlineModule(value)) {
-            Matcher m = COMPILED_INLINE_MODULE_PATTERN.matcher(value);
+            Matcher m = INLINE_MODULE_PATTERN.matcher(value);
             if (m.find()) {
                 language = m.group(1);
             }
@@ -302,7 +301,7 @@ public final class StringUtils {
     public static String getInlineModuleCode(final String value) {
         String code = "";
         if (isInlineModule(value)) {
-            Matcher m = COMPILED_INLINE_MODULE_PATTERN.matcher(value);
+            Matcher m = INLINE_MODULE_PATTERN.matcher(value);
             if (m.find()) {
                 code = m.group(2);
             }
@@ -320,7 +319,7 @@ public final class StringUtils {
      * @return
      */
     public static String getXccUri(String username, String password, String host, String port, String dbname) {
-        return "xcc://" + urlEncodeIfNecessary(username) + ":" + urlEncodeIfNecessary(password) + "@" + host + ":" + port + (dbname == null ? "" : "/" + urlEncodeIfNecessary(dbname));
+        return "xcc://" + urlEncodeIfNecessary(username) + ':' + urlEncodeIfNecessary(password) + '@' + host + ':' + port + (dbname == null ? "" : '/' + urlEncodeIfNecessary(dbname));
     }
 
     /**
@@ -360,8 +359,7 @@ public final class StringUtils {
         try {
             return URLEncoder.encode(arg, UTF_8);
         } catch (UnsupportedEncodingException ex) {
-            LOG.log(Level.SEVERE, UTF_8_NOT_SUPPORTED, ex);
-            throw new AssertionError(UTF_8_NOT_SUPPORTED);
+            throw new AssertionError(UTF_8_NOT_SUPPORTED, ex);
         }
     }
 
@@ -374,8 +372,7 @@ public final class StringUtils {
         try {
             return URLDecoder.decode(arg, UTF_8);
         } catch (UnsupportedEncodingException ex) {
-            LOG.log(Level.SEVERE, UTF_8_NOT_SUPPORTED, ex);
-            throw new AssertionError(UTF_8_NOT_SUPPORTED);
+            throw new AssertionError(UTF_8_NOT_SUPPORTED, ex);
         }
     }
 

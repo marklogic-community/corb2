@@ -113,14 +113,14 @@ public class ModuleExecutor extends AbstractManager {
         if (null == options.getProcessModule()) {
             throw new NullPointerException(PROCESS_MODULE + " must be specified");
         }
-        
+
         if (modulesDatabase != null) {
             options.setModulesDatabase(modulesDatabase);
         }
         if (moduleRoot != null) {
             options.setModuleRoot(moduleRoot);
         }
-        
+
         if (!this.properties.containsKey(EXPORT_FILE_DIR) && exportFileDir != null) {
             this.properties.put(EXPORT_FILE_DIR, exportFileDir);
         }
@@ -146,7 +146,7 @@ public class ModuleExecutor extends AbstractManager {
         List<String> args = new ArrayList<>(5);
         String xccConnectionUri = "xcc://user:password@host:port/[ database ]";
         String optionsFile = "myjob.properties";
-        PrintStream err = System.err;
+        PrintStream err = System.err; // NOPMD
 
         err.println("usage 1:");
         args.add(NAME);
@@ -228,8 +228,8 @@ public class ModuleExecutor extends AbstractManager {
 
             // custom inputs
             for (String propName : propertyNames) {
-                if (propName.startsWith(PROCESS_MODULE + ".")) {
-                    String varName = propName.substring((PROCESS_MODULE + ".").length());
+                if (propName.startsWith(PROCESS_MODULE + '.')) {
+                    String varName = propName.substring((PROCESS_MODULE + '.').length());
                     String value = getProperty(propName);
                     if (value != null) {
                         request.setNewStringVariable(varName, value);

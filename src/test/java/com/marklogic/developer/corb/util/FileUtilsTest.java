@@ -140,7 +140,6 @@ public class FileUtilsTest {
     public void testMoveFile() throws IOException {
         File file = File.createTempFile("moveFile", TEXT_FILE_EXT);
         file.deleteOnExit();
-        file.createNewFile();
         FileUtils.moveFile(file, file);
         assertTrue(file.exists());
     }
@@ -157,7 +156,6 @@ public class FileUtilsTest {
     public void testGetFileAbsolutePath() throws IOException {
         File file = File.createTempFile("getFile", TEXT_FILE_EXT);
         file.deleteOnExit();
-        file.createNewFile();
         File retrievedFile = FileUtils.getFile(file.getAbsolutePath());
         assertTrue(retrievedFile.exists());
     }

@@ -95,7 +95,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
         if (isNotBlank(filename)) {
             InputStream is = null;
             try {
-                is = Manager.class.getResourceAsStream("/" + filename);
+                is = Manager.class.getResourceAsStream('/' + filename);
                 if (is != null) {
                     LOG.log(INFO, MessageFormat.format("Loading private key file {0} from classpath", filename));
                 } else {
@@ -179,7 +179,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
             length = Integer.parseInt(args[4].trim());
         }
         if (privateKeyPathName == null || publicKeyPathName == null) {
-            System.err.println(GEN_KEYS_USAGE);
+            System.err.println(GEN_KEYS_USAGE); // NOPMD
             return;
         }
 
@@ -191,12 +191,12 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 
         try (FileOutputStream privateFos = new FileOutputStream(new File(privateKeyPathName));
                 FileOutputStream publicFos = new FileOutputStream(new File(publicKeyPathName))) {
-            
+
             privateFos.write(privateKey.getEncoded());
-            System.out.println("Generated private key: " + privateKeyPathName);
+            System.out.println("Generated private key: " + privateKeyPathName); // NOPMD
 
             publicFos.write(publicKey.getEncoded());
-            System.out.println("Generated public key: " + publicKeyPathName);
+            System.out.println("Generated public key: " + publicKeyPathName); // NOPMD
         }
     }
 
@@ -214,7 +214,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
             algorithm = args[3].trim();
         }
         if (publicKeyPathName == null || clearText == null) {
-            System.err.println(ENCRYPT_USAGE);
+            System.err.println(ENCRYPT_USAGE); // NOPMD
             return;
         }
 
@@ -223,7 +223,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
             Cipher cipher = Cipher.getInstance(algorithm);
             cipher.init(Cipher.ENCRYPT_MODE, KeyFactory.getInstance(algorithm).generatePublic(x509EncodedKeySpec));
             String encryptedText = DatatypeConverter.printBase64Binary(cipher.doFinal(clearText.getBytes("UTF-8")));
-            System.out.println("Input: " + clearText + "\nOutput: " + encryptedText);
+            System.out.println("Input: " + clearText + "\nOutput: " + encryptedText); // NOPMD
         }
     }
 
@@ -235,7 +235,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
         } else if ("encrypt".equals(method)) {
             encrypt(args);
         } else {
-            System.out.println(GEN_KEYS_USAGE + "\n" + ENCRYPT_USAGE);
+            System.out.println(GEN_KEYS_USAGE + '\n' + ENCRYPT_USAGE); // NOPMD
         }
     }
 }

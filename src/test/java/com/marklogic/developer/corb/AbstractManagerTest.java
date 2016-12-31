@@ -60,7 +60,7 @@ public class AbstractManagerTest {
     private static final String PROPERTY_XCC_HTTPCOMPLIANT = "xcc.httpcompliant";
     private static final String PROPERTIES_FILE_NAME = "helloWorld.properties";
     private static final String PROPERTIES_FILE_DIR = "src/test/resources/";
-    private static final String PROPERTIES_FILE_PATH = PROPERTIES_FILE_DIR + "/" + PROPERTIES_FILE_NAME;
+    private static final String PROPERTIES_FILE_PATH = PROPERTIES_FILE_DIR + '/' + PROPERTIES_FILE_NAME;
     private static final String INVALID_FILE_PATH = "does/not/exist";
     private static final String SELECTOR_FILE_NAME = "selector.xqy";
     private static final String SELECTOR_FILE_PATH = "src/test/resources/" + SELECTOR_FILE_NAME;
@@ -392,7 +392,7 @@ public class AbstractManagerTest {
 
     @Test
     public void testInitOptionsWithXCCHTTPCompliantTrue() {
-        String[] args = {};    
+        String[] args = {};
         AbstractManager instance = AbstractManagerImpl.instanceWithXccHttpCompliantValue(Boolean.toString(true));
         try {
             instance.initOptions(args);
@@ -405,7 +405,7 @@ public class AbstractManagerTest {
 
     @Test
     public void testInitOptionsWithXCCHTTPCompliantFalse() {
-        String[] args = {};    
+        String[] args = {};
         AbstractManager instance = AbstractManagerImpl.instanceWithXccHttpCompliantValue(Boolean.toString(false));
         try {
             instance.initOptions(args);
@@ -746,7 +746,7 @@ public class AbstractManagerTest {
 
         public static AbstractManager instanceWithXccHttpCompliantValue(String xccHttpCompliantValue) {
             System.clearProperty(PROPERTY_XCC_HTTPCOMPLIANT);
-            
+
             Properties properties = new Properties();
             properties.setProperty(Options.XCC_HTTPCOMPLIANT, xccHttpCompliantValue);
             AbstractManager instance = new AbstractManagerImpl();

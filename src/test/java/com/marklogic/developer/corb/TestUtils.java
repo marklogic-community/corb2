@@ -64,7 +64,7 @@ public final class TestUtils {
                     System.clearProperty(option);
                     //remove any custom input properties (i.e. URIS-MODULE.foo)
                     systemProperties.stream()
-                            .filter(property -> property.startsWith(option + "."))
+                            .filter(property -> property.startsWith(option + '.'))
                             .forEach(System::clearProperty);
                 });
     }

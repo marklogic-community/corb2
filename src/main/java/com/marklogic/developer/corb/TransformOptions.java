@@ -72,20 +72,20 @@ public class TransformOptions {
     private String modulesDatabase = "Modules";
 
     // Set on status check
-    private String XDBC_ROOT = SLASH;
+    private String xdbcRoot = SLASH;
 
     /**
      * @return
      */
     public String getXDBC_ROOT() {
-        return XDBC_ROOT;
+        return xdbcRoot;
     }
 
     /**
      * @param xdbc_root
      */
     public void setXDBC_ROOT(String xdbc_root) {
-        XDBC_ROOT = xdbc_root;
+        this.xdbcRoot = xdbc_root;
     }
 
     /**

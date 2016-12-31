@@ -119,7 +119,7 @@ public class AbstractDecrypterTest {
     @Test
     public void testDecryptEncrypted() {
         String property = "encryptedProp";
-        String value = "ENC("+ VALUE + ")";
+        String value = "ENC("+ VALUE + ')';
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         String result = instance.decrypt(property, value);
         assertEquals(VALUE.toUpperCase(), result);

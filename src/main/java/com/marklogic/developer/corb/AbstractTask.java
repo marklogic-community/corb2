@@ -189,13 +189,13 @@ public abstract class AbstractTask implements Task {
                         Set<String> propSet = new HashSet<>();
                         if (properties != null) {
                             for (String propName : properties.stringPropertyNames()) {
-                                if (propName.startsWith(moduleType + ".")) {
+                                if (propName.startsWith(moduleType + '.')) {
                                     propSet.add(propName);
                                 }
                             }
                         }
                         for (String propName : System.getProperties().stringPropertyNames()) {
-                            if (propName.startsWith(moduleType + ".")) {
+                            if (propName.startsWith(moduleType + '.')) {
                                 propSet.add(propName);
                             }
                         }
@@ -234,7 +234,7 @@ public abstract class AbstractTask implements Task {
             }
 
             for (String propName : modulePropNames) {
-                if (propName.startsWith(moduleType + ".")) {
+                if (propName.startsWith(moduleType + '.')) {
                     String varName = propName.substring(moduleType.length() + 1);
                     String value = getProperty(propName);
                     if (value != null) {

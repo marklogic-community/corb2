@@ -377,9 +377,9 @@ public class Manager extends AbstractManager {
             String value = properties.getProperty(key);
             for (Map.Entry<String, String> entry : legacyProperties.entrySet()) {
                 String legacyKey = entry.getValue();
-                String legacyKeyPrefix = legacyKey + ".";
+                String legacyKeyPrefix = legacyKey + '.';
                 String normalizedKey = entry.getKey();
-                String normalizedKeyPrefix = normalizedKey + ".";
+                String normalizedKeyPrefix = normalizedKey + '.';
                 String normalizedCustomInputKey = key.replace(legacyKeyPrefix, normalizedKeyPrefix);
 
                 //First check for an exact match of the keys
@@ -424,10 +424,10 @@ public class Manager extends AbstractManager {
         String xccConnectionUri = "xcc://user:password@host:port/[ database ]";
         String threadCount = "10";
         String optionsFile = "myjob.properties";
-        PrintStream err = System.err;
+        PrintStream err = System.err; // NOPMD
 
         err.println("usage 1:");
-        err.println(TAB + NAME + " " + xccConnectionUri + " input-selector module-name.xqy"
+        err.println(TAB + NAME + ' ' + xccConnectionUri + " input-selector module-name.xqy"
                 + " [ thread-count [ uris-module [ module-root" + " [ modules-database [ install [ process-task"
                 + " [ pre-batch-module [ pre-batch-task" + " [ post-batch-module  [ post-batch-task"
                 + " [ export-file-dir [ export-file-name" + " [ uris-file ] ] ] ] ] ] ] ] ] ] ] ] ]");

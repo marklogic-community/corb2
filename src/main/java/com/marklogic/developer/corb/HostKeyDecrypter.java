@@ -168,7 +168,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
 
         private static BufferedReader read(String command) {
             Runtime runtime = Runtime.getRuntime();
-            Process process = null;
+            Process process;
             try {
                 process = runtime.exec(command.split(" "));
             } catch (IOException e) {
