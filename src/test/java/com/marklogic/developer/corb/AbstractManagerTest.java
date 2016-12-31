@@ -67,11 +67,11 @@ public class AbstractManagerTest {
     private static final String KEY = "key";
     private static final String VALUE = "value";
     private String selectorAsText;
-    private final String username = "username";
-    private final String password = "password";
-    private final String host = "localhost";
-    private final String port = "80";
-    private final PrintStream systemErr = System.err;
+    private static final String USERNAME = "username";
+    private static final String PASSWORD = "password";
+    private static final String HOST = "localhost";
+    private static final String PORT = "80";
+    private static final PrintStream ERROR = System.err;
 
     private String originalValue;
 
@@ -87,7 +87,7 @@ public class AbstractManagerTest {
     @After
     public void tearDown() {
         clearSystemProperties();
-        System.setErr(systemErr);
+        System.setErr(ERROR);
         if (originalValue != null) {
             System.setProperty(PROPERTY_XCC_HTTPCOMPLIANT, originalValue);
         } else {
@@ -468,10 +468,10 @@ public class AbstractManagerTest {
     @Test
     public void testInitURIArgsTakePrecedenceOverProperties() {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_USERNAME, username);
-        instance.properties.setProperty(Options.XCC_PASSWORD, password);
-        instance.properties.setProperty(Options.XCC_HOSTNAME, host);
-        instance.properties.setProperty(Options.XCC_PORT, port);
+        instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
+        instance.properties.setProperty(Options.XCC_PASSWORD, PASSWORD);
+        instance.properties.setProperty(Options.XCC_HOSTNAME, HOST);
+        instance.properties.setProperty(Options.XCC_PORT, PORT);
         try {
             instance.initURI(XCC_CONNECTION_URI);
         } catch (CorbException ex) {
@@ -518,10 +518,10 @@ public class AbstractManagerTest {
     @Test
     public void testInitURINullURIWithValues() {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_USERNAME, username);
-        instance.properties.setProperty(Options.XCC_PASSWORD, password);
-        instance.properties.setProperty(Options.XCC_HOSTNAME, host);
-        instance.properties.setProperty(Options.XCC_PORT, port);
+        instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
+        instance.properties.setProperty(Options.XCC_PASSWORD, PASSWORD);
+        instance.properties.setProperty(Options.XCC_HOSTNAME, HOST);
+        instance.properties.setProperty(Options.XCC_PORT, PORT);
         try {
             instance.initURI(null);
             assertEquals("xcc://username:password@localhost:80", instance.connectionUri.toString());
@@ -534,10 +534,10 @@ public class AbstractManagerTest {
     @Test
     public void testInitURINullURIWithUnencodedValues() {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_USERNAME, username);
+        instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
         instance.properties.setProperty(Options.XCC_PASSWORD, "p@ssword:+!");
-        instance.properties.setProperty(Options.XCC_HOSTNAME, host);
-        instance.properties.setProperty(Options.XCC_PORT, port);
+        instance.properties.setProperty(Options.XCC_HOSTNAME, HOST);
+        instance.properties.setProperty(Options.XCC_PORT, PORT);
         try {
             instance.initURI(null);
         } catch (CorbException ex) {
@@ -550,10 +550,10 @@ public class AbstractManagerTest {
     @Test
     public void testInitURINullURIWithUnencodedValues2() {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_USERNAME, username);
+        instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
         instance.properties.setProperty(Options.XCC_PASSWORD, "p@ssword:+");
-        instance.properties.setProperty(Options.XCC_HOSTNAME, host);
-        instance.properties.setProperty(Options.XCC_PORT, port);
+        instance.properties.setProperty(Options.XCC_HOSTNAME, HOST);
+        instance.properties.setProperty(Options.XCC_PORT, PORT);
         instance.properties.setProperty(Options.XCC_DBNAME, "documents database");
         try {
             instance.initURI(null);
@@ -567,10 +567,10 @@ public class AbstractManagerTest {
     @Test
     public void testInitURINullURIWithEncodedValues() {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_USERNAME, username);
+        instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
         instance.properties.setProperty(Options.XCC_PASSWORD, "p%40assword%2B%3A");
-        instance.properties.setProperty(Options.XCC_HOSTNAME, host);
-        instance.properties.setProperty(Options.XCC_PORT, port);
+        instance.properties.setProperty(Options.XCC_HOSTNAME, HOST);
+        instance.properties.setProperty(Options.XCC_PORT, PORT);
         instance.properties.setProperty(Options.XCC_DBNAME, "documents%20database");
         try {
             instance.initURI(null);
@@ -584,7 +584,7 @@ public class AbstractManagerTest {
     @Test(expected = CorbException.class)
     public void testInitURINullURIWithPassword() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_PASSWORD, password);
+        instance.properties.setProperty(Options.XCC_PASSWORD, PASSWORD);
         instance.initURI(null);
         fail();
     }
@@ -592,7 +592,7 @@ public class AbstractManagerTest {
     @Test(expected = CorbException.class)
     public void testInitURINullURIWithPort() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_PORT, port);
+        instance.properties.setProperty(Options.XCC_PORT, PORT);
         instance.initURI(null);
         fail();
     }
@@ -600,7 +600,7 @@ public class AbstractManagerTest {
     @Test(expected = CorbException.class)
     public void testInitURINullURIWithHostname() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_HOSTNAME, host);
+        instance.properties.setProperty(Options.XCC_HOSTNAME, HOST);
         instance.initURI(null);
         fail();
     }
@@ -608,7 +608,7 @@ public class AbstractManagerTest {
     @Test(expected = CorbException.class)
     public void testInitURINullURIWithUsername() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_USERNAME, username);
+        instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
         instance.initURI(null);
         fail();
     }
