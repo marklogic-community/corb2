@@ -258,7 +258,6 @@ public class AbstractTaskTest {
         RequestOptions options = request.getOptions();
         assertEquals(instance.language, options.getQueryLanguage());
         assertEquals(instance.timeZone, options.getTimeZone());
-
         List<XdmVariable> variableList = Arrays.asList(request.getVariables());
 
         XdmVariable uriVariable = buildStringXdmVariable("URI", "a;b;c");
@@ -276,7 +275,6 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.moduleUri = URI;
         instance.language = "Sparql"; //not currently supported, just verifying that it accepts any string
-
         instance.generateRequest(session);
 
         RequestOptions options = request.getOptions();
@@ -291,7 +289,6 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.moduleUri = URI;
         instance.timeZone = TimeZone.getTimeZone("PST");
-
         instance.generateRequest(session);
 
         RequestOptions options = request.getOptions();
@@ -317,8 +314,7 @@ public class AbstractTaskTest {
         XdmVariable customInputVariableBaz = buildStringXdmVariable(BAZ, BAR);
 
         assertTrue(variableList.contains(customInputVariable));
-        //verify that only custom inputs for this moduleType are set
-        assertFalse(variableList.contains(customInputVariableBaz));
+        assertFalse(variableList.contains(customInputVariableBaz)); //verify that only custom inputs for this moduleType are set
     }
 
     @Test
@@ -332,11 +328,9 @@ public class AbstractTaskTest {
         instance.setModuleType(INIT_MODULE);
         instance.properties.setProperty(Options.URIS_BATCH_REF, BAZ);
         instance.generateRequest(session);
-
         List<XdmVariable> variableList = Arrays.asList(request.getVariables());
 
         XdmVariable customInputVariable = buildStringXdmVariable(Options.URIS_BATCH_REF, BAR);
-
         assertTrue(variableList.contains(customInputVariable));
     }
 
@@ -354,8 +348,7 @@ public class AbstractTaskTest {
     private XdmVariable buildStringXdmVariable(String name, String value) {
         XName xName = new XName(name);
         XSString xValue = ValueFactory.newXSString(value);
-        XdmVariable xVariable = ValueFactory.newVariable(xName, xValue);
-        return xVariable;
+        return ValueFactory.newVariable(xName, xValue);
     }
 
     @Test
@@ -511,7 +504,6 @@ public class AbstractTaskTest {
 
     @Test
     public void testShouldRetryNotRetryableQueryException() {
-
         Request req = mock(Request.class);
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
@@ -521,17 +513,14 @@ public class AbstractTaskTest {
         assertFalse(instance.shouldRetry(exception));
 
         instance.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, SVC_EXTIME + ",XDMP-EXTIME");
-
         assertTrue(instance.shouldRetry(exception));
 
         instance.properties.remove(Options.QUERY_RETRY_ERROR_CODES);
-
         assertFalse(instance.shouldRetry(exception)); //no match on code(and no exception attempting to split null)
     }
 
     @Test
     public void testShouldRetryRetryableQueryException() {
-
         Request req = mock(Request.class);
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
@@ -549,7 +538,6 @@ public class AbstractTaskTest {
 
     @Test
     public void testShouldRetryRequestPermissionException() {
-
         Request req = mock(Request.class);
         AbstractTask instance = new AbstractTaskImpl();
         instance.properties = new Properties();
@@ -867,17 +855,16 @@ public class AbstractTaskTest {
 
         @Override
         public String[] call() throws Exception {
-            throw new UnsupportedOperationException("Not supported yet.");
+            throw new UnsupportedOperationException();
         }
 
     }
 
     private static class RequestImpl implements Request {
-
         private long count = -1;
         private long position = -1;
         private RequestOptions requestOptions = new RequestOptions();
-        final private List<XdmVariable> variables = new ArrayList<>();
+        private final List<XdmVariable> variables = new ArrayList<>();
 
         @Override
         public void setCount(long count) {
@@ -983,23 +970,20 @@ public class AbstractTaskTest {
     }
 
     private static class AdhocQueryImpl extends RequestImpl implements AdhocQuery {
-
         private String query;
 
         @Override
         public void setQuery(String string) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public String getQuery() {
             return query;
         }
-
     }
 
     private static class ModuleInvokeImpl extends RequestImpl implements ModuleInvoke {
-
         private String moduleUri;
 
         @Override
