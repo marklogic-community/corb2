@@ -19,12 +19,17 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
+import static com.marklogic.developer.corb.Options.INIT_MODULE;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import com.marklogic.developer.corb.util.StringUtils;
+import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ModuleInvoke;
 import com.marklogic.xcc.Request;
+import com.marklogic.xcc.RequestOptions;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
+import com.marklogic.xcc.ValueFactory;
 import com.marklogic.xcc.exceptions.QueryStackFrame;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.RequestPermissionException;
@@ -33,12 +38,21 @@ import com.marklogic.xcc.exceptions.RetryableJavaScriptException;
 import com.marklogic.xcc.exceptions.RetryableXQueryException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.exceptions.XQueryException;
+import com.marklogic.xcc.types.ValueType;
+import com.marklogic.xcc.types.XName;
+import com.marklogic.xcc.types.XSString;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
+import com.marklogic.xcc.types.XdmValue;
+import com.marklogic.xcc.types.XdmVariable;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -191,11 +205,13 @@ public class AbstractTaskTest {
 
     @Test
     public void testInvokeModule() {
+        String[] inputUris = new String[]{FOO, BAR, BAZ};
+        AbstractTask instance = new AbstractTaskImpl();
+        instance.moduleUri = "module.xqy";
+        instance.adhocQuery = ADHOC_MODULE;
+        instance.inputUris = inputUris;
+
         try {
-            AbstractTask instance = new AbstractTaskImpl();
-            instance.moduleUri = "module.xqy";
-            instance.adhocQuery = ADHOC_MODULE;
-            instance.inputUris = new String[]{FOO, BAR, BAZ};
             ContentSource cs = mock(ContentSource.class);
             Session session = mock(Session.class);
             ModuleInvoke request = mock(ModuleInvoke.class);
@@ -216,13 +232,150 @@ public class AbstractTaskTest {
             instance.properties = props;
 
             instance.inputUris = new String[]{URI, "uri2"};
-            instance.invokeModule();
-            assertTrue(AbstractTask.MODULE_PROPS.get(FOO).contains(key1));
-            assertTrue(AbstractTask.MODULE_PROPS.get(FOO).contains(key2));
+            String[] result = instance.invokeModule();
+            assertArrayEquals(instance.inputUris, result);
         } catch (RequestException | CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
+    }
+
+    @Test
+    public void testGenerateRequestModuleInvoke() {
+        ModuleInvoke request = new ModuleInvokeImpl();
+        Session session = mock(Session.class);
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+
+        AbstractTask instance = new AbstractTaskImpl();
+        instance.moduleUri = URI;
+        instance.language = "JavaScript";
+        instance.timeZone = TimeZone.getDefault();
+        instance.inputUris = new String[]{"a", "b", "c"};
+        instance.setModuleType(INIT_MODULE);
+        instance.properties.setProperty(INIT_MODULE + "." + FOO, BAR);
+
+        instance.generateRequest(session);
+
+        RequestOptions options = request.getOptions();
+        assertEquals(instance.language, options.getQueryLanguage());
+        assertEquals(instance.timeZone, options.getTimeZone());
+
+        List<XdmVariable> variableList = Arrays.asList(request.getVariables());
+
+        XdmVariable uriVariable = buildStringXdmVariable("URI", "a;b;c");
+        assertTrue(variableList.contains(uriVariable));
+
+        XdmVariable customInputVariable = buildStringXdmVariable(FOO, BAR);
+        assertTrue(variableList.contains(customInputVariable));
+    }
+
+    public void testGenerateRequestModuleInvokeSetLanguage() {
+        ModuleInvoke request = new ModuleInvokeImpl();
+        Session session = mock(Session.class);
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+
+        AbstractTask instance = new AbstractTaskImpl();
+        instance.moduleUri = URI;
+        instance.language = "Sparql"; //not currently supported, just verifying that it accepts any string
+
+        instance.generateRequest(session);
+
+        RequestOptions options = request.getOptions();
+        assertEquals(instance.language, options.getQueryLanguage());
+    }
+
+    public void testGenerateRequestModuleInvokeSetTimeZone() {
+        ModuleInvoke request = new ModuleInvokeImpl();
+        Session session = mock(Session.class);
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+
+        AbstractTask instance = new AbstractTaskImpl();
+        instance.moduleUri = URI;
+        instance.timeZone = TimeZone.getTimeZone("PST");
+
+        instance.generateRequest(session);
+
+        RequestOptions options = request.getOptions();
+        assertEquals(instance.timeZone, options.getTimeZone());
+    }
+
+    @Test
+    public void testGenerateRequestModuleInvokeWithCustomInputs() {
+        ModuleInvoke request = new ModuleInvokeImpl();
+        Session session = mock(Session.class);
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+
+        AbstractTask instance = new AbstractTaskImpl();
+        instance.moduleUri = URI;
+        instance.setModuleType(INIT_MODULE);
+        instance.properties.setProperty(INIT_MODULE + "." + FOO, BAR);
+        instance.properties.setProperty(Options.POST_BATCH_MODULE + "." + BAZ, BAR);
+        instance.generateRequest(session);
+
+        List<XdmVariable> variableList = Arrays.asList(request.getVariables());
+
+        XdmVariable customInputVariable = buildStringXdmVariable(FOO, BAR);
+        XdmVariable customInputVariableBaz = buildStringXdmVariable(BAZ, BAR);
+
+        assertTrue(variableList.contains(customInputVariable));
+        //verify that only custom inputs for this moduleType are set
+        assertFalse(variableList.contains(customInputVariableBaz));
+    }
+
+    @Test
+    public void testGenerateRequestModuleInvokeWithUrisBatchRef() {
+        ModuleInvoke request = new ModuleInvokeImpl();
+        Session session = mock(Session.class);
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+
+        AbstractTask instance = new AbstractTaskImpl();
+        instance.moduleUri = URI;
+        instance.setModuleType(INIT_MODULE);
+        instance.properties.setProperty(Options.URIS_BATCH_REF, BAZ);
+        instance.generateRequest(session);
+
+        List<XdmVariable> variableList = Arrays.asList(request.getVariables());
+
+        XdmVariable customInputVariable = buildStringXdmVariable(Options.URIS_BATCH_REF, BAR);
+
+        assertTrue(variableList.contains(customInputVariable));
+    }
+
+    @Test
+    public void testGenerateRequestModuleInvokeWithoutModuleUri() {
+        AdhocQuery request = new AdhocQueryImpl();
+        Session session = mock(Session.class);
+        when(session.newAdhocQuery(anyString())).thenReturn(request);
+
+        AbstractTask instance = new AbstractTaskImpl();
+        Request requestResult = instance.generateRequest(session);
+        assertTrue(requestResult instanceof AdhocQuery);
+    }
+
+    private XdmVariable buildStringXdmVariable(String name, String value) {
+        XName xName = new XName(name);
+        XSString xValue = ValueFactory.newXSString(value);
+        XdmVariable xVariable = ValueFactory.newVariable(xName, xValue);
+        return xVariable;
+    }
+
+    @Test
+    public void testGetCustomInputPropertyNames() {
+        String key1 = FOO + ".bar";
+        String key2 = FOO + ".baz";
+        AbstractTask instance = new AbstractTaskImpl();
+        instance.setModuleType(FOO);
+        System.setProperty(key1, BAZ);
+        Properties props = new Properties();
+        props.setProperty(key1, BAZ);
+        props.setProperty(key2, "boo");
+        props.setProperty(Options.BATCH_URI_DELIM, "");
+        instance.properties = props;
+        Set<String> inputs = instance.getCustomInputPropertyNames();
+        assertEquals(2, inputs.size());
+        assertTrue(inputs.contains(key1));
+        assertTrue(inputs.contains(key2));
+        System.clearProperty(key1);
     }
 
     @Test
@@ -720,4 +873,143 @@ public class AbstractTaskTest {
 
     }
 
+    private static class RequestImpl implements Request {
+
+        private long count = -1;
+        private long position = -1;
+        private RequestOptions requestOptions = new RequestOptions();
+        final private List<XdmVariable> variables = new ArrayList<>();
+
+        @Override
+        public void setCount(long count) {
+            this.count = count;
+        }
+
+        @Override
+        public long getCount() {
+            return this.count;
+        }
+
+        @Override
+        public void setPosition(long position) {
+            this.position = position;
+        }
+
+        @Override
+        public long getPosition() {
+            return this.position;
+        }
+
+        @Override
+        public Session getSession() {
+            return null;
+        }
+
+        @Override
+        public void setOptions(RequestOptions requestOptions) {
+            this.requestOptions = requestOptions;
+        }
+
+        @Override
+        public RequestOptions getOptions() {
+            return this.requestOptions;
+        }
+
+        @Override
+        public RequestOptions getEffectiveOptions() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setVariable(XdmVariable xv) {
+            variables.add(xv);
+        }
+
+        @Override
+        public XdmVariable setNewVariable(XName xname, XdmValue xv) {
+            XdmVariable variable = ValueFactory.newVariable(xname, xv);
+            variables.add(variable);
+            return variable;
+        }
+
+        @Override
+        public XdmVariable setNewVariable(String string, String string1, ValueType vt, Object o) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public XdmVariable setNewVariable(String string, ValueType vt, Object o) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public XdmVariable setNewStringVariable(String name, String value, String defaultValue) {
+            XName xName = new XName(name);
+            String val = value == null ? defaultValue : value;
+            XSString xValue = ValueFactory.newXSString(val);
+            XdmVariable variable = ValueFactory.newVariable(xName, xValue);
+            variables.add(variable);
+            return variable;
+        }
+
+        @Override
+        public XdmVariable setNewStringVariable(String name, String value) {
+            return setNewStringVariable(name, value, null);
+        }
+
+        @Override
+        public XdmVariable setNewIntegerVariable(String string, String string1, long l) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public XdmVariable setNewIntegerVariable(String string, long l) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void clearVariable(XdmVariable xdmVariable) {
+            variables.remove(xdmVariable);
+        }
+
+        @Override
+        public void clearVariables() {
+            variables.clear();
+        }
+
+        @Override
+        public XdmVariable[] getVariables() {
+            return variables.toArray(new XdmVariable[variables.size()]);
+        }
+    }
+
+    private static class AdhocQueryImpl extends RequestImpl implements AdhocQuery {
+
+        private String query;
+
+        @Override
+        public void setQuery(String string) {
+        }
+
+        @Override
+        public String getQuery() {
+            return query;
+        }
+
+    }
+
+    private static class ModuleInvokeImpl extends RequestImpl implements ModuleInvoke {
+
+        private String moduleUri;
+
+        @Override
+        public String getModuleUri() {
+            return moduleUri;
+        }
+
+        @Override
+        public void setModuleUri(String moduleUri) {
+            this.moduleUri = moduleUri;
+        }
+    }
 }

@@ -160,11 +160,6 @@ public class Manager extends AbstractManager {
         String collectionName = getOption(args, 1, COLLECTION_NAME);
         this.collection = collectionName == null ? "" : collectionName;
 
-        //This is relevant for unit tests only. clear the static map so it gets re-initialized for fresh run
-        if (AbstractTask.MODULE_PROPS != null) {
-            AbstractTask.MODULE_PROPS.clear();
-        }
-
         EXIT_CODE_NO_URIS = NumberUtils.toInt(getOption(Options.EXIT_CODE_NO_URIS));
 
         scheduleCommandFileWatcher();
