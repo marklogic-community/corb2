@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,10 +50,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.text.MessageFormat;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
@@ -87,9 +85,6 @@ public abstract class AbstractTask implements Task {
     protected String language;
     protected TimeZone timeZone;
     protected String exportDir;
-
-    private static final Object SYNC_OBJ = new Object();
-    protected static final Map<String, Set<String>> MODULE_PROPS = new HashMap<>();
 
     protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
     protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
@@ -131,7 +126,7 @@ public abstract class AbstractTask implements Task {
     public void setTimeZone(TimeZone timeZone) {
         this.timeZone = timeZone;
     }
-    
+
     @Override
     public void setProperties(Properties properties) {
         this.properties = properties;
@@ -174,73 +169,11 @@ public abstract class AbstractTask implements Task {
             return new String[0];
         }
 
-        Session session = null;
         ResultSequence seq = null;
         Thread.yield();// try to avoid thread starvation
-        try {
-            session = newSession();
-            Request request;
+        try (Session session = newSession()) {
 
-            Set<String> modulePropNames = MODULE_PROPS.get(moduleType);
-            if (modulePropNames == null) {
-                synchronized (SYNC_OBJ) {
-                    modulePropNames = MODULE_PROPS.get(moduleType);
-                    if (modulePropNames == null) {
-                        Set<String> propSet = new HashSet<>();
-                        if (properties != null) {
-                            for (String propName : properties.stringPropertyNames()) {
-                                if (propName.startsWith(moduleType + ".")) {
-                                    propSet.add(propName);
-                                }
-                            }
-                        }
-                        for (String propName : System.getProperties().stringPropertyNames()) {
-                            if (propName.startsWith(moduleType + ".")) {
-                                propSet.add(propName);
-                            }
-                        }
-                        MODULE_PROPS.put(moduleType, modulePropNames = propSet);
-                    }
-                }
-            }
-
-            if (moduleUri == null) {
-                request = session.newAdhocQuery(adhocQuery);
-            } else {
-                request = session.newModuleInvoke(moduleUri);
-            }
-            RequestOptions requestOptions = request.getOptions();
-            if (language != null) {
-                requestOptions.setQueryLanguage(language);
-            }
-            if (timeZone != null) {
-                requestOptions.setTimeZone(timeZone);
-            }
-            if (inputUris != null && inputUris.length > 0) {
-                if (inputUris.length == 1) {
-                    request.setNewStringVariable(URI, inputUris[0]);
-                } else {
-                    String delim = getProperty(BATCH_URI_DELIM);
-                    if (isEmpty(delim)) {
-                        delim = DEFAULT_BATCH_URI_DELIM;
-                    }
-                    request.setNewStringVariable(URI, StringUtils.join(inputUris, delim));
-                }
-            }
-
-            if (properties != null && properties.containsKey(URIS_BATCH_REF)) {
-                request.setNewStringVariable(URIS_BATCH_REF, properties.getProperty(URIS_BATCH_REF));
-            }
-
-            for (String propName : modulePropNames) {
-                if (propName.startsWith(moduleType + ".")) {
-                    String varName = propName.substring(moduleType.length() + 1);
-                    String value = getProperty(propName);
-                    if (value != null) {
-                        request.setNewStringVariable(varName, value);
-                    }
-                }
-            }
+            Request request = generateRequest(session);
             
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);
@@ -259,16 +192,73 @@ public abstract class AbstractTask implements Task {
         } catch (Exception exc) {
             throw new CorbException(exc.getMessage() + AT_URI + asString(inputUris), exc);
         } finally {
-            if (null != session && !session.isClosed()) {
-                session.close();
-                session = null;
-            }
             if (null != seq && !seq.isClosed()) {
                 seq.close();
                 seq = null;
             }
             Thread.yield();// try to avoid thread starvation
         }
+    }
+
+    protected Request generateRequest(Session session) {
+        Request request;
+        //determine whether this is an eval or execution of installed module
+        if (moduleUri == null) {
+            request = session.newAdhocQuery(adhocQuery);
+        } else {
+            request = session.newModuleInvoke(moduleUri);
+        }
+        
+        RequestOptions requestOptions = request.getOptions();
+        if (language != null) {
+            requestOptions.setQueryLanguage(language);
+        }
+        if (timeZone != null) {
+            requestOptions.setTimeZone(timeZone);
+        }
+        
+        if (inputUris != null && inputUris.length > 0) {
+            if (inputUris.length == 1) {
+                request.setNewStringVariable(URI, inputUris[0]);
+            } else {
+                String delim = getBatchUriDelimiter();
+                request.setNewStringVariable(URI, StringUtils.join(inputUris, delim));
+            }
+        }
+
+        if (properties != null && properties.containsKey(URIS_BATCH_REF)) {
+            request.setNewStringVariable(URIS_BATCH_REF, properties.getProperty(URIS_BATCH_REF));
+        }
+
+        //set custom inputs
+        for (String customInputPropertyName : getCustomInputPropertyNames()) {
+            String varName = customInputPropertyName.substring(moduleType.length() + 1);
+            String value = getProperty(customInputPropertyName);
+            if (value != null) {
+                request.setNewStringVariable(varName, value);
+            }
+        }
+        return request;
+    }
+
+    protected Set<String> getCustomInputPropertyNames() {
+        Set<String> moduleCustomInputPropertyNames = new HashSet<>();
+        if (moduleType == null) {
+            return moduleCustomInputPropertyNames;
+        }
+        if (properties != null) {
+            for (String propName : properties.stringPropertyNames()) {
+                if (propName.startsWith(moduleType + '.')) {
+                    moduleCustomInputPropertyNames.add(propName);
+                }
+            }
+        }
+        for (String propName : System.getProperties().stringPropertyNames()) {
+            if (propName.startsWith(moduleType + '.')) {
+                moduleCustomInputPropertyNames.add(propName);
+            }
+        }
+        return moduleCustomInputPropertyNames;
     }
 
     protected boolean shouldRetry(RequestException requestException) {
@@ -393,12 +383,20 @@ public abstract class AbstractTask implements Task {
         return queryRetryInterval < 0 ? DEFAULT_QUERY_RETRY_INTERVAL : queryRetryInterval;
     }
 
+    private String getBatchUriDelimiter() {
+        String delim = getProperty(BATCH_URI_DELIM);
+        if (isEmpty(delim)) {
+            delim = DEFAULT_BATCH_URI_DELIM;
+        }
+        return delim;
+    }
+
     /**
      * Retrieves an int value.
      *
      * @param key The key name.
-     * @return The requested value (<code>-1</code> if not found or could not
-     * parse value as int).
+     * @return The requested value ({@code -1} if not found or could not parse
+     * value as int).
      */
     protected int getIntProperty(String key) {
         int intVal = -1;
@@ -428,8 +426,8 @@ public abstract class AbstractTask implements Task {
             delim = DEFAULT_BATCH_URI_DELIM;
         }
 
-        synchronized (ERROR_SYNC_OBJ) {      
-            try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, errorFileName), true))){              
+        synchronized (ERROR_SYNC_OBJ) {
+            try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, errorFileName), true))) {
                 for (String uri : uris) {
                     writer.write(uri.getBytes());
                     if (isNotEmpty(message)) {
@@ -441,7 +439,7 @@ public abstract class AbstractTask implements Task {
                 writer.flush();
             } catch (Exception exc) {
                 LOG.log(SEVERE, "Problem writing uris to " + ERROR_FILE_NAME, exc);
-            } 
+            }
         }
     }
 

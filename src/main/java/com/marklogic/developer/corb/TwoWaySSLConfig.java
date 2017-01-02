@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
 /**
- * 
+ *
  * @since 2.2.0
  */
 public class TwoWaySSLConfig extends AbstractSSLConfig {
@@ -53,7 +53,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
     public static final String SSL_KEYSTORE_TYPE = com.marklogic.developer.corb.Options.SSL_KEYSTORE_TYPE;
     public static final String SSL_PROPERTIES_FILE = com.marklogic.developer.corb.Options.SSL_PROPERTIES_FILE;
     private static final String DELIMITER = ",";
-    
+
     /**
      * @return acceptable list of cipher suites
      */
@@ -106,7 +106,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
             if (f.exists() && !f.isDirectory()) {
                 LOG.log(Level.INFO, "Loading SSL configuration file {0} from filesystem", securityFileName);
 
-                try (InputStream is = new FileInputStream(f);) {     
+                try (InputStream is = new FileInputStream(f)) {
                     if (properties == null) {
                         properties = new Properties();
                     }
@@ -154,7 +154,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
             KeyStore clientKeyStore = KeyStore.getInstance(sslkeyStoreType);
             char[] sslkeyStorePasswordChars = sslkeyStorePassword != null ? sslkeyStorePassword.toCharArray() : null;
 
-            try (InputStream keystoreInputStream = new FileInputStream(sslkeyStore)) {              
+            try (InputStream keystoreInputStream = new FileInputStream(sslkeyStore)) {
                 clientKeyStore.load(keystoreInputStream, sslkeyStorePasswordChars);
             }
             char[] sslkeyPasswordChars = sslkeyPassword != null ? sslkeyPassword.toCharArray() : null;

@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -43,10 +43,10 @@ public final class Options {
      * option {@value #BATCH_URI_DELIM}.
      * </p>
      * Sample code for transform:
-     * <pre><code>
+     * <pre>{@code
      * declare variable URI as xs:string exernal;
      * let $all-uris := fn:tokenize($URI,";")
-     * </code></pre>
+     * }</pre>
      */
     @Usage(description = "The number of uris to be executed in single transform. "
             + "Default value is 1. If greater than 1, the PROCESS-MODULE will "
@@ -845,6 +845,16 @@ public final class Options {
     public static final String XCC_HOSTNAME = "XCC-HOSTNAME";
 
     /**
+     * Optional boolean flag to indicate whether to enable HTTP 1.1 compliance in XCC. If this option is set,
+     * the "xcc.httpcompliant" System property will be set.
+     * @see <a href="https://docs.marklogic.com/guide/xcc/concepts#id_28335">XCC Developer's Guide</a>
+     * @since 2.4.0
+     */
+    @Usage(description = "Optional boolean flag to indicate whether to enable HTTP 1.1 Compliance in XCC. " +
+        "If this option is set, the \"xcc.httpcompliant\" System property will be set.")
+    public static final String XCC_HTTPCOMPLIANT = "XCC-HTTPCOMPLIANT";
+
+    /**
      * Required if {@value #XCC_CONNECTION_URI} is not specified.
      */
     @Usage(description = "Required if XCC-CONNECTION-URI is not specified.")
@@ -857,14 +867,18 @@ public final class Options {
     public static final String XCC_PORT = "XCC-PORT";
 
     /**
-     * The ID for the TimeZone that should be set on XCC RequestOption. When a
-     * value is specified, it is parsed using TimeZone.getTimeZone() and set on
-     * XCC RequestOption for each Task. Invalid ID values will produce the GMT
-     * TimeZone. If not specified, XCC uses the JVM default TimeZone.
+     * The ID for the TimeZone that should be set on XCC RequestOption.
+     * When a value is specified, it is parsed using TimeZone.getTimeZone() and
+     * set on XCC RequestOption for each Task. Invalid ID values will produce the GMT TimeZone.
+     * If not specified, XCC uses the JVM default TimeZone.
      *
      * @see java.util.TimeZone
      * @since 2.4.0
      */
+    @Usage(description = "The ID for the TimeZone that should be set on XCC RequestOption. When a\n" +
+        " value is specified, it is parsed using TimeZone.getTimeZone() and set on\n" +
+        " XCC RequestOption for each Task. Invalid ID values will produce the GMT\n" +
+        " TimeZone. If not specified, XCC uses the JVM default TimeZone.")
     public static final String XCC_TIME_ZONE = "XCC-TIME-ZONE";
 
     /**

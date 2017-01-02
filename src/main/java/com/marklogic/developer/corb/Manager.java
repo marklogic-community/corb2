@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,14 +62,11 @@ import com.marklogic.xcc.ContentCreateOptions;
 import com.marklogic.xcc.ContentFactory;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
-import com.marklogic.xcc.exceptions.XccConfigException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.net.URISyntaxException;
-import java.security.GeneralSecurityException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -132,7 +129,7 @@ public class Manager extends AbstractManager {
             manager.usage();
             System.exit(EXIT_CODE_INIT_ERROR);
         }
-        //now we can start corb. 
+        //now we can start corb.
         try {
             int count = manager.run();
             if (manager.execError) {
@@ -151,37 +148,17 @@ public class Manager extends AbstractManager {
     }
 
     @Override
-    public void init(String[] commandline_args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException {
-        String[] args = commandline_args;
+    public void init(String[] commandlineArgs, Properties props) throws CorbException {
+        super.init(commandlineArgs, props);
+
+        prepareModules();
+
+        String[] args = commandlineArgs;
         if (args == null) {
             args = new String[0];
         }
-        if (props == null || props.isEmpty()) {
-            initPropertiesFromOptionsFile();
-        } else {
-            this.properties = props;
-        }
-
-        initDecrypter();
-        initSSLConfig();
-
-        initURI(args.length > 0 ? args[0] : null);
-
-        String collectionName = getOption(args.length > 1 ? args[1] : null, COLLECTION_NAME);
+        String collectionName = getOption(args, 1, COLLECTION_NAME);
         this.collection = collectionName == null ? "" : collectionName;
-
-        initOptions(args);
-
-        logRuntimeArgs();
-
-        prepareContentSource();
-        registerStatusInfo();
-        prepareModules();
-
-        //This is relavant for unit tests only. clear the static map so it gets re-initialized for fresh run
-        if (AbstractTask.MODULE_PROPS != null) {
-            AbstractTask.MODULE_PROPS.clear();
-        }
 
         EXIT_CODE_NO_URIS = NumberUtils.toInt(getOption(Options.EXIT_CODE_NO_URIS));
 
@@ -198,26 +175,32 @@ public class Manager extends AbstractManager {
         }
     }
 
-    protected void initOptions(String... args) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        // gather inputs		
-        String processModule = getOption(args.length > 2 ? args[2] : null, PROCESS_MODULE);
-        String threadCount = getOption(args.length > 3 ? args[3] : null, THREAD_COUNT);
-        String urisModule = getOption(args.length > 4 ? args[4] : null, URIS_MODULE);
-        String moduleRoot = getOption(args.length > 5 ? args[5] : null, MODULE_ROOT);
-        String modulesDatabase = getOption(args.length > 6 ? args[6] : null, MODULES_DATABASE);
-        String install = getOption(args.length > 7 ? args[7] : null, INSTALL);
-        String processTask = getOption(args.length > 8 ? args[8] : null, PROCESS_TASK);
-        String preBatchModule = getOption(args.length > 9 ? args[9] : null, PRE_BATCH_MODULE);
-        String preBatchTask = getOption(args.length > 10 ? args[10] : null, PRE_BATCH_TASK);
-        String postBatchModule = getOption(args.length > 11 ? args[11] : null, POST_BATCH_MODULE);
-        String postBatchTask = getOption(args.length > 12 ? args[12] : null, POST_BATCH_TASK);
-        String exportFileDir = getOption(args.length > 13 ? args[13] : null, EXPORT_FILE_DIR);
-        String exportFileName = getOption(args.length > 14 ? args[14] : null, EXPORT_FILE_NAME);
-        String urisFile = getOption(args.length > 15 ? args[15] : null, URIS_FILE);
+    @Override
+    protected void initOptions(String... args) throws CorbException {
+        super.initOptions(args);
+        // gather inputs
+        String processModule = getOption(args, 2, PROCESS_MODULE);
+        String threadCount = getOption(args, 3, THREAD_COUNT);
+        String urisModule = getOption(args, 4, URIS_MODULE);
+        String moduleRoot = getOption(args, 5, MODULE_ROOT);
+        String modulesDatabase = getOption(args, 6, MODULES_DATABASE);
+        String install = getOption(args, 7, INSTALL);
+        String processTask = getOption(args, 8, PROCESS_TASK);
+        String preBatchModule = getOption(args, 9, PRE_BATCH_MODULE);
+        String preBatchTask = getOption(args, 10, PRE_BATCH_TASK);
+        String postBatchModule = getOption(args, 11, POST_BATCH_MODULE);
+        String postBatchTask = getOption(args, 12, POST_BATCH_TASK);
+        String exportFileDir = getOption(args, 13, EXPORT_FILE_DIR);
+        String exportFileName = getOption(args, 14, EXPORT_FILE_NAME);
+        String urisFile = getOption(args, 15, URIS_FILE);
 
         String urisLoader = getOption(URIS_LOADER);
         if (urisLoader != null) {
-            options.setUrisLoaderClass(getUrisLoaderCls(urisLoader));
+            try {
+                options.setUrisLoaderClass(getUrisLoaderCls(urisLoader));
+            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException ex) {
+                throw new CorbException("Unable to instantiate UrisLoader Class: " + urisLoader, ex);
+            }
         }
 
         String initModule = getOption(INIT_MODULE);
@@ -233,7 +216,7 @@ public class Manager extends AbstractManager {
 
         String numTpsForETC = getOption(NUM_TPS_FOR_ETC);
 
-        //Check legacy properties keys, for backwards compatability
+        //Check legacy properties keys, for backwards compatibility
         if (processModule == null) {
             processModule = getOption(XQUERY_MODULE);
         }
@@ -296,32 +279,35 @@ public class Manager extends AbstractManager {
         if (initModule != null) {
             options.setInitModule(initModule);
         }
-        if (initTask != null) {
-            options.setInitTaskClass(getTaskCls(INIT_TASK, initTask));
+        if (preBatchModule != null) {
+            options.setPreBatchModule(preBatchModule);
+        }
+        if (postBatchModule != null) {
+            options.setPostBatchModule(postBatchModule);
         }
 
         // java class for processing individual tasks.
         // If specified, it is used instead of xquery module, but xquery module is
         // still required.
-        if (processTask != null) {
-            options.setProcessTaskClass(getTaskCls(PROCESS_TASK, processTask));
+        try {
+            if (initTask != null) {
+                options.setInitTaskClass(getTaskCls(INIT_TASK, initTask));
+            }
+            if (processTask != null) {
+                options.setProcessTaskClass(getTaskCls(PROCESS_TASK, processTask));
+            }
+            if (preBatchTask != null) {
+                options.setPreBatchTaskClass(getTaskCls(PRE_BATCH_TASK, preBatchTask));
+            }
+            if (postBatchTask != null) {
+                options.setPostBatchTaskClass(getTaskCls(POST_BATCH_TASK, postBatchTask));
+            }
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
+            throw new CorbException("Unable to instantiate class", ex);
         }
+
         if (null == options.getProcessTaskClass() && null == options.getProcessModule()) {
             throw new NullPointerException(PROCESS_TASK + " or " + PROCESS_MODULE + " must be specified");
-        }
-
-        if (preBatchModule != null) {
-            options.setPreBatchModule(preBatchModule);
-        }
-        if (preBatchTask != null) {
-            options.setPreBatchTaskClass(getTaskCls(PRE_BATCH_TASK, preBatchTask));
-        }
-
-        if (postBatchModule != null) {
-            options.setPostBatchModule(postBatchModule);
-        }
-        if (postBatchTask != null) {
-            options.setPostBatchTaskClass(getTaskCls(POST_BATCH_TASK, postBatchTask));
         }
 
         if (options.getPostBatchTaskClass() == null) {
@@ -358,16 +344,6 @@ public class Manager extends AbstractManager {
         normalizeLegacyProperties();
     }
 
-    protected boolean deleteFileIfExists(String directory, String filename) {
-        if (filename != null) {
-            File file = new File(directory, filename);
-            if (file.exists()) {
-                return file.delete();
-            }
-        }
-        return false;
-    }
-
     protected void normalizeLegacyProperties() {
         //fix map keys for backward compatibility
         if (this.properties != null) {
@@ -396,15 +372,15 @@ public class Manager extends AbstractManager {
             String value = properties.getProperty(key);
             for (Map.Entry<String, String> entry : legacyProperties.entrySet()) {
                 String legacyKey = entry.getValue();
-                String legacyKeyPrefix = legacyKey + ".";
+                String legacyKeyPrefix = legacyKey + '.';
                 String normalizedKey = entry.getKey();
-                String normalizedKeyPrefix = normalizedKey + ".";
+                String normalizedKeyPrefix = normalizedKey + '.';
                 String normalizedCustomInputKey = key.replace(legacyKeyPrefix, normalizedKeyPrefix);
 
                 //First check for an exact match of the keys
                 if (!properties.containsKey(normalizedKey) && key.equals(legacyKey)) {
                     normalizedProperties.setProperty(normalizedKey, value);
-                    //Then look for custom inputs with the base property as a prefix    
+                    //Then look for custom inputs with the base property as a prefix
                 } else if (!properties.containsKey(normalizedCustomInputKey)
                         && key.startsWith(legacyKeyPrefix) && value != null) {
                     normalizedProperties.setProperty(normalizedCustomInputKey, value);
@@ -440,40 +416,40 @@ public class Manager extends AbstractManager {
         super.usage();
 
         List<String> args = new ArrayList<>(7);
-        String xcc_connection_uri = "xcc://user:password@host:port/[ database ]";
-        String thread_count = "10";
-        String options_file = "myjob.properties";
-        PrintStream err = System.err;
+        String xccConnectionUri = "xcc://user:password@host:port/[ database ]";
+        String threadCount = "10";
+        String optionsFile = "myjob.properties";
+        PrintStream err = System.err; // NOPMD
 
-        err.println("usage 1:");
-        err.println(TAB + NAME + " " + xcc_connection_uri + " input-selector module-name.xqy"
+        err.println("usage 1:"); // NOPMD
+        err.println(TAB + NAME + ' ' + xccConnectionUri + " input-selector module-name.xqy"
                 + " [ thread-count [ uris-module [ module-root" + " [ modules-database [ install [ process-task"
                 + " [ pre-batch-module [ pre-batch-task" + " [ post-batch-module  [ post-batch-task"
-                + " [ export-file-dir [ export-file-name" + " [ uris-file ] ] ] ] ] ] ] ] ] ] ] ] ]");
+                + " [ export-file-dir [ export-file-name" + " [ uris-file ] ] ] ] ] ] ] ] ] ] ] ] ]"); // NOPMD
 
         err.println("\nusage 2:");
-        args.add(buildSystemPropertyArg(XCC_CONNECTION_URI, xcc_connection_uri));
+        args.add(buildSystemPropertyArg(XCC_CONNECTION_URI, xccConnectionUri));
         args.add(buildSystemPropertyArg(PROCESS_MODULE, "module-name.xqy"));
-        args.add(buildSystemPropertyArg(THREAD_COUNT, thread_count));
+        args.add(buildSystemPropertyArg(THREAD_COUNT, threadCount));
         args.add(buildSystemPropertyArg(URIS_MODULE, "get-uris.xqy"));
         args.add(buildSystemPropertyArg(POST_BATCH_MODULE, "post-batch.xqy"));
         args.add(buildSystemPropertyArg("... ", null));
         args.add(NAME);
-        err.println(TAB + StringUtils.join(args, SPACE));
+        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
 
-        err.println("\nusage 3:");
+        err.println("\nusage 3:"); // NOPMD
         args.clear();
-        args.add(buildSystemPropertyArg(OPTIONS_FILE, options_file));
+        args.add(buildSystemPropertyArg(OPTIONS_FILE, optionsFile));
         args.add(NAME);
-        err.println(TAB + StringUtils.join(args, SPACE));
+        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
 
-        err.println("\nusage 4:");
+        err.println("\nusage 4:"); // NOPMD
         args.clear();
-        args.add(buildSystemPropertyArg(OPTIONS_FILE, options_file));
-        args.add(buildSystemPropertyArg(THREAD_COUNT, thread_count));
+        args.add(buildSystemPropertyArg(OPTIONS_FILE, optionsFile));
+        args.add(buildSystemPropertyArg(THREAD_COUNT, threadCount));
         args.add(NAME);
-        args.add(xcc_connection_uri);
-        err.println(TAB + StringUtils.join(args, SPACE));
+        args.add(xccConnectionUri);
+        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
     }
 
     public int run() throws Exception {
@@ -524,57 +500,57 @@ public class Manager extends AbstractManager {
     }
 
     /**
-     * @throws IOException,RequestException
+     * @throws CorbException
      *
      */
-    private void prepareModules() throws IOException, RequestException {
+    private void prepareModules() throws CorbException {
         String[] resourceModules = new String[]{options.getInitModule(), options.getUrisModule(),
             options.getProcessModule(), options.getPreBatchModule(), options.getPostBatchModule()};
         String modulesDatabase = options.getModulesDatabase();
         LOG.log(INFO, "checking modules, database: {0}", modulesDatabase);
 
-        ContentCreateOptions opts = ContentCreateOptions.newTextInstance();
         try (Session session = contentSource.newSession(modulesDatabase)) {
             for (String resourceModule : resourceModules) {
-                if (resourceModule == null || isInlineOrAdhoc(resourceModule)) {
-                    continue;
-                }
+                insertModule(session, resourceModule);
+            }
+        }
+    }
 
-                // Start by checking install flag.
-                if (!options.isDoInstall()) {
-                    LOG.log(INFO, "Skipping module installation: {0}", resourceModule);
-                    continue;
-                } // Next check: if XCC is configured for the filesystem, warn
-                // user
-                else if (options.getModulesDatabase().isEmpty()) {
-                    LOG.warning("XCC configured for the filesystem: please install modules manually");
-                    return;
-                } // Finally, if it's configured for a database, install.
+    protected void insertModule(Session session, String resourceModule) throws CorbException {
+        if (resourceModule == null || isInlineOrAdhoc(resourceModule)) {
+            return;
+        }
+        try {
+            // Start by checking install flag.
+            if (!options.isDoInstall()) {
+                LOG.log(INFO, "Skipping module installation: {0}", resourceModule);
+            } // Next check: if XCC is configured for the filesystem, warn user
+            else if (options.getModulesDatabase().isEmpty()) {
+                LOG.warning("XCC configured for the filesystem: please install modules manually");
+            } // Finally, if it's configured for a database, install.
+            else {
+                ContentCreateOptions contentCreateOptions = ContentCreateOptions.newTextInstance();
+                File file = new File(resourceModule);
+                Content content;
+                // If not installed, are the specified files on the filesystem?
+                if (file.exists()) {
+                    String moduleUri = options.getModuleRoot() + file.getName();
+                    content = ContentFactory.newContent(moduleUri, file, contentCreateOptions);
+                } // finally, check package
                 else {
-                    File f = new File(resourceModule);
-                    Content c;
-                    // If not installed, are the specified files on the
-                    // filesystem?
-                    if (f.exists()) {
-                        String moduleUri = options.getModuleRoot() + f.getName();
-                        c = ContentFactory.newContent(moduleUri, f, opts);
-                    } // finally, check package
-                    else {
-                        LOG.log(WARNING, "looking for {0} as resource", resourceModule);
-                        String moduleUri = options.getModuleRoot() + resourceModule;
-                        try (InputStream is = this.getClass().getResourceAsStream(resourceModule)) {
-                            if (null == is) {
-                                throw new NullPointerException(resourceModule + " could not be found on the filesystem," + " or in package resources");
-                            }
-                            c = ContentFactory.newContent(moduleUri, is, opts);
+                    LOG.log(WARNING, "looking for {0} as resource", resourceModule);
+                    String moduleUri = options.getModuleRoot() + resourceModule;
+                    try (InputStream is = this.getClass().getResourceAsStream('/' + resourceModule)) {
+                        if (null == is) {
+                            throw new NullPointerException(resourceModule + " could not be found on the filesystem," + " or in package resources");
                         }
+                        content = ContentFactory.newContent(moduleUri, is, contentCreateOptions);
                     }
-                    session.insertContent(c);
                 }
+                session.insertContent(content);
             }
         } catch (IOException | RequestException e) {
-            LOG.log(SEVERE, MessageFormat.format("error while reading modules {0}", e.getMessage()), e);
-            throw e;
+            throw new CorbException(MessageFormat.format("error while reading module {0}", resourceModule), e);
         }
     }
 
@@ -675,49 +651,8 @@ public class Manager extends AbstractManager {
             // now start process tasks
             monitor.setTaskCount(expectedTotalCount);
             monitorThread.start();
-            Level memoryLogLevel = INFO;
-            long lastMessageMillis = System.currentTimeMillis();
-            final long RAM_TOTAL = Runtime.getRuntime().totalMemory();
-            long freeMemory;
-            String uri;
-            List<String> uriBatch = new ArrayList<>(options.getBatchSize());
 
-            while (urisLoader.hasNext()) {
-                // check pool occasionally, for fast-fail
-                if (null == pool) {
-                    break;
-                }
-
-                uri = urisLoader.next();
-                if (isBlank(uri)) {
-                    continue;
-                }
-                uriBatch.add(uri);
-
-                if (uriBatch.size() >= options.getBatchSize() || urisCount >= expectedTotalCount || !urisLoader.hasNext()) {
-                    String[] uris = uriBatch.toArray(new String[uriBatch.size()]);
-                    uriBatch.clear();
-                    completionService.submit(taskFactory.newProcessTask(uris, options.isFailOnError()));
-                }
-
-                urisCount++;
-
-                if (0 == urisCount % 25000) {
-                    LOG.log(INFO, "received {0}/{1}: {2}", new Object[]{urisCount, expectedTotalCount, uri});
-
-                    if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
-                        LOG.warning("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
-                        freeMemory = Runtime.getRuntime().freeMemory();
-                        if (freeMemory < RAM_TOTAL * 0.2d) {
-                            memoryLogLevel = WARNING;
-                        } else {
-                            memoryLogLevel = INFO;
-                        }
-                        LOG.log(memoryLogLevel, "free memory: {0} MiB" + " of " + RAM_TOTAL / (1024 * 1024), (freeMemory / (1024 * 1024)));
-                    }
-                    lastMessageMillis = System.currentTimeMillis();
-                }
-            }
+            urisCount = submitUriTasks(urisLoader, taskFactory, expectedTotalCount);
 
             if (urisCount == expectedTotalCount) {
                 LOG.log(INFO, "queue is populated with {0} tasks", urisCount);
@@ -736,30 +671,90 @@ public class Manager extends AbstractManager {
         return urisCount;
     }
 
+    /**
+     * Submit batches of the URIs to be processed. Filter out blank entries and
+     * return the total number of URIs.
+     *
+     * @param urisLoader
+     * @param taskFactory
+     * @param expectedTotalCount
+     * @return
+     * @throws CorbException
+     */
+    protected int submitUriTasks(UrisLoader urisLoader, TaskFactory taskFactory, int expectedTotalCount) throws CorbException {
+        int urisCount = 0;
+        long lastMessageMillis = System.currentTimeMillis();
+        final long totalMemory = Runtime.getRuntime().totalMemory();
+        String uri;
+        List<String> uriBatch = new ArrayList<>(options.getBatchSize());
+
+        while (urisLoader.hasNext()) {
+            // check pool occasionally, for fast-fail
+            if (null == pool) {
+                break;
+            }
+
+            uri = urisLoader.next();
+            if (isBlank(uri)) {
+                continue;
+            }
+            uriBatch.add(uri);
+
+            if (uriBatch.size() >= options.getBatchSize() || urisCount >= expectedTotalCount || !urisLoader.hasNext()) {
+                String[] uris = uriBatch.toArray(new String[uriBatch.size()]);
+                uriBatch.clear();
+                completionService.submit(taskFactory.newProcessTask(uris, options.isFailOnError()));
+            }
+
+            urisCount++;
+
+            if (0 == urisCount % 25000) {
+                LOG.log(INFO, "received {0}/{1}: {2}", new Object[]{urisCount, expectedTotalCount, uri});
+                logIfSlowReceive(lastMessageMillis, totalMemory);
+                lastMessageMillis = System.currentTimeMillis();
+            }
+        }
+        return urisCount;
+    }
+
+    protected void logIfSlowReceive(long lastMessageMillis, long totalMemory) {
+        if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
+            LOG.warning("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
+            long freeMemory = Runtime.getRuntime().freeMemory();
+            Level memoryLogLevel = freeMemory < totalMemory * 0.2d ? WARNING : INFO;
+            final int megabytes = 1024 * 1024;
+            LOG.log(memoryLogLevel, "free memory: {0} MiB" + " of " + totalMemory / megabytes, freeMemory / megabytes);
+        }
+    }
+
     public void setThreadCount(int threadCount) {
         if (threadCount > 0) {
             if (threadCount != options.getThreadCount()) {
                 options.setThreadCount(threadCount);
-                if (pool != null) {
-                    int currentMaxPoolSize = pool.getMaximumPoolSize();
-                    try {
-                        if (threadCount < currentMaxPoolSize) {
-                            //shrink the core first then max
-                            pool.setCorePoolSize(threadCount);
-                            pool.setMaximumPoolSize(threadCount);
-                        } else {
-                            //grow max first, then core
-                            pool.setMaximumPoolSize(threadCount);
-                            pool.setCorePoolSize(threadCount);
-                        }
-                        LOG.log(INFO, "Changed {0} to {1}", new Object[]{THREAD_COUNT, threadCount});
-                    } catch (IllegalArgumentException ex) {
-                        LOG.log(WARNING, "Unable to change thread count", ex);
-                    }
-                }
+                setPoolSize(pool, threadCount);
             }
         } else {
             LOG.log(WARNING, THREAD_COUNT + " must be a positive integer value");
+        }
+    }
+
+    protected void setPoolSize(ThreadPoolExecutor threadPool, int threadCount) {
+        if (threadPool != null) {
+            int currentMaxPoolSize = threadPool.getMaximumPoolSize();
+            try {
+                if (threadCount < currentMaxPoolSize) {
+                    //shrink the core first then max
+                    threadPool.setCorePoolSize(threadCount);
+                    threadPool.setMaximumPoolSize(threadCount);
+                } else {
+                    //grow max first, then core
+                    threadPool.setMaximumPoolSize(threadCount);
+                    threadPool.setCorePoolSize(threadCount);
+                }
+                LOG.log(INFO, "Changed {0} to {1}", new Object[]{THREAD_COUNT, threadCount});
+            } catch (IllegalArgumentException ex) {
+                LOG.log(WARNING, "Unable to change thread count", ex);
+            }
         }
     }
 
@@ -848,7 +843,7 @@ public class Manager extends AbstractManager {
 
         public void onChange(File file) {
 
-            try (InputStream in = new FileInputStream(file);) {
+            try (InputStream in = new FileInputStream(file)) {
 
                 Properties commandFile = new Properties();
                 commandFile.load(in);
@@ -878,7 +873,7 @@ public class Manager extends AbstractManager {
 
     public static class CallerBlocksPolicy implements RejectedExecutionHandler {
 
-        private transient BlockingQueue<Runnable> queue;
+        private BlockingQueue<Runnable> queue;
 
         private boolean warning;
 

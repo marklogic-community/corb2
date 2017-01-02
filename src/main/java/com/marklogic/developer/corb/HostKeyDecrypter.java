@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
  */
 package com.marklogic.developer.corb;
 
+import com.marklogic.developer.corb.util.StringUtils;
 import static java.util.logging.Level.INFO;
 
 import java.io.BufferedReader;
@@ -69,9 +70,9 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     private static final String METHOD_ENCRYPT = "encrypt";
     // currently only usage is encrypt
     protected static final String USAGE = "Encrypt:\n "
-            + MessageFormat.format(USAGE_FORMAT, new Object[]{METHOD_ENCRYPT + " clearText"})
+            + MessageFormat.format(USAGE_FORMAT, METHOD_ENCRYPT + " clearText")
             + "\nTest:\n "
-            + MessageFormat.format(USAGE_FORMAT, new Object[]{METHOD_TEST});
+            + MessageFormat.format(USAGE_FORMAT, METHOD_TEST);
 
     protected static final Logger LOG = Logger.getLogger(HostKeyDecrypter.class.getName());
 
@@ -168,7 +169,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
 
         private static BufferedReader read(String command) {
             Runtime runtime = Runtime.getRuntime();
-            Process process = null;
+            Process process;
             try {
                 process = runtime.exec(command.split(" "));
             } catch (IOException e) {
@@ -177,7 +178,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
 
             OutputStream os = process.getOutputStream();
             closeOrThrowRuntime(os);
-            
+
             InputStream is = process.getInputStream();
             return new BufferedReader(new InputStreamReader(is));
         }
@@ -327,7 +328,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
      * decrypts encrypted password using private key internal to host and AES
      * 256 algorithm and returns plaintext password
      *
-     * @param String encrypted text
+     * @param  encryptedText
      * @author Richard Kennedy
      * @throws NoSuchPaddingException
      * @throws NoSuchAlgorithmException
@@ -343,7 +344,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
             decryptedTextBytes = cipher.doFinal(encryptedTextBytes);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "decryption failed", e);
-            e.printStackTrace();
+            e.printStackTrace(); //NOPMD
         }
         return new String(decryptedTextBytes);
     }
@@ -356,20 +357,22 @@ public class HostKeyDecrypter extends AbstractDecrypter {
      * @throws java.lang.Exception
      */
     public static void main(String... args) throws Exception {
-        String method = (args != null && args.length > 0) ? args[0].trim() : "";
+        String[] arguments = args == null ? new String[]{} : args;
+        
+        String method = arguments.length > 0 ? StringUtils.trim(arguments[0]) : "";
 
-        if (METHOD_ENCRYPT.equals(method) && args.length == 2) {
-            System.out.println(encrypt(args[1].trim()));
+        if (METHOD_ENCRYPT.equals(method) && arguments.length == 2) {
+            System.out.println(encrypt(arguments[1].trim())); // NOPMD
         } else if (METHOD_TEST.equals(method)) {
             HostKeyDecrypter decrypter = new HostKeyDecrypter();
             decrypter.init(System.getProperties());
             String original = "234Helloworld!!!";
-            System.out.println("Password is :" + original);
+            System.out.println("Password is :" + original); // NOPMD
             String password = encrypt(original);
-            System.out.println("Encrypted Password is :" + password);
-            System.out.println("Decrypted password:" + decrypter.doDecrypt("Property", password));
+            System.out.println("Encrypted Password is :" + password); // NOPMD
+            System.out.println("Decrypted password:" + decrypter.doDecrypt("Property", password)); // NOPMD
         } else {
-            System.out.println(USAGE);
+            System.out.println(USAGE); // NOPMD
         }
     }
 }

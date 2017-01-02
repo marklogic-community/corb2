@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 		String topContent = getProperty(EXPORT_FILE_TOP_CONTENT);
 		String batchRef = getProperty(Manager.URIS_BATCH_REF);
 		if (topContent != null && batchRef != null) {
-			topContent = topContent.replace("@" + Manager.URIS_BATCH_REF, batchRef);
+			topContent = topContent.replace('@' + Manager.URIS_BATCH_REF, batchRef);
 		}
 		return topContent;
 	}
@@ -58,7 +58,7 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 			}
 		}
 	}
-	
+
 	private void addLineCountToProps() throws IOException{
 		int ct = FileUtils.getLineCount(new File(exportDir, getPartFileName()));
 		if (this.properties != null && ct > 0) {
@@ -78,5 +78,5 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 			cleanup();
 		}
 	}
-	
+
 }

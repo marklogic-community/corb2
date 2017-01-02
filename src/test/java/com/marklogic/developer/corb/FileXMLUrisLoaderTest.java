@@ -1,5 +1,5 @@
 /*
- * * Copyright (c) 2004-2016 MarkLogic Corporation
+ * * Copyright (c) 2004-2017 MarkLogic Corporation
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -168,144 +168,62 @@ public class FileXMLUrisLoaderTest {
 
     @Test
     public void testSelectRootNode() {
-        List<String> nodes;
-        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
-            instance.properties.setProperty(Options.XML_NODE, "/");
-            instance.open();
-            assertNotNull(instance.nodeIterator);
-            nodes = new ArrayList<>(1);
-            while (instance.hasNext()) {
-                nodes.add(instance.next());
-            }
-            assertEquals(1, nodes.size());
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        List<String> nodes = testSelectNodes("/");
+        assertEquals(1, nodes.size());
     }
 
     @Test
     public void testSelectDocumentElement() {
-        List<String> nodes;
-        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
-            instance.properties.setProperty(Options.XML_NODE, "/*");
-            instance.open();
-            assertNotNull(instance.nodeIterator);
-            nodes = new ArrayList<>(1);
-            while (instance.hasNext()) {
-                nodes.add(instance.next());
-            }
-            assertEquals(1, nodes.size());
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
-
+        List<String> nodes = testSelectNodes("/*");
+        assertEquals(1, nodes.size());
     }
 
     @Test
-    public void testSelectAttributes() throws Exception {
-        List<String> nodes;
-        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
-            instance.properties.setProperty(Options.XML_NODE, "/root/a/@*");
-            instance.open();
-            assertNotNull(instance.nodeIterator);
-            nodes = new ArrayList<>(3);
-            while (instance.hasNext()) {
-                nodes.add(instance.next());
-            }
-            assertEquals(3, nodes.size());
-            assertTrue(nodes.contains(TEST1 + HTML_SUFFIX));
-            assertTrue(nodes.contains(TEST2 + HTML_SUFFIX));
-            assertTrue(nodes.contains(TEST3 + HTML_SUFFIX));
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+    public void testSelectAttributes() {
+        List<String> nodes = testSelectNodes("/root/a/@*");
+        assertEquals(3, nodes.size());
+        assertTrue(nodes.contains(TEST1 + HTML_SUFFIX));
+        assertTrue(nodes.contains(TEST2 + HTML_SUFFIX));
+        assertTrue(nodes.contains(TEST3 + HTML_SUFFIX));
     }
 
     @Test
     public void testSelectTextNodes() {
-        List<String> nodes;
-        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
-            instance.properties.setProperty(Options.XML_NODE, "/root/a/text()");
-            instance.open();
-            assertNotNull(instance.nodeIterator);
-            nodes = new ArrayList<>(3);
-            while (instance.hasNext()) {
-                nodes.add(instance.next());
-            }
-            assertEquals(3, nodes.size());
-            assertTrue(nodes.contains(TEST1));
-            assertTrue(nodes.contains(TEST2));
-            assertTrue(nodes.contains(TEST3));
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        List<String> nodes = testSelectNodes("/root/a/text()");
+        assertEquals(3, nodes.size());
+        assertTrue(nodes.contains(TEST1));
+        assertTrue(nodes.contains(TEST2));
+        assertTrue(nodes.contains(TEST3));
     }
 
     @Test
     public void testSelectComments() {
-        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
-            instance.properties.setProperty(Options.XML_NODE, "//comment()");
-            instance.open();
-            assertNotNull(instance.nodeIterator);
-            List<String> nodes = new ArrayList<>(1);
-            while (instance.hasNext()) {
-                nodes.add(instance.next());
-            }
-            assertEquals(1, nodes.size());
-            assertTrue(nodes.contains("http://test.com/test1.html"));
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        List<String> nodes = testSelectNodes("//comment()");
+        assertEquals(1, nodes.size());
+        assertTrue(nodes.contains("http://test.com/test1.html"));
     }
 
     @Test
     public void testSelectProcessingInstructions() {
-        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
-            instance.properties.setProperty(Options.XML_NODE, "//processing-instruction()");
-            instance.open();
-            assertNotNull(instance.nodeIterator);
-            List<String> nodes = new ArrayList<>(1);
-            while (instance.hasNext()) {
-                nodes.add(instance.next());
-            }
-            assertEquals(1, nodes.size());
-            assertTrue(nodes.contains("http://test.com/test2.html"));
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        List<String> nodes = testSelectNodes("//processing-instruction()");
+        assertEquals(1, nodes.size());
+        assertTrue(nodes.contains("http://test.com/test2.html"));
     }
 
     @Test
     public void testSelectWithUnion() {
-        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
-            instance.properties.setProperty(Options.XML_NODE, "//comment() | //@* | /*/*/text()");
-            instance.open();
-            assertNotNull(instance.nodeIterator);
-            List<String> nodes = new ArrayList<>(7);
-            while (instance.hasNext()) {
-                nodes.add(instance.next());
-            }
-            assertEquals(7, nodes.size());
-            //comment()
-            assertTrue(nodes.contains("http://test.com/test1.html"));
-            //@*
-            assertTrue(nodes.contains(TEST1 + HTML_SUFFIX));
-            assertTrue(nodes.contains(TEST2 + HTML_SUFFIX));
-            assertTrue(nodes.contains(TEST3 + HTML_SUFFIX));
-            //text()
-            assertTrue(nodes.contains(TEST1));
-            assertTrue(nodes.contains(TEST2));
-            assertTrue(nodes.contains(TEST3));
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        List<String> nodes = testSelectNodes("//comment() | //@* | /*/*/text()");
+        assertEquals(7, nodes.size());
+        //comment()
+        assertTrue(nodes.contains("http://test.com/test1.html"));
+        //@*
+        assertTrue(nodes.contains(TEST1 + HTML_SUFFIX));
+        assertTrue(nodes.contains(TEST2 + HTML_SUFFIX));
+        assertTrue(nodes.contains(TEST3 + HTML_SUFFIX));
+        //text()
+        assertTrue(nodes.contains(TEST1));
+        assertTrue(nodes.contains(TEST2));
+        assertTrue(nodes.contains(TEST3));
     }
 
     @Test(expected = CorbException.class)
@@ -351,16 +269,21 @@ public class FileXMLUrisLoaderTest {
     }
 
     @Test
-    public void testHasNext() throws Exception {
+    public void testHasNext() {
         try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
             instance.properties.remove(Options.XML_NODE);
-            instance.open();
+            try {
+                instance.open();
 
-            for (int i = 0; i < instance.getTotalCount(); i++) {
+                for (int i = 0; i < instance.getTotalCount(); i++) {
+                    assertTrue(instance.hasNext());
+                }
+                //Verify that hasNext() does not advance the buffered reader to the next line
                 assertTrue(instance.hasNext());
+            } catch (CorbException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                fail();
             }
-            //Verify that hasNext() does not advance the buffered reader to the next line
-            assertTrue(instance.hasNext());
         }
     }
 
@@ -408,4 +331,21 @@ public class FileXMLUrisLoaderTest {
         assertNull(instance.replacements);
     }
 
+    public List<String> testSelectNodes(String xpath) {
+        List<String> nodes = null;
+        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
+            instance.properties.setProperty(Options.XML_NODE, xpath);
+            instance.open();
+            assertNotNull(instance.nodeIterator);
+            nodes = new ArrayList<>(1);
+            while (instance.hasNext()) {
+                nodes.add(instance.next());
+            }
+
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+        return nodes;
+    }
 }

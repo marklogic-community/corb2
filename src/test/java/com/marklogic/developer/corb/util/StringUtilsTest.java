@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ public class StringUtilsTest {
 
     @Test
     public void testJoinListString() {
-        List<String> items = Arrays.asList(new String[]{"a", "b", "c"});
+        List<String> items = Arrays.asList("a", "b", "c");
         String result = StringUtils.join(items, DELIM);
         assertEquals(A_B_C, result);
     }
@@ -134,16 +134,14 @@ public class StringUtilsTest {
     @Test
     public void testJoinStringArrString() {
         String[] items = new String[]{"a", "b", "c"};
-        String delim = DELIM;
-        String result = StringUtils.join(items, delim);
+        String result = StringUtils.join(items, DELIM);
         assertEquals(A_B_C, result);
     }
 
     @Test(expected = NullPointerException.class)
     public void testJoinStringArrStringIsNull() {
         String[] items = null;
-        String delim = DELIM;
-        StringUtils.join(items, delim);
+        StringUtils.join(items, DELIM);
     }
 
     @Test
@@ -206,9 +204,14 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testDumpHex() throws Exception {
-        String result = StringUtils.dumpHex("abcd", "UTF-8");
-        assertEquals("61 62 63 64", result);
+    public void testDumpHex() {
+        try {
+            String result = StringUtils.dumpHex("abcd", "UTF-8");
+            assertEquals("61 62 63 64", result);
+        } catch (UnsupportedEncodingException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test(expected = NullPointerException.class)
@@ -328,8 +331,7 @@ public class StringUtilsTest {
 
     @Test
     public void testInlineModuleLanguageJavaScript() {
-        String code = INLINE_JAVASCRIPT_CODE;
-        String value = INLINE_JAVASCRIPT_PREFIX + code + ADHOC_SUFFIX;
+        String value = INLINE_JAVASCRIPT_PREFIX + INLINE_JAVASCRIPT_CODE + ADHOC_SUFFIX;
         String result = StringUtils.inlineModuleLanguage(value);
         assertEquals("JAVASCRIPT", result);
     }

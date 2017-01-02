@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-/**
- *
- * @author Praveen Venkata
- */
 import static com.marklogic.developer.corb.Options.XML_FILE;
 import static com.marklogic.developer.corb.Options.XML_NODE;
 import com.marklogic.developer.corb.util.FileUtils;
@@ -180,7 +176,7 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
         return sw.toString();
     }
 
-    private String readNextNode() throws IOException, CorbException {
+    private String readNextNode() throws CorbException {
         if (nodeIterator.hasNext()) {
             Node nextNode = nodeIterator.next();
             short nextNodeType = nextNode.getNodeType();

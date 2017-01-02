@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -119,7 +119,7 @@ public class ArrayQueueTest {
         instance.removeAt(0);
         assertTrue(instance.isEmpty());
     }
-    
+
     @Test
     public void testRemove() {
         Queue<String> instance = new ArrayQueue<>(2);
@@ -151,7 +151,7 @@ public class ArrayQueueTest {
         instance.iterator().next();
         fail();
     }
-    
+
     @Test (expected = NullPointerException.class)
     public void testOfferNull() {
         Queue<String> instance = new ArrayQueue<>(2);

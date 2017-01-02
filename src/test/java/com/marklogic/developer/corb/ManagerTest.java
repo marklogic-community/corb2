@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
 import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.xcc.AdhocQuery;
+import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ContentSourceFactory;
 import com.marklogic.xcc.ModuleInvoke;
@@ -35,27 +36,26 @@ import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
-import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.types.XdmItem;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.GeneralSecurityException;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import org.mockito.Mockito;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
@@ -63,7 +63,7 @@ import static org.mockito.Mockito.when;
 import org.mockito.exceptions.base.MockitoException;
 
 /**
- * The class <code>ManagerTest</code> contains tests for the class
+ * The class {@code ManagerTest} contains tests for the class
  * <code>{@link Manager}</code>.
  *
  * @author matthew.heckel
@@ -94,10 +94,10 @@ public class ManagerTest {
     public static final String POST_BATCH_XQUERY_MODULE_FOO = "post-bar";
     public static final String PRE_BATCH_XQUERY_MODULE_FOO = "pre-bar";
     public static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
-
+    public static final String SLOW_RECEIVE_MESSAGE = "Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC";
+    
     @Before
-    public void setUp()
-            throws Exception {
+    public void setUp() throws IOException {
         clearSystemProperties();
         MANAGER_LOGGER.addHandler(testLogger);
         File tempDir = TestUtils.createTempDirectory();
@@ -105,7 +105,7 @@ public class ManagerTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() throws IOException {
         FileUtils.deleteFile(ManagerTest.EXPORT_FILE_DIR);
         clearSystemProperties();
         System.setErr(systemErr);
@@ -164,8 +164,8 @@ public class ManagerTest {
         assertEquals(1, records.size());
     }
 
-    @Test(expected = InstantiationException.class)
-    public void testInitNullArgsProperties() throws InstantiationException {
+    @Test(expected = CorbException.class)
+    public void testInitNullArgsProperties() throws CorbException {
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
@@ -173,7 +173,7 @@ public class ManagerTest {
         try {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
-        } catch (IOException | URISyntaxException | ClassNotFoundException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
@@ -191,7 +191,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertEquals("", instance.collection);
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -209,20 +209,20 @@ public class ManagerTest {
         try {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
     }
 
-    @Test(expected = InstantiationException.class)
-    public void testInitNullArgsEmptyProperties() throws InstantiationException {
+    @Test(expected = CorbException.class)
+    public void testInitNullArgsEmptyProperties() throws CorbException {
         String[] args = null;
         Properties props = new Properties();
         try {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
-        } catch (IOException | URISyntaxException | ClassNotFoundException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
@@ -234,7 +234,7 @@ public class ManagerTest {
         try {
             Manager instance = getMockManagerWithEmptyResults();
             instance.initOptions(args);
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
@@ -247,7 +247,7 @@ public class ManagerTest {
             Manager instance = new Manager();
             instance.initOptions(args);
 
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
@@ -261,7 +261,7 @@ public class ManagerTest {
             instance.properties = new Properties();
             instance.initOptions(args);
 
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
@@ -278,7 +278,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertNull(instance.options.getUrisFile());
 
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -295,7 +295,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertNull(instance.options.getUrisFile());
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -313,7 +313,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -328,11 +328,10 @@ public class ManagerTest {
         Properties props = new Properties();
         props.setProperty(Options.PROCESS_MODULE, PROCESS_MODULE);
         try {
-
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -348,7 +347,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertTrue(instance.options.isDoInstall());
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -364,7 +363,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertTrue(instance.options.isDoInstall());
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -380,7 +379,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertFalse(instance.options.isDoInstall());
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -396,7 +395,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertEquals(10, instance.options.getDiskQueueMaxInMemorySize());
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -411,7 +410,7 @@ public class ManagerTest {
         try {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
@@ -427,7 +426,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertNull(instance.options.getProcessModule());
-        } catch (RequestException | IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -460,7 +459,7 @@ public class ManagerTest {
             assertEquals(PRE_BATCH_XQUERY_MODULE_FOO, System.getProperty(Options.PRE_BATCH_MODULE + propertySuffix));
             assertEquals(POST_BATCH_MODULE, instance.options.getPostBatchModule());
             assertEquals(POST_BATCH_XQUERY_MODULE_FOO, System.getProperty(Options.POST_BATCH_MODULE + propertySuffix));
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -473,24 +472,24 @@ public class ManagerTest {
         args[2] = null; //process-module
         args[11] = null; //pre-batch-module
         args[13] = null; //post-batch-module
-
+        String propertySuffix = ".foo";
         Properties props = new Properties();
         props.setProperty(Options.XQUERY_MODULE, PROCESS_MODULE);
-        props.setProperty("XQUERY-MODULE.foo", XQUERY_MODULE_FOO);
+        props.setProperty(Options.XQUERY_MODULE + propertySuffix, XQUERY_MODULE_FOO);
         props.setProperty(Options.PRE_BATCH_XQUERY_MODULE, PRE_BATCH_MODULE);
-        props.setProperty("PRE-BATCH-XQUERY-MODULE.foo", PRE_BATCH_XQUERY_MODULE_FOO);
+        props.setProperty(Options.PRE_BATCH_XQUERY_MODULE + propertySuffix, PRE_BATCH_XQUERY_MODULE_FOO);
         props.setProperty(Options.POST_BATCH_XQUERY_MODULE, POST_BATCH_MODULE);
-        props.setProperty("POST-BATCH-XQUERY-MODULE.foo", POST_BATCH_XQUERY_MODULE_FOO);
+        props.setProperty(Options.POST_BATCH_XQUERY_MODULE + propertySuffix, POST_BATCH_XQUERY_MODULE_FOO);
         try {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
-            assertEquals(XQUERY_MODULE_FOO, instance.properties.getProperty("PROCESS-MODULE.foo"));
+            assertEquals(XQUERY_MODULE_FOO, instance.properties.getProperty(Options.PROCESS_MODULE + propertySuffix));
             assertEquals(PRE_BATCH_MODULE, instance.options.getPreBatchModule());
-            assertEquals(PRE_BATCH_XQUERY_MODULE_FOO, instance.properties.getProperty("PRE-BATCH-MODULE.foo"));
+            assertEquals(PRE_BATCH_XQUERY_MODULE_FOO, instance.properties.getProperty(Options.PRE_BATCH_MODULE + propertySuffix));
             assertEquals(POST_BATCH_MODULE, instance.options.getPostBatchModule());
-            assertEquals(POST_BATCH_XQUERY_MODULE_FOO, instance.properties.getProperty("POST-BATCH-MODULE.foo"));
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+            assertEquals(POST_BATCH_XQUERY_MODULE_FOO, instance.properties.getProperty(Options.POST_BATCH_MODULE + propertySuffix));
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -505,7 +504,7 @@ public class ManagerTest {
         try {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
@@ -521,7 +520,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertEquals(5, instance.options.getBatchSize());
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -537,7 +536,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertFalse(instance.options.isFailOnError());
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -553,7 +552,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertTrue(instance.options.isFailOnError());
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -573,7 +572,7 @@ public class ManagerTest {
             assertEquals(EXPORT_FILE_DIR, instance.properties.getProperty("EXPORT-FILE-DIR"));
             assertEquals(EXPORT_FILE_NAME, instance.properties.getProperty("EXPORT-FILE-NAME"));
             assertEquals(EXPORT_FILE_DIR + "/out", instance.properties.getProperty("ERROR-FILE-NAME"));
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -588,7 +587,7 @@ public class ManagerTest {
         try {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
@@ -606,13 +605,13 @@ public class ManagerTest {
         Properties props = new Properties();
         props.setProperty(Options.ERROR_FILE_NAME, errorFilename);
         try {
-            errorFile.createNewFile();
-            exportFile.createNewFile();
-            Manager instance = getMockManagerWithEmptyResults();
-            instance.init(args, props);
+            if (errorFile.createNewFile() && exportFile.createNewFile()) {
+                Manager instance = getMockManagerWithEmptyResults();
+                instance.init(args, props);
+            }
             assertFalse(errorFile.exists());
             assertFalse(exportFile.exists());
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | IOException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -632,7 +631,7 @@ public class ManagerTest {
             instance.init(args, props);
             assertNull(instance.properties.getProperty(Options.EXPORT_FILE_PART_EXT));
             assertNull(System.getProperty(Options.EXPORT_FILE_PART_EXT));
-        } catch (RequestException | IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -642,7 +641,6 @@ public class ManagerTest {
     public void testInitOptionsDefaultOptions() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
-        //args[2] = null;
         args[3] = null;
         args[4] = null;
         args[5] = null;
@@ -662,7 +660,7 @@ public class ManagerTest {
         try {
             instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -697,7 +695,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertEquals("initModule", instance.options.getInitModule());
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -713,7 +711,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertEquals(PROCESS_TASK, instance.options.getProcessTaskClass().getName());
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -730,7 +728,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             assertEquals(loader, instance.options.getUrisLoaderClass().getName());
-        } catch (RequestException | IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -751,7 +749,7 @@ public class ManagerTest {
             instance.init(args, props);
             List<LogRecord> records = testLogger.getLogRecords();
             assertTrue(containsLogRecord(records, new LogRecord(Level.WARNING, "XCC configured for the filesystem: please install modules manually")));
-        } catch (IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException | RequestException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -767,7 +765,7 @@ public class ManagerTest {
         try {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
-        } catch (RequestException | IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
@@ -792,7 +790,7 @@ public class ManagerTest {
         String legacyValue2 = "legacyVal2";
         Properties props = new Properties();
         props.setProperty(Options.XQUERY_MODULE, legacyValue1);
-        props.setProperty("XQUERY-MODULE.bar", legacyValue2);
+        props.setProperty(Options.XQUERY_MODULE + ".bar", legacyValue2);
 
         try {
             Manager manager = getMockManagerWithEmptyResults();
@@ -800,7 +798,7 @@ public class ManagerTest {
             manager.normalizeLegacyProperties();
 
             assertEquals(legacyValue1, manager.properties.getProperty(Options.PROCESS_MODULE));
-            assertEquals(legacyValue2, manager.properties.getProperty("PROCESS-MODULE.bar"));
+            assertEquals(legacyValue2, manager.properties.getProperty(Options.PROCESS_MODULE + ".bar"));
         } catch (RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -837,13 +835,12 @@ public class ManagerTest {
     @Test
     public void testCommandFileWatcherRun() {
         try {
-            List<String> lines = Arrays.asList("THREAD-COUNT=100");
-            File file = createTempFile(lines);
+            File file = createTempFile("THREAD-COUNT=100");
             Manager manager = new Manager();
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.run();
             assertEquals(100, manager.options.getThreadCount());
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -866,13 +863,12 @@ public class ManagerTest {
     @Test
     public void testCommandFileWatcherOnChangeFileIsPaused() {
         try {
-            List<String> lines = Arrays.asList("COMMAND=PAUSE");
-            File file = createTempFile(lines);
+            File file = createTempFile("COMMAND=PAUSE");
             Manager manager = new Manager();
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.onChange(file);
             assertTrue(testLogger.getLogRecords().isEmpty());
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -881,13 +877,12 @@ public class ManagerTest {
     @Test
     public void testCommandFileWatcherOnChangeFileIsStop() {
         try {
-            List<String> lines = Arrays.asList("COMMAND=STOP");
-            File file = createTempFile(lines);
+            File file = createTempFile("COMMAND=STOP");
             Manager manager = new Manager();
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.onChange(file);
             assertTrue(manager.stopCommand);
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -895,29 +890,22 @@ public class ManagerTest {
 
     @Test
     public void testCommandFileWatcherOnChangeThreadCount() {
-        try {
-            List<String> lines = Arrays.asList("THREAD-COUNT=11");
-            File file = createTempFile(lines);
-            Manager manager = new Manager();
-            Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
-            fileWatcher.onChange(file);
-            assertEquals(11, manager.options.getThreadCount());
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        commandFileWatcherOnChangeThreadCount(11, 11);
     }
 
     @Test
     public void testCommandFileWatcherOnChangeThreadCountIsZero() {
+        commandFileWatcherOnChangeThreadCount(0, 1);
+    }
+
+    public void commandFileWatcherOnChangeThreadCount(int threads, int expectedThreadCount) {
         try {
-            List<String> lines = Arrays.asList("THREAD-COUNT=0");
-            File file = createTempFile(lines);
+            File file = createTempFile("THREAD-COUNT=" + Integer.toString(threads));
             Manager manager = new Manager();
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.onChange(file);
-            assertEquals(1, manager.options.getThreadCount());
-        } catch (Exception ex) {
+            assertEquals(expectedThreadCount, manager.options.getThreadCount());
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -946,6 +934,91 @@ public class ManagerTest {
         Manager manager = new Manager();
         Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
         fileWatcher.onChange(file);
+    }
+
+    @Test
+    public void testInsertModule() {
+        Session session = mock(Session.class);
+        Manager manager = new Manager();
+        manager.options.setDoInstall(true);
+        try {
+            manager.insertModule(session, "src/test/resources/transform.xqy");
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testInsertModuleLoadedFromClassloader() {
+        Session session = mock(Session.class);
+        Manager manager = new Manager();
+        manager.options.setDoInstall(true);
+        try {
+            manager.insertModule(session, "transform.xqy");
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testInsertModuleLoadedFromClassloaderNotFound() {
+        Session session = mock(Session.class);
+        Manager manager = new Manager();
+        manager.options.setDoInstall(true);
+        try {
+            manager.insertModule(session, "transformDoesNotExist.xqy");
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test(expected = CorbException.class)
+    public void testInsertModuleAndThrowException() throws CorbException {
+        Session session = mock(Session.class);
+        try {
+            Mockito.doThrow(RequestException.class).when(session).insertContent(any(Content.class));
+            Manager manager = new Manager();
+            manager.options.setDoInstall(true);
+            manager.insertModule(session, "src/test/resources/transform.xqy");
+        } catch (RequestException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+
+    }
+
+    @Test
+    public void testSetPoolSizeGrow() {
+        int size = 5;
+        ThreadPoolExecutor threadPool = testSetPoolSize(5, size);
+        assertEquals(size, threadPool.getMaximumPoolSize());
+        assertEquals(size, threadPool.getCorePoolSize());
+    }
+
+    @Test
+    public void testSetPoolSizeShrink() {
+        int size = 1;
+        ThreadPoolExecutor threadPool = testSetPoolSize(5, size);
+        assertEquals(size, threadPool.getMaximumPoolSize());
+        assertEquals(size, threadPool.getCorePoolSize());
+    }
+
+    @Test
+    public void testSetPoolSizeShrinkNegative() {
+        int initialSize = 5;
+        ThreadPoolExecutor threadPool = testSetPoolSize(initialSize, -1);
+        assertEquals(initialSize, threadPool.getMaximumPoolSize());
+        assertEquals(initialSize, threadPool.getCorePoolSize());
+    }
+
+    public ThreadPoolExecutor testSetPoolSize(int initialSize, int size) {
+        ThreadPoolExecutor threadPool = new ThreadPoolExecutor(initialSize, initialSize, 100, TimeUnit.MILLISECONDS, mock(BlockingQueue.class));
+        Manager instance = new Manager();
+        instance.setPoolSize(threadPool, size);
+        return threadPool;
     }
 
     @Test
@@ -1183,7 +1256,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testSetThreadCount_InvalidValue() {
+    public void testSetThreadCountWithInvalidValue() {
         Manager instance = new Manager();
         instance.setThreadCount(-5);
         assertEquals(1, instance.options.getThreadCount());
@@ -1192,7 +1265,7 @@ public class ManagerTest {
     }
 
     public static String[] getDefaultArgs() {
-        String[] args = {XCC_CONNECTION_URI,
+        return new String[]{XCC_CONNECTION_URI,
             COLLECTION_NAME,
             XQUERY_MODULE,
             THREAD_COUNT,
@@ -1208,7 +1281,6 @@ public class ManagerTest {
             EXPORT_FILE_DIR,
             EXPORT_FILE_NAME,
             URIS_FILE};
-        return args;
     }
 
     public static Properties getDefaultProperties() {
@@ -1229,11 +1301,16 @@ public class ManagerTest {
         properties.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         return properties;
     }
-    
+
     public static void setDefaultSystemProperties() {
         System.getProperties().putAll(getDefaultProperties());
     }
-    
+
+    public File createTempFile(String content) throws IOException {
+        List<String> lines = Collections.singletonList(content);
+        return createTempFile(lines);
+    }
+
     public File createTempFile(List<String> lines) throws IOException {
         Path path = Files.createTempFile("tmp", "txt");
         File file = path.toFile();
@@ -1255,9 +1332,9 @@ public class ManagerTest {
         XdmItem uriCount = mock(XdmItem.class);
 
         when(contentSource.newSession()).thenReturn(session);
-        when(contentSource.newSession((String) any())).thenReturn(session);
+        when(contentSource.newSession(any())).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(moduleInvoke);
-        when(session.submitRequest((Request) any())).thenReturn(res);
+        when(session.submitRequest(any())).thenReturn(res);
         when(res.next()).thenReturn(resultItem).thenReturn(uriCountResult).thenReturn(null);
         when(resultItem.getItem()).thenReturn(batchRefItem);
         when(uriCountResult.getItem()).thenReturn(uriCount);
@@ -1268,10 +1345,40 @@ public class ManagerTest {
         return manager;
     }
 
+    @Test
+    public void testLogIfSlowReceiveNotLowMemory() {
+        Manager manager = new Manager();
+        manager.logIfSlowReceive(System.currentTimeMillis() - 5000, Runtime.getRuntime().freeMemory());
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(2, records.size());
+        assertEquals(Level.WARNING, records.get(0).getLevel());
+        assertEquals(SLOW_RECEIVE_MESSAGE, records.get(0).getMessage());
+        assertEquals(Level.INFO, records.get(1).getLevel());
+    }
+
+    @Test
+    public void testLogIfSlowReceiveLowMemory() {
+        Manager manager = new Manager();
+        manager.logIfSlowReceive(System.currentTimeMillis() - 5000, Runtime.getRuntime().freeMemory() * 6);
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(2, records.size());
+        assertEquals(Level.WARNING, records.get(0).getLevel());
+        assertEquals(SLOW_RECEIVE_MESSAGE, records.get(0).getMessage());
+        assertEquals(Level.WARNING, records.get(1).getLevel());
+    }
+
+    @Test
+    public void testLogIfSlowReceiveNotSlow() {
+        Manager manager = new Manager();
+        manager.logIfSlowReceive(System.currentTimeMillis() - 1, 100000000);
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertTrue(records.isEmpty());
+    }
+
     private static class MockManager extends Manager {
 
         @Override
-        protected void prepareContentSource() throws XccConfigException, GeneralSecurityException {
+        protected void prepareContentSource() throws CorbException {
             //Want to retain the mock contentSoure that we set in our tests
         }
     }

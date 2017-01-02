@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,20 +72,20 @@ public class TransformOptions {
     private String modulesDatabase = "Modules";
 
     // Set on status check
-    private String XDBC_ROOT = SLASH;
+    private String xdbcRoot = SLASH;
 
     /**
      * @return
      */
     public String getXDBC_ROOT() {
-        return XDBC_ROOT;
+        return xdbcRoot;
     }
 
     /**
      * @param xdbc_root
      */
     public void setXDBC_ROOT(String xdbc_root) {
-        XDBC_ROOT = xdbc_root;
+        this.xdbcRoot = xdbc_root;
     }
 
     /**

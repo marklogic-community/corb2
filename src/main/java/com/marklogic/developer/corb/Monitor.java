@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,6 @@ public class Monitor implements Runnable {
     private long lastProgress = 0;
     private long startMillis;
     private final Manager manager;
-    private String[] lastUris;
     private long taskCount;
     private final PausableThreadPoolExecutor pool;
     private boolean shutdownNow;
@@ -92,12 +91,10 @@ public class Monitor implements Runnable {
             // reset interrupt status and exit
             Thread.interrupted();
             LOG.log(SEVERE, "interrupted: exiting", e);
-        } catch (CorbException e) {
-            LOG.log(SEVERE, "Unexpected error", e);
         }
     }
 
-    private void monitorResults() throws InterruptedException, ExecutionException, CorbException {
+    private void monitorResults() throws InterruptedException, ExecutionException {
         // fast-fail as soon as we see any exceptions
         LOG.log(INFO, "monitoring {0} tasks", taskCount);
         Future<String[]> future;
@@ -108,9 +105,8 @@ public class Monitor implements Runnable {
             future = cs.poll(TransformOptions.PROGRESS_INTERVAL_MS, TimeUnit.MILLISECONDS);
             if (null != future) {
                 // record result, or throw exception
-                lastUris = future.get();
+                String[] lastUris = future.get();
                 completed += lastUris.length;
-                //LOG.log(Level.FINE, "completed uris: {0}", Arrays.toString(lastUris));
             }
 
             showProgress();
@@ -124,7 +120,7 @@ public class Monitor implements Runnable {
                     break;
                 }
             } else if (future == null && pool.getActiveCount() == 0) {
-                LOG.log(WARNING, "No active tasks found with {0} tasks remains to be completed", (taskCount - completed));
+                LOG.log(WARNING, "No active tasks found with {0} tasks remains to be completed", taskCount - completed);
             }
         }
         LOG.info("waiting for pool to terminate");
@@ -132,7 +128,7 @@ public class Monitor implements Runnable {
         LOG.log(INFO, "completed all tasks {0}/{1}", new Object[]{completed, taskCount});
     }
 
-    private long showProgress() throws InterruptedException {
+    private long showProgress() {
         long current = System.currentTimeMillis();
         if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
             if (pool.isPaused()) {
@@ -168,48 +164,57 @@ public class Monitor implements Runnable {
     private String getProgressMessage(long completed) {
         long curMillis = System.currentTimeMillis();
         double tps = calculateTransactionsPerSecond(completed, curMillis, startMillis);
-        double curTps = tps;
+        double currentTransactionsPerSecond = tps;
         if (prevMillis > 0) {
-            curTps = calculateTransactionsPerSecond(completed, prevCompleted, curMillis, prevMillis);
+            currentTransactionsPerSecond = calculateTransactionsPerSecond(completed, prevCompleted, curMillis, prevMillis);
         }
         prevCompleted = completed;
         prevMillis = curMillis;
 
         boolean isPaused = manager.isPaused();
-        double tpsForETC = calculateTpsForETC(curTps, isPaused);
-        return getProgressMessage(completed, taskCount, tps, curTps, tpsForETC, pool.getActiveCount(), isPaused);
+        double tpsForETC = calculateTpsForETC(currentTransactionsPerSecond, isPaused);
+        return getProgressMessage(completed, taskCount, tps, currentTransactionsPerSecond, tpsForETC, pool.getActiveCount(), isPaused);
     }
 
-    protected double calculateTpsForETC(double curTps, boolean isPaused) {
-        if (curTps == 0 && isPaused) {
+    protected double calculateTpsForETC(double currentTransactionsPerSecond, boolean isPaused) {
+        if (isZero(currentTransactionsPerSecond) && isPaused) {
             this.tpsForETCList.clear();
         } else {
             if (this.tpsForETCList.size() >= this.numTpsForEtc) {
                 this.tpsForETCList.remove(0);
             }
-            this.tpsForETCList.add(curTps);
+            this.tpsForETCList.add(currentTransactionsPerSecond);
         }
 
-        double tpsForETC = 0;
+        double transactionsPerSecondForETC = 0;
         double sum = 0;
         for (Double next : this.tpsForETCList) {
             sum += next;
         }
         if (!this.tpsForETCList.isEmpty()) {
-            tpsForETC = sum / this.tpsForETCList.size();
+            transactionsPerSecondForETC = sum / this.tpsForETCList.size();
         }
-        return tpsForETC;
+        return transactionsPerSecondForETC;
     }
 
-    static protected double calculateTransactionsPerSecond(long amountCompleted, long currentMillis, long previousMillis) {
+    /**
+     * Determine if the given double value is equal to zero
+     * @param value
+     * @return
+     */
+    protected static boolean isZero(double value) {
+        return Double.compare(value, 0.0) == 0;
+    }
+
+    protected static double calculateTransactionsPerSecond(long amountCompleted, long currentMillis, long previousMillis) {
         return calculateTransactionsPerSecond(amountCompleted, 0, currentMillis, previousMillis);
     }
 
-    static protected double calculateTransactionsPerSecond(long amountCompleted, long previouslyCompleted, long currentMillis, long previousMillis) {
+    protected static double calculateTransactionsPerSecond(long amountCompleted, long previouslyCompleted, long currentMillis, long previousMillis) {
         return (amountCompleted - previouslyCompleted) * 1000d / (currentMillis - previousMillis);
     }
 
-    static protected String getProgressMessage(long completed, long taskCount, double tps, double curTps, double tpsForETC, int threads, boolean isPaused) {
+    protected static String getProgressMessage(long completed, long taskCount, double tps, double curTps, double tpsForETC, int threads, boolean isPaused) {
         String etc = getEstimatedTimeCompletion(taskCount, completed, tpsForETC, isPaused);
         return completed + "/" + taskCount + ", "
                 + formatTransactionsPerSecond(tps) + " tps(avg), "
@@ -218,8 +223,8 @@ public class Monitor implements Runnable {
                 + threads + " active threads.";
     }
 
-    static protected String getEstimatedTimeCompletion(double taskCount, double completed, double tpsForETC, boolean isPaused) {
-        double ets = (tpsForETC != 0) ? (taskCount - completed) / tpsForETC : -1;
+    protected static String getEstimatedTimeCompletion(double taskCount, double completed, double tpsForETC, boolean isPaused) {
+        double ets = !isZero(tpsForETC) ? (taskCount - completed) / tpsForETC : -1;
         int hours = (int) ets / 3600;
         int minutes = (int) (ets % 3600) / 60;
         int seconds = (int) ets % 60;
@@ -234,7 +239,7 @@ public class Monitor implements Runnable {
      * @param n
      * @return
      */
-    static protected String formatTransactionsPerSecond(Number n) {
+    protected static String formatTransactionsPerSecond(Number n) {
         NumberFormat format = DecimalFormat.getInstance();
         format.setRoundingMode(RoundingMode.HALF_UP);
         format.setMinimumFractionDigits(0);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,21 +49,21 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 		}
 		return fileName;
 	}
-	
+
 	protected String getPartFileName() {
 		String fileName = getFileName();
 		if (isNotEmpty(fileName)) {
 			String partExt = getProperty(EXPORT_FILE_PART_EXT);
 			if (isNotEmpty(partExt)) {
 				if (!partExt.startsWith(".")) {
-					partExt = "." + partExt;
+					partExt = '.' + partExt;
 				}
 				fileName += partExt;
 			}
 		}
 		return fileName;
 	}
-	      
+
 	@Override
 	protected void writeToFile(ResultSequence seq) throws IOException {
 		if (seq == null || !seq.hasNext()) {

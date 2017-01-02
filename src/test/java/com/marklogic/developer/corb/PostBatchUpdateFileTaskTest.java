@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,7 +56,8 @@ public class PostBatchUpdateFileTaskTest {
     private static final String D = "d\n";
     private static final String Z = "z\n";
     private static final String ZDDAB = "z...,d....,d....,a.....,b";
-
+    private static final String DISTINCT = "distinct";
+    
     @Before
     public void setUp() {
         clearSystemProperties();
@@ -123,17 +124,19 @@ public class PostBatchUpdateFileTaskTest {
     public void testMoveFileStringStringDestExists() {
         try {
             File source = createSampleFile();
-
             String destFilePath = source.toString() + BAK_EXT;
             File dest = new File(destFilePath);
-            dest.deleteOnExit();
-            dest.createNewFile();
-            PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
-            instance.moveFile(source.toString(), destFilePath);
+            if (dest.createNewFile()) {
+                dest.deleteOnExit();
+                PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+                instance.moveFile(source.toString(), destFilePath);
 
-            assertFalse(source.exists());
-            assertTrue(dest.exists());
-            assertEquals(EXAMPLE_CONTENT, TestUtils.readFile(dest));
+                assertFalse(source.exists());
+                assertTrue(dest.exists());
+                assertEquals(EXAMPLE_CONTENT, TestUtils.readFile(dest));
+            } else {
+                fail();
+            }
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -189,19 +192,22 @@ public class PostBatchUpdateFileTaskTest {
     public void testCompressFileOutputFileDoesNotExist() {
         try {
             File sampleFile = createSamplePartFile();
-            sampleFile.delete();
-            Properties props = new Properties();
-            props.setProperty(Options.EXPORT_FILE_AS_ZIP, Boolean.TRUE.toString());
-            props.setProperty(Options.EXPORT_FILE_NAME, sampleFile.toString());
-            props.setProperty(Options.EXPORT_FILE_PART_EXT, PART_FILE_EXT);
+            if (sampleFile.delete()) {
+                Properties props = new Properties();
+                props.setProperty(Options.EXPORT_FILE_AS_ZIP, Boolean.TRUE.toString());
+                props.setProperty(Options.EXPORT_FILE_NAME, sampleFile.toString());
+                props.setProperty(Options.EXPORT_FILE_PART_EXT, PART_FILE_EXT);
 
-            PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
-            instance.properties = props;
-            instance.compressFile();
+                PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+                instance.properties = props;
+                instance.compressFile();
 
-            File output = new File(sampleFile.toString().concat(ZIP_EXT));
-            output.deleteOnExit();
-            assertFalse(output.exists());
+                File output = new File(sampleFile.toString().concat(ZIP_EXT));
+                output.deleteOnExit();
+                assertFalse(output.exists());
+            } else {
+                fail();
+            }
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -218,15 +224,18 @@ public class PostBatchUpdateFileTaskTest {
             props.setProperty(Options.EXPORT_FILE_PART_EXT, "zpart");
             String zipFilePart = sampleFile.toString().concat(ZIP_EXT).concat(PART_EXT);
             File existingZipFilePart = new File(zipFilePart);
-            existingZipFilePart.createNewFile();
+            if (existingZipFilePart.createNewFile()) {
 
-            PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
-            instance.properties = props;
-            instance.compressFile();
+                PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+                instance.properties = props;
+                instance.compressFile();
 
-            File output = new File(sampleFile.toString().concat(ZIP_EXT));
-            output.deleteOnExit();
-            assertTrue(output.exists());
+                File output = new File(sampleFile.toString().concat(ZIP_EXT));
+                output.deleteOnExit();
+                assertTrue(output.exists());
+            } else {
+                fail();
+            }
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -299,17 +308,17 @@ public class PostBatchUpdateFileTaskTest {
 
     @Test
     public void testCallRemoveDuplicatesAndSortCustomComparatorDistinct() throws Exception {
-        assertTrue(testCustomComparator("distinct", "b,z...,d....,a....."));
+        assertTrue(testCustomComparator(DISTINCT, "b,z...,d....,a....."));
     }
 
     @Test
     public void testCallRemoveDuplicatesAndSortCustomComparatorBadClass() throws Exception {
-        assertTrue(testCustomComparator("distinct", ZDDAB, "java.lang.String"));
+        assertTrue(testCustomComparator(DISTINCT, ZDDAB, "java.lang.String"));
     }
 
     @Test
     public void testCallRemoveDuplicatesAndSortNoSortOrDedupDistinctOnly() throws Exception {
-        assertTrue(testCustomComparator("distinct", ZDDAB, null));
+        assertTrue(testCustomComparator(DISTINCT, ZDDAB, null));
     }
 
     @Test
@@ -327,9 +336,9 @@ public class PostBatchUpdateFileTaskTest {
         file.deleteOnExit();
         try (FileWriter writer = new FileWriter(file, true)) {
             writer.append("z...\n");
-            String d_dot_dot_dot_newline = "d....\n";
-            writer.append(d_dot_dot_dot_newline);
-            writer.append(d_dot_dot_dot_newline);
+            String dDots = "d....\n";
+            writer.append(dDots);
+            writer.append(dDots);
             writer.append("a.....\n");
             writer.append(B);
             writer.flush();
@@ -389,7 +398,6 @@ public class PostBatchUpdateFileTaskTest {
         try {
             File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
             file.deleteOnExit();
-            file.createNewFile();
             Properties props = new Properties();
             props.setProperty(Options.EXPORT_FILE_SORT, Boolean.toString(true));
             props.setProperty(Options.EXPORT_FILE_NAME, file.toString());
@@ -409,7 +417,6 @@ public class PostBatchUpdateFileTaskTest {
         try {
             File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
             file.deleteOnExit();
-            file.createNewFile();
             Properties props = new Properties();
             props.setProperty(Options.EXPORT_FILE_SORT, Boolean.TRUE.toString());
             props.setProperty(Options.EXPORT_FILE_NAME, file.toString());
@@ -424,7 +431,7 @@ public class PostBatchUpdateFileTaskTest {
         }
     }
 
-    private String testRemoveDuplicatesAndSort(Properties props) throws IOException, Exception {
+    private String testRemoveDuplicatesAndSort(Properties props) throws Exception {
 
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
@@ -439,7 +446,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     private String testRemoveDuplicatesAndSort(File fileToSort, Properties props)
-            throws IOException, Exception {
+            throws Exception {
 
         props.setProperty(Options.EXPORT_FILE_AS_ZIP, Boolean.FALSE.toString());
         props.setProperty(Options.EXPORT_FILE_NAME, fileToSort.toString());
@@ -453,7 +460,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testCall() throws NullPointerException {
+    public void testCall() {
 
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
         try {
