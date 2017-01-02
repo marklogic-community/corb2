@@ -389,7 +389,7 @@ public class AbstractTaskTest {
         Request req = mock(Request.class);
         RetryableXQueryException retryableException = new RetryableXQueryException(req, CODE, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
         try {
-            assertTrue(testHandleRequestException("RetryableXQueryException", retryableException, false, 2));
+            assertTrue(testHandleRequestException(retryableException, false, 2));
         } catch (CorbException | IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -401,7 +401,7 @@ public class AbstractTaskTest {
         Request req = mock(Request.class);
         XQueryException xqueryException = new XQueryException(req, CODE, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
         try {
-            assertTrue(testHandleRequestException("XQueryException", xqueryException, false, 2));
+            assertTrue(testHandleRequestException(xqueryException, false, 2));
         } catch (CorbException | IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -413,7 +413,7 @@ public class AbstractTaskTest {
         Request req = mock(Request.class);
         RetryableJavaScriptException retryableException = new RetryableJavaScriptException(req, CODE, W3C_CODE, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
         try {
-            assertTrue(testHandleRequestException("RetryableJavaScriptException", retryableException, false, 2));
+            assertTrue(testHandleRequestException(retryableException, false, 2));
         } catch (CorbException | IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -425,7 +425,7 @@ public class AbstractTaskTest {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException(ERROR_MSG, req);
         try {
-            assertTrue(testHandleRequestException("RequestServerException", serverException, false, 2));
+            assertTrue(testHandleRequestException(serverException, false, 2));
         } catch (CorbException | IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -437,7 +437,7 @@ public class AbstractTaskTest {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException(ERROR_MSG, req);
         try {
-            testHandleRequestException("RequestServerException", serverException, true, 0);
+            testHandleRequestException(serverException, true, 0);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
@@ -449,7 +449,7 @@ public class AbstractTaskTest {
         Request req = mock(Request.class);
         RequestPermissionException serverException = new RequestPermissionException(ERROR_MSG, req, ADMIN);
         try {
-            assertTrue(testHandleRequestException("RequestPermissionException", serverException, false, 2));
+            assertTrue(testHandleRequestException(serverException, false, 2));
         } catch (CorbException | IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -461,7 +461,7 @@ public class AbstractTaskTest {
         Request req = mock(Request.class);
         RequestPermissionException serverException = new RequestPermissionException(ERROR_MSG, req, ADMIN);
         try {
-            testHandleRequestException("RequestPermissionException", serverException, true, 2);
+            testHandleRequestException(serverException, true, 2);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
@@ -473,7 +473,7 @@ public class AbstractTaskTest {
         Request req = mock(Request.class);
         ServerConnectionException serverException = new ServerConnectionException(ERROR_MSG, req);
         try {
-            assertTrue(testHandleRequestException("ServerConnectionException", serverException, false, 2));
+            assertTrue(testHandleRequestException(serverException, false, 2));
         } catch (CorbException | IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -485,7 +485,7 @@ public class AbstractTaskTest {
         Request req = mock(Request.class);
         ServerConnectionException serverException = new ServerConnectionException(ERROR_MSG, req);
         try {
-            testHandleRequestException("ServerConnectionException", serverException, true, 0);
+            testHandleRequestException(serverException, true, 0);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
@@ -784,10 +784,10 @@ public class AbstractTaskTest {
         return dir;
     }
 
-    public boolean testHandleRequestException(String type, RequestException exception, boolean fail, int retryLimit)
+    public boolean testHandleRequestException(RequestException exception, boolean fail, int retryLimit)
             throws CorbException, IOException {
         String[] uris = new String[]{URI};
-        return testHandleRequestException(type, exception, fail, uris, retryLimit);
+        return testHandleRequestException(exception.getClass().getSimpleName(), exception, fail, uris, retryLimit);
     }
 
     public boolean testHandleRequestException(String type, RequestException exception, boolean fail, String[] uris, int retryLimit)
@@ -835,7 +835,7 @@ public class AbstractTaskTest {
             throws CorbException, IOException {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException(message, req);
-        testHandleRequestException("RequestServerException", serverException, false, uris, delim, exportDir, errorFilename, 0);
+        testHandleRequestException(RequestServerException.class.getSimpleName(), serverException, false, uris, delim, exportDir, errorFilename, 0);
         return new File(exportDir, errorFilename);
     }
 
