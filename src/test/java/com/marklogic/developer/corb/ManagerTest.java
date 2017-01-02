@@ -94,7 +94,8 @@ public class ManagerTest {
     public static final String POST_BATCH_XQUERY_MODULE_FOO = "post-bar";
     public static final String PRE_BATCH_XQUERY_MODULE_FOO = "pre-bar";
     public static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
-
+    public static final String SLOW_RECEIVE_MESSAGE = "Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC";
+    
     @Before
     public void setUp() throws IOException {
         clearSystemProperties();
@@ -1351,7 +1352,7 @@ public class ManagerTest {
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(2, records.size());
         assertEquals(Level.WARNING, records.get(0).getLevel());
-        assertEquals("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC", records.get(0).getMessage());
+        assertEquals(SLOW_RECEIVE_MESSAGE, records.get(0).getMessage());
         assertEquals(Level.INFO, records.get(1).getLevel());
     }
 
@@ -1362,7 +1363,7 @@ public class ManagerTest {
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(2, records.size());
         assertEquals(Level.WARNING, records.get(0).getLevel());
-        assertEquals("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC", records.get(0).getMessage());
+        assertEquals(SLOW_RECEIVE_MESSAGE, records.get(0).getMessage());
         assertEquals(Level.WARNING, records.get(1).getLevel());
     }
 
