@@ -18,6 +18,7 @@
  */
 package com.marklogic.developer.corb;
 
+import com.marklogic.developer.corb.util.StringUtils;
 import static java.util.logging.Level.INFO;
 
 import java.io.BufferedReader;
@@ -358,7 +359,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     public static void main(String... args) throws Exception {
         String[] arguments = args == null ? new String[]{} : args;
         
-        String method = arguments.length > 0 ? arguments[0].trim() : "";
+        String method = arguments.length > 0 ? StringUtils.trim(arguments[0]) : "";
 
         if (METHOD_ENCRYPT.equals(method) && arguments.length == 2) {
             System.out.println(encrypt(arguments[1].trim())); // NOPMD
