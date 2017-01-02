@@ -200,7 +200,7 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
         if (nextUri == null) {
             try {
                 nextUri = readNextNode();
-            } catch (IOException | CorbException exc) {
+            } catch (CorbException exc) {
                 throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, exc);
             }
         }
@@ -216,7 +216,7 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
         } else {
             try {
                 node = readNextNode();
-            } catch (IOException | CorbException exc) {
+            } catch (CorbException exc) {
                 throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, exc);
             }
         }
