@@ -566,7 +566,7 @@ public class AbstractTaskTest {
     public void testWriteToErrorFileNullUris() throws CorbException, IOException {
         String[] uris = null;
         File exportDir = createTempDirectory();
-        String filename = "testWriteToErrorFile_nullUris.error";
+        String filename = "testWriteToErrorFileNullUris.error";
         String delim = null;
         String message = null;
         testWriteToError(uris, delim, exportDir, filename, message);
@@ -578,7 +578,7 @@ public class AbstractTaskTest {
     public void testWriteToErrorFileEmptyUris() throws CorbException, IOException {
         String[] uris = new String[]{};
         File exportDir = createTempDirectory();
-        String filename = "testWriteToErrorFile_emptyUris.error";
+        String filename = "testWriteToErrorFileEmptyUris.error";
         String delim = null;
         String message = null;
         File errorFile = testWriteToError(uris, delim, exportDir, filename, message);
@@ -644,7 +644,7 @@ public class AbstractTaskTest {
     @Test
     public void testWriteToErrorFileCustomBatchUridelim() {
         String[] uris = new String[]{URI};
-        String filename = "testWriteToErrorFile_customBatchUridelim.err";
+        String filename = "testWriteToErrorFileCustomBatchUridelim.err";
         String delim = "$";
 
         try {
@@ -661,7 +661,7 @@ public class AbstractTaskTest {
     @Test
     public void testWriteToErrorFileNullMessage() {
         String[] uris = new String[]{URI};
-        String filename = "testWriteToErrorFile_customBatchUridelim.err";
+        String filename = "testWriteToErrorFileNullMessage.err";
         String delim = "|";
         String message = null;
 
@@ -679,7 +679,7 @@ public class AbstractTaskTest {
     @Test
     public void testWriteToErrorFileEmptyMessage() {
         String[] uris = new String[]{URI};
-        String filename = "testWriteToErrorFile_customBatchUridelim.err";
+        String filename = "testWriteToErrorFileEmptyMessage.err";
         String delim = "~";
         String message = "";
         try {
