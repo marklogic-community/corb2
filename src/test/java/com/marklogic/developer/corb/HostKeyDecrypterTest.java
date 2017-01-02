@@ -171,6 +171,17 @@ public class HostKeyDecrypterTest {
     }
 
     @Test
+    public void testMainNullArgs() {
+        String[] args = null;
+        try {
+            HostKeyDecrypter.main(args);
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
+        assertEquals(USAGE, outContent.toString());
+    }
+    
+    @Test
     public void testDoDecrypt() {
         HostKeyDecrypter decrypter = new HostKeyDecrypter();
         String value = "bar";

@@ -356,10 +356,12 @@ public class HostKeyDecrypter extends AbstractDecrypter {
      * @throws java.lang.Exception
      */
     public static void main(String... args) throws Exception {
-        String method = (args != null && args.length > 0) ? args[0].trim() : "";
+        String[] arguments = args == null ? new String[]{} : args;
+        
+        String method = arguments.length > 0 ? arguments[0].trim() : "";
 
-        if (METHOD_ENCRYPT.equals(method) && args.length == 2) {
-            System.out.println(encrypt(args[1].trim())); // NOPMD
+        if (METHOD_ENCRYPT.equals(method) && arguments.length == 2) {
+            System.out.println(encrypt(arguments[1].trim())); // NOPMD
         } else if (METHOD_TEST.equals(method)) {
             HostKeyDecrypter decrypter = new HostKeyDecrypter();
             decrypter.init(System.getProperties());
