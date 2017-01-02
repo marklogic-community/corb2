@@ -70,6 +70,7 @@ import org.xml.sax.SAXException;
  * 
  * For extremely large XML files, consider the {@link com.marklogic.developer.corb.FileUrisStreamingXMLLoader}
  * 
+ * @author Praveen Venkata
  * @since 2.3.1
  */
 public class FileUrisXMLLoader extends AbstractUrisLoader {
