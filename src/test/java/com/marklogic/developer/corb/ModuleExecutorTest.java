@@ -445,7 +445,7 @@ public class ModuleExecutorTest {
     }
 
     private Properties getProperties() {
-        Properties properties = null;
+        Properties properties = new Properties();
         String propFileLocation = System.getProperty(Options.OPTIONS_FILE);
         if (propFileLocation == null || propFileLocation.length() == 0) {
             propFileLocation = OPTIONS_FILE;
