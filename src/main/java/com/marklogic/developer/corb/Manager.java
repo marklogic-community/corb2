@@ -721,7 +721,7 @@ public class Manager extends AbstractManager {
         if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
             LOG.warning("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
             long freeMemory = Runtime.getRuntime().freeMemory();
-            Level memoryLogLevel = (freeMemory < totalMemory * 0.2d) ? WARNING : INFO;
+            Level memoryLogLevel = freeMemory < totalMemory * 0.2d ? WARNING : INFO;
             final int megabytes = 1024 * 1024;
             LOG.log(memoryLogLevel, "free memory: {0} MiB" + " of " + totalMemory / megabytes, freeMemory / megabytes);
         }
