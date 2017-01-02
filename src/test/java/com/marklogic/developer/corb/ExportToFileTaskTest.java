@@ -93,8 +93,7 @@ public class ExportToFileTaskTest {
     public void testGetFileNameSlashAndExportFileUriToPathFalse() {
         ExportToFileTask instance = new ExportToFileTask();
         instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(false));
-        String expected = SLASH;
-        String[] uri = {expected};
+        String[] uri = {SLASH};
         instance.setInputURI(uri);
         String filename = instance.getFileName();
         assertEquals("", filename);

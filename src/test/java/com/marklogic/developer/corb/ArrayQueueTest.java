@@ -119,7 +119,7 @@ public class ArrayQueueTest {
         instance.removeAt(0);
         assertTrue(instance.isEmpty());
     }
-    
+
     @Test
     public void testRemove() {
         Queue<String> instance = new ArrayQueue<>(2);
@@ -151,7 +151,7 @@ public class ArrayQueueTest {
         instance.iterator().next();
         fail();
     }
-    
+
     @Test (expected = NullPointerException.class)
     public void testOfferNull() {
         Queue<String> instance = new ArrayQueue<>(2);

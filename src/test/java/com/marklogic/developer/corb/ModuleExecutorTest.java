@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -435,7 +436,7 @@ public class ModuleExecutorTest {
             clearSystemProperties();
             System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
             ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
-            Properties props = executor.getProperties();
+            Map props = executor.getProperties();
 
             assertNotNull(props);
             assertFalse(props.isEmpty());
@@ -447,7 +448,7 @@ public class ModuleExecutorTest {
     private Properties getProperties() {
         Properties properties = new Properties();
         String propFileLocation = System.getProperty(Options.OPTIONS_FILE);
-        if (propFileLocation == null || propFileLocation.length() == 0) {
+        if (StringUtils.isEmpty(propFileLocation)) {
             propFileLocation = OPTIONS_FILE;
         }
         File propFile = new File(propFileLocation);

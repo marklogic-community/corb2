@@ -277,7 +277,7 @@ public class ModuleExecutor extends AbstractManager {
         }
         String fileDir = getProperty(EXPORT_FILE_DIR);
         String fileName = getProperty(EXPORT_FILE_NAME);
-        if (fileName == null || fileName.length() == 0) {
+        if (StringUtils.isEmpty(fileName)) {
             return;
         }
         LOG.info("Writing output to file");
