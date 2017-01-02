@@ -30,6 +30,8 @@ addons:
       branches: 
         - master
         - development
+      sonar.junit.reportsPath: target/surefire-reports
+      sonar.jacoco.reportPaths: target/jacoco.exec
   coverity_scan:
     project:
       name: "marklogic/corb2"
