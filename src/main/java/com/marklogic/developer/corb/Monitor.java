@@ -91,12 +91,10 @@ public class Monitor implements Runnable {
             // reset interrupt status and exit
             Thread.interrupted();
             LOG.log(SEVERE, "interrupted: exiting", e);
-        } catch (CorbException e) {
-            LOG.log(SEVERE, "Unexpected error", e);
         }
     }
 
-    private void monitorResults() throws InterruptedException, ExecutionException, CorbException {
+    private void monitorResults() throws InterruptedException, ExecutionException {
         // fast-fail as soon as we see any exceptions
         LOG.log(INFO, "monitoring {0} tasks", taskCount);
         Future<String[]> future;
