@@ -1344,6 +1344,36 @@ public class ManagerTest {
         return manager;
     }
 
+    @Test
+    public void testLogIfSlowReceiveNotLowMemory() {
+        Manager manager = new Manager();
+        manager.logIfSlowReceive(System.currentTimeMillis() - 5000, Runtime.getRuntime().freeMemory());
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(2, records.size());
+        assertEquals(Level.WARNING, records.get(0).getLevel());
+        assertEquals("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC", records.get(0).getMessage());
+        assertEquals(Level.INFO, records.get(1).getLevel());
+    }
+
+    @Test
+    public void testLogIfSlowReceiveLowMemory() {
+        Manager manager = new Manager();
+        manager.logIfSlowReceive(System.currentTimeMillis() - 5000, Runtime.getRuntime().freeMemory() * 6);
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(2, records.size());
+        assertEquals(Level.WARNING, records.get(0).getLevel());
+        assertEquals("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC", records.get(0).getMessage());
+        assertEquals(Level.WARNING, records.get(1).getLevel());
+    }
+
+    @Test
+    public void testLogIfSlowReceiveNotSlow() {
+        Manager manager = new Manager();
+        manager.logIfSlowReceive(System.currentTimeMillis() - 1, 100000000);
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertTrue(records.isEmpty());
+    }
+
     private static class MockManager extends Manager {
 
         @Override
