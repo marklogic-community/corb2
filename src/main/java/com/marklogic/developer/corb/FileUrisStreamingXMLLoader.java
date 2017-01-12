@@ -26,10 +26,10 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,6 +38,7 @@ import java.security.InvalidParameterException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -45,12 +46,13 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.stax.StAXSource;
+import org.w3c.dom.Node;
 
 /**
  * Split an XML file {@value #XML_FILE} into multiple documents using the
- * {@link StreamingXPath } expression from the {@value #XML_NODE} property and 
- * sends the serialized XML string to the process module in the URIS parameter. 
- * Uses a StAX parser in order to limit memory consumption and process very 
+ * {@link StreamingXPath } expression from the {@value #XML_NODE} property and
+ * sends the serialized XML string to the process module in the URIS parameter.
+ * Uses a StAX parser in order to limit memory consumption and process very
  * large XML inputs.
  *
  * Optionally validate the XML file prior to processing. Specify the XSD with
@@ -63,7 +65,6 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
 
     protected static final Logger LOG = Logger.getLogger(FileUrisStreamingXMLLoader.class.getName());
     private static final String SLASH = "/";
-    private File xmlFile;
     private Path tempDir;
     private DirectoryStream<Path> directoryStream;
     private Iterator<Path> files;
@@ -74,16 +75,17 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
     public void open() throws CorbException {
         String xmlFilename = getProperty(XML_FILE);
         String xPath = getProperty(Options.XML_NODE);
-
+        // default processing will split on child elements of the document element
         xPath = StringUtils.isBlank(xPath) ? "/*/*" : xPath;
         streamingXPath = new StreamingXPath(xPath);
         xmlFile = FileUtils.getFile(xmlFilename);
         try {
-            validate(xmlFile);
-            batchRef = xmlFile.getCanonicalPath(); //set the original XML filename, for reference in processing module
+            schemaValidate(xmlFile);
+            //set the original XML filename, for reference in processing modules
+            batchRef = xmlFile.getCanonicalPath();
             tempDir = getTempDir();
-            files = read(xmlFile.toPath());
-        } catch (IOException | XMLStreamException ex) {
+            files = readToTempDir(xmlFile.toPath());
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
         }
@@ -97,10 +99,17 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
     @Override
     public String next() throws CorbException {
         Path path = files.next();
+        File file = path.toFile();
         try {
-            String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
-            Files.deleteIfExists(path);
-            return content;
+            Map<String, String> metadata = getMetadata(file);
+            metadata.put(META_SOURCE, xmlFile.getCanonicalPath());
+
+            try (InputStream inputStream = new FileInputStream(file)) {
+                Node node = toIngestDoc(metadata, inputStream);
+                String content = nodeToString(node);
+                Files.deleteIfExists(path);
+                return content;
+            }
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
@@ -108,7 +117,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
     }
 
     @Override
-    public void cleanup(){
+    public void cleanup() {
         super.cleanup();
         if (tempDir != null && tempDir.toFile().exists()) {
             try {
@@ -118,10 +127,10 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
             }
         }
     }
-    
+
     @Override
-    public void close() {     
-        IOUtils.closeQuietly(directoryStream);     
+    public void close() {
+        IOUtils.closeQuietly(directoryStream);
         cleanup();
     }
 
@@ -130,12 +139,9 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
      * an iterator for those files.
      *
      * @param xmlFile
-     * @return
-     * @throws XMLStreamException
-     * @throws FileNotFoundException
-     * @throws IOException
+     * @throws CorbException
      */
-    protected Iterator<Path> read(Path xmlFile) throws XMLStreamException, IOException {
+    private Iterator<Path> readToTempDir(Path xmlFile) throws CorbException {
         int extractedDocumentCount = 0;
 
         XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
@@ -144,8 +150,8 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
             
             Deque<String> context = new ArrayDeque<>();
             while (reader.hasNext()) {
-                if (reader.isStartElement()
-                        && extractElement(reader, context)) {
+                // if there is a problem extracting an element, don't count it
+                if (reader.isStartElement() && extractElement(reader, context)) {
                     extractedDocumentCount++;
                 }
                 if (reader.isEndElement()) {
@@ -153,17 +159,21 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
                 }
                 reader.next();
             }
+            reader.close();
+            directoryStream = Files.newDirectoryStream(tempDir);
+        } catch (XMLStreamException | IOException ex) {
+            throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
         }
-        this.setTotalCount(extractedDocumentCount);
-        
-        directoryStream = Files.newDirectoryStream(tempDir);
-        return directoryStream.iterator();
+        setTotalCount(extractedDocumentCount);
+        return directoryStream.iterator(); //tempDir.toFile().listFiles(); 
     }
 
     /**
-     * Obtain the Path to a temporary directory that can be used to store files for processing.
+     * Obtain the Path to a temporary directory that can be used to store files
+     * for processing.
+     *
      * @return Path to the temporary directory.
-     * @throws IOException 
+     * @throws IOException
      */
     protected Path getTempDir() throws IOException {
         Path dir;
@@ -179,8 +189,11 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         }
         return dir;
     }
+
     /**
-     * Determine whether the context node should be extracted. If so, save as a separate file.
+     * Determine whether the context node should be extracted. If so, save as a
+     * separate file.
+     *
      * @param reader
      * @param context
      * @return boolean indicating whether an element was successfully extracted
@@ -196,10 +209,10 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         if (streamingXPath.matches(currentPath)) {
             try {
                 Path file = Files.createTempFile(tempDir, localName, ".xml", fileAttributes);
-                
+
                 Transformer autobot = newTransformer();
                 autobot.transform(new StAXSource(reader), new StreamResult(file.toFile()));
-                
+
                 elementWasExtracted = true;
             } catch (IOException | TransformerException ex) {
                 LOG.log(Level.SEVERE, EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);

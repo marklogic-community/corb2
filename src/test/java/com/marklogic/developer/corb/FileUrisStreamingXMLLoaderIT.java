@@ -45,7 +45,7 @@ public class FileUrisStreamingXMLLoaderIT {
     private static final String STREAMING_XML_LOADER = "com.marklogic.developer.corb.FileUrisStreamingXMLLoader";
     private static final String LARGE_PREFIX = "LARGE.";
     private static final String LARGE_BUU_FILENAME = LARGE_PREFIX + BUU_FILENAME;
-    private static final int LARGE_COPIES_OF_BEM = 10000;
+    private static final int LARGE_COPIES_OF_BEM = 100;
     private String EXPORT_FILE_DIR;
     private static final Logger LOG = Logger.getLogger(FileUrisStreamingXMLLoaderIT.class.getName());
 
@@ -93,7 +93,7 @@ public class FileUrisStreamingXMLLoaderIT {
 
     @Test
     public void testStreamingXMLUrisLoaderWithLargeInput() {
-        int expected = LARGE_COPIES_OF_BEM * 5 + 1;
+        int expected = LARGE_COPIES_OF_BEM  + 1;
         Properties properties = getBUUProperties();
         properties.setProperty(Options.XML_FILE, BUU_DIR + LARGE_BUU_FILENAME);
         try {
@@ -116,7 +116,6 @@ public class FileUrisStreamingXMLLoaderIT {
 
             properties.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
 
-            //First, verify the output using run()
             Manager manager = new Manager();
             manager.init(properties);
             manager.run();
@@ -126,7 +125,6 @@ public class FileUrisStreamingXMLLoaderIT {
 
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
-            fail();
         }
         return lineCount;
     }
@@ -137,26 +135,36 @@ public class FileUrisStreamingXMLLoaderIT {
         properties.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
         properties.setProperty(Options.THREAD_COUNT, Integer.toString(10));
         properties.setProperty(Options.XML_FILE, BUU_DIR + BUU_FILENAME);
-        properties.setProperty(Options.URIS_LOADER, STREAMING_XML_LOADER);
+        properties.setProperty(Options.URIS_LOADER, "com.marklogic.developer.corb.FileUrisXMLLoader");
+        properties.setProperty(Options.XML_NODE, "/*/*[2]");
         properties.setProperty(Options.PRE_BATCH_TASK, "com.marklogic.developer.corb.PreBatchUpdateFileTask");
         properties.setProperty(Options.PROCESS_TASK, "com.marklogic.developer.corb.ExportBatchToFileTask");
         properties.setProperty(Options.POST_BATCH_TASK, "com.marklogic.developer.corb.PostBatchUpdateFileTask");
-
         properties.setProperty(Options.PROCESS_MODULE, BUU_DIR + "processMultiply.xqy|ADHOC");
         properties.setProperty(Options.PROCESS_MODULE + ".COPIES", Integer.toString(copies));
-        properties.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "<bem:BenefitEnrollmentRequest xmlns:bem=\"http://bem.corb.developer.marklogic.com\">");
+        properties.setProperty(Options.EXPORT_FILE_TOP_CONTENT, 
+                "<bem:BenefitEnrollmentRequest xmlns:bem=\"http://bem.corb.developer.marklogic.com\">"
+                + "<bem:FileInformation>\n" +
+            "		<bem:InterchangeSenderID>PHANTOM</bem:InterchangeSenderID>\n" +
+            "		<bem:InterchangeReceiverID>CMSFFM</bem:InterchangeReceiverID>\n" +
+            "		<bem:GroupSenderID>11512NC0060024</bem:GroupSenderID>\n" +
+            "		<bem:GroupReceiverID>NC0</bem:GroupReceiverID>\n" +
+            "		<bem:GroupControlNumber>20140909</bem:GroupControlNumber>\n" +
+            "		<bem:GroupTimeStamp>2014-10-15T00:00:00</bem:GroupTimeStamp>\n" +
+            "		<bem:VersionNumber>22</bem:VersionNumber>\n" +
+            "	</bem:FileInformation>");
         properties.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "</bem:BenefitEnrollmentRequest>");
         properties.setProperty(Options.EXPORT_FILE_DIR, BUU_DIR);
         properties.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
-
+        properties.setProperty(Options.FILE_LOADER_USE_ENVELOPE, Boolean.toString(false));
         try {
-            //First, verify the output using run()
             Manager manager = new Manager();
             manager.init(properties);
             manager.run();
 
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
     }
 

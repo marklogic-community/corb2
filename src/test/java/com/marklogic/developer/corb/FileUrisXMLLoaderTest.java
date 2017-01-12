@@ -35,9 +35,9 @@ import static org.mockito.Mockito.mock;
  *
  * @author Praveen Venkata
  */
-public class FileXMLUrisLoaderTest {
+public class FileUrisXMLLoaderTest {
 
-    private static final Logger LOG = Logger.getLogger(FileXMLUrisLoaderTest.class.getName());
+    private static final Logger LOG = Logger.getLogger(FileUrisXMLLoaderTest.class.getName());
     private static final String ANCHOR1 = "<a href=\"test1.html\">test1</a>";
     private static final String ANCHOR2 = "<a href=\"test2.html\">test2</a>";
     private static final String ANCHOR3 = "<a href=\"test3.html\">test3</a>";
@@ -115,6 +115,7 @@ public class FileXMLUrisLoaderTest {
         TransformOptions options = new TransformOptions();
         Properties props = new Properties();
         props.setProperty(Options.URIS_LOADER, FileUrisLoader.class.getName());
+        props.setProperty(Options.FILE_LOADER_USE_ENVELOPE, Boolean.toString(false));
         props.setProperty(Options.XML_FILE, "src/test/resources/xml-file.xml");
         props.setProperty(Options.XML_NODE, "/root/a");
         instance.properties = props;
@@ -175,6 +176,12 @@ public class FileXMLUrisLoaderTest {
     @Test
     public void testSelectDocumentElement() {
         List<String> nodes = testSelectNodes("/*");
+        assertEquals(1, nodes.size());
+    }
+
+    @Test
+    public void testSelectDocumentElementWithEnvelope() {
+        List<String> nodes = testSelectNodes("/*", true);
         assertEquals(1, nodes.size());
     }
 
@@ -332,9 +339,14 @@ public class FileXMLUrisLoaderTest {
     }
 
     public List<String> testSelectNodes(String xpath) {
+        return testSelectNodes(xpath, false);
+    }
+
+    public List<String> testSelectNodes(String xpath, boolean useEnvelope) {
         List<String> nodes = null;
         try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
             instance.properties.setProperty(Options.XML_NODE, xpath);
+            instance.properties.setProperty(Options.FILE_LOADER_USE_ENVELOPE, Boolean.toString(useEnvelope));
             instance.open();
             assertNotNull(instance.nodeIterator);
             nodes = new ArrayList<>(1);

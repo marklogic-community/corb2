@@ -10,9 +10,13 @@ let $xml := xdmp:quote($doc,
                 <options xmlns="xdmp:quote">
                     <omit-xml-declaration>yes</omit-xml-declaration>
                 </options>)
+let $corb-loader-content := $doc/corb-loader/content
+let $content :=
+    if ($corb-loader-content) then
+        xdmp:base64-decode($corb-loader-content)
+      else
+        $xml
 return
-  if ($doc/bem:FileInformation) then
-    $xml
-  else 
-    for $i in 1 to xs:int($COPIES)
-    return $xml
+  for $i in 1 to xs:int($COPIES)
+  return $content
+      
