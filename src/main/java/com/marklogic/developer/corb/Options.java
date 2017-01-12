@@ -711,6 +711,12 @@ public final class Options {
     public static final String SSL_PROPERTIES_FILE = "SSL-PROPERTIES-FILE";
 
     /**
+     * 
+     */
+    @Usage(description = "Path to a directory that can be used for temporary processing files.")
+    public static final String TEMP_DIR = "TEMP-DIR";
+    
+    /**
      * The number of worker threads. Default is 1.
      */
     @Usage(description = "The number of worker threads. Default is 1.")
@@ -948,6 +954,29 @@ public final class Options {
             + "to store files extracted from the XML-FILE.")
     public static final String XML_TEMP_DIR = "XML-TEMP-DIR";
 
+    @Usage(description = "In order to use this option a class com.marklogic.developer.corb.FileUrisZipLoader "
+            + "has to be specified in the URIS-LOADER option. If defined instead of "
+            + "URIS-MODULE, each file will be base64 encoded and set as the "
+            + "content of corb-loader XML files and sent as a serialized string in the URI parameter of "
+            + "the process module. "
+            + "The zip file path may be relative or absolute. Default processing will "
+            + "select all of the files in the zip file. ")
+    public static final String ZIP_FILE = "ZIP-FILE";
+    
+    
+    /**
+     * The 
+     */
+    public static final String FILE_LOADER_PATH = "FILE-LOADER-PATH";
+    
+    /**
+     * 
+     */
+    @Usage(description = "Indication of whether File loaders should use an XML envelope, in order to send file "
+            + "metadata in addition to the file content (base64 encoded).")
+    public static final String FILE_LOADER_USE_ENVELOPE = "FILE-LOADER-USE-ENVELOPE";
+    
+    
     /**
      *
      * @deprecated Use the {@link #PROCESS_MODULE} option instead.

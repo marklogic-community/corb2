@@ -19,9 +19,11 @@
 package com.marklogic.developer.corb.util;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,15 +40,30 @@ public final class IOUtils {
     }
 
     /**
-     * Tests whether the {@code InputStream} is a directory. A Directory
-     * will be a ByteArrayInputStream and a File will be a BufferedInputStream.
+     * Tests whether the {@code InputStream} is a directory. A Directory will be
+     * a ByteArrayInputStream and a File will be a BufferedInputStream.
      *
      * @param is
-     * @return {@code true} if the InputStream class is
-     * ByteArrayInputStream
+     * @return {@code true} if the InputStream class is ByteArrayInputStream
      */
     public static boolean isDirectory(InputStream is) {
         return is instanceof ByteArrayInputStream;
+    }
+
+    public static byte[] toByteArray(InputStream is) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        int nRead;
+        byte[] data = new byte[16384];
+        while ((nRead = is.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
+        }
+        buffer.flush();
+        return buffer.toByteArray();
+    }
+
+    public static String toBase64(InputStream is) throws IOException {
+        byte[] bytes = toByteArray(is);
+        return Base64.getEncoder().encodeToString(bytes);
     }
 
     /**

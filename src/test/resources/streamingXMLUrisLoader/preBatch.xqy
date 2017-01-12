@@ -2,7 +2,7 @@ xquery version "1.0-ml";
 
 declare variable $URIS_BATCH_REF as xs:string external;
 
-(: obtain the filename from source XML file :)
+(: obtain the filename from source XML file (will also be set as corb-loader/metadata/source in the process :)
 let $originalFilename := fn:tokenize($URIS_BATCH_REF, "\\|/")[last()]
 
 (: generate a unique ID for this batch :)

@@ -4,9 +4,16 @@ declare namespace bem="http://bem.corb.developer.marklogic.com";
 declare variable $URI as xs:string external;
 declare variable $URIS_BATCH_REF as xs:string external;
 
-let $doc := xdmp:unquote($URI)
+let $corb-loader := xdmp:unquote($URI)/corb-loader
+let $doc := xdmp:unquote(xdmp:base64-decode($corb-loader/content/string()))
+let $metadata := $corb-loader/metadata
+let $originalFilename := fn:tokenize($metadata/filename, "\\|/")[last()] 
+
 let $parentId := xdmp:get-server-field("com.marklogic.developer.corb.StreamingXMLUrisLoader." || $URIS_BATCH_REF || ".parentId")
+
+(:
 let $originalFilename  := xdmp:get-server-field("com.marklogic.developer.corb.StreamingXMLUrisLoader." || $URIS_BATCH_REF || ".originalFilename")
+:)
 let $id := fn:string(xdmp:random(10000000000))
 
 let $content := 
@@ -24,7 +31,7 @@ let $content :=
             </base:versionInformation>
             <transactionFileName>{ $originalFilename }</transactionFileName>
             <loadTime>{ fn:current-dateTime() }</loadTime>
-            <fileInformationXML>{ $URI }</fileInformationXML>
+            <fileInformationXML>{ $doc }</fileInformationXML>
             <definingTransactionMessageDirection>
               <p:referenceTypeName>TransactionMessageDirectionType</p:referenceTypeName>
               <p:referenceTypeCode>1</p:referenceTypeCode>
@@ -51,19 +58,19 @@ let $content :=
           <base:objectCreationDateTime>{ fn:current-dateTime() }</base:objectCreationDateTime>
           <transactionMessageType>EDI</transactionMessageType>
           <fileName>{ $originalFilename }</fileName>
-          <messageXML>{ $URI }</messageXML>
+          <messageXML>{ $doc }</messageXML>
           <status>L</status>
           <parentTransactionFileHandlingObjectIdentifier>{ $parentId }</parentTransactionFileHandlingObjectIdentifier>
         </stagingTransactionMessage>
 
 let $documentElementName := $content/local-name()
 let $dir :=  concat(upper-case(substring($documentElementName,1,1)), substring($documentElementName,2))
-let $uri := "/global/com/ffe/" || $dir || "/" || $id || ".xml"
+let $uri := "/streamingXMLUrisLoader/" || $dir || "/" || $id || ".xml"
 let $collections := ($parentId)
 
 return
     (
-    xdmp:log("running process.xqy for " || $URIS_BATCH_REF),
+    xdmp:log("running process.xqy for " || $URIS_BATCH_REF || " " || $uri),
     xdmp:document-insert($uri, $content, (), $collections), 
     $uri 
     )

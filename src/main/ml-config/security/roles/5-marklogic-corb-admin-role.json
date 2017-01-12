@@ -1,7 +1,7 @@
 {
   "role-name" : "%%NAME%%-admin",
-  "description" : "Non-admin administrator",
-  "role" : [ "rest-admin", "manage-admin", "%%NAME%%-writer" ],
+  "description" : "administrator",
+  "role" : [ "admin"],
   "privilege" : [ {
     "privilege-name" : "any-uri",
     "action" : "http://marklogic.com/xdmp/privileges/any-uri",
