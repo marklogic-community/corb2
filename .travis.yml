@@ -30,7 +30,7 @@ after_success:
   # codecov.io integration https://codecov.io/gh/marklogic/corb2/branch/development
   - bash <(curl -s https://codecov.io/bash)
   # sonarqube.com https://sonarqube.com/dashboard?id=com.marklogic%3Amarklogic-corb%3Adevelopment
-  - sonar-scanner -Dsonar.login=$SONAR_TOKEN -Dsonar.junit.reportsPath=build/test-results -Dsonar.jacoco.reportPaths=build/jacoco/test.exec
+  - sonar-scanner -Dsonar.login=$SONAR_TOKEN -Dsonar.junit.reportsPath=build/test-results -Dsonar.jacoco.reportPaths=build/jacoco/test.exec -Dsonar.sources=src/main/java
   # codacy https://www.codacy.com/app/mads-hansen/corb2/dashboard
   - ~/jpm/bin/codacy-coverage-reporter -l Java -r build/reports/jacoco/test/jacocoTestReport.xml
   # coveralls.io
