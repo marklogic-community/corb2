@@ -431,7 +431,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMain_nullArgs() {
+    public void testMainWithNullArgs() {
         try {
             String[] args = null;
             PrivateKeyDecrypter.main(args);
