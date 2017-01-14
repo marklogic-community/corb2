@@ -26,7 +26,7 @@ script:
   # disable integration and performance tests, since we don't have a MarkLogic instance to use
   - ./gradlew check jacocoTestReport -PskipIntegrationTest -PskipPerformanceTest
   # sonarqube.com https://sonarqube.com/dashboard?id=com.marklogic%3Amarklogic-corb%3Adevelopment
-  - sonar-scanner -Dsonar.login=$SONAR_TOKEN -Dsonar.junit.reportsPath=build/test-results -Dsonar.jacoco.reportPaths=build/jacoco/test.exec -Dsonar.sources=src/main/java
+  - sonar-scanner -Dsonar.login=$SONAR_TOKEN
 
 after_success:
   # codecov.io integration https://codecov.io/gh/marklogic/corb2/branch/development
