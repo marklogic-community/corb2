@@ -735,11 +735,11 @@ public class AbstractManagerTest {
 
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.INFO, records.get(0).getLevel());
-        assertEquals("runtime arguments = {0}", records.get(0).getMessage());
+        assertTrue(records.get(0).getMessage().startsWith("runtime arguments = "));
     }
 
     public static class AbstractManagerImpl extends AbstractManager {
-
+        
         @Override
         public void init(String[] args, Properties props) throws CorbException {
             this.properties = props;

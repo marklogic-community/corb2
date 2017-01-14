@@ -63,7 +63,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
             String cipherSuites = properties.getProperty(SSL_CIPHER_SUITES);
             if (isNotEmpty(cipherSuites)) {
                 String[] cipherSuitesList = cipherSuites.split(DELIMITER);
-                LOG.log(Level.INFO, "Using cipher suites: {0}", cipherSuitesList);
+                LOG.log(Level.INFO, MessageFormat.format("Using cipher suites: {0}", (Object[]) cipherSuitesList));
                 return cipherSuitesList;
             }
         }
@@ -79,7 +79,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
             String enabledProtocols = properties.getProperty(SSL_ENABLED_PROTOCOLS);
             if (isNotEmpty(enabledProtocols)) {
                 String[] enabledProtocolsList = enabledProtocols.split(DELIMITER);
-                LOG.log(Level.INFO, "Using enabled protocols: {0}", enabledProtocolsList);
+                LOG.log(Level.INFO, MessageFormat.format("Using enabled protocols: {0}", (Object[]) enabledProtocolsList));
                 return enabledProtocolsList;
             }
         }
@@ -104,7 +104,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
         if (isNotBlank(securityFileName)) {
             File f = new File(securityFileName);
             if (f.exists() && !f.isDirectory()) {
-                LOG.log(Level.INFO, "Loading SSL configuration file {0} from filesystem", securityFileName);
+                LOG.log(Level.INFO, MessageFormat.format("Loading SSL configuration file {0} from filesystem", securityFileName));
 
                 try (InputStream is = new FileInputStream(f)) {
                     if (properties == null) {

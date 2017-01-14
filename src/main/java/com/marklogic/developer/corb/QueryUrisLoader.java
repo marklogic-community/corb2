@@ -38,6 +38,7 @@ import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -71,8 +72,8 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             opts.setCacheResult(false);
             // this should be a noop, but xqsync does it
             opts.setResultBufferSize(0);
-            LOG.log(INFO, "buffer size = {0}, caching = {1}",
-                    new Object[]{opts.getResultBufferSize(), opts.getCacheResult()});
+            LOG.log(INFO, MessageFormat.format("buffer size = {0}, caching = {1}",
+                    opts.getResultBufferSize(), opts.getCacheResult()));
 
             session = cs.newSession();
             Request request;
@@ -91,7 +92,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
                     if (isEmpty(adhocQuery)) {
                         throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
                     }
-                    LOG.log(INFO, "invoking adhoc uris module {0}", queryPath);
+                    LOG.log(INFO, MessageFormat.format("invoking adhoc uris module {0}", queryPath));
                 }
                 request = session.newAdhocQuery(adhocQuery);
                 if (isJavaScriptModule(urisModule)) {
@@ -100,7 +101,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             } else {
                 String root = options.getModuleRoot();
                 String modulePath = buildModulePath(root, urisModule);
-                LOG.log(INFO, "invoking uris module {0}", modulePath);
+                LOG.log(INFO, MessageFormat.format("invoking uris module {0}", modulePath));
                 request = session.newModuleInvoke(modulePath);
             }
             // NOTE: collection will be treated as a CWSV
@@ -209,7 +210,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             }
 
             if (queue.isEmpty()) {
-                LOG.log(INFO, "received first uri: {0}", uri);
+                LOG.log(INFO, MessageFormat.format("received first uri: {0}", uri));
             }
             //apply replacements (if any) - can be helpful in reducing in-memory footprint for ArrayQueue
             for (int j = 0; j < replacements.length - 1; j += 2) {
@@ -217,9 +218,9 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             }
 
             if (!queue.offer(uri)) {
-                LOG.log(SEVERE, "Unabled to add uri {0} to queue. Received uris {1} which is more than expected {2}", new Object[]{uri, i + 1, getTotalCount()});
+                LOG.log(SEVERE, MessageFormat.format("Unabled to add uri {0} to queue. Received uris {1} which is more than expected {2}", uri, i + 1, getTotalCount()));
             } else if (i >= getTotalCount()) {
-                LOG.log(WARNING, "Received uri {0} at index {1} which is more than expected {2}", new Object[]{uri, i + 1, getTotalCount()});
+                LOG.log(WARNING, MessageFormat.format("Received uri {0} at index {1} which is more than expected {2}", uri, i + 1, getTotalCount()));
             }
 
             logQueueStatus(i, uri, getTotalCount());
@@ -288,8 +289,8 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             try {
                 max = Integer.parseInt(maxStr);
             } catch (NumberFormatException ex) {
-                LOG.log(WARNING, "Unable to parse MaxOptionsFromModule value: {0}, using default value: {1}",
-                        new Object[]{maxStr, DEFAULT_MAX_OPTS_FROM_MODULE});
+                LOG.log(WARNING, MessageFormat.format("Unable to parse MaxOptionsFromModule value: {0}, using default value: {1}",
+                        maxStr, DEFAULT_MAX_OPTS_FROM_MODULE));
             }
         }
         return max;
@@ -300,14 +301,14 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             long freeMemory = Runtime.getRuntime().freeMemory();
             double megabytes = 1024d * 1024d;
             if (freeMemory < (16 * megabytes)) {
-                LOG.log(WARNING, "free memory: {0} MiB", freeMemory / megabytes);
+                LOG.log(WARNING, MessageFormat.format("free memory: {0} MiB", freeMemory / megabytes));
             }
         }
         if (0 == currentIndex % 25000) {
-            LOG.log(INFO, "queued {0}/{1}: {2}", new Object[]{currentIndex, total, uri});
+            LOG.log(INFO, MessageFormat.format("queued {0}/{1}: {2}", currentIndex, total, uri));
         }
         if (currentIndex > total) {
-            LOG.log(WARNING, "expected {0}, got {1}", new Object[]{total, currentIndex});
+            LOG.log(WARNING, MessageFormat.format("expected {0}, got {1}", total, currentIndex));
             LOG.warning("check your uri module!");
         }
     }

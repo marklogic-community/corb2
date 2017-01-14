@@ -100,12 +100,12 @@ public abstract class AbstractManager {
         if (isNotBlank(name)) {
             try (InputStream is = Manager.class.getResourceAsStream('/' + name)) {
                 if (is != null) {
-                    LOG.log(INFO, "Loading {0} from classpath", name);
+                    LOG.log(INFO, MessageFormat.format("Loading {0} from classpath", name));
                     props.load(is);
                 } else {
                     File f = new File(filename);
                     if (f.exists() && !f.isDirectory()) {
-                        LOG.log(INFO, "Loading {0} from filesystem", name);
+                        LOG.log(INFO, MessageFormat.format("Loading {0} from filesystem", name));
                         try (FileInputStream fis = new FileInputStream(f)) {
                             props.load(fis);
                         }
@@ -318,7 +318,7 @@ public abstract class AbstractManager {
     protected void logProperties() {
         for (Entry<Object, Object> e : properties.entrySet()) {
             if (e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
-                LOG.log(INFO, "Loaded property {0}={1}", new Object[]{e.getKey(), e.getValue()});
+                LOG.log(INFO, MessageFormat.format("Loaded property {0}={1}", e.getKey(), e.getValue()));
             }
         }
     }
@@ -432,7 +432,7 @@ public abstract class AbstractManager {
                 argsToLog.add(argument);
             }
         }
-        LOG.log(INFO, "runtime arguments = {0}", StringUtils.join(argsToLog, SPACE));
+        LOG.log(INFO, MessageFormat.format("runtime arguments = {0}", StringUtils.join(argsToLog, SPACE)));
     }
 
 }

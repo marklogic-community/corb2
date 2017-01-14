@@ -160,7 +160,7 @@ public class ManagerTest {
         cbp.rejectedExecution(r, threadPool);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.INFO, records.get(0).getLevel());
-        assertEquals("queue is full: size = {0} (will only appear once)", records.get(0).getMessage());
+        assertEquals("queue is full: size = 0 (will only appear once)", records.get(0).getMessage());
         assertEquals(1, records.size());
     }
 

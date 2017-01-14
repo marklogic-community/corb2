@@ -96,11 +96,11 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
             try {
                 is = Manager.class.getResourceAsStream('/' + filename);
                 if (is != null) {
-                    LOG.log(INFO, "Loading private key file %s from classpath", filename);
+                    LOG.log(INFO, () -> MessageFormat.format("Loading private key file {0} from classpath", filename));
                 } else {
                     File f = new File(filename);
                     if (f.exists() && !f.isDirectory()) {
-                        LOG.log(INFO, "Loading private key file %s from filesystem", filename);
+                        LOG.log(INFO, () -> MessageFormat.format("Loading private key file {0} from filesystem", filename));
                         is = new FileInputStream(f);
                     } else {
                         throw new IllegalStateException("Unable to load " + filename);
@@ -126,7 +126,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
                 closeQuietly(is);
             }
         } else {
-            LOG.log(SEVERE, "%s property must be defined", PRIVATE_KEY_FILE);
+            LOG.log(SEVERE, () -> MessageFormat.format("{0} property must be defined", PRIVATE_KEY_FILE));
         }
     }
 
