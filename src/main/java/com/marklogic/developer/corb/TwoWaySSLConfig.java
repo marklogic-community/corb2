@@ -104,7 +104,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
         if (isNotBlank(securityFileName)) {
             File f = new File(securityFileName);
             if (f.exists() && !f.isDirectory()) {
-                LOG.log(Level.INFO, MessageFormat.format("Loading SSL configuration file {0} from filesystem", securityFileName));
+                LOG.log(Level.INFO, () -> MessageFormat.format("Loading SSL configuration file {0} from filesystem", securityFileName));
 
                 try (InputStream is = new FileInputStream(f)) {
                     if (properties == null) {
@@ -112,14 +112,14 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
                     }
                     properties.load(is);
                 } catch (IOException e) {
-                    LOG.log(Level.SEVERE, MessageFormat.format("Error loading ssl properties file {0}", SSL_PROPERTIES_FILE));
+                    LOG.log(Level.SEVERE, () -> MessageFormat.format("Error loading ssl properties file {0}", SSL_PROPERTIES_FILE));
                     throw new RuntimeException(e);
                 }
             } else {
                 throw new IllegalStateException("Unable to load " + securityFileName);
             }
         } else {
-            LOG.log(Level.INFO, MessageFormat.format("Property {0} not present", SSL_PROPERTIES_FILE));
+            LOG.log(Level.INFO, () -> MessageFormat.format("Property {0} not present", SSL_PROPERTIES_FILE));
         }
     }
 

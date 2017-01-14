@@ -179,15 +179,15 @@ public class ModuleExecutor extends AbstractManager {
 
     @Override
     protected void logOptions() {
-        LOG.log(INFO, MessageFormat.format("Configured modules db: {0}", options.getModulesDatabase()));
-        LOG.log(INFO, MessageFormat.format("Configured modules root: {0}", options.getModuleRoot()));
-        LOG.log(INFO, MessageFormat.format("Configured process module: {0}", options.getProcessModule()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured modules db: {0}", options.getModulesDatabase()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured modules root: {0}", options.getModuleRoot()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured process module: {0}", options.getProcessModule()));
     }
 
     public void run() throws Exception {
-        LOG.log(INFO, MessageFormat.format("{0} starting: {1}", NAME, VERSION_MSG));
+        LOG.log(INFO, () -> MessageFormat.format("{0} starting: {1}", NAME, VERSION_MSG));
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
-        LOG.log(INFO, MessageFormat.format("maximum heap size = {0} MiB", maxMemory));
+        LOG.log(INFO, () -> MessageFormat.format("maximum heap size = {0} MiB", maxMemory));
 
         Request request;
         ResultSequence resultSequence = null;
@@ -214,7 +214,7 @@ public class ModuleExecutor extends AbstractManager {
                     if (isBlank(adhocQuery)) {
                         throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
                     }
-                    LOG.log(INFO, MessageFormat.format("invoking adhoc process module {0}", queryPath));
+                    LOG.log(INFO, () -> MessageFormat.format("invoking adhoc process module {0}", queryPath));
                 }
                 request = session.newAdhocQuery(adhocQuery);
                 if (isJavaScriptModule(processModule)) {
@@ -223,7 +223,7 @@ public class ModuleExecutor extends AbstractManager {
             } else {
                 String root = options.getModuleRoot();
                 String modulePath = buildModulePath(root, processModule);
-                LOG.log(INFO, MessageFormat.format("invoking module {0}", modulePath));
+                LOG.log(INFO, () -> MessageFormat.format("invoking module {0}", modulePath));
                 request = session.newModuleInvoke(modulePath);
             }
 

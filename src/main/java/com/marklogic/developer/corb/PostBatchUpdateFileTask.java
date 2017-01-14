@@ -99,7 +99,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             boolean useGzip = false;
 
             List<File> fragments = ExternalSort.sortInBatch(origFile, comparator, ExternalSort.DEFAULTMAXTEMPFILES, charset, tempFileStore, distinct, headerLineCount, useGzip);
-            LOG.log(INFO, MessageFormat.format("Created {0} temp files for sort and dedup", fragments.size()));
+            LOG.log(INFO, () -> MessageFormat.format("Created {0} temp files for sort and dedup", fragments.size()));
 
             copyHeaderIntoFile(origFile, headerLineCount, sortedFile);
             boolean append = true;

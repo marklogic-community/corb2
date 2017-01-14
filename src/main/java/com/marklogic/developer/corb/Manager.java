@@ -453,9 +453,9 @@ public class Manager extends AbstractManager {
     }
 
     public int run() throws Exception {
-        LOG.log(INFO, MessageFormat.format("{0} starting: {1}", NAME, VERSION_MSG));
+        LOG.log(INFO, () -> MessageFormat.format("{0} starting: {1}", NAME, VERSION_MSG));
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
-        LOG.log(INFO, "maximum heap size = {0} MiB", maxMemory);
+        LOG.log(INFO, () -> MessageFormat.format("maximum heap size = {0} MiB", maxMemory));
 
         this.execError = false; //reset execution error flag for a new run
         monitorThread = preparePool();
@@ -507,7 +507,7 @@ public class Manager extends AbstractManager {
         String[] resourceModules = new String[]{options.getInitModule(), options.getUrisModule(),
             options.getProcessModule(), options.getPreBatchModule(), options.getPostBatchModule()};
         String modulesDatabase = options.getModulesDatabase();
-        LOG.log(INFO, MessageFormat.format("checking modules, database: {0}", modulesDatabase));
+        LOG.log(INFO, () -> MessageFormat.format("checking modules, database: {0}", modulesDatabase));
 
         try (Session session = contentSource.newSession(modulesDatabase)) {
             for (String resourceModule : resourceModules) {
@@ -523,7 +523,7 @@ public class Manager extends AbstractManager {
         try {
             // Start by checking install flag.
             if (!options.isDoInstall()) {
-                LOG.log(INFO, MessageFormat.format("Skipping module installation: {0}", resourceModule));
+                LOG.log(INFO, () -> MessageFormat.format("Skipping module installation: {0}", resourceModule));
             } // Next check: if XCC is configured for the filesystem, warn user
             else if (options.getModulesDatabase().isEmpty()) {
                 LOG.warning("XCC configured for the filesystem: please install modules manually");
@@ -538,7 +538,7 @@ public class Manager extends AbstractManager {
                     content = ContentFactory.newContent(moduleUri, file, contentCreateOptions);
                 } // finally, check package
                 else {
-                    LOG.log(WARNING, MessageFormat.format("looking for {0} as resource", resourceModule));
+                    LOG.log(WARNING, () -> MessageFormat.format("looking for {0} as resource", resourceModule));
                     String moduleUri = options.getModuleRoot() + resourceModule;
                     try (InputStream is = this.getClass().getResourceAsStream('/' + resourceModule)) {
                         if (null == is) {
@@ -556,25 +556,25 @@ public class Manager extends AbstractManager {
 
     @Override
     protected void logOptions() {
-        LOG.log(INFO, MessageFormat.format("Configured modules db: {0}", options.getModulesDatabase()));
-        LOG.log(INFO, MessageFormat.format("Configured modules xdbc root: {0}", options.getXDBC_ROOT()));
-        LOG.log(INFO, MessageFormat.format("Configured modules root: {0}", options.getModuleRoot()));
-        LOG.log(INFO, MessageFormat.format("Configured uri module: {0}", options.getUrisModule()));
-        LOG.log(INFO, MessageFormat.format("Configured uri file: {0}", options.getUrisFile()));
-        LOG.log(INFO, MessageFormat.format("Configured uri loader: {0}", options.getUrisLoaderClass()));
-        LOG.log(INFO, MessageFormat.format("Configured process module: {0}", options.getProcessModule()));
-        LOG.log(INFO, MessageFormat.format("Configured process task: {0}", options.getProcessTaskClass()));
-        LOG.log(INFO, MessageFormat.format("Configured pre batch module: {0}", options.getPreBatchModule()));
-        LOG.log(INFO, MessageFormat.format("Configured pre batch task: {0}", options.getPreBatchTaskClass()));
-        LOG.log(INFO, MessageFormat.format("Configured post batch module: {0}", options.getPostBatchModule()));
-        LOG.log(INFO, MessageFormat.format("Configured post batch task: {0}", options.getPostBatchTaskClass()));
-        LOG.log(INFO, MessageFormat.format("Configured init module: {0}", options.getInitModule()));
-        LOG.log(INFO, MessageFormat.format("Configured init task: {0}", options.getInitTaskClass()));
-        LOG.log(INFO, MessageFormat.format("Configured thread count: {0}", options.getThreadCount()));
-        LOG.log(INFO, MessageFormat.format("Configured batch size: {0}", options.getBatchSize()));
-        LOG.log(INFO, MessageFormat.format("Configured failonError: {0}", options.isFailOnError()));
-        LOG.log(INFO, MessageFormat.format("Configured URIs queue max in-memory size: {0}", options.getDiskQueueMaxInMemorySize()));
-        LOG.log(INFO, MessageFormat.format("Configured URIs queue temp dir: {0}", options.getDiskQueueTempDir()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured modules db: {0}", options.getModulesDatabase()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured modules xdbc root: {0}", options.getXDBC_ROOT()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured modules root: {0}", options.getModuleRoot()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured uri module: {0}", options.getUrisModule()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured uri file: {0}", options.getUrisFile()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured uri loader: {0}", options.getUrisLoaderClass()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured process module: {0}", options.getProcessModule()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured process task: {0}", options.getProcessTaskClass()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured pre batch module: {0}", options.getPreBatchModule()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured pre batch task: {0}", options.getPreBatchTaskClass()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured post batch module: {0}", options.getPostBatchModule()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured post batch task: {0}", options.getPostBatchTaskClass()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured init module: {0}", options.getInitModule()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured init task: {0}", options.getInitTaskClass()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured thread count: {0}", options.getThreadCount()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured batch size: {0}", options.getBatchSize()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured failonError: {0}", options.isFailOnError()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured URIs queue max in-memory size: {0}", options.getDiskQueueMaxInMemorySize()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured URIs queue temp dir: {0}", options.getDiskQueueTempDir()));
     }
 
     private void runInitTask(TaskFactory tf) throws Exception {
@@ -634,7 +634,7 @@ public class Manager extends AbstractManager {
             urisLoader.open();
             if (urisLoader.getBatchRef() != null) {
                 properties.put(URIS_BATCH_REF, urisLoader.getBatchRef());
-                LOG.log(INFO, MessageFormat.format("{0}: {1}", URIS_BATCH_REF, urisLoader.getBatchRef()));
+                LOG.log(INFO, () -> MessageFormat.format("{0}: {1}", URIS_BATCH_REF, urisLoader.getBatchRef()));
             }
 
             expectedTotalCount = urisLoader.getTotalCount();
@@ -751,7 +751,7 @@ public class Manager extends AbstractManager {
                     threadPool.setMaximumPoolSize(threadCount);
                     threadPool.setCorePoolSize(threadCount);
                 }
-                LOG.log(INFO, MessageFormat.format("Changed {0} to {1}", THREAD_COUNT, threadCount));
+                LOG.log(INFO, () -> MessageFormat.format("Changed {0} to {1}", THREAD_COUNT, threadCount));
             } catch (IllegalArgumentException ex) {
                 LOG.log(WARNING, "Unable to change thread count", ex);
             }
@@ -793,7 +793,7 @@ public class Manager extends AbstractManager {
             }
             List<Runnable> remaining = pool.shutdownNow();
             if (!remaining.isEmpty()) {
-                LOG.log(WARNING, MessageFormat.format("thread pool was shut down with {0} pending tasks", remaining.size()));
+                LOG.log(WARNING, () -> MessageFormat.format("thread pool was shut down with {0} pending tasks", remaining.size()));
             }
             pool = null;
         }
@@ -885,7 +885,7 @@ public class Manager extends AbstractManager {
             try {
                 // block until space becomes available
                 if (!warning) {
-                    LOG.log(INFO, MessageFormat.format("queue is full: size = {0} (will only appear once)", queue.size()));
+                    LOG.log(INFO, () -> MessageFormat.format("queue is full: size = {0} (will only appear once)", queue.size()));
                     warning = true;
                 }
                 queue.put(r);

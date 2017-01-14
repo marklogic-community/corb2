@@ -97,7 +97,7 @@ public class Monitor implements Runnable {
 
     private void monitorResults() throws InterruptedException, ExecutionException {
         // fast-fail as soon as we see any exceptions
-        LOG.log(INFO, MessageFormat.format("monitoring {0} tasks", taskCount));
+        LOG.log(INFO, () -> MessageFormat.format("monitoring {0} tasks", taskCount));
         Future<String[]> future;
         while (!shutdownNow) {
             // try to avoid thread starvation
@@ -121,12 +121,12 @@ public class Monitor implements Runnable {
                     break;
                 }
             } else if (future == null && pool.getActiveCount() == 0) {
-                LOG.log(WARNING, MessageFormat.format("No active tasks found with {0} tasks remains to be completed", taskCount - completed));
+                LOG.log(WARNING, () -> MessageFormat.format("No active tasks found with {0} tasks remains to be completed", taskCount - completed));
             }
         }
         LOG.info("waiting for pool to terminate");
         pool.awaitTermination(1, TimeUnit.SECONDS);
-        LOG.log(INFO, MessageFormat.format("completed all tasks {0}/{1}", completed, taskCount));
+        LOG.log(INFO, () -> MessageFormat.format("completed all tasks {0}/{1}", completed, taskCount));
     }
 
     private long showProgress() {
@@ -135,13 +135,13 @@ public class Monitor implements Runnable {
             if (pool.isPaused()) {
                 LOG.log(INFO, "CoRB2 has been paused. Resume execution by changing the " + Options.COMMAND + " option in the command file {0} to RESUME", manager.getOption(COMMAND_FILE));
             }
-            LOG.log(INFO, MessageFormat.format("completed {0}", getProgressMessage(completed)));
+            LOG.log(INFO, () -> MessageFormat.format("completed {0}", getProgressMessage(completed)));
             lastProgress = current;
 
             // check for low memory
             long freeMemory = Runtime.getRuntime().freeMemory();
             if (freeMemory < (16 * 1024 * 1024)) {
-                LOG.log(WARNING, MessageFormat.format("free memory: {0} MiB", freeMemory / 1024 * 1024));
+                LOG.log(WARNING, () -> MessageFormat.format("free memory: {0} MiB", freeMemory / 1024 * 1024));
             }
         }
         return lastProgress;

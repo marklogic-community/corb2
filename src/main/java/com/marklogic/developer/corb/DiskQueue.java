@@ -152,7 +152,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
         if (fileQueue == null) {
             fileQueue = File.createTempFile(DiskQueue.class.getSimpleName() + "-backingstore-", null, tempDir);
             fileQueue.deleteOnExit();
-            LOG.log(Level.INFO, MessageFormat.format("created backing store {0}", fileQueue.getAbsolutePath()));
+            LOG.log(Level.INFO, () -> MessageFormat.format("created backing store {0}", fileQueue.getAbsolutePath()));
             fileOut = new BufferedWriter(new FileWriter(fileQueue));
 
             // Flush output file, so there's something written when we open the input stream.
