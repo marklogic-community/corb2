@@ -38,10 +38,12 @@ public class TestHandler extends Handler {
     
     @Override
     public void flush(){
+        //Nothing to flush, since logs are appended to the logRecords List
     }
 
     @Override
     public void close() {
+        logRecords.clear();
     }
 
     public List<LogRecord> getLogRecords() {
