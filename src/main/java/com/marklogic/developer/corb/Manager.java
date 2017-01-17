@@ -125,7 +125,7 @@ public class Manager extends AbstractManager {
         try {
             manager.init(args);
         } catch (Exception exc) {
-            LOG.log(SEVERE, MessageFormat.format("Error initializing CORB {0}", exc.getMessage()), exc);
+            LOG.log(SEVERE, "Error initializing CORB " + exc.getMessage(), exc);
             manager.usage();
             System.exit(EXIT_CODE_INIT_ERROR);
         }
@@ -638,7 +638,7 @@ public class Manager extends AbstractManager {
             }
 
             expectedTotalCount = urisLoader.getTotalCount();
-            LOG.log(INFO, MessageFormat.format("expecting total {0}", expectedTotalCount));
+            LOG.log(INFO, "expecting total " + expectedTotalCount);
             if (expectedTotalCount <= 0) {
                 LOG.info("nothing to process");
                 stop();
@@ -723,7 +723,7 @@ public class Manager extends AbstractManager {
             long freeMemory = Runtime.getRuntime().freeMemory();
             Level memoryLogLevel = freeMemory < totalMemory * 0.2d ? WARNING : INFO;
             final int megabytes = 1024 * 1024;
-            LOG.log(memoryLogLevel, MessageFormat.format("free memory: {0} MiB" + " of " + totalMemory / megabytes, freeMemory / megabytes));
+            LOG.log(memoryLogLevel, () -> MessageFormat.format("free memory: {0} MiB of {1}", freeMemory / megabytes, totalMemory / megabytes));
         }
     }
 
@@ -734,7 +734,7 @@ public class Manager extends AbstractManager {
                 setPoolSize(pool, threadCount);
             }
         } else {
-            LOG.log(WARNING, THREAD_COUNT + " must be a positive integer value");
+            LOG.log(WARNING, () -> THREAD_COUNT + " must be a positive integer value");
         }
     }
 
@@ -866,7 +866,7 @@ public class Manager extends AbstractManager {
                 }
 
             } catch (IOException e) {
-                LOG.log(WARNING, MessageFormat.format("Unable to load {0}", COMMAND_FILE), e);
+                LOG.log(WARNING, "Unable to load " + COMMAND_FILE, e);
             }
         }
     }
