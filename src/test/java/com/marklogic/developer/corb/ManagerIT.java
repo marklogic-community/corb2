@@ -147,6 +147,7 @@ public class ManagerIT {
         properties.setProperty(Options.URIS_MODULE, "src/test/resources/selectorLargeList.xqy|ADHOC");
         properties.setProperty(Options.URIS_MODULE + ".count", String.valueOf(uriCount));
         properties.setProperty(Options.EXPORT_FILE_NAME, exportFilename);
+        properties.setProperty(Options.DISK_QUEUE, "true");
         properties.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10));
         properties.setProperty(Options.DISK_QUEUE_TEMP_DIR, "/var/tmp");
 
