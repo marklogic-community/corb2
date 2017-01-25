@@ -50,6 +50,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -68,7 +69,12 @@ import java.util.logging.Logger;
  */
 public abstract class AbstractTask implements Task {
 
-    private static final Object ERROR_SYNC_OBJ = new Object();
+    @Override
+	public String toString() {
+		return "URIS: "+Arrays.toString(inputUris);//This is used to report Metrics
+	}
+
+	private static final Object ERROR_SYNC_OBJ = new Object();
 
     protected static final String TRUE = "true";
     protected static final String FALSE = "false";
@@ -252,7 +258,7 @@ public abstract class AbstractTask implements Task {
             processResult(seq);
             seq.close();
             Thread.yield();// try to avoid thread starvation
-
+            Thread.currentThread().setName(Arrays.toString(inputUris));
             return inputUris;
         } catch (RequestException exc) {
             return handleRequestException(exc);

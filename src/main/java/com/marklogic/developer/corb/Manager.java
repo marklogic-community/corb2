@@ -87,6 +87,7 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
@@ -119,8 +120,10 @@ public class Manager extends AbstractManager {
 
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
     private static final String TAB = "\t";
-
-    /**
+    private final ThreadLocal<Long> startTime = new ThreadLocal<Long>();
+    private Long urisLoadTime = 0l;
+   
+	/**
      * @param args
      */
     public static void main(String... args) {
@@ -350,7 +353,35 @@ public class Manager extends AbstractManager {
                 throw new IllegalArgumentException("Cannot write to queue temp directory " + diskQueueTempDir);
             }
         }
-
+        /**/
+        String logMetricsToServerLog=getOption(Options.LOG_METRICS_TO_SERVER_LOG);
+		if(logMetricsToServerLog !=null){
+			options.setLogMetricsToServerLog(Boolean.valueOf(logMetricsToServerLog));
+		}
+		String logMetricsToServerCollections=getOption(Options.LOG_METRICS_TO_SERVER_COLLECTIONS);
+		if(logMetricsToServerCollections !=null){
+			options.setLogMetricsToServerDBCollections(logMetricsToServerCollections);
+		}
+		String logMetricsToServerDBName=getOption(Options.LOG_METRICS_TO_SERVER_DB_NAME);
+		if(logMetricsToServerDBName !=null){
+			options.setLogMetricsToServerDBName(logMetricsToServerDBName);
+		}
+		String logMetricsToServerModule=getOption(Options.LOG_METRICS_TO_SERVER_TRANSFORM_MODULE);
+		if(logMetricsToServerModule !=null){
+			options.setLogMetricsToServerDBTransformModule(logMetricsToServerModule);
+		}
+		String logMetricsToServerURIRoot=getOption(Options.LOG_METRICS_TO_SERVER_URI_ROOT_VALUE);
+		if(logMetricsToServerURIRoot !=null){
+			options.setLogMetricsToServerDBURIRoot(logMetricsToServerURIRoot);
+		}
+		String jobName=getOption(Options.JOB_NAME);
+		if(jobName !=null){
+			options.setJobName(jobName);
+		}
+		String numberOfLongRunningUris=getOption(Options.NUMBER_OF_LONG_RUNNING_URIS_TO_CAPTURE);
+		if(numberOfLongRunningUris !=null){
+			options.setNumberOfLongRunningUris(Integer.valueOf(numberOfLongRunningUris));
+		}
         // delete the export file if it exists
         deleteFileIfExists(exportFileDir, exportFileName);
         deleteFileIfExists(exportFileDir, errorFileName);
@@ -516,7 +547,7 @@ public class Manager extends AbstractManager {
         int threads = options.getThreadCount();
         // an array queue should be somewhat lighter-weight
         BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(options.getQueueSize());
-        pool = new PausableThreadPoolExecutor(threads, threads, 16, TimeUnit.SECONDS, workQueue, policy);
+        pool = new PausableThreadPoolExecutor(threads, threads, 16, TimeUnit.SECONDS, workQueue, policy,options.getNumberOfLongRunningUris());
         pool.prestartAllCoreThreads();
         completionService = new ExecutorCompletionService<>(pool);
         monitor = new Monitor(pool, completionService, this);
@@ -654,7 +685,7 @@ public class Manager extends AbstractManager {
         try (UrisLoader urisLoader = getUriLoader()) {
             // run init task
             runInitTask(taskFactory);
-
+            startTime.set(System.nanoTime());
             urisLoader.open();
             if (urisLoader.getBatchRef() != null) {
                 properties.put(URIS_BATCH_REF, urisLoader.getBatchRef());
@@ -662,6 +693,8 @@ public class Manager extends AbstractManager {
             }
 
             expectedTotalCount = urisLoader.getTotalCount();
+            long endTime = System.nanoTime();
+            urisLoadTime = endTime - startTime.get();
             LOG.log(INFO, "expecting total {0}", expectedTotalCount);
             if (expectedTotalCount <= 0) {
                 LOG.info("nothing to process");
@@ -902,5 +935,8 @@ public class Manager extends AbstractManager {
             }
         }
     }
+    public Long getUrisLoadTime() {
+		return urisLoadTime;
+	}
 
 }

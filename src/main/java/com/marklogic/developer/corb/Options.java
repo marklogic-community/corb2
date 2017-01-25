@@ -919,7 +919,32 @@ public final class Options {
             + "string as node to do further processing with the node. If not specified, "
             + "the default behavior is to select the child elements of the document element (i.e. /*/*)")
     public static final String XML_NODE = "XML-NODE";
-
+    /**
+     * URI selector module written in XQuery or JavaScript. Expected to return a
+     * sequence containing the URIs count followed by all the URIs. Optionally,
+     * it can also return an arbitrary string as a first item in this sequence -
+     * refer to
+     * <a href="https://github.com/marklogic/corb2#uris_batch_ref">URIS_BATCH_REF</a>
+     * section.
+     * <p>
+     * XQuery and JavaScript modules need to have "{@code .xqy}" and
+     * "{@code .sjs}" extensions respectively. JavaScript modules must return a
+     * <a href="https://docs.marklogic.com/js/ValueIterator">ValueIterator</a>.
+     */
+    @Usage(description = "URI selector module written in XQuery or JavaScript. "
+            + "Expected to return a sequence containing the URIs count followed by all the URIs. "
+            + "Optionally, it can also return an arbitrary string as a first item in this sequence - "
+            + "refer to URIS_BATCH_REF section below. XQuery and JavaScript modules "
+            + "need to have .xqy and .sjs extensions respectively. "
+            + "JavaScript modules must return a ValueIterator.")
+    public static final String LOG_METRICS_TO_SERVER_LOG = "LOG-METRICS-TO-SERVER-LOG";
+    public static final String LOG_METRICS_TO_SERVER_DB_NAME = "LOG-METRICS-TO-SERVER-DB-NAME";
+    public static final String LOG_METRICS_TO_SERVER_URI_ROOT_VALUE = "LOG-METRICS-TO-SERVER-URI-ROOT-VALUE";
+    public static final String LOG_METRICS_TO_SERVER_COLLECTIONS = "LOG-METRICS-TO-SERVER-COLLECTIONS";
+    public static final String LOG_METRICS_TO_SERVER_TRANSFORM_MODULE = "LOG-METRICS-TO-SERVER-TRANSFORM-MODULE";
+    public static final String JOB_NAME = "JOB-NAME";
+    public static final String NUMBER_OF_LONG_RUNNING_URIS_TO_CAPTURE = "NUMBER-OF-LONG-RUNNING-URIS-TO-CAPTURE";
+    
     /**
      *
      * @deprecated Use the {@link #PROCESS_MODULE} option instead.
@@ -931,6 +956,13 @@ public final class Options {
 
     private Options() {
     }
+
+	/**
+	 * @return the numberOfLongRunningUrisToCapture
+	 */
+	public static String getNumberOfLongRunningUrisToCapture() {
+		return NUMBER_OF_LONG_RUNNING_URIS_TO_CAPTURE;
+	}
 
 }
 

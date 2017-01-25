@@ -70,7 +70,18 @@ public class TransformOptions {
 
     // We could get rid of this now that we check status...
     private String modulesDatabase = "Modules";
-
+    private Boolean logMetricsToServerLog = false;
+    
+    private Boolean logMetricsToServerDB = false;
+    
+    private String logMetricsToServerDBName = null;
+    private String logMetricsToServerDBURIRoot = "/ServiceMetrics/";
+    private String logMetricsToServerDBTransformModule = "save-metric-to-db.xqy|ADHOC";
+    private String logMetricsToServerDBCollections = null;
+    private Integer numberOfLongRunningUris = 5;
+    
+    private String jobName = null;
+    
     // Set on status check
     private String XDBC_ROOT = SLASH;
 
@@ -366,4 +377,116 @@ public class TransformOptions {
     public int getNumTpsForETC() {
         return this.numTpsForETC;
     }
+
+	/**
+	 * @return the logMetricsToServerLog
+	 */
+	public Boolean getLogMetricsToServerLog() {
+		return logMetricsToServerLog;
+	}
+
+	/**
+	 * @param logMetricsToServerLog the logMetricsToServerLog to set
+	 */
+	public void setLogMetricsToServerLog(Boolean logMetricsToServerLog) {
+		this.logMetricsToServerLog = logMetricsToServerLog;
+	}
+
+	/**
+	 * @return the logMetricsToServerDB
+	 */
+	public Boolean getLogMetricsToServerDB() {
+		return logMetricsToServerDB;
+	}
+
+	/**
+	 * @param logMetricsToServerDB the logMetricsToServerDB to set
+	 */
+	public void setLogMetricsToServerDB(Boolean logMetricsToServerDB) {
+		this.logMetricsToServerDB = logMetricsToServerDB;
+	}
+
+	/**
+	 * @return the logMetricsToServerDBName
+	 */
+	public String getLogMetricsToServerDBName() {
+		return logMetricsToServerDBName;
+	}
+
+	/**
+	 * @param logMetricsToServerDBName the logMetricsToServerDBName to set
+	 */
+	public void setLogMetricsToServerDBName(String logMetricsToServerDBName) {
+		this.logMetricsToServerDBName = logMetricsToServerDBName;
+	}
+
+	/**
+	 * @return the logMetricsToServerDBURIRoot
+	 */
+	public String getLogMetricsToServerDBURIRoot() {
+		return logMetricsToServerDBURIRoot;
+	}
+
+	/**
+	 * @param logMetricsToServerDBURIRoot the logMetricsToServerDBURIRoot to set
+	 */
+	public void setLogMetricsToServerDBURIRoot(String logMetricsToServerDBURIRoot) {
+		this.logMetricsToServerDBURIRoot = logMetricsToServerDBURIRoot;
+	}
+
+	/**
+	 * @return the logMetricsToServerDBTransformModule
+	 */
+	public String getLogMetricsToServerDBTransformModule() {
+		return logMetricsToServerDBTransformModule;
+	}
+
+	/**
+	 * @param logMetricsToServerDBTransformModule the logMetricsToServerDBTransformModule to set
+	 */
+	public void setLogMetricsToServerDBTransformModule(String logMetricsToServerDBTransformModule) {
+		this.logMetricsToServerDBTransformModule = logMetricsToServerDBTransformModule;
+	}
+
+	/**
+	 * @return the logMetricsToServerDBCollections
+	 */
+	public String getLogMetricsToServerDBCollections() {
+		return logMetricsToServerDBCollections;
+	}
+
+	/**
+	 * @param logMetricsToServerDBCollections the logMetricsToServerDBCollections to set
+	 */
+	public void setLogMetricsToServerDBCollections(String logMetricsToServerDBCollections) {
+		this.logMetricsToServerDBCollections = logMetricsToServerDBCollections;
+	}
+
+	/**
+	 * @return the jobName
+	 */
+	public String getJobName() {
+		return jobName;
+	}
+
+	/**
+	 * @param jobName the jobName to set
+	 */
+	public void setJobName(String jobName) {
+		this.jobName = jobName;
+	}
+
+	/**
+	 * @return the numberOfLongRunningUris
+	 */
+	public Integer getNumberOfLongRunningUris() {
+		return numberOfLongRunningUris;
+	}
+
+	/**
+	 * @param numberOfLongRunningUris the numberOfLongRunningUris to set
+	 */
+	public void setNumberOfLongRunningUris(Integer numberOfLongRunningUris) {
+		this.numberOfLongRunningUris = numberOfLongRunningUris;
+	}
 }

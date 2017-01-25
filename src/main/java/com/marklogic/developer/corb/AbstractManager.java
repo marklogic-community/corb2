@@ -18,6 +18,9 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Manager.DEFAULT_BATCH_URI_DELIM;
+import static com.marklogic.developer.corb.Manager.URIS_BATCH_REF;
+import static com.marklogic.developer.corb.Options.BATCH_URI_DELIM;
 import static com.marklogic.developer.corb.Options.DECRYPTER;
 import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
 import static com.marklogic.developer.corb.Options.SSL_CONFIG_CLASS;
@@ -28,19 +31,17 @@ import static com.marklogic.developer.corb.Options.XCC_PASSWORD;
 import static com.marklogic.developer.corb.Options.XCC_PORT;
 import static com.marklogic.developer.corb.Options.XCC_USERNAME;
 import static com.marklogic.developer.corb.util.IOUtils.isDirectory;
-import com.marklogic.developer.corb.util.StringUtils;
+import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
+import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
+import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
-import com.marklogic.xcc.AdhocQuery;
-import com.marklogic.xcc.ContentSource;
-import com.marklogic.xcc.ContentSourceFactory;
-import com.marklogic.xcc.ResultItem;
-import com.marklogic.xcc.ResultSequence;
-import com.marklogic.xcc.SecurityOptions;
-import com.marklogic.xcc.Session;
-import com.marklogic.xcc.exceptions.RequestException;
-import com.marklogic.xcc.exceptions.XccConfigException;
-import com.marklogic.xcc.types.XdmItem;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -56,12 +57,29 @@ import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import static java.util.logging.Level.INFO;
-import static java.util.logging.Level.SEVERE;
+import java.util.Set;
 import java.util.logging.Logger;
+
+import com.marklogic.developer.corb.util.StringUtils;
+import com.marklogic.xcc.AdhocQuery;
+import com.marklogic.xcc.ContentSource;
+import com.marklogic.xcc.ContentSourceFactory;
+import com.marklogic.xcc.Request;
+import com.marklogic.xcc.RequestOptions;
+import com.marklogic.xcc.ResultItem;
+import com.marklogic.xcc.ResultSequence;
+import com.marklogic.xcc.SecurityOptions;
+import com.marklogic.xcc.Session;
+import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.exceptions.XccConfigException;
+import com.marklogic.xcc.types.XdmItem;
 
 public abstract class AbstractManager {
 
@@ -78,6 +96,7 @@ public abstract class AbstractManager {
     protected TransformOptions options = new TransformOptions();
     protected Properties properties = new Properties();
     protected ContentSource contentSource;
+    protected Map<String,String> userProvidedOptions = new HashMap<String,String>();
 
     protected static final int EXIT_CODE_SUCCESS = 0;
     protected static final int EXIT_CODE_INIT_ERROR = 1;
@@ -295,16 +314,19 @@ public abstract class AbstractManager {
      * @return the trimmed property value
      */
     protected String getOption(String argVal, String propName) {
-        if (isNotBlank(argVal)) {
-            return argVal.trim();
+        String retVal=null;
+    	if (isNotBlank(argVal)) {
+    		retVal= argVal.trim();
         } else if (isNotBlank(System.getProperty(propName))) {
-            return System.getProperty(propName).trim();
+        	retVal= System.getProperty(propName).trim();
         } else if (this.properties.containsKey(propName) && isNotBlank(this.properties.getProperty(propName))) {
-            String val = this.properties.getProperty(propName).trim();
+        	retVal = this.properties.getProperty(propName).trim();
             this.properties.remove(propName); //remove from properties file as we would like to keep the properties file simple. 
-            return val;
         }
-        return null;
+    	if(retVal !=null && !retVal.toUpperCase().contains("XCC") && !propName.toUpperCase().contains("XCC")){
+    		this.userProvidedOptions.put(propName, retVal);
+    	}
+        return retVal;
     }
 
     protected void prepareContentSource() throws XccConfigException, GeneralSecurityException {
@@ -374,6 +396,121 @@ public abstract class AbstractManager {
             }
         }
         LOG.log(INFO, "runtime arguments = {0}", StringUtils.join(argsToLog, SPACE));
+    }
+    public Map<String, String> getUserProvidedOptions() {
+		return userProvidedOptions;
+	}
+
+	public void setUserProvidedOptions(Map<String, String> userProvidedOptions) {
+		this.userProvidedOptions = userProvidedOptions;
+	}
+	public void logJobStatsToServer(JobStats jobStats) {
+		logJobStatsToServerDocument(jobStats);
+		logJobStatsToServerLog(jobStats);
+	}
+	private void logJobStatsToServerLog(JobStats jobStats) {
+		
+		Boolean logMetricsToServerLog=options.getLogMetricsToServerLog();
+		if(logMetricsToServerLog){
+			Session session = contentSource.newSession();
+	        AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML 
+	                + "xdmp:log('"+jobStats+"')");	        
+	        try {
+	        	session.submitRequest(q);
+	        } catch (Exception e) {
+	            LOG.log(SEVERE, "logJobStatsToServer request failed", e);
+	            e.printStackTrace();
+	        } finally {
+	            session.close();
+	        }	
+		}
+       	
+    }
+	private void logJobStatsToServerDocument(JobStats jobStats) {	
+		try {
+			String logMetricsToServerDBName=options.getLogMetricsToServerDBName();
+			if(logMetricsToServerDBName !=null){
+				String uriRoot=options.getLogMetricsToServerDBURIRoot();
+				String jobName=options.getJobName();
+				if(jobName!=null){
+					jobStats.setJobName(jobName);
+				}
+				logMetricsToDB(logMetricsToServerDBName,uriRoot,options.getLogMetricsToServerDBCollections(), jobStats,options.getLogMetricsToServerDBTransformModule());
+			}
+		} catch (CorbException e) {
+			LOG.log(INFO, "Unable to log metrics to server as Document");
+			e.printStackTrace();
+		}          
+    }
+	protected Request getRequestForModule(String processModule, Session session) {
+		Request request;
+		if (isInlineOrAdhoc(processModule)) {
+		    String adhocQuery;
+		    if (isInlineModule(processModule)) {
+		        adhocQuery = StringUtils.getInlineModuleCode(processModule);
+		        if (isBlank(adhocQuery)) {
+		            throw new IllegalStateException("Unable to read inline query ");
+		        }
+		        LOG.log(INFO, "invoking inline process module");
+		    } else {
+		        String queryPath = processModule.substring(0, processModule.indexOf('|'));
+		        adhocQuery = getAdhocQuery(queryPath);
+		        if (isBlank(adhocQuery)) {
+		            throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
+		        }
+		        LOG.log(INFO, "invoking adhoc process module {0}", queryPath);
+		    }
+		    request = session.newAdhocQuery(adhocQuery);
+		    
+		} else {
+		    String root = options.getModuleRoot();
+		    String modulePath = buildModulePath(root, processModule);
+		    LOG.log(INFO, "invoking module {0}", modulePath);
+		    request = session.newModuleInvoke(modulePath);
+		}
+		return request;
+	}
+
+	protected void logMetricsToDB(String dbName,String uriRoot,String collections,JobStats jobStats,String processModule) throws CorbException {
+        Session session = null;
+        ResultSequence seq = null;
+        Thread.yield();// try to avoid thread starvation
+        try {
+            session = contentSource.newSession();
+            Request request = getRequestForModule(processModule, session);
+            
+            request.setNewStringVariable("db-name", dbName);
+            if(uriRoot!=null){
+            	request.setNewStringVariable("uri-root", uriRoot);
+            }
+            else{
+            	request.setNewStringVariable("uri-root", "NA");
+            }
+            if(collections!=null) {
+            	request.setNewStringVariable("collections", collections);
+            }
+            else{
+            	request.setNewStringVariable("collections", "NA");
+            }
+            request.setNewStringVariable("metrics-document-str", jobStats.toXMLString());
+            seq = session.submitRequest(request);
+            session.close();
+            Thread.yield();// try to avoid thread starvation
+            seq.close();
+            Thread.yield();// try to avoid thread starvation
+        } catch (Exception exc) {
+            exc.printStackTrace();
+        } finally {
+            if (null != session && !session.isClosed()) {
+                session.close();
+                session = null;
+            }
+            if (null != seq && !seq.isClosed()) {
+                seq.close();
+                seq = null;
+            }
+            Thread.yield();// try to avoid thread starvation
+        }
     }
 
 }

@@ -224,33 +224,10 @@ public class ModuleExecutor extends AbstractManager {
         String processModule = options.getProcessModule();
 
         try (Session session = contentSource.newSession()) {
-            if (isInlineOrAdhoc(processModule)) {
-                String adhocQuery;
-                if (isInlineModule(processModule)) {
-                    adhocQuery = StringUtils.getInlineModuleCode(processModule);
-                    if (isBlank(adhocQuery)) {
-                        throw new IllegalStateException("Unable to read inline query ");
-                    }
-                    LOG.log(INFO, "invoking inline process module");
-                } else {
-                    String queryPath = processModule.substring(0, processModule.indexOf('|'));
-                    adhocQuery = getAdhocQuery(queryPath);
-                    if (isBlank(adhocQuery)) {
-                        throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
-                    }
-                    LOG.log(INFO, "invoking adhoc process module {0}", queryPath);
-                }
-                request = session.newAdhocQuery(adhocQuery);
-                if (isJavaScriptModule(processModule)) {
-                    requestOptions.setQueryLanguage("javascript");
-                }
-            } else {
-                String root = options.getModuleRoot();
-                String modulePath = buildModulePath(root, processModule);
-                LOG.log(INFO, "invoking module {0}", modulePath);
-                request = session.newModuleInvoke(modulePath);
-            }
-
+            request = getRequestForModule(processModule, session);
+            if (isJavaScriptModule(processModule)) {
+		        requestOptions.setQueryLanguage("javascript");
+		    }
             // custom inputs
             for (String propName : propertyNames) {
                 if (propName.startsWith(PROCESS_MODULE + ".")) {

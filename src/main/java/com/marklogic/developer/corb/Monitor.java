@@ -19,18 +19,23 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.COMMAND_FILE;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
+
 import java.math.RoundingMode;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import static java.util.logging.Level.INFO;
-import static java.util.logging.Level.SEVERE;
-import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 
 /**
@@ -39,14 +44,16 @@ import java.util.logging.Logger;
  *
  */
 public class Monitor implements Runnable {
+	private JobStats jobStats;
 
-    protected static final Logger LOG = Logger.getLogger(Monitor.class.getName());
+	protected static final Logger LOG = Logger.getLogger(Monitor.class.getName());
 
     protected static final int DEFAULT_NUM_TPS_FOR_ETC = 10;
 
     private final CompletionService<String[]> cs;
     private long lastProgress = 0;
     private long startMillis;
+    private long endMillis;
     private final Manager manager;
     private String[] lastUris;
     private long taskCount;
@@ -126,10 +133,56 @@ public class Monitor implements Runnable {
         }
         LOG.info("waiting for pool to terminate");
         pool.awaitTermination(1, TimeUnit.SECONDS);
+        endMillis=System.currentTimeMillis();
+        this.populateAndLogJobStats();
         LOG.log(INFO, "completed all tasks {0}/{1}", new Object[]{completed, taskCount});
+        LOG.log(INFO, "Print Job Stats: {0}",this.getJobStats());
     }
 
-    private long showProgress() throws InterruptedException {
+    private void populateAndLogJobStats() {
+		try{
+			this.jobStats=new JobStats();
+			String hostname = "Unknown";
+
+			try
+			{
+			    InetAddress addr;
+			    addr = InetAddress.getLocalHost();
+			    hostname = addr.getHostName();
+			}
+			catch (UnknownHostException ex)
+			{
+				try {
+					hostname = InetAddress.getLoopbackAddress().getHostName();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				System.out.println("Hostname can not be resolved");
+			}
+			this.jobStats.setHost(hostname);
+			this.jobStats.setJobRunLocation(System.getProperty("user.dir"));
+			if(taskCount > 0 ) {
+				this.jobStats.setTopTimeTakingUris(this.pool.getTopUris());
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");  
+				this.jobStats.setStartTime(sdf.format(new Date(this.startMillis)));
+				this.jobStats.setEndTime(sdf.format(new Date(this.endMillis)));
+				this.jobStats.setTotalNumberOfTasks(this.getTaskCount());
+				long durationInMs = TimeUnit.MILLISECONDS.convert(this.manager.getUrisLoadTime(), TimeUnit.NANOSECONDS);
+				this.jobStats.setUrisLoadTime(durationInMs);
+				this.jobStats.setUserProvidedOptions(this.manager.getUserProvidedOptions());
+				Long totalTime = endMillis - startMillis;
+				this.jobStats.setAverageTransactionTime(new Double(totalTime / new Double(taskCount)));
+			}	
+			manager.logJobStatsToServer(jobStats);
+		}
+		catch(Exception e){
+			LOG.log(INFO,"Unable to populate job stats");
+		}
+		
+	}
+
+	private long showProgress() throws InterruptedException {
         long current = System.currentTimeMillis();
         if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
             if (pool.isPaused()) {
@@ -245,5 +298,13 @@ public class Monitor implements Runnable {
     public void shutdownNow() {
         shutdownNow = true;
     }
+    public JobStats getJobStats() {
+		return jobStats;
+	}
+
+	public void setJobStats(JobStats jobStats) {
+		this.jobStats = jobStats;
+	}
+
 
 }
