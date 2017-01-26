@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
  */
 public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
 
-    private static final Logger LOG = Logger.getLogger(FileUrisJSONLoader.class.getName());
+    private static final Logger LOG = Logger.getLogger(FileUrisDirectoryLoader.class.getName());
     protected static final String EXCEPTION_MSG_PROBLEM_READING_FILE = "Problem while reading the file";
     private Iterator<Path> fileIterator;
 
