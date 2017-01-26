@@ -45,7 +45,7 @@ public class FileUrisStreamingXMLLoaderIT {
     private static final String STREAMING_XML_LOADER = "com.marklogic.developer.corb.FileUrisStreamingXMLLoader";
     private static final String LARGE_PREFIX = "LARGE.";
     private static final String LARGE_BUU_FILENAME = LARGE_PREFIX + BUU_FILENAME;
-    private static final int LARGE_COPIES_OF_BEM = 100000;
+    private static final int LARGE_COPIES_OF_BEM = 1000;
     private String exportFileDir;
     private static final Logger LOG = Logger.getLogger(FileUrisStreamingXMLLoaderIT.class.getName());
 
