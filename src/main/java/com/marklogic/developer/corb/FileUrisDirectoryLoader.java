@@ -18,10 +18,8 @@
  */
 package com.marklogic.developer.corb;
 
-import com.marklogic.developer.corb.util.IOUtils;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,29 +36,28 @@ public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
 
     private static final Logger LOG = Logger.getLogger(FileUrisJSONLoader.class.getName());
     protected static final String EXCEPTION_MSG_PROBLEM_READING_FILE = "Problem while reading the file";
-    private DirectoryStream<Path> directoryStream;
     private Iterator<Path> fileIterator;
 
     @Override
     public void open() throws CorbException {
 
         String dirName = getProperty(Options.FILE_LOADER_PATH);
-        
+
         Path dir = Paths.get(dirName);
-        if (!(Files.exists(dir) 
-                && Files.isDirectory(dir) 
+        if (!(Files.exists(dir)
+                && Files.isDirectory(dir)
                 && Files.isReadable(dir))) {
             throw new CorbException(MessageFormat.format("{0}: {1} must be specified and an accessible directory", Options.FILE_LOADER_PATH, dirName));
         }
-        
+
         try {
-            directoryStream = Files.newDirectoryStream(dir, (Path entry) -> {
-                return this.accept(entry);
-            });
-            fileIterator = directoryStream.iterator();
+            if (shouldSetBatchRef()) {
+                batchRef = dir.toFile().getCanonicalPath();
+            }
+            fileIterator = Files.walk(dir).filter(p -> this.accept(p)).iterator();
             setTotalCount(fileCount(dir));
         } catch (IOException ex) {
-            throw new CorbException("Problem loading data from xml file ", ex);
+            throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_FILE, ex);
         }
     }
 
@@ -94,12 +91,11 @@ public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
     public String next() throws CorbException {
         Path path = fileIterator.next();
         File file = path.toFile();
-        return nodeToString(toIngestDoc(file));
+        return nodeToString(toLoaderDoc(file));
     }
 
     @Override
     public void close() {
-        IOUtils.closeQuietly(directoryStream);
         cleanup();
     }
 }

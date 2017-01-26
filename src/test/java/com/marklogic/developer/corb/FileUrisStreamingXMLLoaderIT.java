@@ -45,22 +45,22 @@ public class FileUrisStreamingXMLLoaderIT {
     private static final String STREAMING_XML_LOADER = "com.marklogic.developer.corb.FileUrisStreamingXMLLoader";
     private static final String LARGE_PREFIX = "LARGE.";
     private static final String LARGE_BUU_FILENAME = LARGE_PREFIX + BUU_FILENAME;
-    private static final int LARGE_COPIES_OF_BEM = 100;
-    private String EXPORT_FILE_DIR;
+    private static final int LARGE_COPIES_OF_BEM = 100000;
+    private String exportFileDir;
     private static final Logger LOG = Logger.getLogger(FileUrisStreamingXMLLoaderIT.class.getName());
 
     @Before
     public void setUp() throws IOException {
         clearSystemProperties();
         File tempDir = TestUtils.createTempDirectory();
-        EXPORT_FILE_DIR = tempDir.toString();
+        exportFileDir = tempDir.toString();
         generateLargeInput(LARGE_COPIES_OF_BEM);
     }
 
     @After
     public void tearDown() throws IOException {
-        FileUtils.deleteFile(EXPORT_FILE_DIR);
         clearSystemProperties();
+        FileUtils.deleteFile(exportFileDir);
         File largeFile = new File(BUU_DIR + LARGE_BUU_FILENAME);
         if (largeFile.exists() && !largeFile.delete()) {
             LOG.log(Level.WARNING, "Unable to delete directory");
@@ -71,7 +71,6 @@ public class FileUrisStreamingXMLLoaderIT {
     public void testInvalidLarge() {
         Properties properties = getBUUProperties();
         properties.setProperty(Options.XML_SCHEMA, BUU_DIR + NOT_BUU_SCHEMA);
-
         try {
             testStreamingXMLUrisLoader(LARGE_BUU_FILENAME, properties);
         } catch (Exception ex) {
@@ -93,7 +92,7 @@ public class FileUrisStreamingXMLLoaderIT {
 
     @Test
     public void testStreamingXMLUrisLoaderWithLargeInput() {
-        int expected = LARGE_COPIES_OF_BEM  + 1;
+        int expected = LARGE_COPIES_OF_BEM + 1;
         Properties properties = getBUUProperties();
         properties.setProperty(Options.XML_FILE, BUU_DIR + LARGE_BUU_FILENAME);
         try {
@@ -107,16 +106,13 @@ public class FileUrisStreamingXMLLoaderIT {
 
     public int testStreamingXMLUrisLoader(String filename, Properties properties) {
         int lineCount = -1;
+        String exportFileName = filename + "IT_report.txt";
+        File report = new File(exportFileDir + SLASH + exportFileName);
+        report.deleteOnExit();
+        properties.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
+
+        Manager manager = new Manager();     
         try {
-            String exportFileName = filename + "IT_report.txt";
-            String exportFileDir = EXPORT_FILE_DIR;
-
-            File report = new File(exportFileDir + SLASH + exportFileName);
-            report.deleteOnExit();
-
-            properties.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
-
-            Manager manager = new Manager();
             manager.init(properties);
             manager.run();
 
@@ -142,21 +138,22 @@ public class FileUrisStreamingXMLLoaderIT {
         properties.setProperty(Options.POST_BATCH_TASK, "com.marklogic.developer.corb.PostBatchUpdateFileTask");
         properties.setProperty(Options.PROCESS_MODULE, BUU_DIR + "processMultiply.xqy|ADHOC");
         properties.setProperty(Options.PROCESS_MODULE + ".COPIES", Integer.toString(copies));
-        properties.setProperty(Options.EXPORT_FILE_TOP_CONTENT, 
+        properties.setProperty(Options.EXPORT_FILE_TOP_CONTENT,
                 "<bem:BenefitEnrollmentRequest xmlns:bem=\"http://bem.corb.developer.marklogic.com\">"
-                + "<bem:FileInformation>\n" +
-            "		<bem:InterchangeSenderID>PHANTOM</bem:InterchangeSenderID>\n" +
-            "		<bem:InterchangeReceiverID>CMSFFM</bem:InterchangeReceiverID>\n" +
-            "		<bem:GroupSenderID>11512NC0060024</bem:GroupSenderID>\n" +
-            "		<bem:GroupReceiverID>NC0</bem:GroupReceiverID>\n" +
-            "		<bem:GroupControlNumber>20140909</bem:GroupControlNumber>\n" +
-            "		<bem:GroupTimeStamp>2014-10-15T00:00:00</bem:GroupTimeStamp>\n" +
-            "		<bem:VersionNumber>22</bem:VersionNumber>\n" +
-            "	</bem:FileInformation>");
+                + "<bem:FileInformation>\n"
+                + "		<bem:InterchangeSenderID>PHANTOM</bem:InterchangeSenderID>\n"
+                + "		<bem:InterchangeReceiverID>CMSFFM</bem:InterchangeReceiverID>\n"
+                + "		<bem:GroupSenderID>11512NC0060024</bem:GroupSenderID>\n"
+                + "		<bem:GroupReceiverID>NC0</bem:GroupReceiverID>\n"
+                + "		<bem:GroupControlNumber>20140909</bem:GroupControlNumber>\n"
+                + "		<bem:GroupTimeStamp>2014-10-15T00:00:00</bem:GroupTimeStamp>\n"
+                + "		<bem:VersionNumber>22</bem:VersionNumber>\n"
+                + "	</bem:FileInformation>");
         properties.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "</bem:BenefitEnrollmentRequest>");
         properties.setProperty(Options.EXPORT_FILE_DIR, BUU_DIR);
         properties.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
         properties.setProperty(Options.FILE_LOADER_USE_ENVELOPE, Boolean.toString(false));
+
         try {
             Manager manager = new Manager();
             manager.init(properties);
@@ -171,15 +168,16 @@ public class FileUrisStreamingXMLLoaderIT {
     public Properties getBUUProperties() {
         Properties properties = new Properties();
         properties.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
-        properties.setProperty(Options.EXPORT_FILE_DIR, EXPORT_FILE_DIR);
+        properties.setProperty(Options.EXPORT_FILE_DIR, exportFileDir);
         properties.setProperty(Options.XML_FILE, BUU_DIR + BUU_FILENAME);
         properties.setProperty(Options.XML_SCHEMA, BUU_DIR + BUU_SCHEMA);
         properties.setProperty(Options.URIS_LOADER, STREAMING_XML_LOADER);
         properties.setProperty(Options.PRE_BATCH_MODULE, BUU_DIR + "preBatch.xqy|ADHOC");
-        properties.setProperty(Options.PROCESS_TASK, "com.marklogic.developer.corb.ExportBatchToFileTask");
+        properties.setProperty(Options.PROCESS_TASK, ExportBatchToFileTask.class.getName());
         properties.setProperty(Options.PROCESS_MODULE, BUU_DIR + "process.xqy|ADHOC");
         properties.setProperty(Options.POST_BATCH_MODULE, BUU_DIR + "postBatch.xqy|ADHOC");
         properties.setProperty(Options.THREAD_COUNT, Integer.toString(10));
+        properties.setProperty(Options.FILE_LOADER_SET_URIS_BATCH_REF, Boolean.toString(true));
         return properties;
     }
 }

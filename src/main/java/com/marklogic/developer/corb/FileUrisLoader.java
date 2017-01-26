@@ -41,7 +41,9 @@ public class FileUrisLoader extends AbstractUrisLoader {
         parseUriReplacePatterns();
 
         String fileName = getOptions().getUrisFile();
-
+        if (shouldSetBatchRef()) {
+            batchRef = fileName;
+        }
         try (LineNumberReader lnr = new LineNumberReader(new FileReader(fileName))) {
             lnr.skip(Long.MAX_VALUE);
             this.setTotalCount(lnr.getLineNumber() + 1);

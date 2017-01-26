@@ -32,6 +32,8 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -53,41 +55,48 @@ import org.w3c.dom.Text;
  */
 public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
 
+    public static final String LOADER_DOC = "corb-loader";
+    public static final String CONTENT = "content";
+    public static final String BASE64_ENCODED = "base64Encoded";
+    public static final String METADATA = "metadata";
     public static final String META_CONTENT_TYPE = "contentType";
     public static final String META_FILENAME = "filename";
+    public static final String META_PATH = "path";
     public static final String META_LAST_MODIFIED = "lastModified";
     public static final String META_SOURCE = "source";
-    
-    //TODO: replacements?
-    private final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+
+    protected final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
     private TransformerFactory transformerFactory;
     private static final String YES = "yes";
 
-    protected Document toIngestDoc(File file) throws CorbException {
+    protected Document toLoaderDoc(File file) throws CorbException {
         try (InputStream inputStream = new FileInputStream(file)) {
             Map<String, String> metadata = getMetadata(file);
-            return toIngestDoc(metadata, inputStream);
+            return AbstractFileUrisLoader.this.toLoaderDoc(metadata, inputStream);
         } catch (IOException ex) {
             throw new CorbException("Error reading file metadata", ex);
         }
     }
-    
-    protected Document toIngestDoc(Map<String, String> metadata, InputStream inputStream) throws CorbException {
+
+    protected Document toLoaderDoc(Map<String, String> metadata, InputStream inputStream) throws CorbException {
         try {
-            return toIngestDoc(metadata, IOUtils.toBase64(inputStream), true);
-        } catch (IOException ex) {
+            DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+            Document doc = docBuilder.newDocument();
+            String content = IOUtils.toBase64(inputStream);
+            Text contentText = doc.createTextNode(content);
+            return AbstractFileUrisLoader.this.toLoaderDoc(metadata, contentText, true);
+        } catch (ParserConfigurationException | IOException ex) {
             throw new CorbException("Problem generating base64", ex);
         }
     }
 
-    protected Document toIngestDoc(Map<String, String> metadata, String content, boolean isContentBase64Encoded) throws CorbException {
+    protected Document toLoaderDoc(Map<String, String> metadata, Node content, boolean isContentBase64Encoded) throws CorbException {
         try {
             DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-
             Document doc = docBuilder.newDocument();
-            Element docElement = doc.createElement("corb-loader"); //TODO better name? MLCP uses <com.marklogic.contentpump.metadata/> for their archive metadata files
-            
-            Element metadataElement = doc.createElement("metadata");
+            Element docElement = doc.createElement(LOADER_DOC);
+
+            Element metadataElement = doc.createElement(METADATA);
             docElement.appendChild(metadataElement);
 
             for (Map.Entry<String, String> entry : metadata.entrySet()) {
@@ -97,14 +106,11 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
                 metadataElement.appendChild(metaElement);
             }
 
-            Element contentElement = doc.createElement("content");
-            //Attr nameAttr = doc.createAttribute("base64Encoded");
-            //nameAttr.setValue(Boolean.toString(isContentBase64Encoded));
-            contentElement.setAttribute("base64Encoded", Boolean.toString(isContentBase64Encoded));
-            
-            Text contentText = doc.createTextNode(content);
-            contentElement.appendChild(contentText);
-            
+            Element contentElement = doc.createElement(CONTENT);
+            contentElement.setAttribute(BASE64_ENCODED, Boolean.toString(isContentBase64Encoded));
+            Node importedNode = doc.importNode(content, true);
+            contentElement.appendChild(importedNode);
+
             docElement.appendChild(contentElement);
             doc.appendChild(docElement);
 
@@ -116,12 +122,12 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
 
     protected Map<String, String> getMetadata(File file) throws IOException {
         Map<String, String> metadata = new HashMap<>();
-        metadata.put(META_FILENAME, file.getCanonicalPath());
-        
+        metadata.put(META_FILENAME, file.getName());
+        metadata.put(META_PATH, file.getCanonicalPath());
         String lastModified = this.toISODateTime(file.lastModified());
         if (StringUtils.isNotBlank(lastModified)) {
             metadata.put(META_LAST_MODIFIED, lastModified);
-        } 
+        }
         String contentType = Files.probeContentType(file.toPath());
         if (StringUtils.isNotEmpty(contentType)) {
             metadata.put(META_CONTENT_TYPE, contentType);
@@ -188,5 +194,15 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
             throw new CorbException("nodeToString Transformer Exception", te);
         }
         return sw.toString();
+    }
+
+    protected boolean shouldUseEnvelope() {
+        String useEnvelope = getProperty(Options.FILE_LOADER_USE_ENVELOPE);
+        return StringUtils.stringToBoolean(useEnvelope, true);
+    }
+
+    protected boolean shouldBase64Encode() {
+        String shouldEncode = getProperty(Options.FILE_LOADER_BASE64_ENCODE);
+        return StringUtils.stringToBoolean(shouldEncode, true);
     }
 }

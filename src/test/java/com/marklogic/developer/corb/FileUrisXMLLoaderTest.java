@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.xcc.ContentSource;
+import java.io.IOException;
 import org.junit.*;
 import org.w3c.dom.Document;
 
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -110,19 +112,6 @@ public class FileUrisXMLLoaderTest {
         }
     }
 
-    private FileUrisXMLLoader getDefaultFileUrisXMLLoader() {
-        FileUrisXMLLoader instance = new FileUrisXMLLoader();
-        TransformOptions options = new TransformOptions();
-        Properties props = new Properties();
-        props.setProperty(Options.URIS_LOADER, FileUrisLoader.class.getName());
-        props.setProperty(Options.FILE_LOADER_USE_ENVELOPE, Boolean.toString(false));
-        props.setProperty(Options.XML_FILE, "src/test/resources/xml-file.xml");
-        props.setProperty(Options.XML_NODE, "/root/a");
-        instance.properties = props;
-        instance.options = options;
-        return instance;
-    }
-
     @Test
     public void testOpen() {
         List<String> nodes;
@@ -138,6 +127,68 @@ public class FileUrisXMLLoaderTest {
             assertTrue(nodes.contains(ANCHOR2));
             assertTrue(nodes.contains(ANCHOR3));
             assertTrue(nodes.contains(ANCHOR4));
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test(expected = CorbException.class)
+    public void testOpenNotXMLFile() throws CorbException {
+        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
+            instance.properties.setProperty(Options.XML_FILE, TEST1);
+            instance.open();
+        }
+    }
+
+    @Test
+    public void testOpenWithEnvelopeNotBase64Encoded() {
+        List<String> nodes;
+        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
+            instance.properties.setProperty(Options.FILE_LOADER_USE_ENVELOPE, Boolean.toString(true));
+            instance.properties.setProperty(Options.FILE_LOADER_BASE64_ENCODE, Boolean.toString(false));
+
+            instance.open();
+            assertNotNull(instance.nodeIterator);
+            nodes = new ArrayList<>(4);
+            while (instance.hasNext()) {
+                nodes.add(instance.next());
+            }
+            assertEquals(4, nodes.size());
+
+            assertEquals(4, nodes.stream()
+                    .filter(p
+                            -> (p.contains(ANCHOR1) || p.contains(ANCHOR2) || p.contains(ANCHOR3) || p.contains(ANCHOR4))
+                            && p.contains(FileUrisXMLLoader.LOADER_DOC))
+                    .count());
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testOpenWithEnvelopeAndBase64Encoded() {
+        List<String> nodes;
+        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
+            instance.properties.setProperty(Options.FILE_LOADER_USE_ENVELOPE, Boolean.toString(true));
+            instance.properties.setProperty(Options.FILE_LOADER_BASE64_ENCODE, Boolean.toString(true));
+
+            instance.open();
+            assertNotNull(instance.nodeIterator);
+            nodes = new ArrayList<>(4);
+            while (instance.hasNext()) {
+                nodes.add(instance.next());
+            }
+            assertEquals(4, nodes.size());
+            String firstNode = nodes.get(0);
+            System.out.println(firstNode);
+            assertEquals(4, nodes.stream()
+                    .filter(p
+                            -> !(p.contains(ANCHOR1) || p.contains(ANCHOR2) || p.contains(ANCHOR3) || p.contains(ANCHOR4))
+                            && p.contains(FileUrisXMLLoader.LOADER_DOC))
+                    .count());
+
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -164,7 +215,6 @@ public class FileUrisXMLLoaderTest {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-
     }
 
     @Test
@@ -281,7 +331,6 @@ public class FileUrisXMLLoaderTest {
             instance.properties.remove(Options.XML_NODE);
             try {
                 instance.open();
-
                 for (int i = 0; i < instance.getTotalCount(); i++) {
                     assertTrue(instance.hasNext());
                 }
@@ -353,11 +402,23 @@ public class FileUrisXMLLoaderTest {
             while (instance.hasNext()) {
                 nodes.add(instance.next());
             }
-
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
         return nodes;
+    }
+
+    private FileUrisXMLLoader getDefaultFileUrisXMLLoader() {
+        FileUrisXMLLoader instance = new FileUrisXMLLoader();
+        TransformOptions options = new TransformOptions();
+        Properties props = new Properties();
+        props.setProperty(Options.URIS_LOADER, FileUrisLoader.class.getName());
+        props.setProperty(Options.FILE_LOADER_USE_ENVELOPE, Boolean.toString(false));
+        props.setProperty(Options.XML_FILE, "src/test/resources/xml-file.xml");
+        props.setProperty(Options.XML_NODE, "/root/a");
+        instance.properties = props;
+        instance.options = options;
+        return instance;
     }
 }
