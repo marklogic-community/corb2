@@ -378,6 +378,49 @@ public final class Options {
             + "Default is false.")
     public static final String INSTALL = "INSTALL";
 
+    
+    /**
+     * Boolean option specifying whether the content loaded by
+     * FileUrisStreamingXMLLoader or FileUrisXMLLoader (with the option
+     * FILE-LOADER-USE-ENVELOPE=true) should be base64 encoded, or appended as
+     * the child of the `/corb-loader/content` element. Default is `false`
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Boolean option specifying whether the content loaded by "
+            + "FileUrisStreamingXMLLoader or FileUrisXMLLoader (with the option FILE-LOADER-USE-ENVELOPE=true) "
+            + "should be base64 encoded, or appended as the child of the `/corb-loader/content` element. "
+            + " Default is `false`")
+    public static final String FILE_LOADER_BASE64_ENCODE = "FILE-LOADER-BASE64-ENCODE";
+
+    /**
+     * The path to the file or folder that will be the source for a class that
+     * extends the AbstractFileUrisLoader
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "The path to the file or folder that will be the source for a class that extends the AbstractFileUrisLoader")
+    public static final String FILE_LOADER_PATH = "FILE-LOADER-PATH";
+
+    /**
+     * Boolean option indicating whether a file loader should set the
+     * #URIS_BATCH_REF(https://github.com/marklogic/corb2#uris_batch_ref)
+     * Default is false
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "TODO")
+    public static final String FILE_LOADER_SET_URIS_BATCH_REF = "FILE-LOADER-SET-URIS-BATCH-REF";
+
+    /**
+     * Boolean value indicating whether File loaders should use an XML envelope, 
+     * in order to send file metadata in addition to the file content, which may be base64 encoded.
+     * @since 2.4.0
+     */
+    @Usage(description = "Boolean value indicating whether File loaders should use an XML envelope, "
+            + "in order to send file metadata in addition to the file content, which may be base64 encoded.")
+    public static final String FILE_LOADER_USE_ENVELOPE = "FILE-LOADER-USE-ENVELOPE";
+
     /**
      * (Optional) Property file for the
      * {@link com.marklogic.developer.corb.JasyptDecrypter}.
@@ -711,11 +754,11 @@ public final class Options {
     public static final String SSL_PROPERTIES_FILE = "SSL-PROPERTIES-FILE";
 
     /**
-     * 
+     *
      */
     @Usage(description = "Path to a directory that can be used for temporary processing files.")
     public static final String TEMP_DIR = "TEMP-DIR";
-    
+
     /**
      * The number of worker threads. Default is 1.
      */
@@ -851,13 +894,16 @@ public final class Options {
     public static final String XCC_HOSTNAME = "XCC-HOSTNAME";
 
     /**
-     * Optional boolean flag to indicate whether to enable HTTP 1.1 compliance in XCC. If this option is set,
-     * the "xcc.httpcompliant" System property will be set.
-     * @see <a href="https://docs.marklogic.com/guide/xcc/concepts#id_28335">XCC Developer's Guide</a>
+     * Optional boolean flag to indicate whether to enable HTTP 1.1 compliance
+     * in XCC. If this option is set, the "xcc.httpcompliant" System property
+     * will be set.
+     *
+     * @see <a href="https://docs.marklogic.com/guide/xcc/concepts#id_28335">XCC
+     * Developer's Guide</a>
      * @since 2.4.0
      */
-    @Usage(description = "Optional boolean flag to indicate whether to enable HTTP 1.1 Compliance in XCC. " +
-        "If this option is set, the \"xcc.httpcompliant\" System property will be set.")
+    @Usage(description = "Optional boolean flag to indicate whether to enable HTTP 1.1 Compliance in XCC. "
+            + "If this option is set, the \"xcc.httpcompliant\" System property will be set.")
     public static final String XCC_HTTPCOMPLIANT = "XCC-HTTPCOMPLIANT";
 
     /**
@@ -873,18 +919,18 @@ public final class Options {
     public static final String XCC_PORT = "XCC-PORT";
 
     /**
-     * The ID for the TimeZone that should be set on XCC RequestOption.
-     * When a value is specified, it is parsed using TimeZone.getTimeZone() and
-     * set on XCC RequestOption for each Task. Invalid ID values will produce the GMT TimeZone.
-     * If not specified, XCC uses the JVM default TimeZone.
+     * The ID for the TimeZone that should be set on XCC RequestOption. When a
+     * value is specified, it is parsed using TimeZone.getTimeZone() and set on
+     * XCC RequestOption for each Task. Invalid ID values will produce the GMT
+     * TimeZone. If not specified, XCC uses the JVM default TimeZone.
      *
      * @see java.util.TimeZone
      * @since 2.4.0
      */
-    @Usage(description = "The ID for the TimeZone that should be set on XCC RequestOption. When a\n" +
-        " value is specified, it is parsed using TimeZone.getTimeZone() and set on\n" +
-        " XCC RequestOption for each Task. Invalid ID values will produce the GMT\n" +
-        " TimeZone. If not specified, XCC uses the JVM default TimeZone.")
+    @Usage(description = "The ID for the TimeZone that should be set on XCC RequestOption. When a\n"
+            + " value is specified, it is parsed using TimeZone.getTimeZone() and set on\n"
+            + " XCC RequestOption for each Task. Invalid ID values will produce the GMT\n"
+            + " TimeZone. If not specified, XCC uses the JVM default TimeZone.")
     public static final String XCC_TIME_ZONE = "XCC-TIME-ZONE";
 
     /**
@@ -962,21 +1008,7 @@ public final class Options {
             + "The zip file path may be relative or absolute. Default processing will "
             + "select all of the files in the zip file. ")
     public static final String ZIP_FILE = "ZIP-FILE";
-    
-    
-    /**
-     * The 
-     */
-    public static final String FILE_LOADER_PATH = "FILE-LOADER-PATH";
-    
-    /**
-     * 
-     */
-    @Usage(description = "Indication of whether File loaders should use an XML envelope, in order to send file "
-            + "metadata in addition to the file content (base64 encoded).")
-    public static final String FILE_LOADER_USE_ENVELOPE = "FILE-LOADER-USE-ENVELOPE";
-    
-    
+
     /**
      *
      * @deprecated Use the {@link #PROCESS_MODULE} option instead.

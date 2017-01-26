@@ -93,7 +93,9 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
             xmlFile = new File(fileName);
             schemaValidate(xmlFile);
             nodeIterator = readNodes(xmlFile.toPath());
-            batchRef = xmlFile.getCanonicalPath(); //original XML file set for reference in processing modules
+            if (shouldSetBatchRef()) {
+                batchRef = xmlFile.getCanonicalPath();
+            }
         } catch (IOException exc) {
             throw new CorbException("Problem loading data from XML file ", exc);
         }
@@ -156,9 +158,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
             if (isBlank(line)) {
                 line = readNextNode();
             }
-            //TODO: option for whether to use corb-loader envelope?
-            String useEnvelope = getProperty(Options.FILE_LOADER_USE_ENVELOPE);
-            if (StringUtils.stringToBoolean(useEnvelope, true)) { //TODO: determine if default should be true(breaking change)
+            if (shouldUseEnvelope()) { //TODO: determine if default should be true(breaking change)
                 Map<String, String> metadata;
                 try {
                     metadata = getMetadata(xmlFile);
@@ -167,8 +167,16 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
                     if (!isBlank(xpath)) {
                         metadata.put(Options.XML_NODE, xpath);
                     }
-                    InputStream inputStream = toInputStream(nextNode);
-                    return nodeToString(toIngestDoc(metadata, inputStream));
+
+                    Document loaderDoc;
+                    if (shouldBase64Encode()) {
+                        try (InputStream inputStream = toInputStream(nextNode)) {
+                            loaderDoc = toLoaderDoc(metadata, inputStream);
+                        }
+                    } else {
+                        loaderDoc = toLoaderDoc(metadata, nextNode, false);
+                    }
+                    return nodeToString(loaderDoc);
                 } catch (IOException | TransformerException ex) {
                     LOG.log(Level.SEVERE, null, ex);
                 }
@@ -177,6 +185,12 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
             }
         }
         return null;
+    }
+
+    @Override
+    protected boolean shouldBase64Encode() {
+        String shouldEncode = getProperty(Options.FILE_LOADER_BASE64_ENCODE);
+        return StringUtils.stringToBoolean(shouldEncode, false);
     }
 
     protected InputStream toInputStream(Node node) throws TransformerException {

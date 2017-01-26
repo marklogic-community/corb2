@@ -30,6 +30,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,11 +43,15 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.stax.StAXSource;
+import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
 
 /**
  * Split an XML file {@value #XML_FILE} into multiple documents using the
@@ -68,8 +73,8 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
     private Path tempDir;
     private DirectoryStream<Path> directoryStream;
     private Iterator<Path> files;
-    FileAttribute<?>[] fileAttributes = new FileAttribute<?>[0];
-    StreamingXPath streamingXPath;
+    private final FileAttribute<?>[] fileAttributes = new FileAttribute<?>[0];
+    private StreamingXPath streamingXPath;
 
     @Override
     public void open() throws CorbException {
@@ -81,8 +86,10 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         xmlFile = FileUtils.getFile(xmlFilename);
         try {
             schemaValidate(xmlFile);
-            //set the original XML filename, for reference in processing modules
-            batchRef = xmlFile.getCanonicalPath();
+            if (shouldSetBatchRef()) {
+                //set the original XML filename, for reference in processing modules
+                batchRef = xmlFile.getCanonicalPath();
+            }
             tempDir = getTempDir();
             files = readToTempDir(xmlFile.toPath());
         } catch (IOException ex) {
@@ -99,21 +106,31 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
     @Override
     public String next() throws CorbException {
         Path path = files.next();
-        File file = path.toFile();
+        String content;
         try {
-            Map<String, String> metadata = getMetadata(file);
-            metadata.put(META_SOURCE, xmlFile.getCanonicalPath());
-
-            try (InputStream inputStream = new FileInputStream(file)) {
-                Node node = toIngestDoc(metadata, inputStream);
-                String content = nodeToString(node);
-                Files.deleteIfExists(path);
-                return content;
+            if (shouldUseEnvelope()) {
+                File file = path.toFile();
+                Map<String, String> metadata = getMetadata(file);
+                metadata.put(META_SOURCE, xmlFile.getCanonicalPath());
+                Node node;
+                if (shouldBase64Encode()) {
+                    try (InputStream inputStream = new FileInputStream(file)) {
+                        node = toLoaderDoc(metadata, inputStream);
+                    }
+                } else {
+                    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+                    Document document = docBuilder.parse(file);
+                    node = toLoaderDoc(metadata, document.getDocumentElement(), false);
+                }
+                content = nodeToString(node);
+            } else {
+                content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
             }
-        } catch (IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            Files.deleteIfExists(path);
+        } catch (ParserConfigurationException | SAXException | IOException ex) {
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
         }
+        return content;
     }
 
     @Override
@@ -147,7 +164,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
         try (Reader fileReader = Files.newBufferedReader(xmlFile);) {
             XMLStreamReader reader = xmlInputFactory.createXMLStreamReader(fileReader);
-            
+
             Deque<String> context = new ArrayDeque<>();
             while (reader.hasNext()) {
                 // if there is a problem extracting an element, don't count it

@@ -5,15 +5,18 @@ declare variable $URI as xs:string external;
 declare variable $URIS_BATCH_REF as xs:string external;
 
 let $corb-loader := xdmp:unquote($URI)/corb-loader
-let $doc := xdmp:unquote(xdmp:base64-decode($corb-loader/content/string()))
+let $loader-content := $corb-loader/content
+let $doc := 
+    if ($loader-content/@base64Encoded[. eq "true"]) then 
+        xdmp:unquote(xdmp:base64-decode($loader-content))
+    else 
+        $loader-content/node()
+
 let $metadata := $corb-loader/metadata
 let $originalFilename := fn:tokenize($metadata/filename, "\\|/")[last()] 
 
 let $parentId := xdmp:get-server-field("com.marklogic.developer.corb.StreamingXMLUrisLoader." || $URIS_BATCH_REF || ".parentId")
 
-(:
-let $originalFilename  := xdmp:get-server-field("com.marklogic.developer.corb.StreamingXMLUrisLoader." || $URIS_BATCH_REF || ".originalFilename")
-:)
 let $id := fn:string(xdmp:random(10000000000))
 
 let $content := 

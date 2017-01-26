@@ -18,18 +18,20 @@
  */
 package com.marklogic.developer.corb;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import org.junit.After;
 import org.junit.Test;
@@ -43,8 +45,9 @@ import org.junit.Before;
 public class FileUrisZipLoaderTest {
 
     private static final Logger LOG = Logger.getLogger(FileUrisZipLoaderTest.class.getName());
-    private static final String TEST_ZIP_FILE = "src/test/resources/loader.zip";
-    private static final Path TEST_ZIP_FILE_PATH = Paths.get(TEST_ZIP_FILE);
+    public static final String TEST_ZIP_FILE = "src/test/resources/loader.zip";
+    public static final Path TEST_ZIP_FILE_PATH = Paths.get(TEST_ZIP_FILE);
+    public static final String PDF_COMMENT = "Portable Document Format Entry";
 
     public FileUrisZipLoaderTest() {
     }
@@ -53,7 +56,7 @@ public class FileUrisZipLoaderTest {
     public void setUp() {
         try {
             Files.deleteIfExists(TEST_ZIP_FILE_PATH);
-            pack("src/test/resources/loader", "src/test/resources/loader.zip");
+            pack(FileUrisDirectoryLoaderTest.TEST_DIR, TEST_ZIP_FILE);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -66,7 +69,7 @@ public class FileUrisZipLoaderTest {
     }
 
     @Test
-    public void testOpen() throws Exception {
+    public void testOpen() {
         List<String> nodes;
         try (FileUrisZipLoader instance = getDefaultFileUrisZipLoader()) {
             instance.open();
@@ -79,8 +82,7 @@ public class FileUrisZipLoaderTest {
                 }
                 nodes.add(output);
             }
-            assertEquals(11, nodes.size());
-           
+            assertEquals(FileUrisDirectoryLoaderTest.TEST_ZIP_FILE_COUNT, nodes.size());
 
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -88,7 +90,36 @@ public class FileUrisZipLoaderTest {
         }
     }
 
-    private FileUrisZipLoader getDefaultFileUrisZipLoader() {
+    @Test(expected = CorbException.class)
+    public void testOpenNotZip() throws CorbException {
+        try (FileUrisZipLoader instance = getDefaultFileUrisZipLoader()) {
+            instance.properties.setProperty(Options.ZIP_FILE, TEST_ZIP_FILE + ".notZip");
+            instance.open();
+        }
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testGetMetadataWithFile() {
+        FileUrisZipLoader loader = new FileUrisZipLoader();
+        loader.getMetadata(new File(TEST_ZIP_FILE));
+    }
+
+    @Test
+    public void testGetMetadataForPDF() {
+        String pdfFilename = "docs/simple document.pdf";
+        FileUrisZipLoader loader = new FileUrisZipLoader();
+        try {
+            ZipFile zipFile = new ZipFile(TEST_ZIP_FILE);
+            Map<String, String> metadata = loader.getMetadata(zipFile.getEntry(pdfFilename));
+            assertTrue(metadata.get(FileUrisZipLoader.META_COMMENT).equals(PDF_COMMENT));
+            assertTrue(metadata.get(FileUrisZipLoader.META_FILENAME).equals(pdfFilename));
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    public static FileUrisZipLoader getDefaultFileUrisZipLoader() {
         FileUrisZipLoader instance = new FileUrisZipLoader();
         TransformOptions options = new TransformOptions();
         Properties props = new Properties();
@@ -98,7 +129,7 @@ public class FileUrisZipLoaderTest {
         instance.options = options;
         return instance;
     }
-    
+
     public static void pack(String sourceDirPath, String zipFilePath) throws IOException {
         Path p = Files.createFile(Paths.get(zipFilePath));
         try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(p))) {
@@ -114,8 +145,8 @@ public class FileUrisZipLoaderTest {
                     })
                     .forEach(path -> {
                         ZipEntry zipEntry = new ZipEntry(pp.relativize(path).toString());
-                        if (zipEntry.getName().endsWith(".pdf")){
-                            zipEntry.setComment("Portable Document Format Entry");
+                        if (zipEntry.getName().endsWith(".pdf")) {
+                            zipEntry.setComment(PDF_COMMENT);
                         }
                         try {
                             zs.putNextEntry(zipEntry);
@@ -123,7 +154,7 @@ public class FileUrisZipLoaderTest {
                             zs.closeEntry();
                         } catch (IOException ex) {
                             LOG.log(Level.SEVERE, "Problem adding entry to zip file", ex);
-                        }         
+                        }
                     });
         }
     }

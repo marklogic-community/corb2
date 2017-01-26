@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.URIS_REPLACE_PATTERN;
+import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 import com.marklogic.xcc.ContentSource;
@@ -106,5 +107,10 @@ public abstract class AbstractUrisLoader implements UrisLoader {
                 throw new IllegalArgumentException("Invalid replacement pattern " + urisReplacePattern);
             }
         }
+    }
+    
+    protected boolean shouldSetBatchRef() {
+        String setBatchRef = getProperty(Options.FILE_LOADER_SET_URIS_BATCH_REF);
+        return StringUtils.stringToBoolean(setBatchRef, false);
     }
 }

@@ -33,8 +33,9 @@ import static org.junit.Assert.*;
 public class FileUrisDirectoryLoaderTest {
 
     private static final Logger LOG = Logger.getLogger(FileUrisDirectoryLoaderTest.class.getName());
-    private static final String TEST_DIR = "src/test/resources/loader";
-
+    public static final String TEST_DIR = "src/test/resources/loader";
+    public static final int TEST_ZIP_FILE_COUNT = 11;
+    
     public FileUrisDirectoryLoaderTest() {
     }
 
