@@ -129,6 +129,10 @@ Option | Description
 **EXPORT-FILE-TOP-CONTENT** | Used by `com.marklogic.developer.corb.PreBatchUpdateFileTask` to insert content at the top of **EXPORT-FILE-NAME** before batch process starts. If it includes the string `@URIS_BATCH_REF`, it is replaced by the batch reference returned by **URIS-MODULE**.
 **EXPORT-FILE-URI-TO-PATH** | Default is true. Boolean value indicating whether to convert doc URI to a filepath.
 **FAIL-ON-ERROR** | Boolean value indicating whether the CoRB job should fail and exit if a process module throws an error. Default is true. This option will not handle repeated connection failures.
+**FILE-LOADER-BASE64-ENCODE** | Boolean option specifying whether the content loaded by FileUrisStreamingXMLLoader or FileUrisXMLLoader (with the option `FILE-LOADER-USE-ENVELOPE=true`) should be base64 encoded, or appended as the child of the `/corb-loader/content` element. Default is `false`
+**FILE-LOADER-PATH** | The path to the file or folder that will be the source for a class that extends the AbstractFileUrisLoader
+**FILE-LOADER-SET-URIS-BATCH-REF** | Boolean option indicating whether a file loader should set the [URIS_BATCH_REF](https://github.com/marklogic/corb2#uris_batch_ref). Default is false
+**FILE-LOADER-USE-ENVELOPE** | Boolean value indicating whether FileUris loaders should use an XML envelope, in order to send file metadata in addition to the file content.
 **INSTALL** | Whether to install the Modules in the Modules database. Specify 'true' or '1' for installation. Default is false.
 **MAX_OPTS_FROM_MODULE** | Default is 10. Max number of custom inputs from the URIS-MODULE to other modules.
 **MODULE-ROOT** | Default is '/'.

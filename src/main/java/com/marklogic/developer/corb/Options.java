@@ -409,16 +409,17 @@ public final class Options {
      *
      * @since 2.4.0
      */
-    @Usage(description = "TODO")
+    @Usage(description = "Boolean option indicating whether a file loader should set the URIS_BATCH_REF. Default is false")
     public static final String FILE_LOADER_SET_URIS_BATCH_REF = "FILE-LOADER-SET-URIS-BATCH-REF";
 
     /**
-     * Boolean value indicating whether File loaders should use an XML envelope, 
-     * in order to send file metadata in addition to the file content, which may be base64 encoded.
+     * Boolean value indicating whether FileUris loaders should use an XML envelope, 
+     * in order to send file metadata in addition to the file content.
+     * 
      * @since 2.4.0
      */
-    @Usage(description = "Boolean value indicating whether File loaders should use an XML envelope, "
-            + "in order to send file metadata in addition to the file content, which may be base64 encoded.")
+    @Usage(description = "Boolean value indicating whether a FileUris loader should use an XML envelope, "
+            + "in order to send file metadata in addition to the file content.")
     public static final String FILE_LOADER_USE_ENVELOPE = "FILE-LOADER-USE-ENVELOPE";
 
     /**
