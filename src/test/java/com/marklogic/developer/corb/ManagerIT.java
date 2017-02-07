@@ -56,6 +56,7 @@ public class ManagerIT {
     private static final Logger MANAGER_LOG = Logger.getLogger(Manager.class.getName());
     private static final Logger LOG = Logger.getLogger(ManagerIT.class.getName());
     private static final String EXT_TXT = ".txt";
+    private static final String LARGE_URIS_MODULE = "src/test/resources/selectorLargeList.xqy|ADHOC";
     private static final String TRANSFORM_SLOW_MODULE = "src/test/resources/transformSlow.xqy|ADHOC";
     private static final String SLOW_CMD = "pause";
     private static final LogRecord PAUSING = new LogRecord(Level.INFO, "pausing");
@@ -143,9 +144,10 @@ public class ManagerIT {
         int uriCount = 100;
         String exportFilename = "testManagerUsingSysProps1.txt";
         Properties properties = ManagerTest.getDefaultProperties();
-        properties.setProperty(Options.THREAD_COUNT, "4");
-        properties.setProperty(Options.URIS_MODULE, "src/test/resources/selectorLargeList.xqy|ADHOC");
+        properties.setProperty(Options.THREAD_COUNT, String.valueOf(4));
+        properties.setProperty(Options.URIS_MODULE, LARGE_URIS_MODULE);
         properties.setProperty(Options.URIS_MODULE + ".count", String.valueOf(uriCount));
+        properties.setProperty(Options.BATCH_SIZE, String.valueOf(2));
         properties.setProperty(Options.EXPORT_FILE_NAME, exportFilename);
         properties.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10));
         properties.setProperty(Options.DISK_QUEUE_TEMP_DIR, "/var/tmp");
@@ -158,6 +160,34 @@ public class ManagerIT {
             report.deleteOnExit();
             int lineCount = FileUtils.getLineCount(report);
             assertEquals(uriCount + 2, lineCount);
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testManagerUsingSysPropsLargeUrisListAndBatchSize() {
+        clearSystemProperties();
+        int uriCount = 100;
+        int batchSize = 3;
+        String exportFilename = "testManagerUsingSysProps1.txt";
+        Properties properties = ManagerTest.getDefaultProperties();
+        properties.setProperty(Options.THREAD_COUNT, String.valueOf(4));
+        properties.setProperty(Options.URIS_MODULE, LARGE_URIS_MODULE);
+        properties.setProperty(Options.URIS_MODULE + ".count", String.valueOf(uriCount));
+        properties.setProperty(Options.BATCH_SIZE, String.valueOf(batchSize));
+        properties.setProperty(Options.EXPORT_FILE_NAME, exportFilename);
+        properties.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10));
+
+        Manager manager = new Manager();
+        try {
+            manager.init(properties);
+            manager.run();
+            File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFilename);
+            report.deleteOnExit();
+            int lineCount = FileUtils.getLineCount(report);
+            assertEquals((int)Math.ceil(uriCount / (float)batchSize) + 2, lineCount);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -295,7 +325,7 @@ public class ManagerIT {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        
+
         clearFile(report);
         //Then verify the exit code when invoking the main()
         exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
