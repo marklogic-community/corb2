@@ -41,7 +41,9 @@ import com.marklogic.xcc.types.ValueType;
 import com.marklogic.xcc.types.XName;
 import com.marklogic.xcc.types.XSString;
 import com.marklogic.xcc.types.XdmBinary;
+import com.marklogic.xcc.types.XdmDocument;
 import com.marklogic.xcc.types.XdmItem;
+import com.marklogic.xcc.types.XdmSequence;
 import com.marklogic.xcc.types.XdmValue;
 import com.marklogic.xcc.types.XdmVariable;
 import java.io.File;
@@ -253,7 +255,12 @@ public class AbstractTaskTest {
         instance.setModuleType(INIT_MODULE);
         instance.properties.setProperty(INIT_MODULE + "." + FOO, BAR);
 
-        instance.generateRequest(session);
+        try {
+            instance.generateRequest(session);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
 
         RequestOptions options = request.getOptions();
         assertEquals(instance.language, options.getQueryLanguage());
@@ -267,6 +274,80 @@ public class AbstractTaskTest {
         assertTrue(variableList.contains(customInputVariable));
     }
 
+    @Test
+    public void testGenerateRequestDocLoader() {
+        ModuleInvoke request = new ModuleInvokeImpl();
+        Session session = mock(Session.class);
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+        String[] uris = new String[]{"<doc1/>", "<doc2/>", "<doc3/>"};
+        AbstractTask instance = new AbstractTaskImpl();
+        instance.moduleUri = URI;
+        instance.properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_DOC);
+        instance.inputUris = uris;
+
+        try {
+            instance.generateRequest(session);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+
+        List<XdmVariable> variableList = Arrays.asList(request.getVariables());
+        assertEquals(1, variableList.size());
+        XdmValue value = variableList.get(0).getValue();
+        assertNotNull(value);
+        assertTrue(value instanceof XdmItem);
+    }
+
+    @Test
+    public void testGenerateRequestURILoaderWithXML() {
+        ModuleInvoke request = new ModuleInvokeImpl();
+        Session session = mock(Session.class);
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+        String docString = "<doc/>";
+
+        AbstractTask instance = new AbstractTaskImpl();
+        instance.moduleUri = URI;
+        instance.properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_URI);
+        instance.inputUris = new String[]{docString};
+
+        try {
+            instance.generateRequest(session);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+
+        List<XdmVariable> variableList = Arrays.asList(request.getVariables());
+        assertEquals(1, variableList.size());
+        assertEquals(docString, variableList.get(0).getValue().asString());
+    }
+
+    @Test
+    public void testGenerateRequestURILoaderWithMultipleXMLStringValues() {
+        ModuleInvoke request = new ModuleInvokeImpl();
+        Session session = mock(Session.class);
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+        String docString = "<doc/>";
+
+        AbstractTask instance = new AbstractTaskImpl();
+        instance.moduleUri = URI;
+        instance.properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_URI);
+        instance.inputUris = new String[]{docString, docString, docString};
+
+        try {
+            instance.generateRequest(session);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+
+        List<XdmVariable> variableList = Arrays.asList(request.getVariables());
+        assertEquals(1, variableList.size());
+
+        assertEquals(String.join(Manager.DEFAULT_BATCH_URI_DELIM, instance.inputUris), variableList.get(0).getValue().asString());
+    }
+
     public void testGenerateRequestModuleInvokeSetLanguage() {
         ModuleInvoke request = new ModuleInvokeImpl();
         Session session = mock(Session.class);
@@ -275,8 +356,12 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.moduleUri = URI;
         instance.language = "Sparql"; //not currently supported, just verifying that it accepts any string
-        instance.generateRequest(session);
-
+        try {
+            instance.generateRequest(session);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
         RequestOptions options = request.getOptions();
         assertEquals(instance.language, options.getQueryLanguage());
     }
@@ -289,8 +374,12 @@ public class AbstractTaskTest {
         AbstractTask instance = new AbstractTaskImpl();
         instance.moduleUri = URI;
         instance.timeZone = TimeZone.getTimeZone("PST");
-        instance.generateRequest(session);
-
+        try {
+            instance.generateRequest(session);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
         RequestOptions options = request.getOptions();
         assertEquals(instance.timeZone, options.getTimeZone());
     }
@@ -306,8 +395,12 @@ public class AbstractTaskTest {
         instance.setModuleType(INIT_MODULE);
         instance.properties.setProperty(INIT_MODULE + "." + FOO, BAR);
         instance.properties.setProperty(Options.POST_BATCH_MODULE + "." + BAZ, BAR);
-        instance.generateRequest(session);
-
+        try {
+            instance.generateRequest(session);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
         List<XdmVariable> variableList = Arrays.asList(request.getVariables());
 
         XdmVariable customInputVariable = buildStringXdmVariable(FOO, BAR);
@@ -327,7 +420,12 @@ public class AbstractTaskTest {
         instance.moduleUri = URI;
         instance.setModuleType(INIT_MODULE);
         instance.properties.setProperty(Options.URIS_BATCH_REF, BAZ);
-        instance.generateRequest(session);
+        try {
+            instance.generateRequest(session);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
         List<XdmVariable> variableList = Arrays.asList(request.getVariables());
 
         XdmVariable customInputVariable = buildStringXdmVariable(Options.URIS_BATCH_REF, BAR);
@@ -341,8 +439,13 @@ public class AbstractTaskTest {
         when(session.newAdhocQuery(anyString())).thenReturn(request);
 
         AbstractTask instance = new AbstractTaskImpl();
-        Request requestResult = instance.generateRequest(session);
-        assertTrue(requestResult instanceof AdhocQuery);
+        try {
+            Request requestResult = instance.generateRequest(session);
+            assertTrue(requestResult instanceof AdhocQuery);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     private XdmVariable buildStringXdmVariable(String name, String value) {
@@ -560,6 +663,35 @@ public class AbstractTaskTest {
 
         exception = new RequestPermissionException("Authentication failure for user 'user-name'", req, USER_NAME, false);
         assertTrue(instance.hasRetryableMessage(exception));
+    }
+
+    @Test
+    public void testToXdmItems() {
+        String doc = "<doc/>";
+        AbstractTask instance = new AbstractTaskImpl();
+        try {
+            XdmItem[] result = instance.toXdmItems(new String[]{"", FOO, doc});
+            assertEquals(3, result.length);
+            assertEquals("", result[0].asString());
+            assertEquals(FOO, result[1].asString());
+            assertEquals(doc, result[2].asString());
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testToXdmItemsMalformedXML() {
+        String doc = "<doc/>>";
+        AbstractTask instance = new AbstractTaskImpl();
+        try {
+            XdmItem[] result = instance.toXdmItems(new String[]{doc});
+            assertEquals(doc, result[0].asString());
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
@@ -861,6 +993,7 @@ public class AbstractTaskTest {
     }
 
     private static class RequestImpl implements Request {
+
         private long count = -1;
         private long position = -1;
         private RequestOptions requestOptions = new RequestOptions();
@@ -970,6 +1103,7 @@ public class AbstractTaskTest {
     }
 
     private static class AdhocQueryImpl extends RequestImpl implements AdhocQuery {
+
         private String query;
 
         @Override
@@ -984,6 +1118,7 @@ public class AbstractTaskTest {
     }
 
     private static class ModuleInvokeImpl extends RequestImpl implements ModuleInvoke {
+
         private String moduleUri;
 
         @Override

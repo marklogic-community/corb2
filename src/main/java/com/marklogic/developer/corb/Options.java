@@ -383,45 +383,56 @@ public final class Options {
      * Boolean option specifying whether the content loaded by
      * FileUrisStreamingXMLLoader or FileUrisXMLLoader (with the option
      * FILE-LOADER-USE-ENVELOPE=true) should be base64 encoded, or appended as
-     * the child of the `/corb-loader/content` element. Default is `false`
+     * the child of the `/corb-loader/content` element. 
+     * Default is `false`
      *
      * @since 2.4.0
      */
     @Usage(description = "Boolean option specifying whether the content loaded by "
-            + "FileUrisStreamingXMLLoader or FileUrisXMLLoader (with the option FILE-LOADER-USE-ENVELOPE=true) "
+            + "FileUrisStreamingXMLLoader or FileUrisXMLLoader (with the option LOADER-USE-ENVELOPE=true) "
             + "should be base64 encoded, or appended as the child of the `/corb-loader/content` element. "
             + " Default is `false`")
-    public static final String FILE_LOADER_BASE64_ENCODE = "FILE-LOADER-BASE64-ENCODE";
+    public static final String LOADER_BASE64_ENCODE = "LOADER-BASE64-ENCODE";
 
     /**
-     * The path to the file or folder that will be the source for a class that
+     * The path to the resource (file or folder) that will be the source for a class that
      * extends the AbstractFileUrisLoader
      *
      * @since 2.4.0
      */
-    @Usage(description = "The path to the file or folder that will be the source for a class that extends the AbstractFileUrisLoader")
-    public static final String FILE_LOADER_PATH = "FILE-LOADER-PATH";
+    @Usage(description = "The path to the resource (file or folder) that will be the source for a class that extends the AbstractFileUrisLoader")
+    public static final String LOADER_PATH = "LOADER-PATH";
 
     /**
-     * Boolean option indicating whether a file loader should set the
-     * #URIS_BATCH_REF(https://github.com/marklogic/corb2#uris_batch_ref)
+     * Boolean option indicating whether a loader should set the
+     * #URIS_BATCH_REF(https://github.com/marklogic/corb2#uris_batch_ref) with information about the source of the items. 
      * Default is false
      *
      * @since 2.4.0
      */
-    @Usage(description = "Boolean option indicating whether a file loader should set the URIS_BATCH_REF. Default is false")
-    public static final String FILE_LOADER_SET_URIS_BATCH_REF = "FILE-LOADER-SET-URIS-BATCH-REF";
+    @Usage(description = "Boolean option indicating whether a loader should set the URIS_BATCH_REF with information about the source of the items. Default is false")
+    public static final String LOADER_SET_URIS_BATCH_REF = "LOADER-SET-URIS-BATCH-REF";
 
     /**
-     * Boolean value indicating whether FileUris loaders should use an XML envelope, 
+     * Boolean value indicating whether loader should use an XML envelope, 
      * in order to send file metadata in addition to the file content.
+     * Default is true.
      * 
      * @since 2.4.0
      */
-    @Usage(description = "Boolean value indicating whether a FileUris loader should use an XML envelope, "
-            + "in order to send file metadata in addition to the file content.")
-    public static final String FILE_LOADER_USE_ENVELOPE = "FILE-LOADER-USE-ENVELOPE";
+    @Usage(description = "Boolean value indicating whether a loader should use an XML envelope, "
+            + "in order to send file metadata in addition to the file content. Default is true.")
+    public static final String LOADER_USE_ENVELOPE = "LOADER-USE-ENVELOPE";
 
+    /**
+     * Specify which external variable to set when invoking the loader process module. 
+     * Choices are: URI or DOC. 
+     * Default is URI.
+     * 
+     * @since 2.4.0
+     */
+    @Usage(description = "Specify which external variable to set when invoking the loader process module. Choices are URI or DOC. Default is URI.")
+    public static final String LOADER_VARIABLE = "LOADER-VARIABLE";
     /**
      * (Optional) Property file for the
      * {@link com.marklogic.developer.corb.JasyptDecrypter}.
@@ -755,7 +766,7 @@ public final class Options {
     public static final String SSL_PROPERTIES_FILE = "SSL-PROPERTIES-FILE";
 
     /**
-     *
+     * Path to a directory that can be used for temporary storage while processing records.
      */
     @Usage(description = "Path to a directory that can be used for temporary processing files.")
     public static final String TEMP_DIR = "TEMP-DIR";
@@ -956,7 +967,7 @@ public final class Options {
      * @see #XML_NODE
      * @since 2.3.1
      */
-    @Usage(description = "n order to use this option a class com.marklogic.developer.corb.FileUrisXMLLoader "
+    @Usage(description = "In order to use this option a class com.marklogic.developer.corb.FileUrisXMLLoader "
             + "has to be specified in the URIS-LOADER option. If defined instead of "
             + "URIS-MODULE, XML nodes will be used as URIs from the file located on the client. "
             + "The file path may be relative or absolute. Default processing will "
@@ -993,13 +1004,6 @@ public final class Options {
     @Usage(description = "Path to a W3C XML Schema to be used by com.marklogic.developer.corb.FileUrisStreamingXMLLoader "
             + "or com.marklogic.developer.corb.FileUrisXMLLoader to validate an XML-FILE.")
     public static final String XML_SCHEMA = "XML-SCHEMA";
-
-    /**
-     * @since 2.4.0
-     */
-    @Usage(description = "Temporary directory used by com.marklogic.developer.corb.FileUrisStreamingXMLLoader "
-            + "to store files extracted from the XML-FILE.")
-    public static final String XML_TEMP_DIR = "XML-TEMP-DIR";
 
     @Usage(description = "In order to use this option a class com.marklogic.developer.corb.FileUrisZipLoader "
             + "has to be specified in the URIS-LOADER option. If defined instead of "

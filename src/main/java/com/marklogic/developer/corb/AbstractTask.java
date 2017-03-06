@@ -38,26 +38,40 @@ import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
+import com.marklogic.xcc.ValueFactory;
 import com.marklogic.xcc.exceptions.QueryException;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.RequestPermissionException;
 import com.marklogic.xcc.exceptions.RetryableQueryException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
+import com.marklogic.xcc.types.XName;
 import com.marklogic.xcc.types.XdmBinary;
+import com.marklogic.xcc.types.XdmDocument;
 import com.marklogic.xcc.types.XdmItem;
+import com.marklogic.xcc.types.XdmSequence;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.io.StringReader;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.logging.Level;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -70,7 +84,8 @@ public abstract class AbstractTask implements Task {
 
     protected static final String TRUE = "true";
     protected static final String FALSE = "false";
-    private static final String URI = "URI";
+    protected static final String REQUEST_VARIABLE_DOC = "DOC";
+    protected static final String REQUEST_VARIABLE_URI = "URI";
     protected static final byte[] NEWLINE
             = System.getProperty("line.separator") != null ? System.getProperty("line.separator").getBytes() : "\n".getBytes();
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
@@ -174,7 +189,7 @@ public abstract class AbstractTask implements Task {
         try (Session session = newSession()) {
 
             Request request = generateRequest(session);
-            
+
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);
             retryCount = 0;
@@ -200,7 +215,7 @@ public abstract class AbstractTask implements Task {
         }
     }
 
-    protected Request generateRequest(Session session) {
+    protected Request generateRequest(Session session) throws CorbException {
         Request request;
         //determine whether this is an eval or execution of installed module
         if (moduleUri == null) {
@@ -208,7 +223,7 @@ public abstract class AbstractTask implements Task {
         } else {
             request = session.newModuleInvoke(moduleUri);
         }
-        
+
         RequestOptions requestOptions = request.getOptions();
         if (language != null) {
             requestOptions.setQueryLanguage(language);
@@ -216,13 +231,12 @@ public abstract class AbstractTask implements Task {
         if (timeZone != null) {
             requestOptions.setTimeZone(timeZone);
         }
-        
+
         if (inputUris != null && inputUris.length > 0) {
-            if (inputUris.length == 1) {
-                request.setNewStringVariable(URI, inputUris[0]);
+            if (REQUEST_VARIABLE_DOC.equalsIgnoreCase(properties.getProperty(Options.LOADER_VARIABLE))) {
+                setDocRequestVariable(request, inputUris);
             } else {
-                String delim = getBatchUriDelimiter();
-                request.setNewStringVariable(URI, StringUtils.join(inputUris, delim));
+                setUriRequestVariable(request, inputUris);
             }
         }
 
@@ -239,6 +253,68 @@ public abstract class AbstractTask implements Task {
             }
         }
         return request;
+    }
+
+    protected void setUriRequestVariable(Request request, String[] inputUris) {
+        String delim = getBatchUriDelimiter();
+        String uriValue = StringUtils.join(inputUris, delim);
+        request.setNewStringVariable(REQUEST_VARIABLE_URI, uriValue);
+    }
+
+    protected void setDocRequestVariable(Request request, String[] inputUris) throws CorbException {
+        String batchSize = properties.getProperty(Options.BATCH_SIZE);
+        //XCC does not allow sequences for request parameters
+        if (batchSize != null && Integer.parseInt(batchSize) > 1) {
+            throw new CorbException("Cannot set BATCH-SIZE > 1 with REQUEST-VARIABLE-DOC. XCC does not allow sequences for request parameters.");
+        }
+        XdmItem[] xdmItems = toXdmItems(inputUris);
+
+        XName name = new XName(REQUEST_VARIABLE_DOC);
+        request.setVariable(ValueFactory.newVariable(name, xdmItems[0]));
+    }
+
+    protected XdmItem[] toXdmItems(String[] inputUris) throws CorbException {
+        List<XdmItem> docs = new ArrayList<>(inputUris.length);
+        try {
+            DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            for (String input : inputUris) {
+                String normalizedInput = StringUtils.trimToEmpty(input);
+                XdmItem doc;
+                //it appears to be XML, let's see if we can parse it
+                if (normalizedInput.startsWith("<") && normalizedInput.endsWith(">")) {
+                    try {
+                        InputSource is = new InputSource(new StringReader(normalizedInput));
+                        Document dom = builder.parse(is);
+                        doc = ValueFactory.newDocumentNode(dom);
+                    } catch (SAXException | IOException ex) {
+                        LOG.log(Level.WARNING, "Unable to parse URI as XML. Setting content as text.", ex);
+                        //guess not, lets just use it as-is
+                        doc = ValueFactory.newDocumentNode(input);
+                    }
+                    /**
+                     * TODO if we support JSON values, then we may need Jackson Databinding added as a dependency
+                     *
+                     * } else if (normalizedInput.startsWith("{") &&
+                     * normalizedInput.endsWith("}")) { //smells like a JSON
+                     * object XdmItem item =
+                     * ValueFactory.newJSObject(normalizedInput); doc =
+                     * ValueFactory.newDocumentNode(item); } else if
+                     * (normalizedInput.startsWith("[") &&
+                     * normalizedInput.endsWith("]")) { //smells like a JSON
+                     * array XdmItem item =
+                     * ValueFactory.newJSArray(normalizedInput); doc =
+                     * ValueFactory.newDocumentNode(item);
+                     */
+                } else {
+                    //assume that it is just plain text, use the original value
+                    doc = ValueFactory.newDocumentNode(input);
+                }
+                docs.add(doc);
+            }
+        } catch (ParserConfigurationException ex) {
+            throw new CorbException("Unable to parse loader document", ex);
+        }
+        return docs.toArray(new XdmItem[docs.size()]);
     }
 
     protected Set<String> getCustomInputPropertyNames() {

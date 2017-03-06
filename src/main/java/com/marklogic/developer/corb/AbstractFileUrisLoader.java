@@ -32,8 +32,6 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -197,12 +195,12 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
     }
 
     protected boolean shouldUseEnvelope() {
-        String useEnvelope = getProperty(Options.FILE_LOADER_USE_ENVELOPE);
+        String useEnvelope = getProperty(Options.LOADER_USE_ENVELOPE);
         return StringUtils.stringToBoolean(useEnvelope, true);
     }
 
     protected boolean shouldBase64Encode() {
-        String shouldEncode = getProperty(Options.FILE_LOADER_BASE64_ENCODE);
+        String shouldEncode = getProperty(Options.LOADER_BASE64_ENCODE);
         return StringUtils.stringToBoolean(shouldEncode, true);
     }
 }

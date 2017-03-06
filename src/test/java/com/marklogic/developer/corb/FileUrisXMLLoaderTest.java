@@ -145,8 +145,8 @@ public class FileUrisXMLLoaderTest {
     public void testOpenWithEnvelopeNotBase64Encoded() {
         List<String> nodes;
         try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
-            instance.properties.setProperty(Options.FILE_LOADER_USE_ENVELOPE, Boolean.toString(true));
-            instance.properties.setProperty(Options.FILE_LOADER_BASE64_ENCODE, Boolean.toString(false));
+            instance.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(true));
+            instance.properties.setProperty(Options.LOADER_BASE64_ENCODE, Boolean.toString(false));
 
             instance.open();
             assertNotNull(instance.nodeIterator);
@@ -171,8 +171,8 @@ public class FileUrisXMLLoaderTest {
     public void testOpenWithEnvelopeAndBase64Encoded() {
         List<String> nodes;
         try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
-            instance.properties.setProperty(Options.FILE_LOADER_USE_ENVELOPE, Boolean.toString(true));
-            instance.properties.setProperty(Options.FILE_LOADER_BASE64_ENCODE, Boolean.toString(true));
+            instance.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(true));
+            instance.properties.setProperty(Options.LOADER_BASE64_ENCODE, Boolean.toString(true));
 
             instance.open();
             assertNotNull(instance.nodeIterator);
@@ -395,7 +395,7 @@ public class FileUrisXMLLoaderTest {
         List<String> nodes = null;
         try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
             instance.properties.setProperty(Options.XML_NODE, xpath);
-            instance.properties.setProperty(Options.FILE_LOADER_USE_ENVELOPE, Boolean.toString(useEnvelope));
+            instance.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(useEnvelope));
             instance.open();
             assertNotNull(instance.nodeIterator);
             nodes = new ArrayList<>(1);
@@ -414,7 +414,7 @@ public class FileUrisXMLLoaderTest {
         TransformOptions options = new TransformOptions();
         Properties props = new Properties();
         props.setProperty(Options.URIS_LOADER, FileUrisLoader.class.getName());
-        props.setProperty(Options.FILE_LOADER_USE_ENVELOPE, Boolean.toString(false));
+        props.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(false));
         props.setProperty(Options.XML_FILE, "src/test/resources/xml-file.xml");
         props.setProperty(Options.XML_NODE, "/root/a");
         instance.properties = props;

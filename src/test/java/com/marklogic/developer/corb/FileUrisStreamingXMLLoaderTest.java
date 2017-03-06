@@ -130,7 +130,7 @@ public class FileUrisStreamingXMLLoaderTest {
     @Test
     public void testOpenWithoutEnvelope() {
         FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
-        loader.properties.setProperty(Options.FILE_LOADER_USE_ENVELOPE, Boolean.toString(false));
+        loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(false));
         try {
             loader.open();
             assertEquals(BUU_CHILD_ELEMENTS, loader.getTotalCount());
@@ -150,8 +150,8 @@ public class FileUrisStreamingXMLLoaderTest {
     @Test
     public void testOpenWithEnvelopeAndBase64Encoded() {
         FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
-        loader.properties.setProperty(Options.FILE_LOADER_USE_ENVELOPE, Boolean.toString(true));
-        loader.properties.setProperty(Options.FILE_LOADER_BASE64_ENCODE, Boolean.toString(true));
+        loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(true));
+        loader.properties.setProperty(Options.LOADER_BASE64_ENCODE, Boolean.toString(true));
         try {
             loader.open();
             assertEquals(BUU_CHILD_ELEMENTS, loader.getTotalCount());
@@ -185,7 +185,7 @@ public class FileUrisStreamingXMLLoaderTest {
     public void testGetTempDir() {
         FileUrisStreamingXMLLoader loader = new FileUrisStreamingXMLLoader();
         Properties properties = new Properties();
-        properties.setProperty(Options.XML_TEMP_DIR, BUU_DIR);
+        properties.setProperty(Options.TEMP_DIR, BUU_DIR);
         loader.properties = properties;
         Path tempDir = null;
         try {
@@ -201,7 +201,7 @@ public class FileUrisStreamingXMLLoaderTest {
     public void testGetTempDirWhenFileSpecified() {
         FileUrisStreamingXMLLoader loader = new FileUrisStreamingXMLLoader();
         Properties properties = new Properties();
-        properties.setProperty(Options.XML_TEMP_DIR, BUU_DIR + BUU_SCHEMA);
+        properties.setProperty(Options.TEMP_DIR, BUU_DIR + BUU_SCHEMA);
         loader.properties = properties;
         try {
             Path tempDir = loader.getTempDir();
