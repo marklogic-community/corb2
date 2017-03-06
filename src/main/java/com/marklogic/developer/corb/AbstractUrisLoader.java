@@ -110,7 +110,7 @@ public abstract class AbstractUrisLoader implements UrisLoader {
     }
     
     protected boolean shouldSetBatchRef() {
-        String setBatchRef = getProperty(Options.FILE_LOADER_SET_URIS_BATCH_REF);
+        String setBatchRef = getProperty(Options.LOADER_SET_URIS_BATCH_REF);
         return StringUtils.stringToBoolean(setBatchRef, false);
     }
 }

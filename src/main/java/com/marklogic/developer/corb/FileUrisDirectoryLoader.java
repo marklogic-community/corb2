@@ -41,13 +41,13 @@ public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
     @Override
     public void open() throws CorbException {
 
-        String dirName = getProperty(Options.FILE_LOADER_PATH);
+        String dirName = getProperty(Options.LOADER_PATH);
 
         Path dir = Paths.get(dirName);
         if (!(Files.exists(dir)
                 && Files.isDirectory(dir)
                 && Files.isReadable(dir))) {
-            throw new CorbException(MessageFormat.format("{0}: {1} must be specified and an accessible directory", Options.FILE_LOADER_PATH, dirName));
+            throw new CorbException(MessageFormat.format("{0}: {1} must be specified and an accessible directory", Options.LOADER_PATH, dirName));
         }
 
         try {

@@ -630,7 +630,6 @@ public class AbstractManagerTest {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(key, val);
         assertEquals(val, instance.getOption(key));
-        assertEquals(0, instance.properties.size());
     }
 
     @Test
@@ -640,7 +639,6 @@ public class AbstractManagerTest {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(key, val);
         assertEquals(val.trim(), instance.getOption(key));
-        assertEquals(0, instance.properties.size());
     }
 
     @Test(expected = NullPointerException.class)

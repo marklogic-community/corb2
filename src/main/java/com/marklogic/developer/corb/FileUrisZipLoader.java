@@ -49,7 +49,7 @@ public class FileUrisZipLoader extends AbstractFileUrisLoader {
 
     @Override
     public void open() throws CorbException {
-        String zipFilename = getProperty(Options.ZIP_FILE); //TODO: ability to set either ZIP_FILE or FILE_LOADER_PATH
+        String zipFilename = getProperty(Options.ZIP_FILE); //TODO: ability to set either ZIP_FILE or LOADER_PATH
         Predicate<ZipEntry> isFile = ze -> !ze.isDirectory();
         try {
             zipFile = new ZipFile(zipFilename);

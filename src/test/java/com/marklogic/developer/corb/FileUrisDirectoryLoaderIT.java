@@ -21,7 +21,6 @@ package com.marklogic.developer.corb;
 import static com.marklogic.developer.corb.ManagerIT.SLASH;
 import com.marklogic.developer.corb.util.FileUtils;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -53,6 +52,35 @@ public class FileUrisDirectoryLoaderIT {
     public void testLoadAll() {
         Properties properties = new Properties();
         properties.setProperty(Options.EXPORT_FILE_NAME, "testLoadAll.txt");
+        try {
+            testFileUrisDirectoryLoader(properties);
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testLoadAllAsDocs() {
+        Properties properties = new Properties();
+        properties.setProperty(Options.EXPORT_FILE_NAME, "testLoadAllAsDocs.txt");
+        properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_DOC);
+        properties.setProperty(Options.PROCESS_MODULE, "src/test/resources/fileDocLoaderProcess.xqy|ADHOC");
+        try {
+            testFileUrisDirectoryLoader(properties);
+        } catch (Exception ex) {
+            fail();
+        }
+    }
+
+    @Test(expected = IOException.class)
+    public void testLoadAllAsDocsWithBatch() throws Exception {
+        Properties properties = new Properties();
+        properties.setProperty(Options.EXPORT_FILE_NAME, "testLoadAllAsDocsWithBatch.txt");
+        properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_DOC);
+        properties.setProperty(Options.BATCH_SIZE, Integer.toString(10));
+        properties.setProperty(Options.PROCESS_MODULE, "src/test/resources/fileDocLoaderProcess.xqy|ADHOC");
+
         testFileUrisDirectoryLoader(properties);
     }
 
@@ -62,10 +90,15 @@ public class FileUrisDirectoryLoaderIT {
         properties.setProperty(Options.EXPORT_FILE_NAME, "testLoadAllWithDiskQueue.txt");
         properties.setProperty(Options.DISK_QUEUE, Boolean.toString(true));
         properties.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, Integer.toString(2));
-        testFileUrisDirectoryLoader(properties);
+        try {
+            testFileUrisDirectoryLoader(properties);
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
-    private void testFileUrisDirectoryLoader(Properties additionalProperties) {
+    private void testFileUrisDirectoryLoader(Properties additionalProperties) throws Exception {
         if (additionalProperties == null || !additionalProperties.containsKey(Options.EXPORT_FILE_NAME)) {
             fail();
         }
@@ -75,17 +108,12 @@ public class FileUrisDirectoryLoaderIT {
         properties.putAll(additionalProperties);
         String exportFilename = additionalProperties.getProperty(Options.EXPORT_FILE_NAME);
         Manager manager = new Manager();
-        try {
-            manager.init(properties);
-            manager.run();
 
-            String exportFilePath = tempDir.getPath() + SLASH + exportFilename;
-            verifyLoaderReport(exportFilePath);
-            
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        manager.init(properties);
+        manager.run();
+
+        String exportFilePath = tempDir.getPath() + SLASH + exportFilename;
+        verifyLoaderReport(exportFilePath);
     }
 
     public static void verifyLoaderReport(String exportFilePath) throws IOException {
@@ -111,7 +139,7 @@ public class FileUrisDirectoryLoaderIT {
         Properties properties = new Properties();
         properties.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
         properties.setProperty(Options.EXPORT_FILE_DIR, tempDir.getPath());
-        properties.setProperty(Options.FILE_LOADER_PATH, FileUrisDirectoryLoaderTest.TEST_DIR);
+        properties.setProperty(Options.LOADER_PATH, FileUrisDirectoryLoaderTest.TEST_DIR);
         properties.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
         properties.setProperty(Options.THREAD_COUNT, Integer.toString(8));
         properties.setProperty(Options.URIS_LOADER, FileUrisDirectoryLoader.class.getName());

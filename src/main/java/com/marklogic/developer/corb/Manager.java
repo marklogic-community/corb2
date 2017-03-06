@@ -44,6 +44,7 @@ import static com.marklogic.developer.corb.Options.PRE_BATCH_TASK;
 import static com.marklogic.developer.corb.Options.PRE_BATCH_XQUERY_MODULE;
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.PROCESS_TASK;
+import static com.marklogic.developer.corb.Options.TEMP_DIR;
 import static com.marklogic.developer.corb.Options.THREAD_COUNT;
 import static com.marklogic.developer.corb.Options.URIS_FILE;
 import static com.marklogic.developer.corb.Options.URIS_LOADER;
@@ -213,7 +214,10 @@ public class Manager extends AbstractManager {
         options.setUseDiskQueue(stringToBoolean(getOption(DISK_QUEUE)));
         String diskQueueMaxInMemorySize = getOption(DISK_QUEUE_MAX_IN_MEMORY_SIZE);
         String diskQueueTempDir = getOption(DISK_QUEUE_TEMP_DIR);
-
+        String tempDir = getOption(TEMP_DIR);
+        if (StringUtils.isBlank(diskQueueTempDir) && !StringUtils.isBlank(tempDir)){
+            diskQueueTempDir = tempDir;
+        }
         String numTpsForETC = getOption(NUM_TPS_FOR_ETC);
 
         //Check legacy properties keys, for backwards compatibility

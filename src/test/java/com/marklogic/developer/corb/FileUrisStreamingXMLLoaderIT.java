@@ -111,7 +111,7 @@ public class FileUrisStreamingXMLLoaderIT {
         report.deleteOnExit();
         properties.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
 
-        Manager manager = new Manager();     
+        Manager manager = new Manager();
         try {
             manager.init(properties);
             manager.run();
@@ -152,7 +152,7 @@ public class FileUrisStreamingXMLLoaderIT {
         properties.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "</bem:BenefitEnrollmentRequest>");
         properties.setProperty(Options.EXPORT_FILE_DIR, BUU_DIR);
         properties.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
-        properties.setProperty(Options.FILE_LOADER_USE_ENVELOPE, Boolean.toString(false));
+        properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(false));
 
         try {
             Manager manager = new Manager();
@@ -177,7 +177,7 @@ public class FileUrisStreamingXMLLoaderIT {
         properties.setProperty(Options.PROCESS_MODULE, BUU_DIR + "process.xqy|ADHOC");
         properties.setProperty(Options.POST_BATCH_MODULE, BUU_DIR + "postBatch.xqy|ADHOC");
         properties.setProperty(Options.THREAD_COUNT, Integer.toString(10));
-        properties.setProperty(Options.FILE_LOADER_SET_URIS_BATCH_REF, Boolean.toString(true));
+        properties.setProperty(Options.LOADER_SET_URIS_BATCH_REF, Boolean.toString(true));
         return properties;
     }
 }

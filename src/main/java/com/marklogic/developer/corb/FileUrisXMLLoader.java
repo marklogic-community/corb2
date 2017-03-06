@@ -189,7 +189,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
 
     @Override
     protected boolean shouldBase64Encode() {
-        String shouldEncode = getProperty(Options.FILE_LOADER_BASE64_ENCODE);
+        String shouldEncode = getProperty(Options.LOADER_BASE64_ENCODE);
         return StringUtils.stringToBoolean(shouldEncode, false);
     }
 

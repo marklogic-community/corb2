@@ -362,9 +362,7 @@ public abstract class AbstractManager {
         } else if (isNotBlank(System.getProperty(propertyName))) {
             return System.getProperty(propertyName).trim();
         } else if (this.properties.containsKey(propertyName) && isNotBlank(this.properties.getProperty(propertyName))) {
-            String val = this.properties.getProperty(propertyName).trim();
-            this.properties.remove(propertyName); //remove from properties file as we would like to keep the properties file simple.
-            return val;
+            return this.properties.getProperty(propertyName).trim();
         }
         return null;
     }

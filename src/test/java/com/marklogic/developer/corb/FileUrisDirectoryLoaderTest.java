@@ -35,7 +35,7 @@ public class FileUrisDirectoryLoaderTest {
     private static final Logger LOG = Logger.getLogger(FileUrisDirectoryLoaderTest.class.getName());
     public static final String TEST_DIR = "src/test/resources/loader";
     public static final int TEST_ZIP_FILE_COUNT = 11;
-    
+
     public FileUrisDirectoryLoaderTest() {
     }
 
@@ -43,17 +43,17 @@ public class FileUrisDirectoryLoaderTest {
     public void testCountFiles() throws Exception {
         Path dir = Paths.get(TEST_DIR);
         FileUrisDirectoryLoader loader = new FileUrisDirectoryLoader();
-        assertEquals(11, loader.fileCount(dir));
+        assertEquals(TEST_ZIP_FILE_COUNT, loader.fileCount(dir));
     }
 
     @Test
     public void testOpen() {
         Properties properties = new Properties();
-        properties.setProperty(Options.FILE_LOADER_PATH, TEST_DIR);
+        properties.setProperty(Options.LOADER_PATH, TEST_DIR);
         try (FileUrisDirectoryLoader loader = new FileUrisDirectoryLoader()) {
             loader.properties = properties;
             loader.open();
-            assertEquals(11, loader.getTotalCount());
+            assertEquals(TEST_ZIP_FILE_COUNT, loader.getTotalCount());
             while(loader.hasNext()) {
                 assertNotNull(loader.next());
             }
