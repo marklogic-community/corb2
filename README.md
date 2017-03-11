@@ -117,7 +117,7 @@ Option | Description
 **DISK-QUEUE** | Boolean value indicating whether the CoRB job should spill to disk when a maximum number of URIs have been loaded in memory, in order to control memory consumption and avoid Out of Memory exceptions for extremely large sets of URIs.
 **DISK-QUEUE-MAX-IN-MEMORY-SIZE** | The maximum number of URIs to hold in memory before spilling over to disk. Default is 1000.
 **DISK-QUEUE-TEMP-DIR** | The directory where the URIs queue can write to disk when the maximum in-memory items has been exceeded. Default behavior is to use java.io.tmpdir.
-**ERROR-FILE-NAME** | Used when FAIL-ON-ERROR is false. If specified true, removes duplicates from, the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to separate URI and error message.
+**ERROR-FILE-NAME** | Used when FAIL-ON-ERROR is false. If specified true, removes duplicates from the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to separate URI and error message.
 **EXIT-CODE-NO-URIS** | Default is 0. Returns this exit code when there is nothing to process.
 **EXPORT_FILE_AS_ZIP** | If true, PostBatchUpdateFileTask compresses the output file as a zip file.
 **EXPORT-FILE-BOTTOM-CONTENT** | Used by `com.marklogic.developer.corb.PostBatchUpdateFileTask` to append content to **EXPORT-FILE-NAME** after batch process is complete.
@@ -126,7 +126,7 @@ Option | Description
 **EXPORT-FILE-PART-EXT** | The file extension for export files being processed. ex: .tmp - if specified, `com.marklogic.developer.corb.PreBatchUpdateFileTask` adds this temporary extension to the export file name to indicate **EXPORT-FILE-NAME** is being actively modified. To remove this temporary extension after **EXPORT-FILE-NAME** is complete, `com.marklogic.developer.corb.PostBatchUpdateFileTask` must be specified as **POST-BATCH-TASK**.
 **EXPORT-FILE-SORT** | If `ascending` or `descending`, lines will be sorted. If <code>&#124;distinct</code> is specified after the sort direction, duplicate lines from **EXPORT-FILE-NAME** will be removed. i.e. <code>ascending&#124;distinct</code> or <code>descending&#124;distinct</code>
 **EXPORT-FILE-SORT-COMPARATOR** | A java class that must implement `java.util.Comparator`. If specified, CoRB will use this class for sorting in place of ascending or descending string comparator even if a value was specified for **EXPORT-FILE-SORT**.
-**EXPORT-FILE-TOP-CONTENT** | Used by `com.marklogic.developer.corb.PreBatchUpdateFileTask` to insert content at the top of **EXPORT-FILE-NAME** before batch process starts. If it includes the string `@URIS\_BATCH\_REF`, it is replaced by the batch reference returned by **URIS-MODULE**.
+**EXPORT-FILE-TOP-CONTENT** | Used by `com.marklogic.developer.corb.PreBatchUpdateFileTask` to insert content at the top of **EXPORT-FILE-NAME** before batch process starts. If it includes the string `@URIS_BATCH_REF`, it is replaced by the batch reference returned by **URIS-MODULE**.
 **EXPORT-FILE-URI-TO-PATH** | Default is true. Boolean value indicating whether to convert doc URI to a filepath.
 **FAIL-ON-ERROR** | Boolean value indicating whether the CoRB job should fail and exit if a process module throws an error. Default is true. This option will not handle repeated connection failures.
 **INSTALL** | Whether to install the Modules in the Modules database. Specify 'true' or '1' for installation. Default is false.
