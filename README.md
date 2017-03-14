@@ -203,12 +203,12 @@ JavaScript module must have an .sjs file extension when deployed to Modules data
 For example, a simple URIS-MODULE may look like this:
 ```
 var uris = cts.uris()
-fn.insertBefore(uris,0,uris.count)
+fn.insertBefore(uris,0,fn.count(uris))
 ```
 
 To return URIS\_BATCH\_REF, we can do the following:
 ```
-fn.insertBefore(fn.insertBefore(uris,0,uris.count),0,"batch\-ref")
+fn.insertBefore(fn.insertBefore(uris,0,fn.count(uris)),0,"batch\-ref")
 ```
 
 > Note: Do not use single quotes within (adhoc) JavaScript modules. If you must use a single quote, escape it with a quote (ex: ''text'')
