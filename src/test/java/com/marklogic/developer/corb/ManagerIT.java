@@ -147,7 +147,7 @@ public class ManagerIT {
         properties.setProperty(Options.THREAD_COUNT, String.valueOf(4));
         properties.setProperty(Options.URIS_MODULE, LARGE_URIS_MODULE);
         properties.setProperty(Options.URIS_MODULE + ".count", String.valueOf(uriCount));
-        properties.setProperty(Options.BATCH_SIZE, String.valueOf(2));
+        properties.setProperty(Options.BATCH_SIZE, String.valueOf(1));
         properties.setProperty(Options.EXPORT_FILE_NAME, exportFilename);
         properties.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10));
         properties.setProperty(Options.DISK_QUEUE_TEMP_DIR, "/var/tmp");
