@@ -558,7 +558,7 @@ public class ManagerIT {
             fail();
         }
         List<LogRecord> records = testLogger.getLogRecords();
-        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "Changed {0} to {1}")));
+        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "Changed " + Options.THREAD_COUNT + " to " + 1)));
     }
 
 }
