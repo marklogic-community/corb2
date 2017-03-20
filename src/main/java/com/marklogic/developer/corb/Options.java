@@ -31,6 +31,7 @@ import java.lang.annotation.Target;
  * @since 2.3.0
  */
 public final class Options {
+	public static final String ML_LOG_LEVELS = "none|emergency|alert|critical|error|warning|notice|info|config|debug|fine|finer|finest";
 
     /**
      * The number of URIs to be executed in single transform.
@@ -920,30 +921,58 @@ public final class Options {
             + "the default behavior is to select the child elements of the document element (i.e. /*/*)")
     public static final String XML_NODE = "XML-NODE";
     /**
-     * URI selector module written in XQuery or JavaScript. Expected to return a
-     * sequence containing the URIs count followed by all the URIs. Optionally,
-     * it can also return an arbitrary string as a first item in this sequence -
-     * refer to
-     * <a href="https://github.com/marklogic/corb2#uris_batch_ref">URIS_BATCH_REF</a>
-     * section.
+     * NONE,INFO,DEBUG,...
+     * Boolean value indicating whether the CoRB job should log metrics to ML Server Error Log.
+     * Default value is false. 
+     *
+     * @since 2.4
+     */
+    @Usage(description = "LOG Level  the CoRB job should log metrics to ML Server Error Log."
+            +"Possible values are "+ML_LOG_LEVELS
+    		+ "Default value is none.")
+    public static final String METRICS_TO_ERROR_LOG = "METRICS-TO-ERROR-LOG";
+   /**
+     * Uses the value provided to save the metrics document to the specified Database.
+     * Does not save metrics document to the ML database if this property is not populated.
+     */
+    @Usage(description = " Uses the value provided to save the metrics document to the specified Database.")
+    public static final String METRICS_DB_NAME = "METRICS-DB-NAME";
+    /**
+     * Uses the value provided to as the URI Root for saving the metrics document. 
+     * Default value is "/ServiceMetrics/corb/"
+     * If {@value #LOG_METRICS_TO_SERVER_DB_NAME} is not specified then {@value #LOG_METRICS_TO_SERVER_URI_ROOT_VALUE} is ignored.
+     */
+    @Usage(description = "Uses the value provided to as the URI Root for saving the metrics document.")
+    public static final String METRICS_DOC_BASE_DIR = "METRICS-DOC-BASE-DIR";
+    /**
+     * Adds the metrics document to the specified collection. 
+     * If {@value #JOB_NAME} is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.
+     * If {@value #LOG_METRICS_TO_SERVER_DB_NAME} is not specified then {@value #LOG_METRICS_TO_SERVER_COLLECTIONS} is ignored.
+     */
+    @Usage(description = "Adds the metrics document to the specified collection.")
+    public static final String METRICS_DOC_COLLECTIONS = "METRICS-DOC-COLLECTIONS";
+    public static final String METRICS_DOC_FORMAT = "XML";
+    /**
+     * XQuery or JavaScript to be executed in a batch for each URI from the
+     * {@value #URIS_MODULE} or {@value #URIS_FILE}.
      * <p>
-     * XQuery and JavaScript modules need to have "{@code .xqy}" and
-     * "{@code .sjs}" extensions respectively. JavaScript modules must return a
+     * Module is expected to have at least one external or global variable with
+     * name URI. XQuery and JavaScript modules need to have "{@code .xqy}" and
+     * "{@code .sjs}" extensions respectively. If returning multiple values from
+     * a JavaScript module, values must be returned as
      * <a href="https://docs.marklogic.com/js/ValueIterator">ValueIterator</a>.
      */
-    @Usage(description = "URI selector module written in XQuery or JavaScript. "
-            + "Expected to return a sequence containing the URIs count followed by all the URIs. "
-            + "Optionally, it can also return an arbitrary string as a first item in this sequence - "
-            + "refer to URIS_BATCH_REF section below. XQuery and JavaScript modules "
-            + "need to have .xqy and .sjs extensions respectively. "
-            + "JavaScript modules must return a ValueIterator.")
-    public static final String LOG_METRICS_TO_SERVER_LOG = "LOG-METRICS-TO-SERVER-LOG";
-    public static final String LOG_METRICS_TO_SERVER_DB_NAME = "LOG-METRICS-TO-SERVER-DB-NAME";
-    public static final String LOG_METRICS_TO_SERVER_URI_ROOT_VALUE = "LOG-METRICS-TO-SERVER-URI-ROOT-VALUE";
-    public static final String LOG_METRICS_TO_SERVER_COLLECTIONS = "LOG-METRICS-TO-SERVER-COLLECTIONS";
-    public static final String LOG_METRICS_TO_SERVER_TRANSFORM_MODULE = "LOG-METRICS-TO-SERVER-TRANSFORM-MODULE";
+    @Usage(description = "XQuery or JavaScript to be executed at the end of the Corb Job "
+            + "from the URIS-MODULE or URIS-FILE. Module is expected to have at least "
+            + "one external or global variable with name URI. XQuery and JavaScript "
+            + "modules need to have .xqy and .sjs extensions respectively. If returning "
+            + "multiple values from a JavaScript module, values must be returned as ValueIterator.")
+    
+    public static final String METRICS_PROCESS_MODULE = "METRICS-PROCESS-MODULE";
     public static final String JOB_NAME = "JOB-NAME";
-    public static final String NUMBER_OF_LONG_RUNNING_URIS_TO_CAPTURE = "NUMBER-OF-LONG-RUNNING-URIS-TO-CAPTURE";
+    //zero 
+    //how much is MAX NUMBER
+    public static final String METRICS_NUM_SLOW_TRANSACTIONS = "METRICS-NUM-SLOW-TRANSACTIONS";
     
     /**
      *
@@ -957,12 +986,6 @@ public final class Options {
     private Options() {
     }
 
-	/**
-	 * @return the numberOfLongRunningUrisToCapture
-	 */
-	public static String getNumberOfLongRunningUrisToCapture() {
-		return NUMBER_OF_LONG_RUNNING_URIS_TO_CAPTURE;
-	}
 
 }
 

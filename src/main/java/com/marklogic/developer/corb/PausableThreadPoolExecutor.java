@@ -18,17 +18,14 @@
  */
 package com.marklogic.developer.corb;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -41,14 +38,15 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 
- 	private boolean isPaused;
+ 	private static final String FAILED_URI_TOKEN = "FAILED#";
+	private boolean isPaused;
     private final ReentrantLock pauseLock = new ReentrantLock();
     private final Condition unpaused = pauseLock.newCondition();
     private TopUriList topUriList;
+    private List<String> failedUris;
     
     private final ThreadLocal<Long> startTime = new ThreadLocal<Long>();
-    private final ThreadLocal<String> uris = new ThreadLocal<String>();
-    
+    private final ThreadLocal<String> threadName = new ThreadLocal<String>();
     private final AtomicLong totalTime = new AtomicLong();
     public PausableThreadPoolExecutor(int corePoolSize,
             int maximumPoolSize,
@@ -77,6 +75,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
     @Override
     protected void beforeExecute(Thread t, Runnable r) {
         super.beforeExecute(t, r);
+        threadName.set(Thread.currentThread().getName());
         pauseLock.lock();
         try {
             while (isPaused) {
@@ -95,7 +94,18 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 		super.afterExecute(r, t);
 		try{
 			String result = Thread.currentThread().getName();
-	         if(result !=null){
+			Thread.currentThread().setName(threadName.get());
+			Boolean failed = result !=null && result.toUpperCase().startsWith(FAILED_URI_TOKEN);
+			if(failed){
+				if(failedUris==null){
+					failedUris = new ArrayList<String>();
+				}
+				String[] tokens=result.split(FAILED_URI_TOKEN);
+				if(tokens.length>1 && tokens[1].length()>0){
+					failedUris.add(tokens[1]);
+				}
+			}
+			else if(result !=null){
 	        	long endTime = System.nanoTime();
 	     		long taskTime = endTime - startTime.get();
 	     		long durationInMs = TimeUnit.MILLISECONDS.convert(taskTime, TimeUnit.NANOSECONDS);
@@ -143,6 +153,12 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
             pauseLock.unlock();
         }
     }
+	/**
+	 * @return the failedUris
+	 */
+	public List<String> getFailedUris() {
+		return failedUris;
+	}
 }
 
 class TopUriList{

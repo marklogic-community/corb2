@@ -410,11 +410,14 @@ public abstract class AbstractManager {
 	}
 	private void logJobStatsToServerLog(JobStats jobStats) {
 		
-		Boolean logMetricsToServerLog=options.getLogMetricsToServerLog();
-		if(logMetricsToServerLog){
+		String logMetricsToServerLog=options.getLogMetricsToServerLog();
+		if(logMetricsToServerLog!=null && !logMetricsToServerLog.equalsIgnoreCase("NONE")){
 			Session session = contentSource.newSession();
-	        AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML 
-	                + "xdmp:log('"+jobStats+"')");	        
+			String xquery=XQUERY_VERSION_ML 
+	                + "xdmp:log(\""+jobStats+"\",'"+logMetricsToServerLog.toLowerCase()
+            		+ "')";
+			
+	        AdhocQuery q = session.newAdhocQuery(xquery);	        
 	        try {
 	        	session.submitRequest(q);
 	        } catch (Exception e) {
@@ -423,8 +426,7 @@ public abstract class AbstractManager {
 	        } finally {
 	            session.close();
 	        }	
-		}
-       	
+		}      	
     }
 	private void logJobStatsToServerDocument(JobStats jobStats) {	
 		try {
@@ -437,9 +439,8 @@ public abstract class AbstractManager {
 				}
 				logMetricsToDB(logMetricsToServerDBName,uriRoot,options.getLogMetricsToServerDBCollections(), jobStats,options.getLogMetricsToServerDBTransformModule());
 			}
-		} catch (CorbException e) {
-			LOG.log(INFO, "Unable to log metrics to server as Document");
-			e.printStackTrace();
+		} catch (Exception e) {
+			LOG.log(INFO, "Unable to log metrics to server as Document", e);
 		}          
     }
 	protected Request getRequestForModule(String processModule, Session session) {
@@ -474,17 +475,20 @@ public abstract class AbstractManager {
 	protected void logMetricsToDB(String dbName,String uriRoot,String collections,JobStats jobStats,String processModule) throws CorbException {
         Session session = null;
         ResultSequence seq = null;
+        RequestOptions requestOptions = new RequestOptions();
+        requestOptions.setCacheResult(false);
+
         Thread.yield();// try to avoid thread starvation
         try {
             session = contentSource.newSession();
             Request request = getRequestForModule(processModule, session);
             
-            request.setNewStringVariable("db-name", dbName);
+            request.setNewStringVariable("dbName", dbName);
             if(uriRoot!=null){
-            	request.setNewStringVariable("uri-root", uriRoot);
+            	request.setNewStringVariable("uriRoot", uriRoot);
             }
             else{
-            	request.setNewStringVariable("uri-root", "NA");
+            	request.setNewStringVariable("uriRoot", "NA");
             }
             if(collections!=null) {
             	request.setNewStringVariable("collections", collections);
@@ -492,7 +496,16 @@ public abstract class AbstractManager {
             else{
             	request.setNewStringVariable("collections", "NA");
             }
-            request.setNewStringVariable("metrics-document-str", jobStats.toXMLString());
+            if (isJavaScriptModule(processModule)) {
+		        requestOptions.setQueryLanguage("javascript");
+		        request.setNewStringVariable("metricsDocumentStr", jobStats.toJSONString());	            
+		    }
+            else{
+            	request.setNewStringVariable("metricsDocumentStr", jobStats.toXMLString());
+                
+            }
+            request.setOptions(requestOptions);
+
             seq = session.submitRequest(request);
             session.close();
             Thread.yield();// try to avoid thread starvation

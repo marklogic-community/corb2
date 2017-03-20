@@ -354,23 +354,29 @@ public class Manager extends AbstractManager {
             }
         }
         /**/
-        String logMetricsToServerLog=getOption(Options.LOG_METRICS_TO_SERVER_LOG);
+        String logMetricsToServerLog=getOption(Options.METRICS_TO_ERROR_LOG);
 		if(logMetricsToServerLog !=null){
-			options.setLogMetricsToServerLog(Boolean.valueOf(logMetricsToServerLog));
+			if(logMetricsToServerLog.toLowerCase().matches(Options.ML_LOG_LEVELS)){
+				options.setLogMetricsToServerLog(logMetricsToServerLog.toLowerCase());
+			}
+			else{
+				throw new IllegalArgumentException("INVALID VALUE for METRICS-TO-ERROR-LOG: "+logMetricsToServerLog+". Supported LOG LEVELS are "+Options.ML_LOG_LEVELS);
+				
+			}
 		}
-		String logMetricsToServerCollections=getOption(Options.LOG_METRICS_TO_SERVER_COLLECTIONS);
+		String logMetricsToServerCollections=getOption(Options.METRICS_DOC_COLLECTIONS);
 		if(logMetricsToServerCollections !=null){
 			options.setLogMetricsToServerDBCollections(logMetricsToServerCollections);
 		}
-		String logMetricsToServerDBName=getOption(Options.LOG_METRICS_TO_SERVER_DB_NAME);
+		String logMetricsToServerDBName=getOption(Options.METRICS_DB_NAME);
 		if(logMetricsToServerDBName !=null){
 			options.setLogMetricsToServerDBName(logMetricsToServerDBName);
 		}
-		String logMetricsToServerModule=getOption(Options.LOG_METRICS_TO_SERVER_TRANSFORM_MODULE);
+		String logMetricsToServerModule=getOption(Options.METRICS_PROCESS_MODULE);
 		if(logMetricsToServerModule !=null){
 			options.setLogMetricsToServerDBTransformModule(logMetricsToServerModule);
 		}
-		String logMetricsToServerURIRoot=getOption(Options.LOG_METRICS_TO_SERVER_URI_ROOT_VALUE);
+		String logMetricsToServerURIRoot=getOption(Options.METRICS_DOC_BASE_DIR);
 		if(logMetricsToServerURIRoot !=null){
 			options.setLogMetricsToServerDBURIRoot(logMetricsToServerURIRoot);
 		}
@@ -378,7 +384,7 @@ public class Manager extends AbstractManager {
 		if(jobName !=null){
 			options.setJobName(jobName);
 		}
-		String numberOfLongRunningUris=getOption(Options.NUMBER_OF_LONG_RUNNING_URIS_TO_CAPTURE);
+		String numberOfLongRunningUris=getOption(Options.METRICS_NUM_SLOW_TRANSACTIONS);
 		if(numberOfLongRunningUris !=null){
 			options.setNumberOfLongRunningUris(Integer.valueOf(numberOfLongRunningUris));
 		}
