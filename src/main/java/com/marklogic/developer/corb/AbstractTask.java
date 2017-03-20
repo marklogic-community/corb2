@@ -247,7 +247,7 @@ public abstract class AbstractTask implements Task {
                     }
                 }
             }
-            
+            Thread.currentThread().setName(asString(inputUris));
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);
             retryCount = 0;
@@ -258,7 +258,7 @@ public abstract class AbstractTask implements Task {
             processResult(seq);
             seq.close();
             Thread.yield();// try to avoid thread starvation
-            Thread.currentThread().setName(Arrays.toString(inputUris));
+           
             return inputUris;
         } catch (RequestException exc) {
             return handleRequestException(exc);
@@ -334,6 +334,7 @@ public abstract class AbstractTask implements Task {
         } else {
             LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
             writeToErrorFile(inputUris, requestException.getMessage());
+            Thread.currentThread().setName("FAILED#"+Thread.currentThread().getName());
             return inputUris;
         }
     }

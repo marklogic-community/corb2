@@ -155,15 +155,15 @@ public class Monitor implements Runnable {
 				try {
 					hostname = InetAddress.getLoopbackAddress().getHostName();
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					LOG.log(INFO, "Hostname can not be resolved", e);
 				}
-				System.out.println("Hostname can not be resolved");
 			}
 			this.jobStats.setHost(hostname);
 			this.jobStats.setJobRunLocation(System.getProperty("user.dir"));
 			if(taskCount > 0 ) {
 				this.jobStats.setTopTimeTakingUris(this.pool.getTopUris());
+				this.jobStats.setFailedUris(this.pool.getFailedUris());
+				
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");  
 				this.jobStats.setStartTime(sdf.format(new Date(this.startMillis)));
 				this.jobStats.setEndTime(sdf.format(new Date(this.endMillis)));

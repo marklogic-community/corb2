@@ -70,7 +70,7 @@ public class TransformOptions {
 
     // We could get rid of this now that we check status...
     private String modulesDatabase = "Modules";
-    private Boolean logMetricsToServerLog = false;
+    private String logMetricsToServerLog = "NONE";
     
     private Boolean logMetricsToServerDB = false;
     
@@ -381,14 +381,14 @@ public class TransformOptions {
 	/**
 	 * @return the logMetricsToServerLog
 	 */
-	public Boolean getLogMetricsToServerLog() {
+	public String getLogMetricsToServerLog() {
 		return logMetricsToServerLog;
 	}
 
 	/**
 	 * @param logMetricsToServerLog the logMetricsToServerLog to set
 	 */
-	public void setLogMetricsToServerLog(Boolean logMetricsToServerLog) {
+	public void setLogMetricsToServerLog(String logMetricsToServerLog) {
 		this.logMetricsToServerLog = logMetricsToServerLog;
 	}
 
