@@ -44,6 +44,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -95,7 +96,7 @@ public class ManagerTest {
     public static final String PRE_BATCH_XQUERY_MODULE_FOO = "pre-bar";
     public static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
     public static final String SLOW_RECEIVE_MESSAGE = "Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC";
-    
+
     @Before
     public void setUp() throws IOException {
         clearSystemProperties();
@@ -1264,6 +1265,126 @@ public class ManagerTest {
         assertEquals(1, instance.options.getThreadCount());
     }
 
+    @Test
+    public void testNoResultsPrePostBatchAlwaysExecuteTrue() {
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[4] = null;
+        args[9] = null;
+        args[11] = null;
+        args[15] = null;
+        Properties props = new Properties();
+        props.setProperty(Options.PRE_POST_BATCH_ALWAYS_EXECUTE, Boolean.toString(true));
+        props.setProperty(Options.URIS_LOADER, MockEmptyFileUrisLoader.class.getName());
+        props.setProperty(Options.PRE_BATCH_MINIMUM_COUNT, Integer.toString(0));
+        props.setProperty(Options.POST_BATCH_MINIMUM_COUNT, Integer.toString(0));
+        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "top content");
+        props.setProperty(Options.PRE_BATCH_TASK, "com.marklogic.developer.corb.PreBatchUpdateFileTask");
+        props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "bottom content");
+        props.setProperty(Options.POST_BATCH_TASK, "com.marklogic.developer.corb.PostBatchUpdateFileTask");
+        try {
+            Manager instance = getMockManagerWithEmptyResults();
+            instance.init(args, props);
+            instance.run();
+            
+            File exportFile = new File(EXPORT_FILE_DIR, EXPORT_FILE_NAME);
+            assertTrue(exportFile.exists());
+            assertEquals(2, FileUtils.getLineCount(exportFile));
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testNoResultsDefaultPrePostExecution() {
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[4] = null;
+        args[9] = null;
+        args[11] = null;
+        args[15] = null;
+        Properties props = new Properties();
+        props.setProperty(Options.URIS_LOADER, MockEmptyFileUrisLoader.class.getName());
+        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "top content");
+        props.setProperty(Options.PRE_BATCH_TASK, "com.marklogic.developer.corb.PreBatchUpdateFileTask");
+        props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "bottom content");
+        props.setProperty(Options.POST_BATCH_TASK, "com.marklogic.developer.corb.PostBatchUpdateFileTask");
+        try {
+            Manager instance = getMockManagerWithEmptyResults();
+            instance.init(args, props);
+            instance.run();
+            
+            File exportFile = new File(EXPORT_FILE_DIR, EXPORT_FILE_NAME);
+            assertFalse(exportFile.exists());
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    
+    @Test
+    public void testNoResultsPrePostBatchAlwaysExecuteFalseMinCountGreater() {
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[4] = null;
+        args[9] = null;
+        args[11] = null;
+        args[15] = null;
+        Properties props = new Properties();
+        props.setProperty(Options.PRE_POST_BATCH_ALWAYS_EXECUTE, Boolean.toString(false));
+        props.setProperty(Options.URIS_LOADER, MockEmptyFileUrisLoader.class.getName());
+        props.setProperty(Options.PRE_BATCH_MINIMUM_COUNT, Integer.toString(10));
+        props.setProperty(Options.POST_BATCH_MINIMUM_COUNT, Integer.toString(10));
+        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "top content");
+        props.setProperty(Options.PRE_BATCH_TASK, "com.marklogic.developer.corb.PreBatchUpdateFileTask");
+        props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "bottom content");
+        props.setProperty(Options.POST_BATCH_TASK, "com.marklogic.developer.corb.PostBatchUpdateFileTask");
+        try {
+            Manager instance = getMockManagerWithEmptyResults();
+            instance.init(args, props);
+            instance.run();
+            
+            File exportFile = new File(EXPORT_FILE_DIR, EXPORT_FILE_NAME);
+            assertFalse(exportFile.exists());
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testResultsPrePostBatchAlwaysExecuteFalseMinCountGreater() throws IOException {
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[4] = null;
+        args[9] = null;
+        args[11] = null;
+        args[15] = null;
+        Properties props = new Properties();
+        props.setProperty(Options.PRE_POST_BATCH_ALWAYS_EXECUTE, Boolean.toString(false));
+        props.setProperty(Options.URIS_LOADER, MockEmptyFileUrisLoader.class.getName());
+        props.setProperty(Options.PRE_BATCH_MINIMUM_COUNT, Integer.toString(10));
+        props.setProperty(Options.POST_BATCH_MINIMUM_COUNT, Integer.toString(10));
+        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "top content");
+        props.setProperty(Options.PRE_BATCH_TASK, "com.marklogic.developer.corb.PreBatchUpdateFileTask");
+        props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "bottom content");
+        props.setProperty(Options.POST_BATCH_TASK, "com.marklogic.developer.corb.PostBatchUpdateFileTask");
+
+        try {
+            Manager instance = getMockManagerWithEmptyResults();
+            instance.init(args, props);
+            instance.run();
+            
+            File exportFile = new File(EXPORT_FILE_DIR, EXPORT_FILE_NAME);
+            assertFalse(exportFile.exists());
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
     public static String[] getDefaultArgs() {
         return new String[]{XCC_CONNECTION_URI,
             COLLECTION_NAME,
@@ -1373,6 +1494,14 @@ public class ManagerTest {
         manager.logIfSlowReceive(System.currentTimeMillis() - 1, 100000000);
         List<LogRecord> records = testLogger.getLogRecords();
         assertTrue(records.isEmpty());
+    }
+
+    public static class MockEmptyFileUrisLoader extends FileUrisLoader {
+
+        @Override
+        public void open() throws CorbException {
+            this.setTotalCount(0);
+        }
     }
 
     private static class MockManager extends Manager {

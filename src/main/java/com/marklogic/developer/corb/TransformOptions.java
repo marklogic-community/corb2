@@ -63,9 +63,10 @@ public class TransformOptions {
     private int diskQueueMaxInMemorySize = 1000;
     private File diskQueueTempDir;
     private boolean doInstall;
-
     private int numTpsForETC = 10;
-
+    private boolean prePostBatchAlwaysExecute;
+    private int preBatchMinimumCount = 1;
+    private int postBatchMinimumCount = 1;
     private boolean failOnError = true;
 
     // We could get rid of this now that we check status...
@@ -74,6 +75,30 @@ public class TransformOptions {
     // Set on status check
     private String xdbcRoot = SLASH;
 
+    public void setPrePostBatchAlwaysExecute(boolean shouldAlwaysExecute) {
+        prePostBatchAlwaysExecute = shouldAlwaysExecute;
+    }
+    
+    public boolean shouldPrePostBatchAlwaysExecute() {
+        return prePostBatchAlwaysExecute;
+    }
+    
+    public void setPostBatchMinimumCount(int count) {
+        postBatchMinimumCount = count;
+    }
+    
+    public int getPostBatchMinimumCount() {
+        return postBatchMinimumCount;
+    }
+    
+    public void setPreBatchMinimumCount(int count) {
+        preBatchMinimumCount = count;
+    }
+    
+    public int getPreBatchMinimumCount() {
+        return preBatchMinimumCount;
+    }
+    
     /**
      * @return
      */

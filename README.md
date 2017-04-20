@@ -134,6 +134,9 @@ Option | Description
 **MODULE-ROOT** | Default is '/'.
 **MODULES-DATABASE** | Uses the **XCC-CONNECTION-URI** if not provided; use 0 for file system.
 **NUM-TPS-FOR-ETC** | Default is 10. Number of recent transactions per second (tps) values used to calculate estimated completion time (ETC).
+**POST-BATCH-MINIMUM-COUNT** | The minimum number of results that must be returned for the **POST-BATCH-MODULE** or **POST-BATCH-TASK** to be executed. Default is 1
+**PRE-POST-BATCH-ALWAYS-EXECUTE** | Boolean value indicating whether the PRE_BATCH and POST_BATCH module or task should be executed without evaluating how many URIs were returned by the URI selector.
+**PRE-BATCH-MINIMUM-COUNT** | The minimum number of results that must be returned for the **PRE-BATCH-MODULE** or **PRE-BATCH-TASK** to be executed. Default is 1
 **QUERY-RETRY-LIMIT** | Number of re-query attempts before giving up. Default is 2.
 **QUERY-RETRY-INTERVAL** | Time interval, in seconds, between re-query attempts. Default is 20.
 **QUERY-RETRY-ERROR-CODES** | A comma separated list of MarkLogic error codes for which a QueryException should be retried.

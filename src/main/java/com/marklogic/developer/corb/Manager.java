@@ -36,12 +36,15 @@ import static com.marklogic.developer.corb.Options.MODULES_DATABASE;
 import static com.marklogic.developer.corb.Options.MODULE_ROOT;
 import static com.marklogic.developer.corb.Options.NUM_TPS_FOR_ETC;
 import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
+import static com.marklogic.developer.corb.Options.POST_BATCH_MINIMUM_COUNT;
 import static com.marklogic.developer.corb.Options.POST_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.POST_BATCH_TASK;
 import static com.marklogic.developer.corb.Options.POST_BATCH_XQUERY_MODULE;
+import static com.marklogic.developer.corb.Options.PRE_BATCH_MINIMUM_COUNT;
 import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PRE_BATCH_TASK;
 import static com.marklogic.developer.corb.Options.PRE_BATCH_XQUERY_MODULE;
+import static com.marklogic.developer.corb.Options.PRE_POST_BATCH_ALWAYS_EXECUTE;
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.PROCESS_TASK;
 import static com.marklogic.developer.corb.Options.THREAD_COUNT;
@@ -245,6 +248,10 @@ public class Manager extends AbstractManager {
             options.setDoInstall(true);
         }
         if (urisFile != null) {
+            File f = new File(urisFile);
+            if (!f.exists()) {
+                throw new IllegalArgumentException("Uris file " + urisFile + " not found");
+            }
             options.setUrisFile(urisFile);
         }
         if (batchSize != null) {
@@ -259,6 +266,19 @@ public class Manager extends AbstractManager {
         if (numTpsForETC != null) {
             options.setNumTpsForETC(Integer.parseInt(numTpsForETC));
         }
+        
+        options.setPrePostBatchAlwaysExecute(stringToBoolean(getOption(PRE_POST_BATCH_ALWAYS_EXECUTE)));
+        
+        String postBatchMinimumCount = getOption(POST_BATCH_MINIMUM_COUNT);
+        if (StringUtils.isNotEmpty(postBatchMinimumCount)) {
+            options.setPostBatchMinimumCount(Integer.parseInt(postBatchMinimumCount));
+        }
+        
+        String preBatchMinimumCount = getOption(PRE_BATCH_MINIMUM_COUNT);
+        if (StringUtils.isNotEmpty(preBatchMinimumCount)) {
+            options.setPreBatchMinimumCount(Integer.parseInt(preBatchMinimumCount));
+        }
+        
         if (!this.properties.containsKey(EXPORT_FILE_DIR) && exportFileDir != null) {
             this.properties.put(EXPORT_FILE_DIR, exportFileDir);
         }
@@ -267,13 +287,6 @@ public class Manager extends AbstractManager {
         }
         if (!this.properties.containsKey(ERROR_FILE_NAME) && errorFileName != null) {
             this.properties.put(ERROR_FILE_NAME, errorFileName);
-        }
-
-        if (urisFile != null) {
-            File f = new File(options.getUrisFile());
-            if (!f.exists()) {
-                throw new IllegalArgumentException("Uris file " + urisFile + " not found");
-            }
         }
 
         if (initModule != null) {
@@ -472,7 +485,7 @@ public class Manager extends AbstractManager {
                     LOG.log(SEVERE, "interrupted while waiting for monitor", e);
                 }
             }
-            if (!execError && count > 0) {
+            if (shouldRunPostBatch(count)) {
                 runPostBatchTask(); // post batch tasks
                 LOG.info("all done");
             }
@@ -484,6 +497,14 @@ public class Manager extends AbstractManager {
         }
     }
 
+    protected boolean shouldRunPostBatch(int count) {
+        return !execError && options.shouldPrePostBatchAlwaysExecute() || count >= options.getPostBatchMinimumCount();
+    }
+    
+    protected boolean shouldRunPreBatch(int count) {
+        return options.shouldPrePostBatchAlwaysExecute() || count >= options.getPreBatchMinimumCount();
+    }
+    
     /**
      * @return
      */
@@ -639,15 +660,18 @@ public class Manager extends AbstractManager {
 
             expectedTotalCount = urisLoader.getTotalCount();
             LOG.log(INFO, "expecting total " + expectedTotalCount);
+            
+            if (shouldRunPreBatch(expectedTotalCount)) {
+                // run pre-batch task, if present.
+                runPreBatchTask(taskFactory);
+            }
+            
             if (expectedTotalCount <= 0) {
                 LOG.info("nothing to process");
                 stop();
                 return 0;
             }
-
-            // run pre-batch task, if present.
-            runPreBatchTask(taskFactory);
-
+            
             // now start process tasks
             monitor.setTaskCount(expectedTotalCount);
             monitorThread.start();
