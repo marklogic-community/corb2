@@ -426,13 +426,13 @@ public final class Options {
     public static final String OPTIONS_FILE = "OPTIONS-FILE";
     
     /**
-     * The minimum number of results that must be returned for the POST-BATCH 
-     * module or task to be executed. 
+     * The minimum number of results that must be returned for the POST-BATCH-MODULE 
+     *  or POST-BATCH-TASK to be executed. 
      * Default is 1
      * @since 2.4.0
      */
     @Usage(description = "The minimum number of results that must be returned "
-            + "for the POST-BATCH module or task to be executed. Default is 1")
+            + "for the POST-BATCH-MODULE or POST-BATCH-TASK to be executed. Default is 1")
     public static final String POST_BATCH_MINIMUM_COUNT = "POST-BATCH-MINIMUM-COUNT";
     
     /**
@@ -490,13 +490,13 @@ public final class Options {
     public static final String POST_BATCH_XQUERY_MODULE = "POST-BATCH-XQUERY-MODULE";
 
     /**
-     * The minimum number of results that must be returned for the POST-BATCH 
-     * module or task to be executed. 
+     * The minimum number of results that must be returned for the PRE-BATCH-MODULE 
+     * or PRE-BATCH-TASK to be executed. 
      * Default is 1
      * @since 2.4.0
      */
     @Usage(description = "The minimum number of results that must be returned "
-            + "for the PRE-BATCH module or task to be executed. Default is 1")
+            + "for the PRE-BATCH-MODULE or PRE-BATCH-TASK to be executed. Default is 1")
     public static final String PRE_BATCH_MINIMUM_COUNT = "PRE-BATCH-MINIMUM-COUNT";
     
     /**
