@@ -95,9 +95,8 @@ public class ArrayQueueTest {
         ArrayQueue<String> instance = new ArrayQueue<>(2);
         instance.add(FOO);
         instance.add(BAR);
-        Iterator<String> iterator = instance.iterator();
-        while (iterator.hasNext()) {
-            assertNotNull(iterator.next());
+        for (String anInstance : instance) {
+            assertNotNull(anInstance);
         }
     }
 
