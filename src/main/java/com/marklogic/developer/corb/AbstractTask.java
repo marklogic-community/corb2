@@ -46,9 +46,7 @@ import com.marklogic.xcc.exceptions.RetryableQueryException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XName;
 import com.marklogic.xcc.types.XdmBinary;
-import com.marklogic.xcc.types.XdmDocument;
 import com.marklogic.xcc.types.XdmItem;
-import com.marklogic.xcc.types.XdmSequence;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -255,13 +253,13 @@ public abstract class AbstractTask implements Task {
         return request;
     }
 
-    protected void setUriRequestVariable(Request request, String[] inputUris) {
+    protected void setUriRequestVariable(Request request, String... inputUris) {
         String delim = getBatchUriDelimiter();
         String uriValue = StringUtils.join(inputUris, delim);
         request.setNewStringVariable(REQUEST_VARIABLE_URI, uriValue);
     }
 
-    protected void setDocRequestVariable(Request request, String[] inputUris) throws CorbException {
+    protected void setDocRequestVariable(Request request, String... inputUris) throws CorbException {
         String batchSize = properties.getProperty(Options.BATCH_SIZE);
         //XCC does not allow sequences for request parameters
         if (batchSize != null && Integer.parseInt(batchSize) > 1) {
@@ -273,7 +271,7 @@ public abstract class AbstractTask implements Task {
         request.setVariable(ValueFactory.newVariable(name, xdmItems[0]));
     }
 
-    protected XdmItem[] toXdmItems(String[] inputUris) throws CorbException {
+    protected XdmItem[] toXdmItems(String... inputUris) throws CorbException {
         List<XdmItem> docs = new ArrayList<>(inputUris.length);
         try {
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -287,7 +285,7 @@ public abstract class AbstractTask implements Task {
                         Document dom = builder.parse(is);
                         doc = ValueFactory.newDocumentNode(dom);
                     } catch (SAXException | IOException ex) {
-                        LOG.log(Level.WARNING, "Unable to parse URI as XML. Setting content as text.", ex);
+                        LOG.log(WARNING, "Unable to parse URI as XML. Setting content as text.", ex);
                         //guess not, lets just use it as-is
                         doc = ValueFactory.newDocumentNode(input);
                     }

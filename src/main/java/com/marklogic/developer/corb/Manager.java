@@ -218,7 +218,7 @@ public class Manager extends AbstractManager {
         String diskQueueMaxInMemorySize = getOption(DISK_QUEUE_MAX_IN_MEMORY_SIZE);
         String diskQueueTempDir = getOption(DISK_QUEUE_TEMP_DIR);
         String tempDir = getOption(TEMP_DIR);
-        if (StringUtils.isBlank(diskQueueTempDir) && !StringUtils.isBlank(tempDir)){
+        if (isBlank(diskQueueTempDir) && isNotBlank(tempDir)){
             diskQueueTempDir = tempDir;
         }
         String numTpsForETC = getOption(NUM_TPS_FOR_ETC);
@@ -270,19 +270,19 @@ public class Manager extends AbstractManager {
         if (numTpsForETC != null) {
             options.setNumTpsForETC(Integer.parseInt(numTpsForETC));
         }
-        
+
         options.setPrePostBatchAlwaysExecute(stringToBoolean(getOption(PRE_POST_BATCH_ALWAYS_EXECUTE)));
-        
+
         String postBatchMinimumCount = getOption(POST_BATCH_MINIMUM_COUNT);
         if (StringUtils.isNotEmpty(postBatchMinimumCount)) {
             options.setPostBatchMinimumCount(Integer.parseInt(postBatchMinimumCount));
         }
-        
+
         String preBatchMinimumCount = getOption(PRE_BATCH_MINIMUM_COUNT);
         if (StringUtils.isNotEmpty(preBatchMinimumCount)) {
             options.setPreBatchMinimumCount(Integer.parseInt(preBatchMinimumCount));
         }
-        
+
         if (!this.properties.containsKey(EXPORT_FILE_DIR) && exportFileDir != null) {
             this.properties.put(EXPORT_FILE_DIR, exportFileDir);
         }
@@ -504,11 +504,11 @@ public class Manager extends AbstractManager {
     protected boolean shouldRunPostBatch(int count) {
         return !execError && options.shouldPrePostBatchAlwaysExecute() || count >= options.getPostBatchMinimumCount();
     }
-    
+
     protected boolean shouldRunPreBatch(int count) {
         return options.shouldPrePostBatchAlwaysExecute() || count >= options.getPreBatchMinimumCount();
     }
-    
+
     /**
      * @return
      */
@@ -664,18 +664,18 @@ public class Manager extends AbstractManager {
 
             expectedTotalCount = urisLoader.getTotalCount();
             LOG.log(INFO, "expecting total " + expectedTotalCount);
-            
+
             if (shouldRunPreBatch(expectedTotalCount)) {
                 // run pre-batch task, if present.
                 runPreBatchTask(taskFactory);
             }
-            
+
             if (expectedTotalCount <= 0) {
                 LOG.info("nothing to process");
                 stop();
                 return 0;
             }
-            
+
             // now start process tasks
             monitor.setTaskCount(expectedTotalCount);
             monitorThread.start();

@@ -36,6 +36,7 @@ import org.junit.Before;
 public class FileUrisDirectoryLoaderIT {
 
     public static final String LOADER_PROCESS_MODULE = "src/test/resources/fileUrisLoaderProcess.xqy|ADHOC";
+    public static final String DOC_LOADER_PROCESS_MODULE = "src/test/resources/fileDocLoaderProcess.xqy|ADHOC";
     private static final Logger LOG = Logger.getLogger(FileUrisDirectoryLoaderIT.class.getName());
     private File tempDir;
 
@@ -65,7 +66,7 @@ public class FileUrisDirectoryLoaderIT {
         Properties properties = new Properties();
         properties.setProperty(Options.EXPORT_FILE_NAME, "testLoadAllAsDocs.txt");
         properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_DOC);
-        properties.setProperty(Options.PROCESS_MODULE, "src/test/resources/fileDocLoaderProcess.xqy|ADHOC");
+        properties.setProperty(Options.PROCESS_MODULE, DOC_LOADER_PROCESS_MODULE);
         try {
             testFileUrisDirectoryLoader(properties);
         } catch (Exception ex) {
@@ -79,7 +80,7 @@ public class FileUrisDirectoryLoaderIT {
         properties.setProperty(Options.EXPORT_FILE_NAME, "testLoadAllAsDocsWithBatch.txt");
         properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_DOC);
         properties.setProperty(Options.BATCH_SIZE, Integer.toString(10));
-        properties.setProperty(Options.PROCESS_MODULE, "src/test/resources/fileDocLoaderProcess.xqy|ADHOC");
+        properties.setProperty(Options.PROCESS_MODULE, DOC_LOADER_PROCESS_MODULE);
 
         testFileUrisDirectoryLoader(properties);
     }

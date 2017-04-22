@@ -41,9 +41,7 @@ import com.marklogic.xcc.types.ValueType;
 import com.marklogic.xcc.types.XName;
 import com.marklogic.xcc.types.XSString;
 import com.marklogic.xcc.types.XdmBinary;
-import com.marklogic.xcc.types.XdmDocument;
 import com.marklogic.xcc.types.XdmItem;
-import com.marklogic.xcc.types.XdmSequence;
 import com.marklogic.xcc.types.XdmValue;
 import com.marklogic.xcc.types.XdmVariable;
 import java.io.File;
@@ -91,6 +89,7 @@ public class AbstractTaskTest {
     protected static final String REJECTED_MSG = "denied!";
     private static final String TMP_DIR = "/tmp";
     private static final String ADHOC_MODULE = "adhoc.xqy";
+    private static final String EMPTY_DOC_ELEMENT = "<doc/>";
 
     @Before
     public void setUp() {
@@ -304,12 +303,11 @@ public class AbstractTaskTest {
         ModuleInvoke request = new ModuleInvokeImpl();
         Session session = mock(Session.class);
         when(session.newModuleInvoke(anyString())).thenReturn(request);
-        String docString = "<doc/>";
 
         AbstractTask instance = new AbstractTaskImpl();
         instance.moduleUri = URI;
         instance.properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_URI);
-        instance.inputUris = new String[]{docString};
+        instance.inputUris = new String[]{EMPTY_DOC_ELEMENT};
 
         try {
             instance.generateRequest(session);
@@ -320,7 +318,7 @@ public class AbstractTaskTest {
 
         List<XdmVariable> variableList = Arrays.asList(request.getVariables());
         assertEquals(1, variableList.size());
-        assertEquals(docString, variableList.get(0).getValue().asString());
+        assertEquals(EMPTY_DOC_ELEMENT, variableList.get(0).getValue().asString());
     }
 
     @Test
@@ -328,12 +326,11 @@ public class AbstractTaskTest {
         ModuleInvoke request = new ModuleInvokeImpl();
         Session session = mock(Session.class);
         when(session.newModuleInvoke(anyString())).thenReturn(request);
-        String docString = "<doc/>";
 
         AbstractTask instance = new AbstractTaskImpl();
         instance.moduleUri = URI;
         instance.properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_URI);
-        instance.inputUris = new String[]{docString, docString, docString};
+        instance.inputUris = new String[]{EMPTY_DOC_ELEMENT, EMPTY_DOC_ELEMENT, EMPTY_DOC_ELEMENT};
 
         try {
             instance.generateRequest(session);
@@ -669,14 +666,13 @@ public class AbstractTaskTest {
 
     @Test
     public void testToXdmItems() {
-        String doc = "<doc/>";
         AbstractTask instance = new AbstractTaskImpl();
         try {
-            XdmItem[] result = instance.toXdmItems(new String[]{"", FOO, doc});
+            XdmItem[] result = instance.toXdmItems(new String[]{"", FOO, EMPTY_DOC_ELEMENT});
             assertEquals(3, result.length);
             assertEquals("", result[0].asString());
             assertEquals(FOO, result[1].asString());
-            assertEquals(doc, result[2].asString());
+            assertEquals(EMPTY_DOC_ELEMENT, result[2].asString());
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -685,11 +681,10 @@ public class AbstractTaskTest {
 
     @Test
     public void testToXdmItemsMalformedXML() {
-        String doc = "<doc/>>";
         AbstractTask instance = new AbstractTaskImpl();
         try {
-            XdmItem[] result = instance.toXdmItems(new String[]{doc});
-            assertEquals(doc, result[0].asString());
+            XdmItem[] result = instance.toXdmItems(new String[]{EMPTY_DOC_ELEMENT});
+            assertEquals(EMPTY_DOC_ELEMENT, result[0].asString());
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
