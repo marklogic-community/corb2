@@ -6,6 +6,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '1.2.3'
     id 'com.github.kt3k.coveralls' version '2.6.3'
     id 'com.marklogic.ml-gradle' version '2.5.0'
+    id 'io.github.ddimtirov.codacy' version '0.1.0'
     id 'org.sonarqube' version '2.2.1'
     id 'eclipse'
     id 'idea'
@@ -35,6 +36,8 @@ repositories {
     flatDir {
         dirs 'src/test/resources/'
     }
+    //required for codacyUpload task
+    maven { url "http://dl.bintray.com/typesafe/maven-releases" }
 }
 
 sourceSets {
