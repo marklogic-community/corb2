@@ -479,7 +479,17 @@ public final class Options {
     @Usage(description = "A properties file containing any of the CoRB2 options. "
             + "Relative and full file system paths are supported.")
     public static final String OPTIONS_FILE = "OPTIONS-FILE";
-
+    
+    /**
+     * The minimum number of results that must be returned for the POST-BATCH-MODULE 
+     *  or POST-BATCH-TASK to be executed. 
+     * Default is 1
+     * @since 2.4.0
+     */
+    @Usage(description = "The minimum number of results that must be returned "
+            + "for the POST-BATCH-MODULE or POST-BATCH-TASK to be executed. Default is 1")
+    public static final String POST_BATCH_MINIMUM_COUNT = "POST-BATCH-MINIMUM-COUNT";
+    
     /**
      * An XQuery or JavaScript module which, if specified, will be run after
      * batch processing is completed. XQuery and JavaScript modules need to have
@@ -534,6 +544,16 @@ public final class Options {
     @Usage
     public static final String POST_BATCH_XQUERY_MODULE = "POST-BATCH-XQUERY-MODULE";
 
+    /**
+     * The minimum number of results that must be returned for the PRE-BATCH-MODULE 
+     * or PRE-BATCH-TASK to be executed. 
+     * Default is 1
+     * @since 2.4.0
+     */
+    @Usage(description = "The minimum number of results that must be returned "
+            + "for the PRE-BATCH-MODULE or PRE-BATCH-TASK to be executed. Default is 1")
+    public static final String PRE_BATCH_MINIMUM_COUNT = "PRE-BATCH-MINIMUM-COUNT";
+    
     /**
      * An XQuery or JavaScript module which, if specified, will be run before
      * batch processing starts.
@@ -593,7 +613,20 @@ public final class Options {
     @Deprecated
     @Usage
     public static final String PRE_BATCH_XQUERY_MODULE = "PRE-BATCH-XQUERY-MODULE";
-
+    
+    /**
+     * Boolean value indicating whether the PRE_BATCH and POST_BATCH module or task 
+     * should always be executed without evaluating how many URIs were returned by the URI selector.
+     * Default is false
+     * @see #POST_BATCH_MINIMUM_COUNT
+     * @see #PRE_BATCH_MINIMUM_COUNT
+     * @since 2.4.0
+     */
+    @Usage(description="Boolean value indicating whether the PRE_BATCH and POST_BATCH module or task \n" +
+        " should always be executed without evaluating how many URIs were returned by the URI selector.\n" +
+        " Default is false")
+    public static final String PRE_POST_BATCH_ALWAYS_EXECUTE = "PRE-POST-BATCH-ALWAYS-EXECUTE";
+    
     /**
      * (Optional)
      * <ul>
