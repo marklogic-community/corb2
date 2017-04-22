@@ -267,6 +267,7 @@ public class AbstractTaskTest {
         assertTrue(variableList.contains(customInputVariable));
     }
 
+    @Test
     public void testGenerateRequestModuleInvokeSetLanguage() {
         ModuleInvoke request = new ModuleInvokeImpl();
         Session session = mock(Session.class);
@@ -281,6 +282,7 @@ public class AbstractTaskTest {
         assertEquals(instance.language, options.getQueryLanguage());
     }
 
+    @Test
     public void testGenerateRequestModuleInvokeSetTimeZone() {
         ModuleInvoke request = new ModuleInvokeImpl();
         Session session = mock(Session.class);
