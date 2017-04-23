@@ -335,8 +335,7 @@ public abstract class AbstractTask implements Task {
         } else {
             LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
             writeToErrorFile(inputUris, requestException.getMessage());
-            Thread.currentThread().setName(FAILED_URI_TOKEN+Thread.currentThread().getName());
-            return inputUris;
+            Thread.currentThread().setName(FAILED_URI_TOKEN+Thread.currentThread().getName());return inputUris;
         }
     }
 

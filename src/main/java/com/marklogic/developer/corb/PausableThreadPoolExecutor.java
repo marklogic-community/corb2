@@ -29,14 +29,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import static com.marklogic.developer.corb.TransformOptions.FAILED_URI_TOKEN;
+
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 
- 	private boolean isPaused;
+ 	private static final String FAILED_URI_TOKEN = "FAILED#";
+	private boolean isPaused;
     private final ReentrantLock pauseLock = new ReentrantLock();
     private final Condition unpaused = pauseLock.newCondition();
     private TopUriList topUriList;

@@ -974,18 +974,16 @@ public final class Options {
     @Usage(description = "Name of the current Job.")
     public static final String JOB_NAME = "JOB-NAME";
     /**
-     * Number of failed transactions to be logged in the metrics. 
-     * The default value is 1000 and this value can not exceed 1000.
+     * Maximum number of failed transaction to be logged in the metrics. 
+     * The default value is 1000.
      */
-    @Usage(description = "Number of failed transactions to be logged in the metrics.")
+    @Usage(description = "Adds the metrics document to the specified collection.")
+  
     public static final String METRICS_NUM_FAILED_TRANSACTIONS = "METRICS-NUM-FAILED-TRANSACTIONS";
     
-    /**
-     * Number of slowest transactions to be logged in the metrics. 
-     * The default value is 5 and this value can not exceed 100.
-     */
-   @Usage(description = "Number of slowest transactions to be logged in the metrics.")
-   public static final String METRICS_NUM_SLOW_TRANSACTIONS = "METRICS-NUM-SLOW-TRANSACTIONS";
+    //zero 
+    //how much is MAX NUMBER
+    public static final String METRICS_NUM_SLOW_TRANSACTIONS = "METRICS-NUM-SLOW-TRANSACTIONS";
     
     /**
      *

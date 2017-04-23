@@ -422,7 +422,7 @@ public abstract class AbstractManager {
 		Session session = null;
 		try {
 			session=contentSource.newSession();
-			this.populateJobStats();
+			this.initJobStats();
 			String logMetricsToServerLog = options.getLogMetricsToServerLog();
 			if (logMetricsToServerLog != null && !logMetricsToServerLog.equalsIgnoreCase("NONE")) {
 
