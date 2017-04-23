@@ -19,23 +19,18 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.COMMAND_FILE;
-import static java.util.logging.Level.INFO;
-import static java.util.logging.Level.SEVERE;
-import static java.util.logging.Level.WARNING;
-
 import java.math.RoundingMode;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 
 /**
@@ -44,13 +39,14 @@ import java.util.logging.Logger;
  *
  */
 public class Monitor implements Runnable {
-	
-	protected static final Logger LOG = Logger.getLogger(Monitor.class.getName());
+
+    protected static final Logger LOG = Logger.getLogger(Monitor.class.getName());
 
     protected static final int DEFAULT_NUM_TPS_FOR_ETC = 10;
 
     private final CompletionService<String[]> cs;
     private long lastProgress = 0;
+    private long startMillis;
     private final Manager manager;
     private String[] lastUris;
     private long taskCount;
@@ -59,8 +55,7 @@ public class Monitor implements Runnable {
     protected long completed = 0;
     private long prevCompleted = 0;
     private long prevMillis = 0;
-    private long startMillis;
-    
+
     private final List<Double> tpsForETCList;
     private final int numTpsForEtc;
 
@@ -85,15 +80,14 @@ public class Monitor implements Runnable {
      */
     @Override
     public void run() {
-        
+        startMillis = System.currentTimeMillis();
+
         try {
             Thread.yield();
             monitorResults();
         } catch (ExecutionException e) {
             // tell the main thread to quit
-             //this.populateAndLogJobStats();
             manager.stop(e);
-             
         } catch (InterruptedException e) {
             // reset interrupt status and exit
             Thread.interrupted();
@@ -132,15 +126,10 @@ public class Monitor implements Runnable {
         }
         LOG.info("waiting for pool to terminate");
         pool.awaitTermination(1, TimeUnit.SECONDS);
-        //endMillis=System.currentTimeMillis();
-        //this.populateAndLogJobStats();
         LOG.log(INFO, "completed all tasks {0}/{1}", new Object[]{completed, taskCount});
-//        LOG.log(INFO, "Print Job Stats: {0}",this.getJobStats());
     }
 
-    
-
-	private long showProgress() throws InterruptedException {
+    private long showProgress() throws InterruptedException {
         long current = System.currentTimeMillis();
         if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
             if (pool.isPaused()) {
@@ -256,5 +245,5 @@ public class Monitor implements Runnable {
     public void shutdownNow() {
         shutdownNow = true;
     }
-    
+
 }

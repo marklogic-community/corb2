@@ -19,6 +19,11 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 public class JobStats {
+	private static final String GT = ">";
+	private static final String LT = "<";
+	private static final String OPEN_CURLY = "{";
+	private static final String CLOSE_CURLY = "}";
+	private static final String COMA = ",";
 	private static final String URI = "uri";
 	private static final String JOB_NAME = "name";
 	private static final String JOB_ROOT = "job";
@@ -203,7 +208,7 @@ public class JobStats {
 		NodeList nodeList = node.getChildNodes();
 		for (int i = 0; i < nodeList.getLength(); i++) {
 			if (i != 0) {
-				strBuff.append(",");
+				strBuff.append(COMA);
 			}
 			Node child = nodeList.item(i);
 			if (child.getNodeType() == Node.ELEMENT_NODE) {
@@ -213,19 +218,19 @@ public class JobStats {
 					for (int j = 0; j < uris.getLength(); j++) {
 						if (uris.item(j).hasChildNodes()) {
 							if (j != 0) {
-								strBuff.append(",");
+								strBuff.append(COMA);
 							}
-							strBuff.append("{");
+							strBuff.append(OPEN_CURLY);
 							NodeList innerUris = uris.item(j).getChildNodes();
 							for (int k = 0; k < innerUris.getLength(); k++) {
 								Node uri = innerUris.item(k);
 								if (k != 0) {
-									strBuff.append(",");
+									strBuff.append(COMA);
 								}
 								strBuff.append("\"").append(uri.getNodeName()).append("\":\"")
 										.append(uri.getTextContent()).append("\"");
 							}
-							strBuff.append("}");
+							strBuff.append(CLOSE_CURLY);
 						}
 					}
 					strBuff.append("]");
@@ -235,13 +240,13 @@ public class JobStats {
 					for (int j = 0; j < uris.getLength(); j++) {
 						if (uris.item(j).hasChildNodes()) {
 							if (j != 0) {
-								strBuff.append(",");
+								strBuff.append(COMA);
 							}
 							NodeList innerUris = uris.item(j).getChildNodes();
 							for (int k = 0; k < innerUris.getLength(); k++) {
 								Node uri = innerUris.item(k);
 								if (k != 0) {
-									strBuff.append(",");
+									strBuff.append(COMA);
 								}
 								strBuff.append("\"").append(uri.getTextContent()).append("\"");
 							}
@@ -254,9 +259,10 @@ public class JobStats {
 					strBuff.append("\"").append(child.getNodeName()).append("\":\"").append(child.getTextContent())
 							.append("\"");
 				} else {
-					strBuff.append("\"").append(child.getNodeName()).append("\":{");
+					strBuff.append("\"").append(child.getNodeName()).append("\":"
+							+ OPEN_CURLY);
 					strBuff.append(getJson(child));
-					strBuff.append("}");
+					strBuff.append(CLOSE_CURLY);
 				}
 			}
 
@@ -291,13 +297,13 @@ public class JobStats {
 	private String xmlNode(String nodeName, String nodeVal,String defaultNS) {
 		if (nodeVal != null) {
 			StringBuffer strBuff = new StringBuffer();
-			strBuff.append("<").append(nodeName);
+			strBuff.append(LT).append(nodeName);
 			if(defaultNS!=null){
 				strBuff.append(" xmlns='").append(defaultNS).append("' ");
 				
 			}
 			
-			strBuff.append(">").append(nodeVal).append("</").append(nodeName).append(">");
+			strBuff.append(GT).append(nodeVal).append("</").append(nodeName).append(GT);
 			return strBuff.toString();
 		} else {
 			return "";

@@ -22,8 +22,8 @@ import static com.marklogic.developer.corb.Options.BATCH_SIZE;
 import static com.marklogic.developer.corb.Options.COLLECTION_NAME;
 import static com.marklogic.developer.corb.Options.COMMAND_FILE;
 import static com.marklogic.developer.corb.Options.DISK_QUEUE;
-import static com.marklogic.developer.corb.Options.DISK_QUEUE_TEMP_DIR;
 import static com.marklogic.developer.corb.Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE;
+import static com.marklogic.developer.corb.Options.DISK_QUEUE_TEMP_DIR;
 import static com.marklogic.developer.corb.Options.ERROR_FILE_NAME;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_DIR;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
@@ -50,19 +50,14 @@ import static com.marklogic.developer.corb.Options.URIS_LOADER;
 import static com.marklogic.developer.corb.Options.URIS_MODULE;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
 import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
-import com.marklogic.developer.corb.util.FileUtils;
-import com.marklogic.developer.corb.util.NumberUtils;
-import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.stringToBoolean;
-import com.marklogic.xcc.Content;
-import com.marklogic.xcc.ContentCreateOptions;
-import com.marklogic.xcc.ContentFactory;
-import com.marklogic.xcc.Session;
-import com.marklogic.xcc.exceptions.RequestException;
-import com.marklogic.xcc.exceptions.XccConfigException;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -88,10 +83,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import static java.util.logging.Level.INFO;
-import static java.util.logging.Level.SEVERE;
-import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
+
+import com.marklogic.developer.corb.util.FileUtils;
+import com.marklogic.developer.corb.util.NumberUtils;
+import com.marklogic.developer.corb.util.StringUtils;
+import com.marklogic.xcc.Content;
+import com.marklogic.xcc.ContentCreateOptions;
+import com.marklogic.xcc.ContentFactory;
+import com.marklogic.xcc.Session;
+import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.exceptions.XccConfigException;
 
 /**
  * @author Michael Blakeley, MarkLogic Corporation
