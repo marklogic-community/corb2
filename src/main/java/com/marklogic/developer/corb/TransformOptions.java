@@ -35,7 +35,11 @@ public class TransformOptions {
     public static final String COLLECTION_TYPE = "COLLECTION";
     public static final String DIRECTORY_TYPE = "DIRECTORY";
     public static final String QUERY_TYPE = "QUERY";
-
+    public static final String FAILED_URI_TOKEN = "FAILED#";
+    public static final int MAX_NUM_FAILED_TRANSACTIONS = 1000;
+    public static final int MAX_NUM_SLOW_TRANSACTIONS = 100;
+    
+	
     private String processModule;
     private Class<? extends Task> processTaskCls;
 
@@ -79,6 +83,7 @@ public class TransformOptions {
     private String logMetricsToServerDBTransformModule = "save-metric-to-db.xqy|ADHOC";
     private String logMetricsToServerDBCollections = null;
     private Integer numberOfLongRunningUris = 5;
+    private Integer numberOfFailedUris = MAX_NUM_FAILED_TRANSACTIONS;
     
     private String jobName = null;
     
@@ -488,5 +493,19 @@ public class TransformOptions {
 	 */
 	public void setNumberOfLongRunningUris(Integer numberOfLongRunningUris) {
 		this.numberOfLongRunningUris = numberOfLongRunningUris;
+	}
+
+	/**
+	 * @return the numberOfFailedUris
+	 */
+	public Integer getNumberOfFailedUris() {
+		return numberOfFailedUris;
+	}
+
+	/**
+	 * @param numberOfFailedUris the numberOfFailedUris to set
+	 */
+	public void setNumberOfFailedUris(Integer numberOfFailedUris) {
+		this.numberOfFailedUris = numberOfFailedUris;
 	}
 }

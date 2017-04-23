@@ -51,13 +51,17 @@ import java.io.PrintStream;
 import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -97,12 +101,16 @@ public abstract class AbstractManager {
     protected Properties properties = new Properties();
     protected ContentSource contentSource;
     protected Map<String,String> userProvidedOptions = new HashMap<String,String>();
-
+	protected JobStats jobStats = null;
+	protected long startMillis;
+	protected long endMillis;
+	protected transient PausableThreadPoolExecutor pool;//moved from Manager
     protected static final int EXIT_CODE_SUCCESS = 0;
     protected static final int EXIT_CODE_INIT_ERROR = 1;
     protected static final int EXIT_CODE_PROCESSING_ERROR = 2;
     protected static final String SPACE = " ";
-
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");  
+	
     private static final Logger LOG = Logger.getLogger(AbstractManager.class.getName());
 
     public static Properties loadPropertiesFile(String filename) throws IOException {
@@ -323,6 +331,7 @@ public abstract class AbstractManager {
         	retVal = this.properties.getProperty(propName).trim();
             this.properties.remove(propName); //remove from properties file as we would like to keep the properties file simple. 
         }
+    	//doesnt capture defaults, only user provided.
     	if(retVal !=null && !retVal.toUpperCase().contains("XCC") && !propName.toUpperCase().contains("XCC")){
     		this.userProvidedOptions.put(propName, retVal);
     	}
@@ -404,39 +413,46 @@ public abstract class AbstractManager {
 	public void setUserProvidedOptions(Map<String, String> userProvidedOptions) {
 		this.userProvidedOptions = userProvidedOptions;
 	}
-	public void logJobStatsToServer(JobStats jobStats) {
-		logJobStatsToServerDocument(jobStats);
-		logJobStatsToServerLog(jobStats);
+	protected void logJobStatsToServer(String message) {
+		logJobStatsToServerDocument();
+		logJobStatsToServerLog(message,false);
 	}
-	private void logJobStatsToServerLog(JobStats jobStats) {
-		
-		String logMetricsToServerLog=options.getLogMetricsToServerLog();
-		if(logMetricsToServerLog!=null && !logMetricsToServerLog.equalsIgnoreCase("NONE")){
-			Session session = contentSource.newSession();
-			String xquery=XQUERY_VERSION_ML 
-	                + "xdmp:log(\""+jobStats+"\",'"+logMetricsToServerLog.toLowerCase()
-            		+ "')";
-			
-	        AdhocQuery q = session.newAdhocQuery(xquery);	        
-	        try {
-	        	session.submitRequest(q);
-	        } catch (Exception e) {
-	            LOG.log(SEVERE, "logJobStatsToServer request failed", e);
-	            e.printStackTrace();
-	        } finally {
-	            session.close();
-	        }	
-		}      	
-    }
-	private void logJobStatsToServerDocument(JobStats jobStats) {	
+
+	protected void logJobStatsToServerLog(String message, boolean concise) {
+		Session session = null;
 		try {
+			session=contentSource.newSession();
+			this.populateJobStats();
+			String logMetricsToServerLog = options.getLogMetricsToServerLog();
+			if (logMetricsToServerLog != null && !logMetricsToServerLog.equalsIgnoreCase("NONE")) {
+
+				String xquery = XQUERY_VERSION_ML
+						+ ((message != null)
+								? "xdmp:log(\"" + message + "\",'" + logMetricsToServerLog.toLowerCase() + "')," : "")
+						+ "xdmp:log('" + jobStats.toString(concise) + "\','" + logMetricsToServerLog.toLowerCase()
+						+ "')";
+
+				AdhocQuery q = session.newAdhocQuery(xquery);
+
+				session.submitRequest(q);
+			}
+		} catch (Exception e) {
+			LOG.log(SEVERE, "logJobStatsToServer request failed", e);
+			e.printStackTrace();
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+
+	}
+	private void logJobStatsToServerDocument() {	
+		try {
+			this.populateJobStats();
 			String logMetricsToServerDBName=options.getLogMetricsToServerDBName();
 			if(logMetricsToServerDBName !=null){
 				String uriRoot=options.getLogMetricsToServerDBURIRoot();
-				String jobName=options.getJobName();
-				if(jobName!=null){
-					jobStats.setJobName(jobName);
-				}
+				
 				logMetricsToDB(logMetricsToServerDBName,uriRoot,options.getLogMetricsToServerDBCollections(), jobStats,options.getLogMetricsToServerDBTransformModule());
 			}
 		} catch (Exception e) {
@@ -525,5 +541,58 @@ public abstract class AbstractManager {
             Thread.yield();// try to avoid thread starvation
         }
     }
+
+	public JobStats populateJobStats() {
+		try{
+			this.initJobStats();
+			Long taskCount=(pool!=null)?pool.getTaskCount():0l;
+			if(taskCount > 0 ) {
+				this.jobStats.setTopTimeTakingUris((pool!=null)?this.pool.getTopUris():null);
+				List<String> failedUris=(pool!=null)?this.pool.getFailedUris():null;
+				this.jobStats.setFailedUris(failedUris);
+				this.jobStats.setNumberOfFailedTasks((this.pool!=null)?new Long(this.pool.getNumFailedUris()):0l);
+				this.jobStats.setTotalNumberOfTasks(taskCount);
+				this.jobStats.setEndTime(sdf.format(new Date(this.endMillis)));
+				Long totalTime = endMillis - startMillis;
+				this.jobStats.setAverageTransactionTime(new Double(totalTime / new Double(taskCount)));
+			}	
+			
+		}
+		catch(Exception e){
+			LOG.log(INFO,"Unable to populate job stats");
+		}
+		return this.jobStats;
+	}
+
+	private void initJobStats() {
+		if(this.jobStats==null){
+			this.jobStats=new JobStats();
+		
+			String jobName=options.getJobName();
+			if(jobName!=null){
+				jobStats.setJobName(jobName);
+			}
+			String hostname = "Unknown";
+	
+			try
+			{
+			    InetAddress addr;
+			    addr = InetAddress.getLocalHost();
+			    hostname = addr.getHostName();
+			}
+			catch (UnknownHostException ex)
+			{
+				try {
+					hostname = InetAddress.getLoopbackAddress().getHostName();
+				} catch (Exception e) {
+					LOG.log(INFO, "Hostname can not be resolved", e);
+				}
+			}
+			this.jobStats.setHost(hostname);
+			this.jobStats.setJobRunLocation(System.getProperty("user.dir"));
+			this.jobStats.setStartTime(sdf.format(new Date(this.startMillis)));
+			this.jobStats.setUserProvidedOptions(this.getUserProvidedOptions());
+		}
+	}
 
 }

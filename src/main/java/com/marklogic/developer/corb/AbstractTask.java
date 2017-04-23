@@ -61,6 +61,7 @@ import java.util.TimeZone;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
+import static com.marklogic.developer.corb.TransformOptions.FAILED_URI_TOKEN;
 
 /**
  *
@@ -334,7 +335,7 @@ public abstract class AbstractTask implements Task {
         } else {
             LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
             writeToErrorFile(inputUris, requestException.getMessage());
-            Thread.currentThread().setName("FAILED#"+Thread.currentThread().getName());
+            Thread.currentThread().setName(FAILED_URI_TOKEN+Thread.currentThread().getName());
             return inputUris;
         }
     }

@@ -87,7 +87,6 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
@@ -101,12 +100,15 @@ import java.util.logging.Logger;
  */
 public class Manager extends AbstractManager {
 
-    protected static final String NAME = Manager.class.getName();
+    private static final String END_RUNNING_JOB_MESSAGE = "END RUNNING JOB:";
+    private static final String START_RUNNING_JOB_MESSAGE = "START RUNNING JOB:";
+    private static final String LOADED_URIS_JOB_MESSAGE = "LOADED URIS FOR JOB:";
+    
+	protected static final String NAME = Manager.class.getName();
 
     public static final String URIS_BATCH_REF = com.marklogic.developer.corb.Options.URIS_BATCH_REF;
     public static final String DEFAULT_BATCH_URI_DELIM = ";";
 
-    protected transient PausableThreadPoolExecutor pool;
     protected transient Monitor monitor;
     protected transient Thread monitorThread;
     protected transient CompletionService<String[]> completionService;
@@ -120,10 +122,8 @@ public class Manager extends AbstractManager {
 
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
     private static final String TAB = "\t";
-    private final ThreadLocal<Long> startTime = new ThreadLocal<Long>();
-    private Long urisLoadTime = 0l;
-   
-	/**
+
+    /**
      * @param args
      */
     public static void main(String... args) {
@@ -386,7 +386,19 @@ public class Manager extends AbstractManager {
 		}
 		String numberOfLongRunningUris=getOption(Options.METRICS_NUM_SLOW_TRANSACTIONS);
 		if(numberOfLongRunningUris !=null){
-			options.setNumberOfLongRunningUris(Integer.valueOf(numberOfLongRunningUris));
+			int intNumberOfLongRunningUris=Integer.valueOf(numberOfLongRunningUris);
+			if(intNumberOfLongRunningUris> TransformOptions.MAX_NUM_SLOW_TRANSACTIONS){
+				intNumberOfLongRunningUris=TransformOptions.MAX_NUM_SLOW_TRANSACTIONS;
+			}
+			options.setNumberOfLongRunningUris(intNumberOfLongRunningUris);
+		}
+		String numberOfFailedUris=getOption(Options.METRICS_NUM_FAILED_TRANSACTIONS);
+		if(numberOfFailedUris !=null){
+			int intNumFaileTransactions=Integer.valueOf(numberOfFailedUris);
+			if(intNumFaileTransactions > TransformOptions.MAX_NUM_FAILED_TRANSACTIONS){
+				intNumFaileTransactions = TransformOptions.MAX_NUM_FAILED_TRANSACTIONS;
+			}
+			options.setNumberOfFailedUris(intNumFaileTransactions);
 		}
         // delete the export file if it exists
         deleteFileIfExists(exportFileDir, exportFileName);
@@ -514,7 +526,9 @@ public class Manager extends AbstractManager {
     }
 
     public int run() throws Exception {
-        LOG.log(INFO, "{0} starting: {1}", new Object[]{NAME, VERSION_MSG});
+    	startMillis = System.currentTimeMillis();
+    	logJobStatsToServerLog( START_RUNNING_JOB_MESSAGE,true);
+    	LOG.log(INFO, "{0} starting: {1}", new Object[]{NAME, VERSION_MSG});
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
         LOG.log(INFO, "maximum heap size = {0} MiB", maxMemory);
 
@@ -537,6 +551,8 @@ public class Manager extends AbstractManager {
                 runPostBatchTask(); // post batch tasks
                 LOG.info("all done");
             }
+            endMillis=System.currentTimeMillis();
+            logJobStatsToServer(END_RUNNING_JOB_MESSAGE);
             return count;
         } catch (Exception e) {
             LOG.log(SEVERE, e.getMessage());
@@ -553,7 +569,7 @@ public class Manager extends AbstractManager {
         int threads = options.getThreadCount();
         // an array queue should be somewhat lighter-weight
         BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(options.getQueueSize());
-        pool = new PausableThreadPoolExecutor(threads, threads, 16, TimeUnit.SECONDS, workQueue, policy,options.getNumberOfLongRunningUris());
+        pool = new PausableThreadPoolExecutor(threads, threads, 16, TimeUnit.SECONDS, workQueue, policy,options);
         pool.prestartAllCoreThreads();
         completionService = new ExecutorCompletionService<>(pool);
         monitor = new Monitor(pool, completionService, this);
@@ -641,26 +657,38 @@ public class Manager extends AbstractManager {
     private void runInitTask(TaskFactory tf) throws Exception {
         Task initTask = tf.newInitTask();
         if (initTask != null) {
+        	Long startTime=System.nanoTime();
             LOG.info("Running init Task");
             initTask.call();
+            long endTime = System.nanoTime();
+            jobStats.setInitTaskRunTime(TimeUnit.MILLISECONDS.convert(endTime-startTime, TimeUnit.NANOSECONDS));
+           
         }
     }
 
     private void runPreBatchTask(TaskFactory tf) throws Exception {
+    	
         Task preTask = tf.newPreBatchTask();
         if (preTask != null) {
-            LOG.info("Running pre batch Task");
+        	long startTime = System.nanoTime();
+        	
+        	LOG.info("Running pre batch Task");
             preTask.call();
-        }
+            long endTime=System.nanoTime();
+            this.jobStats.setPreBatchRunTime(TimeUnit.MILLISECONDS.convert(endTime-startTime, TimeUnit.NANOSECONDS));
+        }        
     }
 
     private void runPostBatchTask() throws Exception {
-        TaskFactory tf = new TaskFactory(this);
+    	TaskFactory tf = new TaskFactory(this);
         Task postTask = tf.newPostBatchTask();
         if (postTask != null) {
+        	long startTime = System.nanoTime();
             LOG.info("Running post batch Task");
             postTask.call();
-        }
+            long endTime=System.nanoTime();
+            this.jobStats.setPostBatchRunTime(TimeUnit.MILLISECONDS.convert(endTime-startTime, TimeUnit.NANOSECONDS));
+        }        
     }
 
     private UrisLoader getUriLoader() throws InstantiationException, IllegalAccessException {
@@ -685,13 +713,13 @@ public class Manager extends AbstractManager {
     private int populateQueue() throws Exception {
         LOG.info("populating queue");
         TaskFactory taskFactory = new TaskFactory(this);
-
+        Long startTime=System.nanoTime();
         int expectedTotalCount = -1;
         int urisCount = 0;
         try (UrisLoader urisLoader = getUriLoader()) {
             // run init task
             runInitTask(taskFactory);
-            startTime.set(System.nanoTime());
+            startTime=System.nanoTime();
             urisLoader.open();
             if (urisLoader.getBatchRef() != null) {
                 properties.put(URIS_BATCH_REF, urisLoader.getBatchRef());
@@ -699,13 +727,16 @@ public class Manager extends AbstractManager {
             }
 
             expectedTotalCount = urisLoader.getTotalCount();
-            long endTime = System.nanoTime();
-            urisLoadTime = endTime - startTime.get();
+            Long endTime = System.nanoTime();
+            jobStats.setUrisLoadTime(TimeUnit.MILLISECONDS.convert(endTime-startTime, TimeUnit.NANOSECONDS));
             LOG.log(INFO, "expecting total {0}", expectedTotalCount);
             if (expectedTotalCount <= 0) {
                 LOG.info("nothing to process");
                 stop();
                 return 0;
+            }
+            else{
+            	logJobStatsToServerLog( LOADED_URIS_JOB_MESSAGE,true);
             }
 
             // run pre-batch task, if present.
@@ -832,6 +863,8 @@ public class Manager extends AbstractManager {
     public void stop() {
         LOG.info("cleaning up");
         if (null != pool) {
+        	populateJobStats();
+        	logJobStatsToServer(END_RUNNING_JOB_MESSAGE);
             if (pool.isPaused()) {
                 pool.resume();
             }
@@ -941,8 +974,5 @@ public class Manager extends AbstractManager {
             }
         }
     }
-    public Long getUrisLoadTime() {
-		return urisLoadTime;
-	}
 
 }
