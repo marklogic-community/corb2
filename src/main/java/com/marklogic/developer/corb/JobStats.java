@@ -19,6 +19,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 public class JobStats {
+	private static final String CLOSE_SQUARE = "]";
 	private static final String GT = ">";
 	private static final String LT = "<";
 	private static final String OPEN_CURLY = "{";
@@ -233,7 +234,7 @@ public class JobStats {
 							strBuff.append(CLOSE_CURLY);
 						}
 					}
-					strBuff.append("]");
+					strBuff.append(CLOSE_SQUARE);
 				} else if (child.getNodeName().equals(FAILED_URIS)) {
 					strBuff.append("\"").append(child.getNodeName()).append("\":[");
 					NodeList uris = child.getChildNodes();
@@ -253,7 +254,7 @@ public class JobStats {
 							
 						}
 					}
-					strBuff.append("]");
+					strBuff.append(CLOSE_SQUARE);
 				}
 				else if (child.hasChildNodes() && child.getFirstChild().getNodeType() == Node.TEXT_NODE) {
 					strBuff.append("\"").append(child.getNodeName()).append("\":\"").append(child.getTextContent())
