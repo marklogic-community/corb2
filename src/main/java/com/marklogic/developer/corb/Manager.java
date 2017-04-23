@@ -551,10 +551,10 @@ public class Manager extends AbstractManager {
             }
             if (!execError && count > 0) {
                 runPostBatchTask(); // post batch tasks
+                endMillis=System.currentTimeMillis();
+                logJobStatsToServer(END_RUNNING_JOB_MESSAGE);
                 LOG.info("all done");
             }
-            endMillis=System.currentTimeMillis();
-            logJobStatsToServer(END_RUNNING_JOB_MESSAGE);
             return count;
         } catch (Exception e) {
             LOG.log(SEVERE, e.getMessage());
@@ -865,8 +865,8 @@ public class Manager extends AbstractManager {
     public void stop() {
         LOG.info("cleaning up");
         if (null != pool) {
-        	populateJobStats();
-        	logJobStatsToServer(END_RUNNING_JOB_MESSAGE);
+        	endMillis=System.currentTimeMillis();
+            logJobStatsToServer(END_RUNNING_JOB_MESSAGE);
             if (pool.isPaused()) {
                 pool.resume();
             }
