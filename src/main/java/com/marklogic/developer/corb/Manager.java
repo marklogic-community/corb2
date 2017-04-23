@@ -552,7 +552,7 @@ public class Manager extends AbstractManager {
             if (!execError && count > 0) {
                 runPostBatchTask(); // post batch tasks
                 endMillis=System.currentTimeMillis();
-                logJobStatsToServer(END_RUNNING_JOB_MESSAGE);
+                logJobStatsToServer(END_RUNNING_JOB_MESSAGE);//Log metrics to DB, Java console and Server error log
                 LOG.info("all done");
             }
             return count;

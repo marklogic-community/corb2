@@ -922,12 +922,12 @@ public final class Options {
     public static final String XML_NODE = "XML-NODE";
     /**
      * NONE,INFO,DEBUG,...
-     * Boolean value indicating whether the CoRB job should log metrics to ML Server Error Log.
+     * String value indicating the log level using which the CoRB job should log metrics to ML Server Error Log.
      * Default value is NONE. 
      *
      * @since 2.4
      */
-    @Usage(description = "LOG Level  the CoRB job should log metrics to ML Server Error Log."
+    @Usage(description = "LOG Level the CoRB job should log metrics to ML Server Error Log."
             +"Possible values are "+ML_LOG_LEVELS
     		+ "Default value is none( which means metrics are not logged ).")
     public static final String METRICS_TO_ERROR_LOG = "METRICS-TO-ERROR-LOG";
@@ -938,16 +938,16 @@ public final class Options {
     @Usage(description = " Uses the value provided to save the metrics document to the specified Database.")
     public static final String METRICS_DB_NAME = "METRICS-DB-NAME";
     /**
-     * Uses the value provided to as the URI Root for saving the metrics document. 
-     * Default value is "/ServiceMetrics/corb/"
-     * If {@value #METRICS_DB_NAME} is not specified then {@value #METRICS_DOC_BASE_DIR} is ignored.
+     * Uses the value provided as the URI Root for saving the metrics document. 
+     * Default value is "/ServiceMetrics/"
+     * If {@value #METRICS-DB-NAME} is not specified then {@value #METRICS-DOC-BASE-DIR} is ignored.
      */
-    @Usage(description = "Uses the value provided to as the URI Root for saving the metrics document.")
+    @Usage(description = "Uses the value provided as the URI Root for saving the metrics document.")
     public static final String METRICS_DOC_BASE_DIR = "METRICS-DOC-BASE-DIR";
     /**
      * Adds the metrics document to the specified collection. 
-     * If {@value #JOB_NAME} is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.
-     * If {@value #METRICS_DB_NAME} is not specified then {@value #METRICS_DOC_COLLECTIONS} is ignored.
+     * If {@value #JOB-NAME} is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.
+     * If {@value #METRICS-DB-NAME} is not specified then {@value #METRICS-DOC-COLLECTIONS} is ignored.
      */
     @Usage(description = "Adds the metrics document to the specified collection.")
     public static final String METRICS_DOC_COLLECTIONS = "METRICS-DOC-COLLECTIONS";
@@ -958,7 +958,7 @@ public final class Options {
      * The default value is save-metric-to-db.xqy and it saves the metrics document as XML to the specified DB.
      * You can use these modules as a template to customize the the document can be saved to the DB.
      * XQuery and JavaScript modules need to have "{@code .xqy}" and "{@code .sjs}" extensions respectively.
-     * If {@value #METRICS_DB_NAME} is not specified then {@value #METRICS_PROCESS_MODULE} is ignored.
+     * If {@value #METRICS-DB-NAME} is not specified then {@value #METRICS-PROCESS-MODULE} is ignored.
      */
     @Usage(description = "XQuery or JavaScript to be executed at the end of the Corb Job to save the metrics document to the Database."
             + "There is an XQuery module (save-metric-to-db.xqy) and a JavaScript module (saveMetrics.sjs) provided with CoRB2 Distribution."
@@ -969,7 +969,7 @@ public final class Options {
     public static final String METRICS_PROCESS_MODULE = "METRICS-PROCESS-MODULE";
     /**
      * Name of the current Job. 
-     * If {@value #JOB_NAME} is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.  
+     * If {@value #JOB-NAME} is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.  
      */
     @Usage(description = "Name of the current Job.")
     public static final String JOB_NAME = "JOB-NAME";
@@ -977,12 +977,14 @@ public final class Options {
      * Maximum number of failed transaction to be logged in the metrics. 
      * The default value is 1000.
      */
-    @Usage(description = "Adds the metrics document to the specified collection.")
-  
+    @Usage(description = "Maximum number of failed transaction to be logged in the metrics. The default value is 1000.")
     public static final String METRICS_NUM_FAILED_TRANSACTIONS = "METRICS-NUM-FAILED-TRANSACTIONS";
     
-    //zero 
-    //how much is MAX NUMBER
+    /**
+     * Maximum number of Slow transaction to be logged in the metrics. 
+     * The default value is 5.
+     */
+    @Usage(description = "Maximum number of slow transaction to be logged in the metrics. The default value is 5.")
     public static final String METRICS_NUM_SLOW_TRANSACTIONS = "METRICS-NUM-SLOW-TRANSACTIONS";
     
     /**
