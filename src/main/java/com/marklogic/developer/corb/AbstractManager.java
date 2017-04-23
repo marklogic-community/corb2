@@ -409,6 +409,7 @@ public abstract class AbstractManager {
 	protected void logJobStatsToServer(String message) {
 		logJobStatsToServerDocument();
 		logJobStatsToServerLog(message,false);
+		LOG.info(jobStats.toString(false));
 	}
 
 	protected void logJobStatsToServerLog(String message, boolean concise) {
