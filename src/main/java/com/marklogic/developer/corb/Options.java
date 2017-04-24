@@ -971,7 +971,7 @@ public final class Options {
      * Name of the current Job. 
      * If {@value #JOB-NAME} is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.  
      */
-    @Usage(description = "Name of the current Job.")
+    @Usage(description = "Name of the current Job. If it is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.")
     public static final String JOB_NAME = "JOB-NAME";
     /**
      * Maximum number of failed transaction to be logged in the metrics. 
