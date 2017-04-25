@@ -19,8 +19,7 @@ Default format for metrics document is XML.
 
 |Sample JSON|
 |--------|
-| 
-{
+|{
 "job":
 {
     "name": "TestJob",
@@ -55,5 +54,4 @@ Default format for metrics document is XML.
     }
     ]
   }
-}
-|
+}|
