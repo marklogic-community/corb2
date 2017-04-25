@@ -11,8 +11,8 @@ Default format for metrics document is XML.
 * How can I customize the document that gets saved to the Database?
 >>CoRB2 distribution has two sample modules
     * save-metric-to-db.xqy 
-    >>* This is the default and saves the merics document as XML Document.
+    * This is the default and saves the merics document as XML Document.
     * saveMetrics2.sjs
-    >>* This will save the merics document as a JSON Document.
+    * This will save the merics document as a JSON Document.
 >> When METRICS_PROCESS_MODULE is set to an xquery or javascript module, that module is executed after the CoRB completes to save the metrics document.
 >> To save the document as JSON set the property to the sample sjs file. Ex:METRICS-PROCESS-MODULE=/saveMetrics2.sjs
