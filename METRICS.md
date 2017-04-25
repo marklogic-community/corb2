@@ -16,8 +16,9 @@ Default format for metrics document is XML.
         *   This will save the merics document as a JSON Document.
 >> When METRICS_PROCESS_MODULE is set to an xquery or javascript module, that module is executed after the CoRB completes to save the metrics document.
 >> To save the document as JSON set the property to the sample sjs file. Ex:METRICS-PROCESS-MODULE=/saveMetrics2.sjs
-* |Sample JSON|
---------|
+
+|Sample JSON|
+|--------|
 |```javascript 
 {
 "job":
