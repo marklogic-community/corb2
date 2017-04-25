@@ -19,7 +19,7 @@ Default format for metrics document is XML.
 
 |Sample JSON|
 |--------|
-|```javascript 
+| 
 {
 "job":
 {
