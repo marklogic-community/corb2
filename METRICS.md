@@ -7,25 +7,12 @@
 If none then metrics will not be logged.
 * How to save the metrics as a Document in the database?
 >>METRICS-DB-NAME property will be used to save the mertrics document to the database.
-```javascript 
-{
-"job":
-{
-"runLocation": "/home/vsaradhi/workspace/corb2",
-"userProvidedOptions":
-{
-PROCESS-MODULE": "src/test/resources/transform.xqy|ADHOC",
-"METRICS-DB-NAME": "Documents",
-"URIS-FILE": "src/test/resources/test-file-1.txt"
-}
-,
-"StartTime": "2017-04-23T19:01:10Z",
-"endTime": "2017-04-23T19:01:10Z",
-"host": "localhost",
-"totalNumberOfTasks": "1",
-"averageTransactionTimeInMillis": "117.0",
-"urisLoadTimeInMillis": "2",
-"preBatchRunTimeInMillis": "16",
-"postBatchRunTimeInMillis": "5"
-}
-}```
+Default format for metrics document is XML.
+* How can I customize the document that gets saved to the Database?
+>>CoRB2 distribution has two sample modules
+    * save-metric-to-db.xqy 
+    >>* This is the default and saves the merics document as XML Document.
+    * saveMetrics2.sjs
+    >>* This will save the merics document as a JSON Document.
+>> When METRICS_PROCESS_MODULE is set to an xquery or javascript module, that module is executed after the CoRB completes to save the metrics document.
+>> To save the document as JSON set the property to the sample sjs file. Ex:METRICS-PROCESS-MODULE=/saveMetrics2.sjs
