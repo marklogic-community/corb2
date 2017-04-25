@@ -151,6 +151,14 @@ Option | Description
 **XCC-TIME-ZONE** | The ID for the TimeZone that should be set on XCC RequestOption. When a value is specified, it is parsed using [`TimeZone.getTimeZone()`](https://docs.oracle.com/javase/8/docs/api/java/util/TimeZone.html#getTimeZone-java.lang.String-) and set on XCC RequestOption for each Task. Invalid ID values will produce the GMT TimeZone. If not specified, XCC uses the JVM default TimeZone.
 **XML-FILE** | In order to use this option a class `com.marklogic.developer.corb.FileUrisXMLLoader` has to be specified in the **URIS-LOADER** option. If defined instead of **URIS-MODULE**, XML nodes will be used as URIs from the file located on the client. The file path may be relative or absolute. Default processing will select all of the child elements of the document element (i.e. `/*/*`). The **XML-NODE** option can be specified with an XPath to address a different set of nodes.
 **XML-NODE** | An XPath to address the nodes to be returned in an **XML-FILE** by the `com.marklogic.developer.corb.FileUrisXMLLoader`. For example, a file containing a list of nodes wrapped by a parent element can be used as a **XML-FILE** and the **PROCESS-MODULE** can unquote the URI string as node to do further processing with the node. If not specified, the default behavior is to select the child elements of the document element (i.e. `/*/*`)
+**METRICS_DB_NAME** | Uses the value provided to save the metrics document to the specified Database.|
+**METRICS_DOC_BASE_DIR** | Uses the value provided to as the URI Root for saving the metrics document.|
+**METRICS_DOC_COLLECTIONS** | Adds the metrics document to the specified collection.|
+**METRICS_PROCESS_MODULE** | XQuery or JavaScript to be executed at the end of the Corb Job to save the metrics document to the Database.There is an XQuery module (save-metric-to-db.xqy) and a JavaScript module (saveMetrics.sjs) provided with CoRB2 Distribution.You can use these modules as a template to customize the the document can be saved to the DB.XQuery and JavaScript modules need to have '{@code .xqy}' and{@code .sjs} extensions respectively.|
+**JOB_NAME** | Name of the current Job.|
+**METRICS_NUM_FAILED_TRANSACTIONS** | Adds the metrics document to the specified collection.|
+
+
 
 ### Alternate XCC connection configuration
 Option | Description
@@ -471,6 +479,7 @@ PROCESS-MODULE=transform.sjs
 URIS-MODULE=get-uris.sjs|ADHOC  
 PROCESS-MODULE=extract.sjs|ADHOC
 ```
+CoRB now supports[Logging Job Metrics](https://github.com/vjsaradhi/corb2/edit/feature/LOG-METRICS/METRICS.md)  back to the Database.
 
 ### ModuleExecutor Tool
 
