@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  * Compiles an XPath expression into a regex pattern that is used to evaluate
  * matches for an XPath. To be used by a streaming parser, such as SAX or StAX,
  * in order to evaluate a limited subset of XPath expressions for selection of nodes.
- * 
+ *
  * @author Mads Hansen, MarkLogic Corporation
  * @since 2.4.0
  */
@@ -45,7 +45,7 @@ public class StreamingXPath {
         String regex = parseXPathToRegex("/*/*");
         regexPath = Pattern.compile(regex);
     }
-    
+
     public StreamingXPath(String xpath) throws CorbException {
         String regex = parseXPathToRegex(xpath);
         regexPath = Pattern.compile(regex);
@@ -73,9 +73,9 @@ public class StreamingXPath {
     }
 
     /**
-     * Ensure that non-streamable axes are not used. 
-     * 
-     * TODO: allow in predicates, since we ignore them? Or throw errors for predicates as well?
+     * Ensure that non-streamable axes are not used.
+     *
+     * TODO: allow predicates, since we ignore them? Or throw errors for predicates as well?
      *
      * @param axis
      * @throws com.marklogic.developer.corb.CorbException
@@ -113,7 +113,7 @@ public class StreamingXPath {
             if (path != null) {
                 if (pathIndex == 0 && normalizedXPath.startsWith(SLASH)) {
                     regex
-                        .append('^') //anchor to the begining of the string
+                        .append('^') //anchor to the beginning of the string
                         .append(SLASH); // absolute XPath starting from the root node
                 } else {
                     //TODO namespace support with Option.XML_PATH_NAMESPACES=ns1,http://some/uri,ns2,http://other/uri,ns2,http://asdf and QNames in generated XPaths?
@@ -126,8 +126,7 @@ public class StreamingXPath {
                     if (step.isEmpty()) {
                         //when "//" descendant XPath is used, everything is optional for this step
                         regex
-                            .append("[^/]*")
-                            .append("/?");
+                            .append("[^/]*/?");
                     } else {
                         regex
                             .append(step)
