@@ -16,7 +16,7 @@ plugins {
 }
 
 ext {
-    externalsortinginjavaVersion = '0.2.2'
+    externalsortinginjavaVersion = '0.2.3'
 
   // we don't need a REST server, only an XCC server
     mlAppDeployer.getCommands().remove(mlAppDeployer.getCommand('DeployRestApiServersCommand'))
