@@ -20,7 +20,7 @@
 * **How can I set the log level when logging metrics to the Marklogic error log?**
     * METRICS-TO-ERROR-LOG property has the following possible values:
       +  *none,emergency,alert,critical,error,warning,notice,info,config,debug,fine,finer,finest.*
-      + If none then metrics will not be logged.
+      + Default value is none ( which means the metrics will not be logged to the error log).
 * **How can I save the metrics as a Document to the database?**
     * METRICS-DB-NAME property will be used to save the mertrics document to the database.
     * Default format for metrics document is XML.
@@ -34,8 +34,9 @@
         + This will save the merics document as a **JSON Document**.
         + Ex:METRICS-PROCESS-MODULE=saveMetrics.sjs|ADHOC
 * **Can I add the metrics document to a Collection?**
-    * By default the metrics document is added to a Collection with the Job Name ( or the Job run location if name is not provided )
-    * METRICS-DOC-COLLECTIONS option takes a comma seperated collection names and the document is saved to those collections.
+    + A comma seperated collection names can be assigned to METRICS-DOC-COLLECTIONS option and the document is saved to those collections.
+    + By default the metrics document is added to a Collection with the Job Name (or the Job run location if name is not provided).
+    
 * **Can I change the URI to which the metrics document is saved?**
     * By default the URI format is /METRICS-DOC-BASE-DIR/CoRB2/JOB-NAME/YEAR/MONTH/DATE/HOUR/MINUTE/RANDOM-NUMBER.(json or xml)
     * METRICS-DOC-BASE-DIR has a default value of /ServiceMetrics/
