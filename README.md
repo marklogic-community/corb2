@@ -92,7 +92,7 @@ If specified in more than one place, a command line parameter takes precedence o
 
 > Note: CoRB exit codes `0` - successful, `0` - nothing to process (ref: EXIT-CODE-NO-URIS), `1` - initialization or connection error and `2` - execution error
 
-> Note: CoRB now supports [Logging Job Metrics](METRICS.md) back to the Database.
+> Note: CoRB now supports [Logging Job Metrics](METRICS.md) back to the MarkLogic database log and/or as document in the database.
 
 ### Options
 Option | Description
