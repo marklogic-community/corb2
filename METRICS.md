@@ -3,7 +3,7 @@
 * **How can I log the job metrics to the Marklogic error log?**
     * Logging can be enabled by setting METRICS_TO_ERROR_LOG property in options.
         + Ex: **METRICS-TO-ERROR_LOG=info**
-        + info messages are logged when CoRB job startsup and detailed metrics are logged when the job finishes.
+        + Startup message is logged when CoRB job startsup and detailed metrics are logged when the job finishes.
 * **What kind of details are logged?**
     * User provided options ( not the default options )
     * Host Name
@@ -15,7 +15,7 @@
     * Average transaction time
     * Total tasks 
     * Number of failed tasks
- * **Are connection strings logged to the error log? 
+ * **Are connection strings or passwords logged to the error log?**
     * No. 
 * **How can I set the log level when logging metrics to the Marklogic error log?**
     * METRICS-TO-ERROR-LOG property has the following possible values:
@@ -32,15 +32,15 @@
     + saveMetrics.sjs
         + This will save the merics document as a JSON Document.
         + Ex:METRICS-PROCESS-MODULE=saveMetrics.sjs|ADHOC
-* **Can I add the metrics document to a Collection?
+* **Can I add the metrics document to a Collection?**
     * The metrics document is added to a Collection with the Job Name ( or the Job run location if name is not provided )
     * METRICS-DOC-COLLECTIONS option takes a comma seperated collection names.
 * **Can I change the URI to which the metrics document is saved?**
-    * By default the URI format is /<METRICS_DOC_BASE_DIR>/CoRB2/<JOB-NAME>/<YEAR>/<MONTH>/<DATE>/<HOUR>/<MINUTE>/<RANDOM>.json/xml
+    * By default the URI format is /METRICS_DOC_BASE_DIR/CoRB2/JOB-NAME/YEAR/MONTH/DATE/HOUR/MINUTE/RANDOM-NUMBER.(json or xml)
     * METRICS_DOC_BASE_DIR has a default value of /ServiceMetrics/
     * JOB-NAME defaults to the job run location
      
-* **I want to have complete control over how the metrics document is saved. Is that possible?
+* **I want to have complete control over how the metrics document is saved. Is that possible?**
     * You can use the above mentioned sample modules (*saveMetrics.sjs and save-metric-to-db.xqy*) as an example and implement your own customizations.
     + Ex:METRICS-PROCESS-MODULE=/export/home/dev/saveMetricsCustom.sjs|ADHOC
 
