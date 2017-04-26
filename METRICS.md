@@ -29,9 +29,9 @@
    * When METRICS-PROCESS-MODULE option is set to an xquery or javascript module, that module is executed after the CoRB job completes to save the metrics document.
    * CoRB2 distribution comes with two sample modules that can be found in the resources folder.
     + save-metric-to-db.xqy 
-        + This is the default and saves the merics document as XML Document.
+        + This is the default and saves the metrics document as XML Document.
     + saveMetrics.sjs
-        + This will save the merics document as a **JSON Document**.
+        + This will save the metrics document as a **JSON Document**.
         + Ex:METRICS-PROCESS-MODULE=saveMetrics.sjs|ADHOC
 * **Can I add the metrics document to a Collection?**
     + A comma seperated collection names can be assigned to METRICS-DOC-COLLECTIONS option and the document is saved to those collections.
