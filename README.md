@@ -92,6 +92,8 @@ If specified in more than one place, a command line parameter takes precedence o
 
 > Note: CoRB exit codes `0` - successful, `0` - nothing to process (ref: EXIT-CODE-NO-URIS), `1` - initialization or connection error and `2` - execution error
 
+> Note: CoRB now supports [Logging Job Metrics](METRICS.md) back to the Database.
+
 ### Options
 Option | Description
 ---|---
@@ -480,7 +482,6 @@ PROCESS-MODULE=transform.sjs
 URIS-MODULE=get-uris.sjs|ADHOC  
 PROCESS-MODULE=extract.sjs|ADHOC
 ```
-CoRB now supports [Logging Job Metrics](METRICS.md) back to the Database.
 
 ### ModuleExecutor Tool
 
