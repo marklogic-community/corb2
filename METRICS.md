@@ -24,7 +24,7 @@
 * **How can I save the metrics as a Document to the database?**
     * METRICS-DB-NAME property will be used to save the mertrics document to the database.
     * Default format for metrics document is XML.
-    * METRICS-DB-NAME is the only required for the document to be saved to the database. If this option is not specified the document will not be saved to the Database.
+    * METRICS-DB-NAME is the only required option for the document to be saved to the database. If this option is not specified the document will not be saved to the Database.
 * **How can I save metrics document in JSON format?**
    * When METRICS-PROCESS-MODULE option is set to an xquery or javascript module, that module is executed after the CoRB job completes to save the metrics document.
    * CoRB2 distribution comes with two sample modules that can be found in the resources folder.
