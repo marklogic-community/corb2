@@ -1,7 +1,7 @@
 # CoRB Metrics FAQ
 
 * **How can I log the job metrics to the Marklogic error log?**
-    * Logging can be enabled by setting METRICS_TO_ERROR-LOG property in options.
+    * Logging can be enabled by setting METRICS-TO-ERROR-LOG property in options.
         + Ex: **METRICS-TO-ERROR-LOG=info**
         + Startup message is logged when CoRB job startsup and detailed metrics are logged when the job finishes.
 * **What kind of details are logged?**
@@ -36,7 +36,7 @@
     * The metrics document is added to a Collection with the Job Name ( or the Job run location if name is not provided )
     * METRICS-DOC-COLLECTIONS option takes a comma seperated collection names.
 * **Can I change the URI to which the metrics document is saved?**
-    * By default the URI format is /METRICS_DOC_BASE_DIR/CoRB2/JOB-NAME/YEAR/MONTH/DATE/HOUR/MINUTE/RANDOM-NUMBER.(json or xml)
+    * By default the URI format is /METRICS-DOC-BASE-DIR/CoRB2/JOB-NAME/YEAR/MONTH/DATE/HOUR/MINUTE/RANDOM-NUMBER.(json or xml)
     * METRICS-DOC-BASE-DIR has a default value of /ServiceMetrics/
     * JOB-NAME defaults to the job run location
      
@@ -55,7 +55,7 @@
         "METRICS-TO-ERROR-LOG" : "info",
         "METRICS-DB-NAME" : "Documents",
         "METRICS-NUM-FAILED-TRANSACTIONS" : "2",
-        METRICS-NUM-SLOW-TRANSACTIONS" : "4",
+        "METRICS-NUM-SLOW-TRANSACTIONS" : "4",
         "METRICS-DOC-COLLECTIONS" : "COLLECTION",
         "MODULE-ROOT" : "/",
         "URIS-FILE" : "test-file-1.txt"
