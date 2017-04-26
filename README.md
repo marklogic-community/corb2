@@ -480,7 +480,7 @@ PROCESS-MODULE=transform.sjs
 URIS-MODULE=get-uris.sjs|ADHOC  
 PROCESS-MODULE=extract.sjs|ADHOC
 ```
-CoRB now supports [Logging Job Metrics](https://github.com/vjsaradhi/corb2/edit/feature/LOG-METRICS/METRICS.md) back to the Database.
+CoRB now supports [Logging Job Metrics](METRICS.md) back to the Database.
 
 ### ModuleExecutor Tool
 
