@@ -4,6 +4,10 @@
     * Logging can be enabled by setting METRICS-TO-ERROR-LOG property in options.
         + Ex: **METRICS-TO-ERROR-LOG=info**
         + Startup message is logged when CoRB job startsup and detailed metrics are logged when the job finishes.
+* **How can I set the log level when logging metrics to the Marklogic error log?**
+    * METRICS-TO-ERROR-LOG property has the following possible values:
+      +  *none,emergency,alert,critical,error,warning,notice,info,config,debug,fine,finer,finest.*
+      + Default value is none ( which means the metrics will not be logged to the error log).
 * **What kind of details are logged?**
     * User provided options ( not the default options )
     * Host Name
@@ -17,20 +21,18 @@
     * Total Number of failed tasks
  * **Are connection strings or passwords logged to the error log?**
     * No. 
-* **How can I set the log level when logging metrics to the Marklogic error log?**
-    * METRICS-TO-ERROR-LOG property has the following possible values:
-      +  *none,emergency,alert,critical,error,warning,notice,info,config,debug,fine,finer,finest.*
-      + Default value is none ( which means the metrics will not be logged to the error log).
 * **How can I save the metrics as a Document to the database?**
     * METRICS-DB-NAME property will be used to save the mertrics document to the database.
     * Default format for metrics document is XML.
     * METRICS-DB-NAME is the only required option for the document to be saved to the database. If this option is not specified the document will not be saved to the Database.
+* **Setting the METRICS-DB-NAME option also log it to the server log?**
+    * No. METRICS-TO-ERROR-LOG option needs to be selected for CoRB to log to server log.
 * **How can I save metrics document in JSON format?**
    * When METRICS-PROCESS-MODULE option is set to an xquery or javascript module, that module is executed after the CoRB job completes to save the metrics document.
    * CoRB2 distribution comes with two sample modules that can be found in the resources folder.
-    + save-metric-to-db.xqy 
+    + [save-metric-to-db.xqy](corb2/src/main/resources/save-metric-to-db.xqy)
         + This is the default and saves the metrics document as XML Document.
-    + saveMetrics.sjs
+    + [saveMetrics.sjs](corb2/src/main/resources/saveMetrics.sjs)
         + This will save the metrics document as a **JSON Document**.
         + Ex:METRICS-PROCESS-MODULE=saveMetrics.sjs|ADHOC
 * **Can I add the metrics document to a Collection?**
@@ -43,7 +45,7 @@
     * JOB-NAME defaults to the job run location
      
 * **I want to have complete control over how the metrics document is saved. Is that possible?**
-    * You can use the above mentioned sample modules (*saveMetrics.sjs and save-metric-to-db.xqy*) as an example and implement your own customizations.
+    * You can use the above mentioned sample modules (*[saveMetrics.sjs](corb2/src/main/resources/saveMetrics.sjs) and [save-metric-to-db.xqy](corb2/src/main/resources/save-metric-to-db.xqy)*) as an example and implement your own customizations.
     + Ex:METRICS-PROCESS-MODULE=/export/home/dev/saveMetricsCustom.sjs|ADHOC
 
 ### Sample Metrics Document
