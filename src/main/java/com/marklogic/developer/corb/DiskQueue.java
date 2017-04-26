@@ -19,6 +19,7 @@
   * * Code adapted from Bixio DiskQueue
   * * https://github.com/bixo/bixo/blob/master/src/main/java/bixo/utils/DiskQueue.java
   * * Original work Copyright 2009-2015 Scale Unlimited
+  * * Modifications copyright (c) 2016 MarkLogic Corporation
   *
  */
 package com.marklogic.developer.corb;
@@ -57,7 +58,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
 
     public static final float DEFAULT_REFILL_RATIO = 0.75f;
 
-    // The memoryQueue represents the head of the queue. It can also be the tail, 
+    // The memoryQueue represents the head of the queue. It can also be the tail,
     // if nothing has spilled over onto the disk.
     private MemoryQueue<E> memoryQueue;
 
@@ -72,8 +73,8 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
     private BufferedWriter fileOut;
     private BufferedReader fileIn;
 
-    // When moving elements from disk to memory, we don't know whether the memory 
-    // queue has space until the offer is rejected. So rather than trying to push 
+    // When moving elements from disk to memory, we don't know whether the memory
+    // queue has space until the offer is rejected. So rather than trying to push
     // back an element into the file, just cache it in cachedElement.
     private String cachedElement;
     private File fileQueue;
@@ -104,7 +105,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
         if (tempDir != null && !(tempDir.exists() && tempDir.isDirectory() && tempDir.canWrite())) {
             throw new InvalidParameterException(DiskQueue.class.getSimpleName() + " temporary directory must exist and be writable");
         }
-        
+
         this.tempDir = tempDir;
         memoryQueue = new MemoryQueue<E>(maxInMemorySize);
         refillMemoryRatio = DEFAULT_REFILL_RATIO;
@@ -112,7 +113,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
 
     /* (non-Javadoc)
      * @see java.lang.Object#finalize()
-     * 
+     *
      * Close down streams, and toss the temp file.
      */
     @Override
@@ -214,7 +215,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
 
     /* (non-Javadoc)
      * @see java.util.AbstractQueue#clear()
-     * 
+     *
      * Implement faster clear (so AbstractQueue doesn't call poll() repeatedly)
      */
     @Override
@@ -238,7 +239,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
         // Now see if we have anything on disk
         if (fileQueue != null) {
             try {
-                // Since we buffer writes, we need to make sure everything has 
+                // Since we buffer writes, we need to make sure everything has
                 // been written before we start reading.
                 fileOut.flush();
 
