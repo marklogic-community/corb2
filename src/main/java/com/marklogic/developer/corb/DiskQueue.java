@@ -19,6 +19,7 @@
   * * Code adapted from Bixio DiskQueue
   * * https://github.com/bixo/bixo/blob/master/src/main/java/bixo/utils/DiskQueue.java
   * * Original work Copyright 2009-2015 Scale Unlimited
+  * * Modifications copyright (c) 2016 MarkLogic Corporation
   *
  */
 package com.marklogic.developer.corb;
