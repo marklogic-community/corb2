@@ -72,12 +72,7 @@ import com.marklogic.xcc.types.XdmItem;
  */
 public abstract class AbstractTask implements Task {
 
-    @Override
-	public String toString() {
-		return "URIS: "+Arrays.toString(inputUris);//This is used to report Metrics
-	}
-
-	private static final Object ERROR_SYNC_OBJ = new Object();
+ 	private static final Object ERROR_SYNC_OBJ = new Object();
 
     protected static final String TRUE = "true";
     protected static final String FALSE = "false";
