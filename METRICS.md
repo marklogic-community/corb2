@@ -14,7 +14,7 @@
     * Job run location 
     * Time taken for each of the stages of the CoRB job, i.e, INIT-MODULE, URIS-MODULE, PRE-BATCH-MODULE, PROCESS-MODULE, POST-BATCH-MODULE
     * Failed transactions ( first 1000 failures)
-    * Slow transactions ( top 5 up to 1000, sorted by the slowest )
+    * Slow transactions ( top 5 up to 100, sorted by the slowest )
     * Start and end times
     * Average transaction time
     * Total tasks 
