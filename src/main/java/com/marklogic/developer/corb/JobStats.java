@@ -38,6 +38,7 @@ public class JobStats {
 	private static final String AVERAGE_TRANSACTION_TIME = "averageTransactionTimeInMillis";
 	private static final String TOTAL_NUMBER_OF_TASKS = "totalNumberOfTasks";
 	private static final String NUMBER_OF_FAILED_TASKS = "numberOfFailedTasks";
+	private static final String NUMBER_OF_SUCCEEDED_TASKS = "numberOfSucceededTasks";
 	
 	private static final String HOST = "host";
 	private static final String END_TIME = "endTime";
@@ -49,6 +50,7 @@ public class JobStats {
 	protected String host = null;
 	protected Long totalNumberOfTasks = null;
 	protected Long numberOfFailedTasks = null;
+	protected Long numberOfSucceededTasks = null;
 	protected Double averageTransactionTime = null;
 	protected Long urisLoadTime = null;
 	private Long preBatchRunTime = 0l;
@@ -165,6 +167,7 @@ public class JobStats {
 				.append(xmlNode(END_TIME, endTime)).append(xmlNode(HOST, host))
 				.append(xmlNode(TOTAL_NUMBER_OF_TASKS, totalNumberOfTasks))
 				.append(xmlNode(NUMBER_OF_FAILED_TASKS, numberOfFailedTasks))
+				.append(xmlNode(NUMBER_OF_SUCCEEDED_TASKS, numberOfSucceededTasks))
 				.append(xmlNode(AVERAGE_TRANSACTION_TIME, averageTransactionTime))
 				.append(xmlNode(URIS_LOAD_TIME, urisLoadTime))
 				.append(xmlNode(PRE_BATCH_RUN_TIME, preBatchRunTime))
@@ -407,6 +410,20 @@ public class JobStats {
 	 */
 	public void setInitTaskRunTime(Long initTaskRunTime) {
 		this.initTaskRunTime = initTaskRunTime;
+	}
+
+	/**
+	 * @return the numberOfSucceededTasks
+	 */
+	public Long getNumberOfSucceededTasks() {
+		return numberOfSucceededTasks;
+	}
+
+	/**
+	 * @param numberOfSucceededTasks the numberOfSucceededTasks to set
+	 */
+	public void setNumberOfSucceededTasks(Long numberOfSucceededTasks) {
+		this.numberOfSucceededTasks = numberOfSucceededTasks;
 	}
 
 }

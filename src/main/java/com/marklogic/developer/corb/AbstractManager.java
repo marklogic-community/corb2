@@ -545,6 +545,7 @@ public abstract class AbstractManager {
 				List<String> failedUris=(pool!=null)?this.pool.getFailedUris():null;
 				this.jobStats.setFailedUris(failedUris);
 				this.jobStats.setNumberOfFailedTasks((this.pool!=null)?new Long(this.pool.getNumFailedUris()):0l);
+				this.jobStats.setNumberOfSucceededTasks((this.pool!=null)?new Long(this.pool.getNumSucceededUris()):0l);
 				this.jobStats.setTotalNumberOfTasks(taskCount);
 				this.jobStats.setEndTime(sdf.format(new Date(this.endMillis)));
 				Long totalTime = endMillis - startMillis;

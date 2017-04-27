@@ -326,6 +326,7 @@ public abstract class AbstractTask implements Task {
                 }
                 return invokeModule();
             } else if (requestException instanceof ServerConnectionException || failOnError) {
+            	Thread.currentThread().setName(FAILED_URI_TOKEN+Thread.currentThread().getName());
                 throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
             } else {
                 LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
@@ -333,11 +334,13 @@ public abstract class AbstractTask implements Task {
                 return inputUris;
             }
         } else if (failOnError) {
+        	Thread.currentThread().setName(FAILED_URI_TOKEN+Thread.currentThread().getName());
             throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
         } else {
             LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
             writeToErrorFile(inputUris, requestException.getMessage());
-            Thread.currentThread().setName(FAILED_URI_TOKEN+Thread.currentThread().getName());return inputUris;
+            Thread.currentThread().setName(FAILED_URI_TOKEN+Thread.currentThread().getName());
+            return inputUris;
         }
     }
 
