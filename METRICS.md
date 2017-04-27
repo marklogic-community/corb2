@@ -54,6 +54,7 @@
 { "job" : {
     "name" : "TestJob",
     "runLocation" : "/data/MarkLogic/corb2",
+    "host" : "www.marklogic.com",
     "userProvidedOptions" :
     {
         "METRICS-PROCESS-MODULE" : "/saveMetrics2.sjs",
@@ -68,8 +69,8 @@
     ,
     "StartTime" : "2017-04-23T19:01:10Z",
     "endTime" : "2017-04-23T19:01:10Z",
-    "host" : "www.marklogic.com",
     "totalNumberOfTasks" : "10",
+    "totalRunTimeInMillis": "52074",
     "numberOfFailedTasks" : "2",
     "averageTransactionTimeInMillis" : "117.0",
     "urisLoadTimeInMillis" : "2",
@@ -82,3 +83,13 @@
     "timeInMillis ": "20"}]
   }
 }
+```
+
+### Sample Server Log
+
+```
+2017-04-27 10:19:26.814 Info: marklogic-corb-xdbc: STARTED CORB JOB:
+2017-04-27 10:19:26.814 Info: marklogic-corb-xdbc: {"job":{"runLocation":"/home/dev/workspace/corb2","name":"testCorbMetrics","host":"localhost","StartTime":"2017-04-27T10:19:26Z"}}
+2017-04-27 10:19:28.947 Info: marklogic-corb-xdbc: END RUNNING CORB JOB:
+2017-04-27 10:19:28.947 Info: marklogic-corb-xdbc: {"job":{"runLocation":"/home/dev/workspace/corb2","name":"testCorbMetrics","host":"localhost","userProvidedOptions":{"METRICS-PROCESS-MODULE":"
+```

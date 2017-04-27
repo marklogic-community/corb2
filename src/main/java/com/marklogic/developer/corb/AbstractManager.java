@@ -80,7 +80,15 @@ import com.marklogic.xcc.types.XdmItem;
 
 public abstract class AbstractManager {
 
-    public static final String VERSION = "2.4.0";
+    private static final String METRICS_COLLECTIONS_PARAM = "collections";
+
+	private static final String METRICS_DOCUMENT_STR_PARAM = "metricsDocumentStr";
+
+	private static final String METRICS_DB_NAME_PARAM = "dbName";
+
+	private static final String METRICS_URI_ROOT_PARAM = "uriRoot";
+
+	public static final String VERSION = "2.4.0";
 
     protected static final String VERSION_MSG = "version " + VERSION + " on " + System.getProperty("java.version") + " (" + System.getProperty("java.runtime.name") + ")";
     protected static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server';\n";
@@ -96,6 +104,8 @@ public abstract class AbstractManager {
     protected Map<String,String> userProvidedOptions = new HashMap<String,String>();
 	protected JobStats jobStats = null;
 	protected long startMillis;
+	protected long transformStartMillis;
+	
 	protected long endMillis;
 	protected transient PausableThreadPoolExecutor pool;//moved from Manager
     protected static final int EXIT_CODE_SUCCESS = 0;
@@ -415,21 +425,23 @@ public abstract class AbstractManager {
 	protected void logJobStatsToServerLog(String message, boolean concise) {
 		Session session = null;
 		try {
-			session=contentSource.newSession();
-			this.initJobStats();
-			String logMetricsToServerLog = options.getLogMetricsToServerLog();
-			if (logMetricsToServerLog != null && !logMetricsToServerLog.equalsIgnoreCase("NONE")) {
+			if(contentSource !=null){
+				session=contentSource.newSession();
+				this.initJobStats();
+				String logMetricsToServerLog = options.getLogMetricsToServerLog();
+				if (logMetricsToServerLog != null && !logMetricsToServerLog.equalsIgnoreCase("NONE")) {
 
-				String xquery = XQUERY_VERSION_ML
-						+ ((message != null)
-								? "xdmp:log(\"" + message + "\",'" + logMetricsToServerLog.toLowerCase() + "')," : "")
-						+ "xdmp:log('" + jobStats.toString(concise) + "\','" + logMetricsToServerLog.toLowerCase()
-						+ "')";
+					String xquery = XQUERY_VERSION_ML
+							+ ((message != null)
+									? "xdmp:log(\"" + message + "\",'" + logMetricsToServerLog.toLowerCase() + "')," : "")
+							+ "xdmp:log('" + jobStats.toString(concise) + "\','" + logMetricsToServerLog.toLowerCase()
+							+ "')";
 
-				AdhocQuery q = session.newAdhocQuery(xquery);
+					AdhocQuery q = session.newAdhocQuery(xquery);
 
-				session.submitRequest(q);
-			}
+					session.submitRequest(q);
+				}
+			}			
 		} catch (Exception e) {
 			LOG.log(SEVERE, "logJobStatsToServer request failed", e);
 			e.printStackTrace();
@@ -490,37 +502,39 @@ public abstract class AbstractManager {
 
         Thread.yield();// try to avoid thread starvation
         try {
-            session = contentSource.newSession();
-            Request request = getRequestForModule(processModule, session);
-            
-            request.setNewStringVariable("dbName", dbName);
-            if(uriRoot!=null){
-            	request.setNewStringVariable("uriRoot", uriRoot);
-            }
-            else{
-            	request.setNewStringVariable("uriRoot", "NA");
-            }
-            if(collections!=null) {
-            	request.setNewStringVariable("collections", collections);
-            }
-            else{
-            	request.setNewStringVariable("collections", "NA");
-            }
-            if (isJavaScriptModule(processModule)) {
-		        requestOptions.setQueryLanguage("javascript");
-		        request.setNewStringVariable("metricsDocumentStr", jobStats.toJSONString());	            
-		    }
-            else{
-            	request.setNewStringVariable("metricsDocumentStr", jobStats.toXMLString());
-                
-            }
-            request.setOptions(requestOptions);
-
-            seq = session.submitRequest(request);
-            session.close();
-            Thread.yield();// try to avoid thread starvation
-            seq.close();
-            Thread.yield();// try to avoid thread starvation
+        	if(contentSource !=null){    			
+	            session = contentSource.newSession();
+	            Request request = getRequestForModule(processModule, session);
+	            
+	            request.setNewStringVariable(METRICS_DB_NAME_PARAM, dbName);
+	            if(uriRoot!=null){
+	            	request.setNewStringVariable(METRICS_URI_ROOT_PARAM, uriRoot);
+	            }
+	            else{
+	            	request.setNewStringVariable(METRICS_URI_ROOT_PARAM, "NA");
+	            }
+	            if(collections!=null) {
+	            	request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, collections);
+	            }
+	            else{
+	            	request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, "NA");
+	            }
+	            if (isJavaScriptModule(processModule)) {
+			        requestOptions.setQueryLanguage("javascript");
+			        request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM, jobStats.toJSONString());	            
+			    }
+	            else{
+	            	request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM, jobStats.toXMLString());
+	                
+	            }
+	            request.setOptions(requestOptions);
+	
+	            seq = session.submitRequest(request);
+	            session.close();
+	            Thread.yield();// try to avoid thread starvation
+	            seq.close();
+	            Thread.yield();// try to avoid thread starvation
+        	}
         } catch (Exception exc) {
             exc.printStackTrace();
         } finally {
@@ -549,9 +563,10 @@ public abstract class AbstractManager {
 				this.jobStats.setTotalNumberOfTasks(taskCount);
 				this.jobStats.setEndTime(sdf.format(new Date(this.endMillis)));
 				Long totalTime = endMillis - startMillis;
-				this.jobStats.setAverageTransactionTime(new Double(totalTime / new Double(taskCount)));
-			}	
-			
+				this.jobStats.setTotalRunTimeInMillis(totalTime);
+				Long totalTransformTime = endMillis - transformStartMillis;				
+				this.jobStats.setAverageTransactionTime(new Double(totalTransformTime / new Double(taskCount)));
+			}				
 		}
 		catch(Exception e){
 			LOG.log(INFO,"Unable to populate job stats");

@@ -19,6 +19,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 public class JobStats {
+	private static final String START_TIME = "StartTime";
 	private static final String CLOSE_SQUARE = "]";
 	private static final String GT = ">";
 	private static final String LT = "<";
@@ -35,6 +36,7 @@ public class JobStats {
 	private static final String INIT_TASK_TIME = "initTaskTimeInMillis";
 	private static final String PRE_BATCH_RUN_TIME = "preBatchRunTimeInMillis";
 	private static final String POST_BATCH_RUN_TIME = "postBatchRunTimeInMillis";
+	private static final String TOTAL_JOB_RUN_TIME = "totalRunTimeInMillis";
 	private static final String AVERAGE_TRANSACTION_TIME = "averageTransactionTimeInMillis";
 	private static final String TOTAL_NUMBER_OF_TASKS = "totalNumberOfTasks";
 	private static final String NUMBER_OF_FAILED_TASKS = "numberOfFailedTasks";
@@ -56,6 +58,7 @@ public class JobStats {
 	private Long preBatchRunTime = 0l;
     private Long postBatchRunTime = 0l;
     private Long initTaskRunTime = 0l;
+    private Long totalRunTimeInMillis = 0l;
 	protected String jobRunLocation = null;
 	protected String jobName = null;
 	protected Map<String, Long> longRunningUris = new HashMap<String, Long>();
@@ -162,17 +165,21 @@ public class JobStats {
 	}
 	public String toXMLString(boolean concise) {
 		StringBuffer strBuff = new StringBuffer();
-		strBuff.append(xmlNode(JOB_LOCATION, this.jobRunLocation)).append(xmlNode(JOB_NAME, this.jobName))
-				.append(concise?"":xmlNode(USER_PROVIDED_OPTIONS, userProvidedOptions)).append(xmlNode("StartTime", startTime))
-				.append(xmlNode(END_TIME, endTime)).append(xmlNode(HOST, host))
+		strBuff.append(xmlNode(JOB_LOCATION, this.jobRunLocation))
+				.append(xmlNode(JOB_NAME, this.jobName))
+				.append(xmlNode(HOST, host))
+				.append(concise?"":xmlNode(USER_PROVIDED_OPTIONS, userProvidedOptions))
+				.append(xmlNode(START_TIME, startTime))
+				.append(xmlNode(END_TIME, endTime))
+				.append(xmlNode(INIT_TASK_TIME, initTaskRunTime))
+				.append(xmlNode(PRE_BATCH_RUN_TIME, preBatchRunTime))
+				.append(xmlNode(URIS_LOAD_TIME, urisLoadTime))
+				.append(xmlNode(POST_BATCH_RUN_TIME, postBatchRunTime))
+				.append(xmlNode(TOTAL_JOB_RUN_TIME, totalRunTimeInMillis))
+				.append(xmlNode(AVERAGE_TRANSACTION_TIME, averageTransactionTime))
 				.append(xmlNode(TOTAL_NUMBER_OF_TASKS, totalNumberOfTasks))
 				.append(xmlNode(NUMBER_OF_FAILED_TASKS, numberOfFailedTasks))
 				.append(xmlNode(NUMBER_OF_SUCCEEDED_TASKS, numberOfSucceededTasks))
-				.append(xmlNode(AVERAGE_TRANSACTION_TIME, averageTransactionTime))
-				.append(xmlNode(URIS_LOAD_TIME, urisLoadTime))
-				.append(xmlNode(PRE_BATCH_RUN_TIME, preBatchRunTime))
-				.append(xmlNode(POST_BATCH_RUN_TIME, postBatchRunTime))
-				.append(xmlNode(INIT_TASK_TIME, initTaskRunTime))
 				.append(concise?"":xmlNodeArray(FAILED_URIS, URI,failedUris))
 				.append(concise?"":xmlNodeRanks(LONG_RUNNING_URIS, longRunningUris));
 		return xmlNode(JOB_ROOT, strBuff.toString(),DEF_NS);
@@ -424,6 +431,20 @@ public class JobStats {
 	 */
 	public void setNumberOfSucceededTasks(Long numberOfSucceededTasks) {
 		this.numberOfSucceededTasks = numberOfSucceededTasks;
+	}
+
+	/**
+	 * @return the totalRunTimeInMillis
+	 */
+	public Long getTotalRunTimeInMillis() {
+		return totalRunTimeInMillis;
+	}
+
+	/**
+	 * @param totalRunTimeInMillis the totalRunTimeInMillis to set
+	 */
+	public void setTotalRunTimeInMillis(Long totalRunTimeInMillis) {
+		this.totalRunTimeInMillis = totalRunTimeInMillis;
 	}
 
 }

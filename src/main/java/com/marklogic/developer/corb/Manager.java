@@ -102,8 +102,8 @@ import com.marklogic.xcc.exceptions.XccConfigException;
  */
 public class Manager extends AbstractManager {
 
-    private static final String END_RUNNING_JOB_MESSAGE = "END RUNNING JOB:";
-    private static final String START_RUNNING_JOB_MESSAGE = "START RUNNING JOB:";
+    private static final String END_RUNNING_JOB_MESSAGE = "END RUNNING CORB JOB:";
+    private static final String START_RUNNING_JOB_MESSAGE = "STARTED CORB JOB:";
     private static final String LOADED_URIS_JOB_MESSAGE = "LOADED URIS FOR JOB:";
     
 	protected static final String NAME = Manager.class.getName();
@@ -737,9 +737,9 @@ public class Manager extends AbstractManager {
                 stop();
                 return 0;
             }
-            else{
-            	logJobStatsToServerLog( LOADED_URIS_JOB_MESSAGE,true);
-            }
+//            else{
+//            	logJobStatsToServerLog( LOADED_URIS_JOB_MESSAGE,true);
+//            }//should we log once we load uris?
 
             // run pre-batch task, if present.
             runPreBatchTask(taskFactory);
@@ -753,7 +753,7 @@ public class Manager extends AbstractManager {
             long freeMemory;
             String uri;
             List<String> uriBatch = new ArrayList<>(options.getBatchSize());
-
+            transformStartMillis = System.currentTimeMillis();
             while (urisLoader.hasNext()) {
                 // check pool occasionally, for fast-fail
                 if (null == pool) {
