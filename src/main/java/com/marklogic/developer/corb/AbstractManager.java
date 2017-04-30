@@ -564,7 +564,7 @@ public abstract class AbstractManager {
 				this.jobStats.setEndTime(sdf.format(new Date(this.endMillis)));
 				Long totalTime = endMillis - startMillis;
 				this.jobStats.setTotalRunTimeInMillis(totalTime);
-				Long totalTransformTime = endMillis - transformStartMillis;				
+				Long totalTransformTime = endMillis - transformStartMillis;
 				this.jobStats.setAverageTransactionTime(new Double(totalTransformTime / new Double(taskCount)));
 			}				
 		}

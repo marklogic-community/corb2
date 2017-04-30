@@ -50,10 +50,10 @@ public class JobStats {
 	protected String startTime = null;
 	protected String endTime = null;
 	protected String host = null;
-	protected Long totalNumberOfTasks = null;
-	protected Long numberOfFailedTasks = null;
-	protected Long numberOfSucceededTasks = null;
-	protected Double averageTransactionTime = null;
+	protected Long totalNumberOfTasks = 0l;
+	protected Long numberOfFailedTasks = 0l;
+	protected Long numberOfSucceededTasks = 0l;
+	protected Double averageTransactionTime = 0.0d;
 	protected Long urisLoadTime = null;
 	private Long preBatchRunTime = 0l;
     private Long postBatchRunTime = 0l;
@@ -283,8 +283,16 @@ public class JobStats {
 	private String xmlNode(String nodeName, String nodeVal) {
 		return xmlNode(nodeName, nodeVal,null);
 	}
-	private String xmlNode(String nodeName, Number nodeVal) {
-		if(nodeVal !=null && nodeVal.longValue()>0l){
+	private String xmlNode(String nodeName, Long nodeVal) {
+		if(nodeVal !=null && nodeVal > 0l){
+			return xmlNode(nodeName, nodeVal.toString(),null);
+		}
+		else{
+			return "";
+		}
+	}
+	private String xmlNode(String nodeName, Double nodeVal) {
+		if(nodeVal !=null && nodeVal > 0.0){
 			return xmlNode(nodeName, nodeVal.toString(),null);
 		}
 		else{
