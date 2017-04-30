@@ -77,4 +77,21 @@ public class PausableThreadPoolExecutorTest {
         Duration elapsedTime = Duration.between(startedAt, LocalDateTime.now());
         assertTrue(elapsedTime.toMillis() >= howLongToWait);
     }
+    @Test
+    public void testTopURIs() {
+    	BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
+        RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
+       PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+       executor.topUriList.setSize(2); 
+       executor.topUriList.add("URI1", 6l);
+        executor.topUriList.add("URI1", 6l);
+        executor.topUriList.add("URI2", 5l);
+		executor.topUriList.add("URI3", 4l);
+		executor.topUriList.add("URI4", 3l);
+		executor.topUriList.add("URI5", 2l);
+		executor.topUriList.add("URI6", 1l);
+		assertTrue(executor.topUriList.getData().size()==2);
+		     
+    }
+    
 }

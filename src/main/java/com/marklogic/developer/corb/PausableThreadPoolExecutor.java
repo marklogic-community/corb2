@@ -42,7 +42,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 	private boolean isPaused;
     private final ReentrantLock pauseLock = new ReentrantLock();
     private final Condition unpaused = pauseLock.newCondition();
-    private TopUriList topUriList;
+    protected TopUriList topUriList;
     private List<String> failedUris;
     
     private final ThreadLocal<Long> startTime = new ThreadLocal<Long>();
@@ -178,7 +178,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 	public int getNumSucceededUris() {
 		return numSucceededUris;
 	}
-	private class TopUriList{
+	protected class TopUriList{
 		private TreeSet<UriObject>  list = null;
 		private int size=0;
 		
@@ -249,6 +249,18 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 					return 0;//should never get here
 				}
 			}
+		}
+		/**
+		 * @return the size
+		 */
+		protected int getSize() {
+			return size;
+		}
+		/**
+		 * @param size the size to set
+		 */
+		protected void setSize(int size) {
+			this.size = size;
 		}
 	}
 }

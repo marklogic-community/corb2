@@ -550,7 +550,7 @@ public abstract class AbstractManager {
         }
     }
 
-	public JobStats populateJobStats() {
+	protected JobStats populateJobStats() {
 		try{
 			this.initJobStats();
 			Long taskCount=(pool!=null)?pool.getTaskCount():0l;
@@ -564,7 +564,7 @@ public abstract class AbstractManager {
 				this.jobStats.setEndTime(sdf.format(new Date(this.endMillis)));
 				Long totalTime = endMillis - startMillis;
 				this.jobStats.setTotalRunTimeInMillis(totalTime);
-				Long totalTransformTime = endMillis - transformStartMillis;				
+				Long totalTransformTime = endMillis - transformStartMillis;
 				this.jobStats.setAverageTransactionTime(new Double(totalTransformTime / new Double(taskCount)));
 			}				
 		}
@@ -604,5 +604,4 @@ public abstract class AbstractManager {
 			this.jobStats.setUserProvidedOptions(this.getUserProvidedOptions());
 		}
 	}
-
 }
