@@ -165,7 +165,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
                     metadata.put(META_CONTENT_TYPE, "text/xml");
                     String xpath = getProperty(XML_NODE);
                     if (!isBlank(xpath)) {
-                        metadata.put(Options.XML_NODE, xpath);
+                        metadata.put(XML_NODE, xpath);
                     }
 
                     Document loaderDoc;
