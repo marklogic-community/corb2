@@ -19,7 +19,6 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.xcc.ContentSource;
-import java.io.IOException;
 import org.junit.*;
 import org.w3c.dom.Document;
 
@@ -28,7 +27,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;

@@ -44,7 +44,6 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -1286,7 +1285,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             instance.run();
-            
+
             File exportFile = new File(EXPORT_FILE_DIR, EXPORT_FILE_NAME);
             assertTrue(exportFile.exists());
             assertEquals(2, FileUtils.getLineCount(exportFile));
@@ -1314,7 +1313,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             instance.run();
-            
+
             File exportFile = new File(EXPORT_FILE_DIR, EXPORT_FILE_NAME);
             assertFalse(exportFile.exists());
         } catch (Exception ex) {
@@ -1323,7 +1322,7 @@ public class ManagerTest {
         }
     }
 
-    
+
     @Test
     public void testNoResultsPrePostBatchAlwaysExecuteFalseMinCountGreater() {
         clearSystemProperties();
@@ -1345,7 +1344,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             instance.run();
-            
+
             File exportFile = new File(EXPORT_FILE_DIR, EXPORT_FILE_NAME);
             assertFalse(exportFile.exists());
         } catch (Exception ex) {
@@ -1376,7 +1375,7 @@ public class ManagerTest {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
             instance.run();
-            
+
             File exportFile = new File(EXPORT_FILE_DIR, EXPORT_FILE_NAME);
             assertFalse(exportFile.exists());
         } catch (Exception ex) {
