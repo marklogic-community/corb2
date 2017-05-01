@@ -604,4 +604,5 @@ public abstract class AbstractManager {
 			this.jobStats.setUserProvidedOptions(this.getUserProvidedOptions());
 		}
 	}
+	
 }

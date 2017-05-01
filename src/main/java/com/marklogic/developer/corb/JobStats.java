@@ -4,7 +4,6 @@ import static java.util.logging.Level.INFO;
 
 import java.io.StringReader;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
