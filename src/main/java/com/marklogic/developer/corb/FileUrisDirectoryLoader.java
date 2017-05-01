@@ -64,10 +64,9 @@ public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
     protected int fileCount(Path dir) throws IOException {
         return Math.toIntExact(
                 Files.walk(dir)
-                .collect(Collectors.toList())
-                .parallelStream()
-                .filter(p -> this.accept(p))
-                .count());
+                    .parallel()
+                    .filter(p -> this.accept(p))
+                    .count());
     }
 
     /**
