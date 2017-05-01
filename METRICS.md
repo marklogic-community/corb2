@@ -3,14 +3,14 @@
 * **How can I log the job metrics to the Marklogic error log?**
     * Logging can be enabled by setting METRICS-TO-ERROR-LOG property in options.
         + Ex: **METRICS-TO-ERROR-LOG=info**
-        + Startup message is logged when CoRB job startsup and detailed metrics are logged when the job finishes.
+        + Startup message is logged when CoRB job starts up and detailed metrics are logged when the job has finished.
 * **How can I set the log level when logging metrics to the Marklogic error log?**
     * METRICS-TO-ERROR-LOG property has the following possible values:
       +  *none,emergency,alert,critical,error,warning,notice,info,config,debug,fine,finer,finest.*
       + Default value is none ( which means the metrics will not be logged to the error log).
 * **What kind of details are logged?**
     * User provided options ( not the default options )
-    * Host Name
+    * Host name
     * Job run location 
     * Time taken for each of the stages of the CoRB job, i.e, INIT-MODULE, URIS-MODULE, PRE-BATCH-MODULE, PROCESS-MODULE, POST-BATCH-MODULE
     * Failed transactions ( first 1000 failures)
@@ -18,7 +18,7 @@
     * Start and end times
     * Average transaction time
     * Total tasks 
-    * Total Number of failed tasks
+    * Total number of failed tasks
  * **Are connection strings or passwords logged to the error log?**
     * No. 
 * **How can I save the metrics as a Document to the database?**
@@ -26,9 +26,9 @@
     * Default format for metrics document is XML.
     * METRICS-DB-NAME is the only required option for the document to be saved to the database. If this option is not specified the document will not be saved to the Database.
 * **Setting the METRICS-DB-NAME option also log it to the server log?**
-    * No. METRICS-TO-ERROR-LOG option needs to be selected for CoRB to log to server log.
+    * No, METRICS-TO-ERROR-LOG option needs to be selected for CoRB to log to server log.
 * **How can I save metrics document in JSON format?**
-   * METRICS-PROCESS-MODULE option can be used to save metrics document in JSON format
+   * METRICS-PROCESS-MODULE option can be used to save metrics document in JSON format.
    * When METRICS-PROCESS-MODULE option is set to an xquery or javascript module, that module is executed after the CoRB job completes to save the metrics document.
    * CoRB2 distribution comes with two sample modules that can be found in the resources folder.
     + [save-metric-to-db.xqy](corb2/src/main/resources/save-metric-to-db.xqy)
@@ -37,13 +37,13 @@
         + This will save the metrics document as a **JSON**.
         + Ex:METRICS-PROCESS-MODULE=saveMetrics.sjs|ADHOC
 * **Can I add the metrics document to a Collection?**
-    + A comma seperated collection names can be assigned to METRICS-DOC-COLLECTIONS option and the document is saved to those collections.
-    + By default the metrics document is added to a Collection with the Job Name (or the Job run location if name is not provided).
+    + A comma seperated Collection names can be assigned to METRICS-DOC-COLLECTIONS option and the document is saved to those collections.
+    + By default the metrics document is added to a Collection with the job name (or the job run location if name is not provided).
     
 * **Can I change the URI to which the metrics document is saved?**
-    * By default the URI format is /METRICS-DOC-BASE-DIR/CoRB2/JOB-NAME/YEAR/MONTH/DATE/HOUR/MINUTE/RANDOM-NUMBER.(json or xml)
-    * METRICS-DOC-BASE-DIR has a default value of /ServiceMetrics/
-    * JOB-NAME defaults to the job run location
+    * By default, the URI format is /METRICS-DOC-BASE-DIR/CoRB2/JOB-NAME/YEAR/MONTH/DATE/HOUR/MINUTE/RANDOM-NUMBER.(json or xml).
+    * METRICS-DOC-BASE-DIR has a default value of /ServiceMetrics/.
+    * JOB-NAME defaults to the job run location.
      
 * **I want to have complete control over how the metrics document is saved. Is that possible?**
     * You can use the above mentioned sample modules (*[saveMetrics.sjs](corb2/src/main/resources/saveMetrics.sjs) and [save-metric-to-db.xqy](corb2/src/main/resources/save-metric-to-db.xqy)*) as an example and implement your own customizations.
