@@ -5,7 +5,7 @@
 [![Travis-ci gradle build status](https://travis-ci.org/marklogic/corb2.svg?branch=development)](https://travis-ci.org/marklogic/corb2)
 [![CircleCI maven build status](https://circleci.com/gh/marklogic/corb2/tree/development.svg?style=shield)](https://circleci.com/gh/marklogic/corb2/tree/development)
 [![Codecov code coverage](https://codecov.io/gh/marklogic/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic/corb2/branch/development)
-[![SonarQube TechDebt](https://img.shields.io/sonar/http/sonarqube.com/com.marklogic%3Amarklogic-corb%3Adevelopment/tech_debt.svg)](https://sonarqube.com/component_measures/domain/Maintainability?id=com.marklogic%3Amarklogic-corb%3Adevelopment)
+[![SonarQube TechDebt](https://sonarqube.com/api/badges/measure?key=com.marklogic%3Amarklogic-corb%3Adevelopment&metric=sqale_debt_ratio)](https://sonarqube.com/component_measures/domain/Maintainability?id=com.marklogic%3Amarklogic-corb%3Adevelopment)
 [![SonarQube Quality](https://sonarqube.com/api/badges/gate?key=com.marklogic%3Amarklogic-corb%3Adevelopment)](https://sonarqube.com/overview?id=com.marklogic%3Amarklogic-corb%3Adevelopment)
 [![Codacy Grade Badge](https://api.codacy.com/project/badge/Grade/c0195f063ae34c7ea17bb4c97ab7ff2c)](https://www.codacy.com/app/mads-hansen/corb2?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marklogic/corb2&amp;utm_campaign=Badge_Grade)
 
