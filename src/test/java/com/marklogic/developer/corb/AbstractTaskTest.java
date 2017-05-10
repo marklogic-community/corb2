@@ -1069,6 +1069,21 @@ public class AbstractTaskTest {
         }
 
         @Override
+        public void setNewVariables(String string, ValueType vt, Object[] o) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setNewVariables(String string, String string2, ValueType vt, Object[] o) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setNewVariables(XName string, XdmValue[] xdmValue) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public XdmVariable setNewStringVariable(String name, String value) {
             return setNewStringVariable(name, value, null);
         }
@@ -1112,6 +1127,21 @@ public class AbstractTaskTest {
         public String getQuery() {
             return query;
         }
+
+        @Override
+        public void setNewVariables(String string, ValueType vt, Object[] o) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setNewVariables(String string, String string2, ValueType vt, Object[] o) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setNewVariables(XName string, XdmValue[] xdmValue) {
+            throw new UnsupportedOperationException();
+        }
     }
 
     private static class ModuleInvokeImpl extends RequestImpl implements ModuleInvoke {
@@ -1126,6 +1156,21 @@ public class AbstractTaskTest {
         @Override
         public void setModuleUri(String moduleUri) {
             this.moduleUri = moduleUri;
+        }
+
+        @Override
+        public void setNewVariables(String string, ValueType vt, Object[] o) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setNewVariables(String string, String string2, ValueType vt, Object[] o) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setNewVariables(XName string, XdmValue[] xdmValue) {
+            throw new UnsupportedOperationException();
         }
     }
 }

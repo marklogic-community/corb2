@@ -5,7 +5,7 @@ plugins {
     id 'com.jfrog.bintray' version '1.6'
     id 'com.github.johnrengelman.shadow' version '1.2.3'
     id 'com.github.kt3k.coveralls' version '2.6.3'
-    id 'com.marklogic.ml-gradle' version '2.5.0'
+    id 'com.marklogic.ml-gradle' version '2.6.0'
     id 'io.github.ddimtirov.codacy' version '0.1.0'
     id 'org.sonarqube' version '2.2.1'
     id 'eclipse'
@@ -68,7 +68,7 @@ configurations {
 }
 
 dependencies {
-    compile 'com.marklogic:marklogic-xcc:8.0.6'
+    compile 'com.marklogic:marklogic-xcc:9.0.1'
     compile "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
     // if you want to compile without testing comment out the lines below
     testCompile group: 'junit', name: 'junit', version: '4.12'
