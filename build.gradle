@@ -68,7 +68,7 @@ configurations {
 }
 
 dependencies {
-    compile 'com.marklogic:marklogic-xcc:8.0.6'
+    compile 'com.marklogic:marklogic-xcc:9.0.1'
     compile "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
     // if you want to compile without testing comment out the lines below
     testCompile group: 'junit', name: 'junit', version: '4.12'
