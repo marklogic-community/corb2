@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.XML_FILE;
+import static com.marklogic.developer.corb.Options.XML_NODE;
 import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.developer.corb.util.IOUtils;
 import com.marklogic.developer.corb.util.StringUtils;
@@ -54,14 +55,14 @@ import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 /**
- * Split an XML file {@value #XML_FILE} into multiple documents using the
- * {@link StreamingXPath } expression from the {@value #XML_NODE} property and
+ * Split an XML file {@value Options#XML_FILE} into multiple documents using the
+ * {@link StreamingXPath } expression from the {@value Options#XML_NODE} property and
  * sends the serialized XML string to the process module in the URIS parameter.
  * Uses a StAX parser in order to limit memory consumption and process very
  * large XML inputs.
  *
  * Optionally validate the XML file prior to processing. Specify the XSD with
- * the {@value #XML_SCHEMA}
+ * the {@value Options#XML_SCHEMA}
  *
  * @author Mads Hansen, MarkLogic Corporation
  * @since 2.4.0
@@ -79,7 +80,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
     @Override
     public void open() throws CorbException {
         String xmlFilename = getProperty(XML_FILE);
-        String xPath = getProperty(Options.XML_NODE);
+        String xPath = getProperty(XML_NODE);
         // default processing will split on child elements of the document element
         xPath = StringUtils.isBlank(xPath) ? "/*/*" : xPath;
         streamingXPath = new StreamingXPath(xPath);
@@ -182,7 +183,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
         }
         setTotalCount(extractedDocumentCount);
-        return directoryStream.iterator(); //tempDir.toFile().listFiles(); 
+        return directoryStream.iterator(); //tempDir.toFile().listFiles();
     }
 
     /**

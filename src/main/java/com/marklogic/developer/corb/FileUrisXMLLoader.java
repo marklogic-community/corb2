@@ -18,7 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.AbstractFileUrisLoader.META_CONTENT_TYPE;
 import static com.marklogic.developer.corb.Options.XML_FILE;
 import static com.marklogic.developer.corb.Options.XML_NODE;
 import com.marklogic.developer.corb.util.FileUtils;
@@ -66,8 +65,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 /**
- * Split an XML file {@value #XML_FILE} into multiple documents using the XPath
- * expression from the {@value #XML_NODE} property and send the serialized XML
+ * Split an XML file {@value Options#XML_FILE} into multiple documents using the XPath
+ * expression from the {@value Options#XML_NODE} property and send the serialized XML
  * string to the process module in the URIS parameter.
  *
  * For extremely large XML files, consider the
