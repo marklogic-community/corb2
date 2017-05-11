@@ -18,12 +18,12 @@ plugins {
 ext {
     externalsortinginjavaVersion = '0.2.3'
 
-  // we don't need a REST server, only an XCC server
+    // we don't need a REST server, only an XCC server
     mlAppDeployer.getCommands().remove(mlAppDeployer.getCommand('DeployRestApiServersCommand'))
     mlAppConfig {
-      name = project.name
-      customTokens.put('%%XDBC_PORT%%', '8223')
-      createTriggersDatabase = false
+        name = project.name
+        customTokens.put('%%XDBC_PORT%%', '8223')
+        createTriggersDatabase = false
     }
 }
 
@@ -69,8 +69,9 @@ configurations {
 
 dependencies {
     compile 'com.marklogic:marklogic-xcc:9.0.1'
-    compile "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
-    // if you want to compile without testing comment out the lines below
+    //we bundle the externalsortinginjava classes with the corb distro as a fat jar
+    compileOnly "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
+    testCompile "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile 'org.jasypt:jasypt:1.9.2'
     testCompile 'com.github.stefanbirkner:system-rules:1.16.1' //facilitates tests for methods that invoke System.exit
@@ -207,34 +208,7 @@ tasks.withType(Test) {
 }
 
 tasks.coveralls {
-  dependsOn 'check'
-}
-
-def pomConfig = {
-    name "corb"
-    url 'https://github.com/marklogic/corb2'
-    scm {
-        url 'https://github.com/marklogic/corb2.git'
-    }
-    licenses {
-        license {
-            name "The Apache Software License, Version 2.0"
-            url "http://www.apache.org/licenses/LICENSE-2.0.txt"
-            distribution "repo"
-        }
-    }
-    developers {
-        developer {
-            name "Bhagat Bandlamudi"
-            email "bhagat.bandlamudi@marklogic.com"
-            organization "MarkLogic"
-        }
-        developer {
-            name "Mads Hansen"
-            email "mads.hansen@marklogic.com"
-            organization "MarkLogic"
-        }
-    }
+    dependsOn 'check'
 }
 
 publishing {
@@ -243,11 +217,39 @@ publishing {
             from components.java
             artifact sourcesJar
             artifact javadocJar
-
             pom.withXml {
-                def root = asNode()
-                root.appendNode('description', 'CORB is a Java tool designed for bulk content-reprocessing of documents stored in MarkLogic.')
-                root.children().last() + pomConfig
+                asNode().children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+                    name "corb"
+                    url project.websiteUrl
+                    scm {
+                        url project.vcsUrl
+                    }
+                    issueManagement {
+                        system "GitHub Issues"
+                        url project.issueTrackerUrl
+                    }
+                    licenses {
+                        license {
+                            name "The Apache Software License, Version 2.0"
+                            url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                            distribution "repo"
+                        }
+                    }
+                    description 'CoRB is a Java tool designed for bulk content-reprocessing of documents stored in MarkLogic.'
+                    developers {
+                        developer {
+                            name "Bhagat Bandlamudi"
+                            email "bhagat.bandlamudi@marklogic.com"
+                            organization "MarkLogic"
+                        }
+                        developer {
+                            name "Mads Hansen"
+                            email "mads.hansen@marklogic.com"
+                            organization "MarkLogic"
+                        }
+                    }
+                }
             }
         }
     }
@@ -269,9 +271,9 @@ if (project.hasProperty("myBintrayUser")) {
             name = project.name
             licenses = ['Apache-2.0']
             userOrg = 'marklogic'
-            websiteUrl = 'https://github.com/marklogic/corb2'
-            issueTrackerUrl = 'https://github.com/marklogic/corb2/issues'
-            vcsUrl = 'https://github.com/marklogic/corb2.git'
+            websiteUrl = project.websiteUrl
+            issueTrackerUrl = project.issueTrackerUrl
+            vcsUrl = project.vcsUrl
             githubRepo = 'marklogic/corb2'
             githubReleaseNotesFile = 'README.md'
             version {
