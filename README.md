@@ -58,7 +58,8 @@ If specified in more than one place, a command line parameter takes precedence o
 
 > Note: CORB exit codes `0` - successful, `0` - nothing to process (ref: EXIT-CODE-NO-URIS), `1` - initialization or connection error and `2` - execution error
 
-###Logging
+
+### Logging
 CORB uses Java logger. To customize logging, specify a logging configuration file using Java system argument  
 `-Djava.util.logging.config.file=/path/to/logging.properties`
 
