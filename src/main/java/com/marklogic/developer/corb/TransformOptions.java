@@ -84,6 +84,10 @@ public class TransformOptions {
     private String logMetricsToServerDBCollections = null;
     private Integer numberOfLongRunningUris = 5;
     private Integer numberOfFailedUris = MAX_NUM_FAILED_TRANSACTIONS;
+    private Integer metricsSyncFrequencyInMillis = -1;
+    private Integer metricsOnDemandPort = -1;
+    
+    
     
     private String jobName = null;
     
@@ -507,5 +511,33 @@ public class TransformOptions {
 	 */
 	public void setNumberOfFailedUris(Integer numberOfFailedUris) {
 		this.numberOfFailedUris = numberOfFailedUris;
+	}
+
+	/**
+	 * @return the metricsSyncFrequencyInMillis
+	 */
+	protected Integer getMetricsSyncFrequencyInMillis() {
+		return metricsSyncFrequencyInMillis;
+	}
+
+	/**
+	 * @param metricsSyncFrequencyInMillis the metricsSyncFrequencyInMillis to set
+	 */
+	protected void setMetricsSyncFrequencyInMillis(Integer metricsSyncFrequencyInMillis) {
+		this.metricsSyncFrequencyInMillis = metricsSyncFrequencyInMillis;
+	}
+
+	/**
+	 * @return the metricsOnDemandPort
+	 */
+	protected Integer getMetricsOnDemandPort() {
+		return metricsOnDemandPort;
+	}
+
+	/**
+	 * @param metricsOnDemandPort the metricsOnDemandPort to set
+	 */
+	protected void setMetricsOnDemandPort(Integer metricsOnDemandPort) {
+		this.metricsOnDemandPort = metricsOnDemandPort;
 	}
 }

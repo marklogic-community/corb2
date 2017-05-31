@@ -14,7 +14,9 @@ if(!jobName) {jobName = json["job"]["runLocation"]};
         if(uriRoot == "NA") uri_root = "/ServiceMetrics/"
         if(!fn.startsWith(uri_root,"/")) uri_root="/"+$uri_root
         if(fn.endsWith(uri_root,"/"))  uri_root = uri_root+"/";
-        var uri = uri_root+"CoRB2/"+
+        var uri = json["job"]["metricsDocUri"]
+        if(!uri) { 
+        	uri=uri_root+"CoRB2/"+
                     jobName+"/"+
                     fn.yearFromDateTime(dateTime)+"/"+
                     fn.monthFromDateTime(dateTime)+"/"+
@@ -22,7 +24,9 @@ if(!jobName) {jobName = json["job"]["runLocation"]};
                     fn.hoursFromDateTime(dateTime)+"/"+
                     fn.minutesFromDateTime(dateTime)+"/"+
                     xdmp.random()+".json";
+        }
         xdmp.documentInsert(uri, json, xdmp.defaultPermissions(),coll)
+        return uri;
   }
 };
 var database = xdmp.database(dbName)

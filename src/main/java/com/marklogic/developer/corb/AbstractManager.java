@@ -452,14 +452,15 @@ public abstract class AbstractManager {
 		}
 
 	}
-	private void logJobStatsToServerDocument() {	
+	protected void logJobStatsToServerDocument() {	
 		try {
 			this.populateJobStats();
 			String logMetricsToServerDBName=options.getLogMetricsToServerDBName();
 			if(logMetricsToServerDBName !=null){
 				String uriRoot=options.getLogMetricsToServerDBURIRoot();
 				
-				logMetricsToDB(logMetricsToServerDBName,uriRoot,options.getLogMetricsToServerDBCollections(), jobStats,options.getLogMetricsToServerDBTransformModule());
+				String uri=logMetricsToDB(logMetricsToServerDBName,uriRoot,options.getLogMetricsToServerDBCollections(), jobStats,options.getLogMetricsToServerDBTransformModule());
+				this.jobStats.setUri(uri);
 			}
 		} catch (Exception e) {
 			LOG.log(INFO, "Unable to log metrics to server as Document", e);
@@ -494,7 +495,7 @@ public abstract class AbstractManager {
 		return request;
 	}
 
-	protected void logMetricsToDB(String dbName,String uriRoot,String collections,JobStats jobStats,String processModule) throws CorbException {
+	protected String logMetricsToDB(String dbName,String uriRoot,String collections,JobStats jobStats,String processModule) throws CorbException {
         Session session = null;
         ResultSequence seq = null;
         RequestOptions requestOptions = new RequestOptions();
@@ -530,10 +531,12 @@ public abstract class AbstractManager {
 	            request.setOptions(requestOptions);
 	
 	            seq = session.submitRequest(request);
+	            String uri=seq.hasNext()?seq.next().asString():"";
 	            session.close();
 	            Thread.yield();// try to avoid thread starvation
 	            seq.close();
 	            Thread.yield();// try to avoid thread starvation
+	            return uri;
         	}
         } catch (Exception exc) {
             exc.printStackTrace();
@@ -548,25 +551,31 @@ public abstract class AbstractManager {
             }
             Thread.yield();// try to avoid thread starvation
         }
+        return null;
     }
 
 	protected JobStats populateJobStats() {
 		try{
-			this.initJobStats();
-			Long taskCount=(pool!=null)?pool.getTaskCount():0l;
-			if(taskCount > 0 ) {
-				this.jobStats.setTopTimeTakingUris((pool!=null)?this.pool.getTopUris():null);
-				List<String> failedUris=(pool!=null)?this.pool.getFailedUris():null;
-				this.jobStats.setFailedUris(failedUris);
-				this.jobStats.setNumberOfFailedTasks((this.pool!=null)?new Long(this.pool.getNumFailedUris()):0l);
-				this.jobStats.setNumberOfSucceededTasks((this.pool!=null)?new Long(this.pool.getNumSucceededUris()):0l);
-				this.jobStats.setTotalNumberOfTasks(taskCount);
-				this.jobStats.setEndTime(sdf.format(new Date(this.endMillis)));
-				Long totalTime = endMillis - startMillis;
-				this.jobStats.setTotalRunTimeInMillis(totalTime);
-				Long totalTransformTime = endMillis - transformStartMillis;
-				this.jobStats.setAverageTransactionTime(new Double(totalTransformTime / new Double(taskCount)));
-			}				
+			synchronized (this.jobStats) {
+				this.initJobStats();
+				Long taskCount=(pool!=null)?pool.getTaskCount():0l;
+				if(taskCount > 0 ) {
+					this.jobStats.setTopTimeTakingUris((pool!=null)?this.pool.getTopUris():null);
+					List<String> failedUris=(pool!=null)?this.pool.getFailedUris():null;
+					this.jobStats.setFailedUris(failedUris);
+					long numberOfFailedTasks = (this.pool!=null)?new Long(this.pool.getNumFailedUris()):0l;
+					this.jobStats.setNumberOfFailedTasks(numberOfFailedTasks);
+					long numberOfSucceededTasks = (this.pool!=null)?new Long(this.pool.getNumSucceededUris()):0l;
+					this.jobStats.setNumberOfSucceededTasks(numberOfSucceededTasks);
+					this.jobStats.setTotalNumberOfTasks(taskCount);
+					this.jobStats.setEndTime(sdf.format(new Date(this.endMillis)));
+					Long totalTime = endMillis - startMillis;
+					this.jobStats.setTotalRunTimeInMillis(totalTime);
+					Long totalTransformTime = endMillis - transformStartMillis;
+					this.jobStats.setAverageTransactionTime(new Double(totalTransformTime / new Double(numberOfFailedTasks+numberOfSucceededTasks)));
+				}	
+			}
+							
 		}
 		catch(Exception e){
 			LOG.log(INFO,"Unable to populate job stats");

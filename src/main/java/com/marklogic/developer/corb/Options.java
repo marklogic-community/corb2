@@ -988,6 +988,23 @@ public final class Options {
     public static final String METRICS_NUM_SLOW_TRANSACTIONS = "METRICS-NUM-SLOW-TRANSACTIONS";
     
     /**
+     *Frequency at which the Metrics document needs to be updated in the Database.  
+     * By Default the metrics document is not periodically updated. It is written once at the end of the job.
+     * If {@value #METRICS-DB-NAME} is not specified then {@value #METRICS-TO-DB-SYNC-FREQUENCY} is ignored.
+     */
+  
+    @Usage(description = "Frequency at which the Metrics document needs to be updated in the Database. This value is ignored if METRICS-DB-NAME is not specified")
+    public static final String METRICS_TO_DB_SYNC_FREQUENCY = "METRICS-TO-DB-SYNC-FREQUENCY";
+    
+    /**
+     *Port number to start a light weight HTTP Server which can be used to monitor ,change the number of threads, pause/resume the current corb job.
+     * By Default if this property is not specified, the OnDemand server is turned off.
+     */
+  
+    @Usage(description = "Port number to start a light weight HTTP Server which can be used to monitor ,change the number of threads, pause/resume the current corb job.")
+    public static final String METRICS_ON_DEMAND_PORT = "METRICS-ON-DEMAND-PORT";
+        
+    /**
      *
      * @deprecated Use the {@link #PROCESS_MODULE} option instead.
      * @see #PROCESS_MODULE

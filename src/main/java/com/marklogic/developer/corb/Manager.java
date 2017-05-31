@@ -85,6 +85,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.marklogic.developer.corb.HTTPServer.ContextHandler;
+import com.marklogic.developer.corb.HTTPServer.VirtualHost;
 import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.developer.corb.util.NumberUtils;
 import com.marklogic.developer.corb.util.StringUtils;
@@ -112,9 +114,12 @@ public class Manager extends AbstractManager {
     public static final String DEFAULT_BATCH_URI_DELIM = ";";
 
     protected transient Monitor monitor;
+    protected transient MetricsDocSyncJob metricsDocSyncJob;
+    
     protected transient Thread monitorThread;
     protected transient CompletionService<String[]> completionService;
     protected transient ScheduledExecutorService scheduledExecutor;
+    protected transient HTTPServer onDemandMetricsServer = null;
 
     protected boolean execError;
     protected boolean stopCommand;
@@ -402,6 +407,20 @@ public class Manager extends AbstractManager {
 			}
 			options.setNumberOfFailedUris(intNumFaileTransactions);
 		}
+		String metricsSyncFrequencyInMillis=getOption(Options.METRICS_TO_DB_SYNC_FREQUENCY);
+		if(logMetricsToServerDBName!=null && metricsSyncFrequencyInMillis !=null){
+			//periodically update db only if db name is set and sync frequency is selected
+			//no defaults for this function
+			int intMetricsSyncFrequencyInMillis=Integer.valueOf(metricsSyncFrequencyInMillis);
+			options.setMetricsSyncFrequencyInMillis(intMetricsSyncFrequencyInMillis);
+		}
+		String metricsOnDemandPort=getOption(Options.METRICS_ON_DEMAND_PORT);
+		if(metricsOnDemandPort!=null){
+			//periodically update db only if db name is set and sync frequency is selected
+			//no defaults for this function
+			int intMetricsOnDemandPort=Integer.valueOf(metricsOnDemandPort);
+			options.setMetricsOnDemandPort(intMetricsOnDemandPort);
+		}
         // delete the export file if it exists
         deleteFileIfExists(exportFileDir, exportFileName);
         deleteFileIfExists(exportFileDir, errorFileName);
@@ -530,6 +549,8 @@ public class Manager extends AbstractManager {
     public int run() throws Exception {
     	startMillis = System.currentTimeMillis();
     	logJobStatsToServerLog( START_RUNNING_JOB_MESSAGE,true);
+    	startMetricsSyncJob();
+    	startOnDemandMetricsServer();
     	LOG.log(INFO, "{0} starting: {1}", new Object[]{NAME, VERSION_MSG});
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
         LOG.log(INFO, "maximum heap size = {0} MiB", maxMemory);
@@ -563,7 +584,49 @@ public class Manager extends AbstractManager {
         }
     }
 
-    /**
+	private void startOnDemandMetricsServer() throws IOException {
+		int port = options.getMetricsOnDemandPort();
+		if(port>0 && onDemandMetricsServer == null){
+			onDemandMetricsServer = new HTTPServer(port);
+			VirtualHost host = onDemandMetricsServer.getVirtualHost(null); // default host
+			host.setAllowGeneratedIndex(false); // with directory index pages
+			ContextHandler htmlContextHandler = new HTTPServer.ClasspathResourceContextHandler("corb2-web","/web");
+			ContextHandler dataContextHandler = new OnDemandMetricsDataHandler(this);
+			host.addContext("/service", dataContextHandler);
+			host.addContext("/web", htmlContextHandler);
+			onDemandMetricsServer.start();
+		}
+	}
+	private void stopOnDemandMetricsServer() throws IOException {
+		if(onDemandMetricsServer!=null){
+			onDemandMetricsServer.stop();
+		}
+	}
+
+	private void startMetricsSyncJob() {
+		if(this.metricsDocSyncJob==null && this.options.getMetricsSyncFrequencyInMillis()!=null && this.options.getMetricsSyncFrequencyInMillis()>0){
+			this.metricsDocSyncJob = new MetricsDocSyncJob(this,this.options.getMetricsSyncFrequencyInMillis());
+			Thread metricSyncThread=new Thread(this.metricsDocSyncJob,"metricsDocSyncJob");
+			metricSyncThread.setDaemon(true);
+			metricSyncThread.start();
+		}		
+	}
+    private void shutDownMetricsSyncJob() {
+		if(this.metricsDocSyncJob!=null){
+			this.metricsDocSyncJob.shutdownNow();
+		}		
+	}
+    private void pauseMetricsSyncJob() {
+		if(this.metricsDocSyncJob!=null){
+			this.metricsDocSyncJob.shutdownNow();
+		}		
+	}
+    private void resumeMetricsSyncJob() {
+		if(this.metricsDocSyncJob!=null){
+			this.metricsDocSyncJob.setPaused(false);
+		}		
+	}
+	/**
      * @return
      */
     private Thread preparePool() {
@@ -842,6 +905,7 @@ public class Manager extends AbstractManager {
         if (pool != null && pool.isRunning()) {
             LOG.info("pausing");
             pool.pause();
+            pauseMetricsSyncJob();
         }
     }
 
@@ -856,6 +920,7 @@ public class Manager extends AbstractManager {
         if (pool != null && pool.isPaused()) {
             LOG.info("resuming");
             pool.resume();
+            resumeMetricsSyncJob();
         }
     }
 
@@ -866,7 +931,13 @@ public class Manager extends AbstractManager {
         LOG.info("cleaning up");
         if (null != pool) {
         	endMillis=System.currentTimeMillis();
+        	shutDownMetricsSyncJob();
             logJobStatsToServer(END_RUNNING_JOB_MESSAGE);
+            try {
+				stopOnDemandMetricsServer();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
             if (pool.isPaused()) {
                 pool.resume();
             }

@@ -40,6 +40,9 @@ public class JobStats {
 	private static final String TOTAL_NUMBER_OF_TASKS = "totalNumberOfTasks";
 	private static final String NUMBER_OF_FAILED_TASKS = "numberOfFailedTasks";
 	private static final String NUMBER_OF_SUCCEEDED_TASKS = "numberOfSucceededTasks";
+	private static final String METRICS_DOC_URI = "metricsDocUri";
+	private static final String PAUSED = "paused";
+	
 	
 	private static final String HOST = "host";
 	private static final String END_TIME = "endTime";
@@ -62,6 +65,10 @@ public class JobStats {
 	protected String jobName = null;
 	protected Map<String, Long> longRunningUris = new HashMap<String, Long>();
 	protected List<String> failedUris = null;
+	protected String uri = null;
+	protected String paused = null;
+	
+	
 
 	private static final Logger LOG = Logger.getLogger(JobStats.class.getName());
 
@@ -179,6 +186,8 @@ public class JobStats {
 				.append(xmlNode(TOTAL_NUMBER_OF_TASKS, totalNumberOfTasks))
 				.append(xmlNode(NUMBER_OF_FAILED_TASKS, numberOfFailedTasks))
 				.append(xmlNode(NUMBER_OF_SUCCEEDED_TASKS, numberOfSucceededTasks))
+				.append(xmlNode(METRICS_DOC_URI, uri))
+				.append(xmlNode(PAUSED, paused))
 				.append(concise?"":xmlNodeArray(FAILED_URIS, URI,failedUris))
 				.append(concise?"":xmlNodeRanks(LONG_RUNNING_URIS, longRunningUris));
 		return xmlNode(JOB_ROOT, strBuff.toString(),DEF_NS);
@@ -452,6 +461,34 @@ public class JobStats {
 	 */
 	public void setTotalRunTimeInMillis(Long totalRunTimeInMillis) {
 		this.totalRunTimeInMillis = totalRunTimeInMillis;
+	}
+
+	/**
+	 * @return the uri
+	 */
+	protected String getUri() {
+		return uri;
+	}
+
+	/**
+	 * @param uri the uri to set
+	 */
+	protected void setUri(String uri) {
+		this.uri = uri;
+	}
+
+	/**
+	 * @return the paused
+	 */
+	protected String getPaused() {
+		return paused;
+	}
+
+	/**
+	 * @param paused the paused to set
+	 */
+	protected void setPaused(String paused) {
+		this.paused = paused;
 	}
 
 }
