@@ -119,7 +119,7 @@ public class Manager extends AbstractManager {
     protected transient Thread monitorThread;
     protected transient CompletionService<String[]> completionService;
     protected transient ScheduledExecutorService scheduledExecutor;
-    protected transient HTTPServer onDemandMetricsServer = null;
+    protected transient HTTPServer jobServer = null;
 
     protected boolean execError;
     protected boolean stopCommand;
@@ -408,18 +408,17 @@ public class Manager extends AbstractManager {
 			options.setNumberOfFailedUris(intNumFaileTransactions);
 		}
 		String metricsSyncFrequencyInMillis=getOption(Options.METRICS_TO_DB_SYNC_FREQUENCY);
-		if(logMetricsToServerDBName!=null && metricsSyncFrequencyInMillis !=null){
-			//periodically update db only if db name is set and sync frequency is selected
+		if((logMetricsToServerDBName!=null || this.isMetricsToServerLogEnabled(logMetricsToServerLog )) && metricsSyncFrequencyInMillis !=null){
+			//periodically update db only if db name is set or logging enabled and sync frequency is selected
 			//no defaults for this function
 			int intMetricsSyncFrequencyInMillis=Integer.valueOf(metricsSyncFrequencyInMillis);
 			options.setMetricsSyncFrequencyInMillis(intMetricsSyncFrequencyInMillis);
 		}
-		String metricsOnDemandPort=getOption(Options.METRICS_ON_DEMAND_PORT);
-		if(metricsOnDemandPort!=null){
-			//periodically update db only if db name is set and sync frequency is selected
+		String jobServerPort=getOption(Options.JOB_SERVER_PORT);
+		if(jobServerPort!=null){
 			//no defaults for this function
-			int intMetricsOnDemandPort=Integer.valueOf(metricsOnDemandPort);
-			options.setMetricsOnDemandPort(intMetricsOnDemandPort);
+			int intJobServerPort=Integer.valueOf(jobServerPort);
+			options.setJobServerPort(intJobServerPort);
 		}
         // delete the export file if it exists
         deleteFileIfExists(exportFileDir, exportFileName);
@@ -550,7 +549,7 @@ public class Manager extends AbstractManager {
     	startMillis = System.currentTimeMillis();
     	logJobStatsToServerLog( START_RUNNING_JOB_MESSAGE,true);
     	startMetricsSyncJob();
-    	startOnDemandMetricsServer();
+    	startJobServer();
     	LOG.log(INFO, "{0} starting: {1}", new Object[]{NAME, VERSION_MSG});
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
         LOG.log(INFO, "maximum heap size = {0} MiB", maxMemory);
@@ -584,22 +583,22 @@ public class Manager extends AbstractManager {
         }
     }
 
-	private void startOnDemandMetricsServer() throws IOException {
-		int port = options.getMetricsOnDemandPort();
-		if(port>0 && onDemandMetricsServer == null){
-			onDemandMetricsServer = new HTTPServer(port);
-			VirtualHost host = onDemandMetricsServer.getVirtualHost(null); // default host
+	private void startJobServer() throws IOException {
+		int port = options.getJobServerPort();
+		if(port>0 && jobServer == null){
+			jobServer = new HTTPServer(port);
+			VirtualHost host = jobServer.getVirtualHost(null); // default host
 			host.setAllowGeneratedIndex(false); // with directory index pages
 			ContextHandler htmlContextHandler = new HTTPServer.ClasspathResourceContextHandler("corb2-web","/web");
 			ContextHandler dataContextHandler = new OnDemandMetricsDataHandler(this);
 			host.addContext("/service", dataContextHandler);
 			host.addContext("/web", htmlContextHandler);
-			onDemandMetricsServer.start();
+			jobServer.start();
 		}
 	}
-	private void stopOnDemandMetricsServer() throws IOException {
-		if(onDemandMetricsServer!=null){
-			onDemandMetricsServer.stop();
+	private void stopJobServer() throws IOException {
+		if(jobServer!=null){
+			jobServer.stop();
 		}
 	}
 
@@ -934,7 +933,7 @@ public class Manager extends AbstractManager {
         	shutDownMetricsSyncJob();
             logJobStatsToServer(END_RUNNING_JOB_MESSAGE);
             try {
-				stopOnDemandMetricsServer();
+				stopJobServer();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

@@ -421,7 +421,10 @@ public abstract class AbstractManager {
 		logJobStatsToServerLog(message,false);
 		LOG.info(jobStats.toString(false));
 	}
-
+	protected boolean isMetricsToServerLogEnabled(String logMetricsToServerLog){
+		logMetricsToServerLog = logMetricsToServerLog==null?options.getLogMetricsToServerLog():logMetricsToServerLog;
+		return (logMetricsToServerLog != null && !logMetricsToServerLog.equalsIgnoreCase("NONE"));
+	}
 	protected void logJobStatsToServerLog(String message, boolean concise) {
 		Session session = null;
 		try {
@@ -429,7 +432,7 @@ public abstract class AbstractManager {
 				session=contentSource.newSession();
 				this.initJobStats();
 				String logMetricsToServerLog = options.getLogMetricsToServerLog();
-				if (logMetricsToServerLog != null && !logMetricsToServerLog.equalsIgnoreCase("NONE")) {
+				if (isMetricsToServerLogEnabled(logMetricsToServerLog)) {
 
 					String xquery = XQUERY_VERSION_ML
 							+ ((message != null)
@@ -454,9 +457,9 @@ public abstract class AbstractManager {
 	}
 	protected void logJobStatsToServerDocument() {	
 		try {
-			this.populateJobStats();
 			String logMetricsToServerDBName=options.getLogMetricsToServerDBName();
 			if(logMetricsToServerDBName !=null){
+				this.populateJobStats();
 				String uriRoot=options.getLogMetricsToServerDBURIRoot();
 				
 				String uri=logMetricsToDB(logMetricsToServerDBName,uriRoot,options.getLogMetricsToServerDBCollections(), jobStats,options.getLogMetricsToServerDBTransformModule());
@@ -569,9 +572,10 @@ public abstract class AbstractManager {
 					this.jobStats.setNumberOfSucceededTasks(numberOfSucceededTasks);
 					this.jobStats.setTotalNumberOfTasks(taskCount);
 					this.jobStats.setEndTime(sdf.format(new Date(this.endMillis)));
-					Long totalTime = endMillis - startMillis;
+					Long currentTimeMillis = System.currentTimeMillis();
+					Long totalTime = currentTimeMillis - startMillis;
 					this.jobStats.setTotalRunTimeInMillis(totalTime);
-					Long totalTransformTime = endMillis - transformStartMillis;
+					Long totalTransformTime = currentTimeMillis - transformStartMillis;
 					this.jobStats.setAverageTransactionTime(new Double(totalTransformTime / new Double(numberOfFailedTasks+numberOfSucceededTasks)));
 				}	
 			}

@@ -18,7 +18,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 public class JobStats {
-	private static final String START_TIME = "StartTime";
+	private static final String START_TIME = "startTime";
 	private static final String CLOSE_SQUARE = "]";
 	private static final String GT = ">";
 	private static final String LT = "<";

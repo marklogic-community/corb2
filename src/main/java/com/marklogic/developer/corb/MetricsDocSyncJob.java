@@ -32,8 +32,6 @@ public class MetricsDocSyncJob implements Runnable {
 
 	protected static final Logger LOG = Logger.getLogger(Monitor.class.getName());
 
-	protected static final int DEFAULT_NUM_TPS_FOR_ETC = 10;
-
 	private int syncFrequencyInMillis = -1;
 	private Manager manager = null;
 	private boolean shutdownNow;
@@ -68,6 +66,13 @@ public class MetricsDocSyncJob implements Runnable {
 					Thread.interrupted();
 					LOG.log(SEVERE, "interrupted: exiting", e);
 				} catch (Exception e) {
+					LOG.log(SEVERE, "Unexpected error", e);
+				}
+			}
+			else{
+				try {
+					Thread.sleep(syncFrequencyInMillis);//wait to check if the job resumed
+				} catch (InterruptedException e) {
 					LOG.log(SEVERE, "Unexpected error", e);
 				}
 			}

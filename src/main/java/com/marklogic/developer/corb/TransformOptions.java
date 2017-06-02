@@ -85,7 +85,7 @@ public class TransformOptions {
     private Integer numberOfLongRunningUris = 5;
     private Integer numberOfFailedUris = MAX_NUM_FAILED_TRANSACTIONS;
     private Integer metricsSyncFrequencyInMillis = -1;
-    private Integer metricsOnDemandPort = -1;
+    private Integer jobServerPort = -1;
     
     
     
@@ -530,14 +530,14 @@ public class TransformOptions {
 	/**
 	 * @return the metricsOnDemandPort
 	 */
-	protected Integer getMetricsOnDemandPort() {
-		return metricsOnDemandPort;
+	protected Integer getJobServerPort() {
+		return jobServerPort;
 	}
 
 	/**
 	 * @param metricsOnDemandPort the metricsOnDemandPort to set
 	 */
-	protected void setMetricsOnDemandPort(Integer metricsOnDemandPort) {
-		this.metricsOnDemandPort = metricsOnDemandPort;
+	protected void setJobServerPort(Integer metricsOnDemandPort) {
+		this.jobServerPort = metricsOnDemandPort;
 	}
 }
