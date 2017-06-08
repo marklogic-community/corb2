@@ -6,7 +6,7 @@
 [![CircleCI maven build status](https://circleci.com/gh/marklogic/corb2/tree/development.svg?style=shield)](https://circleci.com/gh/marklogic/corb2/tree/development)
 [![Codecov code coverage](https://codecov.io/gh/marklogic/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic/corb2/branch/development)
 [![SonarQube TechDebt](https://sonarqube.com/api/badges/measure?key=com.marklogic%3Amarklogic-corb%3Adevelopment&metric=sqale_debt_ratio)](https://sonarqube.com/component_measures/domain/Maintainability?id=com.marklogic%3Amarklogic-corb%3Adevelopment)
-[![SonarQube Quality](https://sonarqube.com/api/badges/gate?key=com.marklogic%3Amarklogic-corb%3Adevelopment)](https://sonarqube.com/overview?id=com.marklogic%3Amarklogic-corb%3Adevelopment)
+[![SonarQube Quality](https://sonarqube.com/api/badges/gate?key=com.marklogic%3Amarklogic-corb%3Adevelopment)](https://sonarqube.com/dashboard?id=com.marklogic%3Amarklogic-corb%3Adevelopment)
 [![Codacy Grade Badge](https://api.codacy.com/project/badge/Grade/c0195f063ae34c7ea17bb4c97ab7ff2c)](https://www.codacy.com/app/mads-hansen/corb2?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marklogic/corb2&amp;utm_campaign=Badge_Grade)
 
 ### What is CORB?
@@ -160,7 +160,7 @@ Any property specified with prefix (with '.') **INIT-MODULE**, **URIS-MODULE**, 
 Alternatively, **URIS-MODULE** can pass custom inputs to **PRE-BATCH-MODULE**, **PROCESS-MODULE**, **POST-BATCH-MODULE** by returning one or more of the property values in above format before the count the of URIs. If the **URIS-MODULE** needs **URIS\_BATCH\_REF** (above) as well, it needs to be just before the URIs count.  
 
 #### Custom Input From URIS-MODULE Example:
-```
+```xquery
 let $uris := cts:uris()
 return ("PROCESS-MODULE.foo=bar","POST-BATCH-MODULE.alpha=10",fn:count($uris),$uris)
 ```
@@ -179,22 +179,23 @@ Appending `|ADHOC` to the name or path of a XQuery module (with .xqy extension) 
 It is also possible to set a module option with inline code blocks, rather than a file path. This can be done by prepending either `INLINE-XQUERY|` or `INLINE-JAVASCRIPT|` to the option value, followed by the XQuery or JavaScript code to execute. Inline code blocks are executed as "adhoc" modules and are not uploaded to the Modules database. The `|ADHOC` suffix is optional for inline code blocks.
 
 ##### Inline Adhoc Example:
-* `URIS-MODULE=INLINE-XQUERY|xquery version '1.0-ml'; let $uris := cts:uris('', ('document'), cts:collection-query('foo')) return (count($uris), $uris)`
-
+```xquery
+URIS-MODULE=INLINE-XQUERY|xquery version '1.0-ml'; let $uris := cts:uris('', ('document'), cts:collection-query('foo')) return (count($uris), $uris)
+```
 ### JavaScript Modules
 JavaScript modules are supported with Marklogic 8 and can be used in place of an XQuery module. However, if returning multiple values (ex: URIS-MODULE), values must be returned as a [ValueIterator](https://docs.marklogic.com/js/ValueIterator). MarkLogic JavaScript API has helper functions to convert Arrays into ValueIterator ([`xdmp.arrayValues()`](https://docs.marklogic.com/xdmp.arrayValues)) and inserting values into another ValueIterator ([`fn.insertBefore()`](https://docs.marklogic.com/fn.insertBefore)).
 
 JavaScript module must have an .sjs file extension when deployed to Modules database. However, adhoc JavaScript modules support both .sjs or .js file extensions.
 
 For example, a simple URIS-MODULE may look like this:
-```
+```javascript
 var uris = cts.uris()
 fn.insertBefore(uris,0,fn.count(uris))
 ```
 
 To return URIS\_BATCH\_REF, we can do the following:
-```
-fn.insertBefore(fn.insertBefore(uris,0,fn.count(uris)),0,"batch\-ref")
+```xquery
+fn.insertBefore(fn.insertBefore(uris,0,fn.count(uris)),0,"batch-ref")
 ```
 
 > Note: Do not use single quotes within (adhoc) JavaScript modules. If you must use a single quote, escape it with a quote (ex: ''text'')
@@ -242,7 +243,7 @@ Encrypt the URI or password as below. It is assumed that jasypt distribution is 
 `jasypt-1.9.2/bin/encrypt.sh input="uri or password" password="passphrase" algorithm="algorithm" (ex: PBEWithMD5AndTripleDES or PBEWithMD5AndDES)`  
 
 **jasypt.properties file**  
-```
+```properties
 jasypt.algorithm=PBEWithMD5AndTripleDES #(If not specified, default is PBEWithMD5AndTripleDES)
 jasypt.password=passphrase  
 ```
@@ -321,7 +322,7 @@ java -server -cp .:marklogic-xcc-8.0.5.jar:marklogic-corb-2.3.2.jar
 > Note: any of the properties below can be specified as java system property i.e. '-D' option)
 
 ##### sample 1 - simple batch
-```
+```properties
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
 MODULE-ROOT=/temp/  
@@ -331,7 +332,7 @@ PROCESS-MODULE=transform.xqy
 ```
 
 ##### sample 2 - Use username, password, host and port instead of connection URI
-```
+```properties
 XCC-USERNAME=username   
 XCC-PASSWORD=password   
 XCC-HOSTNAME=localhost   
@@ -345,7 +346,7 @@ PROCESS-MODULE=SampleCorbJob.xqy
 ```
 
 ##### sample 3 - simple batch with URIS-FILE (in place of URIS-MODULE)
-```
+```properties
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
 MODULE-ROOT=/temp/  
@@ -355,7 +356,7 @@ PROCESS-MODULE=SampleCorbJob.xqy
 ```
 
 ##### sample 4 - simple batch with XML-FILE (in place of URIS-MODULE)
-```
+```properties
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
 MODULE-ROOT=/temp/  
@@ -367,7 +368,7 @@ PROCESS-MODULE=SampleCorbJob.xqy
 ```
 
 ##### sample 5 - report, generates a single file with data from processing each URI
-```
+```properties
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
 MODULE-ROOT=/temp/  
@@ -378,19 +379,19 @@ EXPORT-FILE-NAME=/local/path/to/exportmyfile.csv
 ```
 
 ##### sample 6 - report with header, add following to sample 4.
-```
+```properties
 PRE-BATCH-TASK=com.marklogic.developer.corb.PreBatchUpdateFileTask  
 EXPORT-FILE-TOP-CONTENT=col1,col2,col3  
 ```
 
 ##### sample 7 - dynamic headers, assuming pre-batch-header.xqy module returns the header row, add the following to sample 4.
-```   
+```properties
 PRE-BATCH-MODULE=pre-batch-header.xqy  
 PRE-BATCH-TASK=com.marklogic.developer.corb.PreBatchUpdateFileTask   
 ```
 
 ##### sample 8 - pre and post batch hooks
-```
+```properties
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
 MODULE-ROOT=/temp/  
@@ -403,7 +404,7 @@ POST-BATCH-MODULE=post-batch.xqy
 
 ##### sample 9 - adhoc tasks
 XQuery modules live local to filesystem where CORB is located. Any XQuery module can be adhoc.
-```
+```properties
 XCC-CONNECTION-URI=xcc://user:password@localhost:8202/   
 THREAD-COUNT=10  
 MODULE-ROOT=/temp/  
@@ -415,20 +416,20 @@ PRE-BATCH-MODULE=/local/path/to/adhoc-pre-batch.xqy|ADHOC
 
 ##### sample 10 - jasypt encryption
 XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and/or XCC-DBNAME properties can be encrypted and optionally enclosed by ENC(). If JASYPT-PROPERTIES-FILE is not specified, it assumes default jasypt.properties.
-```
+```properties
 XCC-CONNECTION-URI=ENC(encrypted_uri)   
 DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter  
 ```
 
 **sample jasypt.properties**  
-```
+```properties
 jasypt.password=foo   
 jasypt.algorithm=PBEWithMD5AndTripleDES  
 ```
 
 ##### sample 11 - private key encryption with java keys
 XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and/or XCC-DBNAME properties can be encrypted and optionally enclosed by ENC()
-```
+```properties
 XCC-CONNECTION-URI=encrypted_uri    
 DECRYPTER=com.marklogic.developer.corb.PrivateKeyDecrypter  
 PRIVATE-KEY-FILE=/path/to/key/private.key  
@@ -436,20 +437,20 @@ PRIVATE-KEY-ALGORITHM=RSA
 ```
 ##### sample 12 - private key encryption with unix keys
 XCC-CONNECTION-URI, XCC-USERNAME, XCC-PASSWORD, XCC-HOSTNAME, XCC-PORT and/or XCC-DBNAME properties can be encrypted and optionally enclosed by ENC()
-```
+```properties
 XCC-CONNECTION-URI=encrypted_uri  
 DECRYPTER=com.marklogic.developer.corb.PrivateKeyDecrypter  
 PRIVATE-KEY-FILE=/path/to/rsa/key/rivate.pkcs8.key  
 ```
 ##### sample 13 - JavaScript modules deployed to modules database
-```
+```properties
 MODULE-ROOT=/temp/  
 MODULES-DATABASE=MY-Modules-DB  
 URIS-MODULE=get-uris.sjs  
 PROCESS-MODULE=transform.sjs  
 ```
 ##### sample 14 - Adhoc JavaScript modules
-```
+```properties
 URIS-MODULE=get-uris.sjs|ADHOC  
 PROCESS-MODULE=extract.sjs|ADHOC
 ```
@@ -519,7 +520,7 @@ java -cp pathToXCC.jar:pathToCORB.jar:pathToJasypt.jar
         com.marklogic.developer.corb.ModuleExecutor
 ```
 Where myJob.properties has:
-```
+```properties
 MODULES-DATABASE=My-Modules
 DECRYPTER=com.marklogic.developer.corb.JasyptDecrypter
 PROCESS-MODULE=/test/HelloWorld.xqy
