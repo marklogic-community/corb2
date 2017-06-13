@@ -21,7 +21,6 @@ package com.marklogic.developer.corb;
 import com.marklogic.xcc.SecurityOptions;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Properties;
 import javax.net.ssl.SSLContext;
 
 /**
@@ -29,7 +28,7 @@ import javax.net.ssl.SSLContext;
  * @since 2.2.0
  */
 public interface SSLConfig {
-	void setProperties(Properties props);
+	void init(Options options);
 	void setDecrypter(Decrypter decrypter);
 	String[] getEnabledCipherSuites();
 	String[] getEnabledProtocols();

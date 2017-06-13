@@ -61,8 +61,8 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 
 	private void addLineCountToProps() throws IOException{
 		int ct = FileUtils.getLineCount(new File(exportDir, getPartFileName()));
-		if (this.properties != null && ct > 0) {
-			this.properties.setProperty(EXPORT_FILE_HEADER_LINE_COUNT, String.valueOf(ct));
+		if (this.options != null && ct > 0) {
+			this.options.setProperty(EXPORT_FILE_HEADER_LINE_COUNT, String.valueOf(ct));
 		}
 	}
 

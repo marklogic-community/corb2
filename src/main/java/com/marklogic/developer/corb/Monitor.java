@@ -103,7 +103,7 @@ public class Monitor implements Runnable {
             // try to avoid thread starvation
             Thread.yield();
 
-            future = cs.poll(TransformOptions.PROGRESS_INTERVAL_MS, TimeUnit.MILLISECONDS);
+            future = cs.poll(Options.PROGRESS_INTERVAL_MS, TimeUnit.MILLISECONDS);
             if (null != future) {
                 // record result, or throw exception
                 String[] lastUris = future.get();
@@ -131,9 +131,9 @@ public class Monitor implements Runnable {
 
     private long showProgress() {
         long current = System.currentTimeMillis();
-        if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
+        if (current - lastProgress > Options.PROGRESS_INTERVAL_MS) {
             if (pool.isPaused()) {
-                LOG.log(INFO, "CoRB2 has been paused. Resume execution by changing the " + Options.COMMAND + " option in the command file {0} to RESUME", manager.getOption(COMMAND_FILE));
+                LOG.log(INFO, "CoRB2 has been paused. Resume execution by changing the " + Options.COMMAND + " option in the command file {0} to RESUME", manager.getOptions().getProperty(COMMAND_FILE));
             }
             LOG.log(INFO, () -> MessageFormat.format("completed {0}", getProgressMessage(completed)));
             lastProgress = current;

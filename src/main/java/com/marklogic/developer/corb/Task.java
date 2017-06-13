@@ -20,13 +20,21 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.xcc.ContentSource;
 import java.util.concurrent.Callable;
-import java.util.Properties;
 import java.util.TimeZone;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  */
-public interface Task extends Callable<String[]> {
+public interface Task extends Callable<String[]> {  
+    /**
+     * If additional data is sent from CUSTOM URI module, it is available in
+     * properties with key @{value #URIS_BATCH_REF}
+     * 
+     * @param props
+     */
+    void init(Options props);
+    
+    Options getOptions();
 
 	void setContentSource(ContentSource cs);
 
@@ -45,14 +53,6 @@ public interface Task extends Callable<String[]> {
     
     void setTimeZone(TimeZone timeZone);
     
-	/**
-	 * If additional data is sent from CUSTOM URI module, it is available in
-	 * properties with key @{value #URIS_BATCH_REF}
-	 * 
-	 * @param props
-	 */
-	void setProperties(Properties props);
-
 	void setInputURI(String... inputUri);
 
 	void setFailOnError(boolean failOnError);

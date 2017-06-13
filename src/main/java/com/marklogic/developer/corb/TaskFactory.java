@@ -60,7 +60,7 @@ public class TaskFactory {
     }
 
     public Task newProcessTask(String[] uris, boolean failOnError) {
-        TransformOptions options = manager.getOptions();
+        Options options = manager.getOptions();
         if (null == options.getProcessTaskClass() && null == options.getProcessModule()) {
             throw new NullPointerException("null process task and xquery module");
         }
@@ -78,7 +78,7 @@ public class TaskFactory {
     }
 
     public Task newPreBatchTask() {
-        TransformOptions options = manager.getOptions();
+        Options options = manager.getOptions();
         if (null == options.getPreBatchTaskClass() && null == options.getPreBatchModule()) {
             return null;
         }
@@ -95,7 +95,7 @@ public class TaskFactory {
     }
 
     public Task newPostBatchTask() {
-        TransformOptions options = manager.getOptions();
+        Options options = manager.getOptions();
         if (null == options.getPostBatchTaskClass() && null == options.getPostBatchModule()) {
             return null;
         }
@@ -112,7 +112,7 @@ public class TaskFactory {
     }
 
     public Task newInitTask() {
-        TransformOptions options = manager.getOptions();
+        Options options = manager.getOptions();
         if (null == manager.getOptions().getInitTaskClass() && null == options.getInitModule()) {
             return null;
         }
@@ -133,6 +133,8 @@ public class TaskFactory {
     }
 
     private void setupTask(Task task, String moduleType, String module, String[] uris, boolean failOnError) {
+        Options options = manager.getOptions();
+        task.init(options);
         if (module != null) {
             if (isInlineOrAdhoc(module)) {
                 String adhocQuery;
@@ -156,7 +158,7 @@ public class TaskFactory {
             } else {
                 String modulePath = moduleToPathMap.get(module);
                 if (modulePath == null) {
-                    String root = manager.getOptions().getModuleRoot();
+                    String root = options.getModuleRoot();
                     modulePath = buildModulePath(root, module);
                     moduleToPathMap.put(module, modulePath);
                 }
@@ -169,10 +171,7 @@ public class TaskFactory {
         task.setModuleType(moduleType);
         task.setContentSource(manager.getContentSource());
 
-        Properties managerProperties = manager.getProperties();
-        task.setProperties(managerProperties);
-
-        String timeZoneId = managerProperties.getProperty(XCC_TIME_ZONE);
+        String timeZoneId = options.getProperty(XCC_TIME_ZONE);
         if (timeZoneId != null) {
             TimeZone timeZone = TimeZone.getTimeZone(timeZoneId);
             task.setTimeZone(timeZone);

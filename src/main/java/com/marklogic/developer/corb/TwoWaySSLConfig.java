@@ -21,7 +21,6 @@ package com.marklogic.developer.corb;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,7 +42,6 @@ import javax.net.ssl.TrustManagerFactory;
  * @since 2.2.0
  */
 public class TwoWaySSLConfig extends AbstractSSLConfig {
-
     private static final Logger LOG = Logger.getLogger(TwoWaySSLConfig.class.getName());
     public static final String SSL_CIPHER_SUITES = com.marklogic.developer.corb.Options.SSL_CIPHER_SUITES;
     public static final String SSL_ENABLED_PROTOCOLS = com.marklogic.developer.corb.Options.SSL_ENABLED_PROTOCOLS;
@@ -52,20 +50,20 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
     public static final String SSL_KEYSTORE_PASSWORD = com.marklogic.developer.corb.Options.SSL_KEYSTORE_PASSWORD;
     public static final String SSL_KEYSTORE_TYPE = com.marklogic.developer.corb.Options.SSL_KEYSTORE_TYPE;
     public static final String SSL_PROPERTIES_FILE = com.marklogic.developer.corb.Options.SSL_PROPERTIES_FILE;
-    private static final String DELIMITER = ",";
+    public static final String DELIMITER = ",";
+    
+    protected Properties properties = new Properties();
 
     /**
      * @return acceptable list of cipher suites
      */
     @Override
     public String[] getEnabledCipherSuites() {
-        if (properties != null) {
-            String cipherSuites = properties.getProperty(SSL_CIPHER_SUITES);
-            if (isNotEmpty(cipherSuites)) {
-                String[] cipherSuitesList = cipherSuites.split(DELIMITER);
-                LOG.log(Level.INFO, MessageFormat.format("Using cipher suites: {0}", (Object[]) cipherSuitesList));
-                return cipherSuitesList;
-            }
+        String cipherSuites = options.getProperty(SSL_CIPHER_SUITES);
+        if (isNotEmpty(cipherSuites)) {
+            String[] cipherSuitesList = cipherSuites.split(DELIMITER);
+            LOG.log(Level.INFO, MessageFormat.format("Using cipher suites: {0}", (Object[]) cipherSuitesList));
+            return cipherSuitesList;
         }
         return new String[]{};
     }
@@ -75,66 +73,45 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
      */
     @Override
     public String[] getEnabledProtocols() {
-        if (properties != null) {
-            String enabledProtocols = properties.getProperty(SSL_ENABLED_PROTOCOLS);
-            if (isNotEmpty(enabledProtocols)) {
-                String[] enabledProtocolsList = enabledProtocols.split(DELIMITER);
-                LOG.log(Level.INFO, MessageFormat.format("Using enabled protocols: {0}", (Object[]) enabledProtocolsList));
-                return enabledProtocolsList;
-            }
+        String enabledProtocols = options.getProperty(SSL_ENABLED_PROTOCOLS);
+        if (isNotEmpty(enabledProtocols)) {
+            String[] enabledProtocolsList = enabledProtocols.split(DELIMITER);
+            LOG.log(Level.INFO, MessageFormat.format("Using enabled protocols: {0}", (Object[]) enabledProtocolsList));
+            return enabledProtocolsList;
         }
         return new String[]{};
     }
 
-    private String getRequiredProperty(String propertyName) {
-        String property = getProperty(propertyName);
-        if (isNotEmpty(property)) {
+    private String getProperty(String propertyName, boolean required) {
+        String property = properties.getProperty(propertyName);
+        if (isBlank(property)) {
+            property = options.getProperty(propertyName);
+        }
+        if (isNotEmpty(property) || !required) {
             return property;
         } else {
             throw new IllegalStateException("Property " + propertyName + " is not provided and is required");
         }
     }
 
-    /**
-     * loads properties file and adds it to properties
-     *
-     */
-    protected void loadPropertiesFile() {
-        String securityFileName = getProperty(SSL_PROPERTIES_FILE);
-        if (isNotBlank(securityFileName)) {
-            File f = new File(securityFileName);
-            if (f.exists() && !f.isDirectory()) {
-                LOG.log(Level.INFO, () -> MessageFormat.format("Loading SSL configuration file {0} from filesystem", securityFileName));
-
-                try (InputStream is = new FileInputStream(f)) {
-                    if (properties == null) {
-                        properties = new Properties();
-                    }
-                    properties.load(is);
-                } catch (IOException e) {
-                    LOG.log(Level.SEVERE, () -> MessageFormat.format("Error loading ssl properties file {0}", SSL_PROPERTIES_FILE));
-                    throw new RuntimeException(e);
-                }
-            } else {
-                throw new IllegalStateException("Unable to load " + securityFileName);
-            }
-        } else {
-            LOG.log(Level.INFO, () -> MessageFormat.format("Property {0} not present", SSL_PROPERTIES_FILE));
-        }
-    }
-
     @Override
     public SSLContext getSSLContext() throws NoSuchAlgorithmException, KeyManagementException {
-
-        loadPropertiesFile();
-
-        String sslkeyStore = getRequiredProperty(SSL_KEYSTORE);
-        String sslkeyStorePassword = getRequiredProperty(SSL_KEYSTORE_PASSWORD);
-        String sslkeyPassword = getProperty(SSL_KEY_PASSWORD);
+        String securityFileName = options.getProperty(SSL_PROPERTIES_FILE);
+        if (isNotBlank(securityFileName)) {
+            try{
+                properties = AbstractManager.loadPropertiesFile(securityFileName,true);
+            }catch(IOException exc){
+                throw new IllegalStateException("Unable to load "+securityFileName,exc);
+            }
+        }
+        
+        String sslkeyStore = getProperty(SSL_KEYSTORE,true);
+        String sslkeyStorePassword = getProperty(SSL_KEYSTORE_PASSWORD,true);
+        String sslkeyPassword = getProperty(SSL_KEY_PASSWORD,false);
         if (isBlank(sslkeyPassword)) {
             sslkeyPassword = sslkeyStorePassword;
         }
-        String sslkeyStoreType = getRequiredProperty(SSL_KEYSTORE_TYPE);
+        String sslkeyStoreType = getProperty(SSL_KEYSTORE_TYPE,true);
         // decrypting password values
         if (decrypter != null) {
             if (sslkeyStorePassword != null) {

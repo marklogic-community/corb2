@@ -44,25 +44,25 @@ public class AbstractDecrypterTest {
     public void testInitNullProperties()  {
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         try {
-            instance.init(null);
-        } catch (IOException | ClassNotFoundException ex) {
+            instance.init(new Options());
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        assertNotNull(instance.properties);
+        assertNotNull(instance.options);
     }
 
     @Test
-    public void testInit() {
-        Properties props = new Properties();
+    public void testInit() throws CorbException{
+        Options options = new Options();
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         try {
-            instance.init(props);
-        } catch (IOException | ClassNotFoundException ex) {
+            instance.init(options);
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        assertEquals(props, instance.properties);
+        assertEquals(options, instance.options);
     }
 
     @Test
@@ -142,32 +142,33 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testGetProperty() {
+    public void testGetProperty() throws ClassNotFoundException, IOException, CorbException {
         String key = "testGetProperty";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
-        instance.properties = new Properties();
+        instance.init(new Options());
         String result = instance.getProperty(key);
         assertNull(result);
     }
 
     @Test
-    public void testGetPropertyBlankSystemProperty() {
+    public void testGetPropertyBlankSystemProperty() throws ClassNotFoundException, IOException, CorbException {
         String key = "testGetSystemProperty";
         System.setProperty(key, FOUR_SPACES);
         AbstractDecrypter instance = new AbstractDecrypterImpl();
-        instance.properties = new Properties();
+        instance.init(new Options());
         String result = instance.getProperty(key);
         System.clearProperty(key);
         assertNull(result);
     }
 
     @Test
-    public void testGetPropertyBlankPropertiesProperty() {
+    public void testGetPropertyBlankPropertiesProperty() throws CorbException {
         String key = "testGetBlankProperty";
         System.setProperty(key, FOUR_SPACES);
         AbstractDecrypter instance = new AbstractDecrypterImpl();
-        instance.properties = new Properties();
-        instance.properties.setProperty(key, "      ");
+        Options options = new Options();
+        options.setProperty(key, "      ");
+        instance.init(options);
         String result = instance.getProperty(key);
         System.clearProperty(key);
         assertEquals("", result);

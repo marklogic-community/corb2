@@ -18,50 +18,34 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.Options.BATCH_SIZE;
-import static com.marklogic.developer.corb.Options.COLLECTION_NAME;
-import static com.marklogic.developer.corb.Options.COMMAND_FILE;
-import static com.marklogic.developer.corb.Options.DISK_QUEUE;
-import static com.marklogic.developer.corb.Options.DISK_QUEUE_TEMP_DIR;
-import static com.marklogic.developer.corb.Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE;
-import static com.marklogic.developer.corb.Options.ERROR_FILE_NAME;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_DIR;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_PART_EXT;
-import static com.marklogic.developer.corb.Options.FAIL_ON_ERROR;
-import static com.marklogic.developer.corb.Options.INIT_MODULE;
-import static com.marklogic.developer.corb.Options.INIT_TASK;
-import static com.marklogic.developer.corb.Options.INSTALL;
-import static com.marklogic.developer.corb.Options.MODULES_DATABASE;
-import static com.marklogic.developer.corb.Options.MODULE_ROOT;
-import static com.marklogic.developer.corb.Options.NUM_TPS_FOR_ETC;
-import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
-import static com.marklogic.developer.corb.Options.POST_BATCH_MODULE;
-import static com.marklogic.developer.corb.Options.POST_BATCH_TASK;
-import static com.marklogic.developer.corb.Options.POST_BATCH_XQUERY_MODULE;
-import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
-import static com.marklogic.developer.corb.Options.PRE_BATCH_TASK;
-import static com.marklogic.developer.corb.Options.PRE_BATCH_XQUERY_MODULE;
-import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
-import static com.marklogic.developer.corb.Options.PROCESS_TASK;
-import static com.marklogic.developer.corb.Options.THREAD_COUNT;
-import static com.marklogic.developer.corb.Options.URIS_FILE;
-import static com.marklogic.developer.corb.Options.URIS_LOADER;
-import static com.marklogic.developer.corb.Options.URIS_MODULE;
-import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
-import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
-import com.marklogic.developer.corb.util.FileUtils;
-import com.marklogic.developer.corb.util.NumberUtils;
-import com.marklogic.developer.corb.util.StringUtils;
+import static com.marklogic.developer.corb.Constants.COLLECTION_NAME;
+import static com.marklogic.developer.corb.Constants.COMMAND_FILE;
+import static com.marklogic.developer.corb.Constants.COMMAND_FILE_POLL_INTERVAL;
+import static com.marklogic.developer.corb.Constants.EXIT_CODE_NO_URIS;
+import static com.marklogic.developer.corb.Constants.EXPORT_FILE_DIR;
+import static com.marklogic.developer.corb.Constants.EXPORT_FILE_NAME;
+import static com.marklogic.developer.corb.Constants.INSTALL;
+import static com.marklogic.developer.corb.Constants.MODULES_DATABASE;
+import static com.marklogic.developer.corb.Constants.MODULE_ROOT;
+import static com.marklogic.developer.corb.Constants.OPTIONS_FILE;
+import static com.marklogic.developer.corb.Constants.POST_BATCH_MODULE;
+import static com.marklogic.developer.corb.Constants.POST_BATCH_TASK;
+import static com.marklogic.developer.corb.Constants.PRE_BATCH_MODULE;
+import static com.marklogic.developer.corb.Constants.PRE_BATCH_TASK;
+import static com.marklogic.developer.corb.Constants.PROCESS_MODULE;
+import static com.marklogic.developer.corb.Constants.PROCESS_TASK;
+import static com.marklogic.developer.corb.Constants.THREAD_COUNT;
+import static com.marklogic.developer.corb.Constants.URIS_FILE;
+import static com.marklogic.developer.corb.Constants.URIS_LOADER;
+import static com.marklogic.developer.corb.Constants.URIS_MODULE;
+import static com.marklogic.developer.corb.Constants.XCC_CONNECTION_URI;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
-import static com.marklogic.developer.corb.util.StringUtils.stringToBoolean;
-import com.marklogic.xcc.Content;
-import com.marklogic.xcc.ContentCreateOptions;
-import com.marklogic.xcc.ContentFactory;
-import com.marklogic.xcc.Session;
-import com.marklogic.xcc.exceptions.RequestException;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -85,10 +69,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import static java.util.logging.Level.INFO;
-import static java.util.logging.Level.SEVERE;
-import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
+
+import com.marklogic.developer.corb.util.FileUtils;
+import com.marklogic.developer.corb.util.CollectionUtils;
+import com.marklogic.developer.corb.util.NumberUtils;
+import com.marklogic.developer.corb.util.StringUtils;
+import com.marklogic.xcc.Content;
+import com.marklogic.xcc.ContentCreateOptions;
+import com.marklogic.xcc.ContentFactory;
+import com.marklogic.xcc.Session;
+import com.marklogic.xcc.exceptions.RequestException;
 
 /**
  * @author Michael Blakeley, MarkLogic Corporation
@@ -111,11 +102,17 @@ public class Manager extends AbstractManager {
     protected boolean execError;
     protected boolean stopCommand;
 
-    protected static int EXIT_CODE_NO_URIS = EXIT_CODE_SUCCESS;
-    protected static final int EXIT_CODE_STOP_COMMAND = 3;
+    protected static int exitCodeNoUris = Options.DEFAULT_EXIT_CODE_SUCCESS;
 
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
     private static final String TAB = "\t";
+    
+    protected static final String[] argNames = {
+        XCC_CONNECTION_URI,COLLECTION_NAME,PROCESS_MODULE,THREAD_COUNT,
+        URIS_MODULE,MODULE_ROOT,MODULES_DATABASE,INSTALL,PROCESS_TASK,
+        PRE_BATCH_MODULE,PRE_BATCH_TASK,POST_BATCH_MODULE,POST_BATCH_TASK,
+        EXPORT_FILE_DIR,EXPORT_FILE_NAME,URIS_FILE
+    };
 
     /**
      * @param args
@@ -123,291 +120,52 @@ public class Manager extends AbstractManager {
     public static void main(String... args) {
         Manager manager = new Manager();
         try {
-            manager.init(args);
+            manager.init(getArgsAsMap(argNames,args));
         } catch (Exception exc) {
             LOG.log(SEVERE, "Error initializing CORB " + exc.getMessage(), exc);
             manager.usage();
-            System.exit(EXIT_CODE_INIT_ERROR);
+            System.exit(Options.DEFAULT_EXIT_CODE_INIT_ERROR);
         }
         //now we can start corb.
         try {
             int count = manager.run();
             if (manager.execError) {
-                System.exit(EXIT_CODE_PROCESSING_ERROR);
+                System.exit(Options.DEFAULT_EXIT_CODE_PROCESSING_ERROR);
             } else if (manager.stopCommand) {
-                System.exit(EXIT_CODE_STOP_COMMAND);
+                System.exit(Options.DEFAULT_EXIT_CODE_STOP_COMMAND);
             } else if (count == 0) {
-                System.exit(EXIT_CODE_NO_URIS);
+                System.exit(exitCodeNoUris);
             } else {
-                System.exit(EXIT_CODE_SUCCESS);
+                System.exit(Options.DEFAULT_EXIT_CODE_SUCCESS);
             }
         } catch (Exception exc) {
             LOG.log(SEVERE, "Error while running CORB", exc);
-            System.exit(EXIT_CODE_PROCESSING_ERROR);
+            System.exit(Options.DEFAULT_EXIT_CODE_PROCESSING_ERROR);
         }
     }
-
+    
     @Override
-    public void init(String[] commandlineArgs, Properties props) throws CorbException {
-        super.init(commandlineArgs, props);
-
+    public void init(Map<String,String> argsAsMap, Map<String,String> props) throws CorbException {
+        super.init(argsAsMap, props);
+        
         prepareModules();
 
-        String[] args = commandlineArgs;
-        if (args == null) {
-            args = new String[0];
-        }
-        String collectionName = getOption(args, 1, COLLECTION_NAME);
-        this.collection = collectionName == null ? "" : collectionName;
-
-        EXIT_CODE_NO_URIS = NumberUtils.toInt(getOption(Options.EXIT_CODE_NO_URIS));
+        exitCodeNoUris = NumberUtils.toInt(options.getProperty(EXIT_CODE_NO_URIS),Options.DEFAULT_EXIT_CODE_NO_URIS);
 
         scheduleCommandFileWatcher();
+        
+        // delete the export file if it exists
+        deleteFileIfExists(options.getExportFileDir(), options.getExportFileName());
+        deleteFileIfExists(options.getExportFileDir(), options.getErrorFileName());
     }
 
     protected void scheduleCommandFileWatcher() {
-        String commandFile = getOption(COMMAND_FILE);
+        String commandFile = options.getProperty(COMMAND_FILE);
         if (isNotBlank(commandFile)) {
             scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
             CommandFileWatcher commandFileWatcher = new CommandFileWatcher(FileUtils.getFile(commandFile), this);
-            int pollInterval = NumberUtils.toInt(getOption(Options.COMMAND_FILE_POLL_INTERVAL), 1);
+            int pollInterval = NumberUtils.toInt(options.getProperty(COMMAND_FILE_POLL_INTERVAL), Options.DEFAULT_COMMAND_FILE_POLL_INTERVAL);
             scheduledExecutor.scheduleWithFixedDelay(commandFileWatcher, pollInterval, pollInterval, TimeUnit.SECONDS);
-        }
-    }
-
-    @Override
-    protected void initOptions(String... args) throws CorbException {
-        super.initOptions(args);
-        // gather inputs
-        String processModule = getOption(args, 2, PROCESS_MODULE);
-        String threadCount = getOption(args, 3, THREAD_COUNT);
-        String urisModule = getOption(args, 4, URIS_MODULE);
-        String moduleRoot = getOption(args, 5, MODULE_ROOT);
-        String modulesDatabase = getOption(args, 6, MODULES_DATABASE);
-        String install = getOption(args, 7, INSTALL);
-        String processTask = getOption(args, 8, PROCESS_TASK);
-        String preBatchModule = getOption(args, 9, PRE_BATCH_MODULE);
-        String preBatchTask = getOption(args, 10, PRE_BATCH_TASK);
-        String postBatchModule = getOption(args, 11, POST_BATCH_MODULE);
-        String postBatchTask = getOption(args, 12, POST_BATCH_TASK);
-        String exportFileDir = getOption(args, 13, EXPORT_FILE_DIR);
-        String exportFileName = getOption(args, 14, EXPORT_FILE_NAME);
-        String urisFile = getOption(args, 15, URIS_FILE);
-
-        String urisLoader = getOption(URIS_LOADER);
-        if (urisLoader != null) {
-            try {
-                options.setUrisLoaderClass(getUrisLoaderCls(urisLoader));
-            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException ex) {
-                throw new CorbException("Unable to instantiate UrisLoader Class: " + urisLoader, ex);
-            }
-        }
-
-        String initModule = getOption(INIT_MODULE);
-        String initTask = getOption(INIT_TASK);
-
-        String batchSize = getOption(BATCH_SIZE);
-        String failOnError = getOption(FAIL_ON_ERROR);
-        String errorFileName = getOption(ERROR_FILE_NAME);
-
-        options.setUseDiskQueue(stringToBoolean(getOption(DISK_QUEUE)));
-        String diskQueueMaxInMemorySize = getOption(DISK_QUEUE_MAX_IN_MEMORY_SIZE);
-        String diskQueueTempDir = getOption(DISK_QUEUE_TEMP_DIR);
-
-        String numTpsForETC = getOption(NUM_TPS_FOR_ETC);
-
-        //Check legacy properties keys, for backwards compatibility
-        if (processModule == null) {
-            processModule = getOption(XQUERY_MODULE);
-        }
-        if (preBatchModule == null) {
-            preBatchModule = getOption(PRE_BATCH_XQUERY_MODULE);
-        }
-        if (postBatchModule == null) {
-            postBatchModule = getOption(POST_BATCH_XQUERY_MODULE);
-        }
-        if (moduleRoot != null) {
-            options.setModuleRoot(moduleRoot);
-        }
-        if (processModule != null) {
-            options.setProcessModule(processModule);
-        }
-        if (threadCount != null) {
-            options.setThreadCount(Integer.parseInt(threadCount));
-        }
-        if (urisModule != null) {
-            options.setUrisModule(urisModule);
-        }
-        if (modulesDatabase != null) {
-            options.setModulesDatabase(modulesDatabase);
-        }
-        if (install != null && ("true".equalsIgnoreCase(install) || "1".equals(install))) {
-            options.setDoInstall(true);
-        }
-        if (urisFile != null) {
-            options.setUrisFile(urisFile);
-        }
-        if (batchSize != null) {
-            options.setBatchSize(Integer.parseInt(batchSize));
-        }
-        if (failOnError != null && "false".equalsIgnoreCase(failOnError)) {
-            options.setFailOnError(false);
-        }
-        if (diskQueueMaxInMemorySize != null) {
-            options.setDiskQueueMaxInMemorySize(Integer.parseInt(diskQueueMaxInMemorySize));
-        }
-        if (numTpsForETC != null) {
-            options.setNumTpsForETC(Integer.parseInt(numTpsForETC));
-        }
-        if (!this.properties.containsKey(EXPORT_FILE_DIR) && exportFileDir != null) {
-            this.properties.put(EXPORT_FILE_DIR, exportFileDir);
-        }
-        if (!this.properties.containsKey(EXPORT_FILE_NAME) && exportFileName != null) {
-            this.properties.put(EXPORT_FILE_NAME, exportFileName);
-        }
-        if (!this.properties.containsKey(ERROR_FILE_NAME) && errorFileName != null) {
-            this.properties.put(ERROR_FILE_NAME, errorFileName);
-        }
-
-        if (urisFile != null) {
-            File f = new File(options.getUrisFile());
-            if (!f.exists()) {
-                throw new IllegalArgumentException("Uris file " + urisFile + " not found");
-            }
-        }
-
-        if (initModule != null) {
-            options.setInitModule(initModule);
-        }
-        if (preBatchModule != null) {
-            options.setPreBatchModule(preBatchModule);
-        }
-        if (postBatchModule != null) {
-            options.setPostBatchModule(postBatchModule);
-        }
-
-        // java class for processing individual tasks.
-        // If specified, it is used instead of xquery module, but xquery module is
-        // still required.
-        try {
-            if (initTask != null) {
-                options.setInitTaskClass(getTaskCls(INIT_TASK, initTask));
-            }
-            if (processTask != null) {
-                options.setProcessTaskClass(getTaskCls(PROCESS_TASK, processTask));
-            }
-            if (preBatchTask != null) {
-                options.setPreBatchTaskClass(getTaskCls(PRE_BATCH_TASK, preBatchTask));
-            }
-            if (postBatchTask != null) {
-                options.setPostBatchTaskClass(getTaskCls(POST_BATCH_TASK, postBatchTask));
-            }
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
-            throw new CorbException("Unable to instantiate class", ex);
-        }
-
-        if (null == options.getProcessTaskClass() && null == options.getProcessModule()) {
-            throw new NullPointerException(PROCESS_TASK + " or " + PROCESS_MODULE + " must be specified");
-        }
-
-        if (options.getPostBatchTaskClass() == null) {
-            if (this.properties.containsKey(EXPORT_FILE_PART_EXT)) {
-                this.properties.remove(EXPORT_FILE_PART_EXT);
-            }
-            if (System.getProperty(EXPORT_FILE_PART_EXT) != null) {
-                System.clearProperty(EXPORT_FILE_PART_EXT);
-            }
-        }
-
-        if (exportFileDir != null) {
-            File dirFile = new File(exportFileDir);
-            if (dirFile.exists() && dirFile.canWrite()) {
-                options.setExportFileDir(exportFileDir);
-            } else {
-                throw new IllegalArgumentException("Cannot write to export folder " + exportFileDir);
-            }
-        }
-
-        if (diskQueueTempDir != null) {
-            File dirFile = new File(diskQueueTempDir);
-            if (dirFile.exists() && dirFile.canWrite()) {
-                options.setDiskQueueTempDir(dirFile);
-            } else {
-                throw new IllegalArgumentException("Cannot write to queue temp directory " + diskQueueTempDir);
-            }
-        }
-
-        // delete the export file if it exists
-        deleteFileIfExists(exportFileDir, exportFileName);
-        deleteFileIfExists(exportFileDir, errorFileName);
-
-        normalizeLegacyProperties();
-    }
-
-    protected void normalizeLegacyProperties() {
-        //fix map keys for backward compatibility
-        if (this.properties != null) {
-            this.properties.putAll(getNormalizedProperties(this.properties));
-        }
-        //System properties override properties file properties
-        Properties props = getNormalizedProperties(System.getProperties());
-        for (final String name : props.stringPropertyNames()) {
-            System.setProperty(name, props.getProperty(name));
-        }
-    }
-
-    private Properties getNormalizedProperties(Properties properties) {
-        Properties normalizedProperties = new Properties();
-        if (properties == null) {
-            return normalizedProperties;
-        }
-
-        //key=Current Property, value=Legacy Property
-        Map<String, String> legacyProperties = new HashMap<>(3);
-        legacyProperties.put(PROCESS_MODULE, XQUERY_MODULE);
-        legacyProperties.put(PRE_BATCH_MODULE, PRE_BATCH_XQUERY_MODULE);
-        legacyProperties.put(POST_BATCH_MODULE, POST_BATCH_XQUERY_MODULE);
-
-        for (String key : properties.stringPropertyNames()) {
-            String value = properties.getProperty(key);
-            for (Map.Entry<String, String> entry : legacyProperties.entrySet()) {
-                String legacyKey = entry.getValue();
-                String legacyKeyPrefix = legacyKey + '.';
-                String normalizedKey = entry.getKey();
-                String normalizedKeyPrefix = normalizedKey + '.';
-                String normalizedCustomInputKey = key.replace(legacyKeyPrefix, normalizedKeyPrefix);
-
-                //First check for an exact match of the keys
-                if (!properties.containsKey(normalizedKey) && key.equals(legacyKey)) {
-                    normalizedProperties.setProperty(normalizedKey, value);
-                    //Then look for custom inputs with the base property as a prefix
-                } else if (!properties.containsKey(normalizedCustomInputKey)
-                        && key.startsWith(legacyKeyPrefix) && value != null) {
-                    normalizedProperties.setProperty(normalizedCustomInputKey, value);
-                }
-            }
-        }
-
-        return normalizedProperties;
-    }
-
-    protected Class<? extends Task> getTaskCls(String type, String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        Class<?> cls = Class.forName(className);
-        if (Task.class.isAssignableFrom(cls)) {
-            cls.newInstance(); // sanity check
-            return cls.asSubclass(Task.class);
-        } else {
-            throw new IllegalArgumentException(type + " must be of type com.marklogic.developer.corb.Task");
-        }
-    }
-
-    protected Class<? extends UrisLoader> getUrisLoaderCls(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        Class<?> cls = Class.forName(className);
-        if (UrisLoader.class.isAssignableFrom(cls)) {
-            cls.newInstance(); // sanity check
-            return cls.asSubclass(UrisLoader.class);
-        } else {
-            throw new IllegalArgumentException("Uris Loader must be of type com.marklogic.developer.corb.UrisLoader");
         }
     }
 
@@ -616,8 +374,7 @@ public class Manager extends AbstractManager {
 
         loader.setOptions(options);
         loader.setContentSource(contentSource);
-        loader.setCollection(collection);
-        loader.setProperties(properties);
+        loader.setCollection(options.getCollection());
         return loader;
     }
 
@@ -633,7 +390,7 @@ public class Manager extends AbstractManager {
 
             urisLoader.open();
             if (urisLoader.getBatchRef() != null) {
-                properties.put(URIS_BATCH_REF, urisLoader.getBatchRef());
+                options.setProperty(URIS_BATCH_REF, urisLoader.getBatchRef());
                 LOG.log(INFO, () -> MessageFormat.format("{0}: {1}", URIS_BATCH_REF, urisLoader.getBatchRef()));
             }
 

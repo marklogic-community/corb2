@@ -211,17 +211,17 @@ public class AbstractManagerTest {
     }
 
     @Test
-    public void testLogProperties() {
-        Properties props = new Properties();
-        props.setProperty("key1", "value1");
-        props.setProperty("key2", "value2");
+    public void testLogProperties() throws CorbException {
+        Options options = new Options();
+        options.setProperty("key1", "value1");
+        options.setProperty("key2", "value2");
         Manager instance;
         try {
             instance = getMockManagerWithEmptyResults();
-            instance.properties = props;
+            instance.options = options;
             instance.logProperties();
             List<LogRecord> records = testLogger.getLogRecords();
-            assertEquals(props.size(), records.size());
+            assertEquals(options.getProperties(), records.size());
         } catch (RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

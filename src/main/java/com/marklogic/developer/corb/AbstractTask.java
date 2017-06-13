@@ -32,7 +32,6 @@ import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.commaSeparatedValuesToList;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
@@ -52,7 +51,6 @@ import java.io.OutputStream;
 import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
 import static java.util.logging.Level.SEVERE;
@@ -78,7 +76,7 @@ public abstract class AbstractTask implements Task {
     protected ContentSource cs;
     protected String moduleType;
     protected String moduleUri;
-    protected Properties properties = new Properties();
+    protected Options options;
     protected String[] inputUris;
 
     protected String adhocQuery;
@@ -97,6 +95,19 @@ public abstract class AbstractTask implements Task {
     private static final Logger LOG = Logger.getLogger(AbstractTask.class.getName());
     private static final String AT_URI = " at URI: ";
 
+    @Override
+    public void init(Options options) {
+        if(options == null){
+            throw new NullPointerException("Options cannot be null");
+        }
+        this.options = options;
+    }
+    
+    @Override
+    public Options getOptions(){
+        return this.options;
+    }
+    
     @Override
     public void setContentSource(ContentSource cs) {
         this.cs = cs;
@@ -125,11 +136,6 @@ public abstract class AbstractTask implements Task {
     @Override
     public void setTimeZone(TimeZone timeZone) {
         this.timeZone = timeZone;
-    }
-
-    @Override
-    public void setProperties(Properties properties) {
-        this.properties = properties;
     }
 
     @Override
@@ -225,9 +231,10 @@ public abstract class AbstractTask implements Task {
                 request.setNewStringVariable(URI, StringUtils.join(inputUris, delim));
             }
         }
-
-        if (properties != null && properties.containsKey(URIS_BATCH_REF)) {
-            request.setNewStringVariable(URIS_BATCH_REF, properties.getProperty(URIS_BATCH_REF));
+        
+        String batchRef = null;
+        if (options != null && (batchRef = options.getProperty(URIS_BATCH_REF)) != null) {
+            request.setNewStringVariable(URIS_BATCH_REF, batchRef);
         }
 
         //set custom inputs
@@ -243,21 +250,16 @@ public abstract class AbstractTask implements Task {
 
     protected Set<String> getCustomInputPropertyNames() {
         Set<String> moduleCustomInputPropertyNames = new HashSet<>();
-        if (moduleType == null) {
+        if (moduleType == null || options == null) {
             return moduleCustomInputPropertyNames;
         }
-        if (properties != null) {
-            for (String propName : properties.stringPropertyNames()) {
-                if (propName.startsWith(moduleType + '.')) {
-                    moduleCustomInputPropertyNames.add(propName);
-                }
-            }
-        }
-        for (String propName : System.getProperties().stringPropertyNames()) {
+        
+        for (String propName : options.getPropertyNames()) {
             if (propName.startsWith(moduleType + '.')) {
                 moduleCustomInputPropertyNames.add(propName);
             }
         }
+        
         return moduleCustomInputPropertyNames;
     }
 
@@ -337,7 +339,7 @@ public abstract class AbstractTask implements Task {
         cs = null;
         moduleType = null;
         moduleUri = null;
-        properties = null;
+        options = null;
         inputUris = null;
         adhocQuery = null;
         language = null;
@@ -345,12 +347,12 @@ public abstract class AbstractTask implements Task {
         exportDir = null;
     }
 
-    public String getProperty(String key) {
-        String val = System.getProperty(key);
-        if (val == null && properties != null) {
-            val = properties.getProperty(key);
+    protected String getProperty(String key) {
+        String value = null;
+        if(options != null){
+            value = options.getProperty(key, false);
         }
-        return trim(val);
+        return value;
     }
 
     protected static byte[] getValueAsBytes(XdmItem item) {

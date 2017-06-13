@@ -19,21 +19,19 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.AbstractTask.TRUE;
+import static com.marklogic.developer.corb.Constants.XCC_CONNECTION_URI;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_DIR;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
 import static com.marklogic.developer.corb.Options.MODULES_DATABASE;
 import static com.marklogic.developer.corb.Options.MODULE_ROOT;
 import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
-import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
-import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
 import com.marklogic.xcc.ResultSequence;
@@ -46,6 +44,9 @@ import java.io.PrintStream;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
@@ -65,6 +66,11 @@ public class ModuleExecutor extends AbstractManager {
             = System.getProperty(PROPERTY_LINE_SEPARATOR) != null ? System.getProperty(PROPERTY_LINE_SEPARATOR).getBytes() : "\n".getBytes();
     protected static final Logger LOG = Logger.getLogger(ModuleExecutor.class.getName());
     private static final String TAB = "\t";
+    
+    protected static final String[] argNames = {
+            XCC_CONNECTION_URI,PROCESS_MODULE,MODULE_ROOT,
+            MODULES_DATABASE,EXPORT_FILE_DIR,EXPORT_FILE_NAME
+    };
 
     /**
      * Execute an XQuery or JavaScript module in MarkLogic
@@ -74,71 +80,30 @@ public class ModuleExecutor extends AbstractManager {
     public static void main(String... args) {
         ModuleExecutor moduleExecutor = new ModuleExecutor();
         try {
-            moduleExecutor.init(args);
+            moduleExecutor.init(getArgsAsMap(argNames,args));
         } catch (Exception exc) {
             LOG.log(SEVERE, "Error initializing ModuleExecutor", exc);
             moduleExecutor.usage();
-            System.exit(EXIT_CODE_INIT_ERROR);
+            System.exit(Options.DEFAULT_EXIT_CODE_INIT_ERROR);
         }
 
         try {
             moduleExecutor.run();
-            System.exit(EXIT_CODE_SUCCESS);
+            System.exit(Options.DEFAULT_EXIT_CODE_SUCCESS);
         } catch (Exception exc) {
             LOG.log(SEVERE, "Error while running CORB", exc);
-            System.exit(EXIT_CODE_PROCESSING_ERROR);
+            System.exit(Options.DEFAULT_EXIT_CODE_PROCESSING_ERROR);
         }
     }
-
-    /**
-     *
-     * @param args
-     * @throws com.marklogic.developer.corb.CorbException
-     */
+    
     @Override
-    protected void initOptions(String... args) throws CorbException {
-        super.initOptions(args);
-        String processModule = getOption(args, 1, PROCESS_MODULE);
-        String moduleRoot = getOption(args, 2, MODULE_ROOT);
-        String modulesDatabase = getOption(args, 3, MODULES_DATABASE);
-        String exportFileDir = getOption(args, 4, EXPORT_FILE_DIR);
-        String exportFileName = getOption(args, 5, EXPORT_FILE_NAME);
-
-        //Check legacy properties keys, for backwards compatibility
-        if (processModule == null) {
-            processModule = getOption(XQUERY_MODULE);
-        }
-        if (processModule != null) {
-            options.setProcessModule(processModule);
-        }
+    public void init(Map<String,String> argsAsMap, Map<String,String> props) throws CorbException {
+        super.init(argsAsMap, props);
         if (null == options.getProcessModule()) {
             throw new NullPointerException(PROCESS_MODULE + " must be specified");
         }
-
-        if (modulesDatabase != null) {
-            options.setModulesDatabase(modulesDatabase);
-        }
-        if (moduleRoot != null) {
-            options.setModuleRoot(moduleRoot);
-        }
-
-        if (!this.properties.containsKey(EXPORT_FILE_DIR) && exportFileDir != null) {
-            this.properties.put(EXPORT_FILE_DIR, exportFileDir);
-        }
-        if (!this.properties.containsKey(EXPORT_FILE_NAME) && exportFileName != null) {
-            this.properties.put(EXPORT_FILE_NAME, exportFileName);
-        }
-
-        if (exportFileDir != null) {
-            File dirFile = new File(exportFileDir);
-            if (dirFile.exists() && dirFile.canWrite()) {
-                options.setExportFileDir(exportFileDir);
-            } else {
-                throw new IllegalArgumentException("Cannot write to export folder " + exportFileDir);
-            }
-        }
-
-        deleteFileIfExists(exportFileDir, exportFileName);
+        // delete the export file if it exists
+        deleteFileIfExists(options.getExportFileDir(), options.getExportFileName());
     }
 
     @Override
@@ -195,8 +160,7 @@ public class ModuleExecutor extends AbstractManager {
         RequestOptions requestOptions = new RequestOptions();
         requestOptions.setCacheResult(false);
 
-        List<String> propertyNames = new ArrayList<>(properties.stringPropertyNames());
-        propertyNames.addAll(System.getProperties().stringPropertyNames());
+        Set<String> propertyNames = options.getPropertyNames();
         String processModule = options.getProcessModule();
 
         try (Session session = contentSource.newSession()) {
@@ -231,7 +195,7 @@ public class ModuleExecutor extends AbstractManager {
             for (String propName : propertyNames) {
                 if (propName.startsWith(PROCESS_MODULE + '.')) {
                     String varName = propName.substring((PROCESS_MODULE + '.').length());
-                    String value = getProperty(propName);
+                    String value = options.getProperty(propName);
                     if (value != null) {
                         request.setNewStringVariable(varName, value);
                     }
@@ -255,14 +219,6 @@ public class ModuleExecutor extends AbstractManager {
         }
     }
 
-    public String getProperty(String key) {
-        String val = System.getProperty(key);
-        if (isBlank(val) && properties != null) {
-            val = properties.getProperty(key);
-        }
-        return trim(val);
-    }
-
     protected String processResult(ResultSequence seq) throws CorbException {
         try {
             writeToFile(seq);
@@ -276,8 +232,8 @@ public class ModuleExecutor extends AbstractManager {
         if (seq == null || !seq.hasNext()) {
             return;
         }
-        String fileDir = getProperty(EXPORT_FILE_DIR);
-        String fileName = getProperty(EXPORT_FILE_NAME);
+        String fileDir = options.getExportFileDir();
+        String fileName = options.getExportFileName();
         if (StringUtils.isEmpty(fileName)) {
             return;
         }

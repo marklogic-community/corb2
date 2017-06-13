@@ -18,11 +18,10 @@
  */
 package com.marklogic.developer.corb;
 
-import java.io.IOException;
-import java.util.Properties;
 
 public interface Decrypter {
-	void init(Properties properties) throws IOException, ClassNotFoundException;
+	void init(Options options) throws CorbException;
+	Options getOptions();
 	String getConnectionURI(String uri, String username, String password, String host, String port, String dbname);
 	String decrypt(String property, String value);
 }

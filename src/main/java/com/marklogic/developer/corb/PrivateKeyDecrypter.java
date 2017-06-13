@@ -85,12 +85,12 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
 
     @Override
     protected void init_decrypter() throws IOException, ClassNotFoundException {
-        algorithm = getProperty(PRIVATE_KEY_ALGORITHM);
+        algorithm = options.getProperty(PRIVATE_KEY_ALGORITHM);
         if (isBlank(algorithm)) {
             algorithm = DEFAULT_ALGORITHM;
         }
 
-        String filename = getProperty(PRIVATE_KEY_FILE);
+        String filename = options.getProperty(PRIVATE_KEY_FILE);
         if (isNotBlank(filename)) {
             InputStream is = null;
             try {

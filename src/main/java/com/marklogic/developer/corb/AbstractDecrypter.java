@@ -25,23 +25,38 @@ import static com.marklogic.developer.corb.Options.XCC_PASSWORD;
 import static com.marklogic.developer.corb.Options.XCC_PORT;
 import static com.marklogic.developer.corb.Options.XCC_USERNAME;
 import static com.marklogic.developer.corb.util.StringUtils.getXccUri;
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
 import java.io.IOException;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class AbstractDecrypter implements Decrypter {
 
-    protected transient Properties properties;
+    protected Options options;
     private static final Pattern ENCRYPTED_VALUE_REGEX = Pattern.compile("^ENC\\((.*)\\)$");
 
     @Override
-    public void init(Properties properties) throws IOException, ClassNotFoundException {
-        this.properties = properties == null ? new Properties() : properties;
-
-        init_decrypter();
+    public void init(Options options) throws CorbException {
+        if(options == null){
+            throw new NullPointerException("Options cannot be null");
+        }
+        this.options = options;
+        try{
+            init_decrypter();
+        }catch(IOException | ClassNotFoundException exc){
+            throw new CorbException("Exception initializing decrypter",exc);
+        }
+    }
+    
+    public Options getOptions(){
+        return this.options;
+    }
+    
+    protected String getProperty(String key) {
+        String value = null;
+        if(options != null){
+            value = options.getProperty(key);
+        }
+        return value;
     }
 
     @Override
@@ -70,12 +85,4 @@ public abstract class AbstractDecrypter implements Decrypter {
     protected abstract void init_decrypter() throws IOException, ClassNotFoundException;
 
     protected abstract String doDecrypt(String property, String value);
-
-    protected String getProperty(String key) {
-        String val = System.getProperty(key);
-        if (isBlank(val) && properties != null) {
-            val = properties.getProperty(key);
-        }
-        return trim(val);
-    }
 }

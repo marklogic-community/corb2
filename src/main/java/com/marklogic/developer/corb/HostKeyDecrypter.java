@@ -37,6 +37,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Scanner;
@@ -365,7 +366,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
             System.out.println(encrypt(arguments[1].trim())); // NOPMD
         } else if (METHOD_TEST.equals(method)) {
             HostKeyDecrypter decrypter = new HostKeyDecrypter();
-            decrypter.init(System.getProperties());
+            decrypter.init(new Options(new HashMap<String,String>()));
             String original = "234Helloworld!!!";
             System.out.println("Password is :" + original); // NOPMD
             String password = encrypt(original);

@@ -39,7 +39,7 @@ public class JasyptDecrypter extends AbstractDecrypter {
 
     @Override
     protected void init_decrypter() throws IOException, ClassNotFoundException {
-        String decryptPropsFile = getProperty(JASYPT_PROPERTIES_FILE);
+        String decryptPropsFile = options.getProperty(JASYPT_PROPERTIES_FILE);
         if (decryptPropsFile == null || isBlank(decryptPropsFile)) {
             decryptPropsFile = "jasypt.properties";
         }

@@ -18,16 +18,20 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.Options.DECRYPTER;
-import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
-import static com.marklogic.developer.corb.Options.SSL_CONFIG_CLASS;
-import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
-import static com.marklogic.developer.corb.Options.XCC_DBNAME;
-import static com.marklogic.developer.corb.Options.XCC_HOSTNAME;
-import static com.marklogic.developer.corb.Options.XCC_PASSWORD;
-import static com.marklogic.developer.corb.Options.XCC_PORT;
-import static com.marklogic.developer.corb.Options.XCC_USERNAME;
+import static com.marklogic.developer.corb.Constants.DECRYPTER;
+import static com.marklogic.developer.corb.Constants.XCC_HTTPCOMPLIANT;
+import static com.marklogic.developer.corb.Constants.OPTIONS_FILE;
+import static com.marklogic.developer.corb.Constants.SSL_CONFIG_CLASS;
+import static com.marklogic.developer.corb.Constants.XCC_CONNECTION_URI;
+import static com.marklogic.developer.corb.Constants.XCC_DBNAME;
+import static com.marklogic.developer.corb.Constants.XCC_HOSTNAME;
+import static com.marklogic.developer.corb.Constants.XCC_PASSWORD;
+import static com.marklogic.developer.corb.Constants.XCC_PORT;
+import static com.marklogic.developer.corb.Constants.XCC_USERNAME;
+
 import static com.marklogic.developer.corb.util.IOUtils.isDirectory;
+
+import com.marklogic.developer.corb.util.CollectionUtils;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
@@ -56,7 +60,9 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import static java.util.logging.Level.INFO;
@@ -74,14 +80,10 @@ public abstract class AbstractManager {
     protected Decrypter decrypter;
     protected SSLConfig sslConfig;
     protected URI connectionUri;
-    protected String collection;
-    protected TransformOptions options = new TransformOptions();
-    protected Properties properties = new Properties();
+    protected Options options;
+
     protected ContentSource contentSource;
 
-    protected static final int EXIT_CODE_SUCCESS = 0;
-    protected static final int EXIT_CODE_INIT_ERROR = 1;
-    protected static final int EXIT_CODE_PROCESSING_ERROR = 2;
     protected static final String SPACE = " ";
 
     private static final Logger LOG = Logger.getLogger(AbstractManager.class.getName());
@@ -119,7 +121,6 @@ public abstract class AbstractManager {
     }
 
     public static String getAdhocQuery(String module) {
-
         try {
             InputStream is = TaskFactory.class.getResourceAsStream('/' + module);
             if (is == null) {
@@ -147,69 +148,64 @@ public abstract class AbstractManager {
             throw new IllegalStateException("Problem reading adhoc query module " + module, exc);
         }
     }
-
-    public Properties getProperties() {
-        return properties;
+    
+    protected static Map<String,String> getArgsAsMap(String[] argNames, String[] args){
+        Map<String,String> argsMap = new HashMap<String,String>();
+        for(int i=0;i<args.length && i<argNames.length;i++){
+            argsMap.put(argNames[i], args[i]);
+        }
+        return CollectionUtils.removeBlanksAndTrim(argsMap);
     }
 
-    public TransformOptions getOptions() {
+
+    public Options getOptions() {
         return options;
     }
-
-    public void initPropertiesFromOptionsFile() throws IOException {
-        String propsFileName = System.getProperty(OPTIONS_FILE);
-        loadPropertiesFile(propsFileName, true, this.properties);
+    
+    protected void init(Map<String,String> argsAsMap) throws CorbException{
+        this.init(argsAsMap, null);
     }
-
-    public void init(String... args) throws CorbException {
-        init(args, null);
-    }
-
-    public void init(Properties props) throws CorbException {
-        String[] args = {};
-        init(args, props);
-    }
-
-    public void init(String[] commandlineArgs, Properties props) throws CorbException {
-        String[] args = commandlineArgs;
-        if (args == null) {
-            args = new String[0];
+    
+    protected void init(Map<String,String> argsAsMap, Map<String,String> propsMap) throws CorbException {
+        if (argsAsMap == null) {
+            argsAsMap = new HashMap<String,String>();
         }
-        if (props == null || props.isEmpty()) {
+        if (propsMap == null || propsMap.isEmpty()) {
             try {
-                initPropertiesFromOptionsFile();
+                Properties propsFromFile = loadPropertiesFile(System.getProperty(OPTIONS_FILE), true);
+                propsMap = CollectionUtils.propertiesToMap(propsFromFile);
             } catch (IOException ex) {
                 throw new CorbException("Failed to initialized properties from options file", ex);
             }
-        } else {
-            this.properties = props;
         }
+        this.options = new Options(argsAsMap,propsMap);
+        initHttpComplainceForXcc();
+        
         initDecrypter();
         initSSLConfig();
-        initURI(args.length > 0 ? args[0] : null);
-        initOptions(args);
+        initURI();
         logRuntimeArgs();
         prepareContentSource();
         registerStatusInfo();
     }
-
+    
     /**
      * function that is used to get the Decrypter, returns null if not specified
      *
      * @throws CorbException
      */
     protected void initDecrypter() throws CorbException {
-        String decrypterClassName = getOption(DECRYPTER);
+        String decrypterClassName = options.getProperty(DECRYPTER);
         if (decrypterClassName != null) {
             try {
                 Class<?> decrypterCls = Class.forName(decrypterClassName);
                 if (Decrypter.class.isAssignableFrom(decrypterCls)) {
                     this.decrypter = (Decrypter) decrypterCls.newInstance();
-                    decrypter.init(this.properties);
+                    decrypter.init(options);
                 } else {
                     throw new IllegalArgumentException(DECRYPTER + " must be of type com.marklogic.developer.corb.Decrypter");
                 }
-            } catch (ClassNotFoundException | IOException | InstantiationException | IllegalAccessException ex) {
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
                 throw new CorbException(MessageFormat.format("Unable to instantiate {0} {1}", SSL_CONFIG_CLASS, decrypterClassName), ex);
             }
         } else {
@@ -218,7 +214,7 @@ public abstract class AbstractManager {
     }
 
     protected void initSSLConfig() throws CorbException {
-        String sslConfigClassName = getOption(SSL_CONFIG_CLASS);
+        String sslConfigClassName = options.getProperty(SSL_CONFIG_CLASS);
         if (sslConfigClassName != null) {
             try {
                 Class<?> decrypterCls = Class.forName(sslConfigClassName);
@@ -234,17 +230,17 @@ public abstract class AbstractManager {
             LOG.info("Using TrustAnyoneSSSLConfig because no " + SSL_CONFIG_CLASS + " value specified.");
             this.sslConfig = new TrustAnyoneSSLConfig();
         }
-        sslConfig.setProperties(this.properties);
+        sslConfig.init(options);
         sslConfig.setDecrypter(this.decrypter);
     }
 
-    protected void initURI(String uriArg) throws CorbException {
-        String uriAsString = getOption(uriArg, XCC_CONNECTION_URI);
-        String username = getOption(XCC_USERNAME);
-        String password = getOption(XCC_PASSWORD);
-        String host = getOption(XCC_HOSTNAME);
-        String port = getOption(XCC_PORT);
-        String dbname = getOption(XCC_DBNAME);
+    protected void initURI() throws CorbException {
+        String uriAsString = options.getProperty(XCC_CONNECTION_URI);
+        String username = options.getProperty(XCC_USERNAME);
+        String password = options.getProperty(XCC_PASSWORD);
+        String host = options.getProperty(XCC_HOSTNAME);
+        String port = options.getProperty(XCC_PORT);
+        String dbname = options.getProperty(XCC_DBNAME);
 
         if (StringUtils.anyIsNull(uriAsString) && StringUtils.anyIsNull(username, password, host, port)) {
             throw new CorbException(String.format("Either %1$s or %2$s, %3$s, %4$s, and %5$s must be specified",
@@ -264,8 +260,8 @@ public abstract class AbstractManager {
         }
     }
 
-    protected void initOptions(String... args) throws CorbException {
-        String xccHttpCompliant = getOption(Options.XCC_HTTPCOMPLIANT);
+    protected void initHttpComplainceForXcc() throws CorbException {
+        String xccHttpCompliant = options.getProperty(XCC_HTTPCOMPLIANT);
         if (isNotBlank(xccHttpCompliant)) {
             System.setProperty("xcc.httpcompliant", Boolean.toString(StringUtils.stringToBoolean(xccHttpCompliant)));
         }
@@ -316,57 +312,14 @@ public abstract class AbstractManager {
     }
 
     protected void logProperties() {
-        for (Entry<Object, Object> e : properties.entrySet()) {
-            if (e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
+        Map<String,String> props = options.getProperties();
+        props.putAll(options.getArguments());
+        
+        for (Entry<String, String> e : props.entrySet()) {
+            if (e.getKey() != null && !e.getKey().toUpperCase().startsWith("XCC-")) {
                 LOG.log(INFO, () -> MessageFormat.format("Loaded property {0}={1}", e.getKey(), e.getValue()));
             }
         }
-    }
-
-    /**
-     * Retrieve the value of the specified key from either the System
-     * properties, or the properties object.
-     *
-     * @param propertyName
-     * @return the trimmed property value
-     */
-    protected String getOption(String propertyName) {
-        return getOption(null, propertyName);
-    }
-
-    /**
-     * Retrieve either the value from the commandline arguments at the argIndex,
-     * or the first property value from the System.properties or properties object
-     * that is not empty or null.
-     * @param commandlineArgs
-     * @param argIndex
-     * @param propertyName
-     * @return the trimmed property value
-     */
-    protected String getOption(String[] commandlineArgs, int argIndex, String propertyName) {
-        String argValue = commandlineArgs.length > argIndex ? commandlineArgs[argIndex] : null;
-        return getOption(argValue, propertyName);
-    }
-
-    /**
-     * Retrieve either the argVal or the first property value from the
-     * System.properties or properties object that is not empty or null.
-     *
-     * @param argVal
-     * @param propertyName
-     * @return the trimmed property value
-     */
-    protected String getOption(String argVal, String propertyName) {
-        if (isNotBlank(argVal)) {
-            return argVal.trim();
-        } else if (isNotBlank(System.getProperty(propertyName))) {
-            return System.getProperty(propertyName).trim();
-        } else if (this.properties.containsKey(propertyName) && isNotBlank(this.properties.getProperty(propertyName))) {
-            String val = this.properties.getProperty(propertyName).trim();
-            this.properties.remove(propertyName); //remove from properties file as we would like to keep the properties file simple.
-            return val;
-        }
-        return null;
     }
 
     protected void prepareContentSource() throws CorbException {

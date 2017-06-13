@@ -46,6 +46,8 @@ import java.util.Queue;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
+
+import java.io.File;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -107,7 +109,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             // NOTE: collection will be treated as a CWSV
             request.setNewStringVariable("URIS", collection);
             // TODO support DIRECTORY as type
-            request.setNewStringVariable("TYPE", TransformOptions.COLLECTION_TYPE);
+            request.setNewStringVariable("TYPE", Options.COLLECTION_TYPE);
             request.setNewStringVariable("PATTERN", "[,\\s]+");
 
             setCustomInputs(request);
@@ -153,7 +155,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             String value = nextResultItem.getItem().asString();
             if (MODULE_CUSTOM_INPUT.matcher(value).matches()) {
                 int idx = value.indexOf('=');
-                properties.put(value.substring(0, idx).replace(XQUERY_MODULE + '.', PROCESS_MODULE + '.'), value.substring(idx + 1));
+                options.setProperty(value.substring(0, idx).replace(XQUERY_MODULE + '.', PROCESS_MODULE + '.'), value.substring(idx + 1));
             } else {
                 setBatchRef(value);
             }
@@ -171,19 +173,14 @@ public class QueryUrisLoader extends AbstractUrisLoader {
      * @param request
      */
     protected void setCustomInputs(Request request) {
-        List<String> propertyNames = new ArrayList<>();
-        // gather all of the p
-        if (properties != null) {
-            propertyNames.addAll(properties.stringPropertyNames());
-        }
-        propertyNames.addAll(System.getProperties().stringPropertyNames());
-        // custom inputs
-        for (String propName : propertyNames) {
-            if (propName.startsWith(URIS_MODULE + '.')) {
-                String varName = propName.substring((URIS_MODULE + '.').length());
-                String value = getProperty(propName);
-                if (value != null) {
-                    request.setNewStringVariable(varName, value);
+        if(options != null){
+            for (String propName : options.getPropertyNames()) {
+                if (propName.startsWith(URIS_MODULE + '.')) {
+                    String varName = propName.substring((URIS_MODULE + '.').length());
+                    String value = getProperty(propName);
+                    if (value != null) {
+                        request.setNewStringVariable(varName, value);
+                    }
                 }
             }
         }
@@ -237,7 +234,9 @@ public class QueryUrisLoader extends AbstractUrisLoader {
     protected Queue<String> createQueue() {
         Queue<String> uriQueue;
         if (options != null && options.shouldUseDiskQueue()) {
-            uriQueue = new DiskQueue<>(options.getDiskQueueMaxInMemorySize(), options.getDiskQueueTempDir());
+            uriQueue = new DiskQueue<>(
+                    options.getDiskQueueMaxInMemorySize(), 
+                    options.getDiskQueueTempDir() != null ? new File(options.getDiskQueueTempDir()) : null);
         } else {
             uriQueue = new ArrayQueue<>(getTotalCount());
         }
