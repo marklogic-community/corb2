@@ -18,15 +18,15 @@ CORB operations can include generating a report across all documents, manipulati
 ### User Guide
 This document provides a comprehensive overview of CORB and the options available to customize the execution of a CORB job, as well as the [ModuleExecutor Tool](#moduleexecutor-tool), which can be used to execute a single (XQuery or JavaScript) module in MarkLogic.
 
-For additional information, please refer to the [CORB Wiki](https://github.com/marklogic/corb2/wiki).
+For additional information, please refer to the [CORB Wiki](https://github.com/marklogic-community/corb2/wiki).
 
 ### Downloads
 
-Download the latest release directly from https://github.com/marklogic/corb2/releases or resolve dependencies through [Maven Central](http://mvnrepository.com/artifact/com.marklogic/marklogic-corb) or [JCenter](https://bintray.com/marklogic/maven/marklogic-corb/view).
+Download the latest release directly from https://github.com/marklogic-community/corb2/releases or resolve dependencies through [Maven Central](http://mvnrepository.com/artifact/com.marklogic/marklogic-corb) or [JCenter](https://bintray.com/marklogic/maven/marklogic-corb/view).
 
 - CORB v2.4.0 (or later) requires Java 8 (or later) to run.
-- [CORB v2.3.2](https://github.com/marklogic/corb2/releases/tag/2.3.2) is the last release compatable with Java 7 and 6.
-- [CORB v2.2.0](https://github.com/marklogic/corb2/releases/tag/2.2.0) (or later) requires [marklogic-xcc 8.0.* (or later)](https://developer.marklogic.com/products/xcc) to run.
+- [CORB v2.3.2](https://github.com/marklogic-community/corb2/releases/tag/2.3.2) is the last release compatable with Java 7 and 6.
+- [CORB v2.2.0](https://github.com/marklogic-community/corb2/releases/tag/2.2.0) (or later) requires [marklogic-xcc 8.0.* (or later)](https://developer.marklogic.com/products/xcc) to run.
 
 > Note: marklogic-xcc 8 is backwards compatible to MarkLogic 5 and runs on Java 1.6 or later.
 
@@ -37,7 +37,7 @@ To get help with CORB
 
 * Subscribe to the [CORB mailing list](http://developer.marklogic.com/mailman/listinfo/corb2)
 * [Post a question to Stack Overflow](http://stackoverflow.com/questions/ask?tags=marklogic+corb) with the [<code>markogic</code>](https://stackoverflow.com/questions/tagged/marklogic) and [<code>corb</code>](https://stackoverflow.com/questions/tagged/corb) tags.  
-* Submit issues or feature requests at https://github.com/marklogic/corb2/issues
+* Submit issues or feature requests at https://github.com/marklogic-community/corb2/issues
 
 
 ### Running CORB
@@ -108,7 +108,7 @@ Option | Description
 **<a name="FAIL-ON-ERROR"></a>FAIL-ON-ERROR** | Boolean value indicating whether the CORB job should fail and exit if a process module throws an error. Default is true. This option will not handle repeated connection failures.
 **<a name="FILE-LOADER-BASE64-ENCODE"></a>FILE-LOADER-BASE64-ENCODE** | Boolean option specifying whether the content loaded by FileUrisStreamingXMLLoader or FileUrisXMLLoader (with the option `FILE-LOADER-USE-ENVELOPE=true`) should be base64 encoded, or appended as the child of the `/corb-loader/content` element. Default is `false`
 **<a name="FILE-LOADER-PATH"></a>FILE-LOADER-PATH** | The path to the file or folder that will be the source for a class that extends the AbstractFileUrisLoader
-**<a name="FILE-LOADER-SET-URIS-BATCH-REF"></a>FILE-LOADER-SET-URIS-BATCH-REF** | Boolean option indicating whether a file loader should set the [URIS_BATCH_REF](https://github.com/marklogic/corb2#uris_batch_ref). Default is false
+**<a name="FILE-LOADER-SET-URIS-BATCH-REF"></a>FILE-LOADER-SET-URIS-BATCH-REF** | Boolean option indicating whether a file loader should set the [URIS_BATCH_REF](https://github.com/marklogic-community/corb2#uris_batch_ref). Default is false
 **<a name="FILE-LOADER-USE-ENVELOPE"></a>FILE-LOADER-USE-ENVELOPE** | Boolean value indicating whether FileUris loaders should use an XML envelope, in order to send file metadata in addition to the file content.
 **<a name="INSTALL"></a>INSTALL** | Whether to install the Modules in the Modules database. Specify 'true' or '1' for installation. Default is false.
 **<a name="MAX_OPTS_FROM_MODULE"></a>MAX_OPTS_FROM_MODULE** | Default is 10. Max number of custom inputs from the URIS-MODULE to other modules.

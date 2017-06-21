@@ -408,7 +408,7 @@ public abstract class AbstractManager {
             }
         }
 
-        err.println("\nPlease report issues at: https://github.com/marklogic/corb2/issues\n"); // NOPMD
+        err.println("\nPlease report issues at: https://github.com/marklogic-community/corb2/issues\n"); // NOPMD
     }
 
     protected String buildSystemPropertyArg(String property, String value) {

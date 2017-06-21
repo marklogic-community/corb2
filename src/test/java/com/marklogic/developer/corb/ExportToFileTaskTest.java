@@ -61,7 +61,7 @@ public class ExportToFileTaskTest {
     @Test
     public void testGetFileName() {
         ExportToFileTask instance = new ExportToFileTask();
-        String expected = "https://github.com/marklogic/corb2";
+        String expected = "https://github.com/marklogic-community/corb2";
         String[] uri = {expected};
         instance.setInputURI(uri);
         String filename = instance.getFileName();

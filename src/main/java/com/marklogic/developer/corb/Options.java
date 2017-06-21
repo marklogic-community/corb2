@@ -378,12 +378,12 @@ public final class Options {
             + "Default is false.")
     public static final String INSTALL = "INSTALL";
 
-    
+
     /**
      * Boolean option specifying whether the content loaded by
      * FileUrisStreamingXMLLoader or FileUrisXMLLoader (with the option
      * FILE-LOADER-USE-ENVELOPE=true) should be base64 encoded, or appended as
-     * the child of the `/corb-loader/content` element. 
+     * the child of the `/corb-loader/content` element.
      * Default is `false`
      *
      * @since 2.4.0
@@ -405,7 +405,7 @@ public final class Options {
 
     /**
      * Boolean option indicating whether a loader should set the
-     * #URIS_BATCH_REF(https://github.com/marklogic/corb2#uris_batch_ref) with information about the source of the items. 
+     * #URIS_BATCH_REF(https://github.com/marklogic-community/corb2#uris_batch_ref) with information about the source of the items.
      * Default is false
      *
      * @since 2.4.0
@@ -414,10 +414,10 @@ public final class Options {
     public static final String LOADER_SET_URIS_BATCH_REF = "LOADER-SET-URIS-BATCH-REF";
 
     /**
-     * Boolean value indicating whether loader should use an XML envelope, 
+     * Boolean value indicating whether loader should use an XML envelope,
      * in order to send file metadata in addition to the file content.
      * Default is true.
-     * 
+     *
      * @since 2.4.0
      */
     @Usage(description = "Boolean value indicating whether a loader should use an XML envelope, "
@@ -425,10 +425,10 @@ public final class Options {
     public static final String LOADER_USE_ENVELOPE = "LOADER-USE-ENVELOPE";
 
     /**
-     * Specify which external variable to set when invoking the loader process module. 
-     * Choices are: URI or DOC. 
+     * Specify which external variable to set when invoking the loader process module.
+     * Choices are: URI or DOC.
      * Default is URI.
-     * 
+     *
      * @since 2.4.0
      */
     @Usage(description = "Specify which external variable to set when invoking the loader process module. Choices are URI or DOC. Default is URI.")
@@ -479,17 +479,17 @@ public final class Options {
     @Usage(description = "A properties file containing any of the CoRB2 options. "
             + "Relative and full file system paths are supported.")
     public static final String OPTIONS_FILE = "OPTIONS-FILE";
-    
+
     /**
-     * The minimum number of results that must be returned for the POST-BATCH-MODULE 
-     *  or POST-BATCH-TASK to be executed. 
+     * The minimum number of results that must be returned for the POST-BATCH-MODULE
+     *  or POST-BATCH-TASK to be executed.
      * Default is 1
      * @since 2.4.0
      */
     @Usage(description = "The minimum number of results that must be returned "
             + "for the POST-BATCH-MODULE or POST-BATCH-TASK to be executed. Default is 1")
     public static final String POST_BATCH_MINIMUM_COUNT = "POST-BATCH-MINIMUM-COUNT";
-    
+
     /**
      * An XQuery or JavaScript module which, if specified, will be run after
      * batch processing is completed. XQuery and JavaScript modules need to have
@@ -545,15 +545,15 @@ public final class Options {
     public static final String POST_BATCH_XQUERY_MODULE = "POST-BATCH-XQUERY-MODULE";
 
     /**
-     * The minimum number of results that must be returned for the PRE-BATCH-MODULE 
-     * or PRE-BATCH-TASK to be executed. 
+     * The minimum number of results that must be returned for the PRE-BATCH-MODULE
+     * or PRE-BATCH-TASK to be executed.
      * Default is 1
      * @since 2.4.0
      */
     @Usage(description = "The minimum number of results that must be returned "
             + "for the PRE-BATCH-MODULE or PRE-BATCH-TASK to be executed. Default is 1")
     public static final String PRE_BATCH_MINIMUM_COUNT = "PRE-BATCH-MINIMUM-COUNT";
-    
+
     /**
      * An XQuery or JavaScript module which, if specified, will be run before
      * batch processing starts.
@@ -613,9 +613,9 @@ public final class Options {
     @Deprecated
     @Usage
     public static final String PRE_BATCH_XQUERY_MODULE = "PRE-BATCH-XQUERY-MODULE";
-    
+
     /**
-     * Boolean value indicating whether the PRE_BATCH and POST_BATCH module or task 
+     * Boolean value indicating whether the PRE_BATCH and POST_BATCH module or task
      * should always be executed without evaluating how many URIs were returned by the URI selector.
      * Default is false
      * @see #POST_BATCH_MINIMUM_COUNT
@@ -626,7 +626,7 @@ public final class Options {
         " should always be executed without evaluating how many URIs were returned by the URI selector.\n" +
         " Default is false")
     public static final String PRE_POST_BATCH_ALWAYS_EXECUTE = "PRE-POST-BATCH-ALWAYS-EXECUTE";
-    
+
     /**
      * (Optional)
      * <ul>
@@ -811,7 +811,7 @@ public final class Options {
     public static final String THREAD_COUNT = "THREAD-COUNT";
 
     /**
-     * <a href="https://github.com/marklogic/corb2#uris_batch_ref">URIS_BATCH_REF</a>
+     * <a href="https://github.com/marklogic-community/corb2#uris_batch_ref">URIS_BATCH_REF</a>
      */
     @Usage
     public static final String URIS_BATCH_REF = "URIS_BATCH_REF";
@@ -856,7 +856,7 @@ public final class Options {
      * sequence containing the URIs count followed by all the URIs. Optionally,
      * it can also return an arbitrary string as a first item in this sequence -
      * refer to
-     * <a href="https://github.com/marklogic/corb2#uris_batch_ref">URIS_BATCH_REF</a>
+     * <a href="https://github.com/marklogic-community/corb2#uris_batch_ref">URIS_BATCH_REF</a>
      * section.
      * <p>
      * XQuery and JavaScript modules need to have "{@code .xqy}" and
