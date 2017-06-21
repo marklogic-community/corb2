@@ -27,7 +27,7 @@ public class BaseMonitor {
         this.pool = pool;
         this.manager = manager;
         startMillis = System.currentTimeMillis();
-        this.numTpsForEtc = manager.getOptions() != null ? manager.getOptions().getNumTpsForETC() : DEFAULT_NUM_TPS_FOR_ETC;
+        this.numTpsForEtc = (manager !=null && manager.getOptions() != null) ? manager.getOptions().getNumTpsForETC() : DEFAULT_NUM_TPS_FOR_ETC;
         this.tpsForETCList = new ArrayList<>(this.numTpsForEtc);
     }
     protected void populateTps(long completed){

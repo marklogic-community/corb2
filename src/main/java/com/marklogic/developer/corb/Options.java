@@ -975,9 +975,9 @@ public final class Options {
     public static final String JOB_NAME = "JOB-NAME";
     /**
      * Maximum number of failed transaction to be logged in the metrics. 
-     * The default value is 1000.
+     * The default value is 0.
      */
-    @Usage(description = "Maximum number of failed transaction to be logged in the metrics. The default value is 1000.")
+    @Usage(description = "Maximum number of failed transaction to be logged in the metrics. The default value is 0.")
     public static final String METRICS_NUM_FAILED_TRANSACTIONS = "METRICS-NUM-FAILED-TRANSACTIONS";
     
     /**

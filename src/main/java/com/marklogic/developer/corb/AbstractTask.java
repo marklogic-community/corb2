@@ -22,36 +22,17 @@ import static com.marklogic.developer.corb.Manager.DEFAULT_BATCH_URI_DELIM;
 import static com.marklogic.developer.corb.Manager.URIS_BATCH_REF;
 import static com.marklogic.developer.corb.Options.BATCH_URI_DELIM;
 import static com.marklogic.developer.corb.Options.ERROR_FILE_NAME;
+import static com.marklogic.developer.corb.Options.QUERY_RETRY_LIMIT;
+import static com.marklogic.developer.corb.Options.QUERY_RETRY_INTERVAL;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_CODES;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_MESSAGE;
-import static com.marklogic.developer.corb.Options.QUERY_RETRY_INTERVAL;
-import static com.marklogic.developer.corb.Options.QUERY_RETRY_LIMIT;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_INTERVAL;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
-import static com.marklogic.developer.corb.TransformOptions.FAILED_URI_TOKEN;
+import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.commaSeparatedValuesToList;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
-import static java.util.logging.Level.SEVERE;
-import static java.util.logging.Level.WARNING;
-
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.logging.Logger;
-
-import com.marklogic.developer.corb.util.StringUtils;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
@@ -64,6 +45,22 @@ import com.marklogic.xcc.exceptions.RetryableQueryException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmBinary;
 import com.marklogic.xcc.types.XdmItem;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TimeZone;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
+import java.util.logging.Logger;
+import static com.marklogic.developer.corb.TransformOptions.FAILED_URI_TOKEN;
 
 /**
  *
@@ -72,7 +69,7 @@ import com.marklogic.xcc.types.XdmItem;
  */
 public abstract class AbstractTask implements Task {
 
- 	private static final Object ERROR_SYNC_OBJ = new Object();
+    private static final Object ERROR_SYNC_OBJ = new Object();
 
     protected static final String TRUE = "true";
     protected static final String FALSE = "false";
@@ -256,7 +253,7 @@ public abstract class AbstractTask implements Task {
             processResult(seq);
             seq.close();
             Thread.yield();// try to avoid thread starvation
-           
+
             return inputUris;
         } catch (RequestException exc) {
             return handleRequestException(exc);

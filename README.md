@@ -144,7 +144,6 @@ Option | Description
 **METRICS-DOC-BASE-DIR** | Uses the value provided to as the URI Root for saving the metrics document.|
 **METRICS-DOC-COLLECTIONS** | Adds the metrics document to the specified collection.|
 **METRICS-PROCESS-MODULE** | XQuery or JavaScript to be executed at the end of the Corb Job to save the metrics document to the Database.There is an XQuery module (save-metric-to-db.xqy) and a JavaScript module (saveMetrics.sjs) provided with CoRB2 Distribution.You can use these modules as a template to customize the the document can be saved to the DB.XQuery and JavaScript modules need to have '{@code .xqy}' and{@code .sjs} extensions respectively.|
-**METRICS-NUM-FAILED-TRANSACTIONS** | Adds the metrics document to the specified collection.|
 **MODULE-ROOT** | Default is '/'.
 **MODULES-DATABASE** | Uses the **XCC-CONNECTION-URI** if not provided; use 0 for file system.
 **NUM-TPS-FOR-ETC** | Default is 10. Number of recent transactions per second (tps) values used to calculate estimated completion time (ETC).

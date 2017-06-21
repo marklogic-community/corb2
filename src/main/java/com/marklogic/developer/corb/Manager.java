@@ -770,7 +770,7 @@ public class Manager extends AbstractManager {
     }
 
     private void runPostBatchTask() throws Exception {
-    	TaskFactory tf = new TaskFactory(this);
+        TaskFactory tf = new TaskFactory(this);
         Task postTask = tf.newPostBatchTask();
         if (postTask != null) {
         	long startTime = System.nanoTime();
