@@ -1646,6 +1646,36 @@ public class HTTPServer {
 		this(80);
 	}
 
+	public HTTPServer(List<Integer> jobServerPortsToChoose) {
+		jobServerPortsToChoose= new ArrayList<Integer>(new HashSet<Integer>(jobServerPortsToChoose));//dedupe
+		Collections.sort(jobServerPortsToChoose);
+		for(Integer port: jobServerPortsToChoose){
+			if(available(port)){//loop until you find an open port
+				setPort(port);
+				addVirtualHost(new VirtualHost(null)); // add default virtual host
+				break;
+			}
+		}
+	}
+	private static boolean available(int port) {
+	    Socket s = null;
+	    try {
+	        s = new Socket("localhost", port);
+	        // If the code makes it this far without an exception it means
+	        // something is using the port and has responded.
+	        return false;
+	    } catch (IOException e) {
+	        return true;
+	    } finally {
+	        if( s != null){
+	            try {
+	                s.close();
+	            } catch (IOException e) {
+	                throw new RuntimeException("Unable to close socket on port "+port , e);
+	            }
+	        }
+	    }
+	}
 	/**
 	 * Sets the port on which this server will accept connections.
 	 *

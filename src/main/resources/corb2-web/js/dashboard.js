@@ -1,7 +1,12 @@
 var app = angular.module('dashboard',[]);
 app.controller('mainCtrl', ['$scope', '$http','$interval',
                             function($scope, $http, $interval) {
-    	var loadData = function(response) {
+		$scope.allThreadCounts=[]
+		for( var i =1;i<=64;i++){
+			$scope.allThreadCounts.push(i)
+		}
+		$scope.threadCount =-1;
+		var loadData = function(response) {
     		$scope.isLoading=false;
     		var job = response.job;   
     		if(job.paused == "true"){
@@ -21,6 +26,9 @@ app.controller('mainCtrl', ['$scope', '$http','$interval',
     		$scope.jobDuration = (job.totalRunTimeInMillis && job.totalRunTimeInMillis>0 ) ? msToTime(job.totalRunTimeInMillis) : "Not Running";
     		$scope.averageTransactionTimeInMillis =  Math.round(job.averageTransactionTimeInMillis * 100) / 100
     		$scope.job = job
+    		if($scope.threadCount == -1){
+    			$scope.threadCount = job.currentThreadCount
+    		}
     		if(job.userProvidedOptions){
     			$scope.userProvidedOptions = job.userProvidedOptions;//save this as this is fetched only once
     		}
@@ -34,10 +42,11 @@ app.controller('mainCtrl', ['$scope', '$http','$interval',
             	$scope.failedPercent = 0;	
             	$scope.pauseButtonText= "Corb Job Completed"
         		$scope.pauseButtonStyle="disabled"
+        		$scope.updateThreadsButtonStyle="disabled"
             }
     	}
     	var promise=$interval(function() {
-    		$http.get("/service?json=true&concise=true").success(loadData).error(handleError);
+    		$http.get("/service?concise=true").success(loadData).error(handleError);
     	}, 1000); 
     	var msToTime=function(s) {
     		  var ms = s % 1000;
@@ -57,8 +66,14 @@ app.controller('mainCtrl', ['$scope', '$http','$interval',
     		else{
     			reqStr= "&paused=true"
     		}
-    		$http.get("/service?json=true"+reqStr).success(loadData)
+    		$http.get("/service?concise=true"+reqStr).success(loadData)
     	};
-		$http.get("/service?json=true").success(loadData).error(handleError);
+    	$scope.updateThreadCount = function(){
+    		var reqStr = "&threads="+$scope.threadCount
+    		
+    		$http.get("/service?concise=true"+reqStr).success(loadData)
+    	};
+    	$scope.updateThreadsButtonStyle="btn-primary"
+		$http.get("/service").success(loadData).error(handleError);
 
 }]);

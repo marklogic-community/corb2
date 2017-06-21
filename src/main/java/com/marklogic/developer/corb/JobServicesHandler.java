@@ -6,9 +6,9 @@ import java.util.Map;
 import com.marklogic.developer.corb.HTTPServer.Request;
 import com.marklogic.developer.corb.HTTPServer.Response;
 
-public class OnDemandMetricsDataHandler implements HTTPServer.ContextHandler{
+public class JobServicesHandler implements HTTPServer.ContextHandler{
 	Manager manager;
-	OnDemandMetricsDataHandler(Manager manager){
+	JobServicesHandler(Manager manager){
 		this.manager=manager;
 	}
 	public int serve(Request req, Response resp) throws IOException {
@@ -23,8 +23,22 @@ public class OnDemandMetricsDataHandler implements HTTPServer.ContextHandler{
 				manager.resume();
 			}		
 		}
+		if (params.containsKey("threads") || params.containsKey("THREADS")) {
+			String value = params.get("threads");
+			value=value==null?params.get("THREADS"):value;
+			if(value !=null ){
+				try {
+					int threadCount = Integer.parseInt(value);
+					if(threadCount>0){
+						manager.setThreadCount(threadCount);
+					}
+				} catch (NumberFormatException e) {
+					e.printStackTrace();
+				}
+			}
+				
+		}
 		manager.jobStats.setPaused(String.valueOf(manager.isPaused()));		
-		manager.populateJobStats();
 		boolean concise=params.containsKey("concise")||params.containsKey("CONCISE");
 		if (params.containsKey("xml") || params.containsKey("XML")) {
 			resp.getHeaders().add("Content-Type", "application/xml");

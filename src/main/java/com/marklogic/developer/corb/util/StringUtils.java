@@ -31,6 +31,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 /**
  * @author mike.blakeley@marklogic.com
  * @author Bhagat Bandlamudi, MarkLogic Corporation
@@ -378,5 +379,31 @@ public final class StringUtils {
             throw new AssertionError(UTF_8_NOT_SUPPORTED);
         }
     }
+
+	public static List<Integer> parsePortRanges(String jobServerPort) {
+		List<Integer> jobServerPorts = new ArrayList<Integer>();
+		String[] splitByComma = jobServerPort.split(",");
+		for (int i = 0; i < splitByComma.length; i++) {
+			if (splitByComma[i].contains("-")) {
+				String[] splitByDash = splitByComma[i].split("-");
+				if (splitByDash.length == 2) {
+					Integer start = Integer.parseInt(splitByDash[0]);
+					Integer end = Integer.parseInt(splitByDash[1]);
+					if (start > end) {
+						int tmp = start;
+						start = end;
+						end = tmp;
+					}
+					for (int j = start; j <= end; j++) {
+						jobServerPorts.add(j);
+					}
+				}
+			} else {
+				jobServerPorts.add(Integer.parseInt(splitByComma[i]));
+			}
+		}
+
+		return jobServerPorts;
+	}
 
 }

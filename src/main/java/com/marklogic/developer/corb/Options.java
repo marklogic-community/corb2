@@ -997,11 +997,21 @@ public final class Options {
     public static final String METRICS_TO_DB_SYNC_FREQUENCY = "METRICS-TO-DB-SYNC-FREQUENCY";
     
     /**
-     *Port number to start a light weight HTTP Server which can be used to monitor ,change the number of threads, pause/resume the current corb job.
-     * By Default if this property is not specified, the OnDemand server is turned off.
+     *Optional Port number to start a light weight HTTP Server which can be used to monitor ,change the number of threads, pause/resume the current corb job.
+     *Port number must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090
+     * The job server has a service http://<host>:<port>/service
+     * It suports the following params
+     * <ul><li>
+     * paused=true|false will pause/resume the Corb job. </li>
+     * <li>threads=<number> will change the number of threads to <number>. </li>
+     * <li>json=true returns metrics in json format</li>
+     * <li>xml=true returns in xml format</li>
+     * <li>concise=true returns a concise format.</li>
+     * </ul>
+     * By Default if this property is not specified, the Job server is not started.
      */
   
-    @Usage(description = "Port number to start a light weight HTTP Server which can be used to monitor ,change the number of threads, pause/resume the current corb job.")
+    @Usage(description = "Port number to start a light weight HTTP Server which can be used to monitor ,change the number of threads, pause/resume the current corb job. Port number must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090")
     public static final String JOB_SERVER_PORT = "JOB-SERVER-PORT";
         
     /**
