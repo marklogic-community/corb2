@@ -104,22 +104,26 @@ import com.marklogic.xcc.exceptions.XccConfigException;
  */
 public class Manager extends AbstractManager {
 
-    private static final String END_RUNNING_JOB_MESSAGE = "END RUNNING CORB JOB:";
+	private static final String END_RUNNING_JOB_MESSAGE = "END RUNNING CORB JOB:";
     private static final String START_RUNNING_JOB_MESSAGE = "STARTED CORB JOB:";
-    private static final String LOADED_URIS_JOB_MESSAGE = "LOADED URIS FOR JOB:";
     
 	protected static final String NAME = Manager.class.getName();
 
     public static final String URIS_BATCH_REF = com.marklogic.developer.corb.Options.URIS_BATCH_REF;
     public static final String DEFAULT_BATCH_URI_DELIM = ";";
 
+    protected transient PausableThreadPoolExecutor pool;
     protected transient Monitor monitor;
     protected transient MetricsDocSyncJob metricsDocSyncJob;
-    
+    protected transient HTTPServer jobServer = null;
+    protected JobStats jobStats = null;
+	protected long startMillis;
+	protected long transformStartMillis;	
+	protected long endMillis;
+	
     protected transient Thread monitorThread;
     protected transient CompletionService<String[]> completionService;
     protected transient ScheduledExecutorService scheduledExecutor;
-    protected transient HTTPServer jobServer = null;
 
     protected boolean execError;
     protected boolean stopCommand;
@@ -408,7 +412,7 @@ public class Manager extends AbstractManager {
 			options.setNumberOfFailedUris(intNumFaileTransactions);
 		}
 		String metricsSyncFrequencyInMillis=getOption(Options.METRICS_TO_DB_SYNC_FREQUENCY);
-		if((logMetricsToServerDBName!=null || this.isMetricsToServerLogEnabled(logMetricsToServerLog )) && metricsSyncFrequencyInMillis !=null){
+		if((logMetricsToServerDBName!=null || this.options.isMetricsToServerLogEnabled(logMetricsToServerLog )) && metricsSyncFrequencyInMillis !=null){
 			//periodically update db only if db name is set or logging enabled and sync frequency is selected
 			//no defaults for this function
 			int intMetricsSyncFrequencyInMillis=Integer.valueOf(metricsSyncFrequencyInMillis);
@@ -417,8 +421,20 @@ public class Manager extends AbstractManager {
 		String jobServerPort=getOption(Options.JOB_SERVER_PORT);
 		if(jobServerPort!=null){
 			//no defaults for this function
-			int intJobServerPort=Integer.valueOf(jobServerPort);
-			options.setJobServerPort(intJobServerPort);
+			if(jobServerPort.indexOf("-")>-1 || jobServerPort.indexOf(",")>-1 ){
+				try {
+					List<Integer> jobServerPorts = StringUtils.parsePortRanges(jobServerPort);
+					if(jobServerPorts.size()>0){
+						options.setJobServerPortsToChoose(jobServerPorts);
+					}
+				} catch (NumberFormatException e) {
+					throw new IllegalArgumentException(Options.JOB_SERVER_PORT + " must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090");
+				}
+			}
+			else{
+				int intJobServerPort=Integer.parseInt(jobServerPort);
+				options.setJobServerPort(intJobServerPort);
+			}
 		}
         // delete the export file if it exists
         deleteFileIfExists(exportFileDir, exportFileName);
@@ -547,7 +563,10 @@ public class Manager extends AbstractManager {
 
     public int run() throws Exception {
     	startMillis = System.currentTimeMillis();
-    	logJobStatsToServerLog( START_RUNNING_JOB_MESSAGE,true);
+    	if(this.jobStats==null){
+			this.jobStats=new JobStats(this);
+		}
+    	this.jobStats.logJobStatsToServer( START_RUNNING_JOB_MESSAGE,false);
     	startMetricsSyncJob();
     	startJobServer();
     	LOG.log(INFO, "{0} starting: {1}", new Object[]{NAME, VERSION_MSG});
@@ -572,7 +591,7 @@ public class Manager extends AbstractManager {
             if (!execError && count > 0) {
                 runPostBatchTask(); // post batch tasks
                 endMillis=System.currentTimeMillis();
-                logJobStatsToServer(END_RUNNING_JOB_MESSAGE);//Log metrics to DB, Java console and Server error log
+                this.jobStats.logJobStatsToServer(END_RUNNING_JOB_MESSAGE,false);//Log metrics to DB, Java console and Server error log
                 LOG.info("all done");
             }
             return count;
@@ -585,17 +604,24 @@ public class Manager extends AbstractManager {
 
 	private void startJobServer() throws IOException {
 		int port = options.getJobServerPort();
-		if(port>0 && jobServer == null){
-			jobServer = new HTTPServer(port);
+		if((port>0  || options.getJobServerPortsToChoose() !=null && options.getJobServerPortsToChoose().size()>0) && jobServer == null){
+			if(port<0){
+				jobServer = new HTTPServer(options.getJobServerPortsToChoose());
+				options.setJobServerPort(jobServer.port);
+			}
+			else{
+				jobServer = new HTTPServer(port);
+			}
 			VirtualHost host = jobServer.getVirtualHost(null); // default host
 			host.setAllowGeneratedIndex(false); // with directory index pages
 			ContextHandler htmlContextHandler = new HTTPServer.ClasspathResourceContextHandler("corb2-web","/web");
-			ContextHandler dataContextHandler = new OnDemandMetricsDataHandler(this);
+			ContextHandler dataContextHandler = new JobServicesHandler(this);
 			host.addContext("/service", dataContextHandler);
 			host.addContext("/web", htmlContextHandler);
 			jobServer.start();
 		}
 	}
+
 	private void stopJobServer() throws IOException {
 		if(jobServer!=null){
 			jobServer.stop();
@@ -604,7 +630,7 @@ public class Manager extends AbstractManager {
 
 	private void startMetricsSyncJob() {
 		if(this.metricsDocSyncJob==null && this.options.getMetricsSyncFrequencyInMillis()!=null && this.options.getMetricsSyncFrequencyInMillis()>0){
-			this.metricsDocSyncJob = new MetricsDocSyncJob(this,this.options.getMetricsSyncFrequencyInMillis());
+			this.metricsDocSyncJob = new MetricsDocSyncJob(this.jobStats,this.options.getMetricsSyncFrequencyInMillis());
 			Thread metricSyncThread=new Thread(this.metricsDocSyncJob,"metricsDocSyncJob");
 			metricSyncThread.setDaemon(true);
 			metricSyncThread.start();
@@ -617,7 +643,7 @@ public class Manager extends AbstractManager {
 	}
     private void pauseMetricsSyncJob() {
 		if(this.metricsDocSyncJob!=null){
-			this.metricsDocSyncJob.shutdownNow();
+			this.metricsDocSyncJob.setPaused(true);//this will also log full metrics
 		}		
 	}
     private void resumeMetricsSyncJob() {
@@ -637,6 +663,7 @@ public class Manager extends AbstractManager {
         pool.prestartAllCoreThreads();
         completionService = new ExecutorCompletionService<>(pool);
         monitor = new Monitor(pool, completionService, this);
+        jobStats.setPool(pool);
         return new Thread(monitor, "monitor");
     }
 
@@ -731,7 +758,6 @@ public class Manager extends AbstractManager {
     }
 
     private void runPreBatchTask(TaskFactory tf) throws Exception {
-    	
         Task preTask = tf.newPreBatchTask();
         if (preTask != null) {
         	long startTime = System.nanoTime();
@@ -799,9 +825,6 @@ public class Manager extends AbstractManager {
                 stop();
                 return 0;
             }
-//            else{
-//            	logJobStatsToServerLog( LOADED_URIS_JOB_MESSAGE,true);
-//            }//should we log once we load uris?
 
             // run pre-batch task, if present.
             runPreBatchTask(taskFactory);
@@ -931,11 +954,11 @@ public class Manager extends AbstractManager {
         if (null != pool) {
         	endMillis=System.currentTimeMillis();
         	shutDownMetricsSyncJob();
-            logJobStatsToServer(END_RUNNING_JOB_MESSAGE);
+            this.jobStats.logJobStatsToServer(END_RUNNING_JOB_MESSAGE,false);
             try {
 				stopJobServer();
 			} catch (IOException e) {
-				e.printStackTrace();
+				LOG.log(WARNING,"Unable to stop Job server");
 			}
             if (pool.isPaused()) {
                 pool.resume();

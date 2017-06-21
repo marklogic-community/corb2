@@ -1,8 +1,14 @@
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
 
 import java.io.StringReader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +23,24 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-public class JobStats {
+import com.marklogic.developer.corb.util.StringUtils;
+import com.marklogic.xcc.AdhocQuery;
+import com.marklogic.xcc.ContentSource;
+import com.marklogic.xcc.Request;
+import com.marklogic.xcc.RequestOptions;
+import com.marklogic.xcc.ResultSequence;
+import com.marklogic.xcc.Session;
+
+public class JobStats extends BaseMonitor {
+	private static final String NOT_APPLICABLE = "NA";
+	private static final long TPS_ETC_MIN_REFRESH_INTERVAL = 10000l;
+	private static final String METRICS_COLLECTIONS_PARAM = "collections";
+	private static final String METRICS_DOCUMENT_STR_PARAM = "metricsDocumentStr";
+	private static final String METRICS_DB_NAME_PARAM = "dbName";
+	private static final String METRICS_URI_ROOT_PARAM = "uriRoot";
+	protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\";\n";
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+
 	private static final String START_TIME = "startTime";
 	private static final String CLOSE_SQUARE = "]";
 	private static final String GT = ">";
@@ -30,7 +53,7 @@ public class JobStats {
 	private static final String JOB_ROOT = "job";
 	private static final String DEF_NS = "http://marklogic.github.io/corb/";
 	private static final String LONG_RUNNING_URIS = "slowTransactions";
-	private static final String FAILED_URIS = "failedTransactions";	
+	private static final String FAILED_URIS = "failedTransactions";
 	private static final String URIS_LOAD_TIME = "urisLoadTimeInMillis";
 	private static final String INIT_TASK_TIME = "initTaskTimeInMillis";
 	private static final String PRE_BATCH_RUN_TIME = "preBatchRunTimeInMillis";
@@ -42,12 +65,17 @@ public class JobStats {
 	private static final String NUMBER_OF_SUCCEEDED_TASKS = "numberOfSucceededTasks";
 	private static final String METRICS_DOC_URI = "metricsDocUri";
 	private static final String PAUSED = "paused";
-	
-	
+	private static final String AVERAGE_TPS = "averageTransactionsPerSecond";
+	private static final String CURRENT_TPS = "currentTransactionsPerSecond";
+	private static final String ESTIMATED_TIME_OF_COMPLETION = "estimatedTimeOfCompletion";
+	private static final String METRICS_TIMESTAMP = "metricsTimestamp";
+
 	private static final String HOST = "host";
 	private static final String END_TIME = "endTime";
 	private static final String USER_PROVIDED_OPTIONS = "userProvidedOptions";
 	private static final String JOB_LOCATION = "runLocation";
+	private static final String CURRENT_THREAD_COUNT = "currentThreadCount";
+
 	protected Map<String, String> userProvidedOptions = new HashMap<String, String>();
 	protected String startTime = null;
 	protected String endTime = null;
@@ -58,19 +86,201 @@ public class JobStats {
 	protected Double averageTransactionTime = 0.0d;
 	protected Long urisLoadTime = null;
 	private Long preBatchRunTime = 0l;
-    private Long postBatchRunTime = 0l;
-    private Long initTaskRunTime = 0l;
-    private Long totalRunTimeInMillis = 0l;
+	private Long postBatchRunTime = 0l;
+	private Long initTaskRunTime = 0l;
+	private Long totalRunTimeInMillis = 0l;
 	protected String jobRunLocation = null;
 	protected String jobName = null;
 	protected Map<String, Long> longRunningUris = new HashMap<String, Long>();
 	protected List<String> failedUris = null;
 	protected String uri = null;
 	protected String paused = null;
-	
-	
+	protected Long currentThreadCount = 0l;
+
+	protected TransformOptions options = null;
+	protected ContentSource contentSource;
 
 	private static final Logger LOG = Logger.getLogger(JobStats.class.getName());
+
+	public JobStats() {
+		super(null, null);
+	}
+
+	public JobStats(Manager manager) {
+		super(null, manager);
+		options = manager.options;
+		contentSource = manager.contentSource;
+		startMillis = manager.startMillis;
+		String jobName = options.getJobName();
+		if (jobName != null) {
+			setJobName(jobName);
+		}
+		String hostname = "Unknown";
+
+		try {
+			InetAddress addr;
+			addr = InetAddress.getLocalHost();
+			hostname = addr.getHostName();
+		} catch (UnknownHostException ex) {
+			try {
+				hostname = InetAddress.getLoopbackAddress().getHostName();
+			} catch (Exception e) {
+				LOG.log(INFO, "Hostname can not be resolved", e);
+			}
+		}
+		this.setHost(hostname);
+		this.setJobRunLocation(System.getProperty("user.dir"));
+		this.setStartTime(sdf.format(new Date(this.manager.startMillis)));
+		this.setUserProvidedOptions(this.manager.getUserProvidedOptions());
+	}
+
+	private void refresh() {
+		synchronized (this) {
+			taskCount = taskCount > 0 ? taskCount : (pool != null) ? pool.getTaskCount() : 0l;
+			if (taskCount > 0) {
+				this.setTopTimeTakingUris((pool != null) ? this.pool.getTopUris() : null);
+				List<String> failedUris = (pool != null) ? this.pool.getFailedUris() : null;
+				this.setFailedUris(failedUris);
+				long numberOfFailedTasks = (this.pool != null) ? new Long(this.pool.getNumFailedUris()) : 0l;
+				this.setNumberOfFailedTasks(numberOfFailedTasks);
+				long numberOfSucceededTasks = (this.pool != null) ? new Long(this.pool.getNumSucceededUris()) : 0l;
+				this.setNumberOfSucceededTasks(numberOfSucceededTasks);
+				this.setTotalNumberOfTasks(taskCount);
+				Long currentTimeMillis = System.currentTimeMillis();
+				Long totalTime = this.manager.endMillis - manager.startMillis;
+				if (totalTime > 0) {
+					this.setTotalRunTimeInMillis(totalTime);
+					Long totalTransformTime = currentTimeMillis - manager.transformStartMillis;
+					this.setAverageTransactionTime(
+							new Double(totalTransformTime / new Double(numberOfFailedTasks + numberOfSucceededTasks)));
+					this.setEndTime(sdf.format(new Date(this.manager.endMillis)));
+					estimatedTimeOfCompletion = null;
+					this.setCurrentThreadCount(0l);
+				} else {
+					this.setTotalRunTimeInMillis(currentTimeMillis - manager.startMillis);
+					long completed = numberOfSucceededTasks + numberOfFailedTasks;
+					long intervalBetweenRequestsInMillis = TPS_ETC_MIN_REFRESH_INTERVAL;
+					long timeSinceLastReq = currentTimeMillis - prevMillis;
+					if (timeSinceLastReq > intervalBetweenRequestsInMillis) {
+						this.populateTps(completed);
+					}
+					this.setCurrentThreadCount(new Long(this.options.getThreadCount()));
+				}
+			}
+		}
+	}
+
+	protected void logJobStatsToServer(String message, boolean concise) {
+		String processModule = options.getLogMetricsToServerDBTransformModule();
+		String metricsToDocument = null;
+		String metricsToServerLog = null;
+		
+		if (isJavaScriptModule(processModule)) {
+			metricsToDocument = this.toJSONString(concise);
+		} else {
+			metricsToDocument = this.toXMLString(concise);
+			metricsToServerLog= getJsonFromXML(metricsToDocument);
+		}
+		logJobStatsToServerDocument(metricsToDocument);
+		logJobStatsToServerLog(message,metricsToServerLog, concise);
+		LOG.info(toString(false));
+	}
+
+	protected void logJobStatsToServerLog(String message, String metrics,boolean concise) {
+		Session session = null;
+		try {
+			if (contentSource != null) {
+				session = contentSource.newSession();
+				String logMetricsToServerLog = options.getLogMetricsToServerLog();
+				if (options.isMetricsToServerLogEnabled(logMetricsToServerLog)) {
+					metrics=StringUtils.isEmpty(metrics)?toString(concise):metrics;
+					String xquery = XQUERY_VERSION_ML
+							+ ((message != null)
+									? "xdmp:log(\"" + message + "\",'" + logMetricsToServerLog.toLowerCase() + "'),"
+									: "")
+							+ "xdmp:log('" + metrics + "\','" + logMetricsToServerLog.toLowerCase() + "')";
+
+					AdhocQuery q = session.newAdhocQuery(xquery);
+
+					session.submitRequest(q);
+				}
+			}
+		} catch (Exception e) {
+			LOG.log(SEVERE, "logJobStatsToServer request failed", e);
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+
+	}
+
+	protected void logJobStatsToServerDocument(String metrics) {
+		String logMetricsToServerDBName = options.getLogMetricsToServerDBName();
+		if (logMetricsToServerDBName != null) {
+			String uriRoot = options.getLogMetricsToServerDBURIRoot();
+			String uri = null;
+			Session session = null;
+			ResultSequence seq = null;
+			RequestOptions requestOptions = new RequestOptions();
+			requestOptions.setCacheResult(false);
+			String collections = options.getLogMetricsToServerDBCollections();
+			String processModule = options.getLogMetricsToServerDBTransformModule();
+
+			Thread.yield();// try to avoid thread starvation
+			try {
+				if (contentSource != null) {
+					session = contentSource.newSession();
+					Request request = this.manager.getRequestForModule(processModule, session);
+
+					request.setNewStringVariable(METRICS_DB_NAME_PARAM, logMetricsToServerDBName);
+					if (uriRoot != null) {
+						request.setNewStringVariable(METRICS_URI_ROOT_PARAM, uriRoot);
+					} else {
+						request.setNewStringVariable(METRICS_URI_ROOT_PARAM, NOT_APPLICABLE);
+					}
+					if (collections != null) {
+						request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, collections);
+					} else {
+						request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, NOT_APPLICABLE);
+					}
+					if (isJavaScriptModule(processModule)) {
+						requestOptions.setQueryLanguage("javascript");
+						request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
+								metrics == null ? this.toJSONString() : metrics);
+					} else {
+						request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
+								metrics == null ? this.toXMLString() : metrics);
+
+					}
+					request.setOptions(requestOptions);
+
+					seq = session.submitRequest(request);
+					uri = seq.hasNext() ? seq.next().asString() : null;
+					if(uri!=null){
+						this.setUri(uri);
+					}
+					session.close();
+					Thread.yield();// try to avoid thread starvation
+					seq.close();
+					Thread.yield();// try to avoid thread starvation
+				}
+			} catch (Exception exc) {
+				LOG.log(SEVERE, "logJobStatsToServerDocument request failed", exc);
+			} finally {
+				if (null != session && !session.isClosed()) {
+					session.close();
+					session = null;
+				}
+				if (null != seq && !seq.isClosed()) {
+					seq.close();
+					seq = null;
+				}
+				Thread.yield();// try to avoid thread starvation
+			}
+			
+		}
+	}
 
 	public String getJobName() {
 		return jobName;
@@ -159,48 +369,58 @@ public class JobStats {
 	public void setTopTimeTakingUris(Map<String, Long> topTimeTakingUris) {
 		this.longRunningUris = topTimeTakingUris;
 	}
+
 	@Override
-	public String toString(){
+	public String toString() {
 		return toString(true);
 	}
+
 	public String toString(boolean concise) {
 		return toJSONString(concise);
 	}
+
 	public String toXMLString() {
 		return toXMLString(false);
 	}
+
 	public String toXMLString(boolean concise) {
 		StringBuffer strBuff = new StringBuffer();
-		strBuff.append(xmlNode(JOB_LOCATION, this.jobRunLocation))
-				.append(xmlNode(JOB_NAME, this.jobName))
+		this.refresh();
+		strBuff.append(xmlNode(JOB_LOCATION, this.jobRunLocation)).append(xmlNode(JOB_NAME, this.jobName))
 				.append(xmlNode(HOST, host))
-				.append(concise?"":xmlNode(USER_PROVIDED_OPTIONS, userProvidedOptions))
+				.append(concise ? "" : xmlNode(USER_PROVIDED_OPTIONS, userProvidedOptions))
 				.append(xmlNode(START_TIME, startTime))
 				.append(xmlNode(END_TIME, endTime))
 				.append(xmlNode(INIT_TASK_TIME, initTaskRunTime))
 				.append(xmlNode(PRE_BATCH_RUN_TIME, preBatchRunTime))
 				.append(xmlNode(URIS_LOAD_TIME, urisLoadTime))
 				.append(xmlNode(POST_BATCH_RUN_TIME, postBatchRunTime))
-				.append(xmlNode(TOTAL_JOB_RUN_TIME, totalRunTimeInMillis))
 				.append(xmlNode(AVERAGE_TRANSACTION_TIME, averageTransactionTime))
 				.append(xmlNode(TOTAL_NUMBER_OF_TASKS, totalNumberOfTasks))
+				.append(xmlNode(TOTAL_JOB_RUN_TIME, totalRunTimeInMillis))
 				.append(xmlNode(NUMBER_OF_FAILED_TASKS, numberOfFailedTasks))
 				.append(xmlNode(NUMBER_OF_SUCCEEDED_TASKS, numberOfSucceededTasks))
 				.append(xmlNode(METRICS_DOC_URI, uri))
 				.append(xmlNode(PAUSED, paused))
-				.append(concise?"":xmlNodeArray(FAILED_URIS, URI,failedUris))
-				.append(concise?"":xmlNodeRanks(LONG_RUNNING_URIS, longRunningUris));
-		return xmlNode(JOB_ROOT, strBuff.toString(),DEF_NS);
+				.append(xmlNode(AVERAGE_TPS, avgTps > 0 ? formatTransactionsPerSecond(avgTps) : ""))
+				.append(xmlNode(CURRENT_TPS, currentTps > 0 ? formatTransactionsPerSecond(currentTps) : ""))
+				.append(xmlNode(ESTIMATED_TIME_OF_COMPLETION, estimatedTimeOfCompletion))
+				.append(xmlNode(CURRENT_THREAD_COUNT, currentThreadCount))
+				.append(xmlNode(METRICS_TIMESTAMP, sdf.format(new Date())))
+				.append(concise ? "" : xmlNodeArray(FAILED_URIS, URI, failedUris))
+				.append(concise ? "" : xmlNodeRanks(LONG_RUNNING_URIS, longRunningUris));
+		return xmlNode(JOB_ROOT, strBuff.toString(), DEF_NS);
 	}
+
 	public String toJSONString() {
 		return toJSONString(false);
 	}
+
 	public String toJSONString(boolean concise) {
-		String xml = toXMLString(concise);
-		return getJsonFromXML(xml);
+		return getJsonFromXML(toXMLString(concise));
 	}
 
-	private String getJsonFromXML(String xml) {
+	private static String getJsonFromXML(String xml) {
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder dBuilder;
 		try {
@@ -221,7 +441,7 @@ public class JobStats {
 		return "";
 	}
 
-	private String getJson(Node node) {
+	private static String getJson(Node node) {
 		StringBuffer strBuff = new StringBuffer();
 
 		NodeList nodeList = node.getChildNodes();
@@ -269,17 +489,15 @@ public class JobStats {
 								}
 								strBuff.append("\"").append(uri.getTextContent()).append("\"");
 							}
-							
+
 						}
 					}
 					strBuff.append(CLOSE_SQUARE);
-				}
-				else if (child.hasChildNodes() && child.getFirstChild().getNodeType() == Node.TEXT_NODE) {
+				} else if (child.hasChildNodes() && child.getFirstChild().getNodeType() == Node.TEXT_NODE) {
 					strBuff.append("\"").append(child.getNodeName()).append("\":\"").append(child.getTextContent())
 							.append("\"");
 				} else {
-					strBuff.append("\"").append(child.getNodeName()).append("\":"
-							+ OPEN_CURLY);
+					strBuff.append("\"").append(child.getNodeName()).append("\":" + OPEN_CURLY);
 					strBuff.append(getJson(child));
 					strBuff.append(CLOSE_CURLY);
 				}
@@ -288,48 +506,50 @@ public class JobStats {
 		}
 		return strBuff.toString();
 	}
-	private String xmlNode(String nodeName, String nodeVal) {
-		return xmlNode(nodeName, nodeVal,null);
+
+	private static String xmlNode(String nodeName, String nodeVal) {
+		return xmlNode(nodeName, nodeVal, null);
 	}
-	private String xmlNode(String nodeName, Long nodeVal) {
-		if(nodeVal !=null && nodeVal > 0l){
-			return xmlNode(nodeName, nodeVal.toString(),null);
-		}
-		else{
+
+	private static String xmlNode(String nodeName, Long nodeVal) {
+		if (nodeVal != null && nodeVal > 0l) {
+			return xmlNode(nodeName, nodeVal.toString(), null);
+		} else {
 			return "";
 		}
 	}
-	private String xmlNode(String nodeName, Double nodeVal) {
-		if(nodeVal !=null && nodeVal > 0.0){
-			return xmlNode(nodeName, nodeVal.toString(),null);
-		}
-		else{
+
+	private static String xmlNode(String nodeName, Double nodeVal) {
+		if (nodeVal != null && nodeVal > 0.0) {
+			return xmlNode(nodeName, nodeVal.toString(), null);
+		} else {
 			return "";
 		}
 	}
-	private String xmlNodeArray(String nodeName, String childNodeName,List<String> nodeVals) {
-		if(nodeVals!=null && nodeVals.size()>0){
-			
+
+	private static String xmlNodeArray(String nodeName, String childNodeName, List<String> nodeVals) {
+		if (nodeVals != null && nodeVals.size() > 0) {
+
 			StringBuffer strBuff = new StringBuffer();
 			for (String nodeVal : nodeVals) {
-				strBuff.append(xmlNode(childNodeName,nodeVal));
+				strBuff.append(xmlNode(childNodeName, nodeVal));
 			}
-			return xmlNode(nodeName, strBuff.toString(),null);
-		}
-		else{
+			return xmlNode(nodeName, strBuff.toString(), null);
+		} else {
 			return "";
 		}
-		
+
 	}
-	private String xmlNode(String nodeName, String nodeVal,String defaultNS) {
-		if (nodeVal != null) {
+
+	private static String xmlNode(String nodeName, String nodeVal, String defaultNS) {
+		if (StringUtils.isNotEmpty(nodeVal)) {
 			StringBuffer strBuff = new StringBuffer();
 			strBuff.append(LT).append(nodeName);
-			if(defaultNS!=null){
+			if (defaultNS != null) {
 				strBuff.append(" xmlns='").append(defaultNS).append("' ");
-				
+
 			}
-			
+
 			strBuff.append(GT).append(nodeVal).append("</").append(nodeName).append(GT);
 			return strBuff.toString();
 		} else {
@@ -338,19 +558,19 @@ public class JobStats {
 
 	}
 
-	private String xmlNode(String nodeName, Map<String, String> nodeVal) {
-		if(nodeVal !=null && nodeVal.size()>0){
+	private static String xmlNode(String nodeName, Map<String, String> nodeVal) {
+		if (nodeVal != null && nodeVal.size() > 0) {
 			StringBuffer strBuff = new StringBuffer();
 			for (String key : nodeVal.keySet()) {
 				strBuff.append(xmlNode(key, nodeVal.get(key)));
 			}
 			return xmlNode(nodeName, strBuff.toString());
-		}
-		else return "";
+		} else
+			return "";
 	}
 
-	private String xmlNodeRanks(String nodeName, Map<String, Long> nodeVal) {
-		if(nodeVal!=null && nodeVal.size()>0){
+	private static String xmlNodeRanks(String nodeName, Map<String, Long> nodeVal) {
+		if (nodeVal != null && nodeVal.size() > 0) {
 			StringBuffer strBuff = new StringBuffer();
 			TreeSet<Long> ranks = new TreeSet<Long>();
 			ranks.addAll(nodeVal.values());
@@ -373,14 +593,15 @@ public class JobStats {
 			for (Integer key : rankToXML.keySet()) {
 				strBuff.append(xmlNode("Uri", rankToXML.get(key)));
 			}
-			return xmlNode(nodeName, strBuff.toString());	
-		}
-		else return "";
-		
+			return xmlNode(nodeName, strBuff.toString());
+		} else
+			return "";
+
 	}
 
 	/**
-	 * @param failedUris the failedUris to set
+	 * @param failedUris
+	 *            the failedUris to set
 	 */
 	public void setFailedUris(List<String> failedUris) {
 		this.failedUris = failedUris;
@@ -401,7 +622,8 @@ public class JobStats {
 	}
 
 	/**
-	 * @param preBatchRunTime the preBatchRunTime to set
+	 * @param preBatchRunTime
+	 *            the preBatchRunTime to set
 	 */
 	public void setPreBatchRunTime(Long preBatchRunTime) {
 		this.preBatchRunTime = preBatchRunTime;
@@ -415,7 +637,8 @@ public class JobStats {
 	}
 
 	/**
-	 * @param postBatchRunTime the postBatchRunTime to set
+	 * @param postBatchRunTime
+	 *            the postBatchRunTime to set
 	 */
 	public void setPostBatchRunTime(Long postBatchRunTime) {
 		this.postBatchRunTime = postBatchRunTime;
@@ -429,7 +652,8 @@ public class JobStats {
 	}
 
 	/**
-	 * @param initTaskRunTime the initTaskRunTime to set
+	 * @param initTaskRunTime
+	 *            the initTaskRunTime to set
 	 */
 	public void setInitTaskRunTime(Long initTaskRunTime) {
 		this.initTaskRunTime = initTaskRunTime;
@@ -443,7 +667,8 @@ public class JobStats {
 	}
 
 	/**
-	 * @param numberOfSucceededTasks the numberOfSucceededTasks to set
+	 * @param numberOfSucceededTasks
+	 *            the numberOfSucceededTasks to set
 	 */
 	public void setNumberOfSucceededTasks(Long numberOfSucceededTasks) {
 		this.numberOfSucceededTasks = numberOfSucceededTasks;
@@ -457,7 +682,8 @@ public class JobStats {
 	}
 
 	/**
-	 * @param totalRunTimeInMillis the totalRunTimeInMillis to set
+	 * @param totalRunTimeInMillis
+	 *            the totalRunTimeInMillis to set
 	 */
 	public void setTotalRunTimeInMillis(Long totalRunTimeInMillis) {
 		this.totalRunTimeInMillis = totalRunTimeInMillis;
@@ -471,7 +697,8 @@ public class JobStats {
 	}
 
 	/**
-	 * @param uri the uri to set
+	 * @param uri
+	 *            the uri to set
 	 */
 	protected void setUri(String uri) {
 		this.uri = uri;
@@ -485,10 +712,79 @@ public class JobStats {
 	}
 
 	/**
-	 * @param paused the paused to set
+	 * @param paused
+	 *            the paused to set
 	 */
 	protected void setPaused(String paused) {
 		this.paused = paused;
+	}
+
+	/**
+	 * @return the currentThreadCount
+	 */
+	public Long getCurrentThreadCount() {
+		return currentThreadCount;
+	}
+
+	/**
+	 * @param currentThreadCount
+	 *            the currentThreadCount to set
+	 */
+	public void setCurrentThreadCount(Long currentThreadCount) {
+		this.currentThreadCount = currentThreadCount;
+	}
+
+	/**
+	 * @return the avgTps
+	 */
+	public double getAvgTps() {
+		return avgTps;
+	}
+
+	/**
+	 * @param avgTps
+	 *            the avgTps to set
+	 */
+	public void setAvgTps(double avgTps) {
+		this.avgTps = avgTps;
+	}
+
+	/**
+	 * @return the currentTps
+	 */
+	public double getCurrentTps() {
+		return currentTps;
+	}
+
+	/**
+	 * @param currentTps
+	 *            the currentTps to set
+	 */
+	public void setCurrentTps(double currentTps) {
+		this.currentTps = currentTps;
+	}
+
+	/**
+	 * @return the estimatedTimeOfCompletion
+	 */
+	public String getEstimatedTimeOfCompletion() {
+		return estimatedTimeOfCompletion;
+	}
+
+	/**
+	 * @param estimatedTimeOfCompletion
+	 *            the estimatedTimeOfCompletion to set
+	 */
+	public void setEstimatedTimeOfCompletion(String estimatedTimeOfCompletion) {
+		this.estimatedTimeOfCompletion = estimatedTimeOfCompletion;
+	}
+
+	/**
+	 * @param pool
+	 *            the pool to set
+	 */
+	public void setPool(PausableThreadPoolExecutor pool) {
+		this.pool = pool;
 	}
 
 }

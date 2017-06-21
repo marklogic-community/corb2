@@ -20,7 +20,6 @@ package com.marklogic.developer.corb;
 
 import static java.util.logging.Level.SEVERE;
 
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
 /**
@@ -31,9 +30,10 @@ import java.util.logging.Logger;
 public class MetricsDocSyncJob implements Runnable {
 
 	protected static final Logger LOG = Logger.getLogger(Monitor.class.getName());
-
+	private static final String PAUSING_JOB_MESSAGE = "PAUSING CORB JOB:";
+    
 	private int syncFrequencyInMillis = -1;
-	private Manager manager = null;
+	private JobStats jobStats = null;
 	private boolean shutdownNow;
 	private boolean paused;
 
@@ -42,8 +42,8 @@ public class MetricsDocSyncJob implements Runnable {
 	 * @param cs
 	 * @param manager
 	 */
-	public MetricsDocSyncJob(Manager manager, int syncFrequencyInMillis) {
-		this.manager = manager;
+	public MetricsDocSyncJob(JobStats jobStats, int syncFrequencyInMillis) {
+		this.jobStats = jobStats;
 		this.syncFrequencyInMillis = syncFrequencyInMillis;
 	}
 
@@ -80,7 +80,7 @@ public class MetricsDocSyncJob implements Runnable {
 	}
 
 	private void syncDoc() {
-		manager.logJobStatsToServerDocument();
+		jobStats.logJobStatsToServer("RUNNING CORB JOB:",true);
 	}
 
 	/**
@@ -103,6 +103,10 @@ public class MetricsDocSyncJob implements Runnable {
 	 */
 	protected void setPaused(boolean paused) {
 		this.paused = paused;
+		if(paused){
+			//spit out the whole thing(not concise) when pausing
+			jobStats.logJobStatsToServer(PAUSING_JOB_MESSAGE, false);
+		}
 	}
 
 }

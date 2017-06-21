@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
@@ -83,9 +84,10 @@ public class TransformOptions {
     private String logMetricsToServerDBTransformModule = "save-metric-to-db.xqy|ADHOC";
     private String logMetricsToServerDBCollections = null;
     private Integer numberOfLongRunningUris = 5;
-    private Integer numberOfFailedUris = MAX_NUM_FAILED_TRANSACTIONS;
+    private Integer numberOfFailedUris = 0;
     private Integer metricsSyncFrequencyInMillis = -1;
     private Integer jobServerPort = -1;
+    private List<Integer> jobServerPortsToChoose = null;
     
     
     
@@ -539,5 +541,17 @@ public class TransformOptions {
 	 */
 	protected void setJobServerPort(Integer metricsOnDemandPort) {
 		this.jobServerPort = metricsOnDemandPort;
+	}
+	protected boolean isMetricsToServerLogEnabled(String logMetricsToServerLog){
+		logMetricsToServerLog = logMetricsToServerLog==null?getLogMetricsToServerLog():logMetricsToServerLog;
+		return (logMetricsToServerLog != null && !logMetricsToServerLog.equalsIgnoreCase("NONE"));
+	}
+
+	public List<Integer> getJobServerPortsToChoose() {
+		return jobServerPortsToChoose;
+	}
+
+	public void setJobServerPortsToChoose(List<Integer> jobServerPortToChoose) {
+		this.jobServerPortsToChoose = jobServerPortToChoose;
 	}
 }

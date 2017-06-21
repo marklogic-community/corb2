@@ -32,7 +32,6 @@ import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
-import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 import static java.util.logging.Level.INFO;
@@ -47,16 +46,12 @@ import java.io.PrintStream;
 import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
-import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +64,6 @@ import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ContentSourceFactory;
 import com.marklogic.xcc.Request;
-import com.marklogic.xcc.RequestOptions;
 import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.SecurityOptions;
@@ -80,13 +74,6 @@ import com.marklogic.xcc.types.XdmItem;
 
 public abstract class AbstractManager {
 
-    private static final String METRICS_COLLECTIONS_PARAM = "collections";
-
-	private static final String METRICS_DOCUMENT_STR_PARAM = "metricsDocumentStr";
-
-	private static final String METRICS_DB_NAME_PARAM = "dbName";
-
-	private static final String METRICS_URI_ROOT_PARAM = "uriRoot";
 
 	public static final String VERSION = "2.4.0";
 
@@ -102,18 +89,12 @@ public abstract class AbstractManager {
     protected Properties properties = new Properties();
     protected ContentSource contentSource;
     protected Map<String,String> userProvidedOptions = new HashMap<String,String>();
-	protected JobStats jobStats = null;
-	protected long startMillis;
-	protected long transformStartMillis;
 	
-	protected long endMillis;
-	protected transient PausableThreadPoolExecutor pool;//moved from Manager
     protected static final int EXIT_CODE_SUCCESS = 0;
     protected static final int EXIT_CODE_INIT_ERROR = 1;
     protected static final int EXIT_CODE_PROCESSING_ERROR = 2;
     protected static final String SPACE = " ";
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");  
-	
+
     private static final Logger LOG = Logger.getLogger(AbstractManager.class.getName());
 
     public static Properties loadPropertiesFile(String filename) throws IOException {
@@ -416,59 +397,6 @@ public abstract class AbstractManager {
 	public void setUserProvidedOptions(Map<String, String> userProvidedOptions) {
 		this.userProvidedOptions = userProvidedOptions;
 	}
-	protected void logJobStatsToServer(String message) {
-		logJobStatsToServerDocument();
-		logJobStatsToServerLog(message,false);
-		LOG.info(jobStats.toString(false));
-	}
-	protected boolean isMetricsToServerLogEnabled(String logMetricsToServerLog){
-		logMetricsToServerLog = logMetricsToServerLog==null?options.getLogMetricsToServerLog():logMetricsToServerLog;
-		return (logMetricsToServerLog != null && !logMetricsToServerLog.equalsIgnoreCase("NONE"));
-	}
-	protected void logJobStatsToServerLog(String message, boolean concise) {
-		Session session = null;
-		try {
-			if(contentSource !=null){
-				session=contentSource.newSession();
-				this.initJobStats();
-				String logMetricsToServerLog = options.getLogMetricsToServerLog();
-				if (isMetricsToServerLogEnabled(logMetricsToServerLog)) {
-
-					String xquery = XQUERY_VERSION_ML
-							+ ((message != null)
-									? "xdmp:log(\"" + message + "\",'" + logMetricsToServerLog.toLowerCase() + "')," : "")
-							+ "xdmp:log('" + jobStats.toString(concise) + "\','" + logMetricsToServerLog.toLowerCase()
-							+ "')";
-
-					AdhocQuery q = session.newAdhocQuery(xquery);
-
-					session.submitRequest(q);
-				}
-			}			
-		} catch (Exception e) {
-			LOG.log(SEVERE, "logJobStatsToServer request failed", e);
-			e.printStackTrace();
-		} finally {
-			if (session != null) {
-				session.close();
-			}
-		}
-
-	}
-	protected void logJobStatsToServerDocument() {	
-		try {
-			String logMetricsToServerDBName=options.getLogMetricsToServerDBName();
-			if(logMetricsToServerDBName !=null){
-				this.populateJobStats();
-				String uriRoot=options.getLogMetricsToServerDBURIRoot();
-				
-				String uri=logMetricsToDB(logMetricsToServerDBName,uriRoot,options.getLogMetricsToServerDBCollections(), jobStats,options.getLogMetricsToServerDBTransformModule());
-				this.jobStats.setUri(uri);
-			}
-		} catch (Exception e) {
-			LOG.log(INFO, "Unable to log metrics to server as Document", e);
-		}          
-    }
 	protected Request getRequestForModule(String processModule, Session session) {
 		Request request;
 		if (isInlineOrAdhoc(processModule)) {
@@ -497,125 +425,4 @@ public abstract class AbstractManager {
 		}
 		return request;
 	}
-
-	protected String logMetricsToDB(String dbName,String uriRoot,String collections,JobStats jobStats,String processModule) throws CorbException {
-        Session session = null;
-        ResultSequence seq = null;
-        RequestOptions requestOptions = new RequestOptions();
-        requestOptions.setCacheResult(false);
-
-        Thread.yield();// try to avoid thread starvation
-        try {
-        	if(contentSource !=null){    			
-	            session = contentSource.newSession();
-	            Request request = getRequestForModule(processModule, session);
-	            
-	            request.setNewStringVariable(METRICS_DB_NAME_PARAM, dbName);
-	            if(uriRoot!=null){
-	            	request.setNewStringVariable(METRICS_URI_ROOT_PARAM, uriRoot);
-	            }
-	            else{
-	            	request.setNewStringVariable(METRICS_URI_ROOT_PARAM, "NA");
-	            }
-	            if(collections!=null) {
-	            	request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, collections);
-	            }
-	            else{
-	            	request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, "NA");
-	            }
-	            if (isJavaScriptModule(processModule)) {
-			        requestOptions.setQueryLanguage("javascript");
-			        request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM, jobStats.toJSONString());	            
-			    }
-	            else{
-	            	request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM, jobStats.toXMLString());
-	                
-	            }
-	            request.setOptions(requestOptions);
-	
-	            seq = session.submitRequest(request);
-	            String uri=seq.hasNext()?seq.next().asString():"";
-	            session.close();
-	            Thread.yield();// try to avoid thread starvation
-	            seq.close();
-	            Thread.yield();// try to avoid thread starvation
-	            return uri;
-        	}
-        } catch (Exception exc) {
-            exc.printStackTrace();
-        } finally {
-            if (null != session && !session.isClosed()) {
-                session.close();
-                session = null;
-            }
-            if (null != seq && !seq.isClosed()) {
-                seq.close();
-                seq = null;
-            }
-            Thread.yield();// try to avoid thread starvation
-        }
-        return null;
-    }
-
-	protected JobStats populateJobStats() {
-		try{
-			synchronized (this.jobStats) {
-				this.initJobStats();
-				Long taskCount=(pool!=null)?pool.getTaskCount():0l;
-				if(taskCount > 0 ) {
-					this.jobStats.setTopTimeTakingUris((pool!=null)?this.pool.getTopUris():null);
-					List<String> failedUris=(pool!=null)?this.pool.getFailedUris():null;
-					this.jobStats.setFailedUris(failedUris);
-					long numberOfFailedTasks = (this.pool!=null)?new Long(this.pool.getNumFailedUris()):0l;
-					this.jobStats.setNumberOfFailedTasks(numberOfFailedTasks);
-					long numberOfSucceededTasks = (this.pool!=null)?new Long(this.pool.getNumSucceededUris()):0l;
-					this.jobStats.setNumberOfSucceededTasks(numberOfSucceededTasks);
-					this.jobStats.setTotalNumberOfTasks(taskCount);
-					this.jobStats.setEndTime(sdf.format(new Date(this.endMillis)));
-					Long currentTimeMillis = System.currentTimeMillis();
-					Long totalTime = currentTimeMillis - startMillis;
-					this.jobStats.setTotalRunTimeInMillis(totalTime);
-					Long totalTransformTime = currentTimeMillis - transformStartMillis;
-					this.jobStats.setAverageTransactionTime(new Double(totalTransformTime / new Double(numberOfFailedTasks+numberOfSucceededTasks)));
-				}	
-			}
-							
-		}
-		catch(Exception e){
-			LOG.log(INFO,"Unable to populate job stats");
-		}
-		return this.jobStats;
-	}
-
-	private void initJobStats() {
-		if(this.jobStats==null){
-			this.jobStats=new JobStats();
-		
-			String jobName=options.getJobName();
-			if(jobName!=null){
-				jobStats.setJobName(jobName);
-			}
-			String hostname = "Unknown";
-	
-			try
-			{
-			    InetAddress addr;
-			    addr = InetAddress.getLocalHost();
-			    hostname = addr.getHostName();
-			}
-			catch (UnknownHostException ex)
-			{
-				try {
-					hostname = InetAddress.getLoopbackAddress().getHostName();
-				} catch (Exception e) {
-					LOG.log(INFO, "Hostname can not be resolved", e);
-				}
-			}
-			this.jobStats.setHost(hostname);
-			this.jobStats.setJobRunLocation(System.getProperty("user.dir"));
-			this.jobStats.setStartTime(sdf.format(new Date(this.startMillis)));
-			this.jobStats.setUserProvidedOptions(this.getUserProvidedOptions());
-		}
-	}
-	
 }

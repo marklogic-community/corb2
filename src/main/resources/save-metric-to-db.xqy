@@ -28,7 +28,8 @@ let $dateTime := fn:current-dateTime()
 let $uri-root:=if($uriRoot ne "NA") then $uriRoot else $DEFAULT_URI_ROOT
 let $uri-root:=if(fn:starts-with($uri-root,"/")) then $uri-root else "/"||$uri-root
 let $uri-root:=if(fn:ends-with($uri-root,"/")) then $uri-root else $uri-root||"/"
-let $uri := if($uri) then $uri else $uri-root||"CoRB2/"||
+let $orig-uri:=$uri
+let $uri := if($uri) then $uri||"/"||xdmp:random() else $uri-root||"CoRB2/"||
             $job-name||"/"||
             fn:year-from-dateTime($dateTime)||"/"||
             fn:month-from-dateTime($dateTime)||"/"||
@@ -36,4 +37,6 @@ let $uri := if($uri) then $uri else $uri-root||"CoRB2/"||
             fn:hours-from-dateTime($dateTime)||"/"||
             fn:minutes-from-dateTime($dateTime)||"/"||
             xdmp:random()||".xml"
-  return local:save-metrics-document($job-name ,$uri,$metrics-document,$collections)
+ let $orig-uri:=  if($orig-uri) then $orig-uri else $uri         
+ let $_:= local:save-metrics-document($job-name ,$uri,$metrics-document,$collections)
+ return $orig-uri
