@@ -2,7 +2,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    id 'java' 
+    id 'java'
     id 'com.github.johnrengelman.shadow' version '1.2.3'
     id 'maven-publish'
     id 'eclipse'
@@ -45,7 +45,7 @@ sourceSets {
 configurations {
     integrationTestCompile.extendsFrom testCompile
     integrationTestRuntime.extendsFrom testRuntime
-    
+
     performanceTestCompile.extendsFrom testCompile
     performanceTestRuntime.extendsFrom testRuntime
 }
@@ -82,7 +82,7 @@ build.dependsOn(shadowJar);
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     description = "Create a JAR of source files; required by bintray for publishing"
-    classifier 'sources' 
+    classifier 'sources'
     from sourceSets.main.allJava
 }
 
@@ -117,7 +117,7 @@ task integrationTest(type: Test, dependsOn: test) {
         destinationFile = file("$buildDir/jacoco/test.exec")
     }
     //generate the Jacoco report
-    finalizedBy { tasks.integrationTestReport }  
+    finalizedBy { tasks.integrationTestReport }
 }
 
 task integrationTestReport(type: JacocoReport) {
@@ -135,7 +135,7 @@ task performanceTest(type: Test) {
     testLogging {
         events TestLogEvent.STARTED,TestLogEvent.PASSED
     }
-    
+
     //If you want to ensure that performance tests are run every time when you invoke
     //this task, uncomment the following line.
     outputs.upToDateWhen { false }
@@ -195,9 +195,9 @@ tasks.coveralls {
 
 def pomConfig = {
     name "corb"
-    url 'https://github.com/marklogic/corb2'
+    url 'https://github.com/marklogic-community/corb2'
     scm {
-        url 'https://github.com/marklogic/corb2.git'
+        url 'https://github.com/marklogic-community/corb2.git'
     }
     licenses {
         license {
@@ -252,10 +252,10 @@ if (project.hasProperty("myBintrayUser")) {
             name = project.name
             licenses = ['Apache-2.0']
             userOrg = 'marklogic'
-            websiteUrl = 'https://github.com/marklogic/corb2'
-            issueTrackerUrl = 'https://github.com/marklogic/corb2/issues'
-            vcsUrl = 'https://github.com/marklogic/corb2.git'
-            githubRepo = 'marklogic/corb2' 
+            websiteUrl = 'https://github.com/marklogic-community/corb2'
+            issueTrackerUrl = 'https://github.com/marklogic-community/corb2/issues'
+            vcsUrl = 'https://github.com/marklogic-community/corb2.git'
+            githubRepo = 'marklogic/corb2'
             githubReleaseNotesFile = 'README.md'
             version {
                 name = project.version

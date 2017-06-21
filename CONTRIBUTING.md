@@ -46,13 +46,13 @@ information will increase the chances of your issue being dealt with quickly:
 
 #### Fork Corb
 
-Fork the project [on GitHub](https://github.com/marklogic/corb2/fork) and clone
+Fork the project [on GitHub](https://github.com/marklogic-community/corb2/fork) and clone
 your copy.
 
 ```sh
 $ git clone git@github.com:username/corb2.git
 $ cd corb2
-$ git remote add upstream git://github.com/marklogic/corb2.git
+$ git remote add upstream git://github.com/marklogic-community/corb2.git
 ```
 
 All bug fixes and new features go into the master branch.
@@ -178,5 +178,5 @@ local shell as follows:
     git pull --ff upstream master
     ```
 
-[issue tracker]: https://github.com/marklogic/corb2/issues
+[issue tracker]: https://github.com/marklogic-community/corb2/issues
 [.editorconfig]: http://editorconfig.org/

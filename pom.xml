@@ -28,7 +28,7 @@
     <packaging>jar</packaging>
 
     <name>corb</name>
-    <url>>https://github.com/marklogic/corb2</url>
+    <url>>https://github.com/marklogic-community/corb2</url>
 
     <repositories>
         <repository>

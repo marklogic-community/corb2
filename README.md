@@ -5,11 +5,11 @@
 [![codecov](https://codecov.io/gh/marklogic/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic/corb2/branch/development)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/c0195f063ae34c7ea17bb4c97ab7ff2c)](https://www.codacy.com/app/mads-hansen/corb2?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marklogic/corb2&amp;utm_campaign=Badge_Grade)
 ### User Guide
-This document provides a comprehensive overview of CoRB2. For additional information, please refer to the CoRB2 [Wiki](https://github.com/marklogic/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic/corb2/blob/master/WhatIsCORB.doc). This document also covers the less robust [ModuleExecutor Tool](#moduleexecutor-tool), which can be used when only a single staged query is necessary. The ModuleExecutor Tool is provided as part of the CoRB2 distribution.
+This document provides a comprehensive overview of CoRB2. For additional information, please refer to the CoRB2 [Wiki](https://github.com/marklogic-community/corb2/wiki) or download [WhatIsCORB.doc](https://github.com/marklogic-community/corb2/blob/master/WhatIsCORB.doc). This document also covers the less robust [ModuleExecutor Tool](#moduleexecutor-tool), which can be used when only a single staged query is necessary. The ModuleExecutor Tool is provided as part of the CoRB2 distribution.
 
 ### Downloads
 
-Download the latest release directly from https://github.com/marklogic/corb2/releases or you can resolve dependencies through [Maven Central](http://mvnrepository.com/artifact/com.marklogic/marklogic-corb) or [JCenter](https://bintray.com/marklogic/maven/marklogic-corb/view).
+Download the latest release directly from https://github.com/marklogic-community/corb2/releases or you can resolve dependencies through [Maven Central](http://mvnrepository.com/artifact/com.marklogic/marklogic-corb) or [JCenter](https://bintray.com/marklogic/maven/marklogic-corb/view).
 
 Corb v2.2.0 or later requires [marklogic-xcc-8.0.*.jar or later](https://developer.marklogic.com/products/xcc) to run. Please note that marklogic-xcc 8 is backwards compatible up to MarkLogic 5 and runs on Java 1.6 or later.
 
@@ -20,7 +20,7 @@ CoRB uses Java logger. To customize logging, specify a logging configuration fil
 To get help with CoRB
 * Subscribe to [CoRB2 mailing list](http://developer.marklogic.com/mailman/listinfo/corb2)
 * Post a message to [Stack Overflow](http://stackoverflow.com/questions/ask?tags=marklogic+corb) with markogic tag. 
-* Submit issues or feature requests at https://github.com/marklogic/corb2/issues
+* Submit issues or feature requests at https://github.com/marklogic-community/corb2/issues
 
 ### Building CoRB
 You can build CoRB in the same way as any Gradle project:
