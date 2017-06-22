@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -26,8 +26,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,14 +40,12 @@ public final class StringUtils {
     public static final String EMPTY = "";
     public static final String SLASH = "/";
     public static final String XQUERY_EXTENSION = ".xqy";
-    private static final String ADHOC_PATTERN = "(?i).*\\|ADHOC";
-    private static final String JAVASCRIPT_MODULE_FILENAME_PATTERN = "(?i).*\\.s?js(\\|ADHOC)?$";
-    private static final String INLINE_MODULE_PATTERN = "(?i)INLINE-(JAVASCRIPT|XQUERY)\\|(.*?)(\\|ADHOC)?$";
+    private static final Pattern ADHOC_PATTERN = Pattern.compile("(?i).*\\|ADHOC");
+    private static final Pattern JAVASCRIPT_MODULE_FILENAME_PATTERN = Pattern.compile("(?i).*\\.s?js(\\|ADHOC)?$");
+    private static final Pattern INLINE_MODULE_PATTERN = Pattern.compile("(?i)INLINE-(JAVASCRIPT|XQUERY)\\|(.*?)(\\|ADHOC)?$");
     private static final String UTF_8 = "UTF-8";
-    private static final Pattern COMPILED_INLINE_MODULE_PATTERN = Pattern.compile(INLINE_MODULE_PATTERN);
     private static final String UTF_8_NOT_SUPPORTED = UTF_8 + " not supported";
-    private static final Logger LOG = Logger.getLogger(StringUtils.class.getName());
-    
+
     private StringUtils() {
     }
 
@@ -58,7 +54,7 @@ public final class StringUtils {
      * @param str
      * @return
      */
-    public static final boolean stringToBoolean(String str) {
+    public static boolean stringToBoolean(String str) {
         // let the caller decide: should an unset string be true or false?
         return stringToBoolean(str, false);
     }
@@ -69,12 +65,12 @@ public final class StringUtils {
      * @param defaultValue
      * @return
      */
-    public static final boolean stringToBoolean(String str, boolean defaultValue) {
+    public static boolean stringToBoolean(String str, boolean defaultValue) {
         if (str == null) {
             return defaultValue;
         }
         String lcStr = str.trim().toLowerCase();
-        return !("".equals(lcStr) || "0".equals(lcStr) || "f".equals(lcStr) || "false".contains(lcStr) || 
+        return !(lcStr.isEmpty() || "0".equals(lcStr) || "f".equals(lcStr) || "false".contains(lcStr) ||
                 "n".equals(lcStr) || "no".equals(lcStr));
     }
 
@@ -198,7 +194,7 @@ public final class StringUtils {
      * Checks if a CharSequence is null or whitespace-only characters
      *
      * @param value
-     * @return {@code true} if the value is null, empty, or whitespace-only 
+     * @return {@code true} if the value is null, empty, or whitespace-only
      * characters; {@code false} otherwise.
      */
     public static boolean isBlank(final CharSequence value) {
@@ -233,20 +229,20 @@ public final class StringUtils {
     public static String[] split(final String value, String regex) {
         return value == null ? new String[0] : value.split(regex);
     }
-    
+
     /**
      * Split a CSV and return List of values
      * @param value
-     * @return 
+     * @return
      */
     public static List<String> commaSeparatedValuesToList(String value) {
-        List<String> values = new ArrayList<>();    
+        List<String> values = new ArrayList<>();
         for (String item : split(value, ",")) {
             values.add(item.trim());
         }
         return values;
     }
-    
+
     /**
      * Removes control characters (char &lt;= 32) from both ends of the string. If
      * null, returns null. @param value @return @param value @return the trimmed
@@ -265,34 +261,34 @@ public final class StringUtils {
      * String or an empty String if {@code null}
      *
      * @param value
-     * @return 
+     * @return
      */
     public static String trimToEmpty(final String value) {
         return value == null ? EMPTY : value.trim();
     }
 
     public static boolean isAdhoc(final String value) {
-        return value != null && value.matches(ADHOC_PATTERN);
+        return value != null && ADHOC_PATTERN.matcher(value).matches();
     }
 
     public static boolean isJavaScriptModule(final String value) {
         return value != null
-                && (value.matches(JAVASCRIPT_MODULE_FILENAME_PATTERN)
+                && (JAVASCRIPT_MODULE_FILENAME_PATTERN.matcher(value).matches()
                     || "javascript".equalsIgnoreCase(inlineModuleLanguage(value)));
     }
 
     public static boolean isInlineModule(final String value) {
-        return value != null && value.matches(INLINE_MODULE_PATTERN);
+        return value != null && INLINE_MODULE_PATTERN.matcher(value).matches();
     }
 
     public static boolean isInlineOrAdhoc(final String value) {
         return StringUtils.isInlineModule(value) || isAdhoc(value);
     }
-    
+
     public static String inlineModuleLanguage(final String value) {
         String language = "";
         if (isInlineModule(value)) {
-            Matcher m = COMPILED_INLINE_MODULE_PATTERN.matcher(value);
+            Matcher m = INLINE_MODULE_PATTERN.matcher(value);
             if (m.find()) {
                 language = m.group(1);
             }
@@ -303,14 +299,14 @@ public final class StringUtils {
     public static String getInlineModuleCode(final String value) {
         String code = "";
         if (isInlineModule(value)) {
-            Matcher m = COMPILED_INLINE_MODULE_PATTERN.matcher(value);
+            Matcher m = INLINE_MODULE_PATTERN.matcher(value);
             if (m.find()) {
                 code = m.group(2);
             }
         }
         return code;
     }
-    
+
     /**
      * Build an XCC URI from the values provided. Values will be URLEncoded, if it does not appear that they have already been URLEncoded.
      * @param username
@@ -318,65 +314,63 @@ public final class StringUtils {
      * @param host
      * @param port
      * @param dbname
-     * @return 
+     * @return
      */
     public static String getXccUri(String username, String password, String host, String port, String dbname) {
-        return "xcc://" + urlEncodeIfNecessary(username) + ":" + urlEncodeIfNecessary(password) + "@" + host + ":" + port + (dbname == null ? "" : "/" + urlEncodeIfNecessary(dbname));
+        return "xcc://" + urlEncodeIfNecessary(username) + ':' + urlEncodeIfNecessary(password) + '@' + host + ':' + port + (dbname == null ? "" : '/' + urlEncodeIfNecessary(dbname));
     }
-    
+
     /**
      * Indicate whether any items in the array of String objects are null.
      * @param args
-     * @return 
+     * @return
      */
     public static boolean anyIsNull(String... args) {
         return Arrays.asList(args).contains(null);
     }
-    
+
     /**
      * If the given string is not URLEncoded, encode it. Otherwise, return the original value.
      * @param arg
-     * @return 
+     * @return
      */
     protected static String urlEncodeIfNecessary(String arg) {
-        return isUrlEncoded(arg) ? arg : urlEncode(arg);       
+        return isUrlEncoded(arg) ? arg : urlEncode(arg);
     }
-    
+
     /**
-     * Determines whether the value is URLEncoded by evaluating whether the 
+     * Determines whether the value is URLEncoded by evaluating whether the
      * length of the URLDecoded value is the same.
      * @param arg
-     * @return 
+     * @return
      */
     public static boolean isUrlEncoded(String arg) {
-        return arg.length() != urlDecode(arg).length();  
+        return arg.length() != urlDecode(arg).length();
     }
-    
+
     /**
      * URLEncode the given value
      * @param arg
-     * @return 
+     * @return
      */
     protected static String urlEncode(String arg) {
         try {
             return URLEncoder.encode(arg, UTF_8);
         } catch (UnsupportedEncodingException ex) {
-            LOG.log(Level.SEVERE, UTF_8_NOT_SUPPORTED, ex);
-            throw new AssertionError(UTF_8_NOT_SUPPORTED);
+            throw new AssertionError(UTF_8_NOT_SUPPORTED, ex);
         }
     }
-    
+
     /**
      * URLDecode the given value
      * @param arg
-     * @return 
+     * @return
      */
     protected static String urlDecode(String arg) {
         try {
             return URLDecoder.decode(arg, UTF_8);
         } catch (UnsupportedEncodingException ex) {
-            LOG.log(Level.SEVERE, UTF_8_NOT_SUPPORTED, ex);
-            throw new AssertionError(UTF_8_NOT_SUPPORTED);
+            throw new AssertionError(UTF_8_NOT_SUPPORTED, ex);
         }
     }
 

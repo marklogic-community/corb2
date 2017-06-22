@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,9 +68,10 @@ public class TransformOptions {
     private int diskQueueMaxInMemorySize = 1000;
     private File diskQueueTempDir;
     private boolean doInstall;
-
     private int numTpsForETC = 10;
-
+    private boolean prePostBatchAlwaysExecute;
+    private int preBatchMinimumCount = 1;
+    private int postBatchMinimumCount = 1;
     private boolean failOnError = true;
 
     // We could get rid of this now that we check status...
@@ -94,20 +95,44 @@ public class TransformOptions {
     private String jobName = null;
     
     // Set on status check
-    private String XDBC_ROOT = SLASH;
+    private String xdbcRoot = SLASH;
 
+    public void setPrePostBatchAlwaysExecute(boolean shouldAlwaysExecute) {
+        prePostBatchAlwaysExecute = shouldAlwaysExecute;
+    }
+    
+    public boolean shouldPrePostBatchAlwaysExecute() {
+        return prePostBatchAlwaysExecute;
+    }
+    
+    public void setPostBatchMinimumCount(int count) {
+        postBatchMinimumCount = count;
+    }
+    
+    public int getPostBatchMinimumCount() {
+        return postBatchMinimumCount;
+    }
+    
+    public void setPreBatchMinimumCount(int count) {
+        preBatchMinimumCount = count;
+    }
+    
+    public int getPreBatchMinimumCount() {
+        return preBatchMinimumCount;
+    }
+    
     /**
      * @return
      */
     public String getXDBC_ROOT() {
-        return XDBC_ROOT;
+        return xdbcRoot;
     }
 
     /**
      * @param xdbc_root
      */
     public void setXDBC_ROOT(String xdbc_root) {
-        XDBC_ROOT = xdbc_root;
+        this.xdbcRoot = xdbc_root;
     }
 
     /**

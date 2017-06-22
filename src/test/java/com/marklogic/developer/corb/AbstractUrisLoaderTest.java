@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ public class AbstractUrisLoaderTest {
 
     private static final String FOO = "foo";
     private static final String BAR = "bar";
-    
+
     @Test
     public void testSetOptions() {
         TransformOptions options = new TransformOptions();
@@ -91,21 +91,20 @@ public class AbstractUrisLoaderTest {
     }
 
     @Test
-    public void testGetProperty_systemPropAndNullProperties() {
+    public void testGetPropertySystemPropAndNullProperties() {
         String key = FOO;
         String value = BAR;
         System.setProperty(key, value);
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         String result = instance.getProperty(key);
         System.clearProperty(key);
-        assertEquals(value, result);       
+        assertEquals(value, result);
     }
-    
+
     @Test
-    public void testGetProperty_isNull() {
-        String key = FOO;
+    public void testGetPropertyIsNull() {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        String result = instance.getProperty(key);
+        String result = instance.getProperty(FOO);
         assertEquals(null, result);
     }
 
@@ -155,12 +154,12 @@ public class AbstractUrisLoaderTest {
 
         @Override
         public void open() {
-
+            //needed to implement interface
         }
 
         @Override
         public void close() {
-
+            //needed to implement interface
         }
     }
 

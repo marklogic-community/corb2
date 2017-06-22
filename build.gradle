@@ -5,23 +5,25 @@ plugins {
     id 'com.jfrog.bintray' version '1.6'
     id 'com.github.johnrengelman.shadow' version '1.2.3'
     id 'com.github.kt3k.coveralls' version '2.6.3'
-    id 'com.marklogic.ml-gradle' version '2.4.0'
+    id 'com.marklogic.ml-gradle' version '2.7.3'
+    id 'io.github.ddimtirov.codacy' version '0.1.0'
+    id 'org.sonarqube' version '2.2.1'
     id 'eclipse'
     id 'idea'
     id 'jacoco'
-    id 'java' 
+    id 'java'
     id 'maven-publish'
 }
 
 ext {
-    externalsortinginjavaVersion = '0.2.2'
+    externalsortinginjavaVersion = '0.2.3'
 
-  // we don't need a REST server, only an XCC server
+    // we don't need a REST server, only an XCC server
     mlAppDeployer.getCommands().remove(mlAppDeployer.getCommand('DeployRestApiServersCommand'))
     mlAppConfig {
-      name = project.name
-      customTokens.put('%%XDBC_PORT%%', '8223')
-      createTriggersDatabase = false
+        name = project.name
+        customTokens.put('%%XDBC_PORT%%', '8223')
+        createTriggersDatabase = false
     }
 }
 
@@ -34,6 +36,8 @@ repositories {
     flatDir {
         dirs 'src/test/resources/'
     }
+    //required for codacyUpload task
+    maven { url "http://dl.bintray.com/typesafe/maven-releases" }
 }
 
 sourceSets {
@@ -58,15 +62,16 @@ sourceSets {
 configurations {
     integrationTestCompile.extendsFrom testCompile
     integrationTestRuntime.extendsFrom testRuntime
-    
+
     performanceTestCompile.extendsFrom testCompile
     performanceTestRuntime.extendsFrom testRuntime
 }
 
 dependencies {
-    compile 'com.marklogic:marklogic-xcc:8.0.6'
-    compile "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
-    // if you want to compile without testing comment out the lines below
+    compile 'com.marklogic:marklogic-xcc:9.0.1'
+    //we bundle the externalsortinginjava classes with the corb distro as a fat jar
+    compileOnly "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
+    testCompile "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile 'org.jasypt:jasypt:1.9.2'
     testCompile 'com.github.stefanbirkner:system-rules:1.16.1' //facilitates tests for methods that invoke System.exit
@@ -91,11 +96,11 @@ shadowJar {
     //generate same name as the jar task would
     archiveName = "${baseName}-${version}.${extension}"
 }
-build.dependsOn(shadowJar);
+build.dependsOn(shadowJar)
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     description = "Create a JAR of source files; required by bintray for publishing"
-    classifier 'sources' 
+    classifier 'sources'
     from sourceSets.main.allJava
 }
 
@@ -130,7 +135,7 @@ task integrationTest(type: Test, dependsOn: test) {
         destinationFile = file("$buildDir/jacoco/test.exec")
     }
     //generate the Jacoco report
-    finalizedBy { tasks.integrationTestReport }  
+    finalizedBy { tasks.integrationTestReport }
 }
 
 task integrationTestReport(type: JacocoReport) {
@@ -148,7 +153,7 @@ task performanceTest(type: Test) {
     testLogging {
         events TestLogEvent.STARTED,TestLogEvent.PASSED
     }
-    
+
     //If you want to ensure that performance tests are run every time when you invoke
     //this task, uncomment the following line.
     outputs.upToDateWhen { false }
@@ -203,34 +208,7 @@ tasks.withType(Test) {
 }
 
 tasks.coveralls {
-  dependsOn 'check'
-}
-
-def pomConfig = {
-    name "corb"
-    url 'https://github.com/marklogic/corb2'
-    scm {
-        url 'https://github.com/marklogic/corb2.git'
-    }
-    licenses {
-        license {
-            name "The Apache Software License, Version 2.0"
-            url "http://www.apache.org/licenses/LICENSE-2.0.txt"
-            distribution "repo"
-        }
-    }
-    developers {
-        developer {
-            name "Bhagat Bandlamudi"
-            email "bhagat.bandlamudi@marklogic.com"
-            organization "MarkLogic"
-        }
-        developer {
-            name "Mads Hansen"
-            email "mads.hansen@marklogic.com"
-            organization "MarkLogic"
-        }
-    }
+    dependsOn 'check'
 }
 
 publishing {
@@ -239,11 +217,39 @@ publishing {
             from components.java
             artifact sourcesJar
             artifact javadocJar
-
             pom.withXml {
-                def root = asNode()
-                root.appendNode('description', 'CORB is a Java tool designed for bulk content-reprocessing of documents stored in MarkLogic.')
-                root.children().last() + pomConfig
+                asNode().children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+                    name "corb"
+                    url project.websiteUrl
+                    scm {
+                        url project.vcsUrl
+                    }
+                    issueManagement {
+                        system "GitHub Issues"
+                        url project.issueTrackerUrl
+                    }
+                    licenses {
+                        license {
+                            name "The Apache Software License, Version 2.0"
+                            url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                            distribution "repo"
+                        }
+                    }
+                    description 'CoRB is a Java tool designed for bulk content-reprocessing of documents stored in MarkLogic.'
+                    developers {
+                        developer {
+                            name "Bhagat Bandlamudi"
+                            email "bhagat.bandlamudi@marklogic.com"
+                            organization "MarkLogic"
+                        }
+                        developer {
+                            name "Mads Hansen"
+                            email "mads.hansen@marklogic.com"
+                            organization "MarkLogic"
+                        }
+                    }
+                }
             }
         }
     }
@@ -265,10 +271,10 @@ if (project.hasProperty("myBintrayUser")) {
             name = project.name
             licenses = ['Apache-2.0']
             userOrg = 'marklogic'
-            websiteUrl = 'https://github.com/marklogic/corb2'
-            issueTrackerUrl = 'https://github.com/marklogic/corb2/issues'
-            vcsUrl = 'https://github.com/marklogic/corb2.git'
-            githubRepo = 'marklogic/corb2' 
+            websiteUrl = project.websiteUrl
+            issueTrackerUrl = project.issueTrackerUrl
+            vcsUrl = project.vcsUrl
+            githubRepo = 'marklogic/corb2'
             githubReleaseNotesFile = 'README.md'
             version {
                 name = project.version

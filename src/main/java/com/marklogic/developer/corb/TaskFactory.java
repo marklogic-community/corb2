@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ public class TaskFactory {
         }
         try {
             Task task = options.getPreBatchTaskClass() == null ? new Transform() : options.getPreBatchTaskClass().newInstance();
-            setupTask(task, PRE_BATCH_MODULE, options.getPreBatchModule(), new String[0]);
+            setupTask(task, PRE_BATCH_MODULE, options.getPreBatchModule());
             return task;
         } catch (Exception exc) {
             throw new IllegalArgumentException(exc.getMessage(), exc);
@@ -104,7 +104,7 @@ public class TaskFactory {
         }
         try {
             Task task = options.getPostBatchTaskClass() == null ? new Transform() : options.getPostBatchTaskClass().newInstance();
-            setupTask(task, POST_BATCH_MODULE, options.getPostBatchModule(), new String[0]);
+            setupTask(task, POST_BATCH_MODULE, options.getPostBatchModule());
             return task;
         } catch (Exception exc) {
             throw new IllegalArgumentException(exc.getMessage(), exc);
@@ -121,7 +121,7 @@ public class TaskFactory {
         }
         try {
             Task task = options.getInitTaskClass() == null ? new Transform() : options.getInitTaskClass().newInstance();
-            setupTask(task, INIT_MODULE, options.getInitModule(), new String[0]);
+            setupTask(task, INIT_MODULE, options.getInitModule());
             return task;
         } catch (Exception exc) {
             throw new IllegalArgumentException(exc.getMessage(), exc);
@@ -168,10 +168,10 @@ public class TaskFactory {
         }
         task.setModuleType(moduleType);
         task.setContentSource(manager.getContentSource());
-        
+
         Properties managerProperties = manager.getProperties();
         task.setProperties(managerProperties);
-        
+
         String timeZoneId = managerProperties.getProperty(XCC_TIME_ZONE);
         if (timeZoneId != null) {
             TimeZone timeZone = TimeZone.getTimeZone(timeZoneId);

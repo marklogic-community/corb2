@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.attribute.FileAttribute;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -54,7 +53,7 @@ public class FileUtilsTest {
         File out = File.createTempFile("copiedFile", TEXT_FILE_EXT);
         out.deleteOnExit();
         copy(exampleContentFile, out);
-        
+
         assertArrayEquals(getBytes(exampleContentFile), getBytes(out));
     }
 
@@ -140,7 +139,6 @@ public class FileUtilsTest {
     public void testMoveFile() throws IOException {
         File file = File.createTempFile("moveFile", TEXT_FILE_EXT);
         file.deleteOnExit();
-        file.createNewFile();
         FileUtils.moveFile(file, file);
         assertTrue(file.exists());
     }
@@ -157,7 +155,6 @@ public class FileUtilsTest {
     public void testGetFileAbsolutePath() throws IOException {
         File file = File.createTempFile("getFile", TEXT_FILE_EXT);
         file.deleteOnExit();
-        file.createNewFile();
         File retrievedFile = FileUtils.getFile(file.getAbsolutePath());
         assertTrue(retrievedFile.exists());
     }
@@ -170,7 +167,7 @@ public class FileUtilsTest {
 
     public static File createTempDirectory()
             throws IOException {
-        return Files.createTempDirectory("temp", new FileAttribute<?>[0]).toFile(); 
+        return Files.createTempDirectory("temp").toFile();
     }
 
     /**
@@ -181,7 +178,7 @@ public class FileUtilsTest {
      * @throws IOException
      */
     public static void copy(final File source, final File destination) throws IOException {
-        try (InputStream inputStream = new FileInputStream(source); 
+        try (InputStream inputStream = new FileInputStream(source);
                 OutputStream outputStream = new FileOutputStream(destination)) {
             IOUtilsTest.copy(inputStream, outputStream);
         }
@@ -195,15 +192,15 @@ public class FileUtilsTest {
      * @throws IOException
      * @throws FileNotFoundException
      */
-    public static void copy(final String sourceFilePath, final String destinationFilePath) throws FileNotFoundException, IOException {
-        try (InputStream inputStream = new FileInputStream(sourceFilePath); 
-                OutputStream outputStream = new FileOutputStream(destinationFilePath)) {    
+    public static void copy(final String sourceFilePath, final String destinationFilePath) throws IOException {
+        try (InputStream inputStream = new FileInputStream(sourceFilePath);
+                OutputStream outputStream = new FileOutputStream(destinationFilePath)) {
             IOUtilsTest.copy(inputStream, outputStream);
-        }        
+        }
     }
 
     /**
-     * Read the <code>byte[]</code> of a file.
+     * Read the {@code byte[]} of a file.
      *
      * @param contentFile
      * @return
@@ -213,13 +210,13 @@ public class FileUtilsTest {
 
         byte[] buf = new byte[BUFFER_SIZE];
         int read;
-        
-        try (InputStream is = new FileInputStream(contentFile); 
+
+        try (InputStream is = new FileInputStream(contentFile);
                 ByteArrayOutputStream os = new ByteArrayOutputStream()) {
             while ((read = is.read(buf)) > 0) {
                 os.write(buf, 0, read);
             }
             return os.toByteArray();
-        }   
+        }
     }
 }

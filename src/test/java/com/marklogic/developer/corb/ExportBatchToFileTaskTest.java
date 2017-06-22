@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -106,17 +106,7 @@ public class ExportBatchToFileTaskTest {
     @Test
     public void testWriteToFileNullSeq() {
         ResultSequence seq = null;
-        Properties props = new Properties();
-        props.setProperty(Options.EXPORT_FILE_NAME, "testWriteToFileNullSeq.txt");
-        ExportBatchToFileTask instance = new ExportBatchToFileTask();
-        instance.properties = props;
-        try {
-            instance.writeToFile(seq);
-        } catch (IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
-        File file = new File(instance.exportDir, instance.getPartFileName());
+        File file = testWriteToFile(seq);
         assertFalse(file.exists());
     }
 
@@ -124,18 +114,21 @@ public class ExportBatchToFileTaskTest {
     public void testWriteToFileNotSeqHasNext()  {
         ResultSequence seq = mock(ResultSequence.class);
         when(seq.hasNext()).thenReturn(false);
+        File file = testWriteToFile(seq);
+        assertFalse(file.exists());
+    }
+    
+    public File testWriteToFile(ResultSequence resultSequence) {
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_NAME, "testWriteToFile.txt");
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
         try {
-            instance.writeToFile(seq);
+            instance.writeToFile(resultSequence);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        File file = new File(instance.exportDir, instance.getPartFileName());
-        assertFalse(file.exists());
+        return new File(instance.exportDir, instance.getPartFileName());
     }
-
 }

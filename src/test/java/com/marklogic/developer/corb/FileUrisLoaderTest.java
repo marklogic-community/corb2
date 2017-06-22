@@ -1,5 +1,5 @@
 /*
- * * Copyright (c) 2004-2016 MarkLogic Corporation
+ * * Copyright (c) 2004-2017 MarkLogic Corporation
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -114,7 +114,7 @@ public class FileUrisLoaderTest {
             instance.options = options;
             try {
                 instance.open();
-                assertNotNull(instance.br);
+                assertNotNull(instance.bufferedReader);
                 assertEquals("object-id-1", instance.next());
                 assertEquals("test", instance.next());
             } catch (CorbException ex) {
@@ -262,16 +262,16 @@ public class FileUrisLoaderTest {
     @Test
     public void testClose() {
         FileUrisLoader instance = new FileUrisLoader();
-        instance.br = mock(BufferedReader.class);
+        instance.bufferedReader = mock(BufferedReader.class);
         instance.close();
-        assertNull(instance.br);
+        assertNull(instance.bufferedReader);
         instance.close();
     }
 
     @Test
     public void testCleanup() {
         FileUrisLoader instance = new FileUrisLoader();
-        instance.br = mock(BufferedReader.class);
+        instance.bufferedReader = mock(BufferedReader.class);
         instance.collection = "testCleanupCollection";
         instance.cs = mock(ContentSource.class);
         instance.nextLine = "testCleanup";
@@ -281,7 +281,7 @@ public class FileUrisLoaderTest {
         instance.setTotalCount(100);
         instance.close();
         instance.cleanup();
-        assertNull(instance.br);
+        assertNull(instance.bufferedReader);
         assertNull(instance.collection);
         assertNull(instance.cs);
         assertNull(instance.options);

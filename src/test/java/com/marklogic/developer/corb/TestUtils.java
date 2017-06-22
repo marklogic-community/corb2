@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
-import java.nio.file.attribute.FileAttribute;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -37,7 +36,7 @@ import java.util.logging.Logger;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public final class TestUtils {
-    
+
     private static final Logger LOG = Logger.getLogger(TestUtils.class.getName());
     private TestUtils() {
         //No need for an instance
@@ -64,7 +63,7 @@ public final class TestUtils {
                     System.clearProperty(option);
                     //remove any custom input properties (i.e. URIS-MODULE.foo)
                     systemProperties.stream()
-                            .filter(property -> property.startsWith(option + "."))
+                            .filter(property -> property.startsWith(option + '.'))
                             .forEach(System::clearProperty);
                 });
     }
@@ -91,7 +90,7 @@ public final class TestUtils {
     }
 
     public static File createTempDirectory() throws IOException {
-        return Files.createTempDirectory("temp", new FileAttribute<?>[0]).toFile();
+        return Files.createTempDirectory("temp").toFile();
     }
 
     public static boolean containsLogRecord(List<LogRecord> logRecords, LogRecord logRecord) {

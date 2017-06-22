@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -43,12 +44,9 @@ import com.marklogic.developer.corb.util.StringUtils;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ModuleInvoke;
 import com.marklogic.xcc.ResultItem;
-import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.types.XdmItem;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.net.URISyntaxException;
-import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
@@ -61,7 +59,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * The class <code>ModuleExecutorTest</code> contains tests for the class
+ * The class {@code ModuleExecutorTest} contains tests for the class
  * <code>{@link ModuleExecutor}</code>.
  *
  * @author matthew.heckel
@@ -107,7 +105,7 @@ public class ModuleExecutorTest {
 
     private Properties loadProperties(URL filePath) throws IOException {
         Properties prop = new Properties();
-        try (InputStream input = filePath.openStream();) {
+        try (InputStream input = filePath.openStream()) {
             // load a properties file
             prop.load(input);
         }
@@ -144,8 +142,7 @@ public class ModuleExecutorTest {
         } else if (StringUtils.isNotBlank(System.getProperty(propName))) {
             return System.getProperty(propName).trim();
         } else if (StringUtils.isNotBlank(properties.getProperty(propName))) {
-            String val = properties.getProperty(propName).trim();
-            return val;
+            return properties.getProperty(propName).trim();
         }
         return null;
     }
@@ -263,9 +260,9 @@ public class ModuleExecutorTest {
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
         System.setProperty(Options.PROCESS_MODULE, "src/test/resources/transform2.xqy|ADHOC");
         Properties props = getProperties();
-        String[] args = {props.getProperty(Options.XCC_CONNECTION_URI)};
 
         try {
+            String[] args = {props.getProperty(Options.XCC_CONNECTION_URI)};
             ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
             executor.init(args);
             ResultSequence resSeq = run(executor);
@@ -344,20 +341,7 @@ public class ModuleExecutorTest {
         System.setProperty(Options.PROCESS_MODULE, PROCESS_MODULE);
         System.setProperty(Options.EXPORT_FILE_NAME, EXPORT_FILE_NAME);
         String[] args = {};
-        try {
-            ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
-            executor.init(args);
-            executor.run();
-
-            String reportPath = executor.getProperty(Options.EXPORT_FILE_NAME);
-            File report = new File(reportPath);
-            boolean fileExists = report.exists();
-            clearFile(report);
-            assertTrue(fileExists);
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        testRun(args);
     }
 
     @Test
@@ -371,20 +355,7 @@ public class ModuleExecutorTest {
             "",
             EXPORT_FILE_NAME
         };
-        try {
-            ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
-            executor.init(args);
-            executor.run();
-
-            String reportPath = executor.getProperty(Options.EXPORT_FILE_NAME);
-            File report = new File(reportPath);
-            boolean fileExists = report.exists();
-            clearFile(report);
-            assertTrue(fileExists);
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        testRun(args);
     }
 
     @Test
@@ -397,6 +368,10 @@ public class ModuleExecutorTest {
         System.setProperty(Options.JASYPT_PROPERTIES_FILE, "src/test/resources/jasypt.properties");
         System.setProperty("PROCESS-MODULE.foo", "bar");
         System.setProperty(Options.EXPORT_FILE_NAME, EXPORT_FILE_NAME);
+        testRun(args);
+    }
+
+    public void testRun(String[] args) {
         try {
             ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
             executor.init(args);
@@ -437,7 +412,6 @@ public class ModuleExecutorTest {
     public void testRunAdhocIsEmpty() {
         try {
             File emptyModule = File.createTempFile("emptyModule", "txt");
-            emptyModule.createNewFile();
             emptyModule.deleteOnExit();
             clearSystemProperties();
             String[] args = {};
@@ -447,7 +421,6 @@ public class ModuleExecutorTest {
             ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
             executor.init(args);
             executor.run();
-
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             if (ex instanceof IllegalStateException) {
@@ -463,7 +436,7 @@ public class ModuleExecutorTest {
             clearSystemProperties();
             System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
             ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
-            Properties props = executor.getProperties();
+            Map props = executor.getProperties();
 
             assertNotNull(props);
             assertFalse(props.isEmpty());
@@ -473,9 +446,9 @@ public class ModuleExecutorTest {
     }
 
     private Properties getProperties() {
-        Properties properties = null;
+        Properties properties = new Properties();
         String propFileLocation = System.getProperty(Options.OPTIONS_FILE);
-        if (propFileLocation == null || propFileLocation.length() == 0) {
+        if (StringUtils.isEmpty(propFileLocation)) {
             propFileLocation = OPTIONS_FILE;
         }
         File propFile = new File(propFileLocation);
@@ -496,7 +469,7 @@ public class ModuleExecutorTest {
             executor = getMockModuleExecutorWithEmptyResults();
             executor.init(new String[0], props);
             return executor;
-        } catch (RequestException | IOException | URISyntaxException | ClassNotFoundException | InstantiationException | IllegalAccessException | XccConfigException | GeneralSecurityException ex) {
+        } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -504,14 +477,14 @@ public class ModuleExecutorTest {
     }
 
     private ResultSequence run(ModuleExecutor executor) throws CorbException {
-        ResultSequence res = null;
+        ResultSequence res;
         try {
             executor.prepareContentSource();
 
             RequestOptions opts = new RequestOptions();
             opts.setCacheResult(false);
             Session session = executor.contentSource.newSession();
-            Request req = null;
+            Request req;
             TransformOptions options = executor.getOptions();
             Properties properties = executor.getProperties();
 
@@ -529,8 +502,8 @@ public class ModuleExecutorTest {
             }
             req = session.newAdhocQuery(adhocQuery);
             for (String propName : propertyNames) {
-                if (propName.startsWith(Options.PROCESS_MODULE + ".")) {
-                    String varName = propName.substring((Options.PROCESS_MODULE + ".").length());
+                if (propName.startsWith(Options.PROCESS_MODULE + '.')) {
+                    String varName = propName.substring((Options.PROCESS_MODULE + '.').length());
                     String value = properties.getProperty(propName);
                     if (value != null) {
                         req.setNewStringVariable(varName, value);
@@ -542,8 +515,6 @@ public class ModuleExecutorTest {
 
         } catch (RequestException exc) {
             throw new CorbException("While invoking XQuery Module", exc);
-        } catch (XccConfigException | GeneralSecurityException | IllegalStateException exd) {
-            throw new CorbException("While invoking XCC...", exd);
         }
         return res;
     }
@@ -564,29 +535,21 @@ public class ModuleExecutorTest {
         fail();
     }
 
-    @Test(expected = InstantiationException.class)
-    public void testInitStringArrNullProperties() throws InstantiationException {
+    @Test(expected = CorbException.class)
+    public void testInitStringArrNullProperties() throws CorbException {
         String[] args = null;
         Properties props = null;
         ModuleExecutor instance = new ModuleExecutor();
-        try {
-            instance.init(args, props);
-        } catch (IOException | URISyntaxException | ClassNotFoundException | IllegalAccessException | XccConfigException | GeneralSecurityException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
+        instance.init(args, props);
         fail();
     }
 
-    @Test(expected = InstantiationException.class)
-    public void testInitStringArrEmptyProperties() throws InstantiationException {
+    @Test(expected = CorbException.class)
+    public void testInitStringArrEmptyProperties() throws CorbException {
         String[] args = null;
         Properties props = new Properties();
         ModuleExecutor instance = new ModuleExecutor();
-        try {
-            instance.init(args, props);
-        } catch (IOException | URISyntaxException | ClassNotFoundException | IllegalAccessException | XccConfigException | GeneralSecurityException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
+        instance.init(args, props);
         fail();
     }
 
@@ -594,7 +557,12 @@ public class ModuleExecutorTest {
     public void testInitOptionsMissingPROCESSMODULE() {
         String[] args = new String[]{};
         ModuleExecutor instance = new ModuleExecutor();
-        instance.initOptions(args);
+        try {
+            instance.initOptions(args);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
         fail();
     }
 
@@ -606,7 +574,7 @@ public class ModuleExecutorTest {
             ModuleExecutor instance = new ModuleExecutor();
             instance.initOptions(args);
             assertEquals(exportDir, instance.properties.getProperty(Options.EXPORT_FILE_DIR));
-        } catch (IOException ex) {
+        } catch (CorbException | IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -617,7 +585,12 @@ public class ModuleExecutorTest {
         String exportDir = "does/not/exist";
         String[] args = new String[]{FOO, "processModule", "", "", exportDir};
         ModuleExecutor instance = new ModuleExecutor();
-        instance.initOptions(args);
+        try {
+            instance.initOptions(args);
+        } catch (CorbException ex) {
+            Logger.getLogger(ModuleExecutorTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail();
+        }
         fail();
     }
 
@@ -699,11 +672,11 @@ public class ModuleExecutorTest {
         XdmItem uriCount = mock(XdmItem.class);
 
         when(contentSource.newSession()).thenReturn(session);
-        when(contentSource.newSession((String) any())).thenReturn(session);
+        when(contentSource.newSession(any())).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(moduleInvoke).thenReturn(moduleInvoke);
         when(session.newAdhocQuery(anyString())).thenReturn(adhocQuery);
 
-        when(session.submitRequest((Request) any())).thenReturn(res);
+        when(session.submitRequest(any())).thenReturn(res);
         //First, return false when registerInfo() is calling.
         when(res.hasNext()).thenReturn(Boolean.FALSE).thenReturn(Boolean.TRUE).thenReturn(Boolean.TRUE).thenReturn(Boolean.FALSE);
         when(res.next()).thenReturn(resultItem).thenReturn(uriCountResult).thenReturn(resultItem).thenReturn(null);
@@ -720,9 +693,9 @@ public class ModuleExecutorTest {
 
     private static class MockModuleExecutor extends ModuleExecutor {
 
-        //Want to retain the mock contentSource that we set in our tests
         @Override
-        protected void prepareContentSource() throws XccConfigException, GeneralSecurityException {
+        protected void prepareContentSource() throws CorbException {
+            //Want to retain the mock contentSource that we set in our tests
         }
     }
 
@@ -737,7 +710,7 @@ public class ModuleExecutorTest {
 
     private static class MockModuleExecutorResults extends MockModuleExecutor {
 
-        public List<String> results = new ArrayList();
+        private List<String> results = new ArrayList<>();
 
         @Override
         protected void writeToFile(ResultSequence res) {
