@@ -1,5 +1,5 @@
 /*
- * * Copyright (c) 2004-2016 MarkLogic Corporation
+ * * Copyright (c) 2004-2017 MarkLogic Corporation
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -72,13 +72,18 @@ public class JasyptDecrypterTest {
     }
 
     @Test
-    public void testInitDecrypterWithPassord() throws Exception {
+    public void testInitDecrypterWithPassord() {
         clearSystemProperties();
         Properties props = new Properties();
         props.setProperty(Options.JASYPT_PROPERTIES_FILE, "src/test/resources/jasypt.properties");
         JasyptDecrypter instance = new JasyptDecrypter();
         instance.properties = props;
-        instance.init_decrypter();
+        try {
+            instance.init_decrypter();
+        } catch (IOException | ClassNotFoundException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
         assertEquals(UNENCRYPTED_PASSWORD, instance.jaspytProperties.getProperty(JASYPT_PASSWORD));
     }
 

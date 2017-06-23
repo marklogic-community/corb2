@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -82,8 +82,9 @@ public class DiskQueueTest {
     public void testDiskQueueTempDirDoesNotExist() {
         try {
             File tmpFile = TestUtils.createTempDirectory();
-            tmpFile.delete();
-            new DiskQueue<>(0, tmpFile);     
+            if (tmpFile.delete()) {
+                new DiskQueue<>(0, tmpFile);
+            }
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }

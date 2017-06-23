@@ -1,6 +1,6 @@
-# Contributing to Corb
+# Contributing to CoRB
 
-Corb welcomes new contributors. This document will guide you
+CoRB welcomes new contributors. This document will guide you
 through the process.
 
  - [Question or Problem?](#question)
@@ -10,8 +10,9 @@ through the process.
  
 ## <a name="question"></a> Got a Question or Problem?
 
-If you have questions about how to use Corb, please ask on <a href="https://stackoverflow.com">StackOverflow</a>, 
-tagging your questions with "marklogic".
+If you have questions about how to use CoRB, please [ask on Stack Overflow](http://stackoverflow.com/questions/ask?tags=marklogic+corb) 
+with the [<code>markogic</code>](https://stackoverflow.com/questions/tagged/marklogic) 
+and [<code>corb</code>](https://stackoverflow.com/questions/tagged/corb) tags.
 
 ## <a name="issue"></a> Found an Issue?
 If you find a bug in the source code or a mistake in the documentation, you 
@@ -36,7 +37,7 @@ information will increase the chances of your issue being dealt with quickly:
 
 * **Overview of the Issue** - if an error is being thrown a stack trace helps
 * **Motivation for or Use Case** - explain why this is a bug for you
-* **Corb Version** - which release are you using?
+* **CoRB Version** - which release are you using?
 * **Operating System** - Mac, windows? details help
 * **Java Version** - which version and whose build
 * **Suggest a Fix** - if you can't fix the bug yourself, perhaps you can point 
@@ -44,15 +45,15 @@ information will increase the chances of your issue being dealt with quickly:
 
 ### Submitting a Pull Request
 
-#### Fork Corb
+#### Fork CoRB
 
-Fork the project [on GitHub](https://github.com/marklogic/corb2/fork) and clone
+Fork the project [on GitHub](https://github.com/marklogic-community/corb2/fork) and clone
 your copy.
 
 ```sh
 $ git clone git@github.com:username/corb2.git
 $ cd corb2
-$ git remote add upstream git://github.com/marklogic/corb2.git
+$ git remote add upstream git://github.com/marklogic-community/corb2.git
 ```
 
 All bug fixes and new features go into the master branch.
@@ -99,7 +100,7 @@ changed and why. Follow these guidelines when writing one:
 A good commit log looks like this:
 
 ```
-Fixing Issue #123: make the whatchamajigger work in MarkLogic 8
+Fixing Issue #123: make the whatchamajigger work in MarkLogic 9
 
 Body of commit message is a few lines of text, explaining things
 in more detail, possibly giving some background about the issue
@@ -126,8 +127,11 @@ $ git rebase upstream/master
 
 #### Test your code
 
-There are not currently any automated tests. Please run some tests on your own
-to be confident that you have not broken existing functionality. 
+To execute all of the automated unit tests, from the project root, run the following command.
+
+```sh
+$ gradlew test    
+```
 
 #### Push your changes
 
@@ -178,5 +182,5 @@ local shell as follows:
     git pull --ff upstream master
     ```
 
-[issue tracker]: https://github.com/marklogic/corb2/issues
+[issue tracker]: https://github.com/marklogic-community/corb2/issues
 [.editorconfig]: http://editorconfig.org/

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,66 +18,95 @@
  */
 package com.marklogic.developer.corb;
 
-/**
- *
- * @author Praveen Venkata
- */
 import static com.marklogic.developer.corb.Options.XML_FILE;
 import static com.marklogic.developer.corb.Options.XML_NODE;
+import com.marklogic.developer.corb.util.FileUtils;
+import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.StringWriter;
+import java.io.InputStream;
+import java.io.Reader;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stax.StAXSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+import javax.xml.xpath.XPathExpressionException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
+ * Split an XML file {@value Options#XML_FILE} into multiple documents using the XPath
+ * expression from the {@value Options#XML_NODE} property and send the serialized XML
+ * string to the process module in the URIS parameter.
+ *
+ * For extremely large XML files, consider the
+ * {@link com.marklogic.developer.corb.FileUrisStreamingXMLLoader}
+ *
+ * @author Praveen Venkata
  * @since 2.3.1
  */
-public class FileUrisXMLLoader extends AbstractUrisLoader {
+public class FileUrisXMLLoader extends AbstractFileUrisLoader {
 
-    protected static final Logger LOG = Logger.getLogger(FileUrisXMLLoader.class.getName());
-    private static final String EXCEPTION_MSG_PROBLEM_READING_XML_FILE = "Problem while reading the xml file";
+    private static final Logger LOG = Logger.getLogger(FileUrisXMLLoader.class.getName());
+    protected static final String EXCEPTION_MSG_PROBLEM_READING_XML_FILE = "Problem while reading the XML file";
     protected String nextUri;
     protected Iterator<Node> nodeIterator;
     protected Document doc;
-
+    protected File xmlFile;
     private Map<Integer, Node> nodeMap;
-    private TransformerFactory transformerFactory;
-    private static final String YES = "yes";
-    
+
     @Override
     public void open() throws CorbException {
-
         try {
             String fileName = getProperty(XML_FILE);
-            String xpathRootNode = getProperty(XML_NODE);
+            xmlFile = new File(fileName);
+            schemaValidate(xmlFile);
+            nodeIterator = readNodes(xmlFile.toPath());
+            if (shouldSetBatchRef()) {
+                batchRef = xmlFile.getCanonicalPath();
+            }
+        } catch (IOException exc) {
+            throw new CorbException("Problem loading data from XML file ", exc);
+        }
+    }
 
-            File fXmlFile = new File(fileName);
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    private Iterator<Node> readNodes(Path input) throws CorbException {
+        String xpathRootNode = getProperty(XML_NODE);
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        dbFactory.setNamespaceAware(true);
+        try {
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            doc = dBuilder.parse(fXmlFile);
+            doc = dBuilder.parse(input.toFile());
 
             //Get Child nodes for parent node which is a wrapper node
             NodeList nodeList;
@@ -107,36 +136,20 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
             }
 
             this.setTotalCount(nodeMap.size());
-            nodeIterator = nodeMap.values().iterator();
-
-        } catch (Exception exc) {
-            throw new CorbException("Problem loading data from xml file ", exc);
+        } catch (SAXException | IOException | XPathExpressionException | ParserConfigurationException ex) {
+            throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
         }
+        return nodeMap.values().iterator();
     }
 
-    private String nodeToString(Node node) throws CorbException {
-        StringWriter sw = new StringWriter();
-        try {
-            //Creating a transformerFactory is expensive, only do it once
-            if (transformerFactory == null) {
-                transformerFactory = TransformerFactory.newInstance();
-            }
-            Transformer t = transformerFactory.newTransformer();
-            t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, YES);
-            t.setOutputProperty(OutputKeys.INDENT, YES);
-            t.transform(new DOMSource(node), new StreamResult(sw));
-        } catch (TransformerException te) {
-            throw new CorbException("nodeToString Transformer Exception", te);
-        }
-        return sw.toString();
-    }
-
-    private String readNextNode() throws IOException, CorbException {
+    private String readNextNode() throws CorbException {
         if (nodeIterator.hasNext()) {
             Node nextNode = nodeIterator.next();
             short nextNodeType = nextNode.getNodeType();
             String line;
+
             if (nextNodeType == Node.ELEMENT_NODE || nextNodeType == Node.DOCUMENT_NODE) {
+                //serialize the XML into a string
                 line = trim(nodeToString(nextNode));
             } else {
                 line = nextNode.getNodeValue();
@@ -144,19 +157,54 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
             if (isBlank(line)) {
                 line = readNextNode();
             }
-            return line;
+            if (shouldUseEnvelope()) { //TODO: determine if default should be true(breaking change)
+                Map<String, String> metadata;
+                try {
+                    metadata = getMetadata(xmlFile);
+                    metadata.put(META_CONTENT_TYPE, "text/xml");
+                    String xpath = getProperty(XML_NODE);
+                    if (!isBlank(xpath)) {
+                        metadata.put(XML_NODE, xpath);
+                    }
+
+                    Document loaderDoc;
+                    if (shouldBase64Encode()) {
+                        try (InputStream inputStream = toInputStream(nextNode)) {
+                            loaderDoc = toLoaderDoc(metadata, inputStream);
+                        }
+                    } else {
+                        loaderDoc = toLoaderDoc(metadata, nextNode, false);
+                    }
+                    return nodeToString(loaderDoc);
+                } catch (IOException | TransformerException ex) {
+                    LOG.log(Level.SEVERE, null, ex);
+                }
+            } else {
+                return line;
+            }
         }
         return null;
     }
 
     @Override
+    protected boolean shouldBase64Encode() {
+        String shouldEncode = getProperty(Options.LOADER_BASE64_ENCODE);
+        return StringUtils.stringToBoolean(shouldEncode, false);
+    }
+
+    protected InputStream toInputStream(Node node) throws TransformerException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        Source xmlSource = new DOMSource(node);
+        Result outputTarget = new StreamResult(outputStream);
+        getTransformerFactory().newTransformer().transform(xmlSource, outputTarget);
+        InputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+        return inputStream;
+    }
+
+    @Override
     public boolean hasNext() throws CorbException {
         if (nextUri == null) {
-            try {
-                nextUri = readNextNode();
-            } catch (Exception exc) {
-                throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, exc);
-            }
+            nextUri = readNextNode();
         }
         return nextUri != null;
     }
@@ -168,11 +216,7 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
             node = nextUri;
             nextUri = null;
         } else {
-            try {
-                node = readNextNode();
-            } catch (Exception exc) {
-                throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, exc);
-            }
+            node = readNextNode();
         }
         return node;
     }
@@ -180,16 +224,43 @@ public class FileUrisXMLLoader extends AbstractUrisLoader {
     @Override
     public void close() {
         if (doc != null) {
-            LOG.info("closing xml file reader");
+            LOG.info("closing XML file reader");
             try {
                 doc = null;
                 if (nodeMap != null) {
                     nodeMap.clear();
                 }
             } catch (Exception exc) {
-                LOG.log(Level.SEVERE, "while closing xml file reader", exc);
+                LOG.log(Level.SEVERE, "while closing XML file reader", exc);
             }
+        }
+        cleanup();
+    }
+
+    protected void schemaValidate(File xmlFile) throws CorbException {
+        String schemaFilename = getProperty(Options.XML_SCHEMA);
+        if (StringUtils.isNotEmpty(schemaFilename)) {
+            File schemaFile = FileUtils.getFile(schemaFilename);
+            schemaValidate(xmlFile, schemaFile);
         }
     }
 
+    protected void schemaValidate(File xmlFile, File schemaFile) throws CorbException {
+        SchemaFactory sf = SchemaFactory.newInstance(W3C_XML_SCHEMA_NS_URI);
+        XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+        try (Reader fileReader = new FileReader(xmlFile)) {
+            Source source = new StAXSource(xmlInputFactory.createXMLStreamReader(fileReader));
+            Schema schema = sf.newSchema(schemaFile);
+            Validator validator = schema.newValidator();
+            try {
+                validator.validate(source);
+            } catch (SAXException ex) {
+                LOG.log(Level.SEVERE, xmlFile.getCanonicalPath() + " is not schema valid", ex);
+                throw new CorbException(ex.getMessage());
+            }
+        } catch (IOException | SAXException | XMLStreamException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            throw new CorbException(ex.getMessage());
+        }
+    }
 }

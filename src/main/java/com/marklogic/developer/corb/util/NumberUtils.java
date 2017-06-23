@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -26,15 +26,15 @@ public final class NumberUtils {
 
     private NumberUtils() {
     }
-    
+
     /**
-     * <p>Convert a <code>String</code> to an <code>int</code>, returning
-     * <code>zero</code> if the conversion fails.</p>
+     * <p>Convert a {@code String} to an <code>int</code>, returning
+     * {@code zero} if the conversion fails.</p>
      *
-     * <p>If the string is <code>null</code>, <code>zero</code> is returned.</p>
+     * <p>If the string is {@code null}, <code>zero</code> is returned.</p>
      *
      * @param val
-     * @return the int represented by the string,or <code>zero</code> if the
+     * @return the int represented by the string,or {@code zero} if the
      * conversion fails
      */
     public static int toInt(String val) {
@@ -42,10 +42,10 @@ public final class NumberUtils {
     }
 
     /**
-     * <p>Convert a <code>String</code> to an <code>int</code>, returning a default
+     * <p>Convert a {@code String} to an <code>int</code>, returning a default
      * value if the conversion fails.</p>
      *
-     * <p>If the string is <code>null</code>, the default value is returned.</p>
+     * <p>If the string is {@code null}, the default value is returned.</p>
      *
      * @param val the string to convert, may be null
      * @param defaultValue the default value

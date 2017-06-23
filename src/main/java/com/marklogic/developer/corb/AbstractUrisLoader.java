@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.URIS_REPLACE_PATTERN;
+import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 import com.marklogic.xcc.ContentSource;
@@ -95,6 +96,7 @@ public abstract class AbstractUrisLoader implements UrisLoader {
         properties = null;
         replacements = null;
         batchRef = null;
+        total = 0;
     }
 
     protected void parseUriReplacePatterns() {
@@ -105,5 +107,10 @@ public abstract class AbstractUrisLoader implements UrisLoader {
                 throw new IllegalArgumentException("Invalid replacement pattern " + urisReplacePattern);
             }
         }
+    }
+    
+    protected boolean shouldSetBatchRef() {
+        String setBatchRef = getProperty(Options.LOADER_SET_URIS_BATCH_REF);
+        return StringUtils.stringToBoolean(setBatchRef, false);
     }
 }

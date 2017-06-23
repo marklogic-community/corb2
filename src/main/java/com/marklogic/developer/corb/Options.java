@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -44,10 +44,10 @@ public final class Options {
      * option {@value #BATCH_URI_DELIM}.
      * </p>
      * Sample code for transform:
-     * <pre><code>
+     * <pre>{@code
      * declare variable URI as xs:string exernal;
      * let $all-uris := fn:tokenize($URI,";")
-     * </code></pre>
+     * }</pre>
      */
     @Usage(description = "The number of uris to be executed in single transform. "
             + "Default value is 1. If greater than 1, the PROCESS-MODULE will "
@@ -379,6 +379,61 @@ public final class Options {
             + "Default is false.")
     public static final String INSTALL = "INSTALL";
 
+
+    /**
+     * Boolean option specifying whether the content loaded by
+     * FileUrisStreamingXMLLoader or FileUrisXMLLoader (with the option
+     * FILE-LOADER-USE-ENVELOPE=true) should be base64 encoded, or appended as
+     * the child of the `/corb-loader/content` element.
+     * Default is `false`
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Boolean option specifying whether the content loaded by "
+            + "FileUrisStreamingXMLLoader or FileUrisXMLLoader (with the option LOADER-USE-ENVELOPE=true) "
+            + "should be base64 encoded, or appended as the child of the `/corb-loader/content` element. "
+            + " Default is `false`")
+    public static final String LOADER_BASE64_ENCODE = "LOADER-BASE64-ENCODE";
+
+    /**
+     * The path to the resource (file or folder) that will be the source for a class that
+     * extends the AbstractFileUrisLoader
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "The path to the resource (file or folder) that will be the source for a class that extends the AbstractFileUrisLoader")
+    public static final String LOADER_PATH = "LOADER-PATH";
+
+    /**
+     * Boolean option indicating whether a loader should set the
+     * #URIS_BATCH_REF(https://github.com/marklogic-community/corb2#uris_batch_ref) with information about the source of the items.
+     * Default is false
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Boolean option indicating whether a loader should set the URIS_BATCH_REF with information about the source of the items. Default is false")
+    public static final String LOADER_SET_URIS_BATCH_REF = "LOADER-SET-URIS-BATCH-REF";
+
+    /**
+     * Boolean value indicating whether loader should use an XML envelope,
+     * in order to send file metadata in addition to the file content.
+     * Default is true.
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Boolean value indicating whether a loader should use an XML envelope, "
+            + "in order to send file metadata in addition to the file content. Default is true.")
+    public static final String LOADER_USE_ENVELOPE = "LOADER-USE-ENVELOPE";
+
+    /**
+     * Specify which external variable to set when invoking the loader process module.
+     * Choices are: URI or DOC.
+     * Default is URI.
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Specify which external variable to set when invoking the loader process module. Choices are URI or DOC. Default is URI.")
+    public static final String LOADER_VARIABLE = "LOADER-VARIABLE";
     /**
      * (Optional) Property file for the
      * {@link com.marklogic.developer.corb.JasyptDecrypter}.
@@ -425,6 +480,16 @@ public final class Options {
     @Usage(description = "A properties file containing any of the CoRB2 options. "
             + "Relative and full file system paths are supported.")
     public static final String OPTIONS_FILE = "OPTIONS-FILE";
+
+    /**
+     * The minimum number of results that must be returned for the POST-BATCH-MODULE
+     *  or POST-BATCH-TASK to be executed.
+     * Default is 1
+     * @since 2.4.0
+     */
+    @Usage(description = "The minimum number of results that must be returned "
+            + "for the POST-BATCH-MODULE or POST-BATCH-TASK to be executed. Default is 1")
+    public static final String POST_BATCH_MINIMUM_COUNT = "POST-BATCH-MINIMUM-COUNT";
 
     /**
      * An XQuery or JavaScript module which, if specified, will be run after
@@ -479,6 +544,16 @@ public final class Options {
     @Deprecated
     @Usage
     public static final String POST_BATCH_XQUERY_MODULE = "POST-BATCH-XQUERY-MODULE";
+
+    /**
+     * The minimum number of results that must be returned for the PRE-BATCH-MODULE
+     * or PRE-BATCH-TASK to be executed.
+     * Default is 1
+     * @since 2.4.0
+     */
+    @Usage(description = "The minimum number of results that must be returned "
+            + "for the PRE-BATCH-MODULE or PRE-BATCH-TASK to be executed. Default is 1")
+    public static final String PRE_BATCH_MINIMUM_COUNT = "PRE-BATCH-MINIMUM-COUNT";
 
     /**
      * An XQuery or JavaScript module which, if specified, will be run before
@@ -539,6 +614,19 @@ public final class Options {
     @Deprecated
     @Usage
     public static final String PRE_BATCH_XQUERY_MODULE = "PRE-BATCH-XQUERY-MODULE";
+
+    /**
+     * Boolean value indicating whether the PRE_BATCH and POST_BATCH module or task
+     * should always be executed without evaluating how many URIs were returned by the URI selector.
+     * Default is false
+     * @see #POST_BATCH_MINIMUM_COUNT
+     * @see #PRE_BATCH_MINIMUM_COUNT
+     * @since 2.4.0
+     */
+    @Usage(description="Boolean value indicating whether the PRE_BATCH and POST_BATCH module or task \n" +
+        " should always be executed without evaluating how many URIs were returned by the URI selector.\n" +
+        " Default is false")
+    public static final String PRE_POST_BATCH_ALWAYS_EXECUTE = "PRE-POST-BATCH-ALWAYS-EXECUTE";
 
     /**
      * (Optional)
@@ -712,13 +800,19 @@ public final class Options {
     public static final String SSL_PROPERTIES_FILE = "SSL-PROPERTIES-FILE";
 
     /**
+     * Path to a directory that can be used for temporary storage while processing records.
+     */
+    @Usage(description = "Path to a directory that can be used for temporary processing files.")
+    public static final String TEMP_DIR = "TEMP-DIR";
+
+    /**
      * The number of worker threads. Default is 1.
      */
     @Usage(description = "The number of worker threads. Default is 1.")
     public static final String THREAD_COUNT = "THREAD-COUNT";
 
     /**
-     * <a href="https://github.com/marklogic/corb2#uris_batch_ref">URIS_BATCH_REF</a>
+     * <a href="https://github.com/marklogic-community/corb2#uris_batch_ref">URIS_BATCH_REF</a>
      */
     @Usage
     public static final String URIS_BATCH_REF = "URIS_BATCH_REF";
@@ -763,7 +857,7 @@ public final class Options {
      * sequence containing the URIs count followed by all the URIs. Optionally,
      * it can also return an arbitrary string as a first item in this sequence -
      * refer to
-     * <a href="https://github.com/marklogic/corb2#uris_batch_ref">URIS_BATCH_REF</a>
+     * <a href="https://github.com/marklogic-community/corb2#uris_batch_ref">URIS_BATCH_REF</a>
      * section.
      * <p>
      * XQuery and JavaScript modules need to have "{@code .xqy}" and
@@ -804,12 +898,12 @@ public final class Options {
             + "reduce java heap size in very large batch jobs, as the CoRB java "
             + "client holds all the URIS in memory while processing is in progress. "
             + "If truncated, PROCESS-MODULE needs to reconstruct the URI before "
-            + "trying to duse fn:doc() to fetch the document. "
+            + "trying to use fn:doc() to fetch the document. "
             + "Usage: URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2,...)"
             + "Example:"
             + "URIS-REPLACE-PATTERN=/com/marklogic/sample/,,.xml, - Replace /com/marklogic/sample/ "
-            + "and .xml with empty strings. So, CoRB client only needs to cache the id '1234' i"
-            + "nstead of the entire URI /com/marklogic/sample/1234.xml. In the transform "
+            + "and .xml with empty strings. So, CoRB client only needs to cache the id '1234' "
+            + "instead of the entire URI /com/marklogic/sample/1234.xml. In the transform "
             + "PROCESS-MODULE, we need to do let $URI := fn:concat(\"/com/marklogic/sample/\",$URI,\".xml\")")
     public static final String URIS_REPLACE_PATTERN = "URIS-REPLACE-PATTERN";
 
@@ -846,6 +940,19 @@ public final class Options {
     public static final String XCC_HOSTNAME = "XCC-HOSTNAME";
 
     /**
+     * Optional boolean flag to indicate whether to enable HTTP 1.1 compliance
+     * in XCC. If this option is set, the "xcc.httpcompliant" System property
+     * will be set.
+     *
+     * @see <a href="https://docs.marklogic.com/guide/xcc/concepts#id_28335">XCC
+     * Developer's Guide</a>
+     * @since 2.4.0
+     */
+    @Usage(description = "Optional boolean flag to indicate whether to enable HTTP 1.1 Compliance in XCC. "
+            + "If this option is set, the \"xcc.httpcompliant\" System property will be set.")
+    public static final String XCC_HTTPCOMPLIANT = "XCC-HTTPCOMPLIANT";
+
+    /**
      * Required if {@value #XCC_CONNECTION_URI} is not specified.
      */
     @Usage(description = "Required if XCC-CONNECTION-URI is not specified.")
@@ -858,16 +965,20 @@ public final class Options {
     public static final String XCC_PORT = "XCC-PORT";
 
     /**
-     * The ID for the TimeZone that should be set on XCC RequestOption. 
-     * When a value is specified, it is parsed using TimeZone.getTimeZone() and 
-     * set on XCC RequestOption for each Task. Invalid ID values will produce the GMT TimeZone.
-     * If not specified, XCC uses the JVM default TimeZone.
-     * 
+     * The ID for the TimeZone that should be set on XCC RequestOption. When a
+     * value is specified, it is parsed using TimeZone.getTimeZone() and set on
+     * XCC RequestOption for each Task. Invalid ID values will produce the GMT
+     * TimeZone. If not specified, XCC uses the JVM default TimeZone.
+     *
      * @see java.util.TimeZone
      * @since 2.4.0
      */
+    @Usage(description = "The ID for the TimeZone that should be set on XCC RequestOption. When a\n"
+            + " value is specified, it is parsed using TimeZone.getTimeZone() and set on\n"
+            + " XCC RequestOption for each Task. Invalid ID values will produce the GMT\n"
+            + " TimeZone. If not specified, XCC uses the JVM default TimeZone.")
     public static final String XCC_TIME_ZONE = "XCC-TIME-ZONE";
-    
+
     /**
      * Required if {@value #XCC_CONNECTION_URI} is not specified.
      */
@@ -890,7 +1001,7 @@ public final class Options {
      * @see #XML_NODE
      * @since 2.3.1
      */
-    @Usage(description = "n order to use this option a class com.marklogic.developer.corb.FileUrisXMLLoader "
+    @Usage(description = "In order to use this option a class com.marklogic.developer.corb.FileUrisXMLLoader "
             + "has to be specified in the URIS-LOADER option. If defined instead of "
             + "URIS-MODULE, XML nodes will be used as URIs from the file located on the client. "
             + "The file path may be relative or absolute. Default processing will "
@@ -1014,6 +1125,22 @@ public final class Options {
     @Usage(description = "Port number to start a light weight HTTP Server which can be used to monitor ,change the number of threads, pause/resume the current corb job. Port number must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090")
     public static final String JOB_SERVER_PORT = "JOB-SERVER-PORT";
         
+    /**
+     * @since 2.4.0
+     */
+    @Usage(description = "Path to a W3C XML Schema to be used by com.marklogic.developer.corb.FileUrisStreamingXMLLoader "
+            + "or com.marklogic.developer.corb.FileUrisXMLLoader to validate an XML-FILE.")
+    public static final String XML_SCHEMA = "XML-SCHEMA";
+
+    @Usage(description = "In order to use this option a class com.marklogic.developer.corb.FileUrisZipLoader "
+            + "has to be specified in the URIS-LOADER option. If defined instead of "
+            + "URIS-MODULE, each file will be base64 encoded and set as the "
+            + "content of corb-loader XML files and sent as a serialized string in the URI parameter of "
+            + "the process module. "
+            + "The zip file path may be relative or absolute. Default processing will "
+            + "select all of the files in the zip file. ")
+    public static final String ZIP_FILE = "ZIP-FILE";
+
     /**
      *
      * @deprecated Use the {@link #PROCESS_MODULE} option instead.
