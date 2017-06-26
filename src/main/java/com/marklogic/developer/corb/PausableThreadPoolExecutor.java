@@ -18,6 +18,8 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.TransformOptions.FAILED_URI_TOKEN;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,14 +33,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import static com.marklogic.developer.corb.TransformOptions.FAILED_URI_TOKEN;
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 
-	private boolean isPaused;
+    private boolean isPaused;
     private final ReentrantLock pauseLock = new ReentrantLock();
     private final Condition unpaused = pauseLock.newCondition();
     protected TopUriList topUriList;
@@ -263,4 +264,3 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 		}
 	}
 }
-

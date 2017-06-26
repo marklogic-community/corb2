@@ -28,15 +28,20 @@ import static com.marklogic.developer.corb.Options.XCC_PASSWORD;
 import static com.marklogic.developer.corb.Options.XCC_PORT;
 import static com.marklogic.developer.corb.Options.XCC_USERNAME;
 import static com.marklogic.developer.corb.util.IOUtils.isDirectory;
-import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
-import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
+import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
-import static java.util.logging.Level.INFO;
-import static java.util.logging.Level.SEVERE;
-
+import com.marklogic.xcc.AdhocQuery;
+import com.marklogic.xcc.ContentSource;
+import com.marklogic.xcc.ContentSourceFactory;
+import com.marklogic.xcc.Request;
+import com.marklogic.xcc.ResultItem;
+import com.marklogic.xcc.ResultSequence;
+import com.marklogic.xcc.SecurityOptions;
+import com.marklogic.xcc.Session;
+import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.exceptions.XccConfigException;
+import com.marklogic.xcc.types.XdmItem;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -57,21 +62,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
-
-import com.marklogic.developer.corb.util.StringUtils;
-import com.marklogic.xcc.AdhocQuery;
-import com.marklogic.xcc.ContentSource;
-import com.marklogic.xcc.ContentSourceFactory;
-import com.marklogic.xcc.Request;
-import com.marklogic.xcc.ResultItem;
-import com.marklogic.xcc.ResultSequence;
-import com.marklogic.xcc.SecurityOptions;
-import com.marklogic.xcc.Session;
-import com.marklogic.xcc.exceptions.RequestException;
-import com.marklogic.xcc.exceptions.XccConfigException;
-import com.marklogic.xcc.types.XdmItem;
-
+import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
+import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 public abstract class AbstractManager {
 
     public static final String VERSION = "2.4.0";
@@ -448,39 +445,40 @@ public abstract class AbstractManager {
         }
         LOG.log(INFO, () -> MessageFormat.format("runtime arguments = {0}", StringUtils.join(argsToLog, SPACE)));
     }
-    public Map<String, String> getUserProvidedOptions() {
-		return userProvidedOptions;
-	}
 
 	public void setUserProvidedOptions(Map<String, String> userProvidedOptions) {
 		this.userProvidedOptions = userProvidedOptions;
 	}
 	protected Request getRequestForModule(String processModule, Session session) {
 		Request request;
-		if (isInlineOrAdhoc(processModule)) {
-		    String adhocQuery;
-		    if (isInlineModule(processModule)) {
-		        adhocQuery = StringUtils.getInlineModuleCode(processModule);
-		        if (isBlank(adhocQuery)) {
-		            throw new IllegalStateException("Unable to read inline query ");
-		        }
-		        LOG.log(INFO, "invoking inline process module");
-		    } else {
-		        String queryPath = processModule.substring(0, processModule.indexOf('|'));
-		        adhocQuery = getAdhocQuery(queryPath);
-		        if (isBlank(adhocQuery)) {
-		            throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
-		        }
-		        LOG.log(INFO, "invoking adhoc process module {0}", queryPath);
-		    }
-		    request = session.newAdhocQuery(adhocQuery);
-		    
-		} else {
-		    String root = options.getModuleRoot();
-		    String modulePath = buildModulePath(root, processModule);
-		    LOG.log(INFO, "invoking module {0}", modulePath);
-		    request = session.newModuleInvoke(modulePath);
-		}
+		 if (isInlineOrAdhoc(processModule)) {
+             String adhocQuery;
+             if (isInlineModule(processModule)) {
+                 adhocQuery = StringUtils.getInlineModuleCode(processModule);
+                 if (isBlank(adhocQuery)) {
+                     throw new IllegalStateException("Unable to read inline query ");
+                 }
+                 LOG.log(INFO, "invoking inline process module");
+             } else {
+                 String queryPath = processModule.substring(0, processModule.indexOf('|'));
+                 adhocQuery = getAdhocQuery(queryPath);
+                 if (isBlank(adhocQuery)) {
+                     throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
+                 }
+                 LOG.log(INFO, () -> MessageFormat.format("invoking adhoc process module {0}", queryPath));
+             }
+             request = session.newAdhocQuery(adhocQuery);
+             
+         } else {
+             String root = options.getModuleRoot();
+             String modulePath = buildModulePath(root, processModule);
+             LOG.log(INFO, () -> MessageFormat.format("invoking module {0}", modulePath));
+             request = session.newModuleInvoke(modulePath);
+         }
 		return request;
+	}
+
+	public Map<String, String> getUserProvidedOptions() {
+		return userProvidedOptions;
 	}
 }

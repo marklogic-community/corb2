@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import static com.marklogic.developer.corb.Options.MODULE_ROOT;
 import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
+import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
@@ -37,24 +38,21 @@ import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
-import com.marklogic.xcc.exceptions.XccConfigException;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.URISyntaxException;
-import java.security.GeneralSecurityException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
 
 /**
- * This class replaces RunXQuery. It can run both XQuery and JavaScript and when
- * built, doesn't wrap the XCC connection jar as RunXQuery does.
+ * This class can be used to execute either an XQuery or JavaScript module in
+ * MarkLogic.
  *
  * @author matthew.heckel MarkLogic Corportation
  *
@@ -62,8 +60,9 @@ import java.util.logging.Logger;
 public class ModuleExecutor extends AbstractManager {
 
     protected static final String NAME = ModuleExecutor.class.getSimpleName();
+    protected static final String PROPERTY_LINE_SEPARATOR = "line.separator";
     private static final byte[] NEWLINE
-            = System.getProperty("line.separator") != null ? System.getProperty("line.separator").getBytes() : "\n".getBytes();
+            = System.getProperty(PROPERTY_LINE_SEPARATOR) != null ? System.getProperty(PROPERTY_LINE_SEPARATOR).getBytes() : "\n".getBytes();
     protected static final Logger LOG = Logger.getLogger(ModuleExecutor.class.getName());
     private static final String TAB = "\t";
 
@@ -91,53 +90,36 @@ public class ModuleExecutor extends AbstractManager {
         }
     }
 
+    /**
+     *
+     * @param args
+     * @throws com.marklogic.developer.corb.CorbException
+     */
     @Override
-    public void init(String[] commandlineArgs, Properties props)
-            throws IOException, URISyntaxException, ClassNotFoundException,
-            InstantiationException, IllegalAccessException, XccConfigException,
-            GeneralSecurityException {
-        String[] args = commandlineArgs;
-        if (args == null) {
-            args = new String[0];
-        }
+    protected void initOptions(String... args) throws CorbException {
+        super.initOptions(args);
+        String processModule = getOption(args, 1, PROCESS_MODULE);
+        String moduleRoot = getOption(args, 2, MODULE_ROOT);
+        String modulesDatabase = getOption(args, 3, MODULES_DATABASE);
+        String exportFileDir = getOption(args, 4, EXPORT_FILE_DIR);
+        String exportFileName = getOption(args, 5, EXPORT_FILE_NAME);
 
-        if (props == null || props.isEmpty()) {
-            initPropertiesFromOptionsFile();
-        } else {
-            this.properties = props;
-        }
-        initDecrypter();
-        initSSLConfig();
-
-        initURI(args.length > 0 ? args[0] : null);
-
-        initOptions(args);
-
-        logRuntimeArgs();
-
-        prepareContentSource();
-        registerStatusInfo();
-    }
-
-    protected void initOptions(String... args) {
-        String processModule = getOption(args.length > 1 ? args[1] : null, PROCESS_MODULE);
-        String moduleRoot = getOption(args.length > 2 ? args[2] : null, MODULE_ROOT);
-        String modulesDatabase = getOption(args.length > 3 ? args[3] : null, MODULES_DATABASE);
-        String exportFileDir = getOption(args.length > 4 ? args[4] : null, EXPORT_FILE_DIR);
-        String exportFileName = getOption(args.length > 5 ? args[5] : null, EXPORT_FILE_NAME);
-
-        if (moduleRoot != null) {
-            options.setModuleRoot(moduleRoot);
+        //Check legacy properties keys, for backwards compatibility
+        if (processModule == null) {
+            processModule = getOption(XQUERY_MODULE);
         }
         if (processModule != null) {
             options.setProcessModule(processModule);
         }
+        if (null == options.getProcessModule()) {
+            throw new NullPointerException(PROCESS_MODULE + " must be specified");
+        }
+
         if (modulesDatabase != null) {
             options.setModulesDatabase(modulesDatabase);
         }
-        //TODO: normalize XQUERY-MODULE properties
-        if (null == options.getProcessModule()) {
-            throw new NullPointerException(PROCESS_MODULE + " must be specified");
+        if (moduleRoot != null) {
+            options.setModuleRoot(moduleRoot);
         }
 
         if (!this.properties.containsKey(EXPORT_FILE_DIR) && exportFileDir != null) {
@@ -156,62 +138,56 @@ public class ModuleExecutor extends AbstractManager {
             }
         }
 
-        // delete the export file if it exists
-        if (exportFileName != null) {
-            File exportFile = new File(exportFileDir, exportFileName);
-            if (exportFile.exists()) {
-                exportFile.delete();
-            }
-        }
+        deleteFileIfExists(exportFileDir, exportFileName);
     }
 
     @Override
     protected void usage() {
         super.usage();
         List<String> args = new ArrayList<>(5);
-        String xcc_connection_uri = "xcc://user:password@host:port/[ database ]";
-        String options_file = "myjob.properties";
-        PrintStream err = System.err;
+        String xccConnectionUri = "xcc://user:password@host:port/[ database ]";
+        String optionsFile = "myjob.properties";
+        PrintStream err = System.err; // NOPMD
 
-        err.println("usage 1:");
+        err.println("usage 1:"); // NOPMD
         args.add(NAME);
-        args.add(xcc_connection_uri);
+        args.add(xccConnectionUri);
         args.add("process-module [module-root [modules-database [ export-file-name ] ] ]");
-        err.println(TAB + StringUtils.join(args, SPACE));
+        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
 
-        err.println("\nusage 2:");
+        err.println("\nusage 2:"); // NOPMD
         args.clear();
-        args.add(buildSystemPropertyArg(XCC_CONNECTION_URI, xcc_connection_uri));
+        args.add(buildSystemPropertyArg(XCC_CONNECTION_URI, xccConnectionUri));
         args.add(buildSystemPropertyArg(PROCESS_MODULE, "module-name.xqy"));
         args.add(buildSystemPropertyArg("...", null));
         args.add(NAME);
-        err.println(TAB + StringUtils.join(args, SPACE));
+        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
 
-        err.println("\nusage 3:");
+        err.println("\nusage 3:"); // NOPMD
         args.clear();
-        args.add(buildSystemPropertyArg(OPTIONS_FILE, options_file));
+        args.add(buildSystemPropertyArg(OPTIONS_FILE, optionsFile));
         args.add(NAME);
-        err.println(TAB + StringUtils.join(args, SPACE));
+        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
 
-        err.println("\nusage 4:");
+        err.println("\nusage 4:"); // NOPMD
         args.clear();
-        args.add(buildSystemPropertyArg(OPTIONS_FILE, options_file));
+        args.add(buildSystemPropertyArg(OPTIONS_FILE, optionsFile));
         args.add(NAME);
-        args.add(xcc_connection_uri);
-        err.println(TAB + StringUtils.join(args, SPACE));
+        args.add(xccConnectionUri);
+        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
     }
 
     @Override
     protected void logOptions() {
-        LOG.log(INFO, "Configured modules db: {0}", options.getModulesDatabase());
-        LOG.log(INFO, "Configured modules root: {0}", options.getModuleRoot());
-        LOG.log(INFO, "Configured process module: {0}", options.getProcessModule());
+        LOG.log(INFO, () -> MessageFormat.format("Configured modules db: {0}", options.getModulesDatabase()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured modules root: {0}", options.getModuleRoot()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured process module: {0}", options.getProcessModule()));
     }
 
     public void run() throws Exception {
-        LOG.log(INFO, "{0} starting: {1}", new Object[]{NAME, VERSION_MSG});
+        LOG.log(INFO, () -> MessageFormat.format("{0} starting: {1}", NAME, VERSION_MSG));
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
-        LOG.log(INFO, "maximum heap size = {0} MiB", maxMemory);
+        LOG.log(INFO, () -> MessageFormat.format("maximum heap size = {0} MiB", maxMemory));
 
         Request request;
         ResultSequence resultSequence = null;
@@ -230,8 +206,8 @@ public class ModuleExecutor extends AbstractManager {
 		    }
             // custom inputs
             for (String propName : propertyNames) {
-                if (propName.startsWith(PROCESS_MODULE + ".")) {
-                    String varName = propName.substring((PROCESS_MODULE + ".").length());
+                if (propName.startsWith(PROCESS_MODULE + '.')) {
+                    String varName = propName.substring((PROCESS_MODULE + '.').length());
                     String value = getProperty(propName);
                     if (value != null) {
                         request.setNewStringVariable(varName, value);
@@ -279,7 +255,7 @@ public class ModuleExecutor extends AbstractManager {
         }
         String fileDir = getProperty(EXPORT_FILE_DIR);
         String fileName = getProperty(EXPORT_FILE_NAME);
-        if (fileName == null || fileName.length() == 0) {
+        if (StringUtils.isEmpty(fileName)) {
             return;
         }
         LOG.info("Writing output to file");

@@ -49,35 +49,6 @@ public class BaseMonitor {
     	populateTps(completed);
         return getProgressMessage(completed, taskCount, avgTps, currentTps, estimatedTimeOfCompletion, pool.getActiveCount());
     }
-
-    protected double calculateTpsForETC(double curTps, boolean isPaused) {
-        if (curTps == 0 && isPaused) {
-            this.tpsForETCList.clear();
-        } else {
-            if (this.tpsForETCList.size() >= this.numTpsForEtc) {
-                this.tpsForETCList.remove(0);
-            }
-            this.tpsForETCList.add(curTps);
-        }
-
-        double tpsForETC = 0;
-        double sum = 0;
-        for (Double next : this.tpsForETCList) {
-            sum += next;
-        }
-        if (!this.tpsForETCList.isEmpty()) {
-            tpsForETC = sum / this.tpsForETCList.size();
-        }
-        return tpsForETC;
-    }
-
-    static protected double calculateTransactionsPerSecond(long amountCompleted, long currentMillis, long previousMillis) {
-        return calculateTransactionsPerSecond(amountCompleted, 0, currentMillis, previousMillis);
-    }
-
-    static protected double calculateTransactionsPerSecond(long amountCompleted, long previouslyCompleted, long currentMillis, long previousMillis) {
-        return (amountCompleted - previouslyCompleted) * 1000d / (currentMillis - previousMillis);
-    }
     static protected String getProgressMessage(long completed, long taskCount, double tps, double curTps, double tpsForETC, int threads, boolean isPaused) {
         String etc = getEstimatedTimeCompletion(taskCount, completed, tpsForETC, isPaused);
     	return getProgressMessage(completed, taskCount, tps, curTps, etc, threads);
@@ -91,8 +62,46 @@ public class BaseMonitor {
                 + threads + " active threads.";
     }
 
-    static protected String getEstimatedTimeCompletion(double taskCount, double completed, double tpsForETC, boolean isPaused) {
-        double ets = (tpsForETC != 0) ? (taskCount - completed) / tpsForETC : -1;
+    protected double calculateTpsForETC(double currentTransactionsPerSecond, boolean isPaused) {
+        if (isZero(currentTransactionsPerSecond) && isPaused) {
+            this.tpsForETCList.clear();
+        } else {
+            if (this.tpsForETCList.size() >= this.numTpsForEtc) {
+                this.tpsForETCList.remove(0);
+            }
+            this.tpsForETCList.add(currentTransactionsPerSecond);
+        }
+
+        double transactionsPerSecondForETC = 0;
+        double sum = 0;
+        for (Double next : this.tpsForETCList) {
+            sum += next;
+        }
+        if (!this.tpsForETCList.isEmpty()) {
+            transactionsPerSecondForETC = sum / this.tpsForETCList.size();
+        }
+        return transactionsPerSecondForETC;
+    }
+
+    /**
+     * Determine if the given double value is equal to zero
+     * @param value
+     * @return
+     */
+    protected static boolean isZero(double value) {
+        return Double.compare(value, 0.0) == 0;
+    }
+
+    protected static double calculateTransactionsPerSecond(long amountCompleted, long currentMillis, long previousMillis) {
+        return calculateTransactionsPerSecond(amountCompleted, 0, currentMillis, previousMillis);
+    }
+
+    protected static double calculateTransactionsPerSecond(long amountCompleted, long previouslyCompleted, long currentMillis, long previousMillis) {
+        return (amountCompleted - previouslyCompleted) * 1000d / (currentMillis - previousMillis);
+    }
+
+    protected static String getEstimatedTimeCompletion(double taskCount, double completed, double tpsForETC, boolean isPaused) {
+        double ets = !isZero(tpsForETC) ? (taskCount - completed) / tpsForETC : -1;
         int hours = (int) ets / 3600;
         int minutes = (int) (ets % 3600) / 60;
         int seconds = (int) ets % 60;
@@ -107,12 +116,13 @@ public class BaseMonitor {
      * @param n
      * @return
      */
-    static protected String formatTransactionsPerSecond(Number n) {
+    protected static String formatTransactionsPerSecond(Number n) {
         NumberFormat format = DecimalFormat.getInstance();
         format.setRoundingMode(RoundingMode.HALF_UP);
         format.setMinimumFractionDigits(0);
         format.setMaximumFractionDigits(2);
         return n.intValue() >= 1 ? format.format(n.intValue()) : format.format(n);
     }
+
 
 }
