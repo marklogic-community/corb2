@@ -95,6 +95,18 @@ shadowJar {
     }
     //generate same name as the jar task would
     archiveName = "${baseName}-${version}.${extension}"
+    manifest {
+        attributes 'Application-Version': project.version
+        attributes 'Build-date' : new Date();
+        attributes 'Main-Class' : 'com.marklogic.developer.corb.Manager'
+
+        attributes 'Name': 'com/marklogic/developer/corb/'
+        attributes 'Specification-Title' : 'corb'
+        attributes 'Specification-Version' : project.version
+        attributes 'Implementation-Title' : project.name
+        //Manager class reads the version for usage messages
+        attributes 'Implementation-Version' : project.version
+    }
 }
 build.dependsOn(shadowJar)
 
