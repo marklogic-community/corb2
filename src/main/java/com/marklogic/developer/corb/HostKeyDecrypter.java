@@ -31,6 +31,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.file.ProviderNotFoundException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.MessageDigest;
@@ -132,7 +133,13 @@ public class HostKeyDecrypter extends AbstractDecrypter {
              */
             @Override
             public byte[] getSN() {
-                return OSType.getSN("lshal", "system.hardware.serial", this);
+                try {
+                    return OSType.getSN("lshal", "system.hardware.serial", this);
+                } catch (ProviderNotFoundException ex) {
+                    //Linux distros have deprecated lshal and may not be available on modern versions
+                    LOG.warning("lshal is not available on this machine. Using default Serial Number value.");
+                    return OTHER.getSN();
+                }
             }
         },
         OTHER {
@@ -151,8 +158,8 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                     String sn = hasMatch.get().split(marker)[1].trim();
                     return sn.getBytes();
                 }
-            } catch (IOException ex) {
-                new RuntimeException("Required to have " + command + " command installed on machine", ex);
+            } catch (RuntimeException | IOException ex) {
+                throw new ProviderNotFoundException("Required to have " + command + " command installed on machine");
             }
             throw new IllegalStateException(MessageFormat.format(EXCEPTION_MGS_SERIAL_NOT_FOUND, os));
         }
@@ -358,7 +365,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
      */
     public static void main(String... args) throws Exception {
         String[] arguments = args == null ? new String[]{} : args;
-        
+
         String method = arguments.length > 0 ? StringUtils.trim(arguments[0]) : "";
 
         if (METHOD_ENCRYPT.equals(method) && arguments.length == 2) {
