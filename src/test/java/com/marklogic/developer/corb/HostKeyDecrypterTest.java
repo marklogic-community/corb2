@@ -74,10 +74,8 @@ public class HostKeyDecrypterTest {
         try {
             instance.init_decrypter();
             List<LogRecord> records = testLogger.getLogRecords();
-            assertTrue("Initialized HostKeyDecrypter".equals(records.get(0).getMessage()));
-        } catch (RuntimeException ex) {
-            //travis-ci throws an IOException, can't find lshal and then a RuntimeException is thrown
-            LOG.log(Level.SEVERE, null, ex);
+            int lastMessage = records.size() - 1;
+            assertTrue("Initialized HostKeyDecrypter".equals(records.get(lastMessage).getMessage()));
         } catch (IOException | ClassNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -180,7 +178,7 @@ public class HostKeyDecrypterTest {
         }
         assertEquals(USAGE, outContent.toString());
     }
-    
+
     @Test
     public void testDoDecrypt() {
         HostKeyDecrypter decrypter = new HostKeyDecrypter();
