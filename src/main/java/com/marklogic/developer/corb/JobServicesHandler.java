@@ -40,6 +40,10 @@ public class JobServicesHandler implements HTTPServer.ContextHandler{
 		}
 		manager.jobStats.setPaused(String.valueOf(manager.isPaused()));		
 		boolean concise=params.containsKey("concise")||params.containsKey("CONCISE");
+		resp.getHeaders().add("Access-Control-Allow-Origin", "*");
+		resp.getHeaders().add("Access-Control-Allow-Methods", "GET");
+		resp.getHeaders().add("Access-Control-Max-Age", "3600");
+		resp.getHeaders().add("Access-Control-Allow-Headers", "Content-Type");
 		if (params.containsKey("xml") || params.containsKey("XML")) {
 			resp.getHeaders().add("Content-Type", "application/xml");
 			resp.send(200, manager.jobStats.toXMLString(concise));

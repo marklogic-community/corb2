@@ -1417,7 +1417,9 @@ public class ManagerTest {
         properties.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
         properties.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
         properties.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
-        properties.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        if(ManagerTest.EXPORT_FILE_DIR!=null) {
+        	properties.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        }
         properties.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         return properties;
     }

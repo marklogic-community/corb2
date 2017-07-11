@@ -75,6 +75,7 @@ public class JobStats extends BaseMonitor {
 	private static final String USER_PROVIDED_OPTIONS = "userProvidedOptions";
 	private static final String JOB_LOCATION = "runLocation";
 	private static final String CURRENT_THREAD_COUNT = "currentThreadCount";
+	private static final String JOB_SERVER_PORT = "port";
 
 	protected Map<String, String> userProvidedOptions = new HashMap<String, String>();
 	protected String startTime = null;
@@ -96,6 +97,8 @@ public class JobStats extends BaseMonitor {
 	protected String uri = null;
 	protected String paused = null;
 	protected Long currentThreadCount = 0l;
+	protected Long jobServerPort = 0l;
+	
 
 	protected TransformOptions options = null;
 	protected ContentSource contentSource;
@@ -110,7 +113,7 @@ public class JobStats extends BaseMonitor {
 		super(null, manager);
 		options = manager.options;
 		contentSource = manager.contentSource;
-		startMillis = manager.startMillis;
+		startMillis = manager.getStartMillis();
 		String jobName = options.getJobName();
 		if (jobName != null) {
 			setJobName(jobName);
@@ -130,7 +133,7 @@ public class JobStats extends BaseMonitor {
 		}
 		this.setHost(hostname);
 		this.setJobRunLocation(System.getProperty("user.dir"));
-		this.setStartTime(sdf.format(new Date(this.manager.startMillis)));
+		this.setStartTime(sdf.format(new Date(this.manager.getStartMillis())));
 		this.setUserProvidedOptions(this.manager.getUserProvidedOptions());
 	}
 
@@ -144,20 +147,21 @@ public class JobStats extends BaseMonitor {
 				long numberOfFailedTasks = (this.pool != null) ? new Long(this.pool.getNumFailedUris()) : 0l;
 				this.setNumberOfFailedTasks(numberOfFailedTasks);
 				long numberOfSucceededTasks = (this.pool != null) ? new Long(this.pool.getNumSucceededUris()) : 0l;
+				this.setJobServerPort(options.getJobServerPort().longValue());
 				this.setNumberOfSucceededTasks(numberOfSucceededTasks);
 				this.setTotalNumberOfTasks(taskCount);
 				Long currentTimeMillis = System.currentTimeMillis();
-				Long totalTime = this.manager.endMillis - manager.startMillis;
+				Long totalTime = this.manager.getEndMillis() - manager.getStartMillis();
 				if (totalTime > 0) {
 					this.setTotalRunTimeInMillis(totalTime);
-					Long totalTransformTime = currentTimeMillis - manager.transformStartMillis;
+					Long totalTransformTime = currentTimeMillis - manager.getTransformStartMillis();
 					this.setAverageTransactionTime(
 							new Double(totalTransformTime / new Double(numberOfFailedTasks + numberOfSucceededTasks)));
-					this.setEndTime(sdf.format(new Date(this.manager.endMillis)));
+					this.setEndTime(sdf.format(new Date(this.manager.getEndMillis())));
 					estimatedTimeOfCompletion = null;
 					this.setCurrentThreadCount(0l);
 				} else {
-					this.setTotalRunTimeInMillis(currentTimeMillis - manager.startMillis);
+					this.setTotalRunTimeInMillis(currentTimeMillis - manager.getStartMillis());
 					long completed = numberOfSucceededTasks + numberOfFailedTasks;
 					long intervalBetweenRequestsInMillis = TPS_ETC_MIN_REFRESH_INTERVAL;
 					long timeSinceLastReq = currentTimeMillis - prevMillis;
@@ -402,6 +406,7 @@ public class JobStats extends BaseMonitor {
 				.append(xmlNode(NUMBER_OF_SUCCEEDED_TASKS, numberOfSucceededTasks))
 				.append(xmlNode(METRICS_DOC_URI, uri))
 				.append(xmlNode(PAUSED, paused))
+				.append(xmlNode(JOB_SERVER_PORT, jobServerPort))				
 				.append(xmlNode(AVERAGE_TPS, avgTps > 0 ? formatTransactionsPerSecond(avgTps) : ""))
 				.append(xmlNode(CURRENT_TPS, currentTps > 0 ? formatTransactionsPerSecond(currentTps) : ""))
 				.append(xmlNode(ESTIMATED_TIME_OF_COMPLETION, estimatedTimeOfCompletion))
@@ -785,6 +790,20 @@ public class JobStats extends BaseMonitor {
 	 */
 	public void setPool(PausableThreadPoolExecutor pool) {
 		this.pool = pool;
+	}
+
+	/**
+	 * @return the jobServerPort
+	 */
+	public Long getJobServerPort() {
+		return jobServerPort;
+	}
+
+	/**
+	 * @param jobServerPort the jobServerPort to set
+	 */
+	public void setJobServerPort(Long jobServerPort) {
+		this.jobServerPort = jobServerPort;
 	}
 
 }
