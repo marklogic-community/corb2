@@ -47,7 +47,6 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
     
     private final ThreadLocal<Long> startTime = new ThreadLocal<Long>();
     private final ThreadLocal<String> threadName = new ThreadLocal<String>();
-    private final AtomicLong totalTime = new AtomicLong();
     private int numFailedUrisToCapture=0;
     private int numFailedUris=0;
     private int numSucceededUris=0;
@@ -117,7 +116,6 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 	     		long durationInMs = TimeUnit.MILLISECONDS.convert(taskTime, TimeUnit.NANOSECONDS);
 	     		
 	            this.topUriList.add(result,durationInMs);
-	     		totalTime.addAndGet(taskTime); 
 	     		numSucceededUris++;
 	         }
      	}
@@ -130,10 +128,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 	public Map<String,Long> getTopUris() {
 		return topUriList.getData();
 	}
-    public Long getTotalTime() {
- 		return totalTime.longValue();
- 	}
-
+ 
     public boolean isRunning() {
         return !isPaused;
     }

@@ -58,6 +58,7 @@ public class ManagerIT {
     private static final String EXT_TXT = ".txt";
     private static final String LARGE_URIS_MODULE = "src/test/resources/selectorLargeList.xqy|ADHOC";
     private static final String TRANSFORM_SLOW_MODULE = "src/test/resources/transformSlow.xqy|ADHOC";
+    private static final String TRANSFORM_ERROR_MODULE = "src/test/resources/transform-error.xqy|ADHOC";
     private static final String SLOW_CMD = "pause";
     private static final LogRecord PAUSING = new LogRecord(Level.INFO, "pausing");
     private static final LogRecord RESUMING = new LogRecord(Level.INFO, "resuming");
@@ -161,6 +162,36 @@ public class ManagerIT {
             report.deleteOnExit();
             int lineCount = FileUtils.getLineCount(report);
             assertEquals(uriCount + 2, lineCount);
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+    @Test
+    public void testManagerMetricsUsingSysPropsLargeUrisList() {
+        clearSystemProperties();
+        int uriCount = 100;
+        String exportFilename = "testManagerMetricsUsingSysProps1.txt";
+        Properties properties = ManagerTest.getDefaultProperties();
+        properties.setProperty(Options.THREAD_COUNT, String.valueOf(4));
+        properties.setProperty(Options.URIS_MODULE, LARGE_URIS_MODULE);
+        properties.setProperty(Options.URIS_MODULE + ".count", String.valueOf(uriCount));
+        properties.setProperty(Options.BATCH_SIZE, String.valueOf(1));
+        properties.setProperty(Options.EXPORT_FILE_NAME, exportFilename);
+        properties.setProperty(Options.DISK_QUEUE, "true");
+        properties.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10));
+        properties.setProperty(Options.DISK_QUEUE_TEMP_DIR, "/var/tmp");
+        properties.setProperty(Options.PROCESS_MODULE, TRANSFORM_ERROR_MODULE);
+        properties.setProperty(Options.FAIL_ON_ERROR, "false");
+
+        Manager manager = new Manager();
+        try {
+            manager.init(properties);
+            manager.run();
+            File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFilename);
+            report.deleteOnExit();
+            int lineCount = FileUtils.getLineCount(report);
+            assertEquals((uriCount/2) + 2, lineCount);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

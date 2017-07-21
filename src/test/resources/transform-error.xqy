@@ -13,10 +13,9 @@ let $tokens:=fn:tokenize($tokens[1],"/")
     let $last-tokens:=fn:tokenize($tokens[fn:last()],"[.]")
     let $file-name:=$last-tokens[1]
     return if($file-name castable as xs:int) then 
-            (:if(local:is-divisible(xs:int($file-name) ,2)) then
-                fn:error(xs:QName("error"),"222 is an error!")   
-            else $response :)
-            $response
+            if(local:is-divisible(xs:int($file-name) ,2)) then
+                fn:error(xs:QName("error"),"Half of the inputs will be errors!")   
+            else $response 
            else $response 
 else
   $response

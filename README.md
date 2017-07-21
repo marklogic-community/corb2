@@ -137,12 +137,25 @@ Option | Description
 **EXPORT-FILE-URI-TO-PATH** | Default is true. Boolean value indicating whether to convert doc URI to a filepath.
 **FAIL-ON-ERROR** | Boolean value indicating whether the CoRB job should fail and exit if a process module throws an error. Default is true. This option will not handle repeated connection failures.
 **INSTALL** | Whether to install the Modules in the Modules database. Specify 'true' or '1' for installation. Default is false.
-**JOB-NAME** | Name of the current Job.|
+**JOB-NAME** | Name of the current Job.
+**JOB-SERVER-PORT** | Optional Port number to start a light weight HTTP Server which can be used to monitor, change the number of threads, pause/resume the current corb job.
+     Port number must be a valid port(s) or a valid range of ports. 
+     <ul><li>Ex: 9080</li><li> Ex: 9080,9083,9087</li><li> Ex: 9080-9090</li><li> Ex: 9080-9083,9085-9090</li></ul>
+      The job server has a service `http://<host>:<port>/service`.
+      It supports the following params:
+      <ul><li>paused=true or false will pause/resume the Corb job. </li>
+      <li>threads=<number> will change the number of threads to <number>.</li>
+      <li>json=true returns metrics in json format</li>
+      <li>xml=true returns in xml format</li>
+      <li>concise=true returns a concise format.</li>
+      </ul>
+      By Default if this property is not specified, the Job server is not started.
 **MAX_OPTS_FROM_MODULE** | Default is 10. Max number of custom inputs from the URIS-MODULE to other modules.
 **METRICS-TO-ERROR-LOG**|LOG Level  the CoRB job should log metrics to ML Server Error Log.Possible values are *none,emergency,alert,critical,error,warning,notice,info,config,debug,fine,finer,finest*. Default value is none, which means metrics are not logged.|
 **METRICS-DB-NAME** | Uses the value provided to save the metrics document to the specified Database.|
 **METRICS-DOC-BASE-DIR** | Uses the value provided to as the URI Root for saving the metrics document.|
 **METRICS-DOC-COLLECTIONS** | Adds the metrics document to the specified collection.|
+**METRICS-NUM-SLOW-TRANSACTIONS** | Maximum number of slow transaction to be logged in the metrics. The default value is 5.
 **METRICS-PROCESS-MODULE** | XQuery or JavaScript to be executed at the end of the Corb Job to save the metrics document to the Database.There is an XQuery module (save-metric-to-db.xqy) and a JavaScript module (saveMetrics.sjs) provided with CoRB2 Distribution.You can use these modules as a template to customize the the document can be saved to the DB.XQuery and JavaScript modules need to have '{@code .xqy}' and{@code .sjs} extensions respectively.|
 **MODULE-ROOT** | Default is '/'.
 **MODULES-DATABASE** | Uses the **XCC-CONNECTION-URI** if not provided; use 0 for file system.

@@ -101,6 +101,9 @@ import java.util.logging.Logger;
  */
 public class Manager extends AbstractManager {
 
+	private static final String JOB_SERVICE_PATH = "/service";
+	private static final String CLASSPATH_FOLDER_WITH_RESOURCES = "corb2-web";
+	private static final String HTTP_RESOURCE_PATH = "/web";
 	private static final String END_RUNNING_JOB_MESSAGE = "END RUNNING CORB JOB:";
     private static final String START_RUNNING_JOB_MESSAGE = "STARTED CORB JOB:";
     
@@ -396,11 +399,15 @@ public class Manager extends AbstractManager {
 		}
 		String numberOfLongRunningUris=getOption(Options.METRICS_NUM_SLOW_TRANSACTIONS);
 		if(numberOfLongRunningUris !=null){
-			int intNumberOfLongRunningUris=Integer.valueOf(numberOfLongRunningUris);
-			if(intNumberOfLongRunningUris> TransformOptions.MAX_NUM_SLOW_TRANSACTIONS){
-				intNumberOfLongRunningUris=TransformOptions.MAX_NUM_SLOW_TRANSACTIONS;
+			try {
+				int intNumberOfLongRunningUris=Integer.valueOf(numberOfLongRunningUris);
+				if(intNumberOfLongRunningUris> TransformOptions.MAX_NUM_SLOW_TRANSACTIONS){
+					intNumberOfLongRunningUris=TransformOptions.MAX_NUM_SLOW_TRANSACTIONS;
+				}
+				options.setNumberOfLongRunningUris(intNumberOfLongRunningUris);
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException(Options.METRICS_NUM_SLOW_TRANSACTIONS+" = "+numberOfLongRunningUris+" is invalid. please use a valid integer.");
 			}
-			options.setNumberOfLongRunningUris(intNumberOfLongRunningUris);
 		}
 		String numberOfFailedUris=getOption(Options.METRICS_NUM_FAILED_TRANSACTIONS);
 		if(numberOfFailedUris !=null){
@@ -410,30 +417,35 @@ public class Manager extends AbstractManager {
 			}
 			options.setNumberOfFailedUris(intNumFaileTransactions);
 		}
-		String metricsSyncFrequencyInMillis=getOption(Options.METRICS_TO_DB_SYNC_FREQUENCY);
+		String metricsSyncFrequencyInMillis=getOption(Options.METRICS_SYNC_FREQUENCY);
 		if((logMetricsToServerDBName!=null || this.options.isMetricsToServerLogEnabled(logMetricsToServerLog )) && metricsSyncFrequencyInMillis !=null){
 			//periodically update db only if db name is set or logging enabled and sync frequency is selected
 			//no defaults for this function
-			int intMetricsSyncFrequencyInMillis=Integer.valueOf(metricsSyncFrequencyInMillis);
-			options.setMetricsSyncFrequencyInMillis(intMetricsSyncFrequencyInMillis);
+			try {
+				int intMetricsSyncFrequencyInMillis=Integer.valueOf(metricsSyncFrequencyInMillis);
+				options.setMetricsSyncFrequencyInMillis(intMetricsSyncFrequencyInMillis);
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException(Options.METRICS_SYNC_FREQUENCY+" = "+metricsSyncFrequencyInMillis+" is invalid. please use a valid integer.");
+			}
 		}
 		String jobServerPort=getOption(Options.JOB_SERVER_PORT);
 		if(jobServerPort!=null){
 			//no defaults for this function
-			if(jobServerPort.indexOf("-")>-1 || jobServerPort.indexOf(",")>-1 ){
-				try {
+			try {
+				if(jobServerPort.indexOf("-")>-1 || jobServerPort.indexOf(",")>-1 ){
 					List<Integer> jobServerPorts = StringUtils.parsePortRanges(jobServerPort);
 					if(jobServerPorts.size()>0){
 						options.setJobServerPortsToChoose(jobServerPorts);
 					}
-				} catch (NumberFormatException e) {
-					throw new IllegalArgumentException(Options.JOB_SERVER_PORT + " must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090");
+				
 				}
-			}
-			else{
-				int intJobServerPort=Integer.parseInt(jobServerPort);
-				options.setJobServerPort(intJobServerPort);
-			}
+				else{
+					int intJobServerPort=Integer.parseInt(jobServerPort);
+					options.setJobServerPort(intJobServerPort);
+				}
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException(Options.JOB_SERVER_PORT + " must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090");
+			}	
 		}
         // delete the export file if it exists
         deleteFileIfExists(exportFileDir, exportFileName);
@@ -602,10 +614,10 @@ private void startJobServer() throws IOException {
 			}
 			HTTPServer.VirtualHost host = jobServer.getVirtualHost(null); // default host
 			host.setAllowGeneratedIndex(false); // with directory index pages
-			HTTPServer.ContextHandler htmlContextHandler = new HTTPServer.ClasspathResourceContextHandler("corb2-web","/web");
+			HTTPServer.ContextHandler htmlContextHandler = new HTTPServer.ClasspathResourceContextHandler(CLASSPATH_FOLDER_WITH_RESOURCES,HTTP_RESOURCE_PATH);
 			HTTPServer.ContextHandler dataContextHandler = new JobServicesHandler(this);
-			host.addContext("/service", dataContextHandler);
-			host.addContext("/web", htmlContextHandler);
+			host.addContext(JOB_SERVICE_PATH, dataContextHandler);
+			host.addContext(HTTP_RESOURCE_PATH, htmlContextHandler);
 			jobServer.start();
 		}
 	}

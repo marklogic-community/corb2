@@ -111,8 +111,8 @@ public class JobStats extends BaseMonitor {
 
 	public JobStats(Manager manager) {
 		super(null, manager);
-		options = manager.options;
-		contentSource = manager.contentSource;
+		options = manager.getOptions();
+		contentSource = manager.getContentSource();
 		startMillis = manager.getStartMillis();
 		String jobName = options.getJobName();
 		if (jobName != null) {
@@ -174,7 +174,7 @@ public class JobStats extends BaseMonitor {
 		}
 	}
 
-	protected void logJobStatsToServer(String message, boolean concise) {
+	public void logJobStatsToServer(String message, boolean concise) {
 		String processModule = options.getLogMetricsToServerDBTransformModule();
 		String metricsToDocument = null;
 		String metricsToServerLog = null;
@@ -190,7 +190,7 @@ public class JobStats extends BaseMonitor {
 		LOG.info(toString(false));
 	}
 
-	protected void logJobStatsToServerLog(String message, String metrics,boolean concise) {
+	private void logJobStatsToServerLog(String message, String metrics,boolean concise) {
 		Session session = null;
 		try {
 			if (contentSource != null) {
@@ -219,7 +219,7 @@ public class JobStats extends BaseMonitor {
 
 	}
 
-	protected void logJobStatsToServerDocument(String metrics) {
+	private void logJobStatsToServerDocument(String metrics) {
 		String logMetricsToServerDBName = options.getLogMetricsToServerDBName();
 		if (logMetricsToServerDBName != null) {
 			String uriRoot = options.getLogMetricsToServerDBURIRoot();

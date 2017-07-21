@@ -47,7 +47,7 @@ public class BaseMonitor {
     }
     protected String getProgressMessage(long completed) {
     	populateTps(completed);
-        return getProgressMessage(completed, taskCount, avgTps, currentTps, estimatedTimeOfCompletion, pool.getActiveCount());
+        return getProgressMessage(completed, taskCount, avgTps, currentTps, estimatedTimeOfCompletion, pool.getActiveCount(),pool.getNumFailedUris());
     }
     static protected String getProgressMessage(long completed, long taskCount, double tps, double curTps, double tpsForETC, int threads, boolean isPaused) {
         String etc = getEstimatedTimeCompletion(taskCount, completed, tpsForETC, isPaused);
@@ -55,7 +55,12 @@ public class BaseMonitor {
     	    
     }
     static protected String getProgressMessage(long completed, long taskCount, double tps, double curTps, String etc, int threads) {
-        return completed + "/" + taskCount + ", "
+        return  getProgressMessage( completed,  taskCount,  tps,  curTps,  etc,  threads,0);
+    }
+    static protected String getProgressMessage(long completed, long taskCount, double tps, double curTps, String etc, int threads, int failedTasks) {
+        String failedTaskMessage=(failedTasks>0) ? (failedTasks+" tasks failed, ") : "";
+    	return completed + "/" + taskCount + ", "
+        		+ failedTaskMessage
                 + formatTransactionsPerSecond(tps) + " tps(avg), "
                 + formatTransactionsPerSecond(curTps) + " tps(cur), "
                 + "ETC " + etc + ", "

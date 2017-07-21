@@ -1101,17 +1101,17 @@ public final class Options {
     /**
      *Frequency at which the Metrics document needs to be updated in the Database.  
      * By Default the metrics document is not periodically updated. It is written once at the end of the job.
-     * If {@value #METRICS-DB-NAME} is not specified then {@value #METRICS-TO-DB-SYNC-FREQUENCY} is ignored.
+     * If {@value #METRICS-DB-NAME} is not specified then {@value #METRICS-SYNC-FREQUENCY} is ignored.
      */
   
     @Usage(description = "Frequency at which the Metrics document needs to be updated in the Database. This value is ignored if METRICS-DB-NAME is not specified")
-    public static final String METRICS_TO_DB_SYNC_FREQUENCY = "METRICS-TO-DB-SYNC-FREQUENCY";
+    public static final String METRICS_SYNC_FREQUENCY = "METRICS-SYNC-FREQUENCY";
     
     /**
      *Optional Port number to start a light weight HTTP Server which can be used to monitor ,change the number of threads, pause/resume the current corb job.
      *Port number must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090
      * The job server has a service http://<host>:<port>/service
-     * It suports the following params
+     * It supports the following params:
      * <ul><li>
      * paused=true|false will pause/resume the Corb job. </li>
      * <li>threads=<number> will change the number of threads to <number>. </li>
