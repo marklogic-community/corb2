@@ -2,8 +2,8 @@
 
 * **How can I log the job metrics to the Marklogic error log?**
     * Logging can be enabled by setting METRICS-TO-ERROR-LOG property in options.
-        + Ex: **METRICS-TO-ERROR-LOG=info**
-        + Startup message is logged when CoRB job startsup and detailed metrics are logged when the job finishes.
+        + Eg: **METRICS-TO-ERROR-LOG=info**
+        + Startup message is logged when CoRB job starts up and detailed metrics are logged when the job has finished.
 * **How can I set the log level when logging metrics to the Marklogic error log?**
     * METRICS-TO-ERROR-LOG property has the following possible values:
       +  *none,emergency,alert,critical,error,warning,notice,info,config,debug,fine,finer,finest.*
@@ -19,10 +19,12 @@
     * Average transaction time
     * Total tasks 
     * Total Number of failed tasks
+    * Current and average transactions per second
+    * Estimated time of completion
  * **Are connection strings or passwords logged to the error log?**
     * No. 
 * **How can I save the metrics as a Document to the database?**
-    * METRICS-DB-NAME property will be used to save the mertrics document to the database.
+    * METRICS-DB-NAME property will be used to save the metrics document to the database.
     * Default format for metrics document is XML.
     * METRICS-DB-NAME is the only required option for the document to be saved to the database. If this option is not specified the document will not be saved to the Database.
 * **Setting the METRICS-DB-NAME option also log it to the server log?**
@@ -47,8 +49,15 @@
      
 * **I want to have complete control over how the metrics document is saved. Is that possible?**
     * You can use the above mentioned sample modules (*[saveMetrics.sjs](corb2/src/main/resources/saveMetrics.sjs) and [save-metric-to-db.xqy](corb2/src/main/resources/save-metric-to-db.xqy)*) as an example and implement your own customizations.
-    + Ex:METRICS-PROCESS-MODULE=/export/home/dev/saveMetricsCustom.sjs|ADHOC
-
+    + Eg:METRICS-PROCESS-MODULE=/export/home/dev/saveMetricsCustom.sjs|ADHOC
+* **I want to keep logging metrics document at regular intervals. Is that possible?**
+    * You can use METRICS-SYNC-FREQUENCY option to specify the frequency at which the document should be saved to the database.
+    * Corb logs the metrics by creating a new document in the database with a new timestamp as shown below.
+    * Eg: 
+         + /my-dir/CoRB2/job-name/2017/9/22/16/16/1446989213638048899.xml
+         + /my-dir/CoRB2/job-name/2017/9/22/16/16/1446989213638048899.xml/10656720599806190856
+         + /my-dir/CoRB2/job-name/2017/9/22/16/16/1446989213638048899.xml/10846647439302775656
+    
 ### Sample Metrics Document
 ```
 { "job" : {
