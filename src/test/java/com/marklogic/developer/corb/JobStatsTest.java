@@ -62,4 +62,31 @@ public class JobStatsTest {
 				.getNodeValue().toString());
 		assertTrue("Rank is Correct", uri.equals("URI" + rank));
 	}
+	/*
+	 * 1: Log once at the start and once at the end XML 
+	 * 		Log to DB Document
+	 * 		Log to ML Error Log
+	 * 		Log to Java console
+	 * 2: Log once at the start and once at the end JSON
+	 * 		Log to DB Document
+	 * 		Log to ML Error Log
+	 * 		Log to Java console
+	 * 3: Log periodically XML or JSON
+	 * 		Fewer fields in concise mode for periodic logging
+	 * 		End time and average traansaction time is shown on the last entry
+	 * 		Should only have one entry with end time
+	 * 		Should pause syncing when job is paused
+	 * 		Should log one extra full record when pausing 		
+	 * 5: COLLECTION Name
+	 * 6: Root directory
+	 * 7: Job run location can't be found and Job name not specified?
+	 * 8: Job Server Port
+	 * 		Specify single port
+	 * 		Specify range
+	 * 		Specify multiple ranges or multiple ports
+	 * 9: UI Validation
+	 * 		All fields 
+	 */
+	
+	
 }

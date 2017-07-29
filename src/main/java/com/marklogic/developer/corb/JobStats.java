@@ -68,7 +68,7 @@ public class JobStats extends BaseMonitor {
 	private static final String AVERAGE_TPS = "averageTransactionsPerSecond";
 	private static final String CURRENT_TPS = "currentTransactionsPerSecond";
 	private static final String ESTIMATED_TIME_OF_COMPLETION = "estimatedTimeOfCompletion";
-	private static final String METRICS_TIMESTAMP = "metricsTimestamp";
+	private static final String METRICS_TIMESTAMP = "timestamp";
 
 	private static final String HOST = "host";
 	private static final String END_TIME = "endTime";
@@ -165,6 +165,7 @@ public class JobStats extends BaseMonitor {
 					long completed = numberOfSucceededTasks + numberOfFailedTasks;
 					long intervalBetweenRequestsInMillis = TPS_ETC_MIN_REFRESH_INTERVAL;
 					long timeSinceLastReq = currentTimeMillis - prevMillis;
+					//refresh it every 10 seconds or more.. ignore more frequent requests
 					if (timeSinceLastReq > intervalBetweenRequestsInMillis) {
 						this.populateTps(completed);
 					}
@@ -187,7 +188,7 @@ public class JobStats extends BaseMonitor {
 		}
 		logJobStatsToServerDocument(metricsToDocument);
 		logJobStatsToServerLog(message,metricsToServerLog, concise);
-		LOG.info(toString(false));
+//		LOG.info(toString(concise));//DO WE NEED TO LOG?
 	}
 
 	private void logJobStatsToServerLog(String message, String metrics,boolean concise) {
@@ -390,17 +391,18 @@ public class JobStats extends BaseMonitor {
 	public String toXMLString(boolean concise) {
 		StringBuffer strBuff = new StringBuffer();
 		this.refresh();
-		strBuff.append(xmlNode(JOB_LOCATION, this.jobRunLocation)).append(xmlNode(JOB_NAME, this.jobName))
+		strBuff.append(xmlNode(JOB_LOCATION, this.jobRunLocation))
+				.append(xmlNode(JOB_NAME, this.jobName))
 				.append(xmlNode(HOST, host))
 				.append(concise ? "" : xmlNode(USER_PROVIDED_OPTIONS, userProvidedOptions))
 				.append(xmlNode(START_TIME, startTime))
 				.append(xmlNode(END_TIME, endTime))
-				.append(xmlNode(INIT_TASK_TIME, initTaskRunTime))
-				.append(xmlNode(PRE_BATCH_RUN_TIME, preBatchRunTime))
-				.append(xmlNode(URIS_LOAD_TIME, urisLoadTime))
-				.append(xmlNode(POST_BATCH_RUN_TIME, postBatchRunTime))
+				.append(concise ? "" :xmlNode(INIT_TASK_TIME, initTaskRunTime))
+				.append(concise ? "" :xmlNode(PRE_BATCH_RUN_TIME, preBatchRunTime))
+				.append(concise ? "" :xmlNode(URIS_LOAD_TIME, urisLoadTime))
+				.append(concise ? "" :xmlNode(POST_BATCH_RUN_TIME, postBatchRunTime))
 				.append(xmlNode(AVERAGE_TRANSACTION_TIME, averageTransactionTime))
-				.append(xmlNode(TOTAL_NUMBER_OF_TASKS, totalNumberOfTasks))
+				.append(concise ? "" :xmlNode(TOTAL_NUMBER_OF_TASKS, totalNumberOfTasks))
 				.append(xmlNode(TOTAL_JOB_RUN_TIME, totalRunTimeInMillis))
 				.append(xmlNode(NUMBER_OF_FAILED_TASKS, numberOfFailedTasks))
 				.append(xmlNode(NUMBER_OF_SUCCEEDED_TASKS, numberOfSucceededTasks))

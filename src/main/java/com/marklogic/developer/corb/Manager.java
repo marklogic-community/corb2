@@ -101,7 +101,7 @@ import java.util.logging.Logger;
  */
 public class Manager extends AbstractManager {
 
-	private static final String JOB_SERVICE_PATH = "/service";
+	private static final String JOB_SERVICE_PATH = "/corb";
 	private static final String CLASSPATH_FOLDER_WITH_RESOURCES = "corb2-web";
 	private static final String HTTP_RESOURCE_PATH = "/web";
 	private static final String END_RUNNING_JOB_MESSAGE = "END RUNNING CORB JOB:";
@@ -417,15 +417,15 @@ public class Manager extends AbstractManager {
 			}
 			options.setNumberOfFailedUris(intNumFaileTransactions);
 		}
-		String metricsSyncFrequencyInMillis=getOption(Options.METRICS_SYNC_FREQUENCY);
-		if((logMetricsToServerDBName!=null || this.options.isMetricsToServerLogEnabled(logMetricsToServerLog )) && metricsSyncFrequencyInMillis !=null){
+		String metricsSyncFrequencyInSeconds=getOption(Options.METRICS_SYNC_FREQUENCY);
+		if((logMetricsToServerDBName!=null || this.options.isMetricsToServerLogEnabled(logMetricsToServerLog )) && metricsSyncFrequencyInSeconds !=null){
 			//periodically update db only if db name is set or logging enabled and sync frequency is selected
 			//no defaults for this function
 			try {
-				int intMetricsSyncFrequencyInMillis=Integer.valueOf(metricsSyncFrequencyInMillis);
-				options.setMetricsSyncFrequencyInMillis(intMetricsSyncFrequencyInMillis);
+				int intMetricsSyncFrequencyInSeconds=Integer.valueOf(metricsSyncFrequencyInSeconds);
+				options.setMetricsSyncFrequencyInMillis(intMetricsSyncFrequencyInSeconds * 1000);
 			} catch (NumberFormatException e) {
-				throw new IllegalArgumentException(Options.METRICS_SYNC_FREQUENCY+" = "+metricsSyncFrequencyInMillis+" is invalid. please use a valid integer.");
+				throw new IllegalArgumentException(Options.METRICS_SYNC_FREQUENCY+" = "+metricsSyncFrequencyInSeconds+" is invalid. please use a valid integer.");
 			}
 		}
 		String jobServerPort=getOption(Options.JOB_SERVER_PORT);
@@ -591,8 +591,7 @@ public class Manager extends AbstractManager {
             }
             if (shouldRunPostBatch(count)) {
                 runPostBatchTask(); // post batch tasks
-                endMillis=System.currentTimeMillis();
-                this.jobStats.logJobStatsToServer(END_RUNNING_JOB_MESSAGE,false);//Log metrics to DB, Java console and Server error log
+                cleanupJobStats();
 				LOG.info("all done");
             }
             return count;
@@ -601,8 +600,13 @@ public class Manager extends AbstractManager {
             stop();
             throw e;
         }
+        finally{
+        	if (null != jobStats) {
+            	cleanupJobStats();
+            }
+        }
     }
-private void startJobServer() throws IOException {
+    private void startJobServer() throws IOException {
 		int port = options.getJobServerPort();
 		if((port>0  || options.getJobServerPortsToChoose() !=null && options.getJobServerPortsToChoose().size()>0) && jobServer == null){
 			if(port<0){
@@ -616,15 +620,21 @@ private void startJobServer() throws IOException {
 			host.setAllowGeneratedIndex(false); // with directory index pages
 			HTTPServer.ContextHandler htmlContextHandler = new HTTPServer.ClasspathResourceContextHandler(CLASSPATH_FOLDER_WITH_RESOURCES,HTTP_RESOURCE_PATH);
 			HTTPServer.ContextHandler dataContextHandler = new JobServicesHandler(this);
-			host.addContext(JOB_SERVICE_PATH, dataContextHandler);
+			host.addContext(JOB_SERVICE_PATH, dataContextHandler,"GET","POST");
 			host.addContext(HTTP_RESOURCE_PATH, htmlContextHandler);
 			jobServer.start();
+			String decoration="*****************************************************************************************\n";
+			LOG.info(decoration);
+			LOG.info("Job Server has started and can be access using http://localhost:"+jobServer.port+"/web/index.html");
+			LOG.info("Visit http://localhost:"+jobServer.port+"/corb to fetch the metrics data");
+			LOG.info(decoration);
 		}
 	}
 
 	private void stopJobServer() throws IOException {
 		if(jobServer!=null){
 			jobServer.stop();
+			jobServer = null;
 		}
 	}
 
@@ -639,6 +649,7 @@ private void startJobServer() throws IOException {
     private void shutDownMetricsSyncJob() {
 		if(this.metricsDocSyncJob!=null){
 			this.metricsDocSyncJob.shutdownNow();
+			this.metricsDocSyncJob = null;
 		}		
 	}
     private void pauseMetricsSyncJob() {
@@ -982,14 +993,6 @@ private void startJobServer() throws IOException {
     public void stop() {
         LOG.info("cleaning up");
         if (null != pool) {
-        	endMillis=System.currentTimeMillis();
-        	shutDownMetricsSyncJob();
-            this.jobStats.logJobStatsToServer(END_RUNNING_JOB_MESSAGE,false);
-            try {
-				stopJobServer();
-			} catch (IOException e) {
-				LOG.log(WARNING,"Unable to stop Job server");
-			}
             if (pool.isPaused()) {
                 pool.resume();
             }
@@ -1006,6 +1009,21 @@ private void startJobServer() throws IOException {
             monitorThread.interrupt();
         }
     }
+
+	private void cleanupJobStats() {
+		endMillis=System.currentTimeMillis();
+		shutDownMetricsSyncJob();
+		this.jobStats.logJobStatsToServer(END_RUNNING_JOB_MESSAGE,false);
+		try {
+			stopJobServer();
+		} catch (IOException e) {
+			LOG.log(WARNING,"Unable to stop Job server");
+		}
+		catch (Exception e) {
+			LOG.log(WARNING,"Unable to stop Job server");
+		}
+		this.jobStats=null;
+	}
 
     /**
      * Log a fatal error for the provided exception and then stop the thread

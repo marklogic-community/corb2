@@ -187,6 +187,8 @@ public abstract class AbstractTask implements Task {
         try (Session session = newSession()) {
 
             Request request = generateRequest(session);
+            //This is how the log running uris can be populated
+            Thread.currentThread().setName(asString(inputUris));
 
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);

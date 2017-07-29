@@ -80,7 +80,9 @@ public class MetricsDocSyncJob implements Runnable {
 	}
 
 	private void syncDoc() {
-		jobStats.logJobStatsToServer("RUNNING CORB JOB:",true);
+		if(!shutdownNow && !paused){
+			jobStats.logJobStatsToServer("RUNNING CORB JOB:",true);
+		}
 	}
 
 	/**

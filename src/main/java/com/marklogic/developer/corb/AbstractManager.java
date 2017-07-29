@@ -374,7 +374,15 @@ public abstract class AbstractManager {
             this.properties.remove(propName); //remove from properties file as we would like to keep the properties file simple. 
         }
     	//doesnt capture defaults, only user provided.
-    	if(retVal !=null && !retVal.toUpperCase().contains("XCC") && !propName.toUpperCase().contains("XCC")){
+    	String[] secureWords={"XCC","PASSWORD","SSL"};
+    	boolean hasSecureWords = false;
+    	for (int i = 0; i < secureWords.length; i++) {
+    		if((retVal !=null &&retVal.toUpperCase().contains(secureWords[i])) || propName.toUpperCase().contains(secureWords[i])){
+    			hasSecureWords = true;
+    			break;
+    		}
+		}
+    	if(retVal !=null && !hasSecureWords){
     		this.userProvidedOptions.put(propName, retVal);
     	}
         return retVal;

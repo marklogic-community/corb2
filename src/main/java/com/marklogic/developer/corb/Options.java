@@ -1099,12 +1099,12 @@ public final class Options {
     public static final String METRICS_NUM_SLOW_TRANSACTIONS = "METRICS-NUM-SLOW-TRANSACTIONS";
     
     /**
-     *Frequency at which the Metrics document needs to be updated in the Database.  
+     *Frequency ( in seconds) at which the Metrics document needs to be updated in the Database.  
      * By Default the metrics document is not periodically updated. It is written once at the end of the job.
      * If {@value #METRICS-DB-NAME} is not specified then {@value #METRICS-SYNC-FREQUENCY} is ignored.
      */
   
-    @Usage(description = "Frequency at which the Metrics document needs to be updated in the Database. This value is ignored if METRICS-DB-NAME is not specified")
+    @Usage(description = "Frequency ( in seconds) at which the Metrics document needs to be updated in the Database. This value is ignored if METRICS-DB-NAME is not specified")
     public static final String METRICS_SYNC_FREQUENCY = "METRICS-SYNC-FREQUENCY";
     
     /**

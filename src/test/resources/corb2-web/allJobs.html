@@ -7,7 +7,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Job Status</title>
+    <title>Job Dashboard</title>
 
     <!-- Bootstrap core CSS -->
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -43,12 +43,17 @@
 											<th> Job Location </th>
 											<th> Total #Tasks </th>
 											<th> Total Run Time  </th>
-											<th> Pause/Resume   </th>   
+											<th> Pause/Resume   </th>  
+											<th> #Threads   </th>  
+											 <th> Save   </th>  
+											
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr ng-repeat="i in availableServerData">
-                                            <td>{{i.startTime}}</td>       
+                                            <td>
+                                            <a ng-click="openJob(i)" target = "_blank">{{i.startTime}}</a>
+                                            </td>       
                                             <td>{{i.averageTransactionsPerSecond}}</td>
 											<td>{{i.currentTransactionsPerSecond}}</td>
 											<td>{{i.host}}/{{i.port}}</td>
@@ -58,15 +63,16 @@
 											<td>{{i.paused}}</td>
 											<td>{{i.runLocation}}</td>
 											<td>{{i.totalNumberOfTasks}}</td>
-											<td>{{i.totalRunTimeInMillis}}</td>
+											<td>{{msToTime(i.totalRunTimeInMillis)}}</td>
 											<td><button class="btn {{pauseButtonStyle[i.host+i.port]}}" ng-click="pauseResumeButtonClick(i)">{{pauseButtonText[i.host+i.port]}}</button></td>  
 											<td><select class="custom-select" ng-model="threadCounts[i.host+i.port]">
 													<option ng-repeat="x in allThreadCounts">{{x}}</option>
 												</select>
-													<a ng-click="updateThreadCount(i)"><span class="glyphicon glyphicon-save"></span>
-												</a>
-												
-												</td>                            
+													
+												</td>  
+											<td>													
+												<a ng-click="updateThreadCount(i)"><span class="glyphicon glyphicon-save"></span></a>
+											</td> 	                          
                                         </tr>
                                     </tbody>
                                 </table>

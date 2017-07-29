@@ -50,7 +50,7 @@
 * **I want to have complete control over how the metrics document is saved. Is that possible?**
     * You can use the above mentioned sample modules (*[saveMetrics.sjs](corb2/src/main/resources/saveMetrics.sjs) and [save-metric-to-db.xqy](corb2/src/main/resources/save-metric-to-db.xqy)*) as an example and implement your own customizations.
     + Eg:METRICS-PROCESS-MODULE=/export/home/dev/saveMetricsCustom.sjs|ADHOC
-* **I want to keep logging metrics document at regular intervals. Is that possible?**
+* **How do I keep logging metrics document at regular intervals?**
     * You can use METRICS-SYNC-FREQUENCY option to specify the frequency at which the document should be saved to the database.
     * Corb logs the metrics by creating a new document in the database with a new timestamp as shown below.
     * Eg: 

@@ -1,7 +1,7 @@
 var app = angular.module('dashboard',[]);
 app.controller('mainCtrl', ['$scope', '$http','$interval',
                             function($scope, $http, $interval) {
-		var hostData=[["localhost","8010"],["localhost","8011"],["localhost","8012"],["localhost","8013"],["localhost","8014"],["localhost","8015"]]
+		var hostData=[["localhost","9080"],["localhost","9081"],["localhost","9082"],["localhost","9083"],["localhost","9084"],["localhost","9085"]]
 		$scope.availableServers=[]
 		$scope.availableServerData=[]
 		$scope.pauseButtonText={}
@@ -20,15 +20,34 @@ app.controller('mainCtrl', ['$scope', '$http','$interval',
     		else{
     			reqStr= "&paused=true"
     		}
-    		$http.get("http://"+job.host+":"+job.port+"/service?concise=true"+reqStr)
+    		$http.post("http://"+job.host+":"+job.port+"/corb","concise=false"+reqStr,{'headers':{'Content-Type': 'application/x-www-form-urlencoded'}})
     	};
     	$scope.updateThreadCount = function(job){
     		var reqStr = "&threads="+$scope.threadCounts[job.host+job.port]
-    		$http.get("http://"+job.host+":"+job.port+"/service?concise=true"+reqStr)
+    		$http.post("http://"+job.host+":"+job.port+"/corb","concise=false"+reqStr,{'headers':{'Content-Type': 'application/x-www-form-urlencoded'}})
     	};
+    	$scope.openJob = function(job){
+    		window.open("http://"+job.host+":"+job.port+"/web/index.html","target=_blank")
+    	};
+    	var pad = function (n, z) {
+    	    z = z || 2;
+    	    return ('00' + n).slice(-z);
+    	  }
+    	$scope.msToTime=function(s) {
+    		
+    		  var ms = s % 1000;
+    		  s = (s - ms) / 1000;
+    		  var secs = s % 60;
+    		  s = (s - secs) / 60;
+    		  var mins = s % 60;
+    		  var hrs = (s - mins) / 60;
+
+    		  return pad(hrs) + ':' + pad(mins) + ':' + pad(secs) ;
+    		};
+
     	var invokeService=function(host,port){
     		var promise=$interval(function() {
-        		$http.get("http://"+host+":"+port+"/service?concise=true").success(loadData).error(handleError);
+        		$http.get("http://"+host+":"+port+"/corb?concise=false").success(loadData).error(handleError);
         	}, 5000); 
     		var handleError=function (error, status){
                 if( status == "404"){

@@ -4,6 +4,9 @@ var insertDoc = function(metricsDocumentStr,collection,uriRoot){
   var json = JSON.parse(metricsDocumentStr);
 var jobName= json["job"]["name"];
 if(!jobName) {jobName = json["job"]["runLocation"]};
+if(fn.startsWith(jobName,"/")){
+jobName=fn.substring(jobName,2);
+}
   var coll=[]
   if(collection != "NA"){
     coll.push( fn.tokenize(collection , ",").toArray());
@@ -17,7 +20,7 @@ if(!jobName) {jobName = json["job"]["runLocation"]};
         var orig_uri = json["job"]["metricsDocUri"]
         var uri=orig_uri
         if(!uri) { 
-        	uri=uri_root+"CoRB2/"+
+        	uri=uri_root+"CORB/"+
                     jobName+"/"+
                     fn.yearFromDateTime(dateTime)+"/"+
                     fn.monthFromDateTime(dateTime)+"/"+
@@ -27,7 +30,7 @@ if(!jobName) {jobName = json["job"]["runLocation"]};
                     xdmp.random()+".json";
             orig_uri=uri        
         }
-        else{
+        else if(!json["job"]["endTime"]) {//Job finished so update the root document
         	uri=uri+"/"+xdmp.random();
         }
         xdmp.documentInsert(uri, json, xdmp.defaultPermissions(),coll)
