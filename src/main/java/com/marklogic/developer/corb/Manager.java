@@ -101,13 +101,26 @@ import java.util.logging.Logger;
  */
 public class Manager extends AbstractManager {
 
-    protected static final String NAME = Manager.class.getName();
+	private static final String JOB_SERVICE_PATH = "/corb";
+	private static final String CLASSPATH_FOLDER_WITH_RESOURCES = "corb2-web";
+	private static final String HTTP_RESOURCE_PATH = "/web";
+	private static final String END_RUNNING_JOB_MESSAGE = "END RUNNING CORB JOB:";
+    private static final String START_RUNNING_JOB_MESSAGE = "STARTED CORB JOB:";
+    
+	protected static final String NAME = Manager.class.getName();
 
     public static final String URIS_BATCH_REF = com.marklogic.developer.corb.Options.URIS_BATCH_REF;
     public static final String DEFAULT_BATCH_URI_DELIM = ";";
 
     protected transient PausableThreadPoolExecutor pool;
     protected transient Monitor monitor;
+    protected transient MetricsDocSyncJob metricsDocSyncJob;
+    protected transient HTTPServer jobServer = null;
+    protected JobStats jobStats = null;
+	protected long startMillis;
+	protected long transformStartMillis;	
+	protected long endMillis;
+	
     protected transient Thread monitorThread;
     protected transient CompletionService<String[]> completionService;
     protected transient ScheduledExecutorService scheduledExecutor;
@@ -353,7 +366,87 @@ public class Manager extends AbstractManager {
                 throw new IllegalArgumentException("Cannot write to queue temp directory " + diskQueueTempDir);
             }
         }
-
+        /**/
+        String logMetricsToServerLog=getOption(Options.METRICS_TO_ERROR_LOG);
+		if(logMetricsToServerLog !=null){
+			if(logMetricsToServerLog.toLowerCase().matches(Options.ML_LOG_LEVELS)){
+				options.setLogMetricsToServerLog(logMetricsToServerLog.toLowerCase());
+			}
+			else{
+				throw new IllegalArgumentException("INVALID VALUE for METRICS-TO-ERROR-LOG: "+logMetricsToServerLog+". Supported LOG LEVELS are "+Options.ML_LOG_LEVELS);
+				
+			}
+		}
+		String logMetricsToServerCollections=getOption(Options.METRICS_DOC_COLLECTIONS);
+		if(logMetricsToServerCollections !=null){
+			options.setLogMetricsToServerDBCollections(logMetricsToServerCollections);
+		}
+		String logMetricsToServerDBName=getOption(Options.METRICS_DB_NAME);
+		if(logMetricsToServerDBName !=null){
+			options.setLogMetricsToServerDBName(logMetricsToServerDBName);
+		}
+		String logMetricsToServerModule=getOption(Options.METRICS_PROCESS_MODULE);
+		if(logMetricsToServerModule !=null){
+			options.setLogMetricsToServerDBTransformModule(logMetricsToServerModule);
+		}
+		String logMetricsToServerURIRoot=getOption(Options.METRICS_DOC_BASE_DIR);
+		if(logMetricsToServerURIRoot !=null){
+			options.setLogMetricsToServerDBURIRoot(logMetricsToServerURIRoot);
+		}
+		String jobName=getOption(Options.JOB_NAME);
+		if(jobName !=null){
+			options.setJobName(jobName);
+		}
+		String numberOfLongRunningUris=getOption(Options.METRICS_NUM_SLOW_TRANSACTIONS);
+		if(numberOfLongRunningUris !=null){
+			try {
+				int intNumberOfLongRunningUris=Integer.valueOf(numberOfLongRunningUris);
+				if(intNumberOfLongRunningUris> TransformOptions.MAX_NUM_SLOW_TRANSACTIONS){
+					intNumberOfLongRunningUris=TransformOptions.MAX_NUM_SLOW_TRANSACTIONS;
+				}
+				options.setNumberOfLongRunningUris(intNumberOfLongRunningUris);
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException(Options.METRICS_NUM_SLOW_TRANSACTIONS+" = "+numberOfLongRunningUris+" is invalid. please use a valid integer.");
+			}
+		}
+		String numberOfFailedUris=getOption(Options.METRICS_NUM_FAILED_TRANSACTIONS);
+		if(numberOfFailedUris !=null){
+			int intNumFaileTransactions=Integer.valueOf(numberOfFailedUris);
+			if(intNumFaileTransactions > TransformOptions.MAX_NUM_FAILED_TRANSACTIONS){
+				intNumFaileTransactions = TransformOptions.MAX_NUM_FAILED_TRANSACTIONS;
+			}
+			options.setNumberOfFailedUris(intNumFaileTransactions);
+		}
+		String metricsSyncFrequencyInSeconds=getOption(Options.METRICS_SYNC_FREQUENCY);
+		if((logMetricsToServerDBName!=null || this.options.isMetricsToServerLogEnabled(logMetricsToServerLog )) && metricsSyncFrequencyInSeconds !=null){
+			//periodically update db only if db name is set or logging enabled and sync frequency is selected
+			//no defaults for this function
+			try {
+				int intMetricsSyncFrequencyInSeconds=Integer.valueOf(metricsSyncFrequencyInSeconds);
+				options.setMetricsSyncFrequencyInMillis(intMetricsSyncFrequencyInSeconds * 1000);
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException(Options.METRICS_SYNC_FREQUENCY+" = "+metricsSyncFrequencyInSeconds+" is invalid. please use a valid integer.");
+			}
+		}
+		String jobServerPort=getOption(Options.JOB_SERVER_PORT);
+		if(jobServerPort!=null){
+			//no defaults for this function
+			try {
+				if(jobServerPort.indexOf("-")>-1 || jobServerPort.indexOf(",")>-1 ){
+					List<Integer> jobServerPorts = StringUtils.parsePortRanges(jobServerPort);
+					if(jobServerPorts.size()>0){
+						options.setJobServerPortsToChoose(jobServerPorts);
+					}
+				
+				}
+				else{
+					int intJobServerPort=Integer.parseInt(jobServerPort);
+					options.setJobServerPort(intJobServerPort);
+				}
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException(Options.JOB_SERVER_PORT + " must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090");
+			}	
+		}
         // delete the export file if it exists
         deleteFileIfExists(exportFileDir, exportFileName);
         deleteFileIfExists(exportFileDir, errorFileName);
@@ -470,7 +563,14 @@ public class Manager extends AbstractManager {
     }
 
     public int run() throws Exception {
-        LOG.log(INFO, () -> MessageFormat.format("{0} starting: {1}", NAME, VERSION_MSG));
+        startMillis = System.currentTimeMillis();
+    	if(this.jobStats==null){
+			this.jobStats=new JobStats(this);
+		}
+    	this.jobStats.logJobStatsToServer( START_RUNNING_JOB_MESSAGE,false);
+    	startMetricsSyncJob();
+    	startJobServer();
+		LOG.log(INFO, () -> MessageFormat.format("{0} starting: {1}", NAME, VERSION_MSG));
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
         LOG.log(INFO, () -> MessageFormat.format("maximum heap size = {0} MiB", maxMemory));
 
@@ -491,7 +591,8 @@ public class Manager extends AbstractManager {
             }
             if (shouldRunPostBatch(count)) {
                 runPostBatchTask(); // post batch tasks
-                LOG.info("all done");
+                cleanupJobStats();
+				LOG.info("all done");
             }
             return count;
         } catch (Exception e) {
@@ -499,8 +600,68 @@ public class Manager extends AbstractManager {
             stop();
             throw e;
         }
+        finally{
+        	if (null != jobStats) {
+            	cleanupJobStats();
+            }
+        }
     }
+    private void startJobServer() throws IOException {
+		int port = options.getJobServerPort();
+		if((port>0  || options.getJobServerPortsToChoose() !=null && options.getJobServerPortsToChoose().size()>0) && jobServer == null){
+			if(port<0){
+				jobServer = new HTTPServer(options.getJobServerPortsToChoose());
+				options.setJobServerPort(jobServer.port);
+			}
+			else{
+				jobServer = new HTTPServer(port);
+			}
+			HTTPServer.VirtualHost host = jobServer.getVirtualHost(null); // default host
+			host.setAllowGeneratedIndex(false); // with directory index pages
+			HTTPServer.ContextHandler htmlContextHandler = new HTTPServer.ClasspathResourceContextHandler(CLASSPATH_FOLDER_WITH_RESOURCES,HTTP_RESOURCE_PATH);
+			HTTPServer.ContextHandler dataContextHandler = new JobServicesHandler(this);
+			host.addContext(JOB_SERVICE_PATH, dataContextHandler,"GET","POST");
+			host.addContext(HTTP_RESOURCE_PATH, htmlContextHandler);
+			jobServer.start();
+			String decoration="*****************************************************************************************\n";
+			LOG.info(decoration);
+			LOG.info("Job Server has started and can be access using http://localhost:"+jobServer.port+"/web/index.html");
+			LOG.info("Visit http://localhost:"+jobServer.port+"/corb to fetch the metrics data");
+			LOG.info(decoration);
+		}
+	}
 
+	private void stopJobServer() throws IOException {
+		if(jobServer!=null){
+			jobServer.stop();
+			jobServer = null;
+		}
+	}
+
+	private void startMetricsSyncJob() {
+		if(this.metricsDocSyncJob==null && this.options.getMetricsSyncFrequencyInMillis()!=null && this.options.getMetricsSyncFrequencyInMillis()>0){
+			this.metricsDocSyncJob = new MetricsDocSyncJob(this.jobStats,this.options.getMetricsSyncFrequencyInMillis());
+			Thread metricSyncThread=new Thread(this.metricsDocSyncJob,"metricsDocSyncJob");
+			metricSyncThread.setDaemon(true);
+			metricSyncThread.start();
+		}		
+	}
+    private void shutDownMetricsSyncJob() {
+		if(this.metricsDocSyncJob!=null){
+			this.metricsDocSyncJob.shutdownNow();
+			this.metricsDocSyncJob = null;
+		}		
+	}
+    private void pauseMetricsSyncJob() {
+		if(this.metricsDocSyncJob!=null){
+			this.metricsDocSyncJob.setPaused(true);//this will also log full metrics
+		}		
+	}
+    private void resumeMetricsSyncJob() {
+		if(this.metricsDocSyncJob!=null){
+			this.metricsDocSyncJob.setPaused(false);
+		}		
+	}
     protected boolean shouldRunPostBatch(int count) {
         return !execError && options.shouldPrePostBatchAlwaysExecute() || count >= options.getPostBatchMinimumCount();
     }
@@ -517,10 +678,11 @@ public class Manager extends AbstractManager {
         int threads = options.getThreadCount();
         // an array queue should be somewhat lighter-weight
         BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(options.getQueueSize());
-        pool = new PausableThreadPoolExecutor(threads, threads, 16, TimeUnit.SECONDS, workQueue, policy);
+        pool = new PausableThreadPoolExecutor(threads, threads, 16, TimeUnit.SECONDS, workQueue, policy,options);
         pool.prestartAllCoreThreads();
         completionService = new ExecutorCompletionService<>(pool);
         monitor = new Monitor(pool, completionService, this);
+        jobStats.setPool(pool);
         return new Thread(monitor, "monitor");
     }
 
@@ -605,26 +767,37 @@ public class Manager extends AbstractManager {
     private void runInitTask(TaskFactory tf) throws Exception {
         Task initTask = tf.newInitTask();
         if (initTask != null) {
+        	Long startTime=System.nanoTime();
             LOG.info("Running init Task");
             initTask.call();
+            long endTime = System.nanoTime();
+            jobStats.setInitTaskRunTime(TimeUnit.MILLISECONDS.convert(endTime-startTime, TimeUnit.NANOSECONDS));
+           
         }
     }
 
     private void runPreBatchTask(TaskFactory tf) throws Exception {
         Task preTask = tf.newPreBatchTask();
         if (preTask != null) {
-            LOG.info("Running pre batch Task");
+        	long startTime = System.nanoTime();
+        	
+        	LOG.info("Running pre batch Task");
             preTask.call();
-        }
+            long endTime=System.nanoTime();
+            this.jobStats.setPreBatchRunTime(TimeUnit.MILLISECONDS.convert(endTime-startTime, TimeUnit.NANOSECONDS));
+        }        
     }
 
     private void runPostBatchTask() throws Exception {
         TaskFactory tf = new TaskFactory(this);
         Task postTask = tf.newPostBatchTask();
         if (postTask != null) {
+        	long startTime = System.nanoTime();
             LOG.info("Running post batch Task");
             postTask.call();
-        }
+            long endTime=System.nanoTime();
+            this.jobStats.setPostBatchRunTime(TimeUnit.MILLISECONDS.convert(endTime-startTime, TimeUnit.NANOSECONDS));
+        }        
     }
 
     private UrisLoader getUriLoader() throws InstantiationException, IllegalAccessException {
@@ -649,13 +822,13 @@ public class Manager extends AbstractManager {
     private int populateQueue() throws Exception {
         LOG.info("populating queue");
         TaskFactory taskFactory = new TaskFactory(this);
-
+        Long startTime=System.nanoTime();
         int expectedTotalCount = -1;
         int urisCount = 0;
         try (UrisLoader urisLoader = getUriLoader()) {
             // run init task
             runInitTask(taskFactory);
-
+            startTime=System.nanoTime();
             urisLoader.open();
             if (urisLoader.getBatchRef() != null) {
                 properties.put(URIS_BATCH_REF, urisLoader.getBatchRef());
@@ -663,7 +836,9 @@ public class Manager extends AbstractManager {
             }
 
             expectedTotalCount = urisLoader.getTotalCount();
-            LOG.log(INFO, "expecting total " + expectedTotalCount);
+            Long endTime = System.nanoTime();
+            jobStats.setUrisLoadTime(TimeUnit.MILLISECONDS.convert(endTime-startTime, TimeUnit.NANOSECONDS));
+           	LOG.log(INFO, "expecting total " + expectedTotalCount);
 
             if (shouldRunPreBatch(expectedTotalCount)) {
                 // run pre-batch task, if present.
@@ -793,6 +968,7 @@ public class Manager extends AbstractManager {
         if (pool != null && pool.isRunning()) {
             LOG.info("pausing");
             pool.pause();
+            pauseMetricsSyncJob();
         }
     }
 
@@ -807,6 +983,7 @@ public class Manager extends AbstractManager {
         if (pool != null && pool.isPaused()) {
             LOG.info("resuming");
             pool.resume();
+            resumeMetricsSyncJob();
         }
     }
 
@@ -832,6 +1009,21 @@ public class Manager extends AbstractManager {
             monitorThread.interrupt();
         }
     }
+
+	private void cleanupJobStats() {
+		endMillis=System.currentTimeMillis();
+		shutDownMetricsSyncJob();
+		this.jobStats.logJobStatsToServer(END_RUNNING_JOB_MESSAGE,false);
+		try {
+			stopJobServer();
+		} catch (IOException e) {
+			LOG.log(WARNING,"Unable to stop Job server");
+		}
+		catch (Exception e) {
+			LOG.log(WARNING,"Unable to stop Job server");
+		}
+		this.jobStats=null;
+	}
 
     /**
      * Log a fatal error for the provided exception and then stop the thread
@@ -925,5 +1117,26 @@ public class Manager extends AbstractManager {
             }
         }
     }
+
+	/**
+	 * @return the startMillis
+	 */
+	public long getStartMillis() {
+		return startMillis;
+	}
+
+	/**
+	 * @return the transformStartMillis
+	 */
+	public long getTransformStartMillis() {
+		return transformStartMillis;
+	}
+
+	/**
+	 * @return the endMillis
+	 */
+	public long getEndMillis() {
+		return endMillis;
+	}
 
 }

@@ -87,6 +87,7 @@ public class ManagerTest {
     public static final String PRE_BATCH_TASK = "com.marklogic.developer.corb.PreBatchUpdateFileTask";
     public static final String POST_BATCH_MODULE = "src/test/resources/postBatchModule.xqy|ADHOC";
     public static final String POST_BATCH_TASK = "com.marklogic.developer.corb.PostBatchUpdateFileTask";
+    public static final String LOG_LEVEL_INFO = "info";
     public static String EXPORT_FILE_DIR = null;
     public static final String EXPORT_FILE_NAME = "exportFile.out";
     public static final String URIS_FILE = "src/test/resources/uris-file.txt";
@@ -1417,7 +1418,12 @@ public class ManagerTest {
         properties.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
         properties.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
         properties.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
-        properties.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        properties.setProperty(Options.METRICS_TO_ERROR_LOG, ManagerTest.LOG_LEVEL_INFO);
+        
+        
+        if(ManagerTest.EXPORT_FILE_DIR!=null) {
+        	properties.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        }
         properties.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         return properties;
     }

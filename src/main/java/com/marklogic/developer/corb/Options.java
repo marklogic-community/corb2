@@ -31,6 +31,7 @@ import java.lang.annotation.Target;
  * @since 2.3.0
  */
 public final class Options {
+	public static final String ML_LOG_LEVELS = "none|emergency|alert|critical|error|warning|notice|info|config|debug|fine|finer|finest";
 
     /**
      * The number of URIs to be executed in single transform.
@@ -1030,7 +1031,100 @@ public final class Options {
             + "string as node to do further processing with the node. If not specified, "
             + "the default behavior is to select the child elements of the document element (i.e. /*/*)")
     public static final String XML_NODE = "XML-NODE";
-
+    /**
+     * NONE,INFO,DEBUG,...
+     * String value indicating the log level using which the CoRB job should log metrics to ML Server Error Log.
+     * Default value is NONE. 
+     *
+     * @since 2.4
+     */
+    @Usage(description = "LOG Level the CoRB job should log metrics to ML Server Error Log."
+            +"Possible values are "+ML_LOG_LEVELS
+    		+ "Default value is none( which means metrics are not logged ).")
+    public static final String METRICS_TO_ERROR_LOG = "METRICS-TO-ERROR-LOG";
+   /**
+     * Uses the value provided to save the metrics document to the specified Database.
+     * Does not save metrics document to the ML database if this property is not populated.
+     */
+    @Usage(description = " Uses the value provided to save the metrics document to the specified Database.")
+    public static final String METRICS_DB_NAME = "METRICS-DB-NAME";
+    /**
+     * Uses the value provided as the URI Root for saving the metrics document. 
+     * Default value is "/ServiceMetrics/"
+     * If {@value #METRICS-DB-NAME} is not specified then {@value #METRICS-DOC-BASE-DIR} is ignored.
+     */
+    @Usage(description = "Uses the value provided as the URI Root for saving the metrics document.")
+    public static final String METRICS_DOC_BASE_DIR = "METRICS-DOC-BASE-DIR";
+    /**
+     * Adds the metrics document to the specified collection. 
+     * If {@value #JOB-NAME} is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.
+     * If {@value #METRICS-DB-NAME} is not specified then {@value #METRICS-DOC-COLLECTIONS} is ignored.
+     */
+    @Usage(description = "Adds the metrics document to the specified collection.")
+    public static final String METRICS_DOC_COLLECTIONS = "METRICS-DOC-COLLECTIONS";
+    //public static final String METRICS_DOC_FORMAT = "XML";
+    /**
+     * XQuery or JavaScript to be executed at the end of the Corb Job to save the metrics document to the Database.
+     * There is an XQuery module (save-metric-to-db.xqy) and a JavaScript module (saveMetrics.sjs) provided with CoRB2 Distribution.
+     * The default value is save-metric-to-db.xqy and it saves the metrics document as XML to the specified DB.
+     * You can use these modules as a template to customize the the document can be saved to the DB.
+     * XQuery and JavaScript modules need to have "{@code .xqy}" and "{@code .sjs}" extensions respectively.
+     * If {@value #METRICS-DB-NAME} is not specified then {@value #METRICS-PROCESS-MODULE} is ignored.
+     */
+    @Usage(description = "XQuery or JavaScript to be executed at the end of the Corb Job to save the metrics document to the Database."
+            + "There is an XQuery module (save-metric-to-db.xqy) and a JavaScript module (saveMetrics.sjs) provided with CoRB2 Distribution."
+            + "You can use these modules as a template to customize the the document can be saved to the DB."
+            + "XQuery and JavaScript modules need to have '{@code .xqy}' and"
+            		+ "{@code .sjs} extensions respectively.")
+    
+    public static final String METRICS_PROCESS_MODULE = "METRICS-PROCESS-MODULE";
+    /**
+     * Name of the current Job. 
+     * If {@value #JOB-NAME} is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.  
+     */
+    @Usage(description = "Name of the current Job. If it is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.")
+    public static final String JOB_NAME = "JOB-NAME";
+    /**
+     * Maximum number of failed transaction to be logged in the metrics. 
+     * The default value is 0.
+     */
+    @Usage(description = "Maximum number of failed transaction to be logged in the metrics. The default value is 0.")
+    public static final String METRICS_NUM_FAILED_TRANSACTIONS = "METRICS-NUM-FAILED-TRANSACTIONS";
+    
+    /**
+     * Maximum number of Slow transaction to be logged in the metrics. 
+     * The default value is 5.
+     */
+    @Usage(description = "Maximum number of slow transaction to be logged in the metrics. The default value is 5.")
+    public static final String METRICS_NUM_SLOW_TRANSACTIONS = "METRICS-NUM-SLOW-TRANSACTIONS";
+    
+    /**
+     *Frequency ( in seconds) at which the Metrics document needs to be updated in the Database.  
+     * By Default the metrics document is not periodically updated. It is written once at the end of the job.
+     * If {@value #METRICS-DB-NAME} is not specified then {@value #METRICS-SYNC-FREQUENCY} is ignored.
+     */
+  
+    @Usage(description = "Frequency ( in seconds) at which the Metrics document needs to be updated in the Database. This value is ignored if METRICS-DB-NAME is not specified")
+    public static final String METRICS_SYNC_FREQUENCY = "METRICS-SYNC-FREQUENCY";
+    
+    /**
+     *Optional Port number to start a light weight HTTP Server which can be used to monitor ,change the number of threads, pause/resume the current corb job.
+     *Port number must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090
+     * The job server has a service http://<host>:<port>/service
+     * It supports the following params:
+     * <ul><li>
+     * paused=true|false will pause/resume the Corb job. </li>
+     * <li>threads=<number> will change the number of threads to <number>. </li>
+     * <li>json=true returns metrics in json format</li>
+     * <li>xml=true returns in xml format</li>
+     * <li>concise=true returns a concise format.</li>
+     * </ul>
+     * By Default if this property is not specified, the Job server is not started.
+     */
+  
+    @Usage(description = "Port number to start a light weight HTTP Server which can be used to monitor ,change the number of threads, pause/resume the current corb job. Port number must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090")
+    public static final String JOB_SERVER_PORT = "JOB-SERVER-PORT";
+        
     /**
      * @since 2.4.0
      */

@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
@@ -35,7 +36,11 @@ public class TransformOptions {
     public static final String COLLECTION_TYPE = "COLLECTION";
     public static final String DIRECTORY_TYPE = "DIRECTORY";
     public static final String QUERY_TYPE = "QUERY";
-
+    public static final String FAILED_URI_TOKEN = "FAILED#";
+    public static final int MAX_NUM_FAILED_TRANSACTIONS = 1000;
+    public static final int MAX_NUM_SLOW_TRANSACTIONS = 100;
+    
+	
     private String processModule;
     private Class<? extends Task> processTaskCls;
 
@@ -71,7 +76,24 @@ public class TransformOptions {
 
     // We could get rid of this now that we check status...
     private String modulesDatabase = "Modules";
-
+    private String logMetricsToServerLog = "NONE";
+    
+    private Boolean logMetricsToServerDB = false;
+    
+    private String logMetricsToServerDBName = null;
+    private String logMetricsToServerDBURIRoot = "/ServiceMetrics/";
+    private String logMetricsToServerDBTransformModule = "save-metric-to-db.xqy|ADHOC";
+    private String logMetricsToServerDBCollections = null;
+    private Integer numberOfLongRunningUris = 5;
+    private Integer numberOfFailedUris = 0;
+    private Integer metricsSyncFrequencyInMillis = -1;
+    private Integer jobServerPort = -1;
+    private List<Integer> jobServerPortsToChoose = null;
+    
+    
+    
+    private String jobName = null;
+    
     // Set on status check
     private String xdbcRoot = SLASH;
 
@@ -391,4 +413,170 @@ public class TransformOptions {
     public int getNumTpsForETC() {
         return this.numTpsForETC;
     }
+
+	/**
+	 * @return the logMetricsToServerLog
+	 */
+	public String getLogMetricsToServerLog() {
+		return logMetricsToServerLog;
+	}
+
+	/**
+	 * @param logMetricsToServerLog the logMetricsToServerLog to set
+	 */
+	public void setLogMetricsToServerLog(String logMetricsToServerLog) {
+		this.logMetricsToServerLog = logMetricsToServerLog;
+	}
+
+	/**
+	 * @return the logMetricsToServerDB
+	 */
+	public Boolean getLogMetricsToServerDB() {
+		return logMetricsToServerDB;
+	}
+
+	/**
+	 * @param logMetricsToServerDB the logMetricsToServerDB to set
+	 */
+	public void setLogMetricsToServerDB(Boolean logMetricsToServerDB) {
+		this.logMetricsToServerDB = logMetricsToServerDB;
+	}
+
+	/**
+	 * @return the logMetricsToServerDBName
+	 */
+	public String getLogMetricsToServerDBName() {
+		return logMetricsToServerDBName;
+	}
+
+	/**
+	 * @param logMetricsToServerDBName the logMetricsToServerDBName to set
+	 */
+	public void setLogMetricsToServerDBName(String logMetricsToServerDBName) {
+		this.logMetricsToServerDBName = logMetricsToServerDBName;
+	}
+
+	/**
+	 * @return the logMetricsToServerDBURIRoot
+	 */
+	public String getLogMetricsToServerDBURIRoot() {
+		return logMetricsToServerDBURIRoot;
+	}
+
+	/**
+	 * @param logMetricsToServerDBURIRoot the logMetricsToServerDBURIRoot to set
+	 */
+	public void setLogMetricsToServerDBURIRoot(String logMetricsToServerDBURIRoot) {
+		this.logMetricsToServerDBURIRoot = logMetricsToServerDBURIRoot;
+	}
+
+	/**
+	 * @return the logMetricsToServerDBTransformModule
+	 */
+	public String getLogMetricsToServerDBTransformModule() {
+		return logMetricsToServerDBTransformModule;
+	}
+
+	/**
+	 * @param logMetricsToServerDBTransformModule the logMetricsToServerDBTransformModule to set
+	 */
+	public void setLogMetricsToServerDBTransformModule(String logMetricsToServerDBTransformModule) {
+		this.logMetricsToServerDBTransformModule = logMetricsToServerDBTransformModule;
+	}
+
+	/**
+	 * @return the logMetricsToServerDBCollections
+	 */
+	public String getLogMetricsToServerDBCollections() {
+		return logMetricsToServerDBCollections;
+	}
+
+	/**
+	 * @param logMetricsToServerDBCollections the logMetricsToServerDBCollections to set
+	 */
+	public void setLogMetricsToServerDBCollections(String logMetricsToServerDBCollections) {
+		this.logMetricsToServerDBCollections = logMetricsToServerDBCollections;
+	}
+
+	/**
+	 * @return the jobName
+	 */
+	public String getJobName() {
+		return jobName;
+	}
+
+	/**
+	 * @param jobName the jobName to set
+	 */
+	public void setJobName(String jobName) {
+		this.jobName = jobName;
+	}
+
+	/**
+	 * @return the numberOfLongRunningUris
+	 */
+	public Integer getNumberOfLongRunningUris() {
+		return numberOfLongRunningUris;
+	}
+
+	/**
+	 * @param numberOfLongRunningUris the numberOfLongRunningUris to set
+	 */
+	public void setNumberOfLongRunningUris(Integer numberOfLongRunningUris) {
+		this.numberOfLongRunningUris = numberOfLongRunningUris;
+	}
+
+	/**
+	 * @return the numberOfFailedUris
+	 */
+	public Integer getNumberOfFailedUris() {
+		return numberOfFailedUris;
+	}
+
+	/**
+	 * @param numberOfFailedUris the numberOfFailedUris to set
+	 */
+	public void setNumberOfFailedUris(Integer numberOfFailedUris) {
+		this.numberOfFailedUris = numberOfFailedUris;
+	}
+
+	/**
+	 * @return the metricsSyncFrequencyInMillis
+	 */
+	protected Integer getMetricsSyncFrequencyInMillis() {
+		return metricsSyncFrequencyInMillis;
+	}
+
+	/**
+	 * @param metricsSyncFrequencyInMillis the metricsSyncFrequencyInMillis to set
+	 */
+	protected void setMetricsSyncFrequencyInMillis(Integer metricsSyncFrequencyInMillis) {
+		this.metricsSyncFrequencyInMillis = metricsSyncFrequencyInMillis;
+	}
+
+	/**
+	 * @return the metricsOnDemandPort
+	 */
+	protected Integer getJobServerPort() {
+		return jobServerPort;
+	}
+
+	/**
+	 * @param metricsOnDemandPort the metricsOnDemandPort to set
+	 */
+	protected void setJobServerPort(Integer metricsOnDemandPort) {
+		this.jobServerPort = metricsOnDemandPort;
+	}
+	protected boolean isMetricsToServerLogEnabled(String logMetricsToServerLog){
+		logMetricsToServerLog = logMetricsToServerLog==null?getLogMetricsToServerLog():logMetricsToServerLog;
+		return (logMetricsToServerLog != null && !logMetricsToServerLog.equalsIgnoreCase("NONE"));
+	}
+
+	public List<Integer> getJobServerPortsToChoose() {
+		return jobServerPortsToChoose;
+	}
+
+	public void setJobServerPortsToChoose(List<Integer> jobServerPortToChoose) {
+		this.jobServerPortsToChoose = jobServerPortToChoose;
+	}
 }
