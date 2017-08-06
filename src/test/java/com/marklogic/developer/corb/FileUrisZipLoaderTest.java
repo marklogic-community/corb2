@@ -108,8 +108,7 @@ public class FileUrisZipLoaderTest {
     public void testGetMetadataForPDF() {
         String pdfFilename = "docs/simple document.pdf";
         FileUrisZipLoader loader = new FileUrisZipLoader();
-        try {
-            ZipFile zipFile = new ZipFile(TEST_ZIP_FILE);
+        try (ZipFile zipFile = new ZipFile(TEST_ZIP_FILE)) {
             Map<String, String> metadata = loader.getMetadata(zipFile.getEntry(pdfFilename));
             assertTrue(metadata.get(FileUrisZipLoader.META_COMMENT).equals(PDF_COMMENT));
             assertTrue(metadata.get(FileUrisZipLoader.META_FILENAME).equals(pdfFilename));
