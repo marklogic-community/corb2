@@ -1,6 +1,5 @@
 package com.marklogic.developer.corb;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -18,9 +17,9 @@ public class ManagerDemo {
     private static final String TRANSFORM_SLOW_MODULE = "src/test/resources/transformSlow.xqy|ADHOC";
     static int count=1;
     public static void startManager(int uriCount) {
-         
+
         String exportFilename = "testManagerUsingExtremelyLargeUris.txt";
-        
+
         Properties properties = ManagerTest.getDefaultProperties();
         properties.setProperty(Options.THREAD_COUNT, "8");
         properties.setProperty(Options.URIS_MODULE, "src/test/resources/selectorLargeList.xqy|ADHOC");
@@ -34,16 +33,16 @@ public class ManagerDemo {
         properties.setProperty(Options.METRICS_SYNC_FREQUENCY, "5");
         properties.setProperty(Options.METRICS_DB_NAME, "marklogic-corb-content");
         properties.setProperty(Options.METRICS_DOC_COLLECTIONS, "managerDemo");
-        
+
         Manager manager = new Manager();
-        
+
         try {
         	manager.init(properties);
-            
+
         	Thread managerThread=new Thread(){
         		@Override
         		public void run() {
-        			
+
                     try {
 						manager.run();
 					} catch (Exception e) {
@@ -63,9 +62,9 @@ public class ManagerDemo {
         		}
         	};
         	managerThread.start();
-            
-            
-            
+
+
+
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -93,6 +92,6 @@ public class ManagerDemo {
 //		startManager(100000);
 //		startManager(100000);
 //		startManager(100000);
-		
+
 	}
 }

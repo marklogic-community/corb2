@@ -19,12 +19,7 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.COMMAND_FILE;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.text.MessageFormat;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;

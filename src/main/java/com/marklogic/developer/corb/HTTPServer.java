@@ -64,10 +64,6 @@ import java.util.zip.GZIPOutputStream;
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocketFactory;
 
-import com.marklogic.developer.corb.HTTPServer.ContextHandler;
-import com.marklogic.developer.corb.HTTPServer.VirtualHost;
-import com.marklogic.developer.corb.util.IOUtils;
-
 public class HTTPServer {
 
 	private static final Logger LOG = Logger.getLogger(HTTPServer.class.getName());
@@ -652,7 +648,7 @@ public class HTTPServer {
 			info.addHandler(handler, methods);
 		}
 
-		
+
 	}
 
 	/**
@@ -732,7 +728,7 @@ public class HTTPServer {
 					return 404;
 				} else {
 			        long len = is.available();
-					resp.sendHeaders(200, len, 0l, null, getContentType(resource, "application/octet-stream"), null);					
+					resp.sendHeaders(200, len, 0l, null, getContentType(resource, "application/octet-stream"), null);
 					try {
 						transfer(is, resp.getBody(),  len);
 					} finally {
@@ -1513,7 +1509,7 @@ public class HTTPServer {
 			if (out != null)
 				out.write(content);
 		}
-		
+
 		/**
 		 * Sends an error response with the given status and detailed message.
 		 * An HTML body is created containing the status and its description, as

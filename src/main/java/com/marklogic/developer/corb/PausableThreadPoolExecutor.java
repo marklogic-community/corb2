@@ -30,7 +30,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 /**
@@ -44,13 +43,13 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
     private final Condition unpaused = pauseLock.newCondition();
     protected TopUriList topUriList;
     private List<String> failedUris;
-    
+
     private final ThreadLocal<Long> startTime = new ThreadLocal<Long>();
     private final ThreadLocal<String> threadName = new ThreadLocal<String>();
     private int numFailedUrisToCapture=0;
     private int numFailedUris=0;
     private int numSucceededUris=0;
-    
+
     public PausableThreadPoolExecutor(int corePoolSize,
             int maximumPoolSize,
             long keepAliveTime,
@@ -114,7 +113,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 	        	long endTime = System.nanoTime();
 	     		long taskTime = endTime - startTime.get();
 	     		long durationInMs = TimeUnit.MILLISECONDS.convert(taskTime, TimeUnit.NANOSECONDS);
-	     		
+
 	            this.topUriList.add(result,durationInMs);
 	     		numSucceededUris++;
 	         }
@@ -124,11 +123,11 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
      		e.printStackTrace();
      	}
  	}
- 
+
 	public Map<String,Long> getTopUris() {
 		return topUriList.getData();
 	}
- 
+
     public boolean isRunning() {
         return !isPaused;
     }
@@ -176,7 +175,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 	protected class TopUriList{
 		private TreeSet<UriObject>  list = null;
 		private int size=0;
-		
+
 		public TopUriList(int size) {
 			this.size = size;
 			list = new TreeSet<UriObject>() {
@@ -203,7 +202,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 				synchronized (list) {
 					if(list.size()>=this.size ){
 						for(int i=0; i<=list.size()-this.size; i++){
-							list.remove(list.first());						
+							list.remove(list.first());
 						}
 					}
 					list.add(newObj);
