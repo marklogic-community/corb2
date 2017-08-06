@@ -85,7 +85,7 @@ public abstract class AbstractManager {
     protected Properties properties = new Properties();
     protected ContentSource contentSource;
     protected Map<String,String> userProvidedOptions = new HashMap<String,String>();
-	
+
     protected static final int EXIT_CODE_SUCCESS = 0;
     protected static final int EXIT_CODE_INIT_ERROR = 1;
     protected static final int EXIT_CODE_PROCESSING_ERROR = 2;
@@ -371,9 +371,8 @@ public abstract class AbstractManager {
         	retVal= System.getProperty(propName).trim();
         } else if (this.properties.containsKey(propName) && isNotBlank(this.properties.getProperty(propName))) {
         	retVal = this.properties.getProperty(propName).trim();
-            this.properties.remove(propName); //remove from properties file as we would like to keep the properties file simple. 
         }
-    	//doesnt capture defaults, only user provided.
+    	//doesn't capture defaults, only user provided.
     	String[] secureWords={"XCC","PASSWORD","SSL"};
     	boolean hasSecureWords = false;
     	for (int i = 0; i < secureWords.length; i++) {
@@ -476,7 +475,7 @@ public abstract class AbstractManager {
                  LOG.log(INFO, () -> MessageFormat.format("invoking adhoc process module {0}", queryPath));
              }
              request = session.newAdhocQuery(adhocQuery);
-             
+
          } else {
              String root = options.getModuleRoot();
              String modulePath = buildModulePath(root, processModule);
