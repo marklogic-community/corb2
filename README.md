@@ -58,11 +58,7 @@ If specified in more than one place, a command line parameter takes precedence o
 
 > Note: CORB exit codes `0` - successful, `0` - nothing to process (ref: EXIT-CODE-NO-URIS), `1` - initialization or connection error and `2` - execution error
 
-
-### Logging
-CORB uses Java logger. To customize logging, specify a logging configuration file using Java system argument  
-`-Djava.util.logging.config.file=/path/to/logging.properties`
-
+> Note: CoRB now supports [Logging Job Metrics](METRICS.md) back to the MarkLogic database log and/or as document in the database.
 
 ### Options
 Option | Description
@@ -111,7 +107,15 @@ Option | Description
 **<a name="FILE-LOADER-SET-URIS-BATCH-REF"></a>FILE-LOADER-SET-URIS-BATCH-REF** | Boolean option indicating whether a file loader should set the [URIS_BATCH_REF](https://github.com/marklogic-community/corb2#uris_batch_ref). Default is false
 **<a name="FILE-LOADER-USE-ENVELOPE"></a>FILE-LOADER-USE-ENVELOPE** | Boolean value indicating whether FileUris loaders should use an XML envelope, in order to send file metadata in addition to the file content.
 **<a name="INSTALL"></a>INSTALL** | Whether to install the Modules in the Modules database. Specify 'true' or '1' for installation. Default is false.
+**JOB-NAME** | Name of the current Job.
+**JOB-SERVER-PORT** | Optional Port number to start a light weight HTTP Server which can be used to monitor (using GET requests), change the number of threads, pause/resume the current corb job (using POST requests).  Port number must be a valid port(s) or a valid range of ports.      <ul><li>Ex: 9080</li><li> Ex: 9080,9083,9087</li><li> Ex: 9080-9090</li><li> Ex: 9080-9083,9085-9090</li></ul> Job Server has directory browsing and file browsing disabled. The job server has one service `http://<host>:<port>/corb`. It supports the following params:<ul><li>paused=true or false will pause/resume the Corb job via POST request only. </li><li>threads=<number> will change the number of threads to <number>  via POST request only.</li>      <li>json=true returns metrics in json format</li>      <li>xml=true returns in xml format</li>      <li>concise=true returns a concise format.</li>      </ul>      By Default if this property is not specified, the Job server is not started. When a range of ports is specified the java console log file will provide the complete Job server URL (grep for string *com.marklogic.developer.corb.Manager startJobServer*).  
 **<a name="MAX_OPTS_FROM_MODULE"></a>MAX_OPTS_FROM_MODULE** | Default is 10. Max number of custom inputs from the URIS-MODULE to other modules.
+**METRICS-TO-ERROR-LOG**|Specifies the LOG Level, the CoRB job should log metrics to ML Server Error Log. Possible values are *none,emergency,alert,critical,error,warning,notice,info,config,debug,fine,finer,finest*. Default value is none, which means metrics are not logged.|
+**METRICS-DB-NAME** | Uses the value provided to save the metrics document to the specified Database. The XCC connection specified should have the following privilege `http://marklogic.com/xdmp/privileges/xdmp-invoke`|
+**METRICS-DOC-BASE-DIR** | Uses the value provided to as the URI Root for saving the metrics document.|
+**METRICS-DOC-COLLECTIONS** | Adds the metrics document to the specified collection.|
+**METRICS-NUM-SLOW-TRANSACTIONS** | Maximum number of slow transaction to be logged in the metrics. The default value is 5.
+**METRICS-PROCESS-MODULE** | XQuery or JavaScript to be executed at the end of the Corb Job to save the metrics document to the Database.There is an XQuery module (save-metric-to-db.xqy) and a JavaScript module (saveMetrics.sjs) provided with CoRB2 Distribution.You can use these modules as a template to customize the the document can be saved to the DB.XQuery and JavaScript modules need to have '{@code .xqy}' and{@code .sjs} extensions respectively.|
 **<a name="MODULE-ROOT"></a>MODULE-ROOT** | Default is '/'.
 **<a name="MODULES-DATABASE"></a>MODULES-DATABASE** | Uses the **XCC-CONNECTION-URI** if not provided; use 0 for file system.
 **<a name="NUM-TPS-FOR-ETC"></a>NUM-TPS-FOR-ETC** | Default is 10. Number of recent transactions per second (tps) values used to calculate estimated completion time (ETC).

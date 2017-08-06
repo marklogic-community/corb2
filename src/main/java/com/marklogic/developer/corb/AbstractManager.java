@@ -34,6 +34,7 @@ import static com.marklogic.developer.corb.util.StringUtils.trim;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ContentSourceFactory;
+import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.SecurityOptions;
@@ -56,13 +57,18 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
-
+import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
+import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 public abstract class AbstractManager {
     //Obtain the version from META-INF/MANIFEST.MF Implementation-Version attribute
     public static final String VERSION = AbstractManager.class.getPackage().getImplementationVersion();
@@ -78,7 +84,8 @@ public abstract class AbstractManager {
     protected TransformOptions options = new TransformOptions();
     protected Properties properties = new Properties();
     protected ContentSource contentSource;
-
+    protected Map<String,String> userProvidedOptions = new HashMap<String,String>();
+	
     protected static final int EXIT_CODE_SUCCESS = 0;
     protected static final int EXIT_CODE_INIT_ERROR = 1;
     protected static final int EXIT_CODE_PROCESSING_ERROR = 2;
@@ -356,15 +363,29 @@ public abstract class AbstractManager {
      * @param propertyName
      * @return the trimmed property value
      */
-    protected String getOption(String argVal, String propertyName) {
-        if (isNotBlank(argVal)) {
-            return argVal.trim();
-        } else if (isNotBlank(System.getProperty(propertyName))) {
-            return System.getProperty(propertyName).trim();
-        } else if (this.properties.containsKey(propertyName) && isNotBlank(this.properties.getProperty(propertyName))) {
-            return this.properties.getProperty(propertyName).trim();
+    protected String getOption(String argVal, String propName) {
+        String retVal=null;
+    	if (isNotBlank(argVal)) {
+    		retVal= argVal.trim();
+        } else if (isNotBlank(System.getProperty(propName))) {
+        	retVal= System.getProperty(propName).trim();
+        } else if (this.properties.containsKey(propName) && isNotBlank(this.properties.getProperty(propName))) {
+        	retVal = this.properties.getProperty(propName).trim();
+            this.properties.remove(propName); //remove from properties file as we would like to keep the properties file simple. 
         }
-        return null;
+    	//doesnt capture defaults, only user provided.
+    	String[] secureWords={"XCC","PASSWORD","SSL"};
+    	boolean hasSecureWords = false;
+    	for (int i = 0; i < secureWords.length; i++) {
+    		if((retVal !=null &&retVal.toUpperCase().contains(secureWords[i])) || propName.toUpperCase().contains(secureWords[i])){
+    			hasSecureWords = true;
+    			break;
+    		}
+		}
+    	if(retVal !=null && !hasSecureWords){
+    		this.userProvidedOptions.put(propName, retVal);
+    	}
+        return retVal;
     }
 
     protected void prepareContentSource() throws CorbException {
@@ -433,4 +454,39 @@ public abstract class AbstractManager {
         LOG.log(INFO, () -> MessageFormat.format("runtime arguments = {0}", StringUtils.join(argsToLog, SPACE)));
     }
 
+	public void setUserProvidedOptions(Map<String, String> userProvidedOptions) {
+		this.userProvidedOptions = userProvidedOptions;
+	}
+	protected Request getRequestForModule(String processModule, Session session) {
+		Request request;
+		 if (isInlineOrAdhoc(processModule)) {
+             String adhocQuery;
+             if (isInlineModule(processModule)) {
+                 adhocQuery = StringUtils.getInlineModuleCode(processModule);
+                 if (isBlank(adhocQuery)) {
+                     throw new IllegalStateException("Unable to read inline query ");
+                 }
+                 LOG.log(INFO, "invoking inline process module");
+             } else {
+                 String queryPath = processModule.substring(0, processModule.indexOf('|'));
+                 adhocQuery = getAdhocQuery(queryPath);
+                 if (isBlank(adhocQuery)) {
+                     throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
+                 }
+                 LOG.log(INFO, () -> MessageFormat.format("invoking adhoc process module {0}", queryPath));
+             }
+             request = session.newAdhocQuery(adhocQuery);
+             
+         } else {
+             String root = options.getModuleRoot();
+             String modulePath = buildModulePath(root, processModule);
+             LOG.log(INFO, () -> MessageFormat.format("invoking module {0}", modulePath));
+             request = session.newModuleInvoke(modulePath);
+         }
+		return request;
+	}
+
+	public Map<String, String> getUserProvidedOptions() {
+		return userProvidedOptions;
+	}
 }

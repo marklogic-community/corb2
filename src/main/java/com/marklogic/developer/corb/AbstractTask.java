@@ -28,6 +28,7 @@ import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_CODES;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_MESSAGE;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_INTERVAL;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
+import static com.marklogic.developer.corb.TransformOptions.FAILED_URI_TOKEN;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.commaSeparatedValuesToList;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
@@ -186,6 +187,8 @@ public abstract class AbstractTask implements Task {
         try (Session session = newSession()) {
 
             Request request = generateRequest(session);
+            //This is how the log running uris can be populated
+            Thread.currentThread().setName(asString(inputUris));
 
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);
@@ -380,6 +383,7 @@ public abstract class AbstractTask implements Task {
                 }
                 return invokeModule();
             } else if (requestException instanceof ServerConnectionException || failOnError) {
+            	Thread.currentThread().setName(FAILED_URI_TOKEN+Thread.currentThread().getName());
                 throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
             } else {
                 LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
@@ -387,10 +391,12 @@ public abstract class AbstractTask implements Task {
                 return inputUris;
             }
         } else if (failOnError) {
+        	Thread.currentThread().setName(FAILED_URI_TOKEN+Thread.currentThread().getName());
             throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
         } else {
             LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
             writeToErrorFile(inputUris, requestException.getMessage());
+            Thread.currentThread().setName(FAILED_URI_TOKEN+Thread.currentThread().getName());
             return inputUris;
         }
     }
