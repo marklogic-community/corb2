@@ -26,6 +26,7 @@ import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 /**
  *
@@ -61,11 +62,11 @@ public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
     }
 
     protected int fileCount(Path dir) throws IOException {
-        return Math.toIntExact(
-                Files.walk(dir)
-                    .parallel()
+        try (Stream<Path> stream = Files.walk(dir)) {
+            return Math.toIntExact(stream.parallel()
                     .filter(p -> this.accept(p))
                     .count());
+        }
     }
 
     /**
