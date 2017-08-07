@@ -54,8 +54,10 @@ public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
             if (shouldSetBatchRef()) {
                 batchRef = dir.toFile().getCanonicalPath();
             }
-            fileIterator = Files.walk(dir).filter(p -> this.accept(p)).iterator();
-            setTotalCount(fileCount(dir));
+            try (Stream<Path> stream = Files.walk(dir)) {
+                fileIterator = stream.filter(p -> this.accept(p)).iterator();
+                setTotalCount(fileCount(dir));
+            }
         } catch (IOException ex) {
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_FILE, ex);
         }
