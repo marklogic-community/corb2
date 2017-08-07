@@ -197,8 +197,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
         Source xmlSource = new DOMSource(node);
         Result outputTarget = new StreamResult(outputStream);
         getTransformerFactory().newTransformer().transform(xmlSource, outputTarget);
-        InputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-        return inputStream;
+        return new ByteArrayInputStream(outputStream.toByteArray());
     }
 
     @Override

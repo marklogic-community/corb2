@@ -375,27 +375,27 @@ public final class StringUtils {
     }
 
 	public static List<Integer> parsePortRanges(String jobServerPort) {
-		List<Integer> jobServerPorts = new ArrayList<Integer>();
+		List<Integer> jobServerPorts = new ArrayList<>();
 		String[] splitByComma = jobServerPort.split(",");
-		for (int i = 0; i < splitByComma.length; i++) {
-			if (splitByComma[i].contains("-")) {
-				String[] splitByDash = splitByComma[i].split("-");
-				if (splitByDash.length == 2) {
-					Integer start = Integer.parseInt(splitByDash[0]);
-					Integer end = Integer.parseInt(splitByDash[1]);
-					if (start > end) {
-						int tmp = start;
-						start = end;
-						end = tmp;
-					}
-					for (int j = start; j <= end; j++) {
-						jobServerPorts.add(j);
-					}
-				}
-			} else {
-				jobServerPorts.add(Integer.parseInt(splitByComma[i]));
-			}
-		}
+        for (String aSplitByComma : splitByComma) {
+            if (aSplitByComma.contains("-")) {
+                String[] splitByDash = aSplitByComma.split("-");
+                if (splitByDash.length == 2) {
+                    Integer start = Integer.parseInt(splitByDash[0]);
+                    Integer end = Integer.parseInt(splitByDash[1]);
+                    if (start > end) {
+                        int tmp = start;
+                        start = end;
+                        end = tmp;
+                    }
+                    for (int j = start; j <= end; j++) {
+                        jobServerPorts.add(j);
+                    }
+                }
+            } else {
+                jobServerPorts.add(Integer.parseInt(aSplitByComma));
+            }
+        }
 
 		return jobServerPorts;
 	}

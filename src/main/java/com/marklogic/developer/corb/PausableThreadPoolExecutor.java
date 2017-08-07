@@ -64,7 +64,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
             RejectedExecutionHandler handler) {
         this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, handler, defaultTransformOptions());
     }
-    
+
     private static TransformOptions defaultTransformOptions() {
         TransformOptions options = new TransformOptions();
         options.setNumberOfLongRunningUris(5);
@@ -113,7 +113,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
                 if (failed) {
                     String[] tokens = result.split(FAILED_URI_TOKEN);
                     synchronized (SYNC_OBJ) {
-                        if (tokens.length > 1 && tokens[1].length() > 0 && failedUris.size() < numFailedUrisToCapture) {
+                        if (tokens.length > 1 && !tokens[1].isEmpty() && failedUris.size() < numFailedUrisToCapture) {
                             failedUris.add(tokens[1]);
                         }
                         numFailedUris++;

@@ -433,7 +433,7 @@ public class Manager extends AbstractManager {
             try {
                 if (jobServerPort.indexOf('-') > -1 || jobServerPort.indexOf(',') > -1) {
                     List<Integer> jobServerPorts = StringUtils.parsePortRanges(jobServerPort);
-                    if (jobServerPorts.size() > 0) {
+                    if (!jobServerPorts.isEmpty()) {
                         options.setJobServerPortsToChoose(jobServerPorts);
                     }
 
@@ -606,7 +606,7 @@ public class Manager extends AbstractManager {
 
     private void startJobServer() throws IOException {
         int port = options.getJobServerPort();
-        if ((port > 0 || options.getJobServerPortsToChoose() != null && options.getJobServerPortsToChoose().size() > 0) && jobServer == null) {
+        if ((port > 0 || options.getJobServerPortsToChoose() != null && !options.getJobServerPortsToChoose().isEmpty()) && jobServer == null) {
             if (port < 0) {
                 jobServer = new HTTPServer(options.getJobServerPortsToChoose());
                 options.setJobServerPort(jobServer.port);
@@ -1051,7 +1051,7 @@ public class Manager extends AbstractManager {
         }
 
         @Override
-        public final void run() {
+        public void run() {
             if (file.exists()) {
                 long lastModified = file.lastModified();
                 if (this.timeStamp != lastModified) {

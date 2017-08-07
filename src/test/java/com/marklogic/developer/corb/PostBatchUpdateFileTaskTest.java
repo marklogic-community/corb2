@@ -58,7 +58,7 @@ public class PostBatchUpdateFileTaskTest {
     private static final String Z = "z\n";
     private static final String ZDDAB = "z...,d....,d....,a.....,b";
     private static final String DISTINCT = "distinct";
-    
+
     @Before
     public void setUp() {
         clearSystemProperties();
@@ -506,16 +506,9 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     public static class StringLengthComparator implements Comparator<String> , Serializable{
-
         @Override
         public int compare(String o1, String o2) {
-            if (o1.length() > o2.length()) {
-                return 1;
-            } else if (o1.length() < o2.length()) {
-                return -1;
-            } else {
-                return 0;
-            }
+            return Integer.compare(o1.length(), o2.length());
         }
     }
 }

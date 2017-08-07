@@ -7,10 +7,7 @@ import static java.util.logging.Level.SEVERE;
 import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -137,7 +134,7 @@ public class JobStats extends BaseMonitor {
         this.setStartTime(epochMillisAsFormattedDateString(this.manager.getStartMillis()));
         this.setUserProvidedOptions(this.manager.getUserProvidedOptions());
     }
-    
+
     private void refresh() {
         synchronized (this) {
             taskCount = taskCount > 0 ? taskCount : (pool != null) ? pool.getTaskCount() : 0l;
@@ -177,9 +174,9 @@ public class JobStats extends BaseMonitor {
 
     protected String epochMillisAsFormattedDateString(long epochMillis) {
         LocalDateTime date = LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneId.systemDefault());
-        return date.format(DATE_FORMATTER);               
+        return date.format(DATE_FORMATTER);
     }
-    
+
     public void logJobStatsToServer(String message, boolean concise) {
         String processModule = options.getLogMetricsToServerDBTransformModule();
         String metricsToDocument;
@@ -528,7 +525,7 @@ public class JobStats extends BaseMonitor {
     }
 
     private static String xmlNodeArray(String nodeName, String childNodeName, List<String> nodeVals) {
-        if (nodeVals != null && nodeVals.size() > 0) {
+        if (nodeVals != null && !nodeVals.isEmpty()) {
 
             StringBuffer strBuff = new StringBuffer();
             for (String nodeVal : nodeVals) {
@@ -559,7 +556,7 @@ public class JobStats extends BaseMonitor {
     }
 
     private static String xmlNode(String nodeName, Map<String, String> nodeVal) {
-        if (nodeVal != null && nodeVal.size() > 0) {
+        if (nodeVal != null && !nodeVal.isEmpty()) {
             StringBuffer strBuff = new StringBuffer();
             for (Map.Entry<String, String> entry : nodeVal.entrySet()){
                 strBuff.append(xmlNode(entry.getKey(), entry.getValue()));
@@ -571,9 +568,9 @@ public class JobStats extends BaseMonitor {
     }
 
     private static String xmlNodeRanks(String nodeName, Map<String, Long> nodeVal) {
-        if (nodeVal != null && nodeVal.size() > 0) {
+        if (nodeVal != null && !nodeVal.isEmpty()) {
             StringBuffer strBuff = new StringBuffer();
-            TreeSet<Long> ranks = new TreeSet<>();
+            NavigableSet<Long> ranks = new TreeSet<>();
             ranks.addAll(nodeVal.values());
             Map<Integer, String> rankToXML = new HashMap<>();
             int numUris = nodeVal.keySet().size();

@@ -129,7 +129,7 @@ public class HTTPServer {
      * A mapping of path suffixes (e.g. file extensions) to their corresponding
      * MIME types.
      */
-    protected static final Map<String, String> CONTENT_TYPES = new ConcurrentHashMap<String, String>();
+    protected static final Map<String, String> CONTENT_TYPES = new ConcurrentHashMap<>();
 
     static {
         // add some default common content types
@@ -290,7 +290,7 @@ public class HTTPServer {
             if (limit == 0) { // finished previous chunk
                 // read chunk-terminating CRLF if it's not the first chunk
                 if (initialized) {
-                    if (readLine(in).length() > 0) {
+                    if (!readLine(in).isEmpty()) {
                         throw new IOException("chunk data must end with CRLF");
                     }
                 }
@@ -626,7 +626,6 @@ public class HTTPServer {
             info = existing != null ? existing : info;
             info.addHandler(handler, methods);
         }
-
     }
 
     /**
@@ -739,7 +738,7 @@ public class HTTPServer {
             this.name = name.trim();
             this.value = value.trim();
             // RFC2616#14.23 - header can have an empty value (e.g. Host)
-            if (this.name.length() == 0) { // but name cannot be empty
+            if (!this.name.isEmpty()) { // but name cannot be empty
                 throw new IllegalArgumentException("name cannot be empty");
             }
         }
@@ -1173,7 +1172,7 @@ public class HTTPServer {
             try {
                 do {
                     line = readLine(in);
-                } while (line.length() == 0);
+                } while (!line.isEmpty());
             } catch (IOException ioe) { // if EOF, timeout etc.
                 throw new IOException("missing request line"); // signal that the request did not begin
             }
@@ -1567,7 +1566,7 @@ public class HTTPServer {
     }
 
     public HTTPServer(List<Integer> jobServerPortsToChoose) {
-        jobServerPortsToChoose = new ArrayList<Integer>(new HashSet<Integer>(jobServerPortsToChoose));//dedupe
+        jobServerPortsToChoose = new ArrayList<>(new HashSet<>(jobServerPortsToChoose));//dedupe
         Collections.sort(jobServerPortsToChoose);
         for (Integer port : jobServerPortsToChoose) {
             if (available(port)) {//loop until you find an open port
@@ -1788,7 +1787,7 @@ public class HTTPServer {
             // RFC7230#6.6: persist connection unless client or server close
             // explicitly (or legacy client)
         } while (!"close".equalsIgnoreCase(req.getHeaders().get("Connection"))
-                && !"close".equalsIgnoreCase(resp.getHeaders().get("Connection")) 
+                && !"close".equalsIgnoreCase(resp.getHeaders().get("Connection"))
                 && req.getVersion().endsWith("1.1"));
     }
 
@@ -1964,12 +1963,11 @@ public class HTTPServer {
      * @throws FileNotFoundException if the file is not found or cannot be read
      */
     public static void addContentTypes(File mimeTypes) throws IOException {
-        InputStream in = new FileInputStream(mimeTypes);
-        try {
+        try (InputStream in = new FileInputStream(mimeTypes)){
             while (true) {
                 String line = readLine(in).trim(); // throws EOFException when
                 // done
-                if (line.length() > 0 && line.charAt(0) != '#') {
+                if (!line.isEmpty() && line.charAt(0) != '#') {
                     String[] tokens = split(line, " \t");
                     for (int i = 1; i < tokens.length; i++) {
                         addContentType(tokens[0], tokens[i]);
@@ -1977,8 +1975,6 @@ public class HTTPServer {
                 }
             }
         } catch (EOFException ignore) { // the end of file was reached - it's ok
-        } finally {
-            in.close();
         }
     }
 
@@ -2048,7 +2044,7 @@ public class HTTPServer {
      * an empty list if there are none
      */
     public static List<String[]> parseParamsList(String s) {
-        if (s == null || s.length() == 0) {
+        if (s == null || !s.isEmpty()) {
             return Collections.emptyList();
         }
         List<String[]> params = new ArrayList<>(8);
@@ -2061,7 +2057,7 @@ public class HTTPServer {
             try {
                 name = URLDecoder.decode(name.trim(), "UTF-8");
                 val = URLDecoder.decode(val.trim(), "UTF-8");
-                if (name.length() > 0) {
+                if (!name.isEmpty()) {
                     params.add(new String[]{name, val});
                 }
             } catch (UnsupportedEncodingException ignore) {
@@ -2266,7 +2262,7 @@ public class HTTPServer {
                 //increment
             }
             String element = str.substring(start, end).trim();
-            if (element.length() > 0) {
+            if (!element.isEmpty()) {
                 elements.add(element);
             }
             start = end + 1;
@@ -2531,7 +2527,7 @@ public class HTTPServer {
      */
     public static String readLine(InputStream in) throws IOException {
         String s = readToken(in, '\n', "ISO8859_1", 8192);
-        return s.length() > 0 && s.charAt(s.length() - 1) == '\r' ? s.substring(0, s.length() - 1) : s;
+        return !s.isEmpty() && s.charAt(s.length() - 1) == '\r' ? s.substring(0, s.length() - 1) : s;
     }
 
     /**
@@ -2550,7 +2546,7 @@ public class HTTPServer {
         String line;
         String prevLine = "";
         int count = 0;
-        while ((line = readLine(in)).length() > 0) {
+        while (!(line = readLine(in)).isEmpty()) {
             int first;
             for (first = 0; first < line.length() && Character.isWhitespace(line.charAt(first)); first++) {
                 //skipping whitespace

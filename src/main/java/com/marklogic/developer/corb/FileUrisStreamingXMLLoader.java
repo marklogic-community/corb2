@@ -163,7 +163,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         int extractedDocumentCount = 0;
 
         XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
-        try (Reader fileReader = Files.newBufferedReader(xmlFile);) {
+        try (Reader fileReader = Files.newBufferedReader(xmlFile)) {
             XMLStreamReader reader = xmlInputFactory.createXMLStreamReader(fileReader);
 
             Deque<String> context = new ArrayDeque<>();

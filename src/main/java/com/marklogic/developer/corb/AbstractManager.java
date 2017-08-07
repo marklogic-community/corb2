@@ -84,7 +84,7 @@ public abstract class AbstractManager {
     protected TransformOptions options = new TransformOptions();
     protected Properties properties = new Properties();
     protected ContentSource contentSource;
-    protected Map<String,String> userProvidedOptions = new HashMap<String,String>();
+    protected Map<String,String> userProvidedOptions = new HashMap<>();
 
     protected static final int EXIT_CODE_SUCCESS = 0;
     protected static final int EXIT_CODE_INIT_ERROR = 1;
@@ -375,12 +375,12 @@ public abstract class AbstractManager {
     	//doesn't capture defaults, only user provided.
     	String[] secureWords={"XCC","PASSWORD","SSL"};
     	boolean hasSecureWords = false;
-    	for (int i = 0; i < secureWords.length; i++) {
-    		if((retVal !=null &&retVal.toUpperCase().contains(secureWords[i])) || propertyName.toUpperCase().contains(secureWords[i])){
-    			hasSecureWords = true;
-    			break;
-    		}
-		}
+        for (String secureWord : secureWords) {
+            if ((retVal != null && retVal.toUpperCase().contains(secureWord)) || propertyName.toUpperCase().contains(secureWord)) {
+                hasSecureWords = true;
+                break;
+            }
+        }
     	if(retVal !=null && !hasSecureWords){
     		this.userProvidedOptions.put(propertyName, retVal);
     	}

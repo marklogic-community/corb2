@@ -17,7 +17,7 @@ public class BaseMonitor {
     protected long prevCompleted = 0;
     protected long prevMillis = 0;
     protected long startMillis;
-    
+
     protected final List<Double> tpsForETCList;
     protected final int numTpsForEtc;
 	protected Double avgTps=0d,currentTps=0d;
@@ -30,7 +30,7 @@ public class BaseMonitor {
         this.numTpsForEtc = (manager !=null && manager.getOptions() != null) ? manager.getOptions().getNumTpsForETC() : DEFAULT_NUM_TPS_FOR_ETC;
         this.tpsForETCList = new ArrayList<>(this.numTpsForEtc);
     }
-    
+
     protected void populateTps(long completed){
     	long curMillis = System.currentTimeMillis();
         avgTps = calculateTransactionsPerSecond(completed, curMillis, startMillis);
@@ -45,20 +45,20 @@ public class BaseMonitor {
         double tpsForETC = calculateTpsForETC(currentTps, isPaused);
         estimatedTimeOfCompletion = getEstimatedTimeCompletion(taskCount, completed, tpsForETC, isPaused);
     }
-    
+
     protected String getProgressMessage(long completed) {
     	populateTps(completed);
         return getProgressMessage(completed, taskCount, avgTps, currentTps, estimatedTimeOfCompletion, pool.getActiveCount(),pool.getNumFailedUris());
     }
-    static protected String getProgressMessage(long completed, long taskCount, double tps, double curTps, double tpsForETC, int threads, boolean isPaused) {
+    protected static String getProgressMessage(long completed, long taskCount, double tps, double curTps, double tpsForETC, int threads, boolean isPaused) {
         String etc = getEstimatedTimeCompletion(taskCount, completed, tpsForETC, isPaused);
     	return getProgressMessage(completed, taskCount, tps, curTps, etc, threads);
-    	    
+
     }
-    static protected String getProgressMessage(long completed, long taskCount, double tps, double curTps, String etc, int threads) {
+    protected static String getProgressMessage(long completed, long taskCount, double tps, double curTps, String etc, int threads) {
         return  getProgressMessage( completed,  taskCount,  tps,  curTps,  etc,  threads,0);
     }
-    static protected String getProgressMessage(long completed, long taskCount, double tps, double curTps, String etc, int threads, int failedTasks) {
+    protected static String getProgressMessage(long completed, long taskCount, double tps, double curTps, String etc, int threads, int failedTasks) {
         String failedTaskMessage=(failedTasks>0) ? (failedTasks+" tasks failed, ") : "";
     	return completed + "/" + taskCount + ", "
         		+ failedTaskMessage
