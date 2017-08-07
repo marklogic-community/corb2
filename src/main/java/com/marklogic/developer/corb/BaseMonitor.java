@@ -10,7 +10,7 @@ public class BaseMonitor {
 
 	protected static final int DEFAULT_NUM_TPS_FOR_ETC = 10;
 
-    protected long lastProgress = 0;
+    protected long lastProgress;
     protected final Manager manager;
     protected long taskCount;
     protected PausableThreadPoolExecutor pool;
@@ -30,6 +30,7 @@ public class BaseMonitor {
         this.numTpsForEtc = (manager !=null && manager.getOptions() != null) ? manager.getOptions().getNumTpsForETC() : DEFAULT_NUM_TPS_FOR_ETC;
         this.tpsForETCList = new ArrayList<>(this.numTpsForEtc);
     }
+    
     protected void populateTps(long completed){
     	long curMillis = System.currentTimeMillis();
         avgTps = calculateTransactionsPerSecond(completed, curMillis, startMillis);
@@ -43,8 +44,8 @@ public class BaseMonitor {
         boolean isPaused = manager.isPaused();
         double tpsForETC = calculateTpsForETC(currentTps, isPaused);
         estimatedTimeOfCompletion = getEstimatedTimeCompletion(taskCount, completed, tpsForETC, isPaused);
-
     }
+    
     protected String getProgressMessage(long completed) {
     	populateTps(completed);
         return getProgressMessage(completed, taskCount, avgTps, currentTps, estimatedTimeOfCompletion, pool.getActiveCount(),pool.getNumFailedUris());
@@ -128,6 +129,5 @@ public class BaseMonitor {
         format.setMaximumFractionDigits(2);
         return n.intValue() >= 1 ? format.format(n.intValue()) : format.format(n);
     }
-
 
 }

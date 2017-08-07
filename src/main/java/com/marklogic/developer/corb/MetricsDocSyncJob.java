@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,86 +29,84 @@ import java.util.logging.Logger;
  */
 public class MetricsDocSyncJob implements Runnable {
 
-	protected static final Logger LOG = Logger.getLogger(Monitor.class.getName());
-	private static final String PAUSING_JOB_MESSAGE = "PAUSING CORB JOB:";
-    
-	private int syncFrequencyInMillis = -1;
-	private JobStats jobStats = null;
-	private boolean shutdownNow;
-	private boolean paused;
+    protected static final Logger LOG = Logger.getLogger(Monitor.class.getName());
+    private static final String PAUSING_JOB_MESSAGE = "PAUSING CORB JOB:";
 
-	/**
-	 * @param pool
-	 * @param cs
-	 * @param manager
-	 */
-	public MetricsDocSyncJob(JobStats jobStats, int syncFrequencyInMillis) {
-		this.jobStats = jobStats;
-		this.syncFrequencyInMillis = syncFrequencyInMillis;
-	}
+    private int syncFrequencyInMillis = -1;
+    private JobStats jobStats = null;
+    private boolean shutdownNow;
+    private boolean paused;
 
-	/*
+    /**
+     *
+     * @param jobStats
+     * @param syncFrequencyInMillis
+     */
+    public MetricsDocSyncJob(JobStats jobStats, int syncFrequencyInMillis) {
+        this.jobStats = jobStats;
+        this.syncFrequencyInMillis = syncFrequencyInMillis;
+    }
+
+    /*
 	 * (non-Javadoc)
 	 *
 	 * @see java.lang.Runnable#run()
-	 */
-	@Override
-	public void run() {
-		while (!shutdownNow && syncFrequencyInMillis >0) {
-			if (!paused) {
+     */
+    @Override
+    public void run() {
+        while (!shutdownNow && syncFrequencyInMillis > 0) {
+            if (!paused) {
 
-				try {
-					Thread.yield();
-					Thread.sleep(syncFrequencyInMillis);
-					syncDoc();
-				} catch (InterruptedException e) {
-					// reset interrupt status and exit
-					Thread.interrupted();
-					LOG.log(SEVERE, "interrupted: exiting", e);
-				} catch (Exception e) {
-					LOG.log(SEVERE, "Unexpected error", e);
-				}
-			}
-			else{
-				try {
-					Thread.sleep(syncFrequencyInMillis);//wait to check if the job resumed
-				} catch (InterruptedException e) {
-					LOG.log(SEVERE, "Unexpected error", e);
-				}
-			}
-		}
-	}
+                try {
+                    Thread.yield();
+                    Thread.sleep(syncFrequencyInMillis);
+                    syncDoc();
+                } catch (InterruptedException e) {
+                    // reset interrupt status and exit
+                    Thread.interrupted();
+                    LOG.log(SEVERE, "interrupted: exiting", e);
+                } catch (Exception e) {
+                    LOG.log(SEVERE, "Unexpected error", e);
+                }
+            } else {
+                try {
+                    Thread.sleep(syncFrequencyInMillis);//wait to check if the job resumed
+                } catch (InterruptedException e) {
+                    LOG.log(SEVERE, "Unexpected error", e);
+                }
+            }
+        }
+    }
 
-	private void syncDoc() {
-		if(!shutdownNow && !paused){
-			jobStats.logJobStatsToServer("RUNNING CORB JOB:",true);
-		}
-	}
+    private void syncDoc() {
+        if (!shutdownNow && !paused) {
+            jobStats.logJobStatsToServer("RUNNING CORB JOB:", true);
+        }
+    }
 
-	/**
-	 *
-	 */
-	public void shutdownNow() {
-		shutdownNow = true;
-	}
+    /**
+     *
+     */
+    public void shutdownNow() {
+        shutdownNow = true;
+    }
 
-	/**
-	 * @return the paused
-	 */
-	protected boolean isPaused() {
-		return paused;
-	}
+    /**
+     * @return the paused
+     */
+    protected boolean isPaused() {
+        return paused;
+    }
 
-	/**
-	 * @param paused
-	 *            the paused to set
-	 */
-	protected void setPaused(boolean paused) {
-		this.paused = paused;
-		if(paused){
-			//spit out the whole thing(not concise) when pausing
-			jobStats.logJobStatsToServer(PAUSING_JOB_MESSAGE, false);
-		}
-	}
+    /**
+     * @param paused the paused to set
+     */
+    protected void setPaused(boolean paused) {
+        this.paused = paused;
+        if (paused) {
+            //spit out the whole thing(not concise) when pausing
+            jobStats.logJobStatsToServer(PAUSING_JOB_MESSAGE, false);
+        }
+    }
 
 }

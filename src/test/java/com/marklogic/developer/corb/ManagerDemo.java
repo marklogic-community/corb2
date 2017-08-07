@@ -11,11 +11,11 @@ import java.util.logging.Logger;
 import com.marklogic.developer.corb.util.FileUtils;
 
 public class ManagerDemo {
+
     public static final String SLASH = "/";
-    private static final Logger LOG = Logger.getLogger(ManagerPT.class.getName());
-    private static final String TRANSFORM_ERROR_MODULE = "src/test/resources/transform-error.xqy|ADHOC";
+    private static final Logger LOG = Logger.getLogger(ManagerDemo.class.getName());
     private static final String TRANSFORM_SLOW_MODULE = "src/test/resources/transformSlow.xqy|ADHOC";
-    static int count=1;
+
     public static void startManager(int uriCount) {
 
         String exportFilename = "testManagerUsingExtremelyLargeUris.txt";
@@ -37,61 +37,54 @@ public class ManagerDemo {
         Manager manager = new Manager();
 
         try {
-        	manager.init(properties);
+            manager.init(properties);
 
-        	Thread managerThread=new Thread(){
-        		@Override
-        		public void run() {
+            Thread managerThread = new Thread() {
+                @Override
+                public void run() {
 
                     try {
-						manager.run();
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-                    finally {
-                    	File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFilename);
+                        manager.run();
+                    } catch (Exception e) {
+                        LOG.log(Level.SEVERE, "Encountered an errror running a job", e);
+                    } finally {
+                        File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFilename);
                         report.deleteOnExit();
                         try {
-							int lineCount = FileUtils.getLineCount(report);
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-        		}
-        	};
-        	managerThread.start();
+                            int lineCount = FileUtils.getLineCount(report);
+                        } catch (IOException e) {
+                            LOG.log(Level.SEVERE, "Encountered an error reading export", e);
+                        }
+                    }
+                }
+            };
+            managerThread.start();
 
-
-
-        } catch (Exception ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
-        }
-        finally{
-        	manager.stop();
+        } finally {
+            manager.stop();
         }
     }
-    public static void main(String[] args) throws IOException {
-    	HTTPServer jobServer = new HTTPServer(9091);
-		HTTPServer.VirtualHost host = jobServer.getVirtualHost(null); // default host
-		host.setAllowGeneratedIndex(false); // with directory index pages
-		HTTPServer.ContextHandler htmlContextHandler = new HTTPServer.ClasspathResourceContextHandler("corb2-web","/web");
-		host.addContext("/web", htmlContextHandler);
-		jobServer.start();
-		startManager(100000);
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		startManager(100000);
-//		startManager(100000);
-//		startManager(100000);
-//		startManager(100000);
-//		startManager(100000);
 
-	}
+    public static void main(String[] args) throws IOException {
+        HTTPServer jobServer = new HTTPServer(9091);
+        HTTPServer.VirtualHost host = jobServer.getVirtualHost(null); // default host
+        host.setAllowGeneratedIndex(false); // with directory index pages
+        HTTPServer.ContextHandler htmlContextHandler = new HTTPServer.ClasspathResourceContextHandler("corb2-web", "/web");
+        host.addContext("/web", htmlContextHandler);
+        jobServer.start();
+        startManager(100000);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            LOG.log(Level.FINE, "Thread inturrupted while sleeping", e);
+        }
+        startManager(100000);
+//		startManager(100000);
+//		startManager(100000);
+//		startManager(100000);
+//		startManager(100000);
+    }
 }

@@ -363,26 +363,26 @@ public abstract class AbstractManager {
      * @param propertyName
      * @return the trimmed property value
      */
-    protected String getOption(String argVal, String propName) {
+    protected String getOption(String argVal, String propertyName) {
         String retVal=null;
     	if (isNotBlank(argVal)) {
     		retVal= argVal.trim();
-        } else if (isNotBlank(System.getProperty(propName))) {
-        	retVal= System.getProperty(propName).trim();
-        } else if (this.properties.containsKey(propName) && isNotBlank(this.properties.getProperty(propName))) {
-        	retVal = this.properties.getProperty(propName).trim();
+        } else if (isNotBlank(System.getProperty(propertyName))) {
+        	retVal= System.getProperty(propertyName).trim();
+        } else if (this.properties.containsKey(propertyName) && isNotBlank(this.properties.getProperty(propertyName))) {
+        	retVal = this.properties.getProperty(propertyName).trim();
         }
     	//doesn't capture defaults, only user provided.
     	String[] secureWords={"XCC","PASSWORD","SSL"};
     	boolean hasSecureWords = false;
     	for (int i = 0; i < secureWords.length; i++) {
-    		if((retVal !=null &&retVal.toUpperCase().contains(secureWords[i])) || propName.toUpperCase().contains(secureWords[i])){
+    		if((retVal !=null &&retVal.toUpperCase().contains(secureWords[i])) || propertyName.toUpperCase().contains(secureWords[i])){
     			hasSecureWords = true;
     			break;
     		}
 		}
     	if(retVal !=null && !hasSecureWords){
-    		this.userProvidedOptions.put(propName, retVal);
+    		this.userProvidedOptions.put(propertyName, retVal);
     	}
         return retVal;
     }

@@ -29,7 +29,7 @@ public class JobStatsTest {
 	public void testFailedUris() {
 		JobStats jobStats = new JobStats();
 		jobStats.setJobName("Name");
-		jobStats.setFailedUris(new ArrayList<String>());
+		jobStats.setFailedUris(new ArrayList<>());
 		assertXMLJSONNotNull(jobStats);
 	}
 
@@ -42,7 +42,7 @@ public class JobStatsTest {
 
 	@Test
 	public void testXMLRanks() throws ParserConfigurationException, SAXException, IOException {
-		Map<String, Long> nodeVal = new HashMap<String, Long>();
+		Map<String, Long> nodeVal = new HashMap<>();
 		nodeVal.put("URI1", 6l);
 		nodeVal.put("URI2", 5l);
 		nodeVal.put("URI3", 4l);
@@ -56,10 +56,8 @@ public class JobStatsTest {
 		DocumentBuilder dBuilder;
 		dBuilder = dbFactory.newDocumentBuilder();
 		Document doc = dBuilder.parse(new InputSource(new StringReader(jobStats.toXMLString())));
-		String uri = (doc.getElementsByTagName("Uri").item(0).getFirstChild().getFirstChild().getNodeValue()
-				.toString());
-		String rank = (doc.getElementsByTagName("Uri").item(0).getFirstChild().getNextSibling().getFirstChild()
-				.getNodeValue().toString());
+		String uri = doc.getElementsByTagName("Uri").item(0).getFirstChild().getFirstChild().getNodeValue();
+		String rank = doc.getElementsByTagName("Uri").item(0).getFirstChild().getNextSibling().getFirstChild().getNodeValue();
 		assertTrue("Rank is Correct", uri.equals("URI" + rank));
 	}
 	/*
@@ -87,6 +85,4 @@ public class JobStatsTest {
 	 * 9: UI Validation
 	 * 		All fields 
 	 */
-	
-	
 }

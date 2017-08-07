@@ -29,6 +29,7 @@ import com.marklogic.xcc.exceptions.RequestPermissionException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -504,7 +505,7 @@ public class PostBatchUpdateFileTaskTest {
         return createSampleFile(".part");
     }
 
-    public static class StringLengthComparator implements Comparator<String> {
+    public static class StringLengthComparator implements Comparator<String> , Serializable{
 
         @Override
         public int compare(String o1, String o2) {

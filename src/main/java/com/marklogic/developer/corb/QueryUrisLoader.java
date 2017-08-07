@@ -210,7 +210,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             }
 
             if (queue.isEmpty()) {
-                LOG.log(INFO, "received first uri: " + uri);
+                LOG.log(INFO, MessageFormat.format("received first uri: {0}", uri));
             }
             //apply replacements (if any) - can be helpful in reducing in-memory footprint for ArrayQueue
             for (int j = 0; j < replacements.length - 1; j += 2) {
