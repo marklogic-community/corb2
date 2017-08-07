@@ -20,8 +20,9 @@ public class BaseMonitor {
 
     protected final List<Double> tpsForETCList;
     protected final int numTpsForEtc;
-	protected Double avgTps=0d,currentTps=0d;
-	protected String estimatedTimeOfCompletion="";
+	protected Double avgTps = 0d; 
+    protected Double currentTps = 0d;
+	protected String estimatedTimeOfCompletion = "";
 
     public BaseMonitor(PausableThreadPoolExecutor pool, Manager manager) {
         this.pool = pool;
