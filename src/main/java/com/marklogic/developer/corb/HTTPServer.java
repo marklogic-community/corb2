@@ -83,8 +83,8 @@ public class HTTPServer {
     /**
      * Date format strings.
      */
-    protected static final char[] DAYS = "Sun Mon Tue Wed Thu Fri Sat".toCharArray(),
-            MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".toCharArray();
+    protected static final char[] DAYS = "Sun Mon Tue Wed Thu Fri Sat".toCharArray();
+    protected static final char[] MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".toCharArray();
 
     /**
      * A convenience array containing the carriage-return and line feed chars.
