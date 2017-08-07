@@ -1684,10 +1684,11 @@ public class HTTPServer {
      */
     protected ServerSocket createServerSocket() throws IOException {
         ServerSocketFactory factory = secure ? SSLServerSocketFactory.getDefault() : ServerSocketFactory.getDefault();
-        ServerSocket serverSocket = factory.createServerSocket();
-        serverSocket.setReuseAddress(true);
-        serverSocket.bind(new InetSocketAddress(port));
-        return serverSocket;
+        try (ServerSocket serverSocket = factory.createServerSocket()) {
+            serverSocket.setReuseAddress(true);
+            serverSocket.bind(new InetSocketAddress(port));
+            return serverSocket;
+        }
     }
 
     /**
@@ -1963,7 +1964,7 @@ public class HTTPServer {
      * @throws FileNotFoundException if the file is not found or cannot be read
      */
     public static void addContentTypes(File mimeTypes) throws IOException {
-        try (InputStream in = new FileInputStream(mimeTypes)){
+        try (InputStream in = new FileInputStream(mimeTypes)) {
             while (true) {
                 String line = readLine(in).trim(); // throws EOFException when
                 // done
@@ -2048,20 +2049,21 @@ public class HTTPServer {
             return Collections.emptyList();
         }
         List<String[]> params = new ArrayList<>(8);
-        Scanner sc = new Scanner(s).useDelimiter("&");
-        while (sc.hasNext()) {
-            String pair = sc.next();
-            int pos = pair.indexOf('=');
-            String name = pos == -1 ? pair : pair.substring(0, pos);
-            String val = pos == -1 ? "" : pair.substring(pos + 1);
-            try {
-                name = URLDecoder.decode(name.trim(), "UTF-8");
-                val = URLDecoder.decode(val.trim(), "UTF-8");
-                if (!name.isEmpty()) {
-                    params.add(new String[]{name, val});
-                }
-            } catch (UnsupportedEncodingException ignore) {
-            } // never thrown
+        try (Scanner sc = new Scanner(s).useDelimiter("&")) {
+            while (sc.hasNext()) {
+                String pair = sc.next();
+                int pos = pair.indexOf('=');
+                String name = pos == -1 ? pair : pair.substring(0, pos);
+                String val = pos == -1 ? "" : pair.substring(pos + 1);
+                try {
+                    name = URLDecoder.decode(name.trim(), "UTF-8");
+                    val = URLDecoder.decode(val.trim(), "UTF-8");
+                    if (!name.isEmpty()) {
+                        params.add(new String[]{name, val});
+                    }
+                } catch (UnsupportedEncodingException ignore) {
+                } // never thrown
+            }
         }
         return params;
     }
