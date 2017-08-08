@@ -37,16 +37,16 @@ public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
     private static final Logger LOG = Logger.getLogger(FileUrisDirectoryLoader.class.getName());
     protected static final String EXCEPTION_MSG_PROBLEM_READING_FILE = "Problem while reading the file";
     private Iterator<Path> fileIterator;
-
+    private Stream<Path> fileStream;
+    
     @Override
     public void open() throws CorbException {
 
         String dirName = getProperty(Options.LOADER_PATH);
 
         Path dir = Paths.get(dirName);
-        if (!(Files.exists(dir)
-                && Files.isDirectory(dir)
-                && Files.isReadable(dir))) {
+        File file = dir.toFile();
+        if (!(file.exists() && file.isDirectory() && Files.isReadable(dir))) {
             throw new CorbException(MessageFormat.format("{0}: {1} must be specified and an accessible directory", Options.LOADER_PATH, dirName));
         }
 
@@ -54,7 +54,8 @@ public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
             if (shouldSetBatchRef()) {
                 batchRef = dir.toFile().getCanonicalPath();
             }
-            fileIterator = Files.walk(dir).filter(p -> this.accept(p)).iterator(); 
+            fileStream = Files.walk(dir);
+            fileIterator = fileStream.filter(this::accept).iterator(); 
             setTotalCount(fileCount(dir));
         } catch (IOException ex) {
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_FILE, ex);
@@ -64,7 +65,7 @@ public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
     protected int fileCount(Path dir) throws IOException {
         try (Stream<Path> stream = Files.walk(dir)) {
             return Math.toIntExact(stream.parallel()
-                    .filter(p -> this.accept(p))
+                    .filter(this::accept)
                     .count());
         }
     }
@@ -95,6 +96,9 @@ public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
 
     @Override
     public void close() {
+        if (fileStream != null) {
+            fileStream.close();
+        }
         cleanup();
     }
 }
