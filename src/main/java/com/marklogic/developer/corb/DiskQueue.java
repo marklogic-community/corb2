@@ -119,7 +119,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
     @Override
     protected void finalize() throws Throwable {
         if (closeFile()) {
-            LOG.warning(MessageFormat.format("{0} still had open file in finalize", DiskQueue.class.getSimpleName()));
+            LOG.log(Level.WARNING, () -> MessageFormat.format("{0} still had open file in finalize", DiskQueue.class.getSimpleName()));
         }
         super.finalize();
     }
@@ -187,7 +187,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
                 fileOut.newLine();
                 fileElementCount += 1;
             } catch (IOException e) {
-                LOG.log(Level.SEVERE, MessageFormat.format("Error writing to {0} backing store", DiskQueue.class.getSimpleName()), e);
+                LOG.log(Level.SEVERE, MessageFormat.format("Error writing to {0} backing store {1}", DiskQueue.class.getSimpleName(), fileQueue.getAbsolutePath()), e);
                 return false;
             }
         }
