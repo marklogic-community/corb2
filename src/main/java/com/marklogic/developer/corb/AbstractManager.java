@@ -69,9 +69,13 @@ import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.logging.Level;
 
 public abstract class AbstractManager {
+
     //Obtain the version from META-INF/MANIFEST.MF Implementation-Version attribute
     public static final String VERSION = AbstractManager.class.getPackage().getImplementationVersion();
 
@@ -86,7 +90,7 @@ public abstract class AbstractManager {
     protected TransformOptions options = new TransformOptions();
     protected Properties properties = new Properties();
     protected ContentSource contentSource;
-    protected Map<String,String> userProvidedOptions = new HashMap<>();
+    protected Map<String, String> userProvidedOptions = new HashMap<>();
 
     protected static final int EXIT_CODE_SUCCESS = 0;
     protected static final int EXIT_CODE_INIT_ERROR = 1;
@@ -291,29 +295,31 @@ public abstract class AbstractManager {
     }
 
     protected void registerStatusInfo() {
-        Session session = contentSource.newSession();
-        AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML + DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
-                + "let $status := xdmp:server-status(xdmp:host(), xdmp:server())\n"
-                + "let $modules := $status/mlss:modules\n"
-                + "let $root := $status/mlss:root\n"
-                + "return (data($modules), data($root))");
-        ResultSequence rs = null;
-        try {
-            rs = session.submitRequest(q);
+        ResultSequence resultSequence = null;
+        try (Session session = contentSource.newSession()) {
+
+            AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML + DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
+                    + "let $status := xdmp:server-status(xdmp:host(), xdmp:server())\n"
+                    + "let $modules := $status/mlss:modules\n"
+                    + "let $root := $status/mlss:root\n"
+                    + "return (data($modules), data($root))");
+            resultSequence = session.submitRequest(q);
+
+            while (null != resultSequence && resultSequence.hasNext()) {
+                ResultItem rsItem = resultSequence.next();
+                XdmItem item = rsItem.getItem();
+                if (rsItem.getIndex() == 0 && "0".equals(item.asString())) {
+                    options.setModulesDatabase("");
+                }
+                if (rsItem.getIndex() == 1) {
+                    options.setXDBC_ROOT(item.asString());
+                }
+            }
         } catch (RequestException e) {
             LOG.log(SEVERE, "registerStatusInfo request failed", e);
-            e.printStackTrace();
         } finally {
-            session.close();
-        }
-        while (null != rs && rs.hasNext()) {
-            ResultItem rsItem = rs.next();
-            XdmItem item = rsItem.getItem();
-            if (rsItem.getIndex() == 0 && "0".equals(item.asString())) {
-                options.setModulesDatabase("");
-            }
-            if (rsItem.getIndex() == 1) {
-                options.setXDBC_ROOT(item.asString());
+            if (null != resultSequence && !resultSequence.isClosed()) {
+                resultSequence.close();
             }
         }
         logOptions();
@@ -345,8 +351,9 @@ public abstract class AbstractManager {
 
     /**
      * Retrieve either the value from the commandline arguments at the argIndex,
-     * or the first property value from the System.properties or properties object
-     * that is not empty or null.
+     * or the first property value from the System.properties or properties
+     * object that is not empty or null.
+     *
      * @param commandlineArgs
      * @param argIndex
      * @param propertyName
@@ -366,26 +373,26 @@ public abstract class AbstractManager {
      * @return the trimmed property value
      */
     protected String getOption(String argVal, String propertyName) {
-        String retVal=null;
-    	if (isNotBlank(argVal)) {
-    		retVal= argVal.trim();
+        String retVal = null;
+        if (isNotBlank(argVal)) {
+            retVal = argVal.trim();
         } else if (isNotBlank(System.getProperty(propertyName))) {
-        	retVal= System.getProperty(propertyName).trim();
+            retVal = System.getProperty(propertyName).trim();
         } else if (this.properties.containsKey(propertyName) && isNotBlank(this.properties.getProperty(propertyName))) {
-        	retVal = this.properties.getProperty(propertyName).trim();
+            retVal = this.properties.getProperty(propertyName).trim();
         }
-    	//doesn't capture defaults, only user provided.
-    	String[] secureWords={"XCC","PASSWORD","SSL"};
-    	boolean hasSecureWords = false;
+        //doesn't capture defaults, only user provided.
+        String[] secureWords = {"XCC", "PASSWORD", "SSL"};
+        boolean hasSecureWords = false;
         for (String secureWord : secureWords) {
             if ((retVal != null && retVal.toUpperCase().contains(secureWord)) || propertyName.toUpperCase().contains(secureWord)) {
                 hasSecureWords = true;
                 break;
             }
         }
-    	if(retVal !=null && !hasSecureWords){
-    		this.userProvidedOptions.put(propertyName, retVal);
-    	}
+        if (retVal != null && !hasSecureWords) {
+            this.userProvidedOptions.put(propertyName, retVal);
+        }
         return retVal;
     }
 
@@ -455,39 +462,40 @@ public abstract class AbstractManager {
         LOG.log(INFO, () -> MessageFormat.format("runtime arguments = {0}", StringUtils.join(argsToLog, SPACE)));
     }
 
-	public void setUserProvidedOptions(Map<String, String> userProvidedOptions) {
-		this.userProvidedOptions = userProvidedOptions;
-	}
-	protected Request getRequestForModule(String processModule, Session session) {
-		Request request;
-		 if (isInlineOrAdhoc(processModule)) {
-             String adhocQuery;
-             if (isInlineModule(processModule)) {
-                 adhocQuery = StringUtils.getInlineModuleCode(processModule);
-                 if (isBlank(adhocQuery)) {
-                     throw new IllegalStateException("Unable to read inline query ");
-                 }
-                 LOG.log(INFO, "invoking inline process module");
-             } else {
-                 String queryPath = processModule.substring(0, processModule.indexOf('|'));
-                 adhocQuery = getAdhocQuery(queryPath);
-                 if (isBlank(adhocQuery)) {
-                     throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
-                 }
-                 LOG.log(INFO, () -> MessageFormat.format("invoking adhoc process module {0}", queryPath));
-             }
-             request = session.newAdhocQuery(adhocQuery);
+    public void setUserProvidedOptions(Map<String, String> userProvidedOptions) {
+        this.userProvidedOptions = userProvidedOptions;
+    }
 
-         } else {
-             String root = options.getModuleRoot();
-             String modulePath = buildModulePath(root, processModule);
-             LOG.log(INFO, () -> MessageFormat.format("invoking module {0}", modulePath));
-             request = session.newModuleInvoke(modulePath);
-         }
-		return request;
-	}
+    protected Request getRequestForModule(String processModule, Session session) {
+        Request request;
+        if (isInlineOrAdhoc(processModule)) {
+            String adhocQuery;
+            if (isInlineModule(processModule)) {
+                adhocQuery = StringUtils.getInlineModuleCode(processModule);
+                if (isBlank(adhocQuery)) {
+                    throw new IllegalStateException("Unable to read inline query ");
+                }
+                LOG.log(INFO, "invoking inline process module");
+            } else {
+                String queryPath = processModule.substring(0, processModule.indexOf('|'));
+                adhocQuery = getAdhocQuery(queryPath);
+                if (isBlank(adhocQuery)) {
+                    throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
+                }
+                LOG.log(INFO, () -> MessageFormat.format("invoking adhoc process module {0}", queryPath));
+            }
+            request = session.newAdhocQuery(adhocQuery);
 
-	public Map<String, String> getUserProvidedOptions() {
-		return userProvidedOptions;
-	}
+        } else {
+            String root = options.getModuleRoot();
+            String modulePath = buildModulePath(root, processModule);
+            LOG.log(INFO, () -> MessageFormat.format("invoking module {0}", modulePath));
+            request = session.newModuleInvoke(modulePath);
+        }
+        return request;
+    }
+
+    public Map<String, String> getUserProvidedOptions() {
+        return userProvidedOptions;
+    }
 }
