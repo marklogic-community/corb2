@@ -69,6 +69,8 @@ import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
+import java.util.logging.Level;
+
 public abstract class AbstractManager {
     //Obtain the version from META-INF/MANIFEST.MF Implementation-Version attribute
     public static final String VERSION = AbstractManager.class.getPackage().getImplementationVersion();
@@ -238,7 +240,7 @@ public abstract class AbstractManager {
                 throw new CorbException(MessageFormat.format("Unable to instantiate {0} {1}", SSL_CONFIG_CLASS, sslConfigClassName), ex);
             }
         } else {
-            LOG.info("Using TrustAnyoneSSSLConfig because no " + SSL_CONFIG_CLASS + " value specified.");
+            LOG.log(Level.INFO, () -> "Using TrustAnyoneSSSLConfig because no " + SSL_CONFIG_CLASS + " value specified.");
             this.sslConfig = new TrustAnyoneSSLConfig();
         }
         sslConfig.setProperties(this.properties);
