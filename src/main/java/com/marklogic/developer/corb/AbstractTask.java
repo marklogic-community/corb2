@@ -278,43 +278,47 @@ public abstract class AbstractTask implements Task {
         try {
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             for (String input : inputUris) {
-                String normalizedInput = StringUtils.trimToEmpty(input);
-                XdmItem doc;
-                //it appears to be XML, let's see if we can parse it
-                if (normalizedInput.startsWith("<") && normalizedInput.endsWith(">")) {
-                    try {
-                        InputSource is = new InputSource(new StringReader(normalizedInput));
-                        Document dom = builder.parse(is);
-                        doc = ValueFactory.newDocumentNode(dom);
-                    } catch (SAXException | IOException ex) {
-                        LOG.log(WARNING, "Unable to parse URI as XML. Setting content as text.", ex);
-                        //guess not, lets just use it as-is
-                        doc = ValueFactory.newDocumentNode(input);
-                    }
-                    /**
-                     * TODO if we support JSON values, then we may need Jackson Databinding added as a dependency
-                     *
-                     * } else if (normalizedInput.startsWith("{") &&
-                     * normalizedInput.endsWith("}")) { //smells like a JSON
-                     * object XdmItem item =
-                     * ValueFactory.newJSObject(normalizedInput); doc =
-                     * ValueFactory.newDocumentNode(item); } else if
-                     * (normalizedInput.startsWith("[") &&
-                     * normalizedInput.endsWith("]")) { //smells like a JSON
-                     * array XdmItem item =
-                     * ValueFactory.newJSArray(normalizedInput); doc =
-                     * ValueFactory.newDocumentNode(item);
-                     */
-                } else {
-                    //assume that it is just plain text, use the original value
-                    doc = ValueFactory.newDocumentNode(input);
-                }
+                XdmItem doc = toXdmItem(builder, input);
                 docs.add(doc);
             }
         } catch (ParserConfigurationException ex) {
             throw new CorbException("Unable to parse loader document", ex);
         }
         return docs.toArray(new XdmItem[docs.size()]);
+    }
+
+    protected XdmItem toXdmItem(DocumentBuilder builder, String input) throws CorbException {
+        String normalizedInput = StringUtils.trimToEmpty(input);
+        XdmItem doc;
+        //it appears to be XML, let's see if we can parse it
+        if (normalizedInput.startsWith("<") && normalizedInput.endsWith(">")) {
+            try {
+                InputSource is = new InputSource(new StringReader(normalizedInput));
+                Document dom = builder.parse(is);
+                doc = ValueFactory.newDocumentNode(dom);
+            } catch (SAXException | IOException ex) {
+                LOG.log(WARNING, "Unable to parse URI as XML. Setting content as text.", ex);
+                //guess not, lets just use it as-is
+                doc = ValueFactory.newDocumentNode(input);
+            }
+            /**
+             * TODO if we support JSON values, then we may need Jackson
+             * Databinding added as a dependency
+             *
+             * } else if (normalizedInput.startsWith("{") &&
+             * normalizedInput.endsWith("}")) { //smells like a JSON object
+             * XdmItem item = ValueFactory.newJSObject(normalizedInput); doc =
+             * ValueFactory.newDocumentNode(item); } else if
+             * (normalizedInput.startsWith("[") &&
+             * normalizedInput.endsWith("]")) { //smells like a JSON array
+             * XdmItem item = ValueFactory.newJSArray(normalizedInput); doc =
+             * ValueFactory.newDocumentNode(item);
+             */
+        } else {
+            //assume that it is just plain text, use the original value
+            doc = ValueFactory.newDocumentNode(input);
+        }
+        return doc;
     }
 
     protected Set<String> getCustomInputPropertyNames() {
@@ -383,7 +387,7 @@ public abstract class AbstractTask implements Task {
                 }
                 return invokeModule();
             } else if (requestException instanceof ServerConnectionException || failOnError) {
-            	Thread.currentThread().setName(FAILED_URI_TOKEN+Thread.currentThread().getName());
+                Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
                 throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
             } else {
                 LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
@@ -391,12 +395,12 @@ public abstract class AbstractTask implements Task {
                 return inputUris;
             }
         } else if (failOnError) {
-        	Thread.currentThread().setName(FAILED_URI_TOKEN+Thread.currentThread().getName());
+            Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
             throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
         } else {
             LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
             writeToErrorFile(inputUris, requestException.getMessage());
-            Thread.currentThread().setName(FAILED_URI_TOKEN+Thread.currentThread().getName());
+            Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
             return inputUris;
         }
     }
