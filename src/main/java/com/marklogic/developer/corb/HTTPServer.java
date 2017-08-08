@@ -289,10 +289,8 @@ public class HTTPServer {
         protected long initChunk() throws IOException {
             if (limit == 0) { // finished previous chunk
                 // read chunk-terminating CRLF if it's not the first chunk
-                if (initialized) {
-                    if (!readLine(in).isEmpty()) {
-                        throw new IOException("chunk data must end with CRLF");
-                    }
+                if (initialized && !readLine(in).isEmpty()) {
+                    throw new IOException("chunk data must end with CRLF");
                 }
                 initialized = true;
                 limit = parseChunkSize(readLine(in)); // read next chunk size
@@ -447,6 +445,13 @@ public class HTTPServer {
     public static class VirtualHost {
 
         public static final String DEFAULT_HOST_NAME = "~DEFAULT~";
+        protected final String name;
+        protected final Set<String> aliases = new CopyOnWriteArraySet<>();
+        protected volatile String directoryIndex = "index.html";
+        protected volatile boolean allowGeneratedIndex;
+        protected final Set<String> methods = new CopyOnWriteArraySet<>();
+        protected final ContextInfo emptyContext = new ContextInfo();
+        protected final ConcurrentMap<String, ContextInfo> contexts = new ConcurrentHashMap<>();
 
         /**
          * The {@code ContextInfo} class holds a single context's information.
@@ -483,14 +488,6 @@ public class HTTPServer {
                 }
             }
         }
-
-        protected final String name;
-        protected final Set<String> aliases = new CopyOnWriteArraySet<>();
-        protected volatile String directoryIndex = "index.html";
-        protected volatile boolean allowGeneratedIndex;
-        protected final Set<String> methods = new CopyOnWriteArraySet<>();
-        protected final ContextInfo emptyContext = new ContextInfo();
-        protected final ConcurrentMap<String, ContextInfo> contexts = new ConcurrentHashMap<>();
 
         /**
          * Constructs a VirtualHost with the given name.
@@ -617,7 +614,7 @@ public class HTTPServer {
          * @throws IllegalArgumentException if path is malformed
          */
         public void addContext(String path, ContextHandler handler, String... methods) {
-            if (path == null || !path.startsWith("/") && !path.equals("*")) {
+            if (path == null || !path.startsWith("/") && !"*".equals(path)) {
                 throw new IllegalArgumentException("invalid path: " + path);
             }
             path = trimRight(path, '/');
@@ -973,7 +970,7 @@ public class HTTPServer {
             // if there is no such Transfer-Encoding, use Content-Length
             // if neither header exists, there is no body
             String header = headers.get("Transfer-Encoding");
-            if (header != null && !header.toLowerCase(Locale.US).equals("identity")) {
+            if (header != null && !"identity".equals(header.toLowerCase(Locale.US))) {
                 if (Arrays.asList(splitElements(header, true)).contains("chunked")) {
                     body = new ChunkedInputStream(in, headers);
                 } else {
@@ -1811,7 +1808,7 @@ public class HTTPServer {
         Headers reqHeaders = req.getHeaders();
         // validate request
         String version = req.getVersion();
-        if (version.equals("HTTP/1.1")) {
+        if ("HTTP/1.1".equals(version)) {
             if (!reqHeaders.contains("Host")) {
                 // RFC2616#14.23: missing Host header gets 400
                 resp.sendError(400, "Missing required Host header");
@@ -1820,7 +1817,7 @@ public class HTTPServer {
             // return a continue response before reading body
             String expect = reqHeaders.get("Expect");
             if (expect != null) {
-                if (expect.equalsIgnoreCase("100-continue")) {
+                if ("100-continue".equalsIgnoreCase(expect)) {
                     Response tempResp = new Response(resp.getOutputStream());
                     tempResp.sendHeaders(100);
                     resp.getOutputStream().flush();
@@ -1830,7 +1827,7 @@ public class HTTPServer {
                     return false;
                 }
             }
-        } else if (version.equals("HTTP/1.0") || version.equals("HTTP/0.9")) {
+        } else if ("HTTP/1.0".equals(version) || "HTTP/0.9".equals(version)) {
             // RFC2616#14.10 - remove connection headers from older versions
             for (String token : splitElements(reqHeaders.get("Connection"), false)) {
                 reqHeaders.remove(token);
@@ -1854,13 +1851,13 @@ public class HTTPServer {
         VirtualHost host = req.getVirtualHost();
         Map<String, ContextHandler> handlers = host.getContext(req.getPath()).getHandlers();
         // RFC 2616#5.1.1 - GET and HEAD must be supported
-        if (method.equals("GET") || handlers.containsKey(method)) {
+        if ("GET".equals(method) || handlers.containsKey(method)) {
             serve(req, resp); // method is handled by context handler (or 404)
-        } else if (method.equals("HEAD")) { // default HEAD handler
+        } else if ("HEAD".equals(method)) { // default HEAD handler
             req.method = "GET"; // identical to a GET
             resp.setDiscardBody(true); // process normally but discard body
             serve(req, resp);
-        } else if (method.equals("TRACE")) { // default TRACE handler
+        } else if ("TRACE".equals(method)) { // default TRACE handler
             handleTrace(req, resp);
         } else {
             Set<String> methods = new LinkedHashSet<>();
@@ -1868,10 +1865,10 @@ public class HTTPServer {
             // methods
             // "*" is a special server-wide (no-context) request supported by
             // OPTIONS
-            boolean isServerOptions = req.getPath().equals("*") && method.equals("OPTIONS");
+            boolean isServerOptions = "*".equals(req.getPath()) && "OPTIONS".equals(method);
             methods.addAll(isServerOptions ? host.getMethods() : handlers.keySet());
             resp.getHeaders().add("Allow", join(", ", methods));
-            if (method.equals("OPTIONS")) { // default OPTIONS handler
+            if ("OPTIONS".equals(method)) { // default OPTIONS handler
                 resp.getHeaders().add("Content-Length", "0"); // RFC2616#9.2
                 resp.sendHeaders(200);
             } else if (host.getMethods().contains(method)) {
