@@ -421,7 +421,7 @@ public class Manager extends AbstractManager {
             //periodically update db only if db name is set or logging enabled and sync frequency is selected
             //no defaults for this function
             try {
-                int intMetricsSyncFrequencyInSeconds = Integer.valueOf(metricsSyncFrequencyInSeconds);
+                int intMetricsSyncFrequencyInSeconds = Integer.parseInt(metricsSyncFrequencyInSeconds);
                 options.setMetricsSyncFrequencyInMillis(intMetricsSyncFrequencyInSeconds * 1000);
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException(Options.METRICS_SYNC_FREQUENCY + " = " + metricsSyncFrequencyInSeconds + " is invalid. please use a valid integer.");
