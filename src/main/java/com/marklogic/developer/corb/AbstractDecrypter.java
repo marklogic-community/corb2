@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
 
 public abstract class AbstractDecrypter implements Decrypter {
 
-    protected transient Properties properties;
+    protected Properties properties;
     private static final Pattern ENCRYPTED_VALUE_REGEX = Pattern.compile("^ENC\\((.*)\\)$");
 
     @Override
