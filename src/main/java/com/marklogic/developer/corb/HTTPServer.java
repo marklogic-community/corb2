@@ -1510,25 +1510,22 @@ public class HTTPServer {
             try {
                 while (!serv.isClosed()) {
                     final Socket sock = serv.accept();
-                    executor.execute(new Runnable() {
-                        @Override
-                        public void run() {
+                    executor.execute(() -> {
+                        try {
                             try {
+                                sock.setSoTimeout(socketTimeout);
+                                sock.setTcpNoDelay(true); // we buffer anyway, so improve latency
+                                handleConnection(sock.getInputStream(), sock.getOutputStream());
+                            } finally {
                                 try {
-                                    sock.setSoTimeout(socketTimeout);
-                                    sock.setTcpNoDelay(true); // we buffer anyway, so improve latency
-                                    handleConnection(sock.getInputStream(), sock.getOutputStream());
+                                    // RFC7230#6.6 - close socket gracefully
+                                    sock.shutdownOutput(); // half-close socket (only output)
+                                    transfer(sock.getInputStream(), null, -1); // consume input
                                 } finally {
-                                    try {
-                                        // RFC7230#6.6 - close socket gracefully
-                                        sock.shutdownOutput(); // half-close socket (only output)
-                                        transfer(sock.getInputStream(), null, -1); // consume input
-                                    } finally {
-                                        sock.close(); // and finally close socket fully
-                                    }
+                                    sock.close(); // and finally close socket fully
                                 }
-                            } catch (IOException ignore) {
                             }
+                        } catch (IOException ignore) {
                         }
                     });
                 }
@@ -1578,22 +1575,12 @@ public class HTTPServer {
     }
 
     private static boolean available(int port) {
-        Socket s = null;
-        try {
-            s = new Socket("localhost", port);
+        try (Socket s = new Socket("localhost", port)) {
             // If the code makes it this far without an exception it means
             // something is using the port and has responded.
             return false;
         } catch (IOException e) {
             return true;
-        } finally {
-            if (s != null) {
-                try {
-                    s.close();
-                } catch (IOException e) {
-                    throw new RuntimeException("Unable to close socket on port " + port, e);
-                }
-            }
         }
     }
 
