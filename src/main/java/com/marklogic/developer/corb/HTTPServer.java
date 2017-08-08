@@ -65,7 +65,7 @@ import javax.net.ssl.SSLServerSocketFactory;
 public class HTTPServer {
 
     private static final Logger LOG = Logger.getLogger(HTTPServer.class.getName());
-    public static final String[] DATE_PATTERNS = {"EEE, dd MMM yyyy HH:mm:ss z", // RFC
+    protected static final String[] DATE_PATTERNS = {"EEE, dd MMM yyyy HH:mm:ss z", // RFC
         // 822,
         // updated
         // by
@@ -89,7 +89,7 @@ public class HTTPServer {
     /**
      * A convenience array containing the carriage-return and line feed chars.
      */
-    public static final byte[] CRLF = {0x0d, 0x0a};
+    protected static final byte[] CRLF = {0x0d, 0x0a};
 
     /**
      * The HTTP status description strings.
