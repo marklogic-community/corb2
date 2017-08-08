@@ -287,8 +287,10 @@ public abstract class AbstractManager {
     protected boolean deleteFileIfExists(String directory, String filename) {
         if (filename != null) {
             File file = new File(directory, filename);
-            if (file.exists()) {
-                return file.delete();
+            try {
+                return Files.deleteIfExists(file.toPath());
+            } catch (IOException ex) {
+                LOG.log(Level.SEVERE, MessageFormat.format("Unable to remove {0}", file.toString()), ex);
             }
         }
         return false;
