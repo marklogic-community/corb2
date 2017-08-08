@@ -105,7 +105,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                         if (!sn.isEmpty()) {
                             return sn.getBytes();
                         } else {
-                            throw new IllegalStateException(MessageFormat.format(EXCEPTION_MGS_SERIAL_NOT_FOUND, new Object[]{this.toString()}));
+                            throw new IllegalStateException(MessageFormat.format(EXCEPTION_MGS_SERIAL_NOT_FOUND, this.toString()));
                         }
                     }
                 } finally {
