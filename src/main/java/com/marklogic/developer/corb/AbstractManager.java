@@ -288,7 +288,7 @@ public abstract class AbstractManager {
             try {
                 return Files.deleteIfExists(file.toPath());
             } catch (IOException ex) {
-                LOG.log(Level.SEVERE, MessageFormat.format("Unable to remove {0}", file.toString()), ex);
+                LOG.log(Level.SEVERE, MessageFormat.format("Unable to remove {0}", file), ex);
             }
         }
         return false;
