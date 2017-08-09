@@ -70,7 +70,6 @@ import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import java.nio.file.Files;
-import java.util.logging.Level;
 
 public abstract class AbstractManager {
 
