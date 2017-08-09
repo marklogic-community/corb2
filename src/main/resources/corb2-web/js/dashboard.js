@@ -2,7 +2,7 @@ var app = angular.module('dashboard',[]);
 app.controller('mainCtrl', ['$scope', '$http','$interval',
                             function($scope, $http, $interval) {
 		$scope.allThreadCounts=[];
-		for( var i =1;i<=64;i++){
+		for (var i =1; i<=64; i++) {
 			$scope.allThreadCounts.push(i)
 		}
 		$scope.threadCount =-1;
@@ -17,7 +17,7 @@ app.controller('mainCtrl', ['$scope', '$http','$interval',
     			$scope.urisLoadTimeInMillis=job.urisLoadTimeInMillis;
     			$scope.totalNumberOfTasks=job.totalNumberOfTasks;
     		}
-    		if (job.paused == "true") {
+    		if (job.paused === "true") {
     			$scope.pauseButtonText= "Resume Corb Job";
     			$scope.pauseButtonStyle="btn-info";
     		} else {
@@ -33,14 +33,14 @@ app.controller('mainCtrl', ['$scope', '$http','$interval',
     		$scope.jobDuration = (job.totalRunTimeInMillis && job.totalRunTimeInMillis>0 ) ? msToTime(job.totalRunTimeInMillis) : "Not Running";
     		$scope.averageTransactionTimeInMillis =  Math.round(job.averageTransactionTimeInMillis * 100) / 100;
     		$scope.job = job;
-    		if ($scope.threadCount == -1) {
+    		if ($scope.threadCount === -1) {
     			$scope.threadCount = job.currentThreadCount;
     			$scope.totalNumberOfTasks = job.totalNumberOfTasks;
     		}
 
     	};
     	var handleError = function (error, status) {
-            if ( status == "404") {
+            if (status === "404") {
             	$interval.cancel(promise);
             	$scope.allDone=100;
             	$scope.successPercent = 0;
@@ -50,7 +50,7 @@ app.controller('mainCtrl', ['$scope', '$http','$interval',
         		$scope.updateThreadsButtonStyle = "disabled";
             }
     	};
-    	var promise=$interval(function() {
+    	var promise = $interval(function() {
     		$http.get("/corb?concise=true").success(loadData).error(handleError);
     	}, 5000);
     	var pad = function(n, z) {
@@ -70,7 +70,7 @@ app.controller('mainCtrl', ['$scope', '$http','$interval',
     		};
     	$scope.pauseResumeButtonClick = function(){
     		var reqStr = "";
-    		if ($scope.job.paused == "true") {
+    		if ($scope.job.paused === "true") {
     			reqStr= "&paused=false";
     		} else {
     			reqStr= "&paused=true";

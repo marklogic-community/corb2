@@ -1,92 +1,82 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <meta name="description" content="">
     <meta name="author" content="">
-
     <title>Job Dashboard</title>
-
     <!-- Bootstrap core CSS -->
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="./css/bootstrap.min.css" >
     <!-- Custom styles for this template -->
     <link href="./css/dashboard.css" rel="stylesheet">
-
-   
-   </head>
-
+  </head>
   <body ng-app="dashboard" ng-controller="mainCtrl">
-
-   
-
     <div class="container-fluid">
       <div class="row">
-       <div class="col-lg-12">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h3>Job Dashboard</h3>
-                        </div>
-                        <div class="table-responsive">
-                                <table class="table table-striped table-bordered table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th> Start Time </th>       
-											<th> Avg TPS </th>
-											<th> Curr TPS </th>
-											<th> Host/Port </th>
-											<th> # Threads</th>
-											<th> #Succeeded Tasks </th>
-											<th> #Failed Tasks </th>
-											<th> Is Paused </th>
-											<th> Job Location </th>
-											<th> Total #Tasks </th>
-											<th> Total Run Time  </th>
-											<th> Pause/Resume   </th>  
-											<th> #Threads   </th>  
-											 <th> Save   </th>  
-											
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr ng-repeat="i in availableServerData">
-                                            <td>
-                                            <a ng-click="openJob(i)" target = "_blank">{{i.startTime}}</a>
-                                            </td>       
-                                            <td>{{i.averageTransactionsPerSecond}}</td>
-											<td>{{i.currentTransactionsPerSecond}}</td>
-											<td>{{i.host}}/{{i.port}}</td>
-											<td>{{i.currentThreadCount}}</td>
-											<td>{{i.numberOfSucceededTasks}}</td>
-											<td>{{i.numberOfFailedTasks}}</td>
-											<td>{{i.paused}}</td>
-											<td>{{i.runLocation}}</td>
-											<td>{{i.totalNumberOfTasks}}</td>
-											<td>{{msToTime(i.totalRunTimeInMillis)}}</td>
-											<td><button class="btn {{pauseButtonStyle[i.host+i.port]}}" ng-click="pauseResumeButtonClick(i)">{{pauseButtonText[i.host+i.port]}}</button></td>  
-											<td><select class="custom-select" ng-model="threadCounts[i.host+i.port]">
-													<option ng-repeat="x in allThreadCounts">{{x}}</option>
-												</select>
-													
-												</td>  
-											<td>													
-												<a ng-click="updateThreadCount(i)"><span class="glyphicon glyphicon-save"></span></a>
-											</td> 	                          
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                    </div>
+        <div class="col-lg-12">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3>Job Dashboard</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-striped table-bordered table-hover">
+                <thead>
+                  <tr>
+                    <th> Start Time </th>       
+                    <th> Avg TPS </th>
+                    <th> Curr TPS </th>
+                    <th> Host/Port </th>
+                    <th> # Threads</th>
+                    <th> #Succeeded Tasks </th>
+                    <th> #Failed Tasks </th>
+                    <th> Is Paused </th>
+                    <th> Job Location </th>
+                    <th> Total #Tasks </th>
+                    <th> Total Run Time  </th>
+                    <th> Pause/Resume   </th>  
+                    <th> #Threads   </th>  
+                    <th> Save   </th>  
+
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat="i in availableServerData">
+                    <td>
+                      <a ng-click="openJob(i)" target = "_blank">{{i.startTime}}</a>
+                    </td>       
+                    <td>{{i.averageTransactionsPerSecond}}</td>
+                    <td>{{i.currentTransactionsPerSecond}}</td>
+                    <td>{{i.host}}/{{i.port}}</td>
+                    <td>{{i.currentThreadCount}}</td>
+                    <td>{{i.numberOfSucceededTasks}}</td>
+                    <td>{{i.numberOfFailedTasks}}</td>
+                    <td>{{i.paused}}</td>
+                    <td>{{i.runLocation}}</td>
+                    <td>{{i.totalNumberOfTasks}}</td>
+                    <td>{{msToTime(i.totalRunTimeInMillis)}}</td>
+                    <td><button class="btn {{pauseButtonStyle[i.host+i.port]}}" ng-click="pauseResumeButtonClick(i)">{{pauseButtonText[i.host+i.port]}}</button></td>  
+                    <td><select class="custom-select" ng-model="threadCounts[i.host+i.port]">
+                        <option ng-repeat="x in allThreadCounts">{{x}}</option>
+                      </select>
+
+                    </td>  
+                    <td>													
+                      <a ng-click="updateThreadCount(i)"><span class="glyphicon glyphicon-save"></span></a>
+                    </td> 	                          
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
-      
     </div>
-    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular.min.js"></script>
-   
+    <script src="./js/jquery-3.1.1.slim.min.js"></script>
+    <script src="./js/angular.min.js"></script>
     <script src="./js/bootstrap.min.js"></script>
     <script src="./js/allJobs.js"></script>
-    
-
-
-</body></html>
+  </body>
+</html>
