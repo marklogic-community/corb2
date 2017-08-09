@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.List;
 import java.util.Properties;
@@ -197,7 +196,7 @@ public class MetricsIT {
             List<String> urisWithEndTime = docsWithEndTime(manager.contentSource, collectionName, METRICS_DB_NAME, (XML_EXT.equals(extension)));
             assertTrue("Only one URI with End Time", (urisWithEndTime.size() == 1));
         } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            LOG.log(SEVERE, null, ex);
             fail();
         } finally {
             cleanupDocs(manager.contentSource, collectionName, METRICS_DB_NAME);
