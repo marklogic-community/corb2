@@ -64,7 +64,13 @@ import javax.net.ssl.SSLServerSocketFactory;
 
 public class HTTPServer {
 
-    private static final Logger LOG = Logger.getLogger(HTTPServer.class.getName());
+    private static final Logger LOG = Logger.getLogger(HTTPServer.class.getName());          
+    protected volatile int port;
+    protected boolean secure;
+    protected volatile int socketTimeout = 10000;
+    protected volatile Executor executor;
+    protected volatile ServerSocket serv;
+    protected final Map<String, VirtualHost> hosts = new ConcurrentHashMap<>();
     protected static final String[] DATE_PATTERNS = {"EEE, dd MMM yyyy HH:mm:ss z", // RFC
         // 822,
         // updated
@@ -73,7 +79,7 @@ public class HTTPServer {
         // 1123
         "EEEE, dd-MMM-yy HH:mm:ss z", // RFC 850, obsoleted by RFC 1036
         "EEE MMM d HH:mm:ss yyyy" // ANSI C's asctime() format
-};
+    };
 
     /**
      * A GMT (UTC) timezone instance.
@@ -1499,8 +1505,7 @@ public class HTTPServer {
     /**
      * The {@code SocketHandlerThread} handles accepted sockets.
      */
-    protected class SocketHandlerThread extends Thread {
-
+    protected class SocketHandlerThread extends Thread {      
         @Override
         public void run() {
             setName(getClass().getSimpleName() + "-" + port);
@@ -1530,13 +1535,6 @@ public class HTTPServer {
             }
         }
     }
-
-    protected volatile int port;
-    protected boolean secure;
-    protected volatile int socketTimeout = 10000;
-    protected volatile Executor executor;
-    protected volatile ServerSocket serv;
-    protected final Map<String, VirtualHost> hosts = new ConcurrentHashMap<>();
 
     /**
      * Constructs an HTTPServer which can accept connections on the given port.
