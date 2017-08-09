@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 public class JobServicesHandler implements HTTPServer.ContextHandler {
 
     private static final Logger LOG = Logger.getLogger(JobServicesHandler.class.getName());
-    Manager manager;
+    private Manager manager;
 
     JobServicesHandler(Manager manager) {
         this.manager = manager;
