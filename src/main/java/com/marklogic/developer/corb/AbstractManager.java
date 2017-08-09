@@ -242,7 +242,7 @@ public abstract class AbstractManager {
                 throw new CorbException(MessageFormat.format("Unable to instantiate {0} {1}", SSL_CONFIG_CLASS, sslConfigClassName), ex);
             }
         } else {
-            LOG.log(Level.INFO, () -> "Using TrustAnyoneSSSLConfig because no " + SSL_CONFIG_CLASS + " value specified.");
+            LOG.log(INFO, () -> "Using TrustAnyoneSSSLConfig because no " + SSL_CONFIG_CLASS + " value specified.");
             this.sslConfig = new TrustAnyoneSSLConfig();
         }
         sslConfig.setProperties(this.properties);
@@ -288,7 +288,7 @@ public abstract class AbstractManager {
             try {
                 return Files.deleteIfExists(file.toPath());
             } catch (IOException ex) {
-                LOG.log(Level.SEVERE, MessageFormat.format("Unable to remove {0}", file), ex);
+                LOG.log(SEVERE, MessageFormat.format("Unable to remove {0}", file), ex);
             }
         }
         return false;
