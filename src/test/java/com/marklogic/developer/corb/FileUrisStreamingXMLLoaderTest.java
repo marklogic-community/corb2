@@ -204,7 +204,7 @@ public class FileUrisStreamingXMLLoaderTest {
         properties.setProperty(Options.TEMP_DIR, BUU_DIR + BUU_SCHEMA);
         loader.properties = properties;
         try {
-            Path tempDir = loader.getTempDir();
+            loader.getTempDir();
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
