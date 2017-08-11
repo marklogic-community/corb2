@@ -64,7 +64,7 @@ import javax.net.ssl.SSLServerSocketFactory;
 
 public class HTTPServer {
 
-    private static final Logger LOG = Logger.getLogger(HTTPServer.class.getName());          
+    private static final Logger LOG = Logger.getLogger(HTTPServer.class.getName());
     protected volatile int port;
     protected boolean secure;
     protected volatile int socketTimeout = 10000;
@@ -714,7 +714,7 @@ public class HTTPServer {
                 }
 
             } catch (IOException exc) {
-                LOG.log(SEVERE, "Unable to server resource", exc);
+                LOG.log(SEVERE, "Unable to serve resource", exc);
                 return 404;
             }
         }
@@ -1505,7 +1505,7 @@ public class HTTPServer {
     /**
      * The {@code SocketHandlerThread} handles accepted sockets.
      */
-    protected class SocketHandlerThread extends Thread {      
+    protected class SocketHandlerThread extends Thread {
         @Override
         public void run() {
             setName(getClass().getSimpleName() + "-" + port);
