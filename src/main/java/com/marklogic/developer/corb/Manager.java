@@ -620,10 +620,10 @@ public class Manager extends AbstractManager {
             host.addContext(JOB_SERVICE_PATH, dataContextHandler, "GET", "POST");
             host.addContext(HTTP_RESOURCE_PATH, htmlContextHandler);
             jobServer.start();
-            String decoration = "*****************************************************************************************\n";
+            String decoration = "*****************************************************************************************";
             LOG.info(decoration);
-            LOG.log(INFO, MessageFormat.format("Job Server has started and can be access using http://localhost:{0}/web/index.html", jobServer.port));
-            LOG.log(INFO, MessageFormat.format("Visit http://localhost:{0}/corb to fetch the metrics data", jobServer.port));
+            LOG.log(INFO, MessageFormat.format("Job Server has started and can be access using http://localhost:{0,number,#}/web/index.html", jobServer.port));
+            LOG.log(INFO, MessageFormat.format("Visit http://localhost:{0,number,#}{1} to fetch the metrics data", jobServer.port, JOB_SERVICE_PATH));
             LOG.info(decoration);
         }
     }
