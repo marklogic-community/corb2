@@ -9,26 +9,26 @@
     <meta name="author" content="">
     <title>Job Status</title>
     <!-- Bootstrap core CSS -->
-	<link href="./css/bootstrap.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="./css/bootstrap.min.css">
     <!-- Custom styles for this template -->
     <link href="./css/dashboard.css" rel="stylesheet">
    </head>
   <body ng-app="dashboard" ng-controller="mainCtrl">
     <div class="container-fluid">
-      <div class="row">
+      <div class="row">      
         <div class="col-sm-9 col-md-10  main">
           <h4>Job Status</h4>
           <div class="row">
             <div class="col-xs-7 col-sm-7">
 	            <div class="progress">
-				  <div class="progress-bar progress-bar-success progress-bar-striped active"
+				  <div class="progress-bar progress-bar-success progress-bar-striped active" 
 				  role="progressbar" style="width:{{successPercent}}%"
 				  aria-valuenow="{{successPercent}}" aria-valuemin="0" aria-valuemax="100"
 				  data-placement="bottom" data-toggle="tooltip" title="{{successTotals}}"
 				   >
 				    Success ({{successPercent}}%)
 				  </div>
-
+				  
 				  <div class="progress-bar progress-bar-danger progress-bar-striped active" role="progressbar" style="width:{{failedPercent}}%"
 				  aria-valuenow="{{failedPercent}}" aria-valuemin="0" aria-valuemax="100"
 				  data-placement="bottom" data-toggle="tooltip" title="{{failedTotals}}"
@@ -45,15 +45,15 @@
             	<select class="custom-select" ng-model="threadCount" id="threadCount">
 					<option ng-repeat="x in allThreadCounts">{{x}}</option>
 				</select>
-		    </div>
+		    </div>	
             <div class="col-xs-2 col-sm-2 ">
-            	<button class="btn {{updateThreadsButtonStyle}}"
+            	<button class="btn {{updateThreadsButtonStyle}}" 
 		    	data-loading-text="<i class='icon-spinner icon-spin icon-large'></i>"
 		    	ng-click="updateThreadCount()">Update Thread #</button>
-
+           
             </div>
             <div class="col-xs-2 col-sm-2 ">
-              <button class="btn {{pauseButtonStyle}}"
+              <button class="btn {{pauseButtonStyle}}" 
               data-loading-text="<i class='icon-spinner icon-spin icon-large'></i>"
               ng-click="pauseResumeButtonClick()">{{pauseButtonText}}</button>
             </div>
@@ -131,7 +131,7 @@
                       </div>
                   </div>
               <!-- /.panel -->
-              </div>
+              </div>      
           <!-- /.panel -->
           </div>
         </div>
@@ -153,7 +153,7 @@
                         <tbody>
                             <tr ng-repeat="(key,value) in userProvidedOptions">
                                 <td>{{key}}</td>
-                                <td>{{value}}</td>
+                                <td>{{value}}</td>                                            
                             </tr>
                         </tbody>
                     </table>

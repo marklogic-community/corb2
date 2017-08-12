@@ -8,26 +8,25 @@ app.controller('mainCtrl', ['$scope', '$http','$interval',
 		$scope.pauseButtonStyle={};
 		$scope.threadCounts={};
 		$scope.allThreadCounts=[];
-		for (var i =1; i<=64; i++) {
+		for (var i =1; i <= 64; i++) {
 			$scope.allThreadCounts.push(i)
 		}
 		$scope.pauseResumeButtonClick = function(job){
 
-    		var reqStr = "";
+    		var reqStr = "&paused=";
     		if (job.paused === "true") {
-    			reqStr= "&paused=false"
+    			reqStr = "false"
+    		} else {
+    			reqStr = "true"
     		}
-    		else{
-    			reqStr= "&paused=true"
-    		}
-    		$http.post("http://"+job.host+":"+job.port+"/corb","concise=false"+reqStr,{'headers':{'Content-Type': 'application/x-www-form-urlencoded'}})
+    		$http.post("http://" + job.host + ":" + job.port + "/corb", "concise=false" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}})
     	};
     	$scope.updateThreadCount = function(job){
     		var reqStr = "&threads=" + $scope.threadCounts[job.host + job.port];
-    		$http.post("http://"+job.host+":"+job.port+"/corb","concise=false"+reqStr,{'headers':{'Content-Type': 'application/x-www-form-urlencoded'}})
+    		$http.post("http://" + job.host + ":" + job.port + "/corb", "concise=false" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}})
     	};
     	$scope.openJob = function(job){
-    		window.open("http://"+job.host+":"+job.port+"/web/index.html","target=_blank")
+    		window.open("http://" + job.host + ":" + job.port + "/web/index.html", "target=_blank")
     	};
     	var pad = function (n, z) {
     	    z = z || 2;
@@ -58,17 +57,17 @@ app.controller('mainCtrl', ['$scope', '$http','$interval',
         		$scope.isLoading = false;
         		console.log("host " + host + " port " + port + " FOUND");
         		var job = response.job;
-        		var oldData=$scope.availableServers[host + ":" + port];
+        		var oldData = $scope.availableServers[host + ":" + port];
         		$scope.availableServers[host + ":" + port] = (job);
         		if (job.paused === "true") {
-        			$scope.pauseButtonText[host+port]= "Resume Corb Job";
-        			$scope.pauseButtonStyle[host+port]="btn-info";
+        			$scope.pauseButtonText[host+port] = "Resume Corb Job";
+        			$scope.pauseButtonStyle[host+port] = "btn-info";
         		}
         		else{
-        			$scope.pauseButtonText[host+port]= "Pause Corb Job";
-        			$scope.pauseButtonStyle[host+port]="btn-success";
+        			$scope.pauseButtonText[host+port] = "Pause Corb Job";
+        			$scope.pauseButtonStyle[host+port] = "btn-success";
         		}
-        		$scope.threadCounts[host+port] ? null : $scope.threadCounts[host+port]=job.currentThreadCount;
+        		$scope.threadCounts[host+port] ? null : $scope.threadCounts[host+port] = job.currentThreadCount;
         		for (i in $scope.availableServerData) {
                     if (oldData === $scope.availableServerData[i]) {
                         $scope.availableServerData.splice(i, 1);
