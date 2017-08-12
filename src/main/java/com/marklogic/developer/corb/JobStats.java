@@ -129,44 +129,45 @@ public class JobStats extends BaseMonitor {
                 LOG.log(INFO, "Hostname can not be resolved", e);
             }
         }
-        this.setHost(hostname);
-        this.setJobRunLocation(System.getProperty("user.dir"));
-        this.setStartTime(epochMillisAsFormattedDateString(this.manager.getStartMillis()));
-        this.setUserProvidedOptions(this.manager.getUserProvidedOptions());
+        setHost(hostname);
+        setJobRunLocation(System.getProperty("user.dir"));
+        setStartTime(epochMillisAsFormattedDateString(manager.getStartMillis()));
+        setUserProvidedOptions(manager.getUserProvidedOptions());
     }
 
     private void refresh() {
         synchronized (this) {
+
             taskCount = taskCount > 0 ? taskCount : (pool != null) ? pool.getTaskCount() : 0l;
             if (taskCount > 0) {
-                this.setTopTimeTakingUris((pool != null) ? this.pool.getTopUris() : null);
-                List<String> failedUris = (pool != null) ? this.pool.getFailedUris() : null;
-                this.setFailedUris(failedUris);
-                long numberOfFailedTasks = (this.pool != null) ? this.pool.getNumFailedUris() : 0l;
-                this.setNumberOfFailedTasks(numberOfFailedTasks);
-                long numberOfSucceededTasks = (this.pool != null) ? this.pool.getNumSucceededUris() : 0l;
-                this.setJobServerPort(options.getJobServerPort().longValue());
-                this.setNumberOfSucceededTasks(numberOfSucceededTasks);
-                this.setTotalNumberOfTasks(taskCount);
+                if (pool != null) {
+                    setTotalNumberOfTasks(manager.monitor.getTaskCount());
+                    setTopTimeTakingUris(pool.getTopUris());
+                    setFailedUris(pool.getFailedUris());
+                    setNumberOfFailedTasks(pool.getNumFailedUris());
+                    setNumberOfSucceededTasks(pool.getNumSucceededUris());
+                }
+                setJobServerPort(options.getJobServerPort().longValue());
+
                 Long currentTimeMillis = System.currentTimeMillis();
-                Long totalTime = this.manager.getEndMillis() - manager.getStartMillis();
+                Long totalTime = manager.getEndMillis() - manager.getStartMillis();
                 if (totalTime > 0) {
-                    this.setTotalRunTimeInMillis(totalTime);
+                    setTotalRunTimeInMillis(totalTime);
                     Long totalTransformTime = currentTimeMillis - manager.getTransformStartMillis();
-                    this.setAverageTransactionTime(totalTransformTime / Double.valueOf(numberOfFailedTasks + numberOfSucceededTasks));
-                    this.setEndTime(epochMillisAsFormattedDateString(this.manager.getEndMillis()));
+                    setAverageTransactionTime(totalTransformTime / Double.valueOf(numberOfFailedTasks + numberOfSucceededTasks));
+                    setEndTime(epochMillisAsFormattedDateString(manager.getEndMillis()));
                     estimatedTimeOfCompletion = null;
-                    this.setCurrentThreadCount(0l);
+                    setCurrentThreadCount(0l);
                 } else {
-                    this.setTotalRunTimeInMillis(currentTimeMillis - manager.getStartMillis());
+                    setTotalRunTimeInMillis(currentTimeMillis - manager.getStartMillis());
                     long completed = numberOfSucceededTasks + numberOfFailedTasks;
                     long intervalBetweenRequestsInMillis = TPS_ETC_MIN_REFRESH_INTERVAL;
                     long timeSinceLastReq = currentTimeMillis - prevMillis;
                     //refresh it every 10 seconds or more.. ignore more frequent requests
                     if (timeSinceLastReq > intervalBetweenRequestsInMillis) {
-                        this.populateTps(completed);
+                        populateTps(completed);
                     }
-                    this.setCurrentThreadCount(Long.valueOf(this.options.getThreadCount()));
+                    setCurrentThreadCount(Long.valueOf(options.getThreadCount()));
                 }
             }
         }
@@ -183,9 +184,9 @@ public class JobStats extends BaseMonitor {
         String metricsToServerLog = null;
 
         if (isJavaScriptModule(processModule)) {
-            metricsToDocument = this.toJSONString(concise);
+            metricsToDocument = toJSONString(concise);
         } else {
-            metricsToDocument = this.toXMLString(concise);
+            metricsToDocument = toXMLString(concise);
             metricsToServerLog = getJsonFromXML(metricsToDocument);
         }
         logJobStatsToServerDocument(metricsToDocument);
@@ -229,7 +230,7 @@ public class JobStats extends BaseMonitor {
 
             if (contentSource != null) {
                 try (Session session = contentSource.newSession()) {
-                    Request request = this.manager.getRequestForModule(processModule, session);
+                    Request request = manager.getRequestForModule(processModule, session);
 
                     request.setNewStringVariable(METRICS_DB_NAME_PARAM, logMetricsToServerDBName);
                     if (uriRoot != null) {
@@ -245,10 +246,10 @@ public class JobStats extends BaseMonitor {
                     if (isJavaScriptModule(processModule)) {
                         requestOptions.setQueryLanguage("javascript");
                         request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
-                                metrics == null ? this.toJSONString() : metrics);
+                                metrics == null ? toJSONString() : metrics);
                     } else {
                         request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
-                                metrics == null ? this.toXMLString() : metrics);
+                                metrics == null ? toXMLString() : metrics);
 
                     }
                     request.setOptions(requestOptions);
@@ -256,7 +257,7 @@ public class JobStats extends BaseMonitor {
                     seq = session.submitRequest(request);
                     String uri = seq.hasNext() ? seq.next().asString() : null;
                     if (uri != null) {
-                        this.setUri(uri);
+                        setUri(uri);
                     }
                     session.close();
                     Thread.yield();// try to avoid thread starvation
@@ -339,6 +340,9 @@ public class JobStats extends BaseMonitor {
 
     public void setNumberOfFailedTasks(Long numberOfFailedTasks) {
         this.numberOfFailedTasks = numberOfFailedTasks;
+    }
+    public void setNumberOfFailedTasks(Integer numberOfFailedTasks) {
+        this.numberOfFailedTasks = numberOfFailedTasks.longValue();
     }
 
     public Double getAverageTransactionTime() {
@@ -667,7 +671,9 @@ public class JobStats extends BaseMonitor {
     public void setNumberOfSucceededTasks(Long numberOfSucceededTasks) {
         this.numberOfSucceededTasks = numberOfSucceededTasks;
     }
-
+    public void setNumberOfSucceededTasks(Integer numberOfSucceededTasks) {
+        this.numberOfSucceededTasks = numberOfSucceededTasks.longValue();
+    }
     /**
      * @return the totalRunTimeInMillis
      */
