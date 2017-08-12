@@ -392,7 +392,7 @@ public class JobStats extends BaseMonitor {
                 .append(concise ? "" : xmlNode(URIS_LOAD_TIME, urisLoadTime))
                 .append(concise ? "" : xmlNode(POST_BATCH_RUN_TIME, postBatchRunTime))
                 .append(xmlNode(AVERAGE_TRANSACTION_TIME, averageTransactionTime))
-                .append(concise ? "" : xmlNode(TOTAL_NUMBER_OF_TASKS, totalNumberOfTasks))
+                .append(xmlNode(TOTAL_NUMBER_OF_TASKS, totalNumberOfTasks))
                 .append(xmlNode(TOTAL_JOB_RUN_TIME, totalRunTimeInMillis))
                 .append(xmlNode(NUMBER_OF_FAILED_TASKS, numberOfFailedTasks))
                 .append(xmlNode(NUMBER_OF_SUCCEEDED_TASKS, numberOfSucceededTasks))
