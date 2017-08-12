@@ -56,13 +56,13 @@ public class ManagerPT {
         FileUtils.deleteFile(ManagerTest.EXPORT_FILE_DIR);
         clearSystemProperties();
     }
- 
+
     @Test
     public void testExtremelyLargeUrisList() {
-         
+
         int uriCount = 9999999;
         String exportFilename = "testManagerUsingExtremelyLargeUris.txt";
-        
+
         Properties properties = ManagerTest.getDefaultProperties();
         properties.setProperty(Options.THREAD_COUNT, "8");
         properties.setProperty(Options.URIS_MODULE, "src/test/resources/selectorLargeList.xqy|ADHOC");
@@ -70,22 +70,27 @@ public class ManagerPT {
         properties.setProperty(Options.EXPORT_FILE_NAME, exportFilename);
         properties.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10000));
         properties.setProperty(Options.DISK_QUEUE_TEMP_DIR, "/var/tmp");
-        
+        properties.setProperty(Options.JOB_SERVER_PORT,"8000-9000");
+        properties.setProperty(Options.JOB_NAME, "Manager Integration Test");
+        properties.setProperty(Options.METRICS_TO_ERROR_LOG, "INFO");
+        properties.setProperty(Options.METRICS_DB_NAME, "marklogic-corb-content");
+        properties.setProperty(Options.METRICS_DOC_COLLECTIONS, "corb-metrics");
+
         Manager manager = new Manager();
         try {
-            
+
             manager.init(properties);
             manager.run();
-            
+
             File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFilename);
             report.deleteOnExit();
             int lineCount = FileUtils.getLineCount(report);
-            
+
             assertEquals(uriCount + 2, lineCount);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
-  
+
 }
