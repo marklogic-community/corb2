@@ -21,6 +21,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -741,7 +743,7 @@ public class HTTPServer {
             this.name = name.trim();
             this.value = value.trim();
             // RFC2616#14.23 - header can have an empty value (e.g. Host)
-            if (!this.name.isEmpty()) { // but name cannot be empty
+            if (this.name.isEmpty()) { // but name cannot be empty
                 throw new IllegalArgumentException("name cannot be empty");
             }
         }
@@ -1175,7 +1177,7 @@ public class HTTPServer {
             try {
                 do {
                     line = readLine(in);
-                } while (!line.isEmpty());
+                } while (line.isEmpty());
             } catch (IOException ioe) { // if EOF, timeout etc.
                 throw new IOException("missing request line"); // signal that the request did not begin
             }
@@ -1570,6 +1572,7 @@ public class HTTPServer {
     }
 
     private static boolean available(int port) {
+
         try (Socket s = new Socket("localhost", port)) {
             // If the code makes it this far without an exception it means
             // something is using the port and has responded.
@@ -1666,11 +1669,10 @@ public class HTTPServer {
      */
     protected ServerSocket createServerSocket() throws IOException {
         ServerSocketFactory factory = secure ? SSLServerSocketFactory.getDefault() : ServerSocketFactory.getDefault();
-        try (ServerSocket serverSocket = factory.createServerSocket()) {
-            serverSocket.setReuseAddress(true);
-            serverSocket.bind(new InetSocketAddress(port));
-            return serverSocket;
-        }
+        ServerSocket serv = factory.createServerSocket();
+        serv.setReuseAddress(true);
+        serv.bind(new InetSocketAddress(port));
+        return serv;
     }
 
     /**
@@ -1948,8 +1950,7 @@ public class HTTPServer {
     public static void addContentTypes(File mimeTypes) throws IOException {
         try (InputStream in = new FileInputStream(mimeTypes)) {
             while (true) {
-                String line = readLine(in).trim(); // throws EOFException when
-                // done
+                String line = readLine(in).trim(); // throws EOFException when done
                 if (!line.isEmpty() && line.charAt(0) != '#') {
                     String[] tokens = split(line, " \t");
                     for (int i = 1; i < tokens.length; i++) {
@@ -2027,7 +2028,7 @@ public class HTTPServer {
      * an empty list if there are none
      */
     public static List<String[]> parseParamsList(String s) {
-        if (s == null || !s.isEmpty()) {
+        if (s == null || s.isEmpty()) {
             return Collections.emptyList();
         }
         List<String[]> params = new ArrayList<>(8);
