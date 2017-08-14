@@ -175,7 +175,7 @@ public class Manager extends AbstractManager {
             args = new String[0];
         }
         String collectionName = getOption(args, 1, COLLECTION_NAME);
-        this.collection = collectionName == null ? "" : collectionName;
+        collection = collectionName == null ? "" : collectionName;
 
         EXIT_CODE_NO_URIS = NumberUtils.toInt(getOption(Options.EXIT_CODE_NO_URIS));
 
@@ -296,14 +296,14 @@ public class Manager extends AbstractManager {
             options.setPreBatchMinimumCount(Integer.parseInt(preBatchMinimumCount));
         }
 
-        if (!this.properties.containsKey(EXPORT_FILE_DIR) && exportFileDir != null) {
-            this.properties.put(EXPORT_FILE_DIR, exportFileDir);
+        if (!properties.containsKey(EXPORT_FILE_DIR) && exportFileDir != null) {
+            properties.put(EXPORT_FILE_DIR, exportFileDir);
         }
-        if (!this.properties.containsKey(EXPORT_FILE_NAME) && exportFileName != null) {
-            this.properties.put(EXPORT_FILE_NAME, exportFileName);
+        if (!properties.containsKey(EXPORT_FILE_NAME) && exportFileName != null) {
+            properties.put(EXPORT_FILE_NAME, exportFileName);
         }
-        if (!this.properties.containsKey(ERROR_FILE_NAME) && errorFileName != null) {
-            this.properties.put(ERROR_FILE_NAME, errorFileName);
+        if (!properties.containsKey(ERROR_FILE_NAME) && errorFileName != null) {
+            properties.put(ERROR_FILE_NAME, errorFileName);
         }
 
         if (initModule != null) {
@@ -341,8 +341,8 @@ public class Manager extends AbstractManager {
         }
 
         if (options.getPostBatchTaskClass() == null) {
-            if (this.properties.containsKey(EXPORT_FILE_PART_EXT)) {
-                this.properties.remove(EXPORT_FILE_PART_EXT);
+            if (properties.containsKey(EXPORT_FILE_PART_EXT)) {
+                properties.remove(EXPORT_FILE_PART_EXT);
             }
             if (System.getProperty(EXPORT_FILE_PART_EXT) != null) {
                 System.clearProperty(EXPORT_FILE_PART_EXT);
@@ -417,7 +417,7 @@ public class Manager extends AbstractManager {
             options.setNumberOfFailedUris(intNumFaileTransactions);
         }
         String metricsSyncFrequencyInSeconds = getOption(Options.METRICS_SYNC_FREQUENCY);
-        if ((logMetricsToServerDBName != null || this.options.isMetricsToServerLogEnabled(logMetricsToServerLog)) && metricsSyncFrequencyInSeconds != null) {
+        if ((logMetricsToServerDBName != null || options.isMetricsToServerLogEnabled(logMetricsToServerLog)) && metricsSyncFrequencyInSeconds != null) {
             //periodically update db only if db name is set or logging enabled and sync frequency is selected
             //no defaults for this function
             try {
@@ -454,8 +454,8 @@ public class Manager extends AbstractManager {
 
     protected void normalizeLegacyProperties() {
         //fix map keys for backward compatibility
-        if (this.properties != null) {
-            this.properties.putAll(getNormalizedProperties(this.properties));
+        if (properties != null) {
+            properties.putAll(getNormalizedProperties(properties));
         }
         //System properties override properties file properties
         Properties props = getNormalizedProperties(System.getProperties());
@@ -562,17 +562,17 @@ public class Manager extends AbstractManager {
 
     public int run() throws Exception {
         startMillis = System.currentTimeMillis();
-        if (this.jobStats == null) {
-            this.jobStats = new JobStats(this);
+        if (jobStats == null) {
+            jobStats = new JobStats(this);
         }
-        this.jobStats.logJobStatsToServer(START_RUNNING_JOB_MESSAGE, false);
+        jobStats.logJobStatsToServer(START_RUNNING_JOB_MESSAGE, false);
         startMetricsSyncJob();
         startJobServer();
         LOG.log(INFO, () -> MessageFormat.format("{0} starting: {1}", NAME, VERSION_MSG));
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
         LOG.log(INFO, () -> MessageFormat.format("maximum heap size = {0} MiB", maxMemory));
 
-        this.execError = false; //reset execution error flag for a new run
+        execError = false; //reset execution error flag for a new run
         monitorThread = preparePool();
 
         try {
@@ -622,7 +622,7 @@ public class Manager extends AbstractManager {
             jobServer.start();
             String decoration = "*****************************************************************************************";
             LOG.info(decoration);
-            LOG.log(INFO, MessageFormat.format("Job Server has started and can be access using http://localhost:{0,number,#}/web/index.html", jobServer.port));
+            LOG.log(INFO, MessageFormat.format("Job Server has started and can be access using http://localhost:{0,number,#}{1}/index.html", jobServer.port, HTTP_RESOURCE_PATH));
             LOG.log(INFO, MessageFormat.format("Visit http://localhost:{0,number,#}{1} to fetch the metrics data", jobServer.port, JOB_SERVICE_PATH));
             LOG.info(decoration);
         }
@@ -636,30 +636,30 @@ public class Manager extends AbstractManager {
     }
 
     private void startMetricsSyncJob() {
-        if (this.metricsDocSyncJob == null && this.options.getMetricsSyncFrequencyInMillis() != null && this.options.getMetricsSyncFrequencyInMillis() > 0) {
-            this.metricsDocSyncJob = new MetricsDocSyncJob(this.jobStats, this.options.getMetricsSyncFrequencyInMillis());
-            Thread metricSyncThread = new Thread(this.metricsDocSyncJob, "metricsDocSyncJob");
+        if (metricsDocSyncJob == null && options.getMetricsSyncFrequencyInMillis() != null && options.getMetricsSyncFrequencyInMillis() > 0) {
+            metricsDocSyncJob = new MetricsDocSyncJob(jobStats, options.getMetricsSyncFrequencyInMillis());
+            Thread metricSyncThread = new Thread(metricsDocSyncJob, "metricsDocSyncJob");
             metricSyncThread.setDaemon(true);
             metricSyncThread.start();
         }
     }
 
     private void shutDownMetricsSyncJob() {
-        if (this.metricsDocSyncJob != null) {
-            this.metricsDocSyncJob.shutdownNow();
-            this.metricsDocSyncJob = null;
+        if (metricsDocSyncJob != null) {
+            metricsDocSyncJob.shutdownNow();
+            metricsDocSyncJob = null;
         }
     }
 
     private void pauseMetricsSyncJob() {
-        if (this.metricsDocSyncJob != null) {
-            this.metricsDocSyncJob.setPaused(true);//this will also log full metrics
+        if (metricsDocSyncJob != null) {
+            metricsDocSyncJob.setPaused(true);//this will also log full metrics
         }
     }
 
     private void resumeMetricsSyncJob() {
-        if (this.metricsDocSyncJob != null) {
-            this.metricsDocSyncJob.setPaused(false);
+        if (metricsDocSyncJob != null) {
+            metricsDocSyncJob.setPaused(false);
         }
     }
 
@@ -773,7 +773,6 @@ public class Manager extends AbstractManager {
             initTask.call();
             long endTime = System.nanoTime();
             jobStats.setInitTaskRunTime(TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS));
-
         }
     }
 
@@ -781,11 +780,10 @@ public class Manager extends AbstractManager {
         Task preTask = tf.newPreBatchTask();
         if (preTask != null) {
             long startTime = System.nanoTime();
-
             LOG.info("Running pre batch Task");
             preTask.call();
             long endTime = System.nanoTime();
-            this.jobStats.setPreBatchRunTime(TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS));
+            jobStats.setPreBatchRunTime(TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS));
         }
     }
 
@@ -797,7 +795,7 @@ public class Manager extends AbstractManager {
             LOG.info("Running post batch Task");
             postTask.call();
             long endTime = System.nanoTime();
-            this.jobStats.setPostBatchRunTime(TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS));
+            jobStats.setPostBatchRunTime(TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS));
         }
     }
 
@@ -1014,7 +1012,7 @@ public class Manager extends AbstractManager {
     private void cleanupJobStats() {
         endMillis = System.currentTimeMillis();
         shutDownMetricsSyncJob();
-        this.jobStats.logJobStatsToServer(END_RUNNING_JOB_MESSAGE, false);
+        jobStats.logJobStatsToServer(END_RUNNING_JOB_MESSAGE, false);
         try {
             stopJobServer();
         } catch (IOException e) {
@@ -1022,7 +1020,7 @@ public class Manager extends AbstractManager {
         } catch (Exception e) {
             LOG.log(WARNING, "Unable to stop Job server");
         }
-        this.jobStats = null;
+        jobStats = null;
     }
 
     /**
@@ -1032,7 +1030,7 @@ public class Manager extends AbstractManager {
      * @param e
      */
     public void stop(ExecutionException e) {
-        this.execError = true;
+        execError = true;
         LOG.log(SEVERE, "fatal error", e.getCause());
         LOG.warning("exiting due to fatal error");
         stop();
@@ -1046,7 +1044,7 @@ public class Manager extends AbstractManager {
 
         public CommandFileWatcher(File file, Manager manager) {
             this.file = file;
-            this.timeStamp = -1;
+            timeStamp = -1;
             this.manager = manager;
         }
 
@@ -1054,8 +1052,8 @@ public class Manager extends AbstractManager {
         public void run() {
             if (file.exists()) {
                 long lastModified = file.lastModified();
-                if (this.timeStamp != lastModified) {
-                    this.timeStamp = lastModified;
+                if (timeStamp != lastModified) {
+                    timeStamp = lastModified;
                     onChange(file);
                 }
             }
