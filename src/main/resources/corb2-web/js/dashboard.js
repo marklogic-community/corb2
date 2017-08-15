@@ -11,12 +11,14 @@ app.controller('mainCtrl', ['$scope', '$http','$interval',
 
     		var job = response.job;
     		if (job.userProvidedOptions) {
-    			$scope.userProvidedOptions = job.userProvidedOptions;//save this as this is fetched only once
+                $scope.userProvidedOptions = job.userProvidedOptions;//save this as this is fetched only once
+            }
+    		if (typeof job.totalNumberOfTasks !== "undefined") {
     			$scope.initTaskTimeInMillis = job.initTaskTimeInMillis;
     			$scope.preBatchRunTimeInMillis = job.preBatchRunTimeInMillis;
     			$scope.urisLoadTimeInMillis = job.urisLoadTimeInMillis;
     			$scope.totalNumberOfTasks = job.totalNumberOfTasks;
-    		}
+            }
     		if (job.paused === "true") {
     			$scope.pauseButtonText = "Resume Corb Job";
     			$scope.pauseButtonStyle = "btn-info";
@@ -26,7 +28,7 @@ app.controller('mainCtrl', ['$scope', '$http','$interval',
     		}
     		$scope.successPercent = (job.numberOfSucceededTasks && job.numberOfSucceededTasks > 0 ? ((job.numberOfSucceededTasks / $scope.totalNumberOfTasks) * 100) : 0);
     		$scope.successPercent = Math.round($scope.successPercent * 100) / 100;
-    		$scope.successTotals = (job.numberOfSucceededTasks ? job.numberOfSucceededTasks:0) + " out of " + $scope.totalNumberOfTasks + " succeeded.";
+    		$scope.successTotals = (job.numberOfSucceededTasks ? job.numberOfSucceededTasks : 0) + " out of " + $scope.totalNumberOfTasks + " succeeded.";
     		$scope.failedPercent = (job.numberOfFailedTasks && job.numberOfFailedTasks > 0 ? ((job.numberOfFailedTasks/$scope.totalNumberOfTasks) * 100) : 0);
     		$scope.failedPercent = Math.round($scope.failedPercent * 100) / 100;
     		$scope.failedTotals = (job.numberOfFailedTasks ? job.numberOfFailedTasks : 0) + " out of " + $scope.totalNumberOfTasks + " failed.";
@@ -50,7 +52,8 @@ app.controller('mainCtrl', ['$scope', '$http','$interval',
             }
     	};
     	var promise = $interval(function() {
-    		$http.get("/corb?concise=true").success(loadData).error(handleError);
+    	    var concise = isNaN(+$scope.totalNumberOfTasks) && typeof $scope.job.totalNumberOfTasks == "undefined" ? "" : "?concise";
+    		$http.get("/corb" + concise).success(loadData).error(handleError);
     	}, 5000);
     	var pad = function(n, z) {
     	    z = z || 2;

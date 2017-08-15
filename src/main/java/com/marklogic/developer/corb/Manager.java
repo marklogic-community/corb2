@@ -683,7 +683,6 @@ public class Manager extends AbstractManager {
         pool.prestartAllCoreThreads();
         completionService = new ExecutorCompletionService<>(pool);
         monitor = new Monitor(pool, completionService, this);
-        jobStats.setPool(pool);
         return new Thread(monitor, "monitor");
     }
 

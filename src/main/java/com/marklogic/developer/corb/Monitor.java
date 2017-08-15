@@ -38,8 +38,9 @@ public class Monitor extends BaseMonitor implements Runnable {
 
     protected static final Logger LOG = Logger.getLogger(Monitor.class.getName());
     protected boolean shutdownNow;
-    protected long completed = 0;
+    protected long completed = 0l;
     protected String[] lastUris;
+    protected PausableThreadPoolExecutor pool;
     protected final CompletionService<String[]> cs;
     /**
      * @param pool
@@ -47,8 +48,9 @@ public class Monitor extends BaseMonitor implements Runnable {
      * @param manager
      */
     public Monitor(PausableThreadPoolExecutor pool, CompletionService<String[]> cs, Manager manager) {
-        super(pool, manager);
-        this.cs=cs;
+        super(manager);
+        this.pool = pool;
+        this.cs = cs;
     }
 
     /*
@@ -123,6 +125,11 @@ public class Monitor extends BaseMonitor implements Runnable {
             }
         }
         return lastProgress;
+    }
+
+    protected String getProgressMessage(long completed) {
+        populateTps(completed);
+        return getProgressMessage(completed, taskCount, avgTps, currentTps, estimatedTimeOfCompletion, pool.getActiveCount(),pool.getNumFailedUris());
     }
 
     /**

@@ -13,23 +13,22 @@ public class BaseMonitor {
     protected long lastProgress;
     protected final Manager manager;
     protected long taskCount;
-    protected PausableThreadPoolExecutor pool;
+
     protected long prevCompleted = 0;
     protected long prevMillis = 0;
     protected long startMillis;
 
     protected final List<Double> tpsForETCList;
     protected final int numTpsForEtc;
-	protected Double avgTps = 0d; 
+	protected Double avgTps = 0d;
     protected Double currentTps = 0d;
 	protected String estimatedTimeOfCompletion = "";
 
-    public BaseMonitor(PausableThreadPoolExecutor pool, Manager manager) {
-        this.pool = pool;
+    public BaseMonitor(Manager manager) {
         this.manager = manager;
         startMillis = System.currentTimeMillis();
-        this.numTpsForEtc = (manager !=null && manager.getOptions() != null) ? manager.getOptions().getNumTpsForETC() : DEFAULT_NUM_TPS_FOR_ETC;
-        this.tpsForETCList = new ArrayList<>(this.numTpsForEtc);
+        numTpsForEtc = (manager !=null && manager.getOptions() != null) ? manager.getOptions().getNumTpsForETC() : DEFAULT_NUM_TPS_FOR_ETC;
+        tpsForETCList = new ArrayList<>(this.numTpsForEtc);
     }
 
     protected void populateTps(long completed){
@@ -47,10 +46,6 @@ public class BaseMonitor {
         estimatedTimeOfCompletion = getEstimatedTimeCompletion(taskCount, completed, tpsForETC, isPaused);
     }
 
-    protected String getProgressMessage(long completed) {
-    	populateTps(completed);
-        return getProgressMessage(completed, taskCount, avgTps, currentTps, estimatedTimeOfCompletion, pool.getActiveCount(),pool.getNumFailedUris());
-    }
     protected static String getProgressMessage(long completed, long taskCount, double tps, double curTps, double tpsForETC, int threads, boolean isPaused) {
         String etc = getEstimatedTimeCompletion(taskCount, completed, tpsForETC, isPaused);
     	return getProgressMessage(completed, taskCount, tps, curTps, etc, threads);
@@ -71,21 +66,21 @@ public class BaseMonitor {
 
     protected double calculateTpsForETC(double currentTransactionsPerSecond, boolean isPaused) {
         if (isZero(currentTransactionsPerSecond) && isPaused) {
-            this.tpsForETCList.clear();
+            tpsForETCList.clear();
         } else {
-            if (this.tpsForETCList.size() >= this.numTpsForEtc) {
-                this.tpsForETCList.remove(0);
+            if (tpsForETCList.size() >= numTpsForEtc) {
+                tpsForETCList.remove(0);
             }
-            this.tpsForETCList.add(currentTransactionsPerSecond);
+            tpsForETCList.add(currentTransactionsPerSecond);
         }
 
         double transactionsPerSecondForETC = 0;
         double sum = 0;
-        for (Double next : this.tpsForETCList) {
+        for (Double next : tpsForETCList) {
             sum += next;
         }
-        if (!this.tpsForETCList.isEmpty()) {
-            transactionsPerSecondForETC = sum / this.tpsForETCList.size();
+        if (!tpsForETCList.isEmpty()) {
+            transactionsPerSecondForETC = sum / tpsForETCList.size();
         }
         return transactionsPerSecondForETC;
     }

@@ -41,9 +41,12 @@ public class JobStats extends BaseMonitor {
     protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\";\n";
     private static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
     private static final String START_TIME = "startTime";
+    private static final String OPEN_SQUARE = "[";
     private static final String CLOSE_SQUARE = "]";
     private static final String GT = ">";
     private static final String LT = "<";
+    private static final String QUOTE = "\"";
+    private static final String COLON = ":";
     private static final String OPEN_CURLY = "{";
     private static final String CLOSE_CURLY = "}";
     private static final String COMA = ",";
@@ -98,76 +101,76 @@ public class JobStats extends BaseMonitor {
     protected Long currentThreadCount = 0l;
     protected Long jobServerPort = 0l;
 
-    protected TransformOptions options = null;
-    protected ContentSource contentSource;
+    private TransformOptions options = null;
+    private ContentSource contentSource;
 
     private static final Logger LOG = Logger.getLogger(JobStats.class.getName());
 
-    public JobStats() {
-        super(null, null);
-    }
-
     public JobStats(Manager manager) {
-        super(null, manager);
+        super(manager);
         options = manager.getOptions();
         contentSource = manager.getContentSource();
-        startMillis = manager.getStartMillis();
+
         String jobName = options.getJobName();
         if (jobName != null) {
             setJobName(jobName);
         }
-        String hostname = "Unknown";
-
-        try {
-            InetAddress addr;
-            addr = InetAddress.getLocalHost();
-            hostname = addr.getHostName();
-        } catch (UnknownHostException ex) {
-            try {
-                hostname = InetAddress.getLoopbackAddress().getHostName();
-            } catch (Exception e) {
-                LOG.log(INFO, "Hostname can not be resolved", e);
-            }
-        }
-        setHost(hostname);
+        setHost(getHostName());
         setJobRunLocation(System.getProperty("user.dir"));
         setStartTime(epochMillisAsFormattedDateString(manager.getStartMillis()));
         setUserProvidedOptions(manager.getUserProvidedOptions());
     }
 
+    protected String getHostName() {
+        String hostName = "Unknown";
+        try {
+            InetAddress addr;
+            addr = InetAddress.getLocalHost();
+            hostName = addr.getHostName();
+        } catch (UnknownHostException ex) {
+            try {
+                hostName = InetAddress.getLoopbackAddress().getHostName();
+            } catch (Exception e) {
+                LOG.log(INFO, "Hostname can not be resolved", e);
+            }
+        }
+        return hostName;
+    }
+
     private void refresh() {
         synchronized (this) {
 
-            taskCount = taskCount > 0 ? taskCount : (pool != null) ? pool.getTaskCount() : 0l;
-            if (taskCount > 0) {
-                if (pool != null) {
-                    setTotalNumberOfTasks(manager.monitor.getTaskCount());
-                    setTopTimeTakingUris(pool.getTopUris());
-                    setFailedUris(pool.getFailedUris());
-                    setNumberOfFailedTasks(pool.getNumFailedUris());
-                    setNumberOfSucceededTasks(pool.getNumSucceededUris());
-                }
+            if (manager !=null && manager.monitor != null) {
                 setJobServerPort(options.getJobServerPort().longValue());
+                setTotalNumberOfTasks(manager.monitor.getTaskCount());
+                if (getTotalNumberOfTasks() > 0) {
+                    PausableThreadPoolExecutor threadPool = manager.monitor.pool;
 
-                Long currentTimeMillis = System.currentTimeMillis();
-                Long totalTime = manager.getEndMillis() - manager.getStartMillis();
-                if (totalTime > 0) {
-                    setTotalRunTimeInMillis(totalTime);
-                    Long totalTransformTime = currentTimeMillis - manager.getTransformStartMillis();
-                    setAverageTransactionTime(totalTransformTime / Double.valueOf(numberOfFailedTasks + numberOfSucceededTasks));
-                    setEndTime(epochMillisAsFormattedDateString(manager.getEndMillis()));
-                    estimatedTimeOfCompletion = null;
-                    setCurrentThreadCount(0l);
-                } else {
-                    setTotalRunTimeInMillis(currentTimeMillis - manager.getStartMillis());
-                    long completed = numberOfSucceededTasks + numberOfFailedTasks;
-                    long intervalBetweenRequestsInMillis = TPS_ETC_MIN_REFRESH_INTERVAL;
-                    long timeSinceLastReq = currentTimeMillis - prevMillis;
-                    //refresh it every 10 seconds or more.. ignore more frequent requests
-                    if (timeSinceLastReq > intervalBetweenRequestsInMillis) {
-                        populateTps(completed);
+                    setTopTimeTakingUris(threadPool.getTopUris());
+                    setFailedUris(threadPool.getFailedUris());
+                    setNumberOfFailedTasks(threadPool.getNumFailedUris());
+                    setNumberOfSucceededTasks(threadPool.getNumSucceededUris());
+
+                    Long currentTimeMillis = System.currentTimeMillis();
+                    Long totalTime = manager.getEndMillis() - manager.getStartMillis();
+                    if (totalTime > 0) {
+                        setTotalRunTimeInMillis(totalTime);
+                        Long totalTransformTime = currentTimeMillis - manager.getTransformStartMillis();
+                        setAverageTransactionTime(totalTransformTime / Double.valueOf(numberOfFailedTasks + numberOfSucceededTasks));
+                        setEndTime(epochMillisAsFormattedDateString(manager.getEndMillis()));
+                        estimatedTimeOfCompletion = null;
+                        setCurrentThreadCount(0l);
+                    } else {
+                        setTotalRunTimeInMillis(currentTimeMillis - manager.getStartMillis());
+                        long completed = numberOfSucceededTasks + numberOfFailedTasks;
+                        long intervalBetweenRequestsInMillis = TPS_ETC_MIN_REFRESH_INTERVAL;
+                        long timeSinceLastReq = currentTimeMillis - prevMillis;
+                        //refresh it every 10 seconds or more.. ignore more frequent requests
+                        if (timeSinceLastReq > intervalBetweenRequestsInMillis) {
+                            populateTps(completed);
+                        }
+                        setCurrentThreadCount(Long.valueOf(options.getThreadCount()));
                     }
-                    setCurrentThreadCount(Long.valueOf(options.getThreadCount()));
                 }
             }
         }
@@ -384,9 +387,9 @@ public class JobStats extends BaseMonitor {
 
     public String toXMLString(boolean concise) {
         StringBuilder strBuff = new StringBuilder();
-        this.refresh();
-        strBuff.append(xmlNode(JOB_LOCATION, this.jobRunLocation))
-                .append(xmlNode(JOB_NAME, this.jobName))
+        refresh();
+        strBuff.append(xmlNode(JOB_LOCATION, jobRunLocation))
+                .append(xmlNode(JOB_NAME, jobName))
                 .append(xmlNode(HOST, host))
                 .append(concise ? "" : xmlNode(USER_PROVIDED_OPTIONS, userProvidedOptions))
                 .append(xmlNode(START_TIME, startTime))
@@ -396,7 +399,7 @@ public class JobStats extends BaseMonitor {
                 .append(concise ? "" : xmlNode(URIS_LOAD_TIME, urisLoadTime))
                 .append(concise ? "" : xmlNode(POST_BATCH_RUN_TIME, postBatchRunTime))
                 .append(xmlNode(AVERAGE_TRANSACTION_TIME, averageTransactionTime))
-                .append(xmlNode(TOTAL_NUMBER_OF_TASKS, totalNumberOfTasks))
+                .append(concise ? "" : xmlNode(TOTAL_NUMBER_OF_TASKS, totalNumberOfTasks))
                 .append(xmlNode(TOTAL_JOB_RUN_TIME, totalRunTimeInMillis))
                 .append(xmlNode(NUMBER_OF_FAILED_TASKS, numberOfFailedTasks))
                 .append(xmlNode(NUMBER_OF_SUCCEEDED_TASKS, numberOfSucceededTasks))
@@ -453,7 +456,9 @@ public class JobStats extends BaseMonitor {
             Node child = nodeList.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE) {
                 if (child.getNodeName().equals(LONG_RUNNING_URIS)) {
-                    strBuff.append("\"").append(child.getNodeName()).append("\":[");
+                    strBuff.append(toJsonProperty(child.getNodeName()))
+                            .append(COLON)
+                            .append(OPEN_SQUARE);
                     NodeList uris = child.getChildNodes();
                     for (int j = 0; j < uris.getLength(); j++) {
                         if (uris.item(j).hasChildNodes()) {
@@ -467,15 +472,18 @@ public class JobStats extends BaseMonitor {
                                 if (k != 0) {
                                     strBuff.append(COMA);
                                 }
-                                strBuff.append("\"").append(uri.getNodeName()).append("\":\"")
-                                        .append(uri.getTextContent()).append("\"");
+                                strBuff.append(toJsonProperty(uri.getNodeName()))
+                                        .append(COLON)
+                                        .append(toJsonValue(uri.getTextContent()));
                             }
                             strBuff.append(CLOSE_CURLY);
                         }
                     }
                     strBuff.append(CLOSE_SQUARE);
                 } else if (child.getNodeName().equals(FAILED_URIS)) {
-                    strBuff.append("\"").append(child.getNodeName()).append("\":[");
+                    strBuff.append(toJsonProperty(child.getNodeName()))
+                            .append(COLON)
+                            .append(OPEN_SQUARE);
                     NodeList uris = child.getChildNodes();
                     for (int j = 0; j < uris.getLength(); j++) {
                         if (uris.item(j).hasChildNodes()) {
@@ -488,24 +496,47 @@ public class JobStats extends BaseMonitor {
                                 if (k != 0) {
                                     strBuff.append(COMA);
                                 }
-                                strBuff.append("\"").append(uri.getTextContent()).append("\"");
+                                strBuff.append(toJsonValue(uri.getTextContent()));
                             }
-
                         }
                     }
                     strBuff.append(CLOSE_SQUARE);
                 } else if (child.hasChildNodes() && child.getFirstChild().getNodeType() == Node.TEXT_NODE) {
-                    strBuff.append("\"").append(child.getNodeName()).append("\":\"").append(child.getTextContent())
-                            .append("\"");
+                    strBuff.append(toJsonProperty(child.getNodeName()))
+                            .append(COLON)
+                            .append(toJsonValue(child.getTextContent()));
                 } else {
-                    strBuff.append("\"").append(child.getNodeName()).append("\":" + OPEN_CURLY);
-                    strBuff.append(getJson(child));
-                    strBuff.append(CLOSE_CURLY);
+                    strBuff.append(toJsonProperty(child.getNodeName()))
+                            .append(COLON)
+                            .append(OPEN_CURLY)
+                            .append(getJson(child))
+                            .append(CLOSE_CURLY);
                 }
             }
 
         }
         return strBuff.toString();
+    }
+
+    public static StringBuffer toJsonProperty(String propertyName) {
+        return new StringBuffer(QUOTE).append(propertyName).append(QUOTE);
+    }
+    public static StringBuffer toJsonValue(String value) {
+        StringBuffer buffer = new StringBuffer();
+        if (isNumeric(value)) {
+            buffer.append(value);
+        } else if (Boolean.TRUE.toString().equalsIgnoreCase(value) || Boolean.FALSE.toString().equalsIgnoreCase(value)) {
+            buffer.append(Boolean.toString(StringUtils.stringToBoolean(value)));
+        } else {
+            buffer.append(QUOTE)
+                .append(value.replace(QUOTE, "\\\""))
+                .append(QUOTE);
+        }
+        return buffer;
+    }
+
+    public static boolean isNumeric(String str) {
+        return str.matches("-?\\d+(\\.\\d+)?");
     }
 
     private static String xmlNode(String nodeName, String nodeVal) {
@@ -770,13 +801,6 @@ public class JobStats extends BaseMonitor {
      */
     public void setEstimatedTimeOfCompletion(String estimatedTimeOfCompletion) {
         this.estimatedTimeOfCompletion = estimatedTimeOfCompletion;
-    }
-
-    /**
-     * @param pool the pool to set
-     */
-    public void setPool(PausableThreadPoolExecutor pool) {
-        this.pool = pool;
     }
 
     /**

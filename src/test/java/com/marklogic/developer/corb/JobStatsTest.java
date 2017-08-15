@@ -20,14 +20,16 @@ import org.xml.sax.SAXException;
 public class JobStatsTest {
 	@Test
 	public void testNullName() {
-		JobStats jobStats = new JobStats();
+	    Manager manager = new Manager();
+		JobStats jobStats = new JobStats(manager);
 		jobStats.setJobName(null);
 		assertXMLJSONNotNull(jobStats);
 	}
 
 	@Test
 	public void testFailedUris() {
-		JobStats jobStats = new JobStats();
+        Manager manager = new Manager();
+		JobStats jobStats = new JobStats(manager);
 		jobStats.setJobName("Name");
 		jobStats.setFailedUris(new ArrayList<>());
 		assertXMLJSONNotNull(jobStats);
@@ -49,7 +51,8 @@ public class JobStatsTest {
 		nodeVal.put("URI4", 3l);
 		nodeVal.put("URI5", 2l);
 		nodeVal.put("URI6", 1l);
-		JobStats jobStats = new JobStats();
+		Manager manager = new Manager();
+		JobStats jobStats = new JobStats(manager);
 		jobStats.setTopTimeTakingUris(nodeVal);
 		assertXMLJSONNotNull(jobStats);
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -61,7 +64,7 @@ public class JobStatsTest {
 		assertTrue("Rank is Correct", uri.equals("URI" + rank));
 	}
 	/*
-	 * 1: Log once at the start and once at the end XML 
+	 * 1: Log once at the start and once at the end XML
 	 * 		Log to DB Document
 	 * 		Log to ML Error Log
 	 * 		Log to Java console
@@ -74,7 +77,7 @@ public class JobStatsTest {
 	 * 		End time and average traansaction time is shown on the last entry
 	 * 		Should only have one entry with end time
 	 * 		Should pause syncing when job is paused
-	 * 		Should log one extra full record when pausing 		
+	 * 		Should log one extra full record when pausing
 	 * 5: COLLECTION Name
 	 * 6: Root directory
 	 * 7: Job run location can't be found and Job name not specified?
@@ -83,6 +86,6 @@ public class JobStatsTest {
 	 * 		Specify range
 	 * 		Specify multiple ranges or multiple ports
 	 * 9: UI Validation
-	 * 		All fields 
+	 * 		All fields
 	 */
 }
