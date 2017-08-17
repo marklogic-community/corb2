@@ -26,14 +26,14 @@
 				  aria-valuenow="{{successPercent}}" aria-valuemin="0" aria-valuemax="100"
 				  data-placement="bottom" data-toggle="tooltip" title="{{successTotals}}"
 				   >
-				    Success ({{successPercent}}%)
+				    Success ({{successPercent | number : 2}}%)
 				  </div>
 
 				  <div class="progress-bar progress-bar-danger progress-bar-striped active" role="progressbar" style="width:{{failedPercent}}%"
 				  aria-valuenow="{{failedPercent}}" aria-valuemin="0" aria-valuemax="100"
 				  data-placement="bottom" data-toggle="tooltip" title="{{failedTotals}}"
 				  >
-				    Failed ({{failedPercent}}%)
+				    Failed ({{failedPercent | number : 2}}%)
 				  </div>
 				  <div class="progress-bar progress-bar-info" role="progressbar" style="width:{{allDone}}%"
 				  aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
@@ -91,11 +91,11 @@
                       <div class="panel-body">
                           <dl>
                               <dt>Total Number Of Tasks</dt>
-                              <dd>{{totalNumberOfTasks}}</dd>
+                              <dd>{{totalNumberOfTasks | number : 0}}</dd>
                               <dt>Number Of Failed Tasks</dt>
-                              <dd>{{job.numberOfFailedTasks}} ({{failedPercent}}%)</dd>
+                              <dd>{{job.numberOfFailedTasks | number : 0}} ({{failedPercent}}%)</dd>
                               <dt>Number Of Succeeded Tasks</dt>
-                              <dd>{{job.numberOfSucceededTasks}} ({{successPercent}}%)</dd>
+                              <dd>{{job.numberOfSucceededTasks | number : 0}} ({{successPercent}}%)</dd>
                               <dt>Job Duration</dt>
                               <dd>{{jobDuration}}</dd>
                           </dl>
@@ -113,17 +113,17 @@
                       <div class="panel-body">
                           <dl class="dl-horizontal">
                               <dt>Init Task Time </dt>
-                              <dd>{{initTaskTimeInMillis}}</dd>
+                              <dd>{{initTaskTimeInMillis | number : 0}}</dd>
                               <dt>Pre-Batch Run Time</dt>
-                              <dd>{{preBatchRunTimeInMillis}}</dd>
+                              <dd>{{preBatchRunTimeInMillis | number : 0}}</dd>
                               <dt>Post Batch Run Time</dt>
-                              <dd>{{job.postBatchRunTimeInMillis}}</dd>
+                              <dd>{{job.postBatchRunTimeInMillis | number : 0}}</dd>
                               <dt>URIs Load Time</dt>
-                              <dd>{{urisLoadTimeInMillis}}</dd>
+                              <dd>{{urisLoadTimeInMillis | number : 0}}</dd>
                               <dt>Average Tps</dt>
-                              <dd>{{job.averageTransactionsPerSecond}}</dd>
+                              <dd>{{job.averageTransactionsPerSecond | number : 2}}</dd>
                               <dt>Current Tps</dt>
-                              <dd>{{job.currentTransactionsPerSecond}}</dd>
+                              <dd>{{job.currentTransactionsPerSecond | number : 2}}</dd>
                               <dt>Estimated time left</dt>
                               <dd>{{job.estimatedTimeOfCompletion}}</dd>
 
