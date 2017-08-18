@@ -1,5 +1,5 @@
-var app = angular.module('dashboard',[]);
-app.controller('mainCtrl', ['$scope', '$http','$interval',
+var app = angular.module("dashboard",[]);
+app.controller("mainCtrl", ["$scope", "$http","$interval",
                             function($scope, $http, $interval) {
 		$scope.allThreadCounts = [];
 		for (var i = 1; i <= 64; i++) {
