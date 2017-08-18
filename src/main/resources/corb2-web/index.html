@@ -42,9 +42,7 @@
 				</div>
             </div>
             <div class="col-xs-1 col-sm-1 ">
-            	<select class="custom-select" ng-model="threadCount" id="threadCount">
-					<option ng-repeat="x in allThreadCounts">{{x}}</option>
-				</select>
+                <select class="custom-select" ng-options="i for i in allThreadCounts" ng-model="threadCount" id="threadCount"></select>
 		    </div>
             <div class="col-xs-2 col-sm-2 ">
             	<button class="btn {{updateThreadsButtonStyle}}"

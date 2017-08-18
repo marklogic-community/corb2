@@ -1,7 +1,7 @@
 var app = angular.module('dashboard',[]);
 app.controller('mainCtrl', ['$scope', '$http','$interval',
                             function($scope, $http, $interval) {
-		$scope.allThreadCounts=[];
+		$scope.allThreadCounts = [];
 		for (var i = 1; i <= 64; i++) {
 			$scope.allThreadCounts.push(i)
 		}
@@ -14,6 +14,7 @@ app.controller('mainCtrl', ['$scope', '$http','$interval',
                 $scope.userProvidedOptions = job.userProvidedOptions;//save this as this is fetched only once
             }
     		if (typeof job.totalNumberOfTasks !== "undefined") {
+                $scope.threadCount = job.currentThreadCount;
     			$scope.initTaskTimeInMillis = job.initTaskTimeInMillis;
     			$scope.preBatchRunTimeInMillis = job.preBatchRunTimeInMillis;
     			$scope.urisLoadTimeInMillis = job.urisLoadTimeInMillis;
@@ -35,10 +36,6 @@ app.controller('mainCtrl', ['$scope', '$http','$interval',
     		$scope.jobDuration = (job.totalRunTimeInMillis && job.totalRunTimeInMillis > 0 ) ? msToTime(job.totalRunTimeInMillis) : "Not Running";
     		$scope.averageTransactionTimeInMillis =  Math.round(job.averageTransactionTimeInMillis * 100) / 100;
     		$scope.job = job;
-    		if ($scope.threadCount === -1) {
-    			$scope.threadCount = job.currentThreadCount;
-    			$scope.totalNumberOfTasks = job.totalNumberOfTasks;
-    		}
     	};
     	var handleError = function (error, status) {
             if (status === "404") {
