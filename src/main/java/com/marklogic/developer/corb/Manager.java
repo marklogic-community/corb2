@@ -836,7 +836,7 @@ public class Manager extends AbstractManager {
             expectedTotalCount = urisLoader.getTotalCount();
             Long endTime = System.nanoTime();
             jobStats.setUrisLoadTime(TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS));
-            LOG.log(INFO, MessageFormat.format("expecting total {0}", expectedTotalCount));
+            LOG.log(INFO, MessageFormat.format("expecting total {0,number}", expectedTotalCount));
 
             if (shouldRunPreBatch(expectedTotalCount)) {
                 // run pre-batch task, if present.
@@ -856,9 +856,9 @@ public class Manager extends AbstractManager {
             urisCount = submitUriTasks(urisLoader, taskFactory, expectedTotalCount);
 
             if (urisCount == expectedTotalCount) {
-                LOG.log(INFO, MessageFormat.format("queue is populated with {0} tasks", urisCount));
+                LOG.log(INFO, MessageFormat.format("queue is populated with {0,number} tasks", urisCount));
             } else {
-                LOG.log(WARNING, MessageFormat.format("queue is expected to be populated with {0} tasks, but got {1} tasks.", expectedTotalCount, urisCount));
+                LOG.log(WARNING, MessageFormat.format("queue is expected to be populated with {0,number} tasks, but got {1,number} tasks.", expectedTotalCount, urisCount));
                 monitor.setTaskCount(urisCount);
             }
 
@@ -910,7 +910,7 @@ public class Manager extends AbstractManager {
             urisCount++;
 
             if (0 == urisCount % 25000) {
-                LOG.log(INFO, MessageFormat.format("received {0}/{1}: {2}", urisCount, expectedTotalCount, uri));
+                LOG.log(INFO, MessageFormat.format("received {0,number}/{1,number}: {2}", urisCount, expectedTotalCount, uri));
                 logIfSlowReceive(lastMessageMillis, totalMemory);
                 lastMessageMillis = System.currentTimeMillis();
             }
@@ -924,7 +924,7 @@ public class Manager extends AbstractManager {
             long freeMemory = Runtime.getRuntime().freeMemory();
             Level memoryLogLevel = freeMemory < totalMemory * 0.2d ? WARNING : INFO;
             final int megabytes = 1024 * 1024;
-            LOG.log(memoryLogLevel, () -> MessageFormat.format("free memory: {0} MiB of {1}", freeMemory / megabytes, totalMemory / megabytes));
+            LOG.log(memoryLogLevel, () -> MessageFormat.format("free memory: {0,number} MiB of {1,number}", freeMemory / megabytes, totalMemory / megabytes));
         }
     }
 
@@ -996,7 +996,7 @@ public class Manager extends AbstractManager {
             }
             List<Runnable> remaining = pool.shutdownNow();
             if (!remaining.isEmpty()) {
-                LOG.log(WARNING, () -> MessageFormat.format("thread pool was shut down with {0} pending tasks", remaining.size()));
+                LOG.log(WARNING, () -> MessageFormat.format("thread pool was shut down with {0,number} pending tasks", remaining.size()));
             }
             pool = null;
         }

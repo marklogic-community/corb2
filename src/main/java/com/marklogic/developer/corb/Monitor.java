@@ -101,12 +101,12 @@ public class Monitor extends BaseMonitor implements Runnable {
                     break;
                 }
             } else if (future == null && pool.getActiveCount() == 0) {
-                LOG.log(WARNING, () -> MessageFormat.format("No active tasks found with {0} tasks remains to be completed", taskCount - completed));
+                LOG.log(WARNING, () -> MessageFormat.format("No active tasks found with {0,number} tasks remains to be completed", taskCount - completed));
             }
         }
         LOG.info("waiting for pool to terminate");
         pool.awaitTermination(1, TimeUnit.SECONDS);
-        LOG.log(INFO, () -> MessageFormat.format("completed all tasks {0}/{1}", completed, taskCount));
+        LOG.log(INFO, () -> MessageFormat.format("completed all tasks {0,number}/{1,number}", completed, taskCount));
     }
 
     private long showProgress() {
