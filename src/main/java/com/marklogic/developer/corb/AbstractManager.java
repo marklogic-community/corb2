@@ -384,7 +384,7 @@ public abstract class AbstractManager {
         String[] secureWords = {"XCC", "PASSWORD", "SSL"};
         boolean hasSecureWords = false;
         for (String secureWord : secureWords) {
-            if ((retVal != null && retVal.toUpperCase().contains(secureWord)) || propertyName.toUpperCase().contains(secureWord)) {
+            if (retVal != null && retVal.toUpperCase().contains(secureWord) || propertyName.toUpperCase().contains(secureWord)) {
                 hasSecureWords = true;
                 break;
             }

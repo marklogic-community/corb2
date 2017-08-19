@@ -39,8 +39,8 @@ public class TransformOptions {
     public static final String FAILED_URI_TOKEN = "FAILED#";
     public static final int MAX_NUM_FAILED_TRANSACTIONS = 1000;
     public static final int MAX_NUM_SLOW_TRANSACTIONS = 100;
-    
-	
+
+
     private String processModule;
     private Class<? extends Task> processTaskCls;
 
@@ -77,9 +77,9 @@ public class TransformOptions {
     // We could get rid of this now that we check status...
     private String modulesDatabase = "Modules";
     private String logMetricsToServerLog = "NONE";
-    
+
     private Boolean logMetricsToServerDB = false;
-    
+
     private String logMetricsToServerDBName = null;
     private String logMetricsToServerDBURIRoot = "/ServiceMetrics/";
     private String logMetricsToServerDBTransformModule = "save-metric-to-db.xqy|ADHOC";
@@ -89,38 +89,35 @@ public class TransformOptions {
     private Integer metricsSyncFrequencyInMillis = -1;
     private Integer jobServerPort = -1;
     private List<Integer> jobServerPortsToChoose = null;
-    
-    
-    
     private String jobName = null;
-    
+
     // Set on status check
     private String xdbcRoot = SLASH;
 
     public void setPrePostBatchAlwaysExecute(boolean shouldAlwaysExecute) {
         prePostBatchAlwaysExecute = shouldAlwaysExecute;
     }
-    
+
     public boolean shouldPrePostBatchAlwaysExecute() {
         return prePostBatchAlwaysExecute;
     }
-    
+
     public void setPostBatchMinimumCount(int count) {
         postBatchMinimumCount = count;
     }
-    
+
     public int getPostBatchMinimumCount() {
         return postBatchMinimumCount;
     }
-    
+
     public void setPreBatchMinimumCount(int count) {
         preBatchMinimumCount = count;
     }
-    
+
     public int getPreBatchMinimumCount() {
         return preBatchMinimumCount;
     }
-    
+
     /**
      * @return
      */
@@ -569,7 +566,7 @@ public class TransformOptions {
 	}
 	protected boolean isMetricsToServerLogEnabled(String logMetricsToServerLog){
 		logMetricsToServerLog = logMetricsToServerLog==null?getLogMetricsToServerLog():logMetricsToServerLog;
-		return (logMetricsToServerLog != null && !logMetricsToServerLog.equalsIgnoreCase("NONE"));
+		return logMetricsToServerLog != null && !logMetricsToServerLog.equalsIgnoreCase("NONE");
 	}
 
 	public List<Integer> getJobServerPortsToChoose() {

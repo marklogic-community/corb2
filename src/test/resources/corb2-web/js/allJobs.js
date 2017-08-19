@@ -33,7 +33,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
 
         var pad = function (n, z) {
             z = z || 2;
-            return ('00' + n).slice(-z);
+            return ("00" + n).slice(-z);
         };
         $scope.msToTime = function(s) {
             var ms = s % 1000;

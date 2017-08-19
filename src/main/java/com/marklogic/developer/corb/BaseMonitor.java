@@ -27,7 +27,7 @@ public class BaseMonitor {
     public BaseMonitor(Manager manager) {
         this.manager = manager;
         startMillis = System.currentTimeMillis();
-        numTpsForEtc = (manager !=null && manager.getOptions() != null) ? manager.getOptions().getNumTpsForETC() : DEFAULT_NUM_TPS_FOR_ETC;
+        numTpsForEtc = manager !=null && manager.getOptions() != null ? manager.getOptions().getNumTpsForETC() : DEFAULT_NUM_TPS_FOR_ETC;
         tpsForETCList = new ArrayList<>(this.numTpsForEtc);
     }
 
@@ -55,7 +55,7 @@ public class BaseMonitor {
         return  getProgressMessage( completed,  taskCount,  tps,  curTps,  etc,  threads,0);
     }
     protected static String getProgressMessage(long completed, long taskCount, double tps, double curTps, String etc, int threads, int failedTasks) {
-        String failedTaskMessage=(failedTasks>0) ? (failedTasks+" tasks failed, ") : "";
+        String failedTaskMessage = failedTasks > 0 ? failedTasks + " tasks failed, " : "";
     	return completed + "/" + taskCount + ", "
         		+ failedTaskMessage
                 + formatTransactionsPerSecond(tps) + " tps(avg), "

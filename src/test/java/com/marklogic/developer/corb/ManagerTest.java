@@ -1279,9 +1279,9 @@ public class ManagerTest {
         props.setProperty(Options.PRE_BATCH_MINIMUM_COUNT, Integer.toString(0));
         props.setProperty(Options.POST_BATCH_MINIMUM_COUNT, Integer.toString(0));
         props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "top content");
-        props.setProperty(Options.PRE_BATCH_TASK, "com.marklogic.developer.corb.PreBatchUpdateFileTask");
+        props.setProperty(Options.PRE_BATCH_TASK, PRE_BATCH_TASK);
         props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "bottom content");
-        props.setProperty(Options.POST_BATCH_TASK, "com.marklogic.developer.corb.PostBatchUpdateFileTask");
+        props.setProperty(Options.POST_BATCH_TASK, POST_BATCH_TASK);
         try {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
@@ -1306,10 +1306,8 @@ public class ManagerTest {
         args[15] = null;
         Properties props = new Properties();
         props.setProperty(Options.URIS_LOADER, MockEmptyFileUrisLoader.class.getName());
-        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "top content");
-        props.setProperty(Options.PRE_BATCH_TASK, "com.marklogic.developer.corb.PreBatchUpdateFileTask");
-        props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "bottom content");
-        props.setProperty(Options.POST_BATCH_TASK, "com.marklogic.developer.corb.PostBatchUpdateFileTask");
+        props.setProperty(Options.PRE_BATCH_TASK, PRE_BATCH_TASK);
+        props.setProperty(Options.POST_BATCH_TASK, POST_BATCH_TASK);
         try {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
@@ -1337,10 +1335,8 @@ public class ManagerTest {
         props.setProperty(Options.URIS_LOADER, MockEmptyFileUrisLoader.class.getName());
         props.setProperty(Options.PRE_BATCH_MINIMUM_COUNT, Integer.toString(10));
         props.setProperty(Options.POST_BATCH_MINIMUM_COUNT, Integer.toString(10));
-        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "top content");
-        props.setProperty(Options.PRE_BATCH_TASK, "com.marklogic.developer.corb.PreBatchUpdateFileTask");
-        props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "bottom content");
-        props.setProperty(Options.POST_BATCH_TASK, "com.marklogic.developer.corb.PostBatchUpdateFileTask");
+        props.setProperty(Options.PRE_BATCH_TASK, PRE_BATCH_TASK);
+        props.setProperty(Options.POST_BATCH_TASK, POST_BATCH_TASK);
         try {
             Manager instance = getMockManagerWithEmptyResults();
             instance.init(args, props);
@@ -1367,10 +1363,8 @@ public class ManagerTest {
         props.setProperty(Options.URIS_LOADER, MockEmptyFileUrisLoader.class.getName());
         props.setProperty(Options.PRE_BATCH_MINIMUM_COUNT, Integer.toString(10));
         props.setProperty(Options.POST_BATCH_MINIMUM_COUNT, Integer.toString(10));
-        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "top content");
-        props.setProperty(Options.PRE_BATCH_TASK, "com.marklogic.developer.corb.PreBatchUpdateFileTask");
-        props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "bottom content");
-        props.setProperty(Options.POST_BATCH_TASK, "com.marklogic.developer.corb.PostBatchUpdateFileTask");
+        props.setProperty(Options.PRE_BATCH_TASK, PRE_BATCH_TASK);
+        props.setProperty(Options.POST_BATCH_TASK, POST_BATCH_TASK);
 
         try {
             Manager instance = getMockManagerWithEmptyResults();
@@ -1419,8 +1413,8 @@ public class ManagerTest {
         properties.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
         properties.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
         properties.setProperty(Options.METRICS_TO_ERROR_LOG, ManagerTest.LOG_LEVEL_INFO);
-        
-        
+
+
         if(ManagerTest.EXPORT_FILE_DIR!=null) {
         	properties.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
         }

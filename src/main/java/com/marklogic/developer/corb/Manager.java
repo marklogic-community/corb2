@@ -1035,6 +1035,27 @@ public class Manager extends AbstractManager {
         stop();
     }
 
+    /**
+     * @return the startMillis
+     */
+    public long getStartMillis() {
+        return startMillis;
+    }
+
+    /**
+     * @return the transformStartMillis
+     */
+    public long getTransformStartMillis() {
+        return transformStartMillis;
+    }
+
+    /**
+     * @return the endMillis
+     */
+    public long getEndMillis() {
+        return endMillis;
+    }
+
     public static class CommandFileWatcher implements Runnable {
 
         private long timeStamp;
@@ -1113,27 +1134,6 @@ public class Manager extends AbstractManager {
                 throw new RejectedExecutionException(e);
             }
         }
-    }
-
-    /**
-     * @return the startMillis
-     */
-    public long getStartMillis() {
-        return startMillis;
-    }
-
-    /**
-     * @return the transformStartMillis
-     */
-    public long getTransformStartMillis() {
-        return transformStartMillis;
-    }
-
-    /**
-     * @return the endMillis
-     */
-    public long getEndMillis() {
-        return endMillis;
     }
 
 }

@@ -123,7 +123,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
                     long taskTime = endTime - startTime.get();
                     long durationInMs = TimeUnit.MILLISECONDS.convert(taskTime, TimeUnit.NANOSECONDS);
 
-                    this.topUriList.add(result, durationInMs);
+                    topUriList.add(result, durationInMs);
                     numSucceededUris++;
                 }
             }
@@ -208,7 +208,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 
         Map<String, Long> getData() {
             Map<String, Long> map = new HashMap<>();
-            for (UriObject obj : this.list) {
+            for (UriObject obj : list) {
                 map.put(obj.uri, obj.timeTaken);
             }
             return map;
@@ -226,6 +226,20 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
                     list.add(newObj);
                 }
             }
+        }
+
+        /**
+         * @return the size
+         */
+        protected int getSize() {
+            return size;
+        }
+
+        /**
+         * @param size the size to set
+         */
+        protected void setSize(int size) {
+            this.size = size;
         }
 
         private class UriObject implements Comparable<UriObject> {
@@ -274,20 +288,6 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
                     return 0;//should never get here
                 }
             }
-        }
-
-        /**
-         * @return the size
-         */
-        protected int getSize() {
-            return size;
-        }
-
-        /**
-         * @param size the size to set
-         */
-        protected void setSize(int size) {
-            this.size = size;
         }
     }
 }

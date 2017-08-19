@@ -54,7 +54,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         }, 5000);
         var pad = function(n, z) {
             z = z || 2;
-            return ('00' + n).slice(-z);
+            return ("00" + n).slice(-z);
         };
         var msToTime = function(s) {
 

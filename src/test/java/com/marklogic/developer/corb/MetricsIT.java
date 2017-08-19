@@ -165,7 +165,7 @@ public class MetricsIT {
             result.addAll(Arrays.asList(rs.asStrings()));
         } catch (RequestException e) {
             LOG.log(SEVERE, "registerStatusInfo request failed", e);
-        } 
+        }
         return result;
     }
 
@@ -193,7 +193,7 @@ public class MetricsIT {
             for (String uri : uris) {
                 assertTrue("Extension should be " + extension, uri.contains(extension));
             }
-            List<String> urisWithEndTime = docsWithEndTime(manager.contentSource, collectionName, METRICS_DB_NAME, (XML_EXT.equals(extension)));
+            List<String> urisWithEndTime = docsWithEndTime(manager.contentSource, collectionName, METRICS_DB_NAME, XML_EXT.equals(extension));
             assertTrue("Only one URI with End Time", (urisWithEndTime.size() == 1));
         } catch (Exception ex) {
             LOG.log(SEVERE, null, ex);
