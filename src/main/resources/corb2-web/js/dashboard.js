@@ -3,7 +3,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
     function($scope, $http, $interval) {
         $scope.allThreadCounts = [];
         for (var i = 1; i <= 64; i++) {
-            $scope.allThreadCounts.push(i)
+            $scope.allThreadCounts.push(i);
         }
         $scope.threadCount = -1;
         var loadData = function(response) {
@@ -65,7 +65,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             var mins = s % 60;
             var hrs = (s - mins) / 60;
 
-            return pad(hrs) + ':' + pad(mins) + ':' + pad(secs) ;
+            return pad(hrs) + ":" + pad(mins) + ":" + pad(secs) ;
         };
         $scope.pauseResumeButtonClick = function(){
             var reqStr = "&paused=";

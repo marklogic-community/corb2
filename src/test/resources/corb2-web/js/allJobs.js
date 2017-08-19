@@ -42,7 +42,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             s = (s - secs) / 60;
             var mins = s % 60;
             var hrs = (s - mins) / 60;
-            return pad(hrs) + ':' + pad(mins) + ':' + pad(secs);
+            return pad(hrs) + ":" + pad(mins) + ":" + pad(secs);
         };
 
         var invokeService = function(host,port) {
