@@ -18,12 +18,23 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
 
             return pad(hrs) + ":" + pad(mins) + ":" + pad(secs) ;
         };
-
         var promise = $interval(function() {
             var concise = isNaN(+$scope.totalNumberOfTasks) && typeof $scope.job.totalNumberOfTasks === "undefined" ? "" : "?concise";
             $http.get("/corb" + concise).success(loadData).error(handleError);
         }, 5000);
 
+        var handleError = function (error, status) {
+            if (status === "404") {
+                $interval.cancel(promise);
+                $scope.allDone = 100;
+                $scope.successPercent = 0;
+                $scope.failedPercent = 0;
+                $scope.pauseButtonText = "CORB Job Completed";
+                $scope.pauseButtonStyle = "disabled";
+                $scope.updateThreadsButtonStyle = "disabled";
+            }
+        };
+        
         $scope.allThreadCounts = [];
         for (var i = 1; i <= 64; i++) {
             $scope.allThreadCounts.push(i);
@@ -60,18 +71,6 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             $scope.averageTransactionTimeInMillis =  Math.round(job.averageTransactionTimeInMillis * 100) / 100;
             $scope.job = job;
         };
-        var handleError = function (error, status) {
-            if (status === "404") {
-                $interval.cancel(promise);
-                $scope.allDone = 100;
-                $scope.successPercent = 0;
-                $scope.failedPercent = 0;
-                $scope.pauseButtonText = "CORB Job Completed";
-                $scope.pauseButtonStyle = "disabled";
-                $scope.updateThreadsButtonStyle = "disabled";
-            }
-        };
-
         $scope.pauseResumeButtonClick = function(){
             var reqStr = "&paused=";
             if ($scope.job.paused === "true") {
