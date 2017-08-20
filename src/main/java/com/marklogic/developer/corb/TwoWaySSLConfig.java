@@ -63,7 +63,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
             String cipherSuites = properties.getProperty(SSL_CIPHER_SUITES);
             if (isNotEmpty(cipherSuites)) {
                 String[] cipherSuitesList = cipherSuites.split(DELIMITER);
-                LOG.log(Level.INFO, MessageFormat.format("Using cipher suites: {0}", (Object[]) cipherSuitesList));
+                LOG.log(Level.INFO, () -> MessageFormat.format("Using cipher suites: {0}", (Object[]) cipherSuitesList));
                 return cipherSuitesList;
             }
         }
@@ -79,7 +79,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
             String enabledProtocols = properties.getProperty(SSL_ENABLED_PROTOCOLS);
             if (isNotEmpty(enabledProtocols)) {
                 String[] enabledProtocolsList = enabledProtocols.split(DELIMITER);
-                LOG.log(Level.INFO, MessageFormat.format("Using enabled protocols: {0}", (Object[]) enabledProtocolsList));
+                LOG.log(Level.INFO, () -> MessageFormat.format("Using enabled protocols: {0}", (Object[]) enabledProtocolsList));
                 return enabledProtocolsList;
             }
         }
