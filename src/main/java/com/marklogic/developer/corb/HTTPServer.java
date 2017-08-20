@@ -58,7 +58,7 @@ import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
-
+import static java.nio.charset.StandardCharsets.UTF_8;
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocketFactory;
 
@@ -831,8 +831,8 @@ public class HTTPServer {
                 String name = pos == -1 ? pair : pair.substring(0, pos);
                 String val = pos == -1 ? "" : pair.substring(pos + 1);
                 try {
-                    name = URLDecoder.decode(name.trim(), "UTF-8");
-                    val = URLDecoder.decode(val.trim(), "UTF-8");
+                    name = URLDecoder.decode(name.trim(), UTF_8.name());
+                    val = URLDecoder.decode(val.trim(), UTF_8.name());
                     if (!name.isEmpty()) {
                         params.add(new String[]{name, val});
                     }
@@ -2135,7 +2135,7 @@ public class HTTPServer {
             List<String[]> bodyParams = Collections.emptyList();
             String ct = headers.get("Content-Type");
             if (ct != null && ct.toLowerCase(Locale.US).startsWith("application/x-www-form-urlencoded")) {
-                bodyParams = parseParamsList(readToken(body, -1, "UTF-8", 2097152)); // 2MB
+                bodyParams = parseParamsList(readToken(body, -1, UTF_8.name(), 2097152)); // 2MB
             }																						// limit
             if (bodyParams.isEmpty()) {
                 return queryParams;
@@ -2464,7 +2464,7 @@ public class HTTPServer {
          * @throws IOException if an error occurs
          */
         public void send(int status, String text) throws IOException {
-            byte[] content = text.getBytes("UTF-8");
+            byte[] content = text.getBytes(UTF_8.name());
             sendHeaders(status, content.length, -1, "W/\"" + Integer.toHexString(text.hashCode()) + "\"",
                     "text/html; charset=utf-8", null);
             OutputStream output = getBody();
