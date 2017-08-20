@@ -46,9 +46,6 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         };
 
         var invokeService = function(host,port) {
-            var promise = $interval(function() {
-                $http.get("http://" + host + ":" + port + "/corb").success(loadData).error(handleError);
-            }, 5000);
             var handleError = function (error, status){
                 if (status === "404") {
                     $interval.cancel(promise);
@@ -64,21 +61,23 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
                 if (job.paused === "true") {
                     $scope.pauseButtonText[host+port] = "Resume Corb Job";
                     $scope.pauseButtonStyle[host+port] = "btn-info";
-                }
-                else{
+                } else {
                     $scope.pauseButtonText[host+port] = "Pause Corb Job";
                     $scope.pauseButtonStyle[host+port] = "btn-success";
                 }
                 $scope.threadCounts[host + port] ? null : $scope.threadCounts[host + port] = job.currentThreadCount;
-                for (i in $scope.availableServerData) {
+                for (var i in $scope.availableServerData) {
                     if (oldData === $scope.availableServerData[i]) {
                         $scope.availableServerData.splice(i, 1);
                     }
                 }
                 $scope.availableServerData.push(job);
             };
+            var promise = $interval(function() {
+                $http.get("http://" + host + ":" + port + "/corb").success(loadData).error(handleError);
+            }, 5000);
         };
-        for (i in hostData) {
+        for (var i in hostData) {
             invokeService(hostData[i][0], hostData[i][1]);
         }
     }]);

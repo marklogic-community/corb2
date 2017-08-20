@@ -1,6 +1,29 @@
 var app = angular.module("dashboard",[]);
 app.controller("mainCtrl", ["$scope", "$http","$interval",
     function($scope, $http, $interval) {
+
+        var pad = function(n, z) {
+            z = z || 2;
+            return ("00" + n).slice(-z);
+        };
+
+        var msToTime = function(s) {
+
+            var ms = s % 1000;
+            s = (s - ms) / 1000;
+            var secs = s % 60;
+            s = (s - secs) / 60;
+            var mins = s % 60;
+            var hrs = (s - mins) / 60;
+
+            return pad(hrs) + ":" + pad(mins) + ":" + pad(secs) ;
+        };
+
+        var promise = $interval(function() {
+            var concise = isNaN(+$scope.totalNumberOfTasks) && typeof $scope.job.totalNumberOfTasks === "undefined" ? "" : "?concise";
+            $http.get("/corb" + concise).success(loadData).error(handleError);
+        }, 5000);
+
         $scope.allThreadCounts = [];
         for (var i = 1; i <= 64; i++) {
             $scope.allThreadCounts.push(i);
@@ -48,25 +71,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
                 $scope.updateThreadsButtonStyle = "disabled";
             }
         };
-        var promise = $interval(function() {
-            var concise = isNaN(+$scope.totalNumberOfTasks) && typeof $scope.job.totalNumberOfTasks === "undefined" ? "" : "?concise";
-            $http.get("/corb" + concise).success(loadData).error(handleError);
-        }, 5000);
-        var pad = function(n, z) {
-            z = z || 2;
-            return ("00" + n).slice(-z);
-        };
-        var msToTime = function(s) {
 
-            var ms = s % 1000;
-            s = (s - ms) / 1000;
-            var secs = s % 60;
-            s = (s - secs) / 60;
-            var mins = s % 60;
-            var hrs = (s - mins) / 60;
-
-            return pad(hrs) + ":" + pad(mins) + ":" + pad(secs) ;
-        };
         $scope.pauseResumeButtonClick = function(){
             var reqStr = "&paused=";
             if ($scope.job.paused === "true") {
