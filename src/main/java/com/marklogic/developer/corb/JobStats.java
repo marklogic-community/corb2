@@ -176,7 +176,7 @@ public class JobStats extends BaseMonitor {
         }
     }
 
-    protected String epochMillisAsFormattedDateString(long epochMillis) {
+    protected static String epochMillisAsFormattedDateString(long epochMillis) {
         LocalDateTime date = LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneId.systemDefault());
         return date.format(DATE_FORMATTER);
     }
