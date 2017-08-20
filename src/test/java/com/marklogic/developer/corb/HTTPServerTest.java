@@ -147,7 +147,6 @@ public class HTTPServerTest {
     @Test
     public void markSupported(){
         try (InputStream inputStream = new FileInputStream(TEXT_FILE)) {
-            HTTPServer.Headers headers = new HTTPServer.Headers();
             HTTPServer.LimitedInputStream limitedInputStream = new HTTPServer.LimitedInputStream(inputStream, 1, false);
             assertFalse(limitedInputStream.markSupported());
         } catch (IOException ex){
@@ -454,5 +453,5 @@ public class HTTPServerTest {
             HTTPServer.transfer(input, out, 500);
         }
     }
-    
+
 }
