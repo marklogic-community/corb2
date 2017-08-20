@@ -156,7 +156,7 @@ public class JobStats extends BaseMonitor {
                     if (totalTime > 0) {
                         setTotalRunTimeInMillis(totalTime);
                         Long totalTransformTime = currentTimeMillis - manager.getTransformStartMillis();
-                        setAverageTransactionTime(totalTransformTime / Double.valueOf(numberOfFailedTasks + numberOfSucceededTasks));
+                        setAverageTransactionTime(totalTransformTime / Double.valueOf(numberOfFailedTasks) + Double.valueOf(numberOfSucceededTasks));
                         setEndTime(epochMillisAsFormattedDateString(manager.getEndMillis()));
                         estimatedTimeOfCompletion = null;
                         setCurrentThreadCount(0l);
