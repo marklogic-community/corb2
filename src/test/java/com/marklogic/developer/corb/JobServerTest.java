@@ -1,23 +1,19 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
+import com.marklogic.developer.corb.util.IOUtils;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.Before;
 import org.junit.Test;
-import sun.misc.IOUtils;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static org.junit.Assert.*;
 
 public class JobServerTest {
@@ -35,12 +31,12 @@ public class JobServerTest {
         try {
             HttpServer server = JobServer.create(port);
             assertNotNull(server);
-            StringBuilder result = new StringBuilder();
-
+           
             URL url = new URL("http://localhost:" + port + "/web/");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            byte[] content = IOUtils.readFully(conn.getInputStream(), 5000, false);
+            
+            byte[] content = IOUtils.toByteArray(conn.getInputStream());
             assertEquals(200, conn.getResponseCode());
             assertNotNull(content);
 
