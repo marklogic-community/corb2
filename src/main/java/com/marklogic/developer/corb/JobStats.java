@@ -521,6 +521,7 @@ public class JobStats extends BaseMonitor {
     public static StringBuffer toJsonProperty(String propertyName) {
         return new StringBuffer(QUOTE).append(propertyName).append(QUOTE);
     }
+
     public static StringBuffer toJsonValue(String value) {
         StringBuffer buffer = new StringBuffer();
         if (isNumeric(value)) {
@@ -544,22 +545,18 @@ public class JobStats extends BaseMonitor {
     }
 
     private static String xmlNode(String nodeName, Long nodeVal) {
-        if (nodeVal != null && nodeVal > 0l) {
-            return xmlNode(nodeName, nodeVal.toString(), null);
-        } else {
-            return "";
-        }
+        return xmlNode(nodeName, nodeVal != null && nodeVal >= 0l ? nodeVal.toString() : null);
     }
 
-    private static String xmlNode(String nodeName, Double nodeVal) {
-        if (nodeVal != null && nodeVal > 0.0) {
-            return xmlNode(nodeName, nodeVal.toString(), null);
-        } else {
-            return "";
-        }
+    protected static String xmlNode(String nodeName, Double nodeVal) {
+        return xmlNode(nodeName, nodeVal != null && nodeVal >= 0.0 ? nodeVal.toString() : null);
     }
 
-    private static String xmlNodeArray(String nodeName, String childNodeName, List<String> nodeVals) {
+    protected static String xmlNode(String nodeName, Integer nodeVal) {
+        return xmlNode(nodeName, nodeVal != null && nodeVal >= 0 ? nodeVal.toString() : null);
+    }
+
+    protected static String xmlNodeArray(String nodeName, String childNodeName, List<String> nodeVals) {
         if (nodeVals != null && !nodeVals.isEmpty()) {
 
             StringBuffer strBuff = new StringBuffer();
@@ -570,16 +567,14 @@ public class JobStats extends BaseMonitor {
         } else {
             return "";
         }
-
     }
 
-    private static String xmlNode(String nodeName, String nodeVal, String defaultNS) {
+    protected static String xmlNode(String nodeName, String nodeVal, String defaultNS) {
         if (StringUtils.isNotEmpty(nodeVal)) {
             StringBuffer strBuff = new StringBuffer();
             strBuff.append(LT).append(nodeName);
             if (defaultNS != null) {
-                strBuff.append(" xmlns='").append(defaultNS).append("' ");
-
+                strBuff.append(" xmlns='").append(defaultNS).append("'");
             }
 
             strBuff.append(GT).append(nodeVal).append("</").append(nodeName).append(GT);
@@ -587,10 +582,9 @@ public class JobStats extends BaseMonitor {
         } else {
             return "";
         }
-
     }
 
-    private static String xmlNode(String nodeName, Map<String, String> nodeVal) {
+    protected static String xmlNode(String nodeName, Map<String, String> nodeVal) {
         if (nodeVal != null && !nodeVal.isEmpty()) {
             StringBuffer strBuff = new StringBuffer();
             for (Map.Entry<String, String> entry : nodeVal.entrySet()){
@@ -602,7 +596,7 @@ public class JobStats extends BaseMonitor {
         }
     }
 
-    private static String xmlNodeRanks(String nodeName, Map<String, Long> nodeVal) {
+    protected static String xmlNodeRanks(String nodeName, Map<String, Long> nodeVal) {
         if (nodeVal != null && !nodeVal.isEmpty()) {
             StringBuffer strBuff = new StringBuffer();
             NavigableSet<Long> ranks = new TreeSet<>();
@@ -610,18 +604,18 @@ public class JobStats extends BaseMonitor {
             Map<Integer, String> rankToXML = new HashMap<>();
             int numUris = nodeVal.keySet().size();
             for (Map.Entry<String, Long> entry : nodeVal.entrySet()) {
-                StringBuffer strBuff2 = new StringBuffer();
+                StringBuffer rankXml = new StringBuffer();
                 Long time = entry.getValue();
                 Integer rank = numUris - ranks.headSet(time).size();
                 String urisWithSameRank = rankToXML.get(rank);
                 if (urisWithSameRank != null) {
-                    strBuff2.append(urisWithSameRank).append(xmlNode(URI, entry.getKey()));
+                    rankXml.append(urisWithSameRank).append(xmlNode(URI, entry.getKey()));
                 } else {
-                    strBuff2.append(xmlNode(URI, entry.getKey())).append(xmlNode("rank", "" + rank))
-                            .append(xmlNode("timeInMillis", (time) + ""));
+                    rankXml.append(xmlNode(URI, entry.getKey()))
+                            .append(xmlNode("rank", rank))
+                            .append(xmlNode("timeInMillis", time));
                 }
-
-                rankToXML.put(rank, strBuff2.toString());
+                rankToXML.put(rank, rankXml.toString());
             }
             for (Map.Entry<Integer, String> entry : rankToXML.entrySet()){
                 strBuff.append(xmlNode("Uri", entry.getValue()));
@@ -630,7 +624,6 @@ public class JobStats extends BaseMonitor {
         } else {
             return "";
         }
-
     }
 
     /**

@@ -9,6 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.marklogic.developer.corb.util.FileUtils;
+import com.sun.net.httpserver.HttpServer;
 
 public class ManagerDemo {
 
@@ -43,19 +44,19 @@ public class ManagerDemo {
                 @Override
                 public void run() {
 
-                try {
-                    manager.run();
-                } catch (Exception e) {
-                    LOG.log(Level.SEVERE, "Encountered an error running a job", e);
-                } finally {
-                    File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFilename);
-                    report.deleteOnExit();
                     try {
-                        int lineCount = FileUtils.getLineCount(report);
-                    } catch (IOException e) {
-                        LOG.log(Level.SEVERE, "Encountered an error reading export", e);
+                        manager.run();
+                    } catch (Exception e) {
+                        LOG.log(Level.SEVERE, "Encountered an error running a job", e);
+                    } finally {
+                        File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFilename);
+                        report.deleteOnExit();
+                        try {
+                            int lineCount = FileUtils.getLineCount(report);
+                        } catch (IOException e) {
+                            LOG.log(Level.SEVERE, "Encountered an error reading export", e);
+                        }
                     }
-                }
                 }
             };
             managerThread.start();
@@ -69,22 +70,20 @@ public class ManagerDemo {
     }
 
     public static void main(String[] args) throws IOException {
-        HTTPServer jobServer = new HTTPServer(9091);
-        HTTPServer.VirtualHost host = jobServer.getVirtualHost(null); // default host
-        host.setAllowGeneratedIndex(false); // with directory index pages
-        HTTPServer.ContextHandler htmlContextHandler = new HTTPServer.ClasspathResourceContextHandler("corb2-web", "/web");
-        host.addContext("/web", htmlContextHandler);
-        jobServer.start();
+        HttpServer jobServer = JobServer.create(9091);
+
         startManager(100000);
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             LOG.log(Level.FINE, "Thread inturrupted while sleeping", e);
         }
+
         startManager(100000);
 //		startManager(100000);
 //		startManager(100000);
 //		startManager(100000);
 //		startManager(100000);
     }
+
 }

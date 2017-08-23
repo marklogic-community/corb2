@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 
 public class JobStatsTest {
     private static final String FOO = "foo";
+
     @Test
     public void getHostName() throws Exception {
         TransformOptions transformOptions = new TransformOptions();
@@ -233,8 +234,8 @@ public class JobStatsTest {
     public void setEstimatedTimeOfCompletion() throws Exception {
         Manager manager = new Manager();
         JobStats jobStats = new JobStats(manager);
-        jobStats.setEstimatedTimeOfCompletion("foo");
-        assertEquals("foo", jobStats.getEstimatedTimeOfCompletion());
+        jobStats.setEstimatedTimeOfCompletion(FOO);
+        assertEquals(FOO, jobStats.getEstimatedTimeOfCompletion());
     }
 
     @Test
@@ -243,6 +244,47 @@ public class JobStatsTest {
         JobStats jobStats = new JobStats(manager);
         jobStats.setJobServerPort(1l);
         assertEquals(Long.valueOf(1l), jobStats.getJobServerPort());
+    }
+
+    @Test
+    public void testXmlNodeInteger() {
+        Integer value = null;
+        assertEquals("", JobStats.xmlNode(FOO, value));
+        value = -1;
+        assertEquals("", JobStats.xmlNode(FOO, value));
+        value = 0;
+        assertEquals("<foo>0</foo>", JobStats.xmlNode(FOO, value));
+        value = 5;
+        assertEquals("<foo>5</foo>", JobStats.xmlNode(FOO, value));
+    }
+
+    @Test
+    public void testXmlNodeDouble() {
+        Double value = null;
+        assertEquals("", JobStats.xmlNode(FOO, value));
+        value = -1.0d;
+        assertEquals("", JobStats.xmlNode(FOO, value));
+        value = 0.0d;
+        assertEquals("<foo>0.0</foo>", JobStats.xmlNode(FOO, value));
+        value = 5d;
+        assertEquals("<foo>5.0</foo>", JobStats.xmlNode(FOO, value));
+    }
+
+    @Test
+    public void testToString() {
+        Manager manager = new Manager();
+        JobStats jobStats = new JobStats(manager);
+        assertEquals(jobStats.toString(), jobStats.toString(true));
+        assertNotEquals(jobStats.toString(), jobStats.toString(false));
+    }
+
+    @Test
+    public void testXmlNodeArray() {
+        List<String> value = new ArrayList<>(3);
+        value.add("");
+        value.add("a");
+        value.add("1");
+        assertEquals("<foo><foo>a</foo><foo>1</foo></foo>", JobStats.xmlNodeArray(FOO, FOO, value));
     }
 
     @Test

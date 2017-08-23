@@ -2,12 +2,12 @@ var app = angular.module("dashboard",[]);
 app.controller("mainCtrl", ["$scope", "$http","$interval",
     function($scope, $http, $interval) {
         var hostData=[["localhost","9080"],["localhost","9081"],["localhost","9082"],["localhost","9083"],["localhost","9084"],["localhost","9085"]];
-        $scope.availableServers=[];
-        $scope.availableServerData=[];
-        $scope.pauseButtonText={};
-        $scope.pauseButtonStyle={};
-        $scope.threadCounts={};
-        $scope.allThreadCounts=[];
+        $scope.availableServers = [];
+        $scope.availableServerData = [];
+        $scope.pauseButtonText = {};
+        $scope.pauseButtonStyle = {};
+        $scope.threadCounts = {};
+        $scope.allThreadCounts = [];
         for (var i =1; i <= 64; i++) {
             $scope.allThreadCounts.push(i);
         }
@@ -28,7 +28,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         };
 
         $scope.openJob = function(job){
-            window.open("http://" + job.host + ":" + job.port + "/web/index.html", "target=_blank");
+            window.open("http://" + job.host + ":" + job.port + "/web/", "target=_blank");
         };
 
         var pad = function (n, z) {

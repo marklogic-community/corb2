@@ -66,28 +66,13 @@ import com.marklogic.xcc.ContentCreateOptions;
 import com.marklogic.xcc.ContentFactory;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
+
+import com.sun.net.httpserver.HttpServer;
+
+import java.io.*;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.logging.Level;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
@@ -101,9 +86,6 @@ import java.util.logging.Logger;
  */
 public class Manager extends AbstractManager {
 
-    private static final String JOB_SERVICE_PATH = "/corb";
-    private static final String CLASSPATH_FOLDER_WITH_RESOURCES = "corb2-web";
-    private static final String HTTP_RESOURCE_PATH = "/web";
     private static final String END_RUNNING_JOB_MESSAGE = "END RUNNING CORB JOB:";
     private static final String START_RUNNING_JOB_MESSAGE = "STARTED CORB JOB:";
 
@@ -115,7 +97,7 @@ public class Manager extends AbstractManager {
     protected transient PausableThreadPoolExecutor pool;
     protected transient Monitor monitor;
     protected transient MetricsDocSyncJob metricsDocSyncJob;
-    protected transient HTTPServer jobServer = null;
+    protected transient HttpServer jobServer = null;
     protected JobStats jobStats = null;
     protected long startMillis;
     protected long transformStartMillis;
@@ -606,31 +588,25 @@ public class Manager extends AbstractManager {
 
     private void startJobServer() throws IOException {
         int port = options.getJobServerPort();
-        if ((port > 0 || options.getJobServerPortsToChoose() != null && !options.getJobServerPortsToChoose().isEmpty()) && jobServer == null) {
-            if (port < 0) {
-                jobServer = new HTTPServer(options.getJobServerPortsToChoose());
-                options.setJobServerPort(jobServer.port);
-            } else {
-                jobServer = new HTTPServer(port);
+        if ((port > 0 ||
+            options.getJobServerPortsToChoose() != null &&
+            !options.getJobServerPortsToChoose().isEmpty()) &&
+            jobServer == null) {
+
+            Set<Integer> portCandidates = new TreeSet<>();
+            if (port > 0) {
+                portCandidates.add(port);
             }
-            HTTPServer.VirtualHost host = jobServer.getVirtualHost(null); // default host
-            host.setAllowGeneratedIndex(false); // with directory index pages
-            HTTPServer.ContextHandler htmlContextHandler = new HTTPServer.ClasspathResourceContextHandler(CLASSPATH_FOLDER_WITH_RESOURCES, HTTP_RESOURCE_PATH);
-            HTTPServer.ContextHandler dataContextHandler = new JobServicesHandler(this);
-            host.addContext(JOB_SERVICE_PATH, dataContextHandler, "GET", "POST");
-            host.addContext(HTTP_RESOURCE_PATH, htmlContextHandler);
-            jobServer.start();
-            String decoration = "*****************************************************************************************";
-            LOG.info(decoration);
-            LOG.log(INFO, MessageFormat.format("Job Server has started and can be access using http://localhost:{0,number,#}{1}/index.html", jobServer.port, HTTP_RESOURCE_PATH));
-            LOG.log(INFO, MessageFormat.format("Visit http://localhost:{0,number,#}{1} to fetch the metrics data", jobServer.port, JOB_SERVICE_PATH));
-            LOG.info(decoration);
+            portCandidates.addAll(options.getJobServerPortsToChoose());
+
+            jobServer = JobServer.create(portCandidates, this);
+            options.setJobServerPort(jobServer.getAddress().getPort());
         }
     }
 
     private void stopJobServer() throws IOException {
         if (jobServer != null) {
-            jobServer.stop();
+            jobServer.stop(0);
             jobServer = null;
         }
     }
