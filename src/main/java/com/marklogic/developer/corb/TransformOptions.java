@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -88,7 +89,7 @@ public class TransformOptions {
     private Integer numberOfFailedUris = 0;
     private Integer metricsSyncFrequencyInMillis = -1;
     private Integer jobServerPort = -1;
-    private List<Integer> jobServerPortsToChoose = null;
+    private List<Integer> jobServerPortsToChoose = new ArrayList<>();
     private String jobName = null;
 
     // Set on status check
