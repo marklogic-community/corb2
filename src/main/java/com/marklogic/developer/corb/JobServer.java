@@ -109,8 +109,8 @@ public class JobServer {
 
     public static void logUsage(HttpServer server) {
         LOG.log(INFO, SEPARATOR);
-        LOG.log(INFO, MessageFormat.format("Job Server has started and can be access using http://localhost:{0,number,#}{1}/", server.getAddress().getPort(), HTTP_RESOURCE_PATH));
-        LOG.log(INFO, MessageFormat.format("Visit http://localhost:{0,number,#}{1} to fetch the metrics data", server.getAddress().getPort(), JOB_SERVICE_PATH));
+        LOG.log(INFO, () -> MessageFormat.format("Job Server has started and can be access using http://localhost:{0,number,#}{1}/", server.getAddress().getPort(), HTTP_RESOURCE_PATH));
+        LOG.log(INFO, () -> MessageFormat.format("Visit http://localhost:{0,number,#}{1} to fetch the metrics data", server.getAddress().getPort(), JOB_SERVICE_PATH));
         LOG.log(INFO, SEPARATOR);
     }
 
