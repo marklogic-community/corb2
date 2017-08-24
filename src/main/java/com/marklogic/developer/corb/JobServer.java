@@ -7,6 +7,7 @@ import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.text.MessageFormat;
 
@@ -25,6 +26,8 @@ public class JobServer {
     private static final String CLASSPATH_FOLDER_WITH_RESOURCES = "web";
     public static final String HTTP_RESOURCE_PATH = "/web";
     public static final String JOB_SERVICE_PATH = "/corb";
+
+    private void JobServer() {}
 
     public static HttpServer create(Integer port) throws IOException {
         return JobServer.create(Collections.singleton(port), null);
@@ -71,10 +74,10 @@ public class JobServer {
 
                     if (is == null) {
                         String response = "Error 404 File not found.";
-                        httpExchange.sendResponseHeaders(404, response.length());
+                        httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, response.length());
                         output.write(response.getBytes());
                     } else {
-                        httpExchange.sendResponseHeaders(200, 0);
+                        httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
                         httpExchange.getResponseHeaders().set("Content-Type", getContentType(relativePath));
 
                         final byte[] buffer = new byte[0x10000];
