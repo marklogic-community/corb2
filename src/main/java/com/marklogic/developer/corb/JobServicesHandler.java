@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +17,7 @@ import java.util.logging.Logger;
 public class JobServicesHandler implements HttpHandler {
 
     private static final Logger LOG = Logger.getLogger(JobServicesHandler.class.getName());
+    private static final String HEADER_CONTENT_TYPE = "Content Type";
     private Manager manager;
 
     JobServicesHandler(Manager manager) {
@@ -32,7 +34,7 @@ public class JobServicesHandler implements HttpHandler {
             doPost(httpExchange, params);
         } else {
             LOG.log(Level.WARNING, "Unsupported method {0}", method);
-            httpExchange.sendResponseHeaders(400, 0l);
+            httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0l);
         }
     }
 
@@ -50,14 +52,14 @@ public class JobServicesHandler implements HttpHandler {
         boolean concise = params.containsKey("concise") || params.containsKey("CONCISE");
         String response;
         if (params.containsKey("xml") || params.containsKey("XML")) {
-            httpExchange.getResponseHeaders().add("Content-Type", "application/xml");
+            httpExchange.getResponseHeaders().add(HEADER_CONTENT_TYPE, "application/xml");
             response = manager.jobStats.toXMLString(concise);
         } else {
-            httpExchange.getResponseHeaders().add("Content-Type", "application/json");
+            httpExchange.getResponseHeaders().add(HEADER_CONTENT_TYPE, "application/json");
             response =  manager.jobStats.toJSONString(concise);
         }
         alowXSS(httpExchange);
-        httpExchange.sendResponseHeaders(200, response.length());
+        httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length());
         httpExchange.getResponseBody().write(response.getBytes(Charset.forName("UTF-8")));
     }
 
@@ -65,7 +67,7 @@ public class JobServicesHandler implements HttpHandler {
         Map<String, String> result = new HashMap<>();
         if (query != null) {
             for (String param : query.split("&")) {
-                String pair[] = param.split("=");
+                String[] pair = param.split("=");
                 if (pair.length > 1) {
                     result.put(pair[0], pair[1]);
                 } else {
@@ -80,9 +82,9 @@ public class JobServicesHandler implements HttpHandler {
         if (params.containsKey("paused") || params.containsKey("PAUSED")) {
             String value = params.get("paused");
             value = value == null ? params.get("PAUSED") : value;
-            if (value != null && value.equalsIgnoreCase("true")) {
+            if (value != null && value.equalsIgnoreCase(Boolean.TRUE.toString())) {
                 manager.pause();
-            } else if (value != null && value.equalsIgnoreCase("false")) {
+            } else if (value != null && value.equalsIgnoreCase(Boolean.FALSE.toString())) {
                 manager.resume();
             }
         }
@@ -111,6 +113,6 @@ public class JobServicesHandler implements HttpHandler {
         headers.add("Access-Control-Allow-Origin", "*");
         headers.add("Access-Control-Allow-Methods", "GET,POST");
         headers.add("Access-Control-Max-Age", "3600");
-        headers.add("Access-Control-Allow-Headers", "Content-Type");
+        headers.add("Access-Control-Allow-Headers", HEADER_CONTENT_TYPE);
     }
 }

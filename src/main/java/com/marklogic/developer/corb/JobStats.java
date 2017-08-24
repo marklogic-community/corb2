@@ -49,7 +49,7 @@ public class JobStats extends BaseMonitor {
     private static final String COLON = ":";
     private static final String OPEN_CURLY = "{";
     private static final String CLOSE_CURLY = "}";
-    private static final String COMA = ",";
+    private static final String COMMA = ",";
     private static final String URI = "uri";
     private static final String JOB_NAME = "name";
     private static final String JOB_ROOT = "job";
@@ -253,7 +253,6 @@ public class JobStats extends BaseMonitor {
                     } else {
                         request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
                                 metrics == null ? toXMLString() : metrics);
-
                     }
                     request.setOptions(requestOptions);
 
@@ -451,7 +450,7 @@ public class JobStats extends BaseMonitor {
         NodeList nodeList = node.getChildNodes();
         for (int i = 0; i < nodeList.getLength(); i++) {
             if (i != 0) {
-                strBuff.append(COMA);
+                strBuff.append(COMMA);
             }
             Node child = nodeList.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE) {
@@ -463,14 +462,14 @@ public class JobStats extends BaseMonitor {
                     for (int j = 0; j < uris.getLength(); j++) {
                         if (uris.item(j).hasChildNodes()) {
                             if (j != 0) {
-                                strBuff.append(COMA);
+                                strBuff.append(COMMA);
                             }
                             strBuff.append(OPEN_CURLY);
                             NodeList innerUris = uris.item(j).getChildNodes();
                             for (int k = 0; k < innerUris.getLength(); k++) {
                                 Node uri = innerUris.item(k);
                                 if (k != 0) {
-                                    strBuff.append(COMA);
+                                    strBuff.append(COMMA);
                                 }
                                 strBuff.append(toJsonProperty(uri.getNodeName()))
                                         .append(COLON)
@@ -488,13 +487,13 @@ public class JobStats extends BaseMonitor {
                     for (int j = 0; j < uris.getLength(); j++) {
                         if (uris.item(j).hasChildNodes()) {
                             if (j != 0) {
-                                strBuff.append(COMA);
+                                strBuff.append(COMMA);
                             }
                             NodeList innerUris = uris.item(j).getChildNodes();
                             for (int k = 0; k < innerUris.getLength(); k++) {
                                 Node uri = innerUris.item(k);
                                 if (k != 0) {
-                                    strBuff.append(COMA);
+                                    strBuff.append(COMMA);
                                 }
                                 strBuff.append(toJsonValue(uri.getTextContent()));
                             }
