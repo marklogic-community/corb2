@@ -88,14 +88,6 @@ public class JobStatsTest {
     }
 
     @Test
-    public void getTotalNumberOfTasks() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setTotalNumberOfTasks(5l);
-        assertEquals(5l, jobStats.getTotalNumberOfTasks(), 0.001);
-    }
-
-    @Test
     public void getNumberOfFailedTasks() throws Exception {
         Manager manager = new Manager();
         JobStats jobStats = new JobStats(manager);
