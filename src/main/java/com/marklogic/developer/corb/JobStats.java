@@ -83,7 +83,7 @@ public class JobStats extends BaseMonitor {
     protected String startTime = null;
     protected String endTime = null;
     protected String host = null;
-    protected Long totalNumberOfTasks = 0l;
+
     protected Long numberOfFailedTasks = 0l;
     protected Long numberOfSucceededTasks = 0l;
     protected Double averageTransactionTime = 0.0d;
@@ -140,12 +140,12 @@ public class JobStats extends BaseMonitor {
     private void refresh() {
         synchronized (this) {
 
-            if (manager !=null && manager.monitor != null) {
+            if (manager != null && manager.monitor != null) {
                 setJobServerPort(options.getJobServerPort().longValue());
-                setTotalNumberOfTasks(manager.monitor.getTaskCount());
-                if (getTotalNumberOfTasks() > 0) {
-                    PausableThreadPoolExecutor threadPool = manager.monitor.pool;
+                this.taskCount = manager.monitor.getTaskCount();
+                if (taskCount > 0) {
 
+                    PausableThreadPoolExecutor threadPool = manager.monitor.pool;
                     setTopTimeTakingUris(threadPool.getTopUris());
                     setFailedUris(threadPool.getFailedUris());
                     setNumberOfFailedTasks(threadPool.getNumFailedUris());
@@ -327,14 +327,6 @@ public class JobStats extends BaseMonitor {
         this.host = host;
     }
 
-    public Long getTotalNumberOfTasks() {
-        return totalNumberOfTasks;
-    }
-
-    public void setTotalNumberOfTasks(Long totalNumberOfTasks) {
-        this.totalNumberOfTasks = totalNumberOfTasks;
-    }
-
     public Long getNumberOfFailedTasks() {
         return numberOfFailedTasks;
     }
@@ -397,13 +389,13 @@ public class JobStats extends BaseMonitor {
                 .append(concise ? "" : xmlNode(URIS_LOAD_TIME, urisLoadTime))
                 .append(concise ? "" : xmlNode(POST_BATCH_RUN_TIME, postBatchRunTime))
                 .append(xmlNode(AVERAGE_TRANSACTION_TIME, averageTransactionTime))
-                .append(concise ? "" : xmlNode(TOTAL_NUMBER_OF_TASKS, totalNumberOfTasks))
+                .append(concise ? "" : xmlNode(TOTAL_NUMBER_OF_TASKS, taskCount))
                 .append(xmlNode(TOTAL_JOB_RUN_TIME, totalRunTimeInMillis))
                 .append(xmlNode(NUMBER_OF_FAILED_TASKS, numberOfFailedTasks))
                 .append(xmlNode(NUMBER_OF_SUCCEEDED_TASKS, numberOfSucceededTasks))
                 .append(xmlNode(METRICS_DOC_URI, uri))
                 .append(xmlNode(PAUSED, paused))
-                .append(xmlNode(JOB_SERVER_PORT, jobServerPort))
+                .append(xmlNode(JOB_SERVER_PORT, getJobServerPort()))
                 .append(xmlNode(AVERAGE_TPS, avgTps > 0 ? formatTransactionsPerSecond(avgTps) : ""))
                 .append(xmlNode(CURRENT_TPS, currentTps > 0 ? formatTransactionsPerSecond(currentTps) : ""))
                 .append(xmlNode(ESTIMATED_TIME_OF_COMPLETION, estimatedTimeOfCompletion))
@@ -511,7 +503,6 @@ public class JobStats extends BaseMonitor {
                             .append(CLOSE_CURLY);
                 }
             }
-
         }
         return strBuff.toString();
     }
