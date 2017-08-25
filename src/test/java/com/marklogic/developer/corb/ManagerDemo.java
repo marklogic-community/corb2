@@ -78,12 +78,11 @@ public class ManagerDemo {
         } catch (InterruptedException e) {
             LOG.log(Level.FINE, "Thread inturrupted while sleeping", e);
         }
-
         startManager(100000);
-//		startManager(100000);
-//		startManager(100000);
-//		startManager(100000);
-//		startManager(100000);
+		startManager(100000);
+		startManager(100000);
+		startManager(100000);
+		startManager(100000);
     }
 
 }
