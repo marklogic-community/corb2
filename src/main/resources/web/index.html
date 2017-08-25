@@ -114,8 +114,6 @@
                               <dd>{{initTaskTimeInMillis | number : 0}}</dd>
                               <dt>Pre-Batch Run Time</dt>
                               <dd>{{preBatchRunTimeInMillis | number : 0}}</dd>
-                              <dt>Post Batch Run Time</dt>
-                              <dd>{{job.postBatchRunTimeInMillis | number : 0}}</dd>
                               <dt>URIs Load Time</dt>
                               <dd>{{urisLoadTimeInMillis | number : 0}}</dd>
                               <dt>Average Tps</dt>
@@ -124,7 +122,8 @@
                               <dd>{{job.currentTransactionsPerSecond | number : 2}}</dd>
                               <dt>Estimated time left</dt>
                               <dd>{{job.estimatedTimeOfCompletion}}</dd>
-
+                              <dt>Post Batch Run Time</dt>
+                              <dd>{{job.postBatchRunTimeInMillis | number : 0}}</dd>
                           </dl>
                       </div>
                   </div>
