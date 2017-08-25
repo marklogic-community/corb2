@@ -604,7 +604,7 @@ public class Manager extends AbstractManager {
         }
     }
 
-    private void stopJobServer() throws IOException {
+    private void stopJobServer() {
         if (jobServer != null) {
             jobServer.stop(0);
             jobServer = null;
@@ -988,14 +988,7 @@ public class Manager extends AbstractManager {
         endMillis = System.currentTimeMillis();
         shutDownMetricsSyncJob();
         jobStats.logJobStatsToServer(END_RUNNING_JOB_MESSAGE, false);
-        try {
-            stopJobServer();
-        } catch (IOException e) {
-            LOG.log(WARNING, "Unable to stop Job server");
-        } catch (Exception e) {
-            LOG.log(WARNING, "Unable to stop Job server");
-        }
-        jobStats = null;
+        stopJobServer();
     }
 
     /**
