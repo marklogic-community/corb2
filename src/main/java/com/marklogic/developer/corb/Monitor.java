@@ -129,7 +129,7 @@ public class Monitor extends BaseMonitor implements Runnable {
 
     protected String getProgressMessage(long completed) {
         populateTps(completed);
-        return getProgressMessage(completed, taskCount, avgTps, currentTps, estimatedTimeOfCompletion, pool.getActiveCount(),pool.getNumFailedUris());
+        return getProgressMessage(completed, taskCount, avgTps, currentTps, estimatedTimeOfCompletion, pool.getActiveCount(), pool.getNumFailedUris());
     }
 
     /**

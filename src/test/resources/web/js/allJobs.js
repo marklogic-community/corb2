@@ -45,7 +45,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             return pad(hrs) + ":" + pad(mins) + ":" + pad(secs);
         };
 
-        var invokeService = function(host,port) {
+        var invokeService = function(host, port) {
             var handleError = function (error, status){
                 if (status === "404") {
                     $interval.cancel(promise);
