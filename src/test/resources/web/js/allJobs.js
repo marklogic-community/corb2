@@ -13,18 +13,18 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         }
 
         $scope.pauseResumeButtonClick = function(job){
-            var reqStr = "&paused=";
+            var reqStr = "paused=";
             if (job.paused === "true") {
                 reqStr = "false";
             } else {
                 reqStr = "true";
             }
-            $http.post("http://" + job.host + ":" + job.port + "/corb", reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}})
+            $http.post("http://" + job.host + ":" + job.port + "/corb?" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}})
         };
 
         $scope.updateThreadCount = function(job){
-            var reqStr = "&threads=" + $scope.threadCounts[job.host + job.port];
-            $http.post("http://" + job.host + ":" + job.port + "/corb", reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}});
+            var reqStr = "threads=" + $scope.threadCounts[job.host + job.port];
+            $http.post("http://" + job.host + ":" + job.port + "/corb?" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}});
         };
 
         $scope.openJob = function(job){

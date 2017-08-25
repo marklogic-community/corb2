@@ -34,7 +34,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
                 $scope.updateThreadsButtonStyle = "disabled";
             }
         };
-        
+
         $scope.allThreadCounts = [];
         for (var i = 1; i <= 64; i++) {
             $scope.allThreadCounts.push(i);
@@ -47,7 +47,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             if (job.userProvidedOptions) {
                 $scope.userProvidedOptions = job.userProvidedOptions;//save this as this is fetched only once
             }
-            if (typeof job.totalNumberOfTasks !== "undefined") {
+            if (typeof job.totalNumberOfTasks !== "undefined" && job.totalNumberOfTasks > 0) {
                 $scope.threadCount = job.currentThreadCount;
                 $scope.initTaskTimeInMillis = job.initTaskTimeInMillis;
                 $scope.preBatchRunTimeInMillis = job.preBatchRunTimeInMillis;
@@ -78,11 +78,11 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             } else {
                 reqStr += "true";
             }
-            $http.post("/corb", "concise=true" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}}).success(loadData);
+            $http.post("/corb?concise=true" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}}).success(loadData);
         };
         $scope.updateThreadCount = function(){
             var reqStr = "&threads=" + $scope.threadCount;
-            $http.post("/corb", "concise=true" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}}).success(loadData);
+            $http.post("/corb?concise=true" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}}).success(loadData);
         };
         $scope.updateThreadsButtonStyle = "btn-primary";
         $http.get("/corb").success(loadData).error(handleError);
