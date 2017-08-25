@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.util.HashMap;
@@ -17,7 +18,7 @@ import java.util.logging.Logger;
 public class JobServicesHandler implements HttpHandler {
 
     private static final Logger LOG = Logger.getLogger(JobServicesHandler.class.getName());
-    private static final String HEADER_CONTENT_TYPE = "Content Type";
+    private static final String HEADER_CONTENT_TYPE = "Content-Type";
     private Manager manager;
 
     JobServicesHandler(Manager manager) {
@@ -60,7 +61,11 @@ public class JobServicesHandler implements HttpHandler {
         }
         alowXSS(httpExchange);
         httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length());
-        httpExchange.getResponseBody().write(response.getBytes(Charset.forName("UTF-8")));
+        try (OutputStream out = httpExchange.getResponseBody()) {
+            out.write(response.getBytes(Charset.forName("UTF-8")));
+            out.flush();
+            out.close();
+        }
     }
 
     public static Map<String, String> querystringToMap(String query){
