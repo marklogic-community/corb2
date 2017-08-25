@@ -93,6 +93,7 @@ public class JobServer {
                 }
             }
         });
+        jobServer.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
         jobServer.start();
         logUsage(jobServer);
         return jobServer;
