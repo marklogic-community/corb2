@@ -34,7 +34,7 @@ public class JobServer {
     }
 
     public static HttpServer create(Set<Integer> portCandidates, Manager manager) throws IOException {
-        int requestQueue = 10; //how many HTTP requests to queue before rejecting requests
+        int requestQueue = 100; //how many HTTP requests to queue before rejecting requests
         return create(portCandidates, requestQueue, manager);
     }
 
