@@ -73,7 +73,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         };
         $scope.pauseResumeButtonClick = function(){
             var reqStr = "&paused=";
-            if ($scope.job.paused === "true") {
+            if ($scope.job.paused === true) {
                 reqStr += "false";
             } else {
                 reqStr += "true";
