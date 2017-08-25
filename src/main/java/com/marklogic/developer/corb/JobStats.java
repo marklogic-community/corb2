@@ -39,7 +39,7 @@ public class JobStats extends BaseMonitor {
     private static final String METRICS_DB_NAME_PARAM = "dbName";
     private static final String METRICS_URI_ROOT_PARAM = "uriRoot";
     protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\";\n";
-    private static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
     private static final String START_TIME = "startTime";
     private static final String OPEN_SQUARE = "[";
     private static final String CLOSE_SQUARE = "]";
@@ -194,7 +194,6 @@ public class JobStats extends BaseMonitor {
         }
         logJobStatsToServerDocument(metricsToDocument);
         logJobStatsToServerLog(message, metricsToServerLog, concise);
-//		LOG.info(toString(concise));//DO WE NEED TO LOG?
     }
 
     private void logJobStatsToServerLog(String message, String metrics, boolean concise) {
