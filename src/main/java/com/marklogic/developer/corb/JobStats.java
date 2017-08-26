@@ -188,6 +188,7 @@ public class JobStats extends BaseMonitor {
 
         if (isJavaScriptModule(processModule)) {
             metricsToDocument = toJSONString(concise);
+            metricsToServerLog = metricsToDocument;
         } else {
             metricsToDocument = toXMLString(concise);
             metricsToServerLog = getJsonFromXML(metricsToDocument);

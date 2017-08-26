@@ -1,7 +1,7 @@
 var app = angular.module("dashboard",[]);
 app.controller("mainCtrl", ["$scope", "$http","$interval",
     function($scope, $http, $interval) {
-
+        var servicePath = "/stats";
         var pad = function(n, z) {
             z = z || 2;
             return ("00" + n).slice(-z);
@@ -20,7 +20,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         };
         var promise = $interval(function() {
             var concise = isNaN(+$scope.totalNumberOfTasks) && typeof $scope.job.totalNumberOfTasks === "undefined" ? "" : "?concise";
-            $http.get("/corb" + concise).success(loadData).error(handleError);
+            $http.get(servicePath + concise).then(loadData, handleError);
         }, 5000);
 
         var handleError = function (error, status) {
@@ -43,7 +43,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         var loadData = function(response) {
             $scope.isLoading = false;
 
-            var job = response.job;
+            var job = response.data.job;
             if (job.userProvidedOptions) {
                 $scope.userProvidedOptions = job.userProvidedOptions;//save this as this is fetched only once
             }
@@ -78,12 +78,12 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             } else {
                 reqStr += "true";
             }
-            $http.post("/corb?concise=true" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}}).success(loadData);
+            $http.post(servicePath + "?concise=true" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}}).then(loadData);
         };
         $scope.updateThreadCount = function(){
             var reqStr = "&threads=" + $scope.threadCount;
-            $http.post("/corb?concise=true" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}}).success(loadData);
+            $http.post(servicePath + "?concise=true" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}}).then(loadData);
         };
         $scope.updateThreadsButtonStyle = "btn-primary";
-        $http.get("/corb").success(loadData).error(handleError);
+        $http.get(servicePath).then(loadData, handleError);
     }]);

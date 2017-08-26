@@ -24,8 +24,8 @@ public class JobServer {
     private static final String SEPARATOR = "*****************************************************************************************";
 
     private static final String CLASSPATH_FOLDER_WITH_RESOURCES = "web";
-    public static final String HTTP_RESOURCE_PATH = "/web";
-    public static final String JOB_SERVICE_PATH = "/corb";
+    public static final String HTTP_RESOURCE_PATH = "/";
+    public static final String JOB_SERVICE_PATH = "/stats";
 
     private void JobServer() {}
 
@@ -62,12 +62,14 @@ public class JobServer {
             public void handle(HttpExchange httpExchange) throws IOException {
 
                 String path = httpExchange.getRequestURI().getPath();
-                String relativePath = path.substring(HTTP_RESOURCE_PATH.length());
                 // filename isn't necessary, let's use clean URLs
-                if (relativePath.equals("/")){
-                    relativePath += "index.html";
+                if (path.isEmpty() || path.equals("/") ){
+                    path += "index.html";
+                } else if (path.equals("jobs")) {
+                    path += ".html";
                 }
-                String resourcePath = CLASSPATH_FOLDER_WITH_RESOURCES + relativePath;
+
+                String resourcePath = CLASSPATH_FOLDER_WITH_RESOURCES + path;
 
                 try (InputStream is = Manager.class.getResourceAsStream("/" + resourcePath);
                      OutputStream output = httpExchange.getResponseBody()) {
@@ -78,7 +80,7 @@ public class JobServer {
                         output.write(response.getBytes());
                     } else {
                         httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
-                        httpExchange.getResponseHeaders().set("Content-Type", getContentType(relativePath));
+                        httpExchange.getResponseHeaders().set("Content-Type", getContentType(path));
 
                         final byte[] buffer = new byte[0x10000];
                         int count = 0;

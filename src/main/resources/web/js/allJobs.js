@@ -1,7 +1,11 @@
 var app = angular.module("dashboard",[]);
 app.controller("mainCtrl", ["$scope", "$http","$interval",
     function($scope, $http, $interval) {
-        var hostData=[["localhost","9080"],["localhost","9081"],["localhost","9082"],["localhost","9083"],["localhost","9084"],["localhost","9085"]];
+        var servicePath = "/stats";
+        function isNumeric(n) {
+            return true;//!isNaN(parseFloat(n)) && isFinite(n);
+        };
+
         $scope.availableServers = [];
         $scope.availableServerData = [];
         $scope.pauseButtonText = {};
@@ -11,20 +15,50 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         for (var i =1; i <= 64; i++) {
             $scope.allThreadCounts.push(i);
         }
+        $scope.parsePorts = function() {
+            var host = location.hostname || "localhost";
 
+            //parse the value, and for each port number test to see if the ports are available
+            var hostData= [];
+
+                var items = $scope.ports.split(",");
+                console.log(items);
+                for (var i = 0, len = items.length; i < len; i++) {
+                    var port = items[i];
+                    if (port.includes("-")) {
+                        var range = port.split("-");
+                        for (var j = range[0]; j <= range[1]; j++) {
+                            hostData.push([host, j]);
+                        }
+                    } else if (isNumeric(port)) {
+                        hostData.push([host, port]);
+                    } else {
+                        console.log("error " + port);
+                    }
+                }
+
+                for (var i in hostData) {
+                    var server = hostData[i][0];
+                    var port = hostData[i][1];
+                    console.log("invokeService" + hostData[i][0] + hostData[i][1]);
+                    invokeService(host, port);
+                }
+            console.log(hostData);
+            console.log("change detected: " + $scope.ports)
+        };
         $scope.pauseResumeButtonClick = function(job){
             var reqStr = "paused=";
-            if (job.paused === "true") {
+            if (job.paused === true) {
                 reqStr = "false";
             } else {
                 reqStr = "true";
             }
-            $http.post("http://" + job.host + ":" + job.port + "/corb?" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}})
+            $http.post("http://" + job.host + ":" + job.port + servicePath + "?" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}})
         };
 
         $scope.updateThreadCount = function(job){
             var reqStr = "threads=" + $scope.threadCounts[job.host + job.port];
-            $http.post("http://" + job.host + ":" + job.port + "/corb?" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}});
+            $http.post("http://" + job.host + ":" + job.port + servicePath + "?" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}});
         };
 
         $scope.openJob = function(job){
@@ -55,15 +89,16 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             var loadData = function(response) {
                 $scope.isLoading = false;
                 console.log("host " + host + " port " + port + " FOUND");
-                var job = response.job;
+
+                var job = response.data.job;
                 var oldData = $scope.availableServers[host + ":" + port];
                 $scope.availableServers[host + ":" + port] = (job);
-                if (job.paused === "true") {
-                    $scope.pauseButtonText[host+port] = "Resume Corb Job";
-                    $scope.pauseButtonStyle[host+port] = "btn-info";
+                if (job.paused === true) {
+                    $scope.pauseButtonText[host + port] = "Resume Corb Job";
+                    $scope.pauseButtonStyle[host + port] = "btn-info";
                 } else {
-                    $scope.pauseButtonText[host+port] = "Pause Corb Job";
-                    $scope.pauseButtonStyle[host+port] = "btn-success";
+                    $scope.pauseButtonText[host + port] = "Pause Corb Job";
+                    $scope.pauseButtonStyle[host + port] = "btn-success";
                 }
                 $scope.threadCounts[host + port] ? null : $scope.threadCounts[host + port] = job.currentThreadCount;
                 for (var i in $scope.availableServerData) {
@@ -74,10 +109,8 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
                 $scope.availableServerData.push(job);
             };
             var promise = $interval(function() {
-                $http.get("http://" + host + ":" + port + "/corb").success(loadData).error(handleError);
+                $http.get("http://" + host + ":" + port + servicePath).then(loadData, handleError);
             }, 5000);
         };
-        for (var i in hostData) {
-            invokeService(hostData[i][0], hostData[i][1]);
-        }
+
     }]);
