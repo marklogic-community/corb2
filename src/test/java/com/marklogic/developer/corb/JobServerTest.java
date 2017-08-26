@@ -31,11 +31,11 @@ public class JobServerTest {
         try {
             HttpServer server = JobServer.create(port);
             assertNotNull(server);
-           
-            URL url = new URL("http://localhost:" + port + "/web/");
+
+            URL url = new URL("http://localhost:" + port );
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            
+
             byte[] content = IOUtils.toByteArray(conn.getInputStream());
             assertEquals(200, conn.getResponseCode());
             assertNotNull(content);
