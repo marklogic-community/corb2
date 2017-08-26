@@ -1,10 +1,9 @@
 var app = angular.module("dashboard",[]);
 app.controller("mainCtrl", ["$scope", "$http","$interval",
     function($scope, $http, $interval) {
+
         var servicePath = "/stats";
-        function isNumeric(n) {
-            return true;//!isNaN(parseFloat(n)) && isFinite(n);
-        };
+        var host = location.hostname || "localhost";
 
         $scope.availableServers = [];
         $scope.availableServerData = [];
@@ -15,37 +14,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         for (var i =1; i <= 64; i++) {
             $scope.allThreadCounts.push(i);
         }
-        $scope.parsePorts = function() {
-            var host = location.hostname || "localhost";
 
-            //parse the value, and for each port number test to see if the ports are available
-            var hostData= [];
-
-                var items = $scope.ports.split(",");
-                console.log(items);
-                for (var i = 0, len = items.length; i < len; i++) {
-                    var port = items[i];
-                    if (port.includes("-")) {
-                        var range = port.split("-");
-                        for (var j = range[0]; j <= range[1]; j++) {
-                            hostData.push([host, j]);
-                        }
-                    } else if (isNumeric(port)) {
-                        hostData.push([host, port]);
-                    } else {
-                        console.log("error " + port);
-                    }
-                }
-
-                for (var i in hostData) {
-                    var server = hostData[i][0];
-                    var port = hostData[i][1];
-                    console.log("invokeService" + hostData[i][0] + hostData[i][1]);
-                    invokeService(host, port);
-                }
-            console.log(hostData);
-            console.log("change detected: " + $scope.ports)
-        };
         $scope.pauseResumeButtonClick = function(job){
             var reqStr = "paused=";
             if (job.paused === true) {
@@ -53,12 +22,12 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             } else {
                 reqStr = "true";
             }
-            $http.post("http://" + job.host + ":" + job.port + servicePath + "?" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}})
+            $http.post("http://" + job.host + ":" + job.port + servicePath + "?" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}});
         };
 
         $scope.updateThreadCount = function(job){
             var reqStr = "threads=" + $scope.threadCounts[job.host + job.port];
-            $http.post("http://" + job.host + ":" + job.port + servicePath + "?" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}});
+            $http.post("http://" + job.host + ":" + job.port + servicePath + "?" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}});
         };
 
         $scope.openJob = function(job){
@@ -69,6 +38,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             z = z || 2;
             return ("00" + n).slice(-z);
         };
+
         $scope.msToTime = function(s) {
             var ms = s % 1000;
             s = (s - ms) / 1000;
@@ -113,4 +83,24 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             }, 5000);
         };
 
+        $scope.parsePorts = function() {
+            var hostData= [];
+            var items = $scope.ports.split(",");
+            for (var i = 0, len = items.length; i < len; i++) {
+                var portToken = items[i];
+                // when there is a dash, process the range of values (inclusive)
+                if (portToken.includes("-")) {
+                    var range = portToken.split("-");
+                    for (var port = range[0]; port <= range[1]; j++) {
+                        hostData.push([host, port]);
+                    }
+                    // otherwise just the specific port number
+                } else {
+                    hostData.push([host, portToken]);
+                }
+            }
+            for (var job in hostData) {
+                invokeService(job[i][0], job[i][1]);
+            }
+        };
     }]);
