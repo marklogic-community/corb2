@@ -63,9 +63,9 @@ public class JobServer {
 
                 String path = httpExchange.getRequestURI().getPath();
                 // filename isn't necessary, let's use clean URLs
-                if (path.isEmpty() || path.equals("/") ){
+                if (path.isEmpty() || "/".equals(path) ){
                     path += "index.html";
-                } else if (path.equals("/jobs")) {
+                } else if ("/jobs".equals(path)) {
                     path += ".html";
                 }
 
