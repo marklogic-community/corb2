@@ -65,7 +65,7 @@ public class JobServer {
                 // filename isn't necessary, let's use clean URLs
                 if (path.isEmpty() || path.equals("/") ){
                     path += "index.html";
-                } else if (path.equals("jobs")) {
+                } else if (path.equals("/jobs")) {
                     path += ".html";
                 }
 
