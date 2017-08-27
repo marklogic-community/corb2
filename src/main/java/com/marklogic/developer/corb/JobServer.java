@@ -25,7 +25,8 @@ public class JobServer {
 
     private static final String CLASSPATH_FOLDER_WITH_RESOURCES = "web";
     public static final String HTTP_RESOURCE_PATH = "/";
-    public static final String JOB_SERVICE_PATH = "/stats";
+    public static final String SERVICE_PATH = "/stats";
+    public static final String MONITOR_PATH = "/jobs";
 
     private void JobServer() {}
 
@@ -53,7 +54,7 @@ public class JobServer {
             }
         }
         if (manager != null) {
-            jobServer.createContext(JOB_SERVICE_PATH, new JobServicesHandler(manager));
+            jobServer.createContext(SERVICE_PATH, new JobServicesHandler(manager));
         }
 
         jobServer.createContext(HTTP_RESOURCE_PATH, new HttpHandler() {
@@ -97,7 +98,7 @@ public class JobServer {
         });
         jobServer.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
         jobServer.start();
-        logUsage(jobServer);
+        logUsage(jobServer, manager);
         return jobServer;
     }
 
@@ -113,10 +114,15 @@ public class JobServer {
         return contentType;
     }
 
-    public static void logUsage(HttpServer server) {
+    public static void logUsage(HttpServer server, Manager manager) {
         LOG.log(INFO, SEPARATOR);
-        LOG.log(INFO, () -> MessageFormat.format("Job Server has started and can be access using http://localhost:{0,number,#}{1}/", server.getAddress().getPort(), HTTP_RESOURCE_PATH));
-        LOG.log(INFO, () -> MessageFormat.format("Visit http://localhost:{0,number,#}{1} to fetch the metrics data", server.getAddress().getPort(), JOB_SERVICE_PATH));
+        LOG.log(INFO, () -> MessageFormat.format("Job Server has started bound to port: {0,number,#}", server.getAddress().getPort()));
+        if (manager == null) {
+            LOG.log(INFO, () -> MessageFormat.format("Monitor the status of jobs at http://localhost:{0,number,#}{1}", server.getAddress().getPort(), MONITOR_PATH));
+        } else {
+            LOG.log(INFO, () -> MessageFormat.format("Monitor and manage the job at http://localhost:{0,number,#}{1}", server.getAddress().getPort(), HTTP_RESOURCE_PATH));
+            LOG.log(INFO, () -> MessageFormat.format("Retrieve job metrics data at http://localhost:{0,number,#}{1}", server.getAddress().getPort(), SERVICE_PATH));
+        }
         LOG.log(INFO, SEPARATOR);
     }
 

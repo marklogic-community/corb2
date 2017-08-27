@@ -57,12 +57,21 @@ public class JobServerTest {
     }
 
     @Test
-    public void testLogUsage() throws Exception {
+    public void testLogUsageWithoutManager() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress(9998), 0);
-        JobServer.logUsage(server);
+        JobServer.logUsage(server, null);
         server.stop(0);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(4, records.size());
     }
 
+    @Test
+    public void testLogUsageWithManager() throws Exception {
+        Manager manager = new Manager();
+        HttpServer server = HttpServer.create(new InetSocketAddress(9998), 0);
+        JobServer.logUsage(server, manager);
+        server.stop(0);
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(5, records.size());
+    }
 }

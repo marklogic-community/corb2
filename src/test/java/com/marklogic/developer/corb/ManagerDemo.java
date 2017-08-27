@@ -71,13 +71,7 @@ public class ManagerDemo {
 
     public static void main(String[] args) throws IOException {
         HttpServer jobServer = JobServer.create(9091);
-
         startManager(100000);
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            LOG.log(Level.FINE, "Thread inturrupted while sleeping", e);
-        }
         startManager(100000);
 		startManager(100000);
 		startManager(100000);
