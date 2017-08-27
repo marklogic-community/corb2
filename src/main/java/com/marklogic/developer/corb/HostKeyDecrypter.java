@@ -197,7 +197,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
             privateKey = getPrivateKey();
             LOG.log(INFO, "Initialized HostKeyDecrypter");
         } catch (NoSuchAlgorithmException e) {
-            new RuntimeException("Error constructing private key", e);
+            throw new RuntimeException("Error constructing private key", e);
         }
     }
 
@@ -207,7 +207,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         try {
             decryptedText = decrypt(value);
         } catch (Exception e) {
-            new RuntimeException("Unabled to decrypt property:" + property, e);
+            throw new RuntimeException("Unabled to decrypt property:" + property, e);
         }
         return decryptedText == null ? value : decryptedText;
     }
