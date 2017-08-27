@@ -62,9 +62,9 @@ public class MetricsDocSyncJob implements Runnable {
                     Thread.sleep(syncFrequencyInMillis);
                     syncDoc();
                 } catch (InterruptedException e) {
-                    // reset interrupt status and exit
-                    Thread.interrupted();
                     LOG.log(SEVERE, "interrupted: exiting", e);
+                    // reset interrupt status and exit
+                    Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     LOG.log(SEVERE, "Unexpected error", e);
                 }
@@ -73,6 +73,7 @@ public class MetricsDocSyncJob implements Runnable {
                     Thread.sleep(syncFrequencyInMillis);//wait to check if the job resumed
                 } catch (InterruptedException e) {
                     LOG.log(SEVERE, "Unexpected error", e);
+                    Thread.currentThread().interrupt();
                 }
             }
         }
