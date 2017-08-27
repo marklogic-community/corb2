@@ -20,6 +20,7 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.developer.corb.util.StringUtils;
 import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.WARNING;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -207,7 +208,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         try {
             decryptedText = decrypt(value);
         } catch (Exception e) {
-            throw new RuntimeException("Unabled to decrypt property:" + property, e);
+            LOG.log(WARNING,"Unabled to decrypt property:" + property, e);
         }
         return decryptedText == null ? value : decryptedText;
     }
