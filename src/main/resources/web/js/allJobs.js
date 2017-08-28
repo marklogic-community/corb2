@@ -16,17 +16,17 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         }
 
         $scope.pauseResumeButtonClick = function(job){
-            var reqStr = "paused=";
+            var reqStr = "command=";
             if (job.paused === true) {
-                reqStr = "false";
+                reqStr = "resume";
             } else {
-                reqStr = "true";
+                reqStr = "pause";
             }
             $http.post("http://" + job.host + ":" + job.port + servicePath + "?" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}});
         };
 
         $scope.updateThreadCount = function(job){
-            var reqStr = "threads=" + $scope.threadCounts[job.host + job.port];
+            var reqStr = "thread-count=" + $scope.threadCounts[job.host + job.port];
             $http.post("http://" + job.host + ":" + job.port + servicePath + "?" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}});
         };
 

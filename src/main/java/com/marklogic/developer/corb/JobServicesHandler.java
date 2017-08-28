@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
+import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 
@@ -18,7 +20,8 @@ import java.util.logging.Logger;
 public class JobServicesHandler implements HttpHandler {
 
     private static final Logger LOG = Logger.getLogger(JobServicesHandler.class.getName());
-    private static final String HEADER_CONTENT_TYPE = "Content-Type";
+    public static final String PARAM_CONCISE = "concise";
+    protected static final String HEADER_CONTENT_TYPE = "Content-Type";
     private Manager manager;
 
     JobServicesHandler(Manager manager) {
@@ -50,9 +53,9 @@ public class JobServicesHandler implements HttpHandler {
     }
 
     protected void writeMetricsOut(HttpExchange httpExchange, Map<String, String> params) throws IOException {
-        boolean concise = params.containsKey("concise") || params.containsKey("CONCISE");
+        boolean concise = hasParameter(params, PARAM_CONCISE);
         String response;
-        if (params.containsKey("xml") || params.containsKey("XML")) {
+        if (hasParameter(params,"xml")) { //TODO: why not ?format=xml ?
             httpExchange.getResponseHeaders().add(HEADER_CONTENT_TYPE, "application/xml");
             response = manager.jobStats.toXMLString(concise);
         } else {
@@ -84,33 +87,45 @@ public class JobServicesHandler implements HttpHandler {
     }
 
     protected void pauseResumeJob(Map<String, String> params) {
-        if (params.containsKey("paused") || params.containsKey("PAUSED")) {
-            String value = params.get("paused");
-            value = value == null ? params.get("PAUSED") : value;
-            if (value != null && value.equalsIgnoreCase(Boolean.TRUE.toString())) {
-                manager.pause();
-            } else if (value != null && value.equalsIgnoreCase(Boolean.FALSE.toString())) {
-                manager.resume();
-            }
+        String value = value = getParameter(params, Options.COMMAND);
+        if ("PAUSE".equalsIgnoreCase(value)) {
+            manager.pause();
+        } else if ("RESUME".equalsIgnoreCase(value)) {
+            manager.resume();
         }
     }
 
     protected void updateThreads(Map<String, String> params) {
-        if (params.containsKey("threads") || params.containsKey("THREADS")) {
-            String value = params.get("threads");
-            value = value == null ? params.get("THREADS") : value;
-            if (value != null) {
-                try {
-                    int threadCount = Integer.parseInt(value);
-                    if (threadCount > 0) {
-                        manager.setThreadCount(threadCount);
-                    }
-                } catch (NumberFormatException e) {
-                    LOG.log(Level.WARNING, "THREADS value not numeric", e);
+        String value = getParameter(params, Options.THREAD_COUNT);
+        if (value != null) {
+            try {
+                int threadCount = Integer.parseInt(value);
+                if (threadCount > 0) {
+                    manager.setThreadCount(threadCount);
                 }
+            } catch (NumberFormatException e) {
+                LOG.log(Level.WARNING, MessageFormat.format("{} value not numeric", Options.THREAD_COUNT), e);
             }
         }
         manager.jobStats.setPaused(String.valueOf(manager.isPaused()));
+    }
+
+    protected String getParameter(Map<String, String> map, String key) {
+        String value = null;
+        String caseSensitiveKey = key.toLowerCase(Locale.ENGLISH);
+        if (map.containsKey(caseSensitiveKey)) {
+            value = map.get(caseSensitiveKey);
+        } else {
+            caseSensitiveKey = key.toUpperCase(Locale.ENGLISH);
+            if (map.containsKey(caseSensitiveKey)) {
+                value = map.get(caseSensitiveKey);
+            }
+        }
+        return value;
+    }
+
+    protected boolean hasParameter(Map<String, String>params, String key){
+        return getParameter(params, key) != null;
     }
 
     protected void alowXSS(HttpExchange httpExchange) {

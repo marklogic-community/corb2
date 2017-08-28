@@ -72,16 +72,16 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             $scope.job = job;
         };
         $scope.pauseResumeButtonClick = function(){
-            var reqStr = "&paused=";
+            var reqStr = "&command=";
             if ($scope.job.paused === true) {
-                reqStr += "false";
+                reqStr += "resume";
             } else {
-                reqStr += "true";
+                reqStr += "pause";
             }
             $http.post(servicePath + "?concise=true" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}}).then(loadData);
         };
         $scope.updateThreadCount = function(){
-            var reqStr = "&threads=" + $scope.threadCount;
+            var reqStr = "&thread-count=" + $scope.threadCount;
             $http.post(servicePath + "?concise=true" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}}).then(loadData);
         };
         $scope.updateThreadsButtonStyle = "btn-primary";

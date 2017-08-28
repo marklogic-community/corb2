@@ -111,7 +111,7 @@ public class JobStats extends BaseMonitor {
         options = manager.getOptions();
         contentSource = manager.getContentSource();
 
-        String jobName = options.getJobName();
+        String jobName = options != null ? options.getJobName() : null;
         if (jobName != null) {
             setJobName(jobName);
         }

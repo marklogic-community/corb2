@@ -416,7 +416,7 @@ public class TransformOptions {
 	 * @return the logMetricsToServerLog
 	 */
 	public String getLogMetricsToServerLog() {
-		return logMetricsToServerLog;
+        return logMetricsToServerLog;
 	}
 
 	/**
@@ -430,21 +430,21 @@ public class TransformOptions {
 	 * @return the logMetricsToServerDB
 	 */
 	public Boolean getLogMetricsToServerDB() {
-		return logMetricsToServerDB;
+        return logMetricsToServerDB;
 	}
 
 	/**
 	 * @param logMetricsToServerDB the logMetricsToServerDB to set
 	 */
 	public void setLogMetricsToServerDB(Boolean logMetricsToServerDB) {
-		this.logMetricsToServerDB = logMetricsToServerDB;
+        this.logMetricsToServerDB = logMetricsToServerDB;
 	}
 
 	/**
 	 * @return the logMetricsToServerDBName
 	 */
 	public String getLogMetricsToServerDBName() {
-		return logMetricsToServerDBName;
+        return logMetricsToServerDBName;
 	}
 
 	/**
@@ -458,7 +458,7 @@ public class TransformOptions {
 	 * @return the logMetricsToServerDBURIRoot
 	 */
 	public String getLogMetricsToServerDBURIRoot() {
-		return logMetricsToServerDBURIRoot;
+        return logMetricsToServerDBURIRoot;
 	}
 
 	/**
@@ -507,14 +507,14 @@ public class TransformOptions {
 	 * @param jobName the jobName to set
 	 */
 	public void setJobName(String jobName) {
-		this.jobName = jobName;
+        this.jobName = jobName;
 	}
 
 	/**
 	 * @return the numberOfLongRunningUris
 	 */
 	public Integer getNumberOfLongRunningUris() {
-		return numberOfLongRunningUris;
+        return numberOfLongRunningUris;
 	}
 
 	/**
@@ -528,21 +528,21 @@ public class TransformOptions {
 	 * @return the numberOfFailedUris
 	 */
 	public Integer getNumberOfFailedUris() {
-		return numberOfFailedUris;
+        return numberOfFailedUris;
 	}
 
 	/**
 	 * @param numberOfFailedUris the numberOfFailedUris to set
 	 */
 	public void setNumberOfFailedUris(Integer numberOfFailedUris) {
-		this.numberOfFailedUris = numberOfFailedUris;
+        this.numberOfFailedUris = numberOfFailedUris;
 	}
 
 	/**
 	 * @return the metricsSyncFrequencyInMillis
 	 */
 	protected Integer getMetricsSyncFrequencyInMillis() {
-		return metricsSyncFrequencyInMillis;
+        return metricsSyncFrequencyInMillis;
 	}
 
 	/**
@@ -556,14 +556,14 @@ public class TransformOptions {
 	 * @return the metricsOnDemandPort
 	 */
 	protected Integer getJobServerPort() {
-		return jobServerPort;
+        return jobServerPort;
 	}
 
 	/**
 	 * @param metricsOnDemandPort the metricsOnDemandPort to set
 	 */
 	protected void setJobServerPort(Integer metricsOnDemandPort) {
-		this.jobServerPort = metricsOnDemandPort;
+        this.jobServerPort = metricsOnDemandPort;
 	}
 	protected boolean isMetricsToServerLogEnabled(String logMetricsToServerLog){
 		logMetricsToServerLog = logMetricsToServerLog==null?getLogMetricsToServerLog():logMetricsToServerLog;
@@ -571,7 +571,7 @@ public class TransformOptions {
 	}
 
 	public List<Integer> getJobServerPortsToChoose() {
-		return jobServerPortsToChoose;
+        return jobServerPortsToChoose;
 	}
 
 	public void setJobServerPortsToChoose(List<Integer> jobServerPortToChoose) {
