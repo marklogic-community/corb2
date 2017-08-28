@@ -56,7 +56,7 @@ public class JobServicesHandler implements HttpHandler {
     protected void writeMetricsOut(HttpExchange httpExchange, Map<String, String> params) throws IOException {
         boolean concise = hasParameter(params, PARAM_CONCISE);
         String response;
-        if (hasParameter(params,"format") && getParameter(params, "format").equalsIgnoreCase("xml")) {
+        if (hasParameter(params,PARAM_FORMAT) && getParameter(params, PARAM_FORMAT).equalsIgnoreCase("xml")) {
             httpExchange.getResponseHeaders().add(HEADER_CONTENT_TYPE, "application/xml");
             response = manager.jobStats.toXMLString(concise);
         } else {
