@@ -20,7 +20,8 @@ import java.util.logging.Logger;
 public class JobServicesHandler implements HttpHandler {
 
     private static final Logger LOG = Logger.getLogger(JobServicesHandler.class.getName());
-    public static final String PARAM_CONCISE = "concise";
+    public static final String PARAM_FORMAT = "FORMAT";
+    public static final String PARAM_CONCISE = "CONCISE";
     protected static final String HEADER_CONTENT_TYPE = "Content-Type";
     private Manager manager;
 
@@ -55,7 +56,7 @@ public class JobServicesHandler implements HttpHandler {
     protected void writeMetricsOut(HttpExchange httpExchange, Map<String, String> params) throws IOException {
         boolean concise = hasParameter(params, PARAM_CONCISE);
         String response;
-        if (hasParameter(params,"xml")) { //TODO: why not ?format=xml ?
+        if (hasParameter(params,"format") && getParameter(params, "format").equalsIgnoreCase("xml")) {
             httpExchange.getResponseHeaders().add(HEADER_CONTENT_TYPE, "application/xml");
             response = manager.jobStats.toXMLString(concise);
         } else {

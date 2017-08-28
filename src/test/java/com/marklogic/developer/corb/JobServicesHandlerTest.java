@@ -91,7 +91,7 @@ public class JobServicesHandlerTest {
         assertEquals(1, headers.get(JobServicesHandler.HEADER_CONTENT_TYPE).size());
         assertTrue(headers.get(JobServicesHandler.HEADER_CONTENT_TYPE).contains("application/json"));
 
-        params.put("xml", "true");
+        params.put(JobServicesHandler.PARAM_FORMAT, "xml");
         handler.writeMetricsOut(exchange, params);
         assertEquals(xssHeaderCount + 1, headers.size());
         assertEquals(2, headers.get(JobServicesHandler.HEADER_CONTENT_TYPE).size());
