@@ -124,8 +124,7 @@ public class JobStats extends BaseMonitor {
     protected String getHostName() {
         String hostName = "Unknown";
         try {
-            InetAddress addr;
-            addr = InetAddress.getLocalHost();
+            InetAddress addr = InetAddress.getLocalHost();
             hostName = addr.getHostName();
         } catch (UnknownHostException ex) {
             try {
