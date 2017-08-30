@@ -2,14 +2,13 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
 import com.marklogic.developer.corb.util.IOUtils;
-import com.sun.net.httpserver.HttpServer;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -29,9 +28,9 @@ public class JobServerTest {
     public void testCreateAndGet() {
         int port = 9999;
         try {
-            HttpServer server = JobServer.create(port);
+            JobServer server = JobServer.create(port);
             assertNotNull(server);
-
+            server.start();
             URL url = new URL("http://localhost:" + port );
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
@@ -58,8 +57,8 @@ public class JobServerTest {
 
     @Test
     public void testLogUsageWithoutManager() throws Exception {
-        HttpServer server = HttpServer.create(new InetSocketAddress(9998), 0);
-        JobServer.logUsage(server, null);
+        JobServer server = JobServer.create(9998);
+        server.logUsage();
         server.stop(0);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(4, records.size());
@@ -68,10 +67,10 @@ public class JobServerTest {
     @Test
     public void testLogUsageWithManager() throws Exception {
         Manager manager = new Manager();
-        HttpServer server = HttpServer.create(new InetSocketAddress(9998), 0);
-        JobServer.logUsage(server, manager);
+        JobServer server = JobServer.create(Collections.singleton(9998), manager);
+        server.logUsage();
         server.stop(0);
         List<LogRecord> records = testLogger.getLogRecords();
-        assertEquals(5, records.size());
+        assertEquals(6, records.size());
     }
 }

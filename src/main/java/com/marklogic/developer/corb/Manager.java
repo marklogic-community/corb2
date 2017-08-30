@@ -67,8 +67,6 @@ import com.marklogic.xcc.ContentFactory;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 
-import com.sun.net.httpserver.HttpServer;
-
 import java.io.*;
 import java.text.MessageFormat;
 import java.util.*;
@@ -97,7 +95,7 @@ public class Manager extends AbstractManager {
     protected transient PausableThreadPoolExecutor pool;
     protected transient Monitor monitor;
     protected transient MetricsDocSyncJob metricsDocSyncJob;
-    protected transient HttpServer jobServer = null;
+    protected transient JobServer jobServer = null;
     protected JobStats jobStats = null;
     protected long startMillis;
     protected long transformStartMillis;
@@ -600,6 +598,7 @@ public class Manager extends AbstractManager {
             portCandidates.addAll(options.getJobServerPortsToChoose());
 
             jobServer = JobServer.create(portCandidates, this);
+            jobServer.start();
             options.setJobServerPort(jobServer.getAddress().getPort());
         }
     }
@@ -954,7 +953,7 @@ public class Manager extends AbstractManager {
      * Resume pool execution (if paused).
      */
     public void resume() {
-        if (pool != null && pool.isPaused()) {
+        if (isPaused()) {
             LOG.info("resuming");
             pool.resume();
             resumeMetricsSyncJob();

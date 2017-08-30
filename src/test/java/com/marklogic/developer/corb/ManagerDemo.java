@@ -9,7 +9,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.marklogic.developer.corb.util.FileUtils;
-import com.sun.net.httpserver.HttpServer;
 
 public class ManagerDemo {
 
@@ -70,7 +69,7 @@ public class ManagerDemo {
     }
 
     public static void main(String[] args) throws IOException {
-        HttpServer jobServer = JobServer.create(9091);
+        JobServer jobServer = JobServer.create(9091);
         startManager(100000);
         startManager(100000);
 		startManager(100000);
