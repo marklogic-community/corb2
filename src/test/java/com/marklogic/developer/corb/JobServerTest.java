@@ -31,13 +31,35 @@ public class JobServerTest {
             JobServer server = JobServer.create(port);
             assertNotNull(server);
             server.start();
+
+            //request to base URL for job page
             URL url = new URL("http://localhost:" + port );
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-
             byte[] content = IOUtils.toByteArray(conn.getInputStream());
             assertEquals(200, conn.getResponseCode());
             assertNotNull(content);
+
+            url = new URL("http://localhost:" + port + "/");
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            content = IOUtils.toByteArray(conn.getInputStream());
+            assertEquals(200, conn.getResponseCode());
+            assertNotNull(content);
+
+            // ensure that base path (without extenstion) gets a response
+            url = new URL("http://localhost:" + port +  server.MONITOR_PATH);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            content = IOUtils.toByteArray(conn.getInputStream());
+            assertEquals(200, conn.getResponseCode());
+            assertNotNull(content);
+
+            //verify that invalid paths result in 404
+            url = new URL("http://localhost:" + port + "/DoesNotExist");
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            assertEquals(404, conn.getResponseCode());
 
             server.stop(0);
         } catch (IOException e) {
