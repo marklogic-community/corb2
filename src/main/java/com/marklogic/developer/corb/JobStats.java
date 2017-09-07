@@ -8,8 +8,6 @@ import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -151,8 +149,8 @@ public class JobStats extends BaseMonitor {
                     PausableThreadPoolExecutor threadPool = manager.monitor.pool;
                     longRunningUris = threadPool.getTopUris();
                     failedUris = threadPool.getFailedUris();
-                    numberOfFailedTasks = Integer.valueOf(threadPool.getNumFailedUris()).longValue();
-                    numberOfSucceededTasks = Integer.valueOf(threadPool.getNumSucceededUris()).longValue();
+                    numberOfFailedTasks = Integer.toUnsignedLong(threadPool.getNumFailedUris());
+                    numberOfSucceededTasks = Integer.toUnsignedLong(threadPool.getNumSucceededUris());
 
                     Long currentTimeMillis = System.currentTimeMillis();
                     Long totalTime = manager.getEndMillis() - manager.getStartMillis();
