@@ -162,7 +162,7 @@ public class JobServer {
         return server.getExecutor();
     }
 
-    public void removeContext(String s) throws IllegalArgumentException {
+    public void removeContext(String s) {
         server.removeContext(s);
     }
 
