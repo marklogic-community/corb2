@@ -87,7 +87,7 @@ public class JobServicesHandler implements HttpHandler {
     }
 
     protected void pauseResumeJob(Map<String, String> params) {
-        String value = value = getParameter(params, Options.COMMAND);
+        String value = getParameter(params, Options.COMMAND);
         if ("PAUSE".equalsIgnoreCase(value)) {
             manager.pause();
         } else if ("RESUME".equalsIgnoreCase(value)) {
@@ -104,7 +104,7 @@ public class JobServicesHandler implements HttpHandler {
                     manager.setThreadCount(threadCount);
                 }
             } catch (NumberFormatException e) {
-                LOG.log(Level.WARNING, MessageFormat.format("{} value not numeric", Options.THREAD_COUNT), e);
+                LOG.log(Level.WARNING, MessageFormat.format("{0} value not numeric", Options.THREAD_COUNT), e);
             }
         }
     }
