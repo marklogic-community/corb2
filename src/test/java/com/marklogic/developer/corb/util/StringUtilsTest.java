@@ -371,7 +371,6 @@ public class StringUtilsTest {
 
     @Test
     public void testInlineModuleCodeNull() {
-
         String result = StringUtils.getInlineModuleCode(null);
         assertEquals("", result);
     }
@@ -394,7 +393,7 @@ public class StringUtilsTest {
 
     @Test(expected = NumberFormatException.class)
     public void testParsePortRangesWithNegativeNumber() {
-        Set<Integer> result = StringUtils.parsePortRanges("-8002");
+        StringUtils.parsePortRanges("-8002");
         fail();
     }
 
@@ -406,7 +405,7 @@ public class StringUtilsTest {
 
     @Test(expected = NumberFormatException.class)
     public void testParsePortRangesNoNumbers() {
-        Set<Integer> result = StringUtils.parsePortRanges("1 to 5");
+        StringUtils.parsePortRanges("1 to 5");
         fail();
     }
 

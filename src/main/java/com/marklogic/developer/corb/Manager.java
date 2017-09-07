@@ -181,7 +181,7 @@ public class Manager extends AbstractManager implements Closeable {
         if (isNotBlank(commandFile)) {
             Runnable commandFileWatcher = new CommandFileWatcher(FileUtils.getFile(commandFile), this);
             int pollInterval = NumberUtils.toInt(getOption(Options.COMMAND_FILE_POLL_INTERVAL), 1);
-            ScheduledFuture<?> CommandFileWatcherFuture = scheduledExecutor.scheduleWithFixedDelay(commandFileWatcher, pollInterval, pollInterval, TimeUnit.SECONDS);
+            scheduledExecutor.scheduleWithFixedDelay(commandFileWatcher, pollInterval, pollInterval, TimeUnit.SECONDS);
         }
     }
 
