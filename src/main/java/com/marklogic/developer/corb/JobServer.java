@@ -25,14 +25,13 @@ public class JobServer {
     private static final Logger LOG = Logger.getLogger(JobServer.class.getName());
     private static final int DEFAULT_REQUEST_QUEUE_SIZE = 100;
     private static final String SEPARATOR = "*****************************************************************************************";
-
-    private HttpServer server;
-    private boolean hasManager;
-
     private static final String CLASSPATH_FOLDER_WITH_RESOURCES = "web";
     public static final String HTTP_RESOURCE_PATH = "/";
     public static final String SERVICE_PATH = "/stats";
     public static final String MONITOR_PATH = "/jobs";
+
+    private HttpServer server;
+    private boolean hasManager;
 
     public static JobServer create(Integer port) throws IOException {
         return JobServer.create(Collections.singleton(port), null);
@@ -126,7 +125,7 @@ public class JobServer {
             LOG.log(INFO, () -> MessageFormat.format("Monitor and manage the job at http://localhost:{0,number,#}{1}", server.getAddress().getPort(), HTTP_RESOURCE_PATH));
             LOG.log(INFO, () -> MessageFormat.format("Retrieve job metrics data at http://localhost:{0,number,#}{1}", server.getAddress().getPort(), SERVICE_PATH));
         }
-        LOG.log(INFO, () -> MessageFormat.format("Monitor the status of multiuple jobs at http://localhost:{0,number,#}{1}", server.getAddress().getPort(), MONITOR_PATH));
+        LOG.log(INFO, () -> MessageFormat.format("Monitor the status of multiple jobs at http://localhost:{0,number,#}{1}", server.getAddress().getPort(), MONITOR_PATH));
         LOG.log(INFO, SEPARATOR);
     }
 

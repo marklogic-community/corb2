@@ -20,7 +20,9 @@ package com.marklogic.developer.corb;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
@@ -81,15 +83,16 @@ public class TransformOptions {
 
     private Boolean logMetricsToServerDB = false;
 
-    private String logMetricsToServerDBName = null;
-    private String logMetricsToServerDBURIRoot = "/ServiceMetrics/";
-    private String logMetricsToServerDBTransformModule = "save-metric-to-db.xqy|ADHOC";
-    private String logMetricsToServerDBCollections = null;
+    private String metricsDatabase = null;
+    private String metricsRoot = "/ServiceMetrics/";
+    private String metricsModule = "save-metrics.xqy|ADHOC";
+    private String metricsCollections = null;
     private Integer numberOfLongRunningUris = 5;
     private Integer numberOfFailedUris = 0;
     private Integer metricsSyncFrequencyInMillis = -1;
+
     private Integer jobServerPort = -1;
-    private List<Integer> jobServerPortsToChoose = new ArrayList<>();
+    private Set<Integer> jobServerPortsToChoose = new LinkedHashSet<>();
     private String jobName = null;
 
     // Set on status check
@@ -441,59 +444,59 @@ public class TransformOptions {
 	}
 
 	/**
-	 * @return the logMetricsToServerDBName
+	 * @return the metricsDatabase
 	 */
-	public String getLogMetricsToServerDBName() {
-        return logMetricsToServerDBName;
+	public String getMetricsDatabase() {
+        return metricsDatabase;
 	}
 
 	/**
-	 * @param logMetricsToServerDBName the logMetricsToServerDBName to set
+	 * @param metricsDatabase the name of the database to save metrics documents
 	 */
-	public void setLogMetricsToServerDBName(String logMetricsToServerDBName) {
-		this.logMetricsToServerDBName = logMetricsToServerDBName;
+	public void setMetricsDatabase(String metricsDatabase) {
+		this.metricsDatabase = metricsDatabase;
 	}
 
 	/**
-	 * @return the logMetricsToServerDBURIRoot
+	 * @return the root directory for metrics documents
 	 */
-	public String getLogMetricsToServerDBURIRoot() {
-        return logMetricsToServerDBURIRoot;
+	public String getMetricsRoot() {
+        return metricsRoot;
 	}
 
 	/**
-	 * @param logMetricsToServerDBURIRoot the logMetricsToServerDBURIRoot to set
+	 * @param metricsRoot the root directory for metrics documents
 	 */
-	public void setLogMetricsToServerDBURIRoot(String logMetricsToServerDBURIRoot) {
-		this.logMetricsToServerDBURIRoot = logMetricsToServerDBURIRoot;
+	public void setMetricsRoot(String metricsRoot) {
+		this.metricsRoot = metricsRoot;
 	}
 
 	/**
-	 * @return the logMetricsToServerDBTransformModule
+	 * @return the metricsModule
 	 */
-	public String getLogMetricsToServerDBTransformModule() {
-		return logMetricsToServerDBTransformModule;
+	public String getMetricsModule() {
+		return metricsModule;
 	}
 
 	/**
-	 * @param logMetricsToServerDBTransformModule the logMetricsToServerDBTransformModule to set
+	 * @param metricsModule module to produce and save metrics
 	 */
-	public void setLogMetricsToServerDBTransformModule(String logMetricsToServerDBTransformModule) {
-		this.logMetricsToServerDBTransformModule = logMetricsToServerDBTransformModule;
+	public void setMetricsModule(String metricsModule) {
+		this.metricsModule = metricsModule;
 	}
 
 	/**
 	 * @return the logMetricsToServerDBCollections
 	 */
-	public String getLogMetricsToServerDBCollections() {
-		return logMetricsToServerDBCollections;
+	public String getMetricsCollections() {
+		return metricsCollections;
 	}
 
 	/**
-	 * @param logMetricsToServerDBCollections the logMetricsToServerDBCollections to set
+	 * @param metricsCollections the collections to add metrics documents when saving
 	 */
-	public void setLogMetricsToServerDBCollections(String logMetricsToServerDBCollections) {
-		this.logMetricsToServerDBCollections = logMetricsToServerDBCollections;
+	public void setMetricsCollections(String metricsCollections) {
+		this.metricsCollections = metricsCollections;
 	}
 
 	/**
@@ -565,16 +568,17 @@ public class TransformOptions {
 	protected void setJobServerPort(Integer metricsOnDemandPort) {
         this.jobServerPort = metricsOnDemandPort;
 	}
-	protected boolean isMetricsToServerLogEnabled(String logMetricsToServerLog){
-		logMetricsToServerLog = logMetricsToServerLog==null?getLogMetricsToServerLog():logMetricsToServerLog;
+
+	protected boolean isMetricsLoggingEnabled(String logMetricsToServerLog){
+		logMetricsToServerLog = logMetricsToServerLog == null ? getLogMetricsToServerLog() : logMetricsToServerLog;
 		return logMetricsToServerLog != null && !logMetricsToServerLog.equalsIgnoreCase("NONE");
 	}
 
-	public List<Integer> getJobServerPortsToChoose() {
+	public Set<Integer> getJobServerPortsToChoose() {
         return jobServerPortsToChoose;
 	}
 
-	public void setJobServerPortsToChoose(List<Integer> jobServerPortToChoose) {
+	public void setJobServerPortsToChoose(Set<Integer> jobServerPortToChoose) {
 		this.jobServerPortsToChoose = jobServerPortToChoose;
 	}
 }

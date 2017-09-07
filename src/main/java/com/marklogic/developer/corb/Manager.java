@@ -82,10 +82,7 @@ import java.util.logging.Logger;
  * @author Colleen Whitney, MarkLogic Corporation
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  */
-public class Manager extends AbstractManager {
-
-    private static final String END_RUNNING_JOB_MESSAGE = "END RUNNING CORB JOB:";
-    private static final String START_RUNNING_JOB_MESSAGE = "STARTED CORB JOB:";
+public class Manager extends AbstractManager implements Closeable {
 
     protected static final String NAME = Manager.class.getName();
 
@@ -94,19 +91,20 @@ public class Manager extends AbstractManager {
 
     protected transient PausableThreadPoolExecutor pool;
     protected transient Monitor monitor;
-    protected transient MetricsDocSyncJob metricsDocSyncJob;
     protected transient JobServer jobServer = null;
+
     protected JobStats jobStats = null;
     protected long startMillis;
     protected long transformStartMillis;
     protected long endMillis;
+    protected boolean execError;
+
+    protected boolean stopCommand;
 
     protected transient Thread monitorThread;
     protected transient CompletionService<String[]> completionService;
-    protected transient ScheduledExecutorService scheduledExecutor;
 
-    protected boolean execError;
-    protected boolean stopCommand;
+    protected transient ScheduledExecutorService scheduledExecutor;
 
     protected static int EXIT_CODE_NO_URIS = EXIT_CODE_SUCCESS;
     protected static final int EXIT_CODE_STOP_COMMAND = 3;
@@ -114,34 +112,49 @@ public class Manager extends AbstractManager {
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
     private static final String TAB = "\t";
 
+    private static final String RUNNING_JOB_MESSAGE = "RUNNING CORB JOB:";
+    private static final String START_RUNNING_JOB_MESSAGE = "STARTED " + RUNNING_JOB_MESSAGE;
+    private static final String PAUSING_JOB_MESSAGE = "PAUSING CORB JOB:";
+    private static final String RESUMING_JOB_MESSAGE = "RESUMING CORB JOB:";
+    private static final String END_RUNNING_JOB_MESSAGE = "END " + RUNNING_JOB_MESSAGE;
+
     /**
      * @param args
      */
     public static void main(String... args) {
-        Manager manager = new Manager();
-        try {
-            manager.init(args);
-        } catch (Exception exc) {
-            LOG.log(SEVERE, "Error initializing CORB " + exc.getMessage(), exc);
-            manager.usage();
-            System.exit(EXIT_CODE_INIT_ERROR);
-        }
-        //now we can start corb.
-        try {
-            int count = manager.run();
-            if (manager.execError) {
-                System.exit(EXIT_CODE_PROCESSING_ERROR);
-            } else if (manager.stopCommand) {
-                System.exit(EXIT_CODE_STOP_COMMAND);
-            } else if (count == 0) {
-                System.exit(EXIT_CODE_NO_URIS);
-            } else {
-                System.exit(EXIT_CODE_SUCCESS);
+        try (Manager manager = new Manager()) {
+            try {
+                manager.init(args);
+            } catch (Exception exc) {
+                LOG.log(SEVERE, "Error initializing CORB " + exc.getMessage(), exc);
+                manager.usage();
+                System.exit(EXIT_CODE_INIT_ERROR);
             }
-        } catch (Exception exc) {
-            LOG.log(SEVERE, "Error while running CORB", exc);
-            System.exit(EXIT_CODE_PROCESSING_ERROR);
+            //now we can start corb.
+            try {
+                int count = manager.run();
+                if (manager.execError) {
+                    System.exit(EXIT_CODE_PROCESSING_ERROR);
+                } else if (manager.stopCommand) {
+                    System.exit(EXIT_CODE_STOP_COMMAND);
+                } else if (count == 0) {
+                    System.exit(EXIT_CODE_NO_URIS);
+                } else {
+                    System.exit(EXIT_CODE_SUCCESS);
+                }
+            } catch (Exception exc) {
+                LOG.log(SEVERE, "Error while running CORB", exc);
+                System.exit(EXIT_CODE_PROCESSING_ERROR);
+            }
         }
+    }
+
+    public void close() {
+        if (scheduledExecutor != null) {
+            //This will shutdown the scheduled executors for the command file watcher and logging JobStats
+            scheduledExecutor.shutdown();
+        }
+        stopJobServer();
     }
 
     @Override
@@ -159,16 +172,16 @@ public class Manager extends AbstractManager {
 
         EXIT_CODE_NO_URIS = NumberUtils.toInt(getOption(Options.EXIT_CODE_NO_URIS));
 
+        scheduledExecutor = Executors.newScheduledThreadPool(2);
         scheduleCommandFileWatcher();
     }
 
     protected void scheduleCommandFileWatcher() {
         String commandFile = getOption(COMMAND_FILE);
         if (isNotBlank(commandFile)) {
-            scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
-            CommandFileWatcher commandFileWatcher = new CommandFileWatcher(FileUtils.getFile(commandFile), this);
+            Runnable commandFileWatcher = new CommandFileWatcher(FileUtils.getFile(commandFile), this);
             int pollInterval = NumberUtils.toInt(getOption(Options.COMMAND_FILE_POLL_INTERVAL), 1);
-            scheduledExecutor.scheduleWithFixedDelay(commandFileWatcher, pollInterval, pollInterval, TimeUnit.SECONDS);
+            ScheduledFuture<?> CommandFileWatcherFuture = scheduledExecutor.scheduleWithFixedDelay(commandFileWatcher, pollInterval, pollInterval, TimeUnit.SECONDS);
         }
     }
 
@@ -346,31 +359,30 @@ public class Manager extends AbstractManager {
                 throw new IllegalArgumentException("Cannot write to queue temp directory " + diskQueueTempDir);
             }
         }
-        /**/
-        String logMetricsToServerLog = getOption(Options.METRICS_TO_ERROR_LOG);
-        if (logMetricsToServerLog != null) {
-            if (logMetricsToServerLog.toLowerCase().matches(Options.ML_LOG_LEVELS)) {
-                options.setLogMetricsToServerLog(logMetricsToServerLog.toLowerCase());
-            } else {
-                throw new IllegalArgumentException("INVALID VALUE for METRICS-TO-ERROR-LOG: " + logMetricsToServerLog + ". Supported LOG LEVELS are " + Options.ML_LOG_LEVELS);
 
+        String metricsLogLevel = getOption(Options.METRICS_LOG_LEVEL);
+        if (metricsLogLevel != null) {
+            if (metricsLogLevel.toLowerCase().matches(Options.ML_LOG_LEVELS)) {
+                options.setLogMetricsToServerLog(metricsLogLevel.toLowerCase());
+            } else {
+                throw new IllegalArgumentException("INVALID VALUE for METRICS-TO-ERROR-LOG: " + metricsLogLevel + ". Supported LOG LEVELS are one of: " + Options.ML_LOG_LEVELS);
             }
         }
-        String logMetricsToServerCollections = getOption(Options.METRICS_DOC_COLLECTIONS);
-        if (logMetricsToServerCollections != null) {
-            options.setLogMetricsToServerDBCollections(logMetricsToServerCollections);
+        String metricsCollections = getOption(Options.METRICS_COLLECTIONS);
+        if (metricsCollections != null) {
+            options.setMetricsCollections(metricsCollections);
         }
-        String logMetricsToServerDBName = getOption(Options.METRICS_DB_NAME);
-        if (logMetricsToServerDBName != null) {
-            options.setLogMetricsToServerDBName(logMetricsToServerDBName);
+        String metricsDatabase = getOption(Options.METRICS_DATABASE);
+        if (metricsDatabase != null) {
+            options.setMetricsDatabase(metricsDatabase);
         }
-        String logMetricsToServerModule = getOption(Options.METRICS_PROCESS_MODULE);
-        if (logMetricsToServerModule != null) {
-            options.setLogMetricsToServerDBTransformModule(logMetricsToServerModule);
+        String metricsModule = getOption(Options.METRICS_MODULE);
+        if (metricsModule != null) {
+            options.setMetricsModule(metricsModule);
         }
-        String logMetricsToServerURIRoot = getOption(Options.METRICS_DOC_BASE_DIR);
-        if (logMetricsToServerURIRoot != null) {
-            options.setLogMetricsToServerDBURIRoot(logMetricsToServerURIRoot);
+        String metricsRoot = getOption(Options.METRICS_ROOT);
+        if (metricsRoot != null) {
+            options.setMetricsRoot(metricsRoot);
         }
         String jobName = getOption(Options.JOB_NAME);
         if (jobName != null) {
@@ -385,46 +397,38 @@ public class Manager extends AbstractManager {
                 }
                 options.setNumberOfLongRunningUris(intNumberOfLongRunningUris);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException(Options.METRICS_NUM_SLOW_TRANSACTIONS + " = " + numberOfLongRunningUris + " is invalid. please use a valid integer.");
+                throw new IllegalArgumentException(Options.METRICS_NUM_SLOW_TRANSACTIONS + " = " + numberOfLongRunningUris + " is invalid. Value must be a valid integer.");
             }
         }
         String numberOfFailedUris = getOption(Options.METRICS_NUM_FAILED_TRANSACTIONS);
         if (numberOfFailedUris != null) {
-            int intNumFaileTransactions = Integer.parseInt(numberOfFailedUris);
-            if (intNumFaileTransactions > TransformOptions.MAX_NUM_FAILED_TRANSACTIONS) {
-                intNumFaileTransactions = TransformOptions.MAX_NUM_FAILED_TRANSACTIONS;
+            int intNumFailedTransactions = Integer.parseInt(numberOfFailedUris);
+            if (intNumFailedTransactions > TransformOptions.MAX_NUM_FAILED_TRANSACTIONS) {
+                intNumFailedTransactions = TransformOptions.MAX_NUM_FAILED_TRANSACTIONS;
             }
-            options.setNumberOfFailedUris(intNumFaileTransactions);
+            options.setNumberOfFailedUris(intNumFailedTransactions);
         }
         String metricsSyncFrequencyInSeconds = getOption(Options.METRICS_SYNC_FREQUENCY);
-        if ((logMetricsToServerDBName != null || options.isMetricsToServerLogEnabled(logMetricsToServerLog)) && metricsSyncFrequencyInSeconds != null) {
+        if ((metricsDatabase != null || options.isMetricsLoggingEnabled(metricsLogLevel)) && metricsSyncFrequencyInSeconds != null) {
             //periodically update db only if db name is set or logging enabled and sync frequency is selected
             //no defaults for this function
             try {
                 int intMetricsSyncFrequencyInSeconds = Integer.parseInt(metricsSyncFrequencyInSeconds);
                 options.setMetricsSyncFrequencyInMillis(intMetricsSyncFrequencyInSeconds * 1000);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException(Options.METRICS_SYNC_FREQUENCY + " = " + metricsSyncFrequencyInSeconds + " is invalid. please use a valid integer.");
+                throw new IllegalArgumentException(Options.METRICS_SYNC_FREQUENCY + " = " + metricsSyncFrequencyInSeconds + " is invalid. Value must be a valid integer.");
             }
         }
-        String jobServerPort = getOption(Options.JOB_SERVER_PORT);
-        if (jobServerPort != null) {
-            //no defaults for this function
-            try {
-                if (jobServerPort.indexOf('-') > -1 || jobServerPort.indexOf(',') > -1) {
-                    List<Integer> jobServerPorts = StringUtils.parsePortRanges(jobServerPort);
-                    if (!jobServerPorts.isEmpty()) {
-                        options.setJobServerPortsToChoose(jobServerPorts);
-                    }
 
-                } else {
-                    int intJobServerPort = Integer.parseInt(jobServerPort);
-                    options.setJobServerPort(intJobServerPort);
-                }
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException(Options.JOB_SERVER_PORT + " must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090");
-            }
+        String jobServerPort = getOption(Options.JOB_SERVER_PORT);
+        //no defaults for this function
+        try {
+            Set<Integer> jobServerPorts = new LinkedHashSet<>(StringUtils.parsePortRanges(jobServerPort));
+            options.setJobServerPortsToChoose(jobServerPorts);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(Options.JOB_SERVER_PORT + " must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090");
         }
+
         // delete the export file if it exists
         deleteFileIfExists(exportFileDir, exportFileName);
         deleteFileIfExists(exportFileDir, errorFileName);
@@ -541,13 +545,15 @@ public class Manager extends AbstractManager {
     }
 
     public int run() throws Exception {
-        startMillis = System.currentTimeMillis();
-        if (jobStats == null) {
-            jobStats = new JobStats(this);
-        }
-        jobStats.logJobStatsToServer(START_RUNNING_JOB_MESSAGE, false);
-        startMetricsSyncJob();
         startJobServer();
+
+        jobStats = new JobStats(this);
+        scheduleJobMetrics();
+
+        startMillis = System.currentTimeMillis();
+
+        jobStats.logToServer(START_RUNNING_JOB_MESSAGE, false);
+
         LOG.log(INFO, () -> MessageFormat.format("{0} starting: {1}", NAME, VERSION_MSG));
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
         LOG.log(INFO, () -> MessageFormat.format("maximum heap size = {0} MiB", maxMemory));
@@ -567,38 +573,32 @@ public class Manager extends AbstractManager {
                     LOG.log(SEVERE, "interrupted while waiting for monitor", e);
                 }
             }
+
             if (shouldRunPostBatch(count)) {
-                runPostBatchTask(); // post batch tasks
-                cleanupJobStats();
-                LOG.info("all done");
+                TaskFactory tf = new TaskFactory(this);
+                runPostBatchTask(tf);
             }
+
+            endMillis = System.currentTimeMillis();
+
+            jobStats.logToServer(END_RUNNING_JOB_MESSAGE, false);
+            LOG.info("all done");
+
             return count;
+
         } catch (Exception e) {
             LOG.log(SEVERE, e.getMessage());
             stop();
             throw e;
-        } finally {
-            if (null != jobStats) {
-                cleanupJobStats();
-            }
         }
     }
 
     private void startJobServer() throws IOException {
-        int port = options.getJobServerPort();
-        if ((port > 0 ||
-            options.getJobServerPortsToChoose() != null &&
-            !options.getJobServerPortsToChoose().isEmpty()) &&
-            jobServer == null) {
+        if (!options.getJobServerPortsToChoose().isEmpty() && jobServer == null) {
 
-            Set<Integer> portCandidates = new TreeSet<>();
-            if (port > 0) {
-                portCandidates.add(port);
-            }
-            portCandidates.addAll(options.getJobServerPortsToChoose());
-
-            jobServer = JobServer.create(portCandidates, this);
+            jobServer = JobServer.create(options.getJobServerPortsToChoose(), this);
             jobServer.start();
+
             options.setJobServerPort(jobServer.getAddress().getPort());
         }
     }
@@ -610,31 +610,15 @@ public class Manager extends AbstractManager {
         }
     }
 
-    private void startMetricsSyncJob() {
-        if (metricsDocSyncJob == null && options.getMetricsSyncFrequencyInMillis() != null && options.getMetricsSyncFrequencyInMillis() > 0) {
-            metricsDocSyncJob = new MetricsDocSyncJob(jobStats, options.getMetricsSyncFrequencyInMillis());
-            Thread metricSyncThread = new Thread(metricsDocSyncJob, "metricsDocSyncJob");
-            metricSyncThread.setDaemon(true);
-            metricSyncThread.start();
-        }
-    }
-
-    private void shutDownMetricsSyncJob() {
-        if (metricsDocSyncJob != null) {
-            metricsDocSyncJob.shutdownNow();
-            metricsDocSyncJob = null;
-        }
-    }
-
-    private void pauseMetricsSyncJob() {
-        if (metricsDocSyncJob != null) {
-            metricsDocSyncJob.setPaused(true);//this will also log full metrics
-        }
-    }
-
-    private void resumeMetricsSyncJob() {
-        if (metricsDocSyncJob != null) {
-            metricsDocSyncJob.setPaused(false);
+    protected void scheduleJobMetrics() {
+        Integer interval = options.getMetricsSyncFrequencyInMillis();
+        if (interval != null && interval > 0) {
+            Runnable jobMetricsLogger = () -> {
+                if (!isPaused()){
+                    jobStats.logToServer(RUNNING_JOB_MESSAGE, true);
+                }
+            };
+            scheduledExecutor.scheduleWithFixedDelay(jobMetricsLogger, interval, interval, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -742,10 +726,12 @@ public class Manager extends AbstractManager {
     private void runInitTask(TaskFactory tf) throws Exception {
         Task initTask = tf.newInitTask();
         if (initTask != null) {
-            Long startTime = System.nanoTime();
             LOG.info("Running init Task");
+
+            long startTime = System.nanoTime();
             initTask.call();
             long endTime = System.nanoTime();
+
             jobStats.setInitTaskRunTime(TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS));
         }
     }
@@ -753,22 +739,25 @@ public class Manager extends AbstractManager {
     private void runPreBatchTask(TaskFactory tf) throws Exception {
         Task preTask = tf.newPreBatchTask();
         if (preTask != null) {
-            long startTime = System.nanoTime();
             LOG.info("Running pre batch Task");
+
+            long startTime = System.nanoTime();
             preTask.call();
             long endTime = System.nanoTime();
+
             jobStats.setPreBatchRunTime(TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS));
         }
     }
 
-    private void runPostBatchTask() throws Exception {
-        TaskFactory tf = new TaskFactory(this);
+    private void runPostBatchTask(TaskFactory tf) throws Exception {
         Task postTask = tf.newPostBatchTask();
         if (postTask != null) {
-            long startTime = System.nanoTime();
             LOG.info("Running post batch Task");
+
+            long startTime = System.nanoTime();
             postTask.call();
             long endTime = System.nanoTime();
+
             jobStats.setPostBatchRunTime(TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS));
         }
     }
@@ -792,25 +781,32 @@ public class Manager extends AbstractManager {
         return loader;
     }
 
+    private void runUrisLoader(UrisLoader urisLoader) throws CorbException {
+        long startTime = System.nanoTime();
+        urisLoader.open();
+        if (urisLoader.getBatchRef() != null) {
+            properties.put(URIS_BATCH_REF, urisLoader.getBatchRef());
+            LOG.log(INFO, () -> MessageFormat.format("{0}: {1}", URIS_BATCH_REF, urisLoader.getBatchRef()));
+        }
+        long endTime = System.nanoTime();
+
+        jobStats.setUrisLoadTime(TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS));
+    }
+
     private int populateQueue() throws Exception {
         LOG.info("populating queue");
         TaskFactory taskFactory = new TaskFactory(this);
-        Long startTime;
+
         int expectedTotalCount = -1;
         int urisCount = 0;
         try (UrisLoader urisLoader = getUriLoader()) {
+
             // run init task
             runInitTask(taskFactory);
-            startTime = System.nanoTime();
-            urisLoader.open();
-            if (urisLoader.getBatchRef() != null) {
-                properties.put(URIS_BATCH_REF, urisLoader.getBatchRef());
-                LOG.log(INFO, () -> MessageFormat.format("{0}: {1}", URIS_BATCH_REF, urisLoader.getBatchRef()));
-            }
+            // Invoke URIs Module, read text file, etc.
+            runUrisLoader(urisLoader);
 
             expectedTotalCount = urisLoader.getTotalCount();
-            Long endTime = System.nanoTime();
-            jobStats.setUrisLoadTime(TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS));
             LOG.log(INFO, MessageFormat.format("expecting total {0,number}", expectedTotalCount));
 
             if (shouldRunPreBatch(expectedTotalCount)) {
@@ -828,6 +824,7 @@ public class Manager extends AbstractManager {
             monitor.setTaskCount(expectedTotalCount);
             monitorThread.start();
 
+            transformStartMillis = System.currentTimeMillis();
             urisCount = submitUriTasks(urisLoader, taskFactory, expectedTotalCount);
 
             if (urisCount == expectedTotalCount) {
@@ -940,8 +937,8 @@ public class Manager extends AbstractManager {
     public void pause() {
         if (pool != null && pool.isRunning()) {
             LOG.info("pausing");
+            jobStats.logToServer(PAUSING_JOB_MESSAGE, false);
             pool.pause();
-            pauseMetricsSyncJob();
         }
     }
 
@@ -955,8 +952,8 @@ public class Manager extends AbstractManager {
     public void resume() {
         if (isPaused()) {
             LOG.info("resuming");
+            jobStats.logToServer(RESUMING_JOB_MESSAGE, false);
             pool.resume();
-            resumeMetricsSyncJob();
         }
     }
 
@@ -981,13 +978,6 @@ public class Manager extends AbstractManager {
         if (null != monitorThread) {
             monitorThread.interrupt();
         }
-    }
-
-    private void cleanupJobStats() {
-        endMillis = System.currentTimeMillis();
-        shutDownMetricsSyncJob();
-        jobStats.logJobStatsToServer(END_RUNNING_JOB_MESSAGE, false);
-        stopJobServer();
     }
 
     /**

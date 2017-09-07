@@ -31,8 +31,8 @@ public interface Task extends Callable<String[]> {
 	void setContentSource(ContentSource cs);
 
 	/**
-	 * XQUERY-MODULE,PRE-BATCH-MODULE,POST-BATCH-MODULE,INIT-MODULE
-	 * 
+	 * INIT-MODULE,PRE-BATCH-MODULE,PROCESS-MODULE,POST-BATCH-MODULE
+	 *
 	 * @param moduleType
 	 */
 	void setModuleType(String moduleType);
@@ -42,13 +42,13 @@ public interface Task extends Callable<String[]> {
 	void setAdhocQuery(String adhocQuery);
 
 	void setQueryLanguage(String language);
-    
+
     void setTimeZone(TimeZone timeZone);
-    
+
 	/**
 	 * If additional data is sent from CUSTOM URI module, it is available in
 	 * properties with key @{value #URIS_BATCH_REF}
-	 * 
+	 *
 	 * @param props
 	 */
 	void setProperties(Properties props);
@@ -56,6 +56,6 @@ public interface Task extends Callable<String[]> {
 	void setInputURI(String... inputUri);
 
 	void setFailOnError(boolean failOnError);
-	
+
 	void setExportDir(String exportFileDir);
 }

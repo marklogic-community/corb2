@@ -1412,7 +1412,7 @@ public class ManagerTest {
         properties.setProperty(Options.PRE_BATCH_TASK, ManagerTest.PRE_BATCH_TASK);
         properties.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
         properties.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
-        properties.setProperty(Options.METRICS_TO_ERROR_LOG, ManagerTest.LOG_LEVEL_INFO);
+        properties.setProperty(Options.METRICS_LOG_LEVEL, ManagerTest.LOG_LEVEL_INFO);
 
 
         if(ManagerTest.EXPORT_FILE_DIR!=null) {

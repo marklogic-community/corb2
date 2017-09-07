@@ -72,9 +72,9 @@ public class ManagerPT {
         properties.setProperty(Options.DISK_QUEUE_TEMP_DIR, "/var/tmp");
         properties.setProperty(Options.JOB_SERVER_PORT,"8000-9000");
         properties.setProperty(Options.JOB_NAME, "Manager Integration Test");
-        properties.setProperty(Options.METRICS_TO_ERROR_LOG, "INFO");
-        properties.setProperty(Options.METRICS_DB_NAME, "marklogic-corb-content");
-        properties.setProperty(Options.METRICS_DOC_COLLECTIONS, "corb-metrics");
+        properties.setProperty(Options.METRICS_LOG_LEVEL, "INFO");
+        properties.setProperty(Options.METRICS_DATABASE, "marklogic-corb-content");
+        properties.setProperty(Options.METRICS_COLLECTIONS, "corb-metrics");
 
         Manager manager = new Manager();
         try {

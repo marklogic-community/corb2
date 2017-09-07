@@ -49,11 +49,12 @@ public class BaseMonitor {
     protected static String getProgressMessage(long completed, long taskCount, double tps, double curTps, double tpsForETC, int threads, boolean isPaused) {
         String etc = getEstimatedTimeCompletion(taskCount, completed, tpsForETC, isPaused);
     	return getProgressMessage(completed, taskCount, tps, curTps, etc, threads);
-
     }
+
     protected static String getProgressMessage(long completed, long taskCount, double tps, double curTps, String etc, int threads) {
         return  getProgressMessage( completed,  taskCount,  tps,  curTps,  etc,  threads,0);
     }
+
     protected static String getProgressMessage(long completed, long taskCount, double tps, double curTps, String etc, int threads, int failedTasks) {
         String failedTaskMessage = failedTasks > 0 ? failedTasks + " tasks failed, " : "";
     	return completed + "/" + taskCount + ", "

@@ -29,8 +29,8 @@ public class JobServicesHandlerTest {
         OutputStream out = new ByteArrayOutputStream();
         when(exchange.getResponseBody()).thenReturn(out);
         Manager manager = mock(Manager.class);
+        when(manager.getOptions()).thenReturn(new TransformOptions());
         manager.jobStats = new JobStats(manager);
-        manager.options = new TransformOptions();
         JobServicesHandler handler = new JobServicesHandler(manager);
         handler.handle(exchange);
         assertTrue(out.toString().startsWith("{"));
@@ -47,8 +47,9 @@ public class JobServicesHandlerTest {
         when(exchange.getResponseBody()).thenReturn(out);
 
         Manager manager = mock(Manager.class);
+        when(manager.getOptions()).thenReturn(new TransformOptions());
         manager.jobStats = new JobStats(manager);
-        manager.options = new TransformOptions();
+
         JobServicesHandler handler = new JobServicesHandler(manager);
         handler.handle(exchange);
         assertTrue(out.toString().startsWith("{"));

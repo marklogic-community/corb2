@@ -68,7 +68,6 @@ public class JobServicesHandler implements HttpHandler {
         try (OutputStream out = httpExchange.getResponseBody()) {
             out.write(response.getBytes(Charset.forName("UTF-8")));
             out.flush();
-            out.close();
         }
     }
 
@@ -108,7 +107,6 @@ public class JobServicesHandler implements HttpHandler {
                 LOG.log(Level.WARNING, MessageFormat.format("{} value not numeric", Options.THREAD_COUNT), e);
             }
         }
-        manager.jobStats.setPaused(String.valueOf(manager.isPaused()));
     }
 
     protected String getParameter(Map<String, String> map, String key) {

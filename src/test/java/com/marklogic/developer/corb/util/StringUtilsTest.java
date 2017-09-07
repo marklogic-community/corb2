@@ -22,6 +22,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.Test;
@@ -373,6 +374,40 @@ public class StringUtilsTest {
 
         String result = StringUtils.getInlineModuleCode(null);
         assertEquals("", result);
+    }
+
+    @Test
+    public void testParsePortRangesSingleNumber() {
+        Set<Integer> result = StringUtils.parsePortRanges("80");
+        assertEquals(1, result.size());
+        assertEquals(80, result.toArray()[0]);
+    }
+
+    @Test
+    public void testParsePortRanges() {
+        Set<Integer> result = StringUtils.parsePortRanges("80,443, 8000-8002, 8003 -8005, 8006- 8008, 8010 - 8009,443 ");
+        assertEquals(13, result.size());
+        Integer[] ports = result.toArray(new Integer[result.size()]);
+        assertEquals(443, ports[1].intValue());
+        assertEquals(8010, ports[12].intValue());
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void testParsePortRangesWithNegativeNumber() {
+        Set<Integer> result = StringUtils.parsePortRanges("-8002");
+        fail();
+    }
+
+    @Test
+    public void testParsePortRangesWithBlankValue() {
+        Set<Integer> result = StringUtils.parsePortRanges("  ");
+        assertEquals(0, result.size());
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void testParsePortRangesNoNumbers() {
+        Set<Integer> result = StringUtils.parsePortRanges("1 to 5");
+        fail();
     }
 
     @Test

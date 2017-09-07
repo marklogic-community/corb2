@@ -64,8 +64,6 @@ public class MetricsIT {
     private static final Logger MANAGER_LOG = Logger.getLogger(Manager.class.getName());
     private static final Logger LOG = Logger.getLogger(MetricsIT.class.getName());
     private static final String LARGE_URIS_MODULE = "src/test/resources/selectorLargeList.xqy|ADHOC";
-    private static final String TRANSFORM_SLOW_MODULE = "src/test/resources/transformSlow.xqy|ADHOC";
-    private static final String TRANSFORM_MODULE = "src/test/resources/transform.xqy|ADHOC";
     private static final String TRANSFORM_ERROR_MODULE = "src/test/resources/transform-error.xqy|ADHOC";
     protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\";\n";
 
@@ -219,10 +217,10 @@ public class MetricsIT {
         if (syncFrequency != null) {
             properties.setProperty(Options.METRICS_SYNC_FREQUENCY, syncFrequency);
         }
-        properties.setProperty(Options.METRICS_DB_NAME, METRICS_DB_NAME);
-        properties.setProperty(Options.METRICS_DOC_COLLECTIONS, collectionName);
+        properties.setProperty(Options.METRICS_DATABASE, METRICS_DB_NAME);
+        properties.setProperty(Options.METRICS_COLLECTIONS, collectionName);
         if (JS_MODULE != null) {
-            properties.setProperty(Options.METRICS_PROCESS_MODULE, JS_MODULE);
+            properties.setProperty(Options.METRICS_MODULE, JS_MODULE);
         }
         return properties;
     }

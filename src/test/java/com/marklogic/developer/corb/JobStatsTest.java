@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletionService;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -17,6 +18,8 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class JobStatsTest {
     private static final String FOO = "foo";
@@ -29,7 +32,6 @@ public class JobStatsTest {
         manager.options = transformOptions;
         JobStats jobStats = new JobStats(manager);
         assertNotNull(jobStats.getHostName());
-        assertEquals(transformOptions.getJobName(), jobStats.getJobName());
     }
 
     @Test
@@ -38,204 +40,9 @@ public class JobStatsTest {
     }
 
     @Test
-    public void getJobName() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setJobName(FOO);
-        assertEquals(FOO, jobStats.getJobName());
-    }
-
-    @Test
-    public void getJobRunLocation() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setJobRunLocation(FOO);
-        assertEquals(FOO, jobStats.getJobRunLocation());
-    }
-
-    @Test
-    public void getUserProvidedOptions() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        Map<String, String> options = new HashMap<>();
-        options.put(FOO, "bar");
-        jobStats.setUserProvidedOptions(options);
-        assertEquals(options, jobStats.getUserProvidedOptions());
-    }
-
-    @Test
-    public void getStartTime() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setStartTime(FOO);
-        assertEquals(FOO, jobStats.getStartTime());
-    }
-
-    @Test
-    public void getEndTime() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setEndTime(FOO);
-        assertEquals(FOO, jobStats.getEndTime());
-    }
-
-    @Test
-    public void getHost() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setHost(FOO);
-        assertEquals(FOO, jobStats.getHost());
-    }
-
-    @Test
-    public void getNumberOfFailedTasks() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setNumberOfFailedTasks(6l);
-        assertEquals(6l, jobStats.getNumberOfFailedTasks(), 0.001);
-
-        jobStats.setNumberOfFailedTasks(7);
-        assertEquals(7l, jobStats.getNumberOfFailedTasks(), 0.001);
-    }
-
-    @Test
-    public void getAverageTransactionTime() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setAverageTransactionTime(7d);
-        assertEquals(7d, jobStats.getAverageTransactionTime(), 0.001);
-    }
-
-    @Test
-    public void getUrisLoadTime() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setUrisLoadTime(8l);
-        assertEquals(8l, jobStats.getUrisLoadTime(), 0.001);
-    }
-
-    @Test
-    public void getTopTimeTakingUris() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        Map<String, Long> uris = new HashMap<>(1);
-        uris.put("/some/uri", Long.valueOf(9l));
-        jobStats.setTopTimeTakingUris(uris);
-        assertEquals(uris, jobStats.getTopTimeTakingUris());
-    }
-
-    @Test
     public void isNumeric() throws Exception {
         assertTrue(JobStats.isNumeric("1.0"));
         assertFalse(JobStats.isNumeric("one"));
-    }
-
-    @Test
-    public void setFailedUris() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        List<String> uris = new ArrayList();
-        uris.add("/some/uri");
-        jobStats.setFailedUris(uris);
-        assertEquals(uris, jobStats.getFailedUris());
-    }
-
-    @Test
-    public void setPreBatchRunTime() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setPreBatchRunTime(1l);
-        assertEquals(Long.valueOf(1l), jobStats.getPreBatchRunTime());
-    }
-
-    @Test
-    public void setPostBatchRunTime() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setPostBatchRunTime(1l);
-        assertEquals(Long.valueOf(1l), jobStats.getPostBatchRunTime());
-    }
-
-    @Test
-    public void setInitTaskRunTime() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setInitTaskRunTime(1l);
-        assertEquals(Long.valueOf(1l), jobStats.getInitTaskRunTime());
-    }
-
-    @Test
-    public void setNumberOfSucceededTasks() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setNumberOfSucceededTasks(1l);
-        assertEquals(Long.valueOf(1l), jobStats.getNumberOfSucceededTasks());
-
-        jobStats.setNumberOfSucceededTasks(2);
-        assertEquals(Long.valueOf(2l), jobStats.getNumberOfSucceededTasks());
-    }
-
-    @Test
-    public void setTotalRunTimeInMillis() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setTotalRunTimeInMillis(1l);
-        assertEquals(Long.valueOf(1l), jobStats.getTotalRunTimeInMillis());
-    }
-
-    @Test
-    public void setUri() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setUri("/some/uri");
-        assertEquals("/some/uri", jobStats.getUri());
-    }
-
-    @Test
-    public void setPaused() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setPaused("true");
-        assertEquals("true", jobStats.getPaused());
-    }
-
-    @Test
-    public void setCurrentThreadCount() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setCurrentThreadCount(1l);
-        assertEquals(Long.valueOf(1l), jobStats.getCurrentThreadCount());
-    }
-
-    @Test
-    public void setCurrentTps() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setCurrentTps(1d);
-        assertEquals(1d, jobStats.getCurrentTps(), 0.001);
-    }
-    @Test
-    public void setAvgTps() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setAvgTps(1d);
-        assertEquals(1d, jobStats.getAvgTps(), 0.001);
-    }
-
-    @Test
-    public void setEstimatedTimeOfCompletion() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setEstimatedTimeOfCompletion(FOO);
-        assertEquals(FOO, jobStats.getEstimatedTimeOfCompletion());
-    }
-
-    @Test
-    public void setJobServerPort() throws Exception {
-        Manager manager = new Manager();
-        JobStats jobStats = new JobStats(manager);
-        jobStats.setJobServerPort(1l);
-        assertEquals(Long.valueOf(1l), jobStats.getJobServerPort());
     }
 
     @Test
@@ -283,16 +90,18 @@ public class JobStatsTest {
 	public void testNullName() {
 	    Manager manager = new Manager();
 		JobStats jobStats = new JobStats(manager);
-		jobStats.setJobName(null);
+
 		assertXMLJSONNotNull(jobStats);
 	}
 
 	@Test
 	public void testFailedUris() {
         Manager manager = new Manager();
+        TransformOptions options = new TransformOptions();
+        options.setJobName("myJob");
+        manager.options = options;
 		JobStats jobStats = new JobStats(manager);
-		jobStats.setJobName("Name");
-		jobStats.setFailedUris(new ArrayList<>());
+
 		assertXMLJSONNotNull(jobStats);
 	}
 
@@ -313,8 +122,13 @@ public class JobStatsTest {
 		nodeVal.put("URI5", 2l);
 		nodeVal.put("URI6", 1l);
 		Manager manager = new Manager();
-		JobStats jobStats = new JobStats(manager);
-		jobStats.setTopTimeTakingUris(nodeVal);
+		PausableThreadPoolExecutor threadPoolExecutor = mock(PausableThreadPoolExecutor.class);
+		when(threadPoolExecutor.getTopUris()).thenReturn(nodeVal);
+		Monitor monitor = new Monitor(threadPoolExecutor, mock(CompletionService.class), manager);
+		monitor.setTaskCount(1);
+        manager.monitor = monitor;
+        JobStats jobStats = new JobStats(manager);
+
 		assertXMLJSONNotNull(jobStats);
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder dBuilder;

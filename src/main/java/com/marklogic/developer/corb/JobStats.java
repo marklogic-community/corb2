@@ -8,6 +8,8 @@ import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -79,27 +81,27 @@ public class JobStats extends BaseMonitor {
     private static final String CURRENT_THREAD_COUNT = "currentThreadCount";
     private static final String JOB_SERVER_PORT = "port";
 
-    protected Map<String, String> userProvidedOptions = new HashMap<>();
-    protected String startTime = null;
-    protected String endTime = null;
-    protected String host = null;
+    private Map<String, String> userProvidedOptions = new HashMap<>();
+    private String startTime = null;
+    private String endTime = null;
+    private String host = null;
 
-    protected Long numberOfFailedTasks = 0l;
-    protected Long numberOfSucceededTasks = 0l;
-    protected Double averageTransactionTime = 0.0d;
-    protected Long urisLoadTime = null;
+    private Long numberOfFailedTasks = 0l;
+    private Long numberOfSucceededTasks = 0l;
+    private Double averageTransactionTime = 0.0d;
+    private Long urisLoadTime = null;
     private Long preBatchRunTime = 0l;
     private Long postBatchRunTime = 0l;
     private Long initTaskRunTime = 0l;
     private Long totalRunTimeInMillis = 0l;
-    protected String jobRunLocation = null;
-    protected String jobName = null;
-    protected Map<String, Long> longRunningUris = new HashMap<>();
-    protected List<String> failedUris = null;
-    protected String uri = null;
-    protected String paused = null;
-    protected Long currentThreadCount = 0l;
-    protected Long jobServerPort = 0l;
+    private String jobRunLocation = null;
+    private String jobName = null;
+    private Map<String, Long> longRunningUris = new HashMap<>();
+    private List<String> failedUris = null;
+    private String uri = null;
+    private String paused = null;
+    private Long currentThreadCount = 0l;
+    private Long jobServerPort = 0l;
 
     private TransformOptions options = null;
     private ContentSource contentSource;
@@ -111,14 +113,14 @@ public class JobStats extends BaseMonitor {
         options = manager.getOptions();
         contentSource = manager.getContentSource();
 
-        String jobName = options != null ? options.getJobName() : null;
-        if (jobName != null) {
-            setJobName(jobName);
+        if (options != null) {
+            jobName = options.getJobName();
+            jobServerPort = options.getJobServerPort().longValue();
         }
-        setHost(getHostName());
-        setJobRunLocation(System.getProperty("user.dir"));
-        setStartTime(epochMillisAsFormattedDateString(manager.getStartMillis()));
-        setUserProvidedOptions(manager.getUserProvidedOptions());
+
+        host = getHostName();
+        jobRunLocation = System.getProperty("user.dir");
+        userProvidedOptions = manager.getUserProvidedOptions();
     }
 
     protected String getHostName() {
@@ -140,35 +142,38 @@ public class JobStats extends BaseMonitor {
         synchronized (this) {
 
             if (manager != null && manager.monitor != null) {
-                setJobServerPort(options.getJobServerPort().longValue());
-                this.taskCount = manager.monitor.getTaskCount();
+                paused = Boolean.toString(manager.isPaused());
+                startTime = epochMillisAsFormattedDateString(manager.getStartMillis());
+
+                taskCount = manager.monitor.getTaskCount();
                 if (taskCount > 0) {
 
                     PausableThreadPoolExecutor threadPool = manager.monitor.pool;
-                    setTopTimeTakingUris(threadPool.getTopUris());
-                    setFailedUris(threadPool.getFailedUris());
-                    setNumberOfFailedTasks(threadPool.getNumFailedUris());
-                    setNumberOfSucceededTasks(threadPool.getNumSucceededUris());
+                    longRunningUris = threadPool.getTopUris();
+                    failedUris = threadPool.getFailedUris();
+                    numberOfFailedTasks = Integer.valueOf(threadPool.getNumFailedUris()).longValue();
+                    numberOfSucceededTasks = Integer.valueOf(threadPool.getNumSucceededUris()).longValue();
 
                     Long currentTimeMillis = System.currentTimeMillis();
                     Long totalTime = manager.getEndMillis() - manager.getStartMillis();
                     if (totalTime > 0) {
-                        setTotalRunTimeInMillis(totalTime);
-                        Long totalTransformTime = currentTimeMillis - manager.getTransformStartMillis();
-                        setAverageTransactionTime(totalTransformTime / Double.valueOf(numberOfFailedTasks) + Double.valueOf(numberOfSucceededTasks));
-                        setEndTime(epochMillisAsFormattedDateString(manager.getEndMillis()));
+                        currentThreadCount = 0l;
+                        totalRunTimeInMillis = totalTime;
+                        long totalTransformTime = currentTimeMillis - manager.getTransformStartMillis();
+                        averageTransactionTime = totalTransformTime / Double.valueOf(numberOfFailedTasks) + Double.valueOf(numberOfSucceededTasks);
+                        endTime = epochMillisAsFormattedDateString(manager.getEndMillis());
                         estimatedTimeOfCompletion = null;
-                        setCurrentThreadCount(0l);
                     } else {
-                        setTotalRunTimeInMillis(currentTimeMillis - manager.getStartMillis());
-                        long completed = numberOfSucceededTasks + numberOfFailedTasks;
-                        long intervalBetweenRequestsInMillis = TPS_ETC_MIN_REFRESH_INTERVAL;
+
+                        currentThreadCount = Long.valueOf(options.getThreadCount());
+                        totalRunTimeInMillis = currentTimeMillis - manager.getStartMillis();
+
                         long timeSinceLastReq = currentTimeMillis - prevMillis;
                         //refresh it every 10 seconds or more.. ignore more frequent requests
-                        if (timeSinceLastReq > intervalBetweenRequestsInMillis) {
+                        if (timeSinceLastReq > TPS_ETC_MIN_REFRESH_INTERVAL) {
+                            long completed = numberOfSucceededTasks + numberOfFailedTasks;
                             populateTps(completed);
                         }
-                        setCurrentThreadCount(Long.valueOf(options.getThreadCount()));
                     }
                 }
             }
@@ -180,33 +185,32 @@ public class JobStats extends BaseMonitor {
         return date.format(DATE_FORMATTER);
     }
 
-    public void logJobStatsToServer(String message, boolean concise) {
-        String processModule = options.getLogMetricsToServerDBTransformModule();
-        String metricsToDocument;
-        String metricsToServerLog = null;
+    public void logToServer(String message, boolean concise) {
+        String processModule = options.getMetricsModule();
+        String metricsDocument;
+        String metricsLogMessage = null;
 
         if (isJavaScriptModule(processModule)) {
-            metricsToDocument = toJSONString(concise);
-            metricsToServerLog = metricsToDocument;
+            metricsDocument = toJSONString(concise);
+            metricsLogMessage = metricsDocument;
         } else {
-            metricsToDocument = toXMLString(concise);
-            metricsToServerLog = getJsonFromXML(metricsToDocument);
+            metricsDocument = toXMLString(concise);
+            metricsLogMessage = getJsonFromXML(metricsDocument);
         }
-        logJobStatsToServerDocument(metricsToDocument);
-        logJobStatsToServerLog(message, metricsToServerLog, concise);
+        executeModule(metricsDocument);
+        logToServer(message, metricsLogMessage);
     }
 
-    private void logJobStatsToServerLog(String message, String metrics, boolean concise) {
+    private void logToServer(String message, String metrics) {
         if (contentSource != null) {
             try (Session session = contentSource.newSession()) {
-                String logMetricsToServerLog = options.getLogMetricsToServerLog();
-                if (options.isMetricsToServerLogEnabled(logMetricsToServerLog)) {
-                    metrics = StringUtils.isEmpty(metrics) ? toString(concise) : metrics;
+                String logLevel = options.getLogMetricsToServerLog();
+                if (options.isMetricsLoggingEnabled(logLevel)) {
                     String xquery = XQUERY_VERSION_ML
                             + ((message != null)
-                                    ? "xdmp:log(\"" + message + "\",'" + logMetricsToServerLog.toLowerCase() + "'),"
+                                    ? "xdmp:log(\"" + message + "\",'" + logLevel.toLowerCase() + "'),"
                                     : "")
-                            + "xdmp:log('" + metrics + "\','" + logMetricsToServerLog.toLowerCase() + "')";
+                            + "xdmp:log('" + metrics + "\','" + logLevel.toLowerCase() + "')";
 
                     AdhocQuery query = session.newAdhocQuery(xquery);
                     session.submitRequest(query);
@@ -217,16 +221,16 @@ public class JobStats extends BaseMonitor {
         }
     }
 
-    private void logJobStatsToServerDocument(String metrics) {
-        String logMetricsToServerDBName = options.getLogMetricsToServerDBName();
-        if (logMetricsToServerDBName != null) {
-            String uriRoot = options.getLogMetricsToServerDBURIRoot();
+    private void executeModule(String metrics) {
+        String metricsDatabase = options.getMetricsDatabase();
+        if (metricsDatabase != null) {
+            String uriRoot = options.getMetricsRoot();
 
             ResultSequence seq = null;
             RequestOptions requestOptions = new RequestOptions();
             requestOptions.setCacheResult(false);
-            String collections = options.getLogMetricsToServerDBCollections();
-            String processModule = options.getLogMetricsToServerDBTransformModule();
+            String collections = options.getMetricsCollections();
+            String processModule = options.getMetricsModule();
 
             Thread.yield();// try to avoid thread starvation
 
@@ -234,7 +238,7 @@ public class JobStats extends BaseMonitor {
                 try (Session session = contentSource.newSession()) {
                     Request request = manager.getRequestForModule(processModule, session);
 
-                    request.setNewStringVariable(METRICS_DB_NAME_PARAM, logMetricsToServerDBName);
+                    request.setNewStringVariable(METRICS_DB_NAME_PARAM, metricsDatabase);
                     if (uriRoot != null) {
                         request.setNewStringVariable(METRICS_URI_ROOT_PARAM, uriRoot);
                     } else {
@@ -258,7 +262,7 @@ public class JobStats extends BaseMonitor {
                     seq = session.submitRequest(request);
                     String uri = seq.hasNext() ? seq.next().asString() : null;
                     if (uri != null) {
-                        setUri(uri);
+                        this.uri = uri;
                     }
                     session.close();
                     Thread.yield();// try to avoid thread starvation
@@ -277,89 +281,6 @@ public class JobStats extends BaseMonitor {
                 }
             }
         }
-    }
-
-    public String getJobName() {
-        return jobName;
-    }
-
-    public void setJobName(String jobName) {
-        this.jobName = jobName;
-    }
-
-    public String getJobRunLocation() {
-        return jobRunLocation;
-    }
-
-    public void setJobRunLocation(String jobRunLocation) {
-        this.jobRunLocation = jobRunLocation;
-    }
-
-    public Map<String, String> getUserProvidedOptions() {
-        return userProvidedOptions;
-    }
-
-    public void setUserProvidedOptions(Map<String, String> userProvidedOptions) {
-        this.userProvidedOptions = userProvidedOptions;
-    }
-
-    public String getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(String startTime) {
-        this.startTime = startTime;
-    }
-
-    public String getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(String endTime) {
-        this.endTime = endTime;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public Long getNumberOfFailedTasks() {
-        return numberOfFailedTasks;
-    }
-
-    public void setNumberOfFailedTasks(Long numberOfFailedTasks) {
-        this.numberOfFailedTasks = numberOfFailedTasks;
-    }
-    public void setNumberOfFailedTasks(Integer numberOfFailedTasks) {
-        this.numberOfFailedTasks = numberOfFailedTasks.longValue();
-    }
-
-    public Double getAverageTransactionTime() {
-        return averageTransactionTime;
-    }
-
-    public void setAverageTransactionTime(Double averageTransactionTime) {
-        this.averageTransactionTime = averageTransactionTime;
-    }
-
-    public Long getUrisLoadTime() {
-        return urisLoadTime;
-    }
-
-    public void setUrisLoadTime(Long urisLoadTime) {
-        this.urisLoadTime = urisLoadTime;
-    }
-
-    public Map<String, Long> getTopTimeTakingUris() {
-        return longRunningUris;
-    }
-
-    public void setTopTimeTakingUris(Map<String, Long> topTimeTakingUris) {
-        this.longRunningUris = topTimeTakingUris;
     }
 
     @Override
@@ -395,7 +316,7 @@ public class JobStats extends BaseMonitor {
                 .append(xmlNode(NUMBER_OF_SUCCEEDED_TASKS, numberOfSucceededTasks))
                 .append(xmlNode(METRICS_DOC_URI, uri))
                 .append(xmlNode(PAUSED, paused))
-                .append(xmlNode(JOB_SERVER_PORT, getJobServerPort()))
+                .append(xmlNode(JOB_SERVER_PORT, jobServerPort))
                 .append(xmlNode(AVERAGE_TPS, avgTps > 0 ? formatTransactionsPerSecond(avgTps) : ""))
                 .append(xmlNode(CURRENT_TPS, currentTps > 0 ? formatTransactionsPerSecond(currentTps) : ""))
                 .append(xmlNode(ESTIMATED_TIME_OF_COMPLETION, estimatedTimeOfCompletion))
@@ -616,24 +537,10 @@ public class JobStats extends BaseMonitor {
     }
 
     /**
-     * @param failedUris the failedUris to set
+     * @param initTaskRunTime the initTaskRunTime to set
      */
-    public void setFailedUris(List<String> failedUris) {
-        this.failedUris = failedUris;
-    }
-
-    /**
-     * @return the failedUris
-     */
-    public List<String> getFailedUris() {
-        return failedUris;
-    }
-
-    /**
-     * @return the preBatchRunTime
-     */
-    public Long getPreBatchRunTime() {
-        return preBatchRunTime;
+    public void setInitTaskRunTime(Long initTaskRunTime) {
+        this.initTaskRunTime = initTaskRunTime;
     }
 
     /**
@@ -643,11 +550,8 @@ public class JobStats extends BaseMonitor {
         this.preBatchRunTime = preBatchRunTime;
     }
 
-    /**
-     * @return the postBatchRunTime
-     */
-    public Long getPostBatchRunTime() {
-        return postBatchRunTime;
+    public void setUrisLoadTime(Long urisLoadTime) {
+        this.urisLoadTime = urisLoadTime;
     }
 
     /**
@@ -656,147 +560,4 @@ public class JobStats extends BaseMonitor {
     public void setPostBatchRunTime(Long postBatchRunTime) {
         this.postBatchRunTime = postBatchRunTime;
     }
-
-    /**
-     * @return the initTaskRunTime
-     */
-    public Long getInitTaskRunTime() {
-        return initTaskRunTime;
-    }
-
-    /**
-     * @param initTaskRunTime the initTaskRunTime to set
-     */
-    public void setInitTaskRunTime(Long initTaskRunTime) {
-        this.initTaskRunTime = initTaskRunTime;
-    }
-
-    /**
-     * @return the numberOfSucceededTasks
-     */
-    public Long getNumberOfSucceededTasks() {
-        return numberOfSucceededTasks;
-    }
-
-    /**
-     * @param numberOfSucceededTasks the numberOfSucceededTasks to set
-     */
-    public void setNumberOfSucceededTasks(Long numberOfSucceededTasks) {
-        this.numberOfSucceededTasks = numberOfSucceededTasks;
-    }
-    public void setNumberOfSucceededTasks(Integer numberOfSucceededTasks) {
-        this.numberOfSucceededTasks = numberOfSucceededTasks.longValue();
-    }
-    /**
-     * @return the totalRunTimeInMillis
-     */
-    public Long getTotalRunTimeInMillis() {
-        return totalRunTimeInMillis;
-    }
-
-    /**
-     * @param totalRunTimeInMillis the totalRunTimeInMillis to set
-     */
-    public void setTotalRunTimeInMillis(Long totalRunTimeInMillis) {
-        this.totalRunTimeInMillis = totalRunTimeInMillis;
-    }
-
-    /**
-     * @return the uri
-     */
-    protected String getUri() {
-        return uri;
-    }
-
-    /**
-     * @param uri the uri to set
-     */
-    protected void setUri(String uri) {
-        this.uri = uri;
-    }
-
-    /**
-     * @return the paused
-     */
-    protected String getPaused() {
-        return paused;
-    }
-
-    /**
-     * @param paused the paused to set
-     */
-    protected void setPaused(String paused) {
-        this.paused = paused;
-    }
-
-    /**
-     * @return the currentThreadCount
-     */
-    public Long getCurrentThreadCount() {
-        return currentThreadCount;
-    }
-
-    /**
-     * @param currentThreadCount the currentThreadCount to set
-     */
-    public void setCurrentThreadCount(Long currentThreadCount) {
-        this.currentThreadCount = currentThreadCount;
-    }
-
-    /**
-     * @return the avgTps
-     */
-    public double getAvgTps() {
-        return avgTps;
-    }
-
-    /**
-     * @param avgTps the avgTps to set
-     */
-    public void setAvgTps(double avgTps) {
-        this.avgTps = avgTps;
-    }
-
-    /**
-     * @return the currentTps
-     */
-    public double getCurrentTps() {
-        return currentTps;
-    }
-
-    /**
-     * @param currentTps the currentTps to set
-     */
-    public void setCurrentTps(double currentTps) {
-        this.currentTps = currentTps;
-    }
-
-    /**
-     * @return the estimatedTimeOfCompletion
-     */
-    public String getEstimatedTimeOfCompletion() {
-        return estimatedTimeOfCompletion;
-    }
-
-    /**
-     * @param estimatedTimeOfCompletion the estimatedTimeOfCompletion to set
-     */
-    public void setEstimatedTimeOfCompletion(String estimatedTimeOfCompletion) {
-        this.estimatedTimeOfCompletion = estimatedTimeOfCompletion;
-    }
-
-    /**
-     * @return the jobServerPort
-     */
-    public Long getJobServerPort() {
-        return jobServerPort;
-    }
-
-    /**
-     * @param jobServerPort the jobServerPort to set
-     */
-    public void setJobServerPort(Long jobServerPort) {
-        this.jobServerPort = jobServerPort;
-    }
-
 }

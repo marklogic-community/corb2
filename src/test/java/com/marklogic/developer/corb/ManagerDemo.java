@@ -31,8 +31,8 @@ public class ManagerDemo {
         properties.setProperty(Options.PROCESS_MODULE, TRANSFORM_SLOW_MODULE);
         properties.setProperty(Options.FAIL_ON_ERROR, "false");
         properties.setProperty(Options.METRICS_SYNC_FREQUENCY, "5");
-        properties.setProperty(Options.METRICS_DB_NAME, "marklogic-corb-content");
-        properties.setProperty(Options.METRICS_DOC_COLLECTIONS, "managerDemo");
+        properties.setProperty(Options.METRICS_DATABASE, "marklogic-corb-content");
+        properties.setProperty(Options.METRICS_COLLECTIONS, "managerDemo");
 
         Manager manager = new Manager();
 

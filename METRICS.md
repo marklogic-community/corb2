@@ -1,11 +1,11 @@
 # CoRB Metrics FAQ
 
 * **How can I log the job metrics to the Marklogic error log?**
-    * Logging can be enabled by setting METRICS-TO-ERROR-LOG property in options.
-        + Eg: **METRICS-TO-ERROR-LOG=info**
+    * Logging can be enabled by setting METRICS-LOG-LEVEL property in options.
+        + i.e. **METRICS-LOG-LEVEL=info**
         + Startup message is logged when CoRB job starts up and detailed metrics are logged when the job has finished.
 * **How can I set the log level when logging metrics to the Marklogic error log?**
-    * METRICS-TO-ERROR-LOG property has the following possible values:
+    * METRICS-LOG-LEVEL property has the following possible values:
       +  *none,emergency,alert,critical,error,warning,notice,info,config,debug,fine,finer,finest.*
       + Default value is none ( which means the metrics will not be logged to the error log).
 * **What kind of details are logged?**
@@ -24,32 +24,32 @@
  * **Are connection strings or passwords logged to the error log?**
     * No. 
 * **How can I save the metrics as a Document to the database?**
-    * METRICS-DB-NAME property will be used to save the metrics document to the database.
+    * METRICS-DATABASE property will be used to save the metrics document to the database.
     * Default format for metrics document is XML.
-    * METRICS-DB-NAME is the only required option for the document to be saved to the database. If this option is not specified the document will not be saved to the Database.
-* **Setting the METRICS-DB-NAME option also log it to the server log?**
-    * No. METRICS-TO-ERROR-LOG option needs to be selected for CoRB to log to server log.
+    * METRICS-DATABASE is the only required option for the document to be saved to the database. If this option is not specified the document will not be saved to the Database.
+* **Setting the METRICS-DATABASE option also log it to the server log?**
+    * No. METRICS-LOG-LEVEL option needs to be set in order for CoRB to log to the server log.
 * **How can I save metrics document in JSON format?**
-   * METRICS-PROCESS-MODULE option can be used to save metrics document in JSON format
-   * When METRICS-PROCESS-MODULE option is set to an xquery or javascript module, that module is executed after the CoRB job completes to save the metrics document.
+   * METRICS-MODULE option can be used to save metrics document in JSON format
+   * When METRICS-MODULE option is set to an XQuery or JavaScript module, that module is executed after the CoRB job completes to save the metrics document.
    * CoRB2 distribution comes with two sample modules that can be found in the resources folder.
-    + [save-metric-to-db.xqy](corb2/src/main/resources/save-metric-to-db.xqy)
+    + [save-metrics.xqy](corb2/src/main/resources/save-metrics.xqy)
         + This is the default and saves the metrics document as XML.
     + [saveMetrics.sjs](corb2/src/main/resources/saveMetrics.sjs)
         + This will save the metrics document as a **JSON**.
-        + Ex:METRICS-PROCESS-MODULE=saveMetrics.sjs|ADHOC
+        + Ex:METRICS-MODULE=saveMetrics.sjs|ADHOC
 * **Can I add the metrics document to a Collection?**
-    + A comma seperated collection names can be assigned to METRICS-DOC-COLLECTIONS option and the document is saved to those collections.
+    + A comma seperated collection names can be assigned to METRICS-COLLECTIONS option and the document is saved to those collections.
     + By default the metrics document is added to a Collection with the Job Name (or the Job run location if name is not provided).
     
 * **Can I change the URI to which the metrics document is saved?**
-    * By default the URI format is /METRICS-DOC-BASE-DIR/CoRB2/JOB-NAME/YEAR/MONTH/DATE/HOUR/MINUTE/RANDOM-NUMBER.(json or xml)
-    * METRICS-DOC-BASE-DIR has a default value of /ServiceMetrics/
+    * By default the URI format is /METRICS-ROOT/CoRB2/JOB-NAME/YEAR/MONTH/DATE/HOUR/MINUTE/RANDOM-NUMBER.(json or xml)
+    * METRICS-ROOT has a default value of /ServiceMetrics/
     * JOB-NAME defaults to the job run location
      
 * **I want to have complete control over how the metrics document is saved. Is that possible?**
     * You can use the above mentioned sample modules (*[saveMetrics.sjs](corb2/src/main/resources/saveMetrics.sjs) and [save-metric-to-db.xqy](corb2/src/main/resources/save-metric-to-db.xqy)*) as an example and implement your own customizations.
-    + Eg:METRICS-PROCESS-MODULE=/export/home/dev/saveMetricsCustom.sjs|ADHOC
+    + Eg:METRICS-MODULE=/export/home/dev/saveMetricsCustom.sjs|ADHOC
 * **How do I keep logging metrics document at regular intervals?**
     * You can use METRICS-SYNC-FREQUENCY option to specify the frequency at which the document should be saved to the database.
     * Corb logs the metrics by creating a new document in the database with a new timestamp as shown below.
@@ -66,12 +66,12 @@
     "host" : "www.marklogic.com",
     "userProvidedOptions" :
     {
-        "METRICS-PROCESS-MODULE" : "/saveMetrics2.sjs",
-        "METRICS-TO-ERROR-LOG" : "info",
-        "METRICS-DB-NAME" : "Documents",
+        "METRICS-MODULE" : "/saveMetrics2.sjs",
+        "METRICS-LOG-LEVEL" : "info",
+        "METRICS-DATABASE" : "Documents",
         "METRICS-NUM-FAILED-TRANSACTIONS" : "2",
         "METRICS-NUM-SLOW-TRANSACTIONS" : "4",
-        "METRICS-DOC-COLLECTIONS" : "COLLECTION",
+        "METRICS-COLLECTIONS" : "COLLECTION",
         "MODULE-ROOT" : "/",
         "URIS-FILE" : "test-file-1.txt"
     }
@@ -100,5 +100,5 @@
 2017-04-27 10:19:26.814 Info: marklogic-corb-xdbc: STARTED CORB JOB:
 2017-04-27 10:19:26.814 Info: marklogic-corb-xdbc: {"job":{"runLocation":"/home/dev/workspace/corb2","name":"testCorbMetrics","host":"localhost","StartTime":"2017-04-27T10:19:26Z"}}
 2017-04-27 10:19:28.947 Info: marklogic-corb-xdbc: END RUNNING CORB JOB:
-2017-04-27 10:19:28.947 Info: marklogic-corb-xdbc: {"job":{"runLocation":"/home/dev/workspace/corb2","name":"testCorbMetrics","host":"localhost","userProvidedOptions":{"METRICS-PROCESS-MODULE":"
+2017-04-27 10:19:28.947 Info: marklogic-corb-xdbc: {"job":{"runLocation":"/home/dev/workspace/corb2","name":"testCorbMetrics","host":"localhost","userProvidedOptions":{"METRICS-MODULE":"
 ```
