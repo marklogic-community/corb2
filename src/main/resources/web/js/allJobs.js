@@ -53,12 +53,12 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             var handleError = function (error, status){
                 if (status === "404") {
                     $interval.cancel(promise);
-                    console.log("host " + host + " port " + port + " not open");
+                    //console.log("host " + host + " port " + port + " not open");
                 }
             };
             var loadData = function(response) {
                 $scope.isLoading = false;
-                console.log("host " + host + " port " + port + " FOUND");
+                //console.log("host " + host + " port " + port + " FOUND");
 
                 var job = response.data.job;
                 var oldData = $scope.availableServers[host + ":" + port];
@@ -91,7 +91,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
                 // when there is a dash, process the range of values (inclusive)
                 if (portToken.includes("-")) {
                     var range = portToken.split("-");
-                    for (var port = range[0]; port <= range[1]; j++) {
+                    for (var port = range[0]; port <= range[1]; port++) {
                         hostData.push([host, port]);
                     }
                     // otherwise just the specific port number

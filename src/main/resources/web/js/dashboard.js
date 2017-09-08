@@ -78,11 +78,11 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             } else {
                 reqStr += "pause";
             }
-            $http.post(servicePath + "?concise=true" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}}).then(loadData);
+            $http.post(servicePath + "?concise=true" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}}).then(loadData);
         };
         $scope.updateThreadCount = function(){
             var reqStr = "&thread-count=" + $scope.threadCount;
-            $http.post(servicePath + "?concise=true" + reqStr, {'headers':{'Content-Type': 'application/x-www-form-urlencoded'}}).then(loadData);
+            $http.post(servicePath + "?concise=true" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}}).then(loadData);
         };
         $scope.updateThreadsButtonStyle = "btn-primary";
         $http.get(servicePath).then(loadData, handleError);
