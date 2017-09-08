@@ -143,7 +143,7 @@ public class JobStats extends BaseMonitor {
         synchronized (this) {
 
             if (manager != null && manager.monitor != null) {
-                jobId = manager.jobId.toString();
+                jobId = manager.jobId != null ? manager.jobId.toString() : "";
                 paused = Boolean.toString(manager.isPaused());
                 startTime = epochMillisAsFormattedDateString(manager.getStartMillis());
 
