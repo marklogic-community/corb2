@@ -58,8 +58,8 @@
                     <td>{{i.runLocation}}</td>
                     <td>{{i.totalNumberOfTasks}}</td>
                     <td>{{msToTime(i.totalRunTimeInMillis)}}</td>
-                    <td><button class="btn {{pauseButtonStyle[i.host+i.port]}}" ng-click="pauseResumeButtonClick(i)">{{pauseButtonText[i.host+i.port]}}</button></td>
-                    <td><select class="custom-select" ng-options="i for i in allThreadCounts" ng-model="threadCounts[i.host+i.port]"></select></td>
+                    <td><button class="btn {{pauseButtonStyle[i.id]}}" ng-click="pauseResumeButtonClick(i)">{{pauseButtonText[i.id]}}</button></td>
+                    <td><select class="custom-select" ng-options="i for i in allThreadCounts" ng-model="threadCounts[i.id]"></select></td>
                     <td><a ng-click="updateThreadCount(i)"><span class="glyphicon glyphicon-save"></span></a></td>
                   </tr>
                 </tbody>
