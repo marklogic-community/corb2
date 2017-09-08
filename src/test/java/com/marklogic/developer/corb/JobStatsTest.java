@@ -31,7 +31,7 @@ public class JobStatsTest {
         Manager manager = new Manager();
         manager.options = transformOptions;
         JobStats jobStats = new JobStats(manager);
-        assertNotNull(jobStats.getHostName());
+        assertNotNull(jobStats.getHost());
     }
 
     @Test
