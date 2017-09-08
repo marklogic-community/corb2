@@ -1,7 +1,11 @@
 var app = angular.module("dashboard",[]);
 app.controller("mainCtrl", ["$scope", "$http","$interval",
     function($scope, $http, $interval) {
+        var host = location.hostname || "localhost";
+        var port = location.port;
         var servicePath = "/stats";
+        var serviceUrl = "http://" + host + ":" + port + servicePath;
+
         var pad = function(n, z) {
             z = z || 2;
             return ("00" + n).slice(-z);
@@ -78,12 +82,12 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             } else {
                 reqStr += "pause";
             }
-            $http.post(servicePath + "?concise=true" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}}).then(loadData);
+            $http.post(serviceUrl + "?concise=true" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}}).then(loadData);
         };
         $scope.updateThreadCount = function(){
             var reqStr = "&thread-count=" + $scope.threadCount;
-            $http.post(servicePath + "?concise=true" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}}).then(loadData);
+            $http.post(serviceUrl + "?concise=true" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}}).then(loadData);
         };
         $scope.updateThreadsButtonStyle = "btn-primary";
-        $http.get(servicePath).then(loadData, handleError);
+        $http.get(serviceUrl).then(loadData, handleError);
     }]);
