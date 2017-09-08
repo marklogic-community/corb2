@@ -92,7 +92,7 @@ public class Manager extends AbstractManager implements Closeable {
     protected transient PausableThreadPoolExecutor pool;
     protected transient Monitor monitor;
     protected transient JobServer jobServer = null;
-
+    protected UUID jobId = null;
     protected JobStats jobStats = null;
     protected long startMillis;
     protected long transformStartMillis;
@@ -546,7 +546,7 @@ public class Manager extends AbstractManager implements Closeable {
 
     public int run() throws Exception {
         startJobServer();
-
+        jobId = UUID.randomUUID();
         jobStats = new JobStats(this);
         scheduleJobMetrics();
 
