@@ -51,6 +51,7 @@ public class JobStats extends BaseMonitor {
     private static final String CLOSE_CURLY = "}";
     private static final String COMMA = ",";
     private static final String URI = "uri";
+    private static final String JOB_ID = "id";
     private static final String JOB_NAME = "name";
     private static final String JOB_ROOT = "job";
     private static final String DEF_NS = "http://marklogic.github.io/corb/";
@@ -93,6 +94,7 @@ public class JobStats extends BaseMonitor {
     private Long initTaskRunTime = 0l;
     private Long totalRunTimeInMillis = 0l;
     private String jobRunLocation = null;
+    private String jobId = null;
     private String jobName = null;
     private Map<String, Long> longRunningUris = new HashMap<>();
     private List<String> failedUris = null;
@@ -116,21 +118,22 @@ public class JobStats extends BaseMonitor {
             jobServerPort = options.getJobServerPort().longValue();
         }
 
-        host = getHostName();
+        host = getHost();
+
         jobRunLocation = System.getProperty("user.dir");
         userProvidedOptions = manager.getUserProvidedOptions();
     }
 
-    protected String getHostName() {
+    protected String getHost() {
         String hostName = "Unknown";
         try {
             InetAddress addr = InetAddress.getLocalHost();
-            hostName = addr.getHostName();
+            hostName = addr.getHostAddress();
         } catch (UnknownHostException ex) {
             try {
-                hostName = InetAddress.getLoopbackAddress().getHostName();
+                hostName = InetAddress.getLoopbackAddress().getHostAddress();
             } catch (Exception e) {
-                LOG.log(INFO, "Hostname can not be resolved", e);
+                LOG.log(INFO, "Host address can not be resolved", e);
             }
         }
         return hostName;
@@ -140,6 +143,7 @@ public class JobStats extends BaseMonitor {
         synchronized (this) {
 
             if (manager != null && manager.monitor != null) {
+                jobId = manager.jobId.toString();
                 paused = Boolean.toString(manager.isPaused());
                 startTime = epochMillisAsFormattedDateString(manager.getStartMillis());
 
@@ -298,6 +302,7 @@ public class JobStats extends BaseMonitor {
         StringBuilder strBuff = new StringBuilder();
         refresh();
         strBuff.append(xmlNode(JOB_LOCATION, jobRunLocation))
+                .append(xmlNode(JOB_ID, jobId))
                 .append(xmlNode(JOB_NAME, jobName))
                 .append(xmlNode(HOST, host))
                 .append(concise ? "" : xmlNode(USER_PROVIDED_OPTIONS, userProvidedOptions))
