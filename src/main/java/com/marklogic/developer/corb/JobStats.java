@@ -482,7 +482,7 @@ public class JobStats extends BaseMonitor {
             StringBuffer strBuff = new StringBuffer();
             strBuff.append(LT).append(nodeName);
             if (defaultNS != null) {
-                strBuff.append(" xmlns='").append(defaultNS).append("'");
+                strBuff.append(" xmlns='").append(defaultNS).append('\'');
             }
 
             strBuff.append(GT).append(nodeVal).append("</").append(nodeName).append(GT);
