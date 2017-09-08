@@ -33,24 +33,14 @@ public class JobServicesHandler implements HttpHandler {
         String querystring = httpExchange.getRequestURI().getQuery();
         Map<String,String> params = querystringToMap(querystring);
         String method = httpExchange.getRequestMethod();
-        if ("GET".equals(method)) {
-            doGet(httpExchange, params);
-        } else if ("POST".equals(method)) {
-            doPost(httpExchange, params);
+        if ("GET".equals(method) || "POST".equals(method) || "OPTIONS".equals(method)) {
+            pauseResumeJob(params);
+            updateThreads(params);
+            writeMetricsOut(httpExchange, params);
         } else {
             LOG.log(Level.WARNING, "Unsupported method {0}", method);
             httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0l);
         }
-    }
-
-    protected void doGet(HttpExchange httpExchange, Map<String, String> params) throws IOException {
-        writeMetricsOut(httpExchange, params);
-    }
-
-    protected void doPost(HttpExchange httpExchange, Map<String, String> params) throws IOException {
-        pauseResumeJob(params);
-        updateThreads(params);
-        doGet(httpExchange, params);
     }
 
     protected void writeMetricsOut(HttpExchange httpExchange, Map<String, String> params) throws IOException {
