@@ -67,7 +67,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             $scope.isLoading = false;
             //ensure that this works with an array or single job object
             var jobs = [].concat(response.data);
-            for (jobIndex in jobs) {
+            for (var jobIndex in jobs) {
                 var job = jobs[jobIndex].job;
                 var oldData = $scope.availableServers[job.id];
                 $scope.availableServers[job.id] = (job);
