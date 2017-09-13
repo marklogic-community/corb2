@@ -1,6 +1,5 @@
 package com.marklogic.developer.corb;
 
-import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
@@ -10,9 +9,7 @@ import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,7 +19,7 @@ public class JobServicesHandler implements HttpHandler {
     private static final Logger LOG = Logger.getLogger(JobServicesHandler.class.getName());
     public static final String PARAM_FORMAT = "FORMAT";
     public static final String PARAM_CONCISE = "CONCISE";
-    protected static final String HEADER_CONTENT_TYPE = "Content-Type";
+
     private Manager manager;
 
     JobServicesHandler(Manager manager) {
@@ -36,24 +33,38 @@ public class JobServicesHandler implements HttpHandler {
         if ("GET".equals(method) || "POST".equals(method) || "OPTIONS".equals(method)) {
             pauseResumeJob(params);
             updateThreads(params);
-            writeMetricsOut(httpExchange, params);
+            String path = httpExchange.getRequestURI().getPath();
+            if (path.contains(JobServer.METRICS_PATH)) {
+                JobServer.alowXSS(httpExchange);
+                writeMetricsOut(httpExchange, params, manager);
+            } else {
+                String jobId = manager.jobId;
+                String relativePath = path.substring(path.indexOf(jobId) + jobId.length());
+                if (relativePath.isEmpty() || "/".equals(relativePath)) {
+                    relativePath = "/index.html";
+                }
+                JobServer.handleStaticRequest(relativePath, httpExchange);
+            }
+
         } else {
             LOG.log(Level.WARNING, "Unsupported method {0}", method);
             httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0l);
         }
     }
 
-    protected void writeMetricsOut(HttpExchange httpExchange, Map<String, String> params) throws IOException {
-        boolean concise = hasParameter(params, PARAM_CONCISE);
+    protected static void writeMetricsOut(HttpExchange httpExchange, Map<String, String> params, Manager manager) throws IOException {
+        boolean concise = JobServer.hasParameter(params, PARAM_CONCISE);
         String response;
-        if (hasParameter(params,PARAM_FORMAT) && getParameter(params, PARAM_FORMAT).equalsIgnoreCase("xml")) {
-            httpExchange.getResponseHeaders().add(HEADER_CONTENT_TYPE, "application/xml");
+        String contentType;
+        if (JobServer.hasParamFormatXml(params)) {
+            contentType = JobServer.MIME_XML;
             response = manager.jobStats.toXMLString(concise);
         } else {
-            httpExchange.getResponseHeaders().add(HEADER_CONTENT_TYPE, "application/json");
+            contentType = JobServer.MIME_JSON;
             response =  manager.jobStats.toJSONString(concise);
         }
-        alowXSS(httpExchange);
+
+        httpExchange.getResponseHeaders().add(JobServer.HEADER_CONTENT_TYPE, contentType);
         httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length());
         try (OutputStream out = httpExchange.getResponseBody()) {
             out.write(response.getBytes(Charset.forName("UTF-8")));
@@ -77,7 +88,7 @@ public class JobServicesHandler implements HttpHandler {
     }
 
     protected void pauseResumeJob(Map<String, String> params) {
-        String value = getParameter(params, Options.COMMAND);
+        String value = JobServer.getParameter(params, Options.COMMAND);
         if ("PAUSE".equalsIgnoreCase(value)) {
             manager.pause();
         } else if ("RESUME".equalsIgnoreCase(value)) {
@@ -86,7 +97,7 @@ public class JobServicesHandler implements HttpHandler {
     }
 
     protected void updateThreads(Map<String, String> params) {
-        String value = getParameter(params, Options.THREAD_COUNT);
+        String value = JobServer.getParameter(params, Options.THREAD_COUNT);
         if (value != null) {
             try {
                 int threadCount = Integer.parseInt(value);
@@ -99,29 +110,4 @@ public class JobServicesHandler implements HttpHandler {
         }
     }
 
-    protected String getParameter(Map<String, String> map, String key) {
-        String value = null;
-        String caseSensitiveKey = key.toLowerCase(Locale.ENGLISH);
-        if (map.containsKey(caseSensitiveKey)) {
-            value = map.get(caseSensitiveKey);
-        } else {
-            caseSensitiveKey = key.toUpperCase(Locale.ENGLISH);
-            if (map.containsKey(caseSensitiveKey)) {
-                value = map.get(caseSensitiveKey);
-            }
-        }
-        return value;
-    }
-
-    protected boolean hasParameter(Map<String, String>params, String key){
-        return getParameter(params, key) != null;
-    }
-
-    protected void alowXSS(HttpExchange httpExchange) {
-        Headers headers = httpExchange.getResponseHeaders();
-        headers.add("Access-Control-Allow-Origin", "*");
-        headers.add("Access-Control-Allow-Methods", "GET,POST");
-        headers.add("Access-Control-Max-Age", "3600");
-        headers.add("Access-Control-Allow-Headers", HEADER_CONTENT_TYPE);
-    }
 }

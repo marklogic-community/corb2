@@ -92,7 +92,7 @@ public class Manager extends AbstractManager implements Closeable {
     protected transient PausableThreadPoolExecutor pool;
     protected transient Monitor monitor;
     protected transient JobServer jobServer = null;
-    protected UUID jobId = null;
+    protected String jobId = null;
     protected JobStats jobStats = null;
     protected long startMillis;
     protected long transformStartMillis;
@@ -545,8 +545,10 @@ public class Manager extends AbstractManager implements Closeable {
     }
 
     public int run() throws Exception {
+        if (jobId == null) {
+            jobId = UUID.randomUUID().toString();
+        }
         startJobServer();
-        jobId = UUID.randomUUID();
         jobStats = new JobStats(this);
         scheduleJobMetrics();
 
@@ -595,12 +597,15 @@ public class Manager extends AbstractManager implements Closeable {
 
     private void startJobServer() throws IOException {
         if (!options.getJobServerPortsToChoose().isEmpty() && jobServer == null) {
-
-            jobServer = JobServer.create(options.getJobServerPortsToChoose(), this);
+            setJobServer(JobServer.create(options.getJobServerPortsToChoose(), this));
             jobServer.start();
-
-            options.setJobServerPort(jobServer.getAddress().getPort());
         }
+    }
+
+    protected void setJobServer(JobServer jobServer) {
+        this.jobServer = jobServer;
+        options.setJobServerPort(jobServer.getAddress().getPort());
+        jobStats = new JobStats(this);
     }
 
     private void stopJobServer() {

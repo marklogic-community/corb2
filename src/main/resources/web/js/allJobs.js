@@ -2,8 +2,10 @@ var app = angular.module("dashboard",[]);
 app.controller("mainCtrl", ["$scope", "$http","$interval",
     function($scope, $http, $interval) {
 
-        var servicePath = "/stats";
+        var metricsPath = "/metrics";
         var host = location.hostname || "localhost";
+        var port = location.port;
+        var promises = {};
 
         $scope.availableServers = [];
         $scope.availableServerData = [];
@@ -11,6 +13,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         $scope.pauseButtonStyle = {};
         $scope.threadCounts = {};
         $scope.allThreadCounts = [];
+
         for (var i =1; i <= 64; i++) {
             $scope.allThreadCounts.push(i);
         }
@@ -22,16 +25,16 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             } else {
                 reqStr += "pause";
             }
-            $http.post("http://" + job.host + ":" + job.port + servicePath + "?" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}}).then(loadData, handleError);
+            $http.post("http://" + job.host + ":" + job.port + "/" + job.id + metricsPath + "?" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}}).then(loadData, handleError);
         };
 
         $scope.updateThreadCount = function(job){
             var reqStr = "thread-count=" + $scope.threadCounts[job.id];
-            $http.post("http://" + job.host + ":" + job.port + servicePath + "?" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}}).then(loadData, handleError);
+            $http.post("http://" + job.host + ":" + job.port + "/" + job.id + metricsPath + "?" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}}).then(loadData, handleError);
         };
 
         $scope.openJob = function(job){
-            window.open("http://" + job.host + ":" + job.port, "target=_blank");
+            window.open("http://" + job.host + ":" + job.port + "/" + job.id , "target=_blank");
         };
 
         var pad = function (n, z) {
@@ -49,38 +52,47 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             return pad(hrs) + ":" + pad(mins) + ":" + pad(secs);
         };
 
-        var handleError = function (error, status){
-            if (status === "404") {
-                $interval.cancel(promise);
-                //console.log("host " + host + " port " + port + " not open");
+        var isNumeric = function isNumeric(value) {
+            return !isNaN(value - parseFloat(value));
+        };
+
+        var handleError = function (response){
+
+            if (response.status === "404" || response.status === -1) {
+                $interval.cancel(promises[response.config.url]);
             }
         };
 
         var loadData = function(response) {
             $scope.isLoading = false;
-
-            var job = response.data.job;
-            var oldData = $scope.availableServers[job.host + ":" + job.port];
-            $scope.availableServers[job.host + ":" + job.port] = (job);
-            if (job.paused === true) {
-                $scope.pauseButtonText[job.id] = "Resume Corb Job";
-                $scope.pauseButtonStyle[job.id] = "btn-info";
-            } else {
-                $scope.pauseButtonText[job.id] = "Pause Corb Job";
-                $scope.pauseButtonStyle[job.id] = "btn-success";
-            }
-            $scope.threadCounts[job.id] ? null : $scope.threadCounts[job.id] = job.currentThreadCount;
-            for (var i in $scope.availableServerData) {
-                if (oldData === $scope.availableServerData[i]) {
-                    $scope.availableServerData.splice(i, 1);
+            //ensure that this works with an array or single job object
+            var jobs = [].concat(response.data);
+            for (jobIndex in jobs) {
+                var job = jobs[jobIndex].job;
+                var oldData = $scope.availableServers[job.id];
+                $scope.availableServers[job.id] = (job);
+                if (job.paused === true) {
+                    $scope.pauseButtonText[job.id] = "Resume Corb Job";
+                    $scope.pauseButtonStyle[job.id] = "btn-info";
+                } else {
+                    $scope.pauseButtonText[job.id] = "Pause Corb Job";
+                    $scope.pauseButtonStyle[job.id] = "btn-success";
                 }
+                $scope.threadCounts[job.id] ? null : $scope.threadCounts[job.id] = job.currentThreadCount;
+                for (var i in $scope.availableServerData) {
+                    if (oldData === $scope.availableServerData[i]) {
+                        $scope.availableServerData.splice(i, 1);
+                    }
+                }
+                $scope.availableServerData.push(job);
             }
-            $scope.availableServerData.push(job);
         };
 
         var invokeService = function(host, port) {
-            var promise = $interval(function() {
-                $http.get("http://" + host + ":" + port + servicePath).then(loadData, handleError);
+            var metricsUrl = "http://" + host + ":" + port + metricsPath
+            $http.get(metricsUrl).then(loadData, handleError);
+            promises[metricsUrl] = $interval(function() {
+                $http.get(metricsUrl).then(loadData, handleError);
             }, 5000);
         };
 
@@ -97,11 +109,17 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
                     }
                     // otherwise just the specific port number
                 } else {
-                    hostData.push([host, portToken]);
+                    if (isNumeric(portToken)) {
+                        hostData.push([host, portToken]);
+                    }
                 }
             }
+            // See if there are any jobs running on other ports
             for (var index in hostData) {
                 invokeService(hostData[index][0], hostData[index][1]);
             }
         };
+
+        //See if there are any jobs running on this webserver
+        invokeService(host, port);
     }]);

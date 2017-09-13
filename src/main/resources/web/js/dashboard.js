@@ -1,10 +1,9 @@
 var app = angular.module("dashboard",[]);
 app.controller("mainCtrl", ["$scope", "$http","$interval",
     function($scope, $http, $interval) {
-        var host = location.hostname || "localhost";
-        var port = location.port;
-        var servicePath = "/stats";
-        var serviceUrl = "http://" + host + ":" + port + servicePath;
+
+        var serviceUrl = location.href + "/metrics";
+        var promise;
 
         var pad = function(n, z) {
             z = z || 2;
@@ -22,13 +21,14 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
 
             return pad(hrs) + ":" + pad(mins) + ":" + pad(secs) ;
         };
-        var promise = $interval(function() {
+
+        promise = $interval(function() {
             var concise = isNaN(+$scope.totalNumberOfTasks) && typeof $scope.job.totalNumberOfTasks === "undefined" ? "" : "?concise";
-            $http.get(servicePath + concise).then(loadData, handleError);
+            $http.get(serviceUrl + concise).then(loadData, handleError);
         }, 5000);
 
         var handleError = function (error, status) {
-            if (status === "404") {
+            if (status === "404" || status === -1) {
                 $interval.cancel(promise);
                 $scope.allDone = 100;
                 $scope.successPercent = 0;
@@ -58,7 +58,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
                 $scope.urisLoadTimeInMillis = job.urisLoadTimeInMillis;
                 $scope.totalNumberOfTasks = job.totalNumberOfTasks;
             }
-            if (job.paused === "true") {
+            if (job.paused === true) {
                 $scope.pauseButtonText = "Resume Corb Job";
                 $scope.pauseButtonStyle = "btn-info";
             } else {
@@ -89,5 +89,8 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             $http.post(serviceUrl + "?concise=true" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}}).then(loadData);
         };
         $scope.updateThreadsButtonStyle = "btn-primary";
+
+        //Start polling for job stats updates
         $http.get(serviceUrl).then(loadData, handleError);
+
     }]);

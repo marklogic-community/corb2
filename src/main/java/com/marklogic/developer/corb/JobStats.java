@@ -53,8 +53,8 @@ public class JobStats extends BaseMonitor {
     private static final String URI = "uri";
     private static final String JOB_ID = "id";
     private static final String JOB_NAME = "name";
-    private static final String JOB_ROOT = "job";
-    private static final String DEF_NS = "http://marklogic.github.io/corb/";
+    public static final String JOB_ROOT = "job";
+    public static final String CORB_NS = "http://marklogic.github.io/corb/";
     private static final String LONG_RUNNING_URIS = "slowTransactions";
     private static final String FAILED_URIS = "failedTransactions";
     private static final String URIS_LOAD_TIME = "urisLoadTimeInMillis";
@@ -327,7 +327,7 @@ public class JobStats extends BaseMonitor {
                 .append(xmlNode(METRICS_TIMESTAMP, LocalDateTime.now().format(DATE_FORMATTER)))
                 .append(concise ? "" : xmlNodeArray(FAILED_URIS, URI, failedUris))
                 .append(concise ? "" : xmlNodeRanks(LONG_RUNNING_URIS, longRunningUris));
-        return xmlNode(JOB_ROOT, strBuff.toString(), DEF_NS);
+        return xmlNode(JOB_ROOT, strBuff.toString(), CORB_NS);
     }
 
     public String toJSONString() {

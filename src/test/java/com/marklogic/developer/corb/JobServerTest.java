@@ -48,7 +48,7 @@ public class JobServerTest {
             assertNotNull(content);
 
             // ensure that base path (without extenstion) gets a response
-            url = new URL("http://localhost:" + port +  server.MONITOR_PATH);
+            url = new URL("http://localhost:" + port +  server.METRICS_PATH);
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             content = IOUtils.toByteArray(conn.getInputStream());
@@ -83,7 +83,7 @@ public class JobServerTest {
         server.logUsage();
         server.stop(0);
         List<LogRecord> records = testLogger.getLogRecords();
-        assertEquals(4, records.size());
+        assertEquals(5, records.size());
     }
 
     @Test
@@ -93,6 +93,6 @@ public class JobServerTest {
         server.logUsage();
         server.stop(0);
         List<LogRecord> records = testLogger.getLogRecords();
-        assertEquals(6, records.size());
+        assertEquals(5, records.size());
     }
 }

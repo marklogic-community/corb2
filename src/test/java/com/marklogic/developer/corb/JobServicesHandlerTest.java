@@ -23,7 +23,7 @@ public class JobServicesHandlerTest {
     public void handle() throws Exception {
         Headers headers = new Headers();
         HttpExchange exchange = mock(HttpExchange.class);
-        when(exchange.getRequestURI()).thenReturn(URI.create(""));
+        when(exchange.getRequestURI()).thenReturn(URI.create(JobServer.METRICS_PATH));
         when(exchange.getRequestMethod()).thenReturn("GET");
         when(exchange.getResponseHeaders()).thenReturn(headers);
         OutputStream out = new ByteArrayOutputStream();
@@ -40,7 +40,7 @@ public class JobServicesHandlerTest {
     public void handlePost() throws Exception {
         Headers headers = new Headers();
         HttpExchange exchange = mock(HttpExchange.class);
-        when(exchange.getRequestURI()).thenReturn(URI.create(""));
+        when(exchange.getRequestURI()).thenReturn(URI.create(JobServer.METRICS_PATH));
         when(exchange.getRequestMethod()).thenReturn("POST");
         when(exchange.getResponseHeaders()).thenReturn(headers);
         OutputStream out = new ByteArrayOutputStream();
@@ -76,7 +76,6 @@ public class JobServicesHandlerTest {
 
     @Test
     public void writeMetricsOut() throws Exception {
-        int xssHeaderCount = 4;
         Manager manager = new Manager();
         manager.jobStats = new JobStats(manager);
         JobServicesHandler handler = new JobServicesHandler(manager);
@@ -87,16 +86,16 @@ public class JobServicesHandlerTest {
         when(exchange.getResponseHeaders()).thenReturn(headers);
         when(exchange.getResponseBody()).thenReturn(out);
 
-        handler.writeMetricsOut(exchange, params);
-        assertEquals(xssHeaderCount + 1, headers.size());
-        assertEquals(1, headers.get(JobServicesHandler.HEADER_CONTENT_TYPE).size());
-        assertTrue(headers.get(JobServicesHandler.HEADER_CONTENT_TYPE).contains("application/json"));
+        handler.writeMetricsOut(exchange, params, manager);
+        assertEquals(1, headers.size());
+        assertEquals(1, headers.get(JobServer.HEADER_CONTENT_TYPE).size());
+        assertTrue(headers.get(JobServer.HEADER_CONTENT_TYPE).contains("application/json"));
 
         params.put(JobServicesHandler.PARAM_FORMAT, "xml");
-        handler.writeMetricsOut(exchange, params);
-        assertEquals(xssHeaderCount + 1, headers.size());
-        assertEquals(2, headers.get(JobServicesHandler.HEADER_CONTENT_TYPE).size());
-        assertTrue(headers.get(JobServicesHandler.HEADER_CONTENT_TYPE).contains("application/xml"));
+        handler.writeMetricsOut(exchange, params, manager);
+        assertEquals( 1, headers.size());
+        assertEquals(2, headers.get(JobServer.HEADER_CONTENT_TYPE).size());
+        assertTrue(headers.get(JobServer.HEADER_CONTENT_TYPE).contains("application/xml"));
     }
 
     @Test
@@ -157,7 +156,7 @@ public class JobServicesHandlerTest {
         JobServicesHandler handler = new JobServicesHandler(manager);
         parameters.put(Options.COMMAND, "pause");
 
-        assertEquals("pause", handler.getParameter(parameters, Options.COMMAND));
+        assertEquals("pause", JobServer.getParameter(parameters, Options.COMMAND));
     }
 
     @Test
@@ -166,7 +165,7 @@ public class JobServicesHandlerTest {
         Manager manager = new Manager();
         JobServicesHandler handler = new JobServicesHandler(manager);
 
-        assertNull(handler.getParameter(parameters, "doesNotExist"));
+        assertNull(JobServer.getParameter(parameters, "doesNotExist"));
     }
 
     @Test
@@ -175,9 +174,9 @@ public class JobServicesHandlerTest {
         parameters.put(Options.THREAD_COUNT, Integer.toString(8));
         Manager manager = new Manager();
         JobServicesHandler handler = new JobServicesHandler(manager);
-        assertEquals(Integer.toString(8), handler.getParameter(parameters, Options.THREAD_COUNT));
+        assertEquals(Integer.toString(8), JobServer.getParameter(parameters, Options.THREAD_COUNT));
 
         parameters.put(Options.THREAD_COUNT.toLowerCase(Locale.ENGLISH), Integer.toString(4));
-        assertEquals(Integer.toString(4), handler.getParameter(parameters, Options.THREAD_COUNT));
+        assertEquals(Integer.toString(4), JobServer.getParameter(parameters, Options.THREAD_COUNT));
     }
 }

@@ -8,8 +8,8 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <title>Job Dashboard</title>
-    <link rel="stylesheet" href="css/bootstrap.min.css" >
-    <link href="css/dashboard.css" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/dashboard.css" rel="stylesheet">
   </head>
   <body ng-app="dashboard" ng-controller="mainCtrl">
     <div class="container-fluid">
@@ -19,12 +19,14 @@
             <div class="panel-heading">
               <h3>Job Dashboard</h3>
             </div>
+
             <div class="panel">
                 <form name="portForm">
-                    <label for="ports">Port Ranges:</label> <input id="ports" ng-model="ports" ng-change="parsePorts()" ng-model-options='{ debounce: 1500 }' ng-pattern="/^(\d+[-,\s]?)*$/" placeholder="i.e. 8010-8050,9000">
+                    <label for="ports">Port Ranges:</label> <input id="ports" ng-model="ports" ng-change="parsePorts()" ng-model-options='{ debounce: 1500 }' ng-pattern="/^(\d+[-,\s]?)*$/" />
                     <span ng-show="portForm.ports.$touched && portForm.ports.$invalid">Invalid format. Specify port ranges with dashes, or a list of ports with commas. i.e. 8005-8010,9001,9002</span>
                 </form>
             </div>
+
             <div class="table-responsive">
               <table class="table table-striped table-bordered table-hover">
                 <thead>
@@ -46,7 +48,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr ng-repeat="i in availableServerData">
+                  <tr ng-repeat="i in availableServerData | orderBy : ['startTime', 'port', 'jobId']">
                     <td><a ng-click="openJob(i)" target = "_blank">{{i.startTime}}</a></td>
                     <td>{{i.averageTransactionsPerSecond}}</td>
                     <td>{{i.currentTransactionsPerSecond}}</td>
@@ -69,9 +71,9 @@
         </div>
       </div>
     </div>
-    <script src="js/jquery-3.1.1.slim.min.js"></script>
-    <script src="js/angular.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/allJobs.js"></script>
+    <script src="/js/jquery-3.1.1.slim.min.js"></script>
+    <script src="/js/angular.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/allJobs.js"></script>
   </body>
 </html>

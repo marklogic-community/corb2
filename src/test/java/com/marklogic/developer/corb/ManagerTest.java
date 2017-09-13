@@ -1415,7 +1415,7 @@ public class ManagerTest {
         properties.setProperty(Options.METRICS_LOG_LEVEL, ManagerTest.LOG_LEVEL_INFO);
 
 
-        if(ManagerTest.EXPORT_FILE_DIR!=null) {
+        if (ManagerTest.EXPORT_FILE_DIR != null) {
         	properties.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
         }
         properties.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
