@@ -135,7 +135,7 @@ public class JobServer {
                 output.write(response.getBytes());
             } else {
                 httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
-                httpExchange.getResponseHeaders().set("Content-Type", getContentType(path));
+                httpExchange.getResponseHeaders().set(HEADER_CONTENT_TYPE, getContentType(path));
 
                 final byte[] buffer = new byte[0x10000];
                 int count = 0;
