@@ -152,8 +152,6 @@ public class JobServicesHandlerTest {
     public void getParameter() {
         Map<String, String> parameters = new HashMap<>(2);
         parameters.put(Options.THREAD_COUNT, Integer.toString(8));
-        Manager manager = new Manager();
-        JobServicesHandler handler = new JobServicesHandler(manager);
         parameters.put(Options.COMMAND, "pause");
 
         assertEquals("pause", JobServer.getParameter(parameters, Options.COMMAND));
