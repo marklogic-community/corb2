@@ -89,7 +89,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         };
 
         var invokeService = function(host, port) {
-            var metricsUrl = "http://" + host + ":" + port + metricsPath
+            var metricsUrl = "http://" + host + ":" + port + metricsPath;
             $http.get(metricsUrl).then(loadData, handleError);
             promises[metricsUrl] = $interval(function() {
                 $http.get(metricsUrl).then(loadData, handleError);
