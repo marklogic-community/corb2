@@ -13,6 +13,16 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         $scope.pauseButtonStyle = {};
         $scope.threadCounts = {};
         $scope.allThreadCounts = [];
+        $scope.external = [ {host: host, port: port} ];
+
+        $scope.addExternal = function() {
+            var newItemNo = $scope.external.length;
+            $scope.external.push( {host:null, port:null} );
+        };
+
+        $scope.removeExternal = function(i) {
+            $scope.external.splice(i, 1);
+        };
 
         for (var i =1; i <= 64; i++) {
             $scope.allThreadCounts.push(i);
@@ -96,27 +106,34 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             }, 5000);
         };
 
-        $scope.parsePorts = function() {
+        $scope.parseExternalHostAndPorts = function($i) {
             var hostData= [];
-            var items = $scope.ports.split(",");
-            for (var i = 0, len = items.length; i < len; i++) {
-                var portToken = items[i];
-                // when there is a dash, process the range of values (inclusive)
-                if (portToken.includes("-")) {
-                    var range = portToken.split("-");
-                    for (var port = range[0]; port <= range[1]; port++) {
-                        hostData.push([host, port]);
-                    }
-                    // otherwise just the specific port number
-                } else {
-                    if (isNumeric(portToken)) {
-                        hostData.push([host, portToken]);
+            var externalHost = $scope.external[$i].host;
+            var externalPorts = $scope.external[$i].port;
+            if (externalHost && externalPorts) {
+
+                var matches = externalHost.match("^(https?\\:)?\\/?\\/?(([^:\\/?#]*)(?:\\:([0-9]+))?)([\\/]{0,1}[^?#]*)(\\?[^#]*|)(#.*|)$");
+                externalHost = matches[3];
+                var items = externalPorts.split(",");
+                for (var i = 0, len = items.length; i < len; i++) {
+                    var portToken = items[i];
+                    // when there is a dash, process the range of values (inclusive)
+                    if (portToken.includes("-")) {
+                        var range = portToken.split("-");
+                        for (var port = range[0]; port <= range[1]; port++) {
+                            hostData.push([externalHost, port]);
+                        }
+                        // otherwise just the specific port number
+                    } else {
+                        if (isNumeric(portToken)) {
+                            hostData.push([externalHost, portToken]);
+                        }
                     }
                 }
-            }
-            // See if there are any jobs running on other ports
-            for (var index in hostData) {
-                invokeService(hostData[index][0], hostData[index][1]);
+                // See if there are any jobs running on other ports
+                for (var index in hostData) {
+                    invokeService(hostData[index][0], hostData[index][1]);
+                }
             }
         };
 

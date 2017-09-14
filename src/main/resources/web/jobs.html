@@ -21,9 +21,29 @@
             </div>
 
             <div class="panel">
-                <form name="portForm">
-                    <label for="ports">Port Ranges:</label> <input id="ports" ng-model="ports" ng-change="parsePorts()" ng-model-options='{ debounce: 1500 }' ng-pattern="/^(\d+[-,\s]?)*$/" />
-                    <span ng-show="portForm.ports.$touched && portForm.ports.$invalid">Invalid format. Specify port ranges with dashes, or a list of ports with commas. i.e. 8005-8010,9001,9002</span>
+                <form name="externalForm" class="form-inline" novalidate>
+                    <div ng-repeat="e in external">
+                        <ng-form name="portForm">
+                            <div class="input-group">
+                                <span class="input-group-addon">Host: </span>
+                                <input class="form-control" ng-readonly="$first" ng-model="e.host" ng-change="parseExternalHostAndPorts($index)" ng-model-options="'{ debounce: 5000 }'" ng-required="true" required/>
+                            </div>
+
+                            <div class="input-group">
+                                <span class="input-group-addon">Port Range: </span>
+                                <input class="form-control" name="port" ng-readonly="$first" ng-model="e.port" ng-change="parseExternalHostAndPorts($index)" ng-model-options='{ debounce: 2000 }' ng-pattern="/^(\d+[-,\s]?)*$/" ng-required="true" required/>
+
+                                <span class="alert alert-danger" ng-show="portForm.port.$touched && portForm.port.$invalid">Invalid format. Specify port ranges with dashes, or a list of ports with commas. i.e. 8005-8010,9001,9002</span>
+                            </div>
+
+                            <button ng-if="$first === false" ng-click="removeExternal($index)">
+                                <span class="glyphicon glyphicon-minus"></span> REMOVE
+                            </button>
+                        </ng-form>
+                    </div>
+                    <button ng-click="addExternal()">
+                        <span class="glyphicon glyphicon-plus"></span> ADD
+                    </button>
                 </form>
             </div>
 
