@@ -6,6 +6,46 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         var host = location.hostname || "localhost";
         var port = location.port;
         var promises = {};
+        var loadData = function(response) {
+            $scope.isLoading = false;
+            //ensure that this works with an array or single job object
+            var jobs = [].concat(response.data);
+            for (var jobIndex in jobs) {
+                var job = jobs[jobIndex].job;
+                var oldData = $scope.availableServers[job.id];
+                $scope.availableServers[job.id] = (job);
+                if (job.paused === true) {
+                    $scope.pauseButtonText[job.id] = "Resume Corb Job";
+                    $scope.pauseButtonStyle[job.id] = "btn-info";
+                } else {
+                    $scope.pauseButtonText[job.id] = "Pause Corb Job";
+                    $scope.pauseButtonStyle[job.id] = "btn-success";
+                }
+                $scope.threadCounts[job.id] ? null : $scope.threadCounts[job.id] = job.currentThreadCount;
+                for (var i in $scope.availableServerData) {
+                    if (oldData === $scope.availableServerData[i]) {
+                        $scope.availableServerData.splice(i, 1);
+                    }
+                }
+                $scope.availableServerData.push(job);
+            }
+        };
+
+        var pad = function (n, z) {
+            z = z || 2;
+            return ("00" + n).slice(-z);
+        };
+
+        var isNumeric = function isNumeric(value) {
+            return !isNaN(value - parseFloat(value));
+        };
+
+        var handleError = function (response){
+
+            if (response.status === "404" || response.status === -1) {
+                $interval.cancel(promises[response.config.url]);
+            }
+        };
 
         $scope.availableServers = [];
         $scope.availableServerData = [];
@@ -47,11 +87,6 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             window.open("http://" + job.host + ":" + job.port + "/" + job.id , "target=_blank");
         };
 
-        var pad = function (n, z) {
-            z = z || 2;
-            return ("00" + n).slice(-z);
-        };
-
         $scope.msToTime = function(s) {
             var ms = s % 1000;
             s = (s - ms) / 1000;
@@ -61,43 +96,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             var hrs = (s - mins) / 60;
             return pad(hrs) + ":" + pad(mins) + ":" + pad(secs);
         };
-
-        var isNumeric = function isNumeric(value) {
-            return !isNaN(value - parseFloat(value));
-        };
-
-        var handleError = function (response){
-
-            if (response.status === "404" || response.status === -1) {
-                $interval.cancel(promises[response.config.url]);
-            }
-        };
-
-        var loadData = function(response) {
-            $scope.isLoading = false;
-            //ensure that this works with an array or single job object
-            var jobs = [].concat(response.data);
-            for (var jobIndex in jobs) {
-                var job = jobs[jobIndex].job;
-                var oldData = $scope.availableServers[job.id];
-                $scope.availableServers[job.id] = (job);
-                if (job.paused === true) {
-                    $scope.pauseButtonText[job.id] = "Resume Corb Job";
-                    $scope.pauseButtonStyle[job.id] = "btn-info";
-                } else {
-                    $scope.pauseButtonText[job.id] = "Pause Corb Job";
-                    $scope.pauseButtonStyle[job.id] = "btn-success";
-                }
-                $scope.threadCounts[job.id] ? null : $scope.threadCounts[job.id] = job.currentThreadCount;
-                for (var i in $scope.availableServerData) {
-                    if (oldData === $scope.availableServerData[i]) {
-                        $scope.availableServerData.splice(i, 1);
-                    }
-                }
-                $scope.availableServerData.push(job);
-            }
-        };
-
+        
         var invokeService = function(host, port) {
             var metricsUrl = "http://" + host + ":" + port + metricsPath;
             $http.get(metricsUrl).then(loadData, handleError);
