@@ -96,7 +96,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             var hrs = (s - mins) / 60;
             return pad(hrs) + ":" + pad(mins) + ":" + pad(secs);
         };
-        
+
         var invokeService = function(host, port) {
             var metricsUrl = "http://" + host + ":" + port + metricsPath;
             $http.get(metricsUrl).then(loadData, handleError);
