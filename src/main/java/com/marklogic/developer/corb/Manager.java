@@ -173,7 +173,6 @@ public class Manager extends AbstractManager implements Closeable {
         EXIT_CODE_NO_URIS = NumberUtils.toInt(getOption(Options.EXIT_CODE_NO_URIS));
 
         scheduledExecutor = Executors.newScheduledThreadPool(2);
-        scheduleCommandFileWatcher();
     }
 
     protected void scheduleCommandFileWatcher() {
@@ -548,6 +547,7 @@ public class Manager extends AbstractManager implements Closeable {
         if (jobId == null) {
             jobId = UUID.randomUUID().toString();
         }
+        scheduleCommandFileWatcher();
         startJobServer();
         jobStats = new JobStats(this);
         scheduleJobMetrics();
@@ -605,7 +605,9 @@ public class Manager extends AbstractManager implements Closeable {
     protected void setJobServer(JobServer jobServer) {
         this.jobServer = jobServer;
         options.setJobServerPort(jobServer.getAddress().getPort());
-        jobStats = new JobStats(this);
+        if (jobStats == null) {
+            jobStats = new JobStats(this);
+        }
     }
 
     private void stopJobServer() {

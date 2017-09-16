@@ -24,7 +24,7 @@
 
               <div class="col-xs-7 col-sm-7">
                   <div class="progress">
-                    <div class="progress-bar progress-bar-success progress-bar-striped active"
+                    <div class="progress-bar progress-bar-success progress-bar-striped {{jobStatus === 'Completed' ? '' : 'active'}}"
                       role="progressbar" style="width:{{successPercent}}%"
                       aria-valuenow="{{successPercent}}" aria-valuemin="0" aria-valuemax="100"
                       data-placement="bottom" data-toggle="tooltip" title="{{successTotals}}"
@@ -43,7 +43,7 @@
                     </div>
                   </div>
               </div>
-              <div class="col-xs-1 col-sm-1 ">
+              <div ng-if="jobStatus != 'Completed'" class="col-xs-1 col-sm-1 ">
                 <select class="custom-select" ng-options="i for i in allThreadCounts" ng-model="threadCount" id="threadCount"></select>
               </div>
               <div class="col-xs-2 col-sm-2 ">

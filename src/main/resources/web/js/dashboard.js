@@ -21,22 +21,10 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
                 $scope.allDone = 100;
                 $scope.successPercent = 0;
                 $scope.failedPercent = 0;
-                $scope.pauseButtonText = "CORB Job Completed";
-                $scope.pauseButtonStyle = "disabled";
-                $scope.updateThreadsButtonStyle = "disabled";
             }
-        };
-
-        // use to reflect the current state returned from updates, and an immediate change in the UI when actions taken
-        var updatePausedState = function(pausedState) {
-            $scope.job.paused = pausedState;
-            if (pausedState) {
-                $scope.pauseButtonText = "Resume Corb Job";
-                $scope.pauseButtonStyle = "btn-info";
-            } else {
-                $scope.pauseButtonText = "Pause Corb Job";
-                $scope.pauseButtonStyle = "btn-success";
-            }
+            $scope.pauseButtonText = "Completed";
+            $scope.pauseButtonStyle = "disabled";
+            $scope.updateThreadsButtonStyle = "disabled";
         };
 
         $scope.msToTime = function(s) {
@@ -55,8 +43,6 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         };
 
         var loadData = function(response) {
-            $scope.isLoading = false;
-
             var job = response.data.job;
             $scope.job = job;
             if (job.userProvidedOptions) {
@@ -69,7 +55,15 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
                 $scope.preBatchRunTimeInMillis = job.preBatchRunTimeInMillis;
                 $scope.totalNumberOfTasks = job.totalNumberOfTasks;
             }
-            updatePausedState(job.paused);
+
+            if ($scope.job.paused) {
+                $scope.pauseButtonText = "Resume";
+                $scope.pauseButtonStyle = "glyphicon glyphicon-play btn btn-info";
+            } else {
+                $scope.pauseButtonText = "Pause";
+                $scope.pauseButtonStyle = "glyphicon glyphicon-pause btn-success";
+            }
+
             $scope.successPercent = (job.numberOfSucceededTasks && job.numberOfSucceededTasks > 0 ? ((job.numberOfSucceededTasks / $scope.totalNumberOfTasks) * 100) : 0);
             $scope.successPercent = Math.round($scope.successPercent * 100) / 100;
             $scope.successTotals = (job.numberOfSucceededTasks ? job.numberOfSucceededTasks : 0) + " out of " + $scope.totalNumberOfTasks + " succeeded.";
@@ -78,6 +72,14 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             $scope.failedTotals = (job.numberOfFailedTasks ? job.numberOfFailedTasks : 0) + " out of " + $scope.totalNumberOfTasks + " failed.";
             $scope.jobDuration = (job.totalRunTimeInMillis && job.totalRunTimeInMillis > 0 ) ? $scope.msToTime(job.totalRunTimeInMillis) : "Not Running";
             $scope.averageTransactionTimeInMillis =  Math.round(job.averageTransactionTimeInMillis * 100) / 100;
+            if (job.numberOfSucceededTasks+ job.numberOfFailedTasks >= $scope.totalNumberOfTasks) {
+                $scope.jobStatus = "Completed"
+            }
+            if ($scope.jobStatus === "Completed") {
+                $scope.pauseButtonText = $scope.jobStatus;
+                $scope.pauseButtonStyle = "disabled";
+                $scope.updateThreadsButtonStyle = "disabled";
+            }
         };
 
         $scope.pauseResumeButtonClick = function(){
@@ -87,7 +89,6 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             } else {
                 reqStr += "pause";
             }
-            updatePausedState(!$scope.job.paused);
             $http.post(serviceUrl + "?concise=true" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}}).then(loadData);
         };
 

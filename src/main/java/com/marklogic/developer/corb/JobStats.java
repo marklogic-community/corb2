@@ -39,6 +39,7 @@ public class JobStats extends BaseMonitor {
     private static final String METRICS_DB_NAME_PARAM = "dbName";
     private static final String METRICS_URI_ROOT_PARAM = "uriRoot";
     protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\";\n";
+    private static final String XDMP_LOG_FORMAT = "xdmp:log('%1$s','%2$s')";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
     private static final String START_TIME = "startTime";
     private static final String OPEN_SQUARE = "[";
@@ -88,7 +89,7 @@ public class JobStats extends BaseMonitor {
     private Long numberOfFailedTasks = 0l;
     private Long numberOfSucceededTasks = 0l;
     private Double averageTransactionTime = 0.0d;
-    private Long urisLoadTime = null;
+    private Long urisLoadTime = -1l;
     private Long preBatchRunTime = -1l;
     private Long postBatchRunTime = -1l;
     private Long initTaskRunTime = -1l;
@@ -99,27 +100,20 @@ public class JobStats extends BaseMonitor {
     private Map<String, Long> longRunningUris = new HashMap<>();
     private List<String> failedUris = null;
     private String uri = null;
-    private String paused = null;
+    private boolean paused;
     private Long currentThreadCount = 0l;
-    private Long jobServerPort = 0l;
+    private Long jobServerPort = -1l;
 
-    private TransformOptions options = null;
     private ContentSource contentSource;
+    private TransformOptions options;
 
     private static final Logger LOG = Logger.getLogger(JobStats.class.getName());
 
     public JobStats(Manager manager) {
         super(manager);
-        options = manager.getOptions();
+        options = manager.options;
         contentSource = manager.getContentSource();
-
-        if (options != null) {
-            jobName = options.getJobName();
-            jobServerPort = options.getJobServerPort().longValue();
-        }
-
         host = getHost();
-
         jobRunLocation = System.getProperty("user.dir");
         userProvidedOptions = manager.getUserProvidedOptions();
     }
@@ -143,8 +137,14 @@ public class JobStats extends BaseMonitor {
         synchronized (this) {
 
             if (manager != null && manager.monitor != null) {
-                jobId = manager.jobId != null ? manager.jobId.toString() : "";
-                paused = Boolean.toString(manager.isPaused());
+                jobId = manager.jobId;
+                paused = manager.isPaused();
+
+                if (options != null) {
+                    jobName = options.getJobName();
+                    jobServerPort = options.getJobServerPort().longValue();
+                }
+
                 startTime = epochMillisAsFormattedDateString(manager.getStartMillis());
 
                 taskCount = manager.monitor.getTaskCount();
@@ -209,10 +209,10 @@ public class JobStats extends BaseMonitor {
                 String logLevel = options.getLogMetricsToServerLog();
                 if (options.isMetricsLoggingEnabled(logLevel)) {
                     String xquery = XQUERY_VERSION_ML
-                            + ((message != null)
-                                    ? "xdmp:log(\"" + message + "\",'" + logLevel.toLowerCase() + "'),"
+                            + (message != null
+                                    ? String.format(XDMP_LOG_FORMAT, message, logLevel.toLowerCase()) + ","
                                     : "")
-                            + "xdmp:log('" + metrics + "\','" + logLevel.toLowerCase() + "')";
+                            + String.format(XDMP_LOG_FORMAT, metrics, logLevel.toLowerCase());
 
                     AdhocQuery query = session.newAdhocQuery(xquery);
                     session.submitRequest(query);
@@ -318,7 +318,7 @@ public class JobStats extends BaseMonitor {
                 .append(xmlNode(NUMBER_OF_FAILED_TASKS, numberOfFailedTasks))
                 .append(xmlNode(NUMBER_OF_SUCCEEDED_TASKS, numberOfSucceededTasks))
                 .append(xmlNode(METRICS_DOC_URI, uri))
-                .append(xmlNode(PAUSED, paused))
+                .append(xmlNode(PAUSED, Boolean.toString(paused)))
                 .append(xmlNode(JOB_SERVER_PORT, jobServerPort))
                 .append(xmlNode(AVERAGE_TPS, avgTps > 0 ? formatTransactionsPerSecond(avgTps) : ""))
                 .append(xmlNode(CURRENT_TPS, currentTps > 0 ? formatTransactionsPerSecond(currentTps) : ""))
@@ -347,7 +347,7 @@ public class JobStats extends BaseMonitor {
 
             StringBuilder strBuff = new StringBuilder();
             Node root = doc.getDocumentElement();
-            strBuff.append("{\"").append(root.getNodeName()).append("\":{");
+            strBuff.append(OPEN_CURLY + "\"").append(root.getNodeName()).append("\"" + COLON + OPEN_CURLY);
             strBuff.append(getJson(root));
             strBuff.append("}}");
             return strBuff.toString();
