@@ -89,10 +89,10 @@ public class JobStats extends BaseMonitor {
     private Long numberOfSucceededTasks = 0l;
     private Double averageTransactionTime = 0.0d;
     private Long urisLoadTime = null;
-    private Long preBatchRunTime = 0l;
-    private Long postBatchRunTime = 0l;
-    private Long initTaskRunTime = 0l;
-    private Long totalRunTimeInMillis = 0l;
+    private Long preBatchRunTime = -1l;
+    private Long postBatchRunTime = -1l;
+    private Long initTaskRunTime = -1l;
+    private Long totalRunTimeInMillis = -1l;
     private String jobRunLocation = null;
     private String jobId = null;
     private String jobName = null;
