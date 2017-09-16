@@ -124,13 +124,16 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
                     long durationInMs = TimeUnit.MILLISECONDS.convert(taskTime, TimeUnit.NANOSECONDS);
 
                     topUriList.add(result, durationInMs);
-                    numSucceededUris++;
+                    synchronized (SYNC_OBJ) {
+                        numSucceededUris++;
+                    }
                 }
             }
         } catch (Exception e) {
             //Ignore
             LOG.log(Level.FINE, "Encountered an issue collecting result status", e);
         }
+        LOG.log(Level.FINE, String.format("succeeded: %s failed: %s ",numSucceededUris, numFailedUris));
     }
 
     public Map<String, Long> getTopUris() {
