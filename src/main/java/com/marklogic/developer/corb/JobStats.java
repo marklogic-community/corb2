@@ -266,7 +266,7 @@ public class JobStats extends BaseMonitor {
                     if (uri != null) {
                         this.uri = uri;
                     }
-                    session.close();
+                    
                     Thread.yield();// try to avoid thread starvation
                     seq.close();
                     Thread.yield();// try to avoid thread starvation
