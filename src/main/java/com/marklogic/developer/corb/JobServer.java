@@ -77,7 +77,7 @@ public class JobServer {
             String finalContentType = contentType;
             String managerStats = managers.stream()
                 .filter(manager -> manager.jobId != null)
-                .map((manager)-> {
+                .map(manager -> {
 
                     // In case the Manager was added prior to the jobId being assigned, create an HTTPContext now that it is available
                     String jobPath = HTTP_RESOURCE_PATH + manager.jobId;
