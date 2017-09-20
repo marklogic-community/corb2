@@ -14,47 +14,45 @@
   <body ng-app="dashboard" ng-controller="mainCtrl">
     <div class="container-fluid">
       <div class="row">
-        <div class="col-sm-9 col-md-10">
+        <div class="col-sm-9 col-md-9">
           <div class="panel panel-default">
             <div class="panel-heading">
               <h3>Job Status</h3>
             </div>
-
             <div class="row top-buffer">
-
-              <div class="col-xs-7 col-sm-7">
+              <div class="col-xs-8 col-sm-8">
                   <div class="progress">
-                    <div class="progress-bar progress-bar-success progress-bar-striped {{jobStatus === 'Completed' ? '' : 'active'}}"
+                    <div class="progress-bar progress-bar-success progress-bar-striped {{jobStatus === 'completed' ? '' : 'active'}}"
                       role="progressbar" style="width:{{successPercent}}%"
                       aria-valuenow="{{successPercent}}" aria-valuemin="0" aria-valuemax="100"
                       data-placement="bottom" data-toggle="tooltip" title="{{successTotals}}"
                     >
                         Success ({{successPercent | number : 2}}%)
                     </div>
-
-                    <div class="progress-bar progress-bar-danger progress-bar-striped active" role="progressbar" style="width:{{failedPercent}}%"
+                    <div class="progress-bar progress-bar-danger progress-bar-striped {{jobStatus === 'completed' ? '' : 'active'}}" role="progressbar" style="width:{{failedPercent}}%"
                       aria-valuenow="{{failedPercent}}" aria-valuemin="0" aria-valuemax="100"
                       data-placement="bottom" data-toggle="tooltip" title="{{failedTotals}}">
                         Failed ({{failedPercent | number : 2}}%)
                     </div>
+
                     <div class="progress-bar progress-bar-info" role="progressbar" style="width:{{allDone}}%"
                       aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
                         Job Completed. Please check the logs.
                     </div>
                   </div>
               </div>
-              <div ng-if="jobStatus != 'Completed'" class="col-xs-1 col-sm-1 ">
-                <select class="custom-select" ng-options="i for i in allThreadCounts" ng-model="threadCount" id="threadCount"></select>
+              <div class="col-xs-2 col-sm-2">
+                <button class="btn {{pauseButtonStyle}}" ng-click="pauseResumeButtonClick()">
+                    <md-icon ng-hide="loading" class="glyphicon {{i.paused ? 'glyphicon-play' : 'glyphicon-pause'}}"></md-icon>
+                    <md-icon ng-if="loading" class="glyphicon glyphicon-refresh"></md-icon>
+                    <span>{{pauseButtonText}}</span>
+                </button>
               </div>
-              <div class="col-xs-2 col-sm-2 ">
-                <button class="btn {{updateThreadsButtonStyle}}"
-                  data-loading-text="<i class='icon-spinner icon-spin icon-large'></i>"
-                  ng-click="updateThreadCount()">Update Thread #</button>
-              </div>
-              <div class="col-xs-2 col-sm-2 ">
-                <button class="btn {{pauseButtonStyle}}"
-                data-loading-text="<i class='icon-spinner icon-spin icon-large'></i>"
-                ng-click="pauseResumeButtonClick()">{{pauseButtonText}}</button>
+              <div class="col-xs-2 col-sm-2">
+                <ng-form>
+                  <label>Threads</label>
+                  <select class="custom-select" ng-options="i for i in allThreadCounts" ng-model="threadCount" ng-change="updateThreadCount()"></select>
+                </ng-form>
               </div>
             </div>
             <div class="row">
@@ -66,17 +64,17 @@
                       <div class="panel-body">
                           <dl>
                               <dt>Job Run Location</dt>
-                              <dd>{{job.runLocation}}</dd>
+                              <dd>{{::job.runLocation}}</dd>
                               <dt>Job Name</dt>
-                              <dd>{{job.name}}</dd>
+                              <dd>{{::job.name}}</dd>
                               <dt>Job ID</dt>
-                              <dd>{{job.id}}</dd>
+                              <dd>{{::job.id}}</dd>
                               <dt>Host</dt>
-                              <dd>{{job.host}}</dd>
+                              <dd>{{::job.host}}</dd>
                               <dt>Start Time</dt>
-                              <dd>{{job.startTime}}</dd>
+                              <dd>{{::job.startTime}}</dd>
                               <dt>Thread Count</dt>
-                              <dd>{{job.currentThreadCount}}</dd>
+                              <dd>{{::job.currentThreadCount}}</dd>
                           </dl>
                       </div>
                   </div>
@@ -89,13 +87,13 @@
                       <div class="panel-body">
                           <dl>
                               <dt>Total Number Of Tasks</dt>
-                              <dd>{{totalNumberOfTasks | number : 0}}</dd>
+                              <dd>{{::totalNumberOfTasks | number : 0}}</dd>
                               <dt>Number Of Failed Tasks</dt>
-                              <dd>{{job.numberOfFailedTasks | number : 0}} ({{failedPercent}}%)</dd>
+                              <dd>{{::job.numberOfFailedTasks | number : 0}} ({{failedPercent}}%)</dd>
                               <dt>Number Of Succeeded Tasks</dt>
-                              <dd>{{job.numberOfSucceededTasks | number : 0}} ({{successPercent}}%)</dd>
+                              <dd>{{::job.numberOfSucceededTasks | number : 0}} ({{successPercent}}%)</dd>
                               <dt>Job Duration</dt>
-                              <dd>{{jobDuration}}</dd>
+                              <dd>{{::jobDuration}}</dd>
                           </dl>
                       </div>
                   </div>
@@ -142,8 +140,8 @@
                       </thead>
                       <tbody>
                       <tr ng-repeat="(key,value) in userProvidedOptions">
-                          <td>{{key}}</td>
-                          <td>{{value}}</td>
+                          <td>{{::key}}</td>
+                          <td>{{::value}}</td>
                       </tr>
                       </tbody>
                     </table>

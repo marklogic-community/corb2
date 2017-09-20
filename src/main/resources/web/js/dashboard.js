@@ -1,3 +1,4 @@
+"use strict";
 var app = angular.module("dashboard",[]);
 app.controller("mainCtrl", ["$scope", "$http","$interval",
     function($scope, $http, $interval) {
@@ -9,11 +10,6 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             z = z || 2;
             return ("00" + n).slice(-z);
         };
-
-        promise = $interval(function() {
-            var concise = isNaN(+$scope.totalNumberOfTasks) && typeof $scope.job.totalNumberOfTasks === "undefined" ? "" : "?concise";
-            $http.get(serviceUrl + concise).then(loadData, handleError);
-        }, 5000);
 
         var handleError = function (error, status) {
             if (status === "404" || status === -1) {
@@ -42,28 +38,30 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
           }
         };
 
+        var scheduleUpdates = function() {
+            //Start polling for job stats updates
+            promise = $interval(function() {
+                var concise = isNaN(+$scope.totalNumberOfTasks) && typeof $scope.job.totalNumberOfTasks === "undefined" ? "" : "?concise";
+                $http.get(serviceUrl + concise).then(loadData, handleError);
+            }, 5000);
+        };
+
         var loadData = function(response) {
             var job = response.data.job;
             $scope.job = job;
+            $scope.loading = false;
+
             if (job.userProvidedOptions) {
                 $scope.userProvidedOptions = job.userProvidedOptions;//save this as this is fetched only once
             }
+
             if (typeof job.totalNumberOfTasks !== "undefined" && job.totalNumberOfTasks > 0) {
-                $scope.threadCount = job.currentThreadCount;
                 $scope.initTaskTimeInMillis = job.initTaskTimeInMillis;
                 $scope.urisLoadTimeInMillis = job.urisLoadTimeInMillis;
                 $scope.preBatchRunTimeInMillis = job.preBatchRunTimeInMillis;
                 $scope.totalNumberOfTasks = job.totalNumberOfTasks;
             }
-
-            if ($scope.job.paused) {
-                $scope.pauseButtonText = "Resume";
-                $scope.pauseButtonStyle = "glyphicon glyphicon-play btn btn-info";
-            } else {
-                $scope.pauseButtonText = "Pause";
-                $scope.pauseButtonStyle = "glyphicon glyphicon-pause btn-success";
-            }
-
+            $scope.threadCount ? null : $scope.threadCount = job.currentThreadCount;
             $scope.successPercent = (job.numberOfSucceededTasks && job.numberOfSucceededTasks > 0 ? ((job.numberOfSucceededTasks / $scope.totalNumberOfTasks) * 100) : 0);
             $scope.successPercent = Math.round($scope.successPercent * 100) / 100;
             $scope.successTotals = (job.numberOfSucceededTasks ? job.numberOfSucceededTasks : 0) + " out of " + $scope.totalNumberOfTasks + " succeeded.";
@@ -73,28 +71,42 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
             $scope.jobDuration = (job.totalRunTimeInMillis && job.totalRunTimeInMillis > 0 ) ? $scope.msToTime(job.totalRunTimeInMillis) : "Not Running";
             $scope.averageTransactionTimeInMillis =  Math.round(job.averageTransactionTimeInMillis * 100) / 100;
             if (job.numberOfSucceededTasks+ job.numberOfFailedTasks >= $scope.totalNumberOfTasks) {
-                $scope.jobStatus = "Completed"
-            }
-            if ($scope.jobStatus === "Completed") {
+                $scope.jobStatus = "completed";
                 $scope.pauseButtonText = $scope.jobStatus;
                 $scope.pauseButtonStyle = "disabled";
                 $scope.updateThreadsButtonStyle = "disabled";
+            } else if ($scope.job.paused) {
+                $scope.pauseButtonText = "resume";
+                $scope.pauseButtonStyle = "btn-info";
+            } else {
+                $scope.pauseButtonText = "pause";
+                $scope.pauseButtonStyle = "btn-success";
             }
         };
 
+        var handleCommandResponse = function(response) {
+            loadData(response);
+            scheduleUpdates();
+        };
+
         $scope.pauseResumeButtonClick = function(){
+            $interval.cancel(promise);
+            $scope.loading = true;
             var reqStr = "&command=";
             if ($scope.job.paused === true) {
                 reqStr += "resume";
             } else {
                 reqStr += "pause";
             }
-            $http.post(serviceUrl + "?concise=true" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}}).then(loadData);
+            $http.post(serviceUrl + "?concise=true" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}}).then(handleCommandResponse);
         };
 
         $scope.updateThreadCount = function(){
+            $interval.cancel(promise);
+            $scope.loading = true;
+            $scope.updateThreadButtonStyle = "btn glyphicon glyphicon-refresh";
             var reqStr = "&thread-count=" + $scope.threadCount;
-            $http.post(serviceUrl + "?concise=true" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}}).then(loadData);
+            $http.post(serviceUrl + "?concise=true" + reqStr, {"headers":{"Content-Type": "application/x-www-form-urlencoded"}}).then(handleCommandResponse);
         };
 
         $scope.updateThreadsButtonStyle = "btn-primary";
@@ -102,8 +114,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         for (var i = 1; i <= 64; i++) {
             $scope.allThreadCounts.push(i);
         }
-        $scope.threadCount = -1;
 
-        //Start polling for job stats updates
         $http.get(serviceUrl).then(loadData, handleError);
+        scheduleUpdates();
 }]);

@@ -79,7 +79,7 @@ public class ManagerDemo {
         jobServer.start();
         //these jobs will use the JobServer port
         jobServer.addManager(startManager(100, false));
-        /*jobServer.addManager(startManager(100000, false));
+        jobServer.addManager(startManager(100000, false));
         //add multiple jobs to the JobServer, these will use their own port
         jobServer.addManager(startManager(100000));
         jobServer.addManager(startManager(100000));
@@ -88,7 +88,7 @@ public class ManagerDemo {
         startManager(100000);
         startManager(100000);
         startManager(100000);
-        */
+
     }
 
 }

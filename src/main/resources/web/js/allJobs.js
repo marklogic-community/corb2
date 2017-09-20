@@ -1,3 +1,4 @@
+"use strict";
 var app = angular.module("dashboard",[]);
 app.controller("mainCtrl", ["$scope", "$http","$interval",
     function($scope, $http, $interval) {
