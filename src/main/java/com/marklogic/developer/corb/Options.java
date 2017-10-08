@@ -111,7 +111,28 @@ public final class Options {
             + "the COMMAND-FILE is tested can be controlled by using this property. "
             + "Default is 1.")
     public static final String COMMAND_FILE_POLL_INTERVAL = "COMMAND-FILE-POLL-INTERVAL";
-
+    
+    /**
+     * Java class to manage marklogic connections. If none specified, DefaultConnectionManager is used.
+     * 
+     * @see com.marklogic.developer.corb.ContentSourceManager
+     * @see com.marklogic.developer.corb.DefaultContentSourceManager
+     * 
+     * @since 2.4.0
+     */
+    @Usage(description = "Java class to manage marklogic connections. If none specified, DefaultConnectionManager is used.")
+    public static final String CONNECTION_MANAGER="CONNECTION-MANAGER";
+    
+    /**
+     * Connection policy for allocating connections to tasks used by DefaultConnectionManager
+     * 
+     * @see com.marklogic.developer.corb.DefaultContentSourceManager
+     * 
+     * @since 2.4.0
+     */
+    @Usage(description = "Connection policy for allocating connections to tasks while using DefaultConnectionManager. Acceptable values 0 for round-robin 1 for random and 2 for load. Default is 0 which is round-robin")
+    public static final String CONNECTION_POLICY = "CONNECTION-POLICY";
+    
     /**
      * The class name of the options value decrypter, which must implement
      * {@link com.marklogic.developer.corb.Decrypter}.
@@ -1080,6 +1101,12 @@ public final class Options {
     @Usage(description = "Required if XCC-CONNECTION-URI is not specified.")
     public static final String XCC_PORT = "XCC-PORT";
 
+    /**
+     * Optional if {@value #XCC_CONNECTION_URI} is not specified. Default is xcc. 
+     */
+    @Usage(description = "Used if XCC-CONNECTION-URI is not specified. Default is xcc")
+    public static final String XCC_PROTOCOL = "XCC-PROTOCOL";
+    
     /**
      * The ID for the TimeZone that should be set on XCC RequestOption. When a
      * value is specified, it is parsed using TimeZone.getTimeZone() and set on

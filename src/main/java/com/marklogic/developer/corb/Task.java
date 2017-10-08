@@ -28,7 +28,7 @@ import java.util.TimeZone;
  */
 public interface Task extends Callable<String[]> {
 
-	void setContentSource(ContentSource cs);
+	void setContentSourceManager(ContentSourceManager csm);
 
 	/**
 	 * INIT-MODULE,PRE-BATCH-MODULE,PROCESS-MODULE,POST-BATCH-MODULE

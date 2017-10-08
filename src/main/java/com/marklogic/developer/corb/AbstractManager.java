@@ -27,20 +27,18 @@ import static com.marklogic.developer.corb.Options.XCC_HOSTNAME;
 import static com.marklogic.developer.corb.Options.XCC_PASSWORD;
 import static com.marklogic.developer.corb.Options.XCC_PORT;
 import static com.marklogic.developer.corb.Options.XCC_USERNAME;
+import static com.marklogic.developer.corb.Options.XCC_PROTOCOL;
 import static com.marklogic.developer.corb.util.IOUtils.isDirectory;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ContentSource;
-import com.marklogic.xcc.ContentSourceFactory;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
-import com.marklogic.xcc.SecurityOptions;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
-import com.marklogic.xcc.exceptions.XccConfigException;
 import com.marklogic.xcc.types.XdmItem;
 import java.io.File;
 import java.io.FileInputStream;
@@ -51,10 +49,6 @@ import java.io.PrintStream;
 import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -82,11 +76,10 @@ public abstract class AbstractManager {
 
     protected Decrypter decrypter;
     protected SSLConfig sslConfig;
-    protected URI connectionUri;
     protected String collection;
+    protected ContentSourceManager contentSourceManager;
     protected TransformOptions options = new TransformOptions();
     protected Properties properties = new Properties();
-    protected ContentSource contentSource;
     protected Map<String, String> userProvidedOptions = new HashMap<>();
 
     protected static final int EXIT_CODE_SUCCESS = 0;
@@ -196,10 +189,10 @@ public abstract class AbstractManager {
         }
         initDecrypter();
         initSSLConfig();
-        initURI(args.length > 0 ? args[0] : null);
+        initConnectionManager(args.length > 0 ? args[0] : null);
+        
         initOptions(args);
         logRuntimeArgs();
-        prepareContentSource();
         registerStatusInfo();
     }
 
@@ -247,31 +240,78 @@ public abstract class AbstractManager {
         sslConfig.setProperties(this.properties);
         sslConfig.setDecrypter(this.decrypter);
     }
-
-    protected void initURI(String uriArg) throws CorbException {
-        String uriAsString = getOption(uriArg, XCC_CONNECTION_URI);
+    
+    protected void initConnectionManager(String uriArg) throws CorbException{
+        String uriAsStrings = getOption(uriArg, XCC_CONNECTION_URI);
         String username = getOption(XCC_USERNAME);
         String password = getOption(XCC_PASSWORD);
-        String host = getOption(XCC_HOSTNAME);
+        String hostnames = getOption(XCC_HOSTNAME);
         String port = getOption(XCC_PORT);
         String dbname = getOption(XCC_DBNAME);
+        String protocol = getOption(XCC_PROTOCOL);
 
-        if (StringUtils.anyIsNull(uriAsString) && StringUtils.anyIsNull(username, password, host, port)) {
+        if (StringUtils.anyIsNull(uriAsStrings) && StringUtils.anyIsNull(username, password, hostnames, port)) {
             throw new CorbException(String.format("Either %1$s or %2$s, %3$s, %4$s, and %5$s must be specified",
                     XCC_CONNECTION_URI, XCC_USERNAME, XCC_PASSWORD, XCC_HOSTNAME, XCC_PORT));
         }
-
-        if (this.decrypter != null) {
-            uriAsString = this.decrypter.getConnectionURI(uriAsString, username, password, host, port, dbname);
-        } else if (uriAsString == null) {
-            uriAsString = StringUtils.getXccUri(username, password, host, port, dbname);
+        
+        ArrayList<String> connectionUriList = new ArrayList<String>();        
+        if (uriAsStrings == null) {
+            if (this.decrypter != null) {
+                username = this.decrypter.decrypt(XCC_USERNAME, username);
+                password = this.decrypter.decrypt(XCC_PASSWORD, password);
+                port = this.decrypter.decrypt(XCC_PORT, port);
+                dbname = this.decrypter.decrypt(XCC_DBNAME, dbname);
+            }
+            for (String host: hostnames.split(StringUtils.COMMA)){
+                if (this.decrypter != null) {
+                    host = this.decrypter.decrypt(XCC_HOSTNAME,host);
+                }
+                String connectionUri = StringUtils.getXccUri(protocol,username, password, host, port, dbname);
+                if(connectionUri != null){
+                    connectionUriList.add(connectionUri);
+                }
+            }
+        }else{
+            for(String connectionUri : uriAsStrings.split(StringUtils.COMMA)){
+                if (this.decrypter != null) {
+                    connectionUri = this.decrypter.decrypt(XCC_CONNECTION_URI, connectionUri);
+                }
+                if(connectionUri != null){
+                    connectionUriList.add(connectionUri);
+                }
+            }
         }
-
-        try {
-            this.connectionUri = new URI(uriAsString);
-        } catch (URISyntaxException ex) {
-            throw new CorbException("XCC URI is invalid", ex);
+                
+        String contentSourceManagerClassName = getOption(Options.CONNECTION_MANAGER);
+        if(contentSourceManagerClassName != null){
+            this.contentSourceManager = createContentSourceManager(contentSourceManagerClassName);
+        }else{
+            this.contentSourceManager = new DefaultContentSourceManager(); 
         }
+        
+        this.contentSourceManager.init(properties, sslConfig, connectionUriList.toArray(new String[connectionUriList.size()]));
+        
+        if(!this.contentSourceManager.available()){
+            throw new CorbException("No connections available. Please check connection parameters or initialization errors");
+        }
+    }
+    
+    protected ContentSourceManager createContentSourceManager(String className) throws CorbException{
+        try{
+            Class<?> cls = Class.forName(className);
+            if (ContentSourceManager.class.isAssignableFrom(cls)) {
+                return cls.asSubclass(ContentSourceManager.class).newInstance();
+            } else {
+                throw new CorbException("ConnectionManager class "+className+" must be of type com.marklogic.developer.corb.Task");
+            }
+        }catch(ClassNotFoundException |IllegalAccessException | InstantiationException exc){
+            throw new CorbException("Exception while creating the connection manager class "+className,exc);
+        }
+    }
+    
+    public ContentSourceManager getContentSourceManager() {
+        return this.contentSourceManager;
     }
 
     protected void initOptions(String... args) throws CorbException {
@@ -294,6 +334,7 @@ public abstract class AbstractManager {
     }
 
     protected void registerStatusInfo() {
+    		ContentSource contentSource = contentSourceManager.get();
         ResultSequence resultSequence = null;
         try (Session session = contentSource.newSession()) {
 
@@ -393,28 +434,6 @@ public abstract class AbstractManager {
             this.userProvidedOptions.put(propertyName, retVal);
         }
         return retVal;
-    }
-
-    protected void prepareContentSource() throws CorbException {
-        try {
-            // support SSL
-            boolean ssl = connectionUri != null && connectionUri.getScheme() != null
-                    && "xccs".equals(connectionUri.getScheme());
-            contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
-                    : ContentSourceFactory.newContentSource(connectionUri);
-        } catch (XccConfigException ex) {
-            throw new CorbException("Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly.", ex);
-        } catch (KeyManagementException | NoSuchAlgorithmException ex) {
-            throw new CorbException("Problem creating content source with ssl", ex);
-        }
-    }
-
-    protected SecurityOptions getSecurityOptions() throws KeyManagementException, NoSuchAlgorithmException {
-        return this.sslConfig.getSecurityOptions();
-    }
-
-    public ContentSource getContentSource() {
-        return this.contentSource;
     }
 
     protected void usage() {

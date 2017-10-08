@@ -75,7 +75,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             LOG.log(INFO, () -> MessageFormat.format("buffer size = {0}, caching = {1}",
                     opts.getResultBufferSize(), opts.getCacheResult()));
 
-            session = cs.newSession();
+            session = csm.get().newSession();
             Request request;
             String urisModule = options.getUrisModule();
             if (isInlineOrAdhoc(urisModule)) {

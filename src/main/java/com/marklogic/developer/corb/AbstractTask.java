@@ -26,15 +26,12 @@ import static com.marklogic.developer.corb.Options.QUERY_RETRY_LIMIT;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_INTERVAL;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_CODES;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_MESSAGE;
-import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_INTERVAL;
-import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
 import static com.marklogic.developer.corb.TransformOptions.FAILED_URI_TOKEN;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.commaSeparatedValuesToList;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
-import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
 import com.marklogic.xcc.ResultSequence;
@@ -88,7 +85,7 @@ public abstract class AbstractTask implements Task {
             = System.getProperty("line.separator") != null ? System.getProperty("line.separator").getBytes() : "\n".getBytes();
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
-    protected ContentSource cs;
+    protected ContentSourceManager csm;
     protected String moduleType;
     protected String moduleUri;
     protected Properties properties = new Properties();
@@ -99,8 +96,6 @@ public abstract class AbstractTask implements Task {
     protected TimeZone timeZone;
     protected String exportDir;
 
-    protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
-    protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
     protected static final int DEFAULT_QUERY_RETRY_INTERVAL = 20;
     protected static final int DEFAULT_QUERY_RETRY_LIMIT = 2;
 
@@ -111,8 +106,8 @@ public abstract class AbstractTask implements Task {
     private static final String AT_URI = " at URI: ";
 
     @Override
-    public void setContentSource(ContentSource cs) {
-        this.cs = cs;
+    public void setContentSourceManager(ContentSourceManager csm) {
+        this.csm = csm;
     }
 
     @Override
@@ -165,7 +160,7 @@ public abstract class AbstractTask implements Task {
     }
 
     public Session newSession() {
-        return cs.newSession();
+        return csm.get().newSession();
     }
 
     @Override
@@ -342,8 +337,7 @@ public abstract class AbstractTask implements Task {
     }
 
     protected boolean shouldRetry(RequestException requestException) {
-        return requestException instanceof ServerConnectionException
-                || requestException instanceof RetryableQueryException
+        return requestException instanceof RetryableQueryException
                 || requestException instanceof RequestPermissionException && shouldRetry((RequestPermissionException) requestException)
                 || requestException instanceof QueryException && shouldRetry((QueryException) requestException)
                 || hasRetryableMessage(requestException);
@@ -373,9 +367,12 @@ public abstract class AbstractTask implements Task {
     protected String[] handleRequestException(RequestException requestException) throws CorbException {
         String name = requestException.getClass().getSimpleName();
 
-        if (shouldRetry(requestException)) {
-            int retryLimit = requestException instanceof ServerConnectionException ? this.getConnectRetryLimit() : this.getQueryRetryLimit();
-            int retryInterval = requestException instanceof ServerConnectionException ? this.getConnectRetryInterval() : this.getQueryRetryInterval();
+        if(requestException instanceof ServerConnectionException) {
+        		Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
+            throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
+        } else if (shouldRetry(requestException)) {
+            int retryLimit = this.getQueryRetryLimit();
+            int retryInterval = this.getQueryRetryInterval();
             if (retryCount < retryLimit) {
                 retryCount++;
                 LOG.log(WARNING,
@@ -386,7 +383,7 @@ public abstract class AbstractTask implements Task {
                 } catch (Exception ex) {
                 }
                 return invokeModule();
-            } else if (requestException instanceof ServerConnectionException || failOnError) {
+            } else if (failOnError) {
                 Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
                 throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
             } else {
@@ -417,7 +414,7 @@ public abstract class AbstractTask implements Task {
 
     protected void cleanup() {
         // release resources
-        cs = null;
+        csm = null;
         moduleType = null;
         moduleUri = null;
         properties = null;
@@ -444,16 +441,6 @@ public abstract class AbstractTask implements Task {
         } else {
             return EMPTY_BYTE_ARRAY.clone();
         }
-    }
-
-    private int getConnectRetryLimit() {
-        int connectRetryLimit = getIntProperty(XCC_CONNECTION_RETRY_LIMIT);
-        return connectRetryLimit < 0 ? DEFAULT_CONNECTION_RETRY_LIMIT : connectRetryLimit;
-    }
-
-    private int getConnectRetryInterval() {
-        int connectRetryInterval = getIntProperty(XCC_CONNECTION_RETRY_INTERVAL);
-        return connectRetryInterval < 0 ? DEFAULT_CONNECTION_RETRY_INTERVAL : connectRetryInterval;
     }
 
     private int getQueryRetryLimit() {

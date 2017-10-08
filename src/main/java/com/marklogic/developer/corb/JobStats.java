@@ -104,7 +104,7 @@ public class JobStats extends BaseMonitor {
     private Long currentThreadCount = 0l;
     private Long jobServerPort = -1l;
 
-    private ContentSource contentSource;
+    private ContentSourceManager contentSourceManager;
     private TransformOptions options;
 
     private static final Logger LOG = Logger.getLogger(JobStats.class.getName());
@@ -112,7 +112,7 @@ public class JobStats extends BaseMonitor {
     public JobStats(Manager manager) {
         super(manager);
         options = manager.options;
-        contentSource = manager.getContentSource();
+        contentSourceManager = manager.getContentSourceManager();
         host = getHost();
         jobRunLocation = System.getProperty("user.dir");
         userProvidedOptions = manager.getUserProvidedOptions();
@@ -204,7 +204,8 @@ public class JobStats extends BaseMonitor {
     }
 
     private void logToServer(String message, String metrics) {
-        if (contentSource != null) {
+        if (contentSourceManager != null) {
+        		ContentSource contentSource = contentSourceManager.get();
             try (Session session = contentSource.newSession()) {
                 String logLevel = options.getLogMetricsToServerLog();
                 if (options.isMetricsLoggingEnabled(logLevel)) {
@@ -236,7 +237,8 @@ public class JobStats extends BaseMonitor {
 
             Thread.yield();// try to avoid thread starvation
 
-            if (contentSource != null) {
+            if (contentSourceManager != null) {
+            		ContentSource contentSource = contentSourceManager.get();
                 try (Session session = contentSource.newSession()) {
                     Request request = manager.getRequestForModule(processModule, session);
 

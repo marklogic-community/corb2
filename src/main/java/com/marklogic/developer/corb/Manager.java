@@ -64,6 +64,7 @@ import static com.marklogic.developer.corb.util.StringUtils.stringToBoolean;
 import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentCreateOptions;
 import com.marklogic.xcc.ContentFactory;
+import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 
@@ -662,6 +663,7 @@ public class Manager extends AbstractManager implements Closeable {
         String modulesDatabase = options.getModulesDatabase();
         LOG.log(INFO, () -> MessageFormat.format("checking modules, database: {0}", modulesDatabase));
 
+        ContentSource contentSource = contentSourceManager.get();
         try (Session session = contentSource.newSession(modulesDatabase)) {
             for (String resourceModule : resourceModules) {
                 insertModule(session, resourceModule);
@@ -782,7 +784,7 @@ public class Manager extends AbstractManager implements Closeable {
         }
 
         loader.setOptions(options);
-        loader.setContentSource(contentSource);
+        loader.setContentSourceManager(contentSourceManager);
         loader.setCollection(collection);
         loader.setProperties(properties);
         return loader;

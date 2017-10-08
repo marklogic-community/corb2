@@ -32,7 +32,7 @@ import java.util.Properties;
 public abstract class AbstractUrisLoader implements UrisLoader {
 
     protected TransformOptions options;
-    protected ContentSource cs;
+    protected ContentSourceManager csm;
     protected String collection;
     protected Properties properties;
     private int total = 0;
@@ -49,8 +49,8 @@ public abstract class AbstractUrisLoader implements UrisLoader {
     }
     
     @Override
-    public void setContentSource(ContentSource cs) {
-        this.cs = cs;
+    public void setContentSourceManager(ContentSourceManager csm) {
+        this.csm = csm;
     }
 
     @Override
@@ -91,7 +91,7 @@ public abstract class AbstractUrisLoader implements UrisLoader {
 
     protected void cleanup() {
         options = null;
-        cs = null;
+        csm = null;
         collection = null;
         properties = null;
         replacements = null;
