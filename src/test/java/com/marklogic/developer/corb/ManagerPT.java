@@ -18,7 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import com.marklogic.developer.corb.util.FileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -43,6 +42,12 @@ public class ManagerPT {
     public static final String SLASH = "/";
     private static final Logger LOG = Logger.getLogger(ManagerPT.class.getName());
 
+    private void clearSystemProperties() {
+		TestUtils.clearSystemProperties();
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
+	}
+    
     @Before
     public void setUp() throws IOException {
         clearSystemProperties();

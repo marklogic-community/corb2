@@ -37,9 +37,7 @@ import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.SecurityOptions;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
-import com.marklogic.xcc.jndi.ContentSourceBean;
 import static com.marklogic.developer.corb.TestUtils.clearFile;
-import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import com.marklogic.developer.corb.util.StringUtils;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ModuleInvoke;
@@ -80,6 +78,12 @@ public class ModuleExecutorTest {
     private PrintStream systemOut = System.out;
     private PrintStream systemErr = System.err;
 
+    private void clearSystemProperties() {
+		TestUtils.clearSystemProperties();
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
+	}
+    
     @Before
     public void setUp() {
         clearSystemProperties();

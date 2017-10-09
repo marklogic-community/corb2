@@ -23,13 +23,11 @@ import java.io.File;
 import org.junit.*;
 import static org.junit.Assert.*;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
-import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
 import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentSource;
-import com.marklogic.xcc.ContentSourceFactory;
 import com.marklogic.xcc.ModuleInvoke;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultItem;
@@ -40,7 +38,6 @@ import com.marklogic.xcc.types.XdmItem;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -97,6 +94,12 @@ public class ManagerTest {
     public static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
     public static final String SLOW_RECEIVE_MESSAGE = "Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC";
 
+    private void clearSystemProperties() {
+    		TestUtils.clearSystemProperties();
+        System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
+        System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
+    }
+    
     @Before
     public void setUp() throws IOException {
         clearSystemProperties();
