@@ -1137,7 +1137,8 @@ public class ManagerTest {
         Manager instance = new Manager();
         instance.options.setUrisModule("someFile2.xqy");
         try {
-            instance.contentSource = ContentSourceFactory.newContentSource(new URI(XCC_CONNECTION_URI));
+            instance.initContentSourceManager(XCC_CONNECTION_URI);
+            
             instance.run();
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -1166,6 +1167,7 @@ public class ManagerTest {
     public void testRegisterStatusInfo() {
         String xccRootValue = "xccRootValue";
 
+        ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         AdhocQuery adhocQuery = mock(AdhocQuery.class);
@@ -1174,7 +1176,8 @@ public class ManagerTest {
         XdmItem firstXdmItem = mock(XdmItem.class);
         ResultItem second = mock(ResultItem.class);
         XdmItem secondXdmItem = mock(XdmItem.class);
-
+        
+        when(contentSourceManager.get()).thenReturn(contentSource);
         when(contentSource.newSession()).thenReturn(session);
         when(session.newAdhocQuery(anyString())).thenReturn(adhocQuery);
         when(resultSequence.hasNext()).thenReturn(true, true, false);
@@ -1190,7 +1193,7 @@ public class ManagerTest {
             when(session.submitRequest(any(Request.class))).thenReturn(resultSequence);
 
             Manager instance = getMockManagerWithEmptyResults();
-            instance.contentSource = contentSource;
+            instance.contentSourceManager = contentSourceManager;
             instance.registerStatusInfo();
 
             assertEquals(xccRootValue, instance.options.getXDBC_ROOT());
@@ -1442,6 +1445,7 @@ public class ManagerTest {
     public static Manager getMockManagerWithEmptyResults() throws RequestException {
         Manager manager = new MockManager();
 
+        ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke moduleInvoke = mock(ModuleInvoke.class);
@@ -1451,6 +1455,7 @@ public class ManagerTest {
         XdmItem batchRefItem = mock(XdmItem.class);
         XdmItem uriCount = mock(XdmItem.class);
 
+        when(contentSourceManager.get()).thenReturn(contentSource);
         when(contentSource.newSession()).thenReturn(session);
         when(contentSource.newSession(any())).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(moduleInvoke);
@@ -1461,7 +1466,7 @@ public class ManagerTest {
         when(batchRefItem.asString()).thenReturn("batchRefVal");
         when(uriCount.asString()).thenReturn(Integer.toString(0));
 
-        manager.contentSource = contentSource;
+        manager.contentSourceManager = contentSourceManager;
         return manager;
     }
 
@@ -1505,9 +1510,5 @@ public class ManagerTest {
 
     private static class MockManager extends Manager {
 
-        @Override
-        protected void prepareContentSource() throws CorbException {
-            //Want to retain the mock contentSoure that we set in our tests
-        }
     }
 }

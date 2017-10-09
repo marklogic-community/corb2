@@ -189,7 +189,7 @@ public abstract class AbstractManager {
         }
         initDecrypter();
         initSSLConfig();
-        initConnectionManager(args.length > 0 ? args[0] : null);
+        initContentSourceManager(args.length > 0 ? args[0] : null);
         
         initOptions(args);
         logRuntimeArgs();
@@ -241,7 +241,7 @@ public abstract class AbstractManager {
         sslConfig.setDecrypter(this.decrypter);
     }
     
-    protected void initConnectionManager(String uriArg) throws CorbException{
+    protected void initContentSourceManager(String uriArg) throws CorbException{
         String uriAsStrings = getOption(uriArg, XCC_CONNECTION_URI);
         String username = getOption(XCC_USERNAME);
         String password = getOption(XCC_PASSWORD);

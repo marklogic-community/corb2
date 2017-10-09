@@ -104,10 +104,10 @@ public class AbstractTaskTest {
 
     @Test
     public void testSetContentSource() {
-        ContentSource cs = mock(ContentSource.class);
+        ContentSourceManager csm = mock(ContentSourceManager.class);
         AbstractTask instance = new AbstractTaskImpl();
-        instance.setContentSource(cs);
-        assertEquals(cs, instance.cs);
+        instance.setContentSourceManager(csm);
+        assertEquals(csm, instance.csm);
     }
 
     @Test
@@ -195,10 +195,12 @@ public class AbstractTaskTest {
     @Test
     public void testNewSession() {
         AbstractTask instance = new AbstractTaskImpl();
+        ContentSourceManager csm = mock(ContentSourceManager.class);
         ContentSource cs = mock(ContentSource.class);
         Session session = mock(Session.class);
+        when(csm.get()).thenReturn(cs);
         when(cs.newSession()).thenReturn(session);
-        instance.cs = cs;
+        instance.csm = csm;
         Session result = instance.newSession();
         assertEquals(session, result);
     }
@@ -212,18 +214,20 @@ public class AbstractTaskTest {
         instance.inputUris = inputUris;
 
         try {
+        		ContentSourceManager csm = mock(ContentSourceManager.class);
             ContentSource cs = mock(ContentSource.class);
             Session session = mock(Session.class);
             ModuleInvoke request = mock(ModuleInvoke.class);
             ResultSequence seq = mock(ResultSequence.class);
 
+            when(csm.get()).thenReturn(cs);
             when(cs.newSession()).thenReturn(session);
             when(session.newModuleInvoke(anyString())).thenReturn(request);
             when(request.setNewStringVariable(anyString(), anyString())).thenReturn(null);
             when(session.submitRequest(request)).thenReturn(seq);
             String key1 = "foo.bar";
             String key2 = "foo.baz";
-            instance.cs = cs;
+            instance.csm = csm;
             instance.moduleType = FOO;
             Properties props = new Properties();
             props.setProperty(key1, BAZ);
@@ -849,14 +853,14 @@ public class AbstractTaskTest {
     @Test
     public void testCleanup() {
         AbstractTask instance = new AbstractTaskImpl();
-        instance.cs = mock(ContentSource.class);
+        instance.csm = mock(ContentSourceManager.class);
         instance.moduleType = "moduleType";
         instance.moduleUri = "moduleUri";
         instance.properties = new Properties();
         instance.inputUris = new String[]{};
         instance.adhocQuery = "adhocQuery";
         instance.cleanup();
-        assertNull(instance.cs);
+        assertNull(instance.csm);
         assertNull(instance.moduleType);
         assertNull(instance.moduleUri);
         assertNull(instance.properties);
@@ -1068,17 +1072,14 @@ public class AbstractTaskTest {
             return variable;
         }
 
-        @Override
         public void setNewVariables(String string, ValueType vt, Object[] o) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
         public void setNewVariables(String string, String string2, ValueType vt, Object[] o) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
         public void setNewVariables(XName string, XdmValue[] xdmValue) {
             throw new UnsupportedOperationException();
         }

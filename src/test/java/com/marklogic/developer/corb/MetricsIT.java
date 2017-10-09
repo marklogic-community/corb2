@@ -122,8 +122,8 @@ public class MetricsIT {
         testManager(uriCount, collectionName, exportFilename, null, null, XML_EXT);
     }
 
-    public static void cleanupDocs(ContentSource contentSource, String collection, String dbName) {
-        try (Session session = contentSource.newSession()) {
+    public static void cleanupDocs(ContentSourceManager contentSourceManager, String collection, String dbName) {
+        try (Session session = contentSourceManager.get().newSession()) {
             AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML
                     + "xdmp:invoke-function(function(){xdmp:collection-delete('" + collection
                     + "')}, <options  xmlns='xdmp:eval'><database>{xdmp:database('" + dbName
@@ -134,9 +134,9 @@ public class MetricsIT {
         }
     }
 
-    public static List<String> collectionCount(ContentSource contentSource, String collection, String dbName) {
+    public static List<String> collectionCount(ContentSourceManager contentSourceManager, String collection, String dbName) {
         List<String> result = new ArrayList<>();
-        try (Session session = contentSource.newSession()) {
+        try (Session session = contentSourceManager.get().newSession()) {
             AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML
                     + "xdmp:invoke-function(function(){cts:uris((),(),cts:collection-query('" + collection
                     + "'))}, <options  xmlns='xdmp:eval'><database>{xdmp:database('" + dbName
@@ -149,9 +149,9 @@ public class MetricsIT {
         return result;
     }
 
-    public static List<String> docsWithEndTime(ContentSource contentSource, String collection, String dbName, boolean isXML) {
+    public static List<String> docsWithEndTime(ContentSourceManager contentSourceManager, String collection, String dbName, boolean isXML) {
         List<String> result = new ArrayList<>();
-        try (Session session = contentSource.newSession()) {
+        try (Session session = contentSourceManager.get().newSession()) {
             AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML + "declare namespace corb2='http://marklogic.github.io/corb/';"
                     + "xdmp:invoke-function(function(){cts:uris((),(),cts:and-query(("
                     + "		cts:element-query(xs:QName('"
@@ -175,13 +175,13 @@ public class MetricsIT {
         Manager manager = new Manager();
         try {
             manager.init(properties);
-            cleanupDocs(manager.contentSource, collectionName, METRICS_DB_NAME);
+            cleanupDocs(manager.contentSourceManager, collectionName, METRICS_DB_NAME);
             manager.run();
             File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFilename);
             report.deleteOnExit();
             int lineCount = FileUtils.getLineCount(report);
             assertEquals((uriCount / 2) + 2, lineCount);
-            List<String> uris = collectionCount(manager.contentSource, collectionName, METRICS_DB_NAME);
+            List<String> uris = collectionCount(manager.contentSourceManager, collectionName, METRICS_DB_NAME);
             if (syncFrequency == null) {
                 assertTrue(uris.size() == 1);//more than one as it will log periodically
             } else {
@@ -191,13 +191,13 @@ public class MetricsIT {
             for (String uri : uris) {
                 assertTrue("Extension should be " + extension, uri.contains(extension));
             }
-            List<String> urisWithEndTime = docsWithEndTime(manager.contentSource, collectionName, METRICS_DB_NAME, XML_EXT.equals(extension));
+            List<String> urisWithEndTime = docsWithEndTime(manager.contentSourceManager, collectionName, METRICS_DB_NAME, XML_EXT.equals(extension));
             assertTrue("Only one URI with End Time", (urisWithEndTime.size() == 1));
         } catch (Exception ex) {
             LOG.log(SEVERE, null, ex);
             fail();
         } finally {
-            cleanupDocs(manager.contentSource, collectionName, METRICS_DB_NAME);
+            cleanupDocs(manager.contentSourceManager, collectionName, METRICS_DB_NAME);
         }
     }
 

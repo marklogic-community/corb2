@@ -33,5 +33,9 @@ public interface ContentSourceManager {
      * @return true if available
      */
     boolean available();
-           
+    
+    /**
+     * Returns all the content sources managed by this manager pool
+     */
+    ContentSource[] getAllContentSources();   
 }

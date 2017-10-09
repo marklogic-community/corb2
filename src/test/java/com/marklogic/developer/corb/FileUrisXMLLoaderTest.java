@@ -67,10 +67,10 @@ public class FileUrisXMLLoaderTest {
 
     @Test
     public void testSetContentSourceNull() {
-        ContentSource cs = null;
+        ContentSourceManager csm = null;
         try (FileUrisXMLLoader instance = new FileUrisXMLLoader()) {
-            instance.setContentSource(cs);
-            assertNull(instance.cs);
+            instance.setContentSourceManager(csm);
+            assertNull(instance.csm);
         }
     }
 
@@ -370,7 +370,7 @@ public class FileUrisXMLLoaderTest {
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.doc = mock(Document.class);
         instance.collection = "testCollection";
-        instance.cs = mock(ContentSource.class);
+        instance.csm = mock(ContentSourceManager.class);
         instance.nextUri = "<test>testData</test>";
         instance.options = new TransformOptions();
         instance.properties = new Properties();
@@ -380,7 +380,7 @@ public class FileUrisXMLLoaderTest {
         instance.cleanup();
         assertNull(instance.doc);
         assertNull(instance.collection);
-        assertNull(instance.cs);
+        assertNull(instance.csm);
         assertNull(instance.options);
         assertNull(instance.replacements);
     }

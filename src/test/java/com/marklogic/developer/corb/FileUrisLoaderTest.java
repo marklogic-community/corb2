@@ -60,10 +60,10 @@ public class FileUrisLoaderTest {
 
     @Test
     public void testSetContentSourceNull() {
-        ContentSource cs = null;
+        ContentSourceManager csm = null;
         try (FileUrisLoader instance = new FileUrisLoader()) {
-            instance.setContentSource(cs);
-            assertNull(instance.cs);
+            instance.setContentSourceManager(csm);
+            assertNull(instance.csm);
         }
     }
 
@@ -273,7 +273,7 @@ public class FileUrisLoaderTest {
         FileUrisLoader instance = new FileUrisLoader();
         instance.bufferedReader = mock(BufferedReader.class);
         instance.collection = "testCleanupCollection";
-        instance.cs = mock(ContentSource.class);
+        instance.csm = mock(ContentSourceManager.class);
         instance.nextLine = "testCleanup";
         instance.options = new TransformOptions();
         instance.properties = new Properties();
@@ -283,7 +283,7 @@ public class FileUrisLoaderTest {
         instance.cleanup();
         assertNull(instance.bufferedReader);
         assertNull(instance.collection);
-        assertNull(instance.cs);
+        assertNull(instance.csm);
         assertNull(instance.options);
         assertNull(instance.replacements);
         assertNull(instance.nextLine);

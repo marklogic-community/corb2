@@ -43,10 +43,10 @@ public class AbstractUrisLoaderTest {
 
     @Test
     public void testSetContentSource() {
-        ContentSource cs = mock(ContentSource.class);
+        ContentSourceManager csm = mock(ContentSourceManager.class);
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        instance.setContentSource(cs);
-        assertEquals(cs, instance.cs);
+        instance.setContentSourceManager(csm);
+        assertEquals(csm, instance.csm);
     }
 
     @Test
@@ -113,7 +113,7 @@ public class AbstractUrisLoaderTest {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         instance.cleanup();
         assertNull(instance.options);
-        assertNull(instance.cs);
+        assertNull(instance.csm);
         assertNull(instance.collection);
         assertNull(instance.properties);
         assertNull(instance.replacements);
