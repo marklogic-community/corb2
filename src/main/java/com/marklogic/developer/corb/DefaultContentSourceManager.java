@@ -9,6 +9,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -33,6 +35,7 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
     
     protected HashMap<ContentSource,Integer> errorCountsMap = new HashMap<ContentSource,Integer>();
     protected HashMap<ContentSource,Integer> connectionCountsMap = new HashMap<ContentSource,Integer>();
+    protected HashMap<ContentSource,Long> errorTimeMap = new HashMap<ContentSource,Long>();
     
     protected int roundRobinIndex =  -1;
     
@@ -85,21 +88,22 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
             }
         }
         
-        return contentSource;
+        return createContentSourceProxy(contentSource);
     }
     
     protected synchronized ContentSource nextContentSource(){
-        if(contentSourceList.isEmpty()){
+    		ArrayList<ContentSource> availableList = getAvailableContentSources();
+        if(availableList.isEmpty()){
             return null;
         }
         
         ContentSource contentSource = null;
-        if(contentSourceList.size() == 1){
-            contentSource = contentSourceList.get(0);
+        if(availableList.size() == 1){
+            contentSource = availableList.get(0);
         }else if(CONNECTION_POLICY_RANDOM == connectionPolicy){
-            contentSource = contentSourceList.get((int)(Math.random() * contentSourceList.size()));
+            contentSource = availableList.get((int)(Math.random() * availableList.size()));
         }else if(CONNECTION_POLICY_LOAD == connectionPolicy){            
-            for(ContentSource next: contentSourceList){
+            for(ContentSource next: availableList){
                 Integer count = connectionCountsMap.get(next);
                 if(count == null || count.intValue() == 0){
                     contentSource = next;
@@ -110,11 +114,37 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
             }
         }else{
             roundRobinIndex = roundRobinIndex + 1;
-            if(roundRobinIndex >= contentSourceList.size()) roundRobinIndex = 0;
-            contentSource = contentSourceList.get(roundRobinIndex);
+            if(roundRobinIndex >= availableList.size()) roundRobinIndex = 0;
+            contentSource = availableList.get(roundRobinIndex);
         }
                
-        return createContentSourceProxy(contentSource);
+        return contentSource;
+    }
+    
+    private ArrayList<ContentSource> getAvailableContentSources(){
+    		//check if any errored connections are eligible for retries with out further wait
+    		if(errorTimeMap.size() > 0) {
+        		long current = System.currentTimeMillis();
+    			int retryInterval = getConnectRetryInterval();
+	    		for(Iterator<Map.Entry<ContentSource, Long>> it = errorTimeMap.entrySet().iterator();it.hasNext();) {
+	    			Map.Entry<ContentSource, Long> next = it.next();
+	    			if((current - next.getValue().longValue()) >= (retryInterval * 1000L)) {
+	    				it.remove();
+	    			}	    				
+	    		}
+    		}
+    		if(errorTimeMap.size() > 0) {
+    			ArrayList<ContentSource> availableList = new ArrayList<ContentSource>();
+	    		for(ContentSource cs: contentSourceList) {
+	    			if(!errorTimeMap.containsKey(cs)) {
+	    				availableList.add(cs);
+	    			}
+	    		}
+	    		//if nothing available, then return the whole list as we have to wait anyway
+	    		return availableList.size() > 0 ? availableList : contentSourceList;
+    		}else {
+    			return contentSourceList;
+    		}
     }
     
     @Override
@@ -126,11 +156,20 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
         contentSourceList.remove(contentSource);
         connectionCountsMap.remove(contentSource);
         errorCountsMap.remove(contentSource);
+        errorTimeMap.remove(contentSource);
     }
                     
     @Override
     public boolean available(){
         return !contentSourceList.isEmpty();
+    }
+    
+    @Override
+    public void close() {
+        connectionCountsMap.clear();
+        errorCountsMap.clear();
+        errorTimeMap.clear();
+		contentSourceList.clear();
     }
     
     @Override
@@ -156,12 +195,14 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
     
     synchronized protected void success(ContentSource cs) {
 		errorCountsMap.remove(cs);
+		errorTimeMap.remove(cs);
 	}
     
     synchronized protected void error(ContentSource cs) {
     		Integer count = errorCountsMap.get(cs);
         count = count == null ? new Integer(1) : new Integer (count.intValue() + 1);
         errorCountsMap.put(cs, count);
+        errorTimeMap.put(cs, System.currentTimeMillis());
         
         int limit = getConnectRetryLimit();
         String hostname = cs.getConnectionProvider().getHostName();

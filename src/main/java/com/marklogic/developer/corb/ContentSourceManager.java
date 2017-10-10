@@ -1,10 +1,11 @@
 package com.marklogic.developer.corb;
 
+import java.io.Closeable;
 import java.util.Properties;
 
 import com.marklogic.xcc.ContentSource;
 
-public interface ContentSourceManager {
+public interface ContentSourceManager extends Closeable{
     /**
      * Initializes the connection manager. This method should only be called by AbstractManager class during initialization of corb.
      * @param properties
@@ -36,6 +37,7 @@ public interface ContentSourceManager {
     
     /**
      * Returns all the content sources managed by this manager pool
+     * @return content sources
      */
     ContentSource[] getAllContentSources();   
 }
