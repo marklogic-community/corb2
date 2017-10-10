@@ -93,6 +93,7 @@ public class Monitor extends BaseMonitor implements Runnable {
             showProgress();
 
             if (completed >= taskCount) {
+            		try{Thread.sleep(1);}catch(Exception exc) {} //sleep for a second for the pool to align
                 if (pool.getActiveCount() > 0 || (pool.getTaskCount() - pool.getCompletedTaskCount()) > 0) {
                     LOG.log(WARNING, "Thread pool is still active with all the tasks completed and received. We shouldn't see this message.");
                     //wait for the ThreadPool numbers to align
