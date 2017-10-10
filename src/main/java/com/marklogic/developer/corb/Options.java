@@ -121,7 +121,7 @@ public final class Options {
      * @since 2.4.0
      */
     @Usage(description = "Java class to manage marklogic connections. If none specified, DefaultConnectionManager is used.")
-    public static final String CONNECTION_MANAGER="CONNECTION-MANAGER";
+    public static final String CONTENT_SOURCE_MANAGER="CONTENT-SOURCE-MANAGER";
     
     /**
      * Connection policy for allocating connections to tasks used by DefaultConnectionManager

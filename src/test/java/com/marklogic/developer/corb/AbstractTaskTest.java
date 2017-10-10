@@ -574,18 +574,6 @@ public class AbstractTaskTest {
         fail();
     }
 
-    @Test
-    public void testHandleRequestExceptionServerConnectionException() {
-        Request req = mock(Request.class);
-        ServerConnectionException serverException = new ServerConnectionException(ERROR_MSG, req);
-        try {
-            assertTrue(testHandleRequestException(serverException, false, 2));
-        } catch (CorbException | IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
-    }
-
     @Test(expected = CorbException.class)
     public void testHandleRequestExceptionServerConnectionExceptionFail() throws CorbException {
         Request req = mock(Request.class);

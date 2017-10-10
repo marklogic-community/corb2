@@ -54,6 +54,7 @@ import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 /**
@@ -134,7 +135,7 @@ public class ModuleExecutorTest {
             instance.logOptions();
             List<LogRecord> records = testLogger.getLogRecords();
             assertEquals(3, records.size());
-        } catch (RequestException ex) {
+        } catch (RequestException|CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -647,15 +648,17 @@ public class ModuleExecutorTest {
         }
     }
 
-    public static ModuleExecutor getMockModuleExecutorCustomProcessResults() throws RequestException {
-        MockModuleExecutorResults manager = new MockModuleExecutorResults();
-        manager.contentSourceManager = getMockContentSourceManager();
+    public static ModuleExecutor getMockModuleExecutorCustomProcessResults() throws RequestException, CorbException {
+        MockModuleExecutorResults manager = spy(new MockModuleExecutorResults());
+        ContentSourceManager contentSourceManager = getMockContentSourceManager(); 
+		when(manager.createContentSourceManager()).thenReturn(contentSourceManager);
         return manager;
     }
 
-    public static ModuleExecutor getMockModuleExecutorWithEmptyResults() throws RequestException {
-        ModuleExecutor manager = new MockModuleExecutor();
-        manager.contentSourceManager = getMockContentSourceManager();
+    public static ModuleExecutor getMockModuleExecutorWithEmptyResults() throws RequestException, CorbException {
+        ModuleExecutor manager = spy(new ModuleExecutor());
+        ContentSourceManager contentSourceManager = getMockContentSourceManager(); 
+		when(manager.createContentSourceManager()).thenReturn(contentSourceManager);
         return manager;
     }
 
@@ -674,6 +677,7 @@ public class ModuleExecutorTest {
         XdmItem uriCount = mock(XdmItem.class);
         
         when(contentSourceManager.get()).thenReturn(contentSource);
+        when(contentSourceManager.available()).thenReturn(true);
         when(contentSource.newSession()).thenReturn(session);
         when(contentSource.newSession(any())).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(moduleInvoke).thenReturn(moduleInvoke);
@@ -694,10 +698,6 @@ public class ModuleExecutorTest {
         return contentSourceManager;
     }
 
-    private static class MockModuleExecutor extends ModuleExecutor {
-
-    }
-
     private static class MockModuleExecutorCannotWrite extends ModuleExecutor {
 
         @Override
@@ -707,7 +707,7 @@ public class ModuleExecutorTest {
         }
     }
 
-    private static class MockModuleExecutorResults extends MockModuleExecutor {
+    private static class MockModuleExecutorResults extends ModuleExecutor {
 
         private List<String> results = new ArrayList<>();
 

@@ -225,7 +225,7 @@ public class AbstractManagerTest {
             instance.logProperties();
             List<LogRecord> records = testLogger.getLogRecords();
             assertEquals(props.size(), records.size());
-        } catch (RequestException ex) {
+        } catch (RequestException|CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -238,7 +238,7 @@ public class AbstractManagerTest {
             instance.logProperties();
             List<LogRecord> records = testLogger.getLogRecords();
             assertEquals(0, records.size());
-        } catch (RequestException ex) {
+        } catch (RequestException|CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -462,7 +462,7 @@ public class AbstractManagerTest {
 	    assertEquals(1,contentSources.length);
 	    
 	    assertEquals(host, contentSources[0].getConnectionProvider().getHostName());
-	    if(port != null) assertEquals(port, contentSources[0].getConnectionProvider().getPort());
+	    if(port != null) assertEquals(Integer.parseInt(port), contentSources[0].getConnectionProvider().getPort());
 	    
 	    String csToStr = contentSources[0].toString();
 	    if(user != null) assertTrue(csToStr.contains("user="+user));
@@ -512,17 +512,12 @@ public class AbstractManagerTest {
         checkContentSource(instance,XCC_URI_USER,XCC_URI_HOST,XCC_URI_PORT,XCC_URI_DB);
     }
 
-    @Test
-    public void testInitURIInvalidXCCURI() {
+    @Test(expected = CorbException.class)
+    public void testInitURIInvalidXCCURI() throws CorbException {
         String uriArg = "www.marklogic.com";
         AbstractManager instance = new AbstractManagerImpl();
-        try {
-            instance.initContentSourceManager(uriArg);
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
-        checkContentSource(instance,null,uriArg,null,null);
+        instance.initContentSourceManager(uriArg);
+        fail();
     }
 
     @Test(expected = CorbException.class)
@@ -578,7 +573,7 @@ public class AbstractManagerTest {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        checkContentSource(instance,USERNAME,HOST,PORT,"documents database");
+        checkContentSource(instance,USERNAME,HOST,PORT,"documents+database");
     }
 
     @Test

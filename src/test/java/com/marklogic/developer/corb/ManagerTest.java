@@ -56,6 +56,7 @@ import org.mockito.Mockito;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import org.mockito.exceptions.base.MockitoException;
 
@@ -782,7 +783,7 @@ public class ManagerTest {
             manager.properties = null;
             manager.normalizeLegacyProperties();
             assertNull(manager.properties);
-        } catch (RequestException ex) {
+        } catch (RequestException|CorbException ex ) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -803,7 +804,7 @@ public class ManagerTest {
 
             assertEquals(legacyValue1, manager.properties.getProperty(Options.PROCESS_MODULE));
             assertEquals(legacyValue2, manager.properties.getProperty(Options.PROCESS_MODULE + ".bar"));
-        } catch (RequestException ex) {
+        } catch (RequestException|CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -821,7 +822,7 @@ public class ManagerTest {
             manager.normalizeLegacyProperties();
 
             assertEquals(processVal, manager.properties.getProperty("PROCESS-MODULE.bar"));
-        } catch (RequestException ex) {
+        } catch (RequestException|CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -1156,6 +1157,7 @@ public class ManagerTest {
     public void testRunGetURILoaderWithURISMODULE() {
         try {
             Manager instance = getMockManagerWithEmptyResults();
+            instance.initContentSourceManager(XCC_CONNECTION_URI);
             instance.collection = "URILoader_Modules";
             instance.options.setUrisModule("someFile3.xqy");
             int count = instance.run();
@@ -1202,7 +1204,7 @@ public class ManagerTest {
             assertEquals(xccRootValue, instance.options.getXDBC_ROOT());
             List<LogRecord> records = testLogger.getLogRecords();
             assertEquals(19, records.size());
-        } catch (RequestException ex) {
+        } catch (RequestException|CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -1222,7 +1224,7 @@ public class ManagerTest {
             instance.logOptions();
             List<LogRecord> records = testLogger.getLogRecords();
             assertEquals(19, records.size());
-        } catch (RequestException ex) {
+        } catch (RequestException|CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -1444,10 +1446,16 @@ public class ManagerTest {
         Files.write(path, lines, Charset.forName("UTF-8"));
         return file;
     }
-
-    public static Manager getMockManagerWithEmptyResults() throws RequestException {
-        Manager manager = new MockManager();
-
+    
+    public static Manager getMockManagerWithEmptyResults() throws RequestException, CorbException{
+    		Manager manager = spy(new Manager());
+    		ContentSourceManager contentSourceManager = getMockContentSourceManagerWithEmptyResults(); 
+    		when(manager.createContentSourceManager()).thenReturn(contentSourceManager);
+    		return manager;
+    }
+    
+        
+    public static ContentSourceManager getMockContentSourceManagerWithEmptyResults() throws RequestException{
         ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -1459,6 +1467,7 @@ public class ManagerTest {
         XdmItem uriCount = mock(XdmItem.class);
 
         when(contentSourceManager.get()).thenReturn(contentSource);
+        when(contentSourceManager.available()).thenReturn(true);
         when(contentSource.newSession()).thenReturn(session);
         when(contentSource.newSession(any())).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(moduleInvoke);
@@ -1468,9 +1477,7 @@ public class ManagerTest {
         when(uriCountResult.getItem()).thenReturn(uriCount);
         when(batchRefItem.asString()).thenReturn("batchRefVal");
         when(uriCount.asString()).thenReturn(Integer.toString(0));
-
-        manager.contentSourceManager = contentSourceManager;
-        return manager;
+        return contentSourceManager;
     }
 
     @Test
@@ -1509,9 +1516,5 @@ public class ManagerTest {
         public void open() throws CorbException {
             this.setTotalCount(0);
         }
-    }
-
-    private static class MockManager extends Manager {
-
     }
 }

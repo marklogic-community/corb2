@@ -283,18 +283,23 @@ public abstract class AbstractManager {
             }
         }
                 
-        String contentSourceManagerClassName = getOption(Options.CONNECTION_MANAGER);
-        if(contentSourceManagerClassName != null){
-            this.contentSourceManager = createContentSourceManager(contentSourceManagerClassName);
-        }else{
-            this.contentSourceManager = new DefaultContentSourceManager(); 
-        }
-        
+        this.contentSourceManager = createContentSourceManager();
         this.contentSourceManager.init(properties, sslConfig, connectionUriList.toArray(new String[connectionUriList.size()]));
         
         if(!this.contentSourceManager.available()){
             throw new CorbException("No connections available. Please check connection parameters or initialization errors");
         }
+    }
+    
+    protected ContentSourceManager createContentSourceManager() throws CorbException {
+    		ContentSourceManager csm = null;
+    		String contentSourceManagerClassName = getOption(Options.CONTENT_SOURCE_MANAGER);
+        if(contentSourceManagerClassName != null){
+        		csm = createContentSourceManager(contentSourceManagerClassName);
+        }else{
+        		csm = new DefaultContentSourceManager(); 
+        }
+        return csm;
     }
     
     protected ContentSourceManager createContentSourceManager(String className) throws CorbException{
