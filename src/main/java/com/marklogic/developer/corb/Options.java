@@ -130,7 +130,7 @@ public final class Options {
      * 
      * @since 2.4.0
      */
-    @Usage(description = "Connection policy for allocating connections to tasks while using DefaultConnectionManager. Acceptable values 0 for round-robin 1 for random and 2 for load. Default is 0 which is round-robin")
+    @Usage(description = "Connection policy for allocating connections to tasks while using DefaultConnectionManager. Acceptable values ROUNBD-ROBIN, RANDOM and LOAD. Default is ROUND-ROBIN")
     public static final String CONNECTION_POLICY = "CONNECTION-POLICY";
     
     /**

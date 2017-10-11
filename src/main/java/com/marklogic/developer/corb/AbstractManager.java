@@ -284,6 +284,7 @@ public abstract class AbstractManager {
         }
                 
         this.contentSourceManager = createContentSourceManager();
+        LOG.info("Using the content source manager "+this.contentSourceManager.getClass().getName());
         this.contentSourceManager.init(properties, sslConfig, connectionUriList.toArray(new String[connectionUriList.size()]));
         
         if(!this.contentSourceManager.available()){

@@ -25,11 +25,11 @@ import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmVariable;
 
 public class DefaultContentSourceManager extends AbstractContentSourceManager{
-    protected static final int CONNECTION_POLICY_ROUND_ROBIN = 0;
-    protected static final int CONNECTION_POLICY_RANDOM = 1;
-    protected static final int CONNECTION_POLICY_LOAD = 2;
+    protected static final String CONNECTION_POLICY_ROUND_ROBIN = "ROUND-ROBIN";
+    protected static final String CONNECTION_POLICY_RANDOM = "RANDOM";
+    protected static final String CONNECTION_POLICY_LOAD = "LOAD";
         
-    protected int connectionPolicy = CONNECTION_POLICY_ROUND_ROBIN;
+    protected String connectionPolicy = CONNECTION_POLICY_ROUND_ROBIN;
     
     protected ArrayList<ContentSource> contentSourceList = new ArrayList<ContentSource>();
     
@@ -54,8 +54,8 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
             initContentSource(connectionString);
         }
         
-        int policy = getIntProperty(CONNECTION_POLICY);
-        if(CONNECTION_POLICY_RANDOM == policy || CONNECTION_POLICY_LOAD == policy){
+        String policy = getProperty(CONNECTION_POLICY);
+        if(CONNECTION_POLICY_RANDOM.equals(policy) || CONNECTION_POLICY_LOAD.equals(policy)){
             this.connectionPolicy = policy;
         }
         LOG.log(INFO,"Using the connection policy "+this.connectionPolicy);
@@ -100,9 +100,9 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
         ContentSource contentSource = null;
         if(availableList.size() == 1){
             contentSource = availableList.get(0);
-        }else if(CONNECTION_POLICY_RANDOM == connectionPolicy){
+        }else if(CONNECTION_POLICY_RANDOM.equals(connectionPolicy)){
             contentSource = availableList.get((int)(Math.random() * availableList.size()));
-        }else if(CONNECTION_POLICY_LOAD == connectionPolicy){            
+        }else if(CONNECTION_POLICY_LOAD.equals(connectionPolicy)){            
             for(ContentSource next: availableList){
                 Integer count = connectionCountsMap.get(next);
                 if(count == null || count.intValue() == 0){
@@ -180,7 +180,7 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
     }
     
     private boolean isLoadPolicy() {
-    		return CONNECTION_POLICY_LOAD == connectionPolicy;
+    		return CONNECTION_POLICY_LOAD.equals(connectionPolicy);
     }
     
     synchronized protected void hold(ContentSource cs) {
