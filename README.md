@@ -87,6 +87,8 @@ Option | Description
 **<a name="COMMAND"></a>COMMAND** | Pause, resume, and stop the execution of CORB. Possible commands include: PAUSE, RESUME, and STOP. If the **COMMAND-FILE** is modified and either there is no **COMMAND** or an invalid value is specified, then execution will RESUME.
 **<a name="COMMAND-FILE"></a>COMMAND-FILE** | A properties file used to configure **COMMAND** and **THREAD-COUNT** while CORB is running. For instance, to temporarily pause execution, or to lower the number of threads in order to throttle execution.
 **<a name="COMMAND-FILE-POLL-INTERVAL"></a>COMMAND-FILE-POLL-INTERVAL** | Default is 1. The regular interval (seconds) in which the existence of the **COMMAND-FILE** is tested can be controlled by using this property.
+**<a name="CONNECTION-POLICY"></a>CONNECTION-POLICY** | Algorithm for balancing load across multiple hosts used by `com.marklogic.developer.corb.DefaultContentSourceManager`. Options include **ROUND-ROBIN**, **RANDOM** and **LOAD**. Default option is **ROUND-ROBIN**. **LOAD** option returns the ContentSource or Connection with least number of active sessions.  
+**<a name="CONTENT-SOURCE-MANAGER"></a>CONTENT-SOURCE-MANAGER** | Class that implements `com.marklogic.developer.corb.ContentSourceManager` and used to manage ContentSource instances or connections. The default is `com.marklogic.developer.corb.DefaultContentSourceManager`.
 **<a name="DISK-QUEUE"></a>DISK-QUEUE** | Boolean value indicating whether the CORB job should spill to disk when a maximum number of URIs have been loaded in memory, in order to control memory consumption and avoid Out of Memory exceptions for extremely large sets of URIs.
 **<a name="DISK-QUEUE-MAX-IN-MEMORY-SIZE"></a>DISK-QUEUE-MAX-IN-MEMORY-SIZE** | The maximum number of URIs to hold in memory before spilling over to disk. Default is 1000.
 **<a name="DISK-QUEUE-TEMP-DIR"></a>DISK-QUEUE-TEMP-DIR** | The directory where the URIs queue can write to disk when the maximum in-memory items has been exceeded. Default behavior is to use java.io.tmpdir.
@@ -148,6 +150,7 @@ Option | Description
 **<a name="XCC-HOSTNAME"></a>XCC-HOSTNAME** | Required if **XCC-CONNECTION-URI** is not specified.
 **<a name="XCC-PORT"></a>XCC-PORT** | Required if **XCC-CONNECTION-URI** is not specified.
 **<a name="XCC-DBNAME"></a>XCC-DBNAME** | (Optional)
+**<a name="XCC-PROTOCOL"></a>XCC-PROTOCOL** | (Optional)
 
 #### URIS\_BATCH\_REF
 If a module, including those specified by **PRE-BATCH-MODULE**, **PROCESS-MODULE** or **POST-BATCH-MODULE** have an external or global variable named **URIS\_BATCH\_REF**, the variable will be set to the first **non-numeric** item in the sequence or [ValueIterator](https://docs.marklogic.com/js/ValueIterator) returned by **URIS-MODULE**. This means that, when used, the **URIS-MODULE** must return a sequence or [ValueIterator](https://docs.marklogic.com/js/ValueIterator) with the special string value first, then the URI count, then the sequence of URIs to process.  
