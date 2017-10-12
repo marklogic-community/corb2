@@ -75,7 +75,7 @@ Option | Description
 **<a name="THREAD-COUNT"></a>THREAD-COUNT** | The number of worker threads. Default is 1.
 **<a name="URIS-MODULE"></a>URIS-MODULE** | URI selector module written in XQuery or JavaScript. Expected to return a sequence containing the uris count followed by all the uris. Optionally, it can also return an arbitrary string as a first item in this sequence - refer to **URIS\_BATCH\_REF** section below. XQuery and JavaScript modules need to have .xqy and .sjs extensions respectively. JavaScript modules must return a [ValueIterator](https://docs.marklogic.com/js/ValueIterator).
 **<a name="URIS-FILE"></a>URIS-FILE** | If defined instead of **URIS-MODULE**, URIs will be loaded from the file located on the client. There should only be one URI per line. This path may be relative or absolute. For example, a file containing a list of document identifiers can be used as a **URIS-FILE** and the **PROCESS-MODULE** can query for the document based on this document identifier.
-**<a name="XCC-CONNECTION-URI"></a>XCC-CONNECTION-URI** | Connection string to MarkLogic XDBC Server.
+**<a name="XCC-CONNECTION-URI"></a>XCC-CONNECTION-URI** | Connection string to MarkLogic XDBC Server. Multiple connection strings can be specified with comma as a separator. 
 
 ### Additional options
 Option | Description
@@ -147,7 +147,7 @@ Option | Description
 ---|---
 **<a name="XCC-USERNAME"></a>XCC-USERNAME** | Required if **XCC-CONNECTION-URI** is not specified.
 **<a name="XCC-PASSWORD"></a>XCC-PASSWORD** | Required if **XCC-CONNECTION-URI** is not specified.
-**<a name="XCC-HOSTNAME"></a>XCC-HOSTNAME** | Required if **XCC-CONNECTION-URI** is not specified.
+**<a name="XCC-HOSTNAME"></a>XCC-HOSTNAME** | Required if **XCC-CONNECTION-URI** is not specified. Multiple host can be specified with comma as a separator. 
 **<a name="XCC-PORT"></a>XCC-PORT** | Required if **XCC-CONNECTION-URI** is not specified.
 **<a name="XCC-DBNAME"></a>XCC-DBNAME** | (Optional)
 **<a name="XCC-PROTOCOL"></a>XCC-PROTOCOL** | (Optional)

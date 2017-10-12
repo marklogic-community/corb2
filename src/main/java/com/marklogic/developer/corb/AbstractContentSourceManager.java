@@ -95,7 +95,7 @@ public abstract class AbstractContentSourceManager implements ContentSourceManag
                 
                 ContentSource contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
                         : ContentSourceFactory.newContentSource(connectionUri);
-                LOG.log(INFO, "Initialized content source for host "+connectionUri.getHost()+":"+connectionUri.getPort());
+                LOG.log(INFO, "Initialized content source for host "+connectionUri.getHost()+":"+connectionUri.getPort()+connectionUri.getPath());
                 return contentSource;
             } catch (XccConfigException ex) {
                 String hostname = (connectionUri != null) ? connectionUri.getHost() : null;

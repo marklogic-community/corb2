@@ -1061,7 +1061,7 @@ public final class Options {
     /**
      * Connection string to MarkLogic XDBC Server.
      */
-    @Usage(description = "Connection string to MarkLogic XDBC Server.")
+    @Usage(description = "Connection string to MarkLogic XDBC Server. Supports multiple connection strings separated by comma.")
     public static final String XCC_CONNECTION_URI = "XCC-CONNECTION-URI";
 
     /**
@@ -1073,7 +1073,7 @@ public final class Options {
     /**
      * Required if {@value #XCC_CONNECTION_URI} is not specified.
      */
-    @Usage(description = "Required if XCC-CONNECTION-URI is not specified.")
+    @Usage(description = "Required if XCC-CONNECTION-URI is not specified. Supports multiple hostnames separated by comma")
     public static final String XCC_HOSTNAME = "XCC-HOSTNAME";
 
     /**

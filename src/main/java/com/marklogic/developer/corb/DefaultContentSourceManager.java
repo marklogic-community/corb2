@@ -121,7 +121,7 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
         return contentSource;
     }
     
-    private ArrayList<ContentSource> getAvailableContentSources(){
+    protected ArrayList<ContentSource> getAvailableContentSources(){
     		//check if any errored connections are eligible for retries with out further wait
     		if(errorTimeMap.size() > 0) {
         		long current = System.currentTimeMillis();
@@ -148,12 +148,11 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
     }
     
     @Override
-    public synchronized void remove(ContentSource contentSource){
-        String hostname = contentSource.getConnectionProvider().getHostName();
-        int port = contentSource.getConnectionProvider().getPort();
-        
+    public synchronized void remove(ContentSource contentSource){        
         if(contentSourceList.contains(contentSource)) {
-        		LOG.log(WARNING,"Removing the MarkLogic server at {0}:{1} from the content source pool.", new Object[]{hostname,port});
+            String hostname = contentSource.getConnectionProvider().getHostName();
+            int port = contentSource.getConnectionProvider().getPort();
+        		LOG.log(WARNING,"Removing the MarkLogic server at {0}:{1}/{2} from the content source pool.", new Object[]{hostname,port});
 	        contentSourceList.remove(contentSource);
 	        connectionCountsMap.remove(contentSource);
 	        errorCountsMap.remove(contentSource);
@@ -179,7 +178,7 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
     		return contentSourceList.toArray(new ContentSource[contentSourceList.size()]);
     }
     
-    private boolean isLoadPolicy() {
+    protected boolean isLoadPolicy() {
     		return CONNECTION_POLICY_LOAD.equals(connectionPolicy);
     }
     
@@ -220,7 +219,7 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
         return count != null ? count.intValue() : 0;
     }
     
-    //methods to create dynamic proxies. 
+    //methods to create dynamic proxy instances. 
     protected ContentSource createContentSourceProxy(ContentSource contentSource) {
     		return (ContentSource) Proxy.newProxyInstance(
     				DefaultContentSourceManager.class.getClassLoader(), new Class[] { ContentSource.class }, 
@@ -246,7 +245,7 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
 			return obj;
 		}
 		
-	    protected Session createSessionProxy(Session session) {
+	    public Session createSessionProxy(Session session) {
 			return (Session)Proxy.newProxyInstance(
 					DefaultContentSourceManager.class.getClassLoader(), new Class[] { Session.class }, 
 					  new SessionInvocationHandler(csm, target, session));
