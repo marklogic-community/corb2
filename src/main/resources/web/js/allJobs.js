@@ -9,7 +9,7 @@ app.controller("mainCtrl", ["$scope", "$http","$interval",
         var promises = {};
         var loadData = function(response) {
             //ensure that this works with an array or single job object
-            var jobs = [].concat(response.data);
+            var jobs = [].concat(response.data.jobs);
             for (var jobIndex in jobs) {
                 var job = jobs[jobIndex].job;
                 var oldData = $scope.availableServers[job.id];

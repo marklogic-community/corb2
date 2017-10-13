@@ -58,10 +58,10 @@ public class JobServicesHandler implements HttpHandler {
         String contentType;
         if (JobServer.hasParamFormatXml(params)) {
             contentType = JobServer.MIME_XML;
-            response = manager.jobStats.toXMLString(concise);
+            response = manager.jobStats.toXmlString(concise);
         } else {
             contentType = JobServer.MIME_JSON;
-            response =  manager.jobStats.toJSONString(concise);
+            response =  manager.jobStats.toJSON(concise);
         }
 
         httpExchange.getResponseHeaders().add(JobServer.HEADER_CONTENT_TYPE, contentType);
