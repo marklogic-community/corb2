@@ -103,7 +103,7 @@ public class JobStatsTest {
         XPathFactory factory = XPathFactory.newInstance();
         NamespaceContext nsContext = new NamespaceContext() {
             public String getNamespaceURI(String prefix) {
-                return prefix.equals("c") ? JobStats.CORB_NAMESPACE : null;
+                return "c".equals(prefix) ? JobStats.CORB_NAMESPACE : null;
             }
             public Iterator getPrefixes(String val) {
                 return null;

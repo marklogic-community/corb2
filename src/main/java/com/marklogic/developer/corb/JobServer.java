@@ -119,7 +119,7 @@ public class JobServer {
         }
     }
 
-    protected String toJson(org.w3c.dom.Document doc) {
+    protected String toJson(Document doc) {
         StringBuilder json = new StringBuilder();
         try {
             if (jobStatsToJsonTemplates == null) {

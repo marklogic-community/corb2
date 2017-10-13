@@ -297,7 +297,7 @@ public class JobStats extends BaseMonitor {
         return toXmlString(doc);
     }
 
-    public static String toXmlString(org.w3c.dom.Document doc)    {
+    public static String toXmlString(Document doc)    {
         DOMImplementationLS domImplementation = (DOMImplementationLS) doc.getImplementation();
         LSSerializer lsSerializer = domImplementation.createLSSerializer();
         return lsSerializer.writeToString(doc);
@@ -314,7 +314,7 @@ public class JobStats extends BaseMonitor {
             }
             doc.appendChild(element);
         } catch (ParserConfigurationException ex) {
-            LOG.log(Level.SEVERE, "Unable to create a new XML Document Builder", ex);
+            LOG.log(SEVERE, "Unable to create a new XML Document", ex);
         }
         return doc;
     }
@@ -330,7 +330,7 @@ public class JobStats extends BaseMonitor {
             Element docElement = createJobElement(doc, concise);
             doc.appendChild(docElement);
         } catch (ParserConfigurationException ex) {
-            LOG.log(Level.SEVERE, "Unable to create a new XML Document Builder", ex);
+            LOG.log(Level.SEVERE, "Unable to create a new XML Document", ex);
         }
         return doc;
     }
@@ -436,7 +436,7 @@ public class JobStats extends BaseMonitor {
             }
             json.append(toJSON(jobStatsToJsonTemplates, doc));
         } catch (TransformerException e) {
-            LOG.log(Level.SEVERE, "Unable to transform to JSON", e);
+            LOG.log(SEVERE, "Unable to transform to JSON", e);
         }
         return json.toString();
     }
