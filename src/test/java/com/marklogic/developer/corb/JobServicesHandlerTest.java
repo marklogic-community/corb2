@@ -60,7 +60,7 @@ public class JobServicesHandlerTest {
         HttpExchange exchange = mock(HttpExchange.class);
         when(exchange.getRequestURI()).thenReturn(URI.create(""));
         when(exchange.getRequestMethod()).thenReturn("DELETE");
-        Mockito.doThrow(new UnsupportedOperationException()).when(exchange).sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0l);
+        Mockito.doThrow(new UnsupportedOperationException()).when(exchange).sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0L);
         Manager manager = mock(Manager.class);
         JobServicesHandler handler = new JobServicesHandler(manager);
         handler.handle(exchange);

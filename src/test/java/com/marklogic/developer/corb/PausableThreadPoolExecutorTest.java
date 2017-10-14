@@ -63,7 +63,7 @@ public class PausableThreadPoolExecutorTest {
         Thread thread = null;
         Runnable runnable = null;
         executor.pause();
-        
+
         LocalDateTime startedAt = LocalDateTime.now();
         int howLongToWait = 200;
         TimerTask deferResume = new TimerTask() {
@@ -82,16 +82,15 @@ public class PausableThreadPoolExecutorTest {
     	BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
-       executor.topUriList.setSize(2); 
-       executor.topUriList.add("URI1", 6l);
-        executor.topUriList.add("URI1", 6l);
-        executor.topUriList.add("URI2", 5l);
-		executor.topUriList.add("URI3", 4l);
-		executor.topUriList.add("URI4", 3l);
-		executor.topUriList.add("URI5", 2l);
-		executor.topUriList.add("URI6", 1l);
-		assertTrue(executor.topUriList.getData().size()==2);
-		     
+       executor.topUriList.setSize(2);
+       executor.topUriList.add("URI1", 6L);
+       executor.topUriList.add("URI1", 6L);
+       executor.topUriList.add("URI2", 5L);
+       executor.topUriList.add("URI3", 4L);
+       executor.topUriList.add("URI4", 3L);
+       executor.topUriList.add("URI5", 2L);
+       executor.topUriList.add("URI6", 1L);
+       assertTrue(executor.topUriList.getData().size()==2);
     }
-    
+
 }

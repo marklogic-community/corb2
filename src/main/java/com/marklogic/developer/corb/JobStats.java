@@ -33,7 +33,7 @@ import java.time.format.DateTimeFormatter;
 public class JobStats extends BaseMonitor {
 
     private static final String NOT_APPLICABLE = "NA";
-    private static final long TPS_ETC_MIN_REFRESH_INTERVAL = 10000l;
+    private static final long TPS_ETC_MIN_REFRESH_INTERVAL = 10000L;
     private static final String METRICS_COLLECTIONS_PARAM = "collections";
     private static final String METRICS_DOCUMENT_STR_PARAM = "metricsDocumentStr";
     private static final String METRICS_DB_NAME_PARAM = "dbName";
@@ -86,14 +86,14 @@ public class JobStats extends BaseMonitor {
     private String endTime = null;
     private String host = null;
 
-    private Long numberOfFailedTasks = 0l;
-    private Long numberOfSucceededTasks = 0l;
+    private Long numberOfFailedTasks = 0L;
+    private Long numberOfSucceededTasks = 0L;
     private Double averageTransactionTime = 0.0d;
-    private Long urisLoadTime = -1l;
-    private Long preBatchRunTime = -1l;
-    private Long postBatchRunTime = -1l;
-    private Long initTaskRunTime = -1l;
-    private Long totalRunTimeInMillis = -1l;
+    private Long urisLoadTime = -1L;
+    private Long preBatchRunTime = -1L;
+    private Long postBatchRunTime = -1L;
+    private Long initTaskRunTime = -1L;
+    private Long totalRunTimeInMillis = -1L;
     private String jobRunLocation = null;
     private String jobId = null;
     private String jobName = null;
@@ -101,8 +101,8 @@ public class JobStats extends BaseMonitor {
     private List<String> failedUris = null;
     private String uri = null;
     private boolean paused;
-    private Long currentThreadCount = 0l;
-    private Long jobServerPort = -1l;
+    private Long currentThreadCount = 0L;
+    private Long jobServerPort = -1L;
 
     private ContentSourcePool csp;
     private TransformOptions options;
@@ -159,7 +159,7 @@ public class JobStats extends BaseMonitor {
                     Long currentTimeMillis = System.currentTimeMillis();
                     Long totalTime = manager.getEndMillis() - manager.getStartMillis();
                     if (totalTime > 0) {
-                        currentThreadCount = 0l;
+                        currentThreadCount = 0L;
                         totalRunTimeInMillis = totalTime;
                         long totalTransformTime = currentTimeMillis - manager.getTransformStartMillis();
                         averageTransactionTime = totalTransformTime / Double.valueOf(numberOfFailedTasks) + Double.valueOf(numberOfSucceededTasks);
@@ -268,7 +268,7 @@ public class JobStats extends BaseMonitor {
                     if (uri != null) {
                         this.uri = uri;
                     }
-                    
+
                     Thread.yield();// try to avoid thread starvation
                     seq.close();
                     Thread.yield();// try to avoid thread starvation
@@ -460,7 +460,7 @@ public class JobStats extends BaseMonitor {
     }
 
     private static String xmlNode(String nodeName, Long nodeVal) {
-        return xmlNode(nodeName, nodeVal != null && nodeVal >= 0l ? nodeVal.toString() : null);
+        return xmlNode(nodeName, nodeVal != null && nodeVal >= 0L ? nodeVal.toString() : null);
     }
 
     protected static String xmlNode(String nodeName, Double nodeVal) {
