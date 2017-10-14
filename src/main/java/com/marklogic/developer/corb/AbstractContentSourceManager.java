@@ -27,26 +27,26 @@ import com.marklogic.xcc.exceptions.XccConfigException;
 public abstract class AbstractContentSourceManager implements ContentSourceManager {
     protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
     protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
-    
+
     protected Properties properties;
     protected SSLConfig sslConfig;
-    
+
     private static final Logger LOG = Logger.getLogger(AbstractContentSourceManager.class.getName());
 
-    protected void init(Properties properties, SSLConfig sslConfig){
+    protected void init(Properties properties, SSLConfig sslConfig) {
         this.properties = properties;
-        if(sslConfig != null){
+        if (sslConfig != null) {
             this.sslConfig = sslConfig;
-        }else{
+        } else {
             LOG.info("Using TrustAnyoneSSSLConfig because no " + SSL_CONFIG_CLASS + " value specified.");
-            sslConfig = new TrustAnyoneSSLConfig();
-        }      
+            this.sslConfig = new TrustAnyoneSSLConfig();
+        }
     }
-    
+
     protected SecurityOptions getSecurityOptions() throws KeyManagementException, NoSuchAlgorithmException {
         return this.sslConfig.getSecurityOptions();
     }
-        
+
     protected int getConnectRetryLimit() {
         int connectRetryLimit = getIntProperty(XCC_CONNECTION_RETRY_LIMIT);
         return connectRetryLimit < 0 ? DEFAULT_CONNECTION_RETRY_LIMIT : connectRetryLimit;
@@ -56,7 +56,7 @@ public abstract class AbstractContentSourceManager implements ContentSourceManag
         int connectRetryInterval = getIntProperty(XCC_CONNECTION_RETRY_INTERVAL);
         return connectRetryInterval < 0 ? DEFAULT_CONNECTION_RETRY_INTERVAL : connectRetryInterval;
     }
-    
+
     /**
      * Retrieves an int value.
      *
@@ -70,13 +70,13 @@ public abstract class AbstractContentSourceManager implements ContentSourceManag
         if (isNotEmpty(value)) {
             try {
                 intVal = Integer.parseInt(value);
-            } catch (Exception exc) {
+            } catch (NumberFormatException exc) {
                 LOG.log(WARNING, MessageFormat.format("Unable to parse `{0}` value `{1}` as an int", key, value), exc);
             }
         }
         return intVal;
     }
-    
+
     public String getProperty(String key) {
         String val = System.getProperty(key);
         if (val == null && properties != null) {
@@ -84,15 +84,15 @@ public abstract class AbstractContentSourceManager implements ContentSourceManag
         }
         return trim(val);
     }
-    
+
     protected ContentSource createContentSource(String connectionString){
-        if(StringUtils.isNotBlank(connectionString)){       
+        if(StringUtils.isNotBlank(connectionString)){
             URI connectionUri = null;
             try {
                 connectionUri = new URI(connectionString);
                 boolean ssl = connectionUri != null && connectionUri.getScheme() != null
                         && "xccs".equals(connectionUri.getScheme());
-                
+
                 ContentSource contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
                         : ContentSourceFactory.newContentSource(connectionUri);
                 LOG.log(INFO, "Initialized content source for host "+connectionUri.getHost()+":"+connectionUri.getPort()+connectionUri.getPath());
