@@ -115,23 +115,23 @@ public final class Options {
     /**
      * Connection policy for allocating connections to tasks used by DefaultConnectionManager
      * 
-     * @see com.marklogic.developer.corb.DefaultContentSourceManager
+     * @see com.marklogic.developer.corb.DefaultContentSourcePool
      * 
      * @since 2.4.0
      */
-    @Usage(description = "Connection policy for allocating connections to tasks while using DefaultConnectionManager. Acceptable values ROUNBD-ROBIN, RANDOM and LOAD. Default is ROUND-ROBIN")
+    @Usage(description = "Connection policy for allocating connections to tasks while using DefaultConnectionPool. Acceptable values ROUNBD-ROBIN, RANDOM and LOAD. Default is ROUND-ROBIN")
     public static final String CONNECTION_POLICY = "CONNECTION-POLICY";
         
     /**
      * Java class to manage marklogic connections. If none specified, DefaultConnectionManager is used.
      * 
-     * @see com.marklogic.developer.corb.ContentSourceManager
-     * @see com.marklogic.developer.corb.DefaultContentSourceManager
+     * @see com.marklogic.developer.corb.ContentSourcePool
+     * @see com.marklogic.developer.corb.DefaultContentSourcePool
      * 
      * @since 2.4.0
      */
-    @Usage(description = "Java class to manage marklogic connections. If none specified, DefaultConnectionManager is used.")
-    public static final String CONTENT_SOURCE_MANAGER="CONTENT-SOURCE-MANAGER";
+    @Usage(description = "Java class to manage marklogic connections. If none specified, DefaultConnectionPool is used.")
+    public static final String CONTENT_SOURCE_POOL="CONTENT-SOURCE-POOL";
     
     /**
      * The class name of the options value decrypter, which must implement

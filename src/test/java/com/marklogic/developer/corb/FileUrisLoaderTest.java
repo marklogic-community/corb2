@@ -18,7 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-import com.marklogic.xcc.ContentSource;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
@@ -60,10 +59,10 @@ public class FileUrisLoaderTest {
 
     @Test
     public void testSetContentSourceNull() {
-        ContentSourceManager csm = null;
+        ContentSourcePool csp = null;
         try (FileUrisLoader instance = new FileUrisLoader()) {
-            instance.setContentSourceManager(csm);
-            assertNull(instance.csm);
+            instance.setContentSourcePool(csp);
+            assertNull(instance.csp);
         }
     }
 
@@ -273,7 +272,7 @@ public class FileUrisLoaderTest {
         FileUrisLoader instance = new FileUrisLoader();
         instance.bufferedReader = mock(BufferedReader.class);
         instance.collection = "testCleanupCollection";
-        instance.csm = mock(ContentSourceManager.class);
+        instance.csp = mock(ContentSourcePool.class);
         instance.nextLine = "testCleanup";
         instance.options = new TransformOptions();
         instance.properties = new Properties();
@@ -283,7 +282,7 @@ public class FileUrisLoaderTest {
         instance.cleanup();
         assertNull(instance.bufferedReader);
         assertNull(instance.collection);
-        assertNull(instance.csm);
+        assertNull(instance.csp);
         assertNull(instance.options);
         assertNull(instance.replacements);
         assertNull(instance.nextLine);

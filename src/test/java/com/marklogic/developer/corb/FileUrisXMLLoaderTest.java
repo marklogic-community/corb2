@@ -18,7 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-import com.marklogic.xcc.ContentSource;
 import org.junit.*;
 import org.w3c.dom.Document;
 
@@ -67,10 +66,10 @@ public class FileUrisXMLLoaderTest {
 
     @Test
     public void testSetContentSourceNull() {
-        ContentSourceManager csm = null;
+        ContentSourcePool csp = null;
         try (FileUrisXMLLoader instance = new FileUrisXMLLoader()) {
-            instance.setContentSourceManager(csm);
-            assertNull(instance.csm);
+            instance.setContentSourcePool(csp);
+            assertNull(instance.csp);
         }
     }
 
@@ -370,7 +369,7 @@ public class FileUrisXMLLoaderTest {
         FileUrisXMLLoader instance = new FileUrisXMLLoader();
         instance.doc = mock(Document.class);
         instance.collection = "testCollection";
-        instance.csm = mock(ContentSourceManager.class);
+        instance.csp = mock(ContentSourcePool.class);
         instance.nextUri = "<test>testData</test>";
         instance.options = new TransformOptions();
         instance.properties = new Properties();
@@ -380,7 +379,7 @@ public class FileUrisXMLLoaderTest {
         instance.cleanup();
         assertNull(instance.doc);
         assertNull(instance.collection);
-        assertNull(instance.csm);
+        assertNull(instance.csp);
         assertNull(instance.options);
         assertNull(instance.replacements);
     }

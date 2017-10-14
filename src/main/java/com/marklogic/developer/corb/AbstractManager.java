@@ -77,7 +77,7 @@ public abstract class AbstractManager {
     protected Decrypter decrypter;
     protected SSLConfig sslConfig;
     protected String collection;
-    protected ContentSourceManager contentSourceManager;
+    protected ContentSourcePool csp;
     protected TransformOptions options = new TransformOptions();
     protected Properties properties = new Properties();
     protected Map<String, String> userProvidedOptions = new HashMap<>();
@@ -189,7 +189,7 @@ public abstract class AbstractManager {
         }
         initDecrypter();
         initSSLConfig();
-        initContentSourceManager(args.length > 0 ? args[0] : null);
+        initContentSourcePool(args.length > 0 ? args[0] : null);
         
         initOptions(args);
         logRuntimeArgs();
@@ -241,7 +241,7 @@ public abstract class AbstractManager {
         sslConfig.setDecrypter(this.decrypter);
     }
     
-    protected void initContentSourceManager(String uriArg) throws CorbException{
+    protected void initContentSourcePool(String uriArg) throws CorbException{
         String uriAsStrings = getOption(uriArg, XCC_CONNECTION_URI);
         String username = getOption(XCC_USERNAME);
         String password = getOption(XCC_PASSWORD);
@@ -283,41 +283,41 @@ public abstract class AbstractManager {
             }
         }
                 
-        this.contentSourceManager = createContentSourceManager();
-        LOG.info("Using the content source manager "+this.contentSourceManager.getClass().getName());
-        this.contentSourceManager.init(properties, sslConfig, connectionUriList.toArray(new String[connectionUriList.size()]));
+        this.csp = createContentSourceManager();
+        LOG.info("Using the content source manager "+this.csp.getClass().getName());
+        this.csp.init(properties, sslConfig, connectionUriList.toArray(new String[connectionUriList.size()]));
         
-        if(!this.contentSourceManager.available()){
+        if(!this.csp.available()){
             throw new CorbException("No connections available. Please check connection parameters or initialization errors");
         }
     }
     
-    protected ContentSourceManager createContentSourceManager() throws CorbException {
-    		ContentSourceManager csm = null;
-    		String contentSourceManagerClassName = getOption(Options.CONTENT_SOURCE_MANAGER);
-        if(contentSourceManagerClassName != null){
-        		csm = createContentSourceManager(contentSourceManagerClassName);
+    protected ContentSourcePool createContentSourceManager() throws CorbException {
+    		ContentSourcePool csm = null;
+    		String contentSourcePoolClassName = getOption(Options.CONTENT_SOURCE_POOL);
+        if(contentSourcePoolClassName != null){
+        		csm = createContentSourcePool(contentSourcePoolClassName);
         }else{
-        		csm = new DefaultContentSourceManager(); 
+        		csm = new DefaultContentSourcePool(); 
         }
         return csm;
     }
     
-    protected ContentSourceManager createContentSourceManager(String className) throws CorbException{
+    protected ContentSourcePool createContentSourcePool(String className) throws CorbException{
         try{
             Class<?> cls = Class.forName(className);
-            if (ContentSourceManager.class.isAssignableFrom(cls)) {
-                return cls.asSubclass(ContentSourceManager.class).newInstance();
+            if (ContentSourcePool.class.isAssignableFrom(cls)) {
+                return cls.asSubclass(ContentSourcePool.class).newInstance();
             } else {
                 throw new CorbException("ConnectionManager class "+className+" must be of type com.marklogic.developer.corb.Task");
             }
         }catch(ClassNotFoundException |IllegalAccessException | InstantiationException exc){
-            throw new CorbException("Exception while creating the connection manager class "+className,exc);
+            throw new CorbException("Exception while creating the ContentSourcePool class "+className,exc);
         }
     }
     
-    public ContentSourceManager getContentSourceManager() {
-        return this.contentSourceManager;
+    public ContentSourcePool getContentSourcePool() {
+        return this.csp;
     }
 
     protected void initOptions(String... args) throws CorbException {
@@ -340,7 +340,7 @@ public abstract class AbstractManager {
     }
 
     protected void registerStatusInfo() {
-    		ContentSource contentSource = contentSourceManager.get();
+    		ContentSource contentSource = csp.get();
         ResultSequence resultSequence = null;
         try (Session session = contentSource.newSession()) {
 

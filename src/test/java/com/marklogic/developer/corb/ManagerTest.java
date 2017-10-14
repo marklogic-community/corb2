@@ -1141,7 +1141,7 @@ public class ManagerTest {
         Manager instance = new Manager();
         instance.options.setUrisModule("someFile2.xqy");
         try {
-            instance.initContentSourceManager(XCC_CONNECTION_URI);
+            instance.initContentSourcePool(XCC_CONNECTION_URI);
             
             instance.run();
         } catch (Exception ex) {
@@ -1157,7 +1157,7 @@ public class ManagerTest {
     public void testRunGetURILoaderWithURISMODULE() {
         try {
             Manager instance = getMockManagerWithEmptyResults();
-            instance.initContentSourceManager(XCC_CONNECTION_URI);
+            instance.initContentSourcePool(XCC_CONNECTION_URI);
             instance.collection = "URILoader_Modules";
             instance.options.setUrisModule("someFile3.xqy");
             int count = instance.run();
@@ -1172,7 +1172,7 @@ public class ManagerTest {
     public void testRegisterStatusInfo() {
         String xccRootValue = "xccRootValue";
 
-        ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
+        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         AdhocQuery adhocQuery = mock(AdhocQuery.class);
@@ -1182,7 +1182,7 @@ public class ManagerTest {
         ResultItem second = mock(ResultItem.class);
         XdmItem secondXdmItem = mock(XdmItem.class);
         
-        when(contentSourceManager.get()).thenReturn(contentSource);
+        when(contentSourcePool.get()).thenReturn(contentSource);
         when(contentSource.newSession()).thenReturn(session);
         when(session.newAdhocQuery(anyString())).thenReturn(adhocQuery);
         when(resultSequence.hasNext()).thenReturn(true, true, false);
@@ -1198,7 +1198,7 @@ public class ManagerTest {
             when(session.submitRequest(any(Request.class))).thenReturn(resultSequence);
 
             Manager instance = getMockManagerWithEmptyResults();
-            instance.contentSourceManager = contentSourceManager;
+            instance.csp = contentSourcePool;
             instance.registerStatusInfo();
 
             assertEquals(xccRootValue, instance.options.getXDBC_ROOT());
@@ -1449,14 +1449,14 @@ public class ManagerTest {
     
     public static Manager getMockManagerWithEmptyResults() throws RequestException, CorbException{
     		Manager manager = spy(new Manager());
-    		ContentSourceManager contentSourceManager = getMockContentSourceManagerWithEmptyResults(); 
-    		when(manager.createContentSourceManager()).thenReturn(contentSourceManager);
+    		ContentSourcePool contentSourcePool = getMockContentSourceManagerWithEmptyResults(); 
+    		when(manager.createContentSourceManager()).thenReturn(contentSourcePool);
     		return manager;
     }
     
         
-    public static ContentSourceManager getMockContentSourceManagerWithEmptyResults() throws RequestException{
-        ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
+    public static ContentSourcePool getMockContentSourceManagerWithEmptyResults() throws RequestException{
+        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke moduleInvoke = mock(ModuleInvoke.class);
@@ -1466,8 +1466,8 @@ public class ManagerTest {
         XdmItem batchRefItem = mock(XdmItem.class);
         XdmItem uriCount = mock(XdmItem.class);
 
-        when(contentSourceManager.get()).thenReturn(contentSource);
-        when(contentSourceManager.available()).thenReturn(true);
+        when(contentSourcePool.get()).thenReturn(contentSource);
+        when(contentSourcePool.available()).thenReturn(true);
         when(contentSource.newSession()).thenReturn(session);
         when(contentSource.newSession(any())).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(moduleInvoke);
@@ -1477,7 +1477,7 @@ public class ManagerTest {
         when(uriCountResult.getItem()).thenReturn(uriCount);
         when(batchRefItem.asString()).thenReturn("batchRefVal");
         when(uriCount.asString()).thenReturn(Integer.toString(0));
-        return contentSourceManager;
+        return contentSourcePool;
     }
 
     @Test

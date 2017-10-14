@@ -104,10 +104,10 @@ public class AbstractTaskTest {
 
     @Test
     public void testSetContentSource() {
-        ContentSourceManager csm = mock(ContentSourceManager.class);
+        ContentSourcePool csp = mock(ContentSourcePool.class);
         AbstractTask instance = new AbstractTaskImpl();
-        instance.setContentSourceManager(csm);
-        assertEquals(csm, instance.csm);
+        instance.setContentSourcePool(csp);
+        assertEquals(csp, instance.csp);
     }
 
     @Test
@@ -195,12 +195,12 @@ public class AbstractTaskTest {
     @Test
     public void testNewSession() {
         AbstractTask instance = new AbstractTaskImpl();
-        ContentSourceManager csm = mock(ContentSourceManager.class);
+        ContentSourcePool csp = mock(ContentSourcePool.class);
         ContentSource cs = mock(ContentSource.class);
         Session session = mock(Session.class);
-        when(csm.get()).thenReturn(cs);
+        when(csp.get()).thenReturn(cs);
         when(cs.newSession()).thenReturn(session);
-        instance.csm = csm;
+        instance.csp = csp;
         Session result = instance.newSession();
         assertEquals(session, result);
     }
@@ -214,20 +214,20 @@ public class AbstractTaskTest {
         instance.inputUris = inputUris;
 
         try {
-        		ContentSourceManager csm = mock(ContentSourceManager.class);
+        		ContentSourcePool csp = mock(ContentSourcePool.class);
             ContentSource cs = mock(ContentSource.class);
             Session session = mock(Session.class);
             ModuleInvoke request = mock(ModuleInvoke.class);
             ResultSequence seq = mock(ResultSequence.class);
 
-            when(csm.get()).thenReturn(cs);
+            when(csp.get()).thenReturn(cs);
             when(cs.newSession()).thenReturn(session);
             when(session.newModuleInvoke(anyString())).thenReturn(request);
             when(request.setNewStringVariable(anyString(), anyString())).thenReturn(null);
             when(session.submitRequest(request)).thenReturn(seq);
             String key1 = "foo.bar";
             String key2 = "foo.baz";
-            instance.csm = csm;
+            instance.csp = csp;
             instance.moduleType = FOO;
             Properties props = new Properties();
             props.setProperty(key1, BAZ);
@@ -841,14 +841,14 @@ public class AbstractTaskTest {
     @Test
     public void testCleanup() {
         AbstractTask instance = new AbstractTaskImpl();
-        instance.csm = mock(ContentSourceManager.class);
+        instance.csp = mock(ContentSourcePool.class);
         instance.moduleType = "moduleType";
         instance.moduleUri = "moduleUri";
         instance.properties = new Properties();
         instance.inputUris = new String[]{};
         instance.adhocQuery = "adhocQuery";
         instance.cleanup();
-        assertNull(instance.csm);
+        assertNull(instance.csp);
         assertNull(instance.moduleType);
         assertNull(instance.moduleUri);
         assertNull(instance.properties);

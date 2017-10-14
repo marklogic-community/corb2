@@ -24,27 +24,33 @@ import com.marklogic.xcc.SecurityOptions;
 import com.marklogic.xcc.exceptions.XccConfigException;
 
 
-public abstract class AbstractContentSourceManager implements ContentSourceManager {
+public abstract class AbstractContentSourcePool implements ContentSourcePool {
     protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
     protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
     
-    protected Properties properties;
-    protected SSLConfig sslConfig;
+    protected Properties properties = new Properties();
+    protected SSLConfig sslConfig = new TrustAnyoneSSLConfig();
     
-    private static final Logger LOG = Logger.getLogger(AbstractContentSourceManager.class.getName());
+    private static final Logger LOG = Logger.getLogger(AbstractContentSourcePool.class.getName());
 
     protected void init(Properties properties, SSLConfig sslConfig){
-        this.properties = properties;
+    		if(properties != null) {
+    			this.properties = properties;
+    		}
         if(sslConfig != null){
             this.sslConfig = sslConfig;
         }else{
             LOG.info("Using TrustAnyoneSSSLConfig because no " + SSL_CONFIG_CLASS + " value specified.");
-            sslConfig = new TrustAnyoneSSLConfig();
         }      
     }
     
+    @Override
+    public SSLConfig getSSLConfig() {
+    		return this.sslConfig;
+    }
+    
     protected SecurityOptions getSecurityOptions() throws KeyManagementException, NoSuchAlgorithmException {
-        return this.sslConfig.getSecurityOptions();
+        return this.sslConfig != null ? this.sslConfig.getSecurityOptions() : null;
     }
         
     protected int getConnectRetryLimit() {

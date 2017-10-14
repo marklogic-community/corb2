@@ -1,6 +1,6 @@
 package com.marklogic.developer.corb;
 
-public class DefaultContentSourceManagerTest {
+public class DefaultContentSourcePoolTest {
 	/*
     @Test(expected = NullPointerException.class)
     public void testPrepareContentSourceNull() {

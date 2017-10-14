@@ -198,7 +198,7 @@ public class ModuleExecutor extends AbstractManager {
         propertyNames.addAll(System.getProperties().stringPropertyNames());
         String processModule = options.getProcessModule();
 
-        ContentSource contentSource = contentSourceManager.get();
+        ContentSource contentSource = csp.get();
         try (Session session = contentSource.newSession()) {
             request = getRequestForModule(processModule, session);
             if (isJavaScriptModule(processModule)) {
