@@ -92,16 +92,15 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
     }
 
     protected ContentSource createContentSource(String connectionString){
-        if(StringUtils.isNotBlank(connectionString)){
+        if (StringUtils.isNotBlank(connectionString)){
             URI connectionUri = null;
             try {
                 connectionUri = new URI(connectionString);
-                boolean ssl = connectionUri != null && connectionUri.getScheme() != null
-                        && "xccs".equals(connectionUri.getScheme());
+                boolean ssl = connectionUri.getScheme() != null && "xccs".equals(connectionUri.getScheme());
 
                 ContentSource contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
                         : ContentSourceFactory.newContentSource(connectionUri);
-                LOG.log(INFO, "Initialized content source for host "+connectionUri.getHost()+":"+connectionUri.getPort()+connectionUri.getPath());
+                LOG.log(INFO, "Initialized content source for host {0}:{1}{2}", new Object[]{connectionUri.getHost(), connectionUri.getPort(), connectionUri.getPath()});
                 return contentSource;
             } catch (XccConfigException ex) {
                 String hostname = (connectionUri != null) ? connectionUri.getHost() : null;
