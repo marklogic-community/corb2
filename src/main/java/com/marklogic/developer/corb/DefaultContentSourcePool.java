@@ -305,7 +305,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 					if (isSubmitRequest(method) && attempts < retryLimit) {
 						LOG.log(INFO, "Submit request failed {0} times. Max Limit is {1}. Retrying..", new Object[]{attempts, retryLimit});
 						return submitAsNewRequest(args);
-					} else if(isInsertContent(method) && attempts < retryLimit) {
+					} else if (isInsertContent(method) && attempts < retryLimit) {
 						LOG.log(INFO, "Insert content failed {0} times. Max Limit is {1}. Retrying..", new Object[]{attempts, retryLimit});
 						return insertAsNewRequest(args);
 					} else {
