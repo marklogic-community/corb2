@@ -462,11 +462,17 @@ public class AbstractManagerTest {
 	    assertEquals(1,contentSources.length);
 	    
 	    assertEquals(host, contentSources[0].getConnectionProvider().getHostName());
-	    if(port != null) assertEquals(Integer.parseInt(port), contentSources[0].getConnectionProvider().getPort());
+	    if (port != null) {
+            assertEquals(Integer.parseInt(port), contentSources[0].getConnectionProvider().getPort());
+        }
 	    
 	    String csToStr = contentSources[0].toString();
-	    if(user != null) assertTrue(csToStr.contains("user="+user));
-	    if(dbname != null) assertTrue(csToStr.contains("cb="+dbname));
+	    if (user != null) {
+            assertTrue(csToStr.contains("user="+user));
+        }
+	    if (dbname != null) {
+            assertTrue(csToStr.contains("cb="+dbname));
+        }
 	}
 
 
