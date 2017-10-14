@@ -150,7 +150,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
         if (contentSourceList.contains(contentSource)) {
             String hostname = contentSource.getConnectionProvider().getHostName();
             int port = contentSource.getConnectionProvider().getPort();
-        	LOG.log(WARNING, "Removing the MarkLogic server at {0}:{1}/{2} from the content source pool.", new Object[]{hostname,port});
+        	LOG.log(WARNING, "Removing the MarkLogic server at {0}:{1} from the content source pool.", new Object[]{hostname,port});
 	        contentSourceList.remove(contentSource);
 	        connectionCountsMap.remove(contentSource);
 	        errorCountsMap.remove(contentSource);
