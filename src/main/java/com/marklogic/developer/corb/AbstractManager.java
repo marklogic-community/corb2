@@ -227,6 +227,7 @@ public abstract class AbstractManager {
                 Class<?> decrypterCls = Class.forName(sslConfigClassName);
                 if (SSLConfig.class.isAssignableFrom(decrypterCls)) {
                     this.sslConfig = (SSLConfig) decrypterCls.newInstance();
+                    LOG.log(INFO, () -> MessageFormat.format("Using SSLConfig {0}",decrypterCls.getName()));
                 } else {
                     throw new IllegalArgumentException("SSL Options must be of type com.marklogic.developer.corb.SSLConfig");
                 }

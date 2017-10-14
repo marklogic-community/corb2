@@ -28,19 +28,24 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
     protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
     protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
 
-    protected Properties properties = new Properties();
-    protected SSLConfig sslConfig = new TrustAnyoneSSLConfig();
+    protected Properties properties;
+    protected SSLConfig sslConfig;
 
     private static final Logger LOG = Logger.getLogger(AbstractContentSourcePool.class.getName());
 
     protected void init(Properties properties, SSLConfig sslConfig){
     		if(properties != null) {
     			this.properties = properties;
+    		}else {
+    			this.properties = new Properties();
+    			LOG.warning("Attempt to initialize with null properties. Using empty properties");
     		}
+    		
         if(sslConfig != null){
             this.sslConfig = sslConfig;
         } else {
-            LOG.info("Using TrustAnyoneSSSLConfig because no " + SSL_CONFIG_CLASS + " value specified.");
+        	 	this.sslConfig = new TrustAnyoneSSLConfig();
+            LOG.info("Using TrustAnyoneSSSLConfig as sslConfig is null.");
         }
     }
 

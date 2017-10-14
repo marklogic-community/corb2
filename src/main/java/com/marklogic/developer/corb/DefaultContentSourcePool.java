@@ -9,7 +9,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -93,7 +92,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
     }
 
     protected synchronized ContentSource nextContentSource(){
-    	List<ContentSource> availableList = getAvailableContentSources();
+    		List<ContentSource> availableList = getAvailableContentSources();
         if (availableList.isEmpty()){
             return null;
         }
@@ -150,7 +149,8 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
         if (contentSourceList.contains(contentSource)) {
             String hostname = contentSource.getConnectionProvider().getHostName();
             int port = contentSource.getConnectionProvider().getPort();
-        	LOG.log(WARNING, "Removing the MarkLogic server at {0}:{1} from the content source pool.", new Object[]{hostname,port});
+            
+            LOG.log(WARNING, "Removing the MarkLogic server at {0}:{1} from the content source pool.", new Object[]{hostname,port});
 	        contentSourceList.remove(contentSource);
 	        connectionCountsMap.remove(contentSource);
 	        errorCountsMap.remove(contentSource);
@@ -173,11 +173,11 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 
     @Override
     public ContentSource[] getAllContentSources() {
-    	return contentSourceList.toArray(new ContentSource[contentSourceList.size()]);
+    		return contentSourceList.toArray(new ContentSource[contentSourceList.size()]);
     }
 
     protected boolean isLoadPolicy() {
-    	return CONNECTION_POLICY_LOAD.equals(connectionPolicy);
+    		return CONNECTION_POLICY_LOAD.equals(connectionPolicy);
     }
 
     synchronized protected void hold(ContentSource cs) {
@@ -187,7 +187,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
     }
 
     synchronized protected void release(ContentSource cs) {
-    	Integer count = connectionCountsMap.get(cs);
+    		Integer count = connectionCountsMap.get(cs);
         count = (count == null || count > 0 ) ? 0 : count - 1;
         connectionCountsMap.put(cs, count);
     }
@@ -198,7 +198,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 	}
 
     synchronized protected void error(ContentSource cs) {
-    	Integer count = errorCountsMap.get(cs);
+    		Integer count = errorCountsMap.get(cs);
         count = count == null ? 1 : count + 1;
         errorCountsMap.put(cs, count);
         errorTimeMap.put(cs, System.currentTimeMillis());
@@ -254,9 +254,9 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 
     static protected class SessionInvocationHandler implements InvocationHandler {
         DefaultContentSourcePool csp;
-    	ContentSource cs;
-    	Session target;
-    	int attempts = 0;
+    		ContentSource cs;
+    		Session target;
+    		int attempts = 0;
 
 		protected SessionInvocationHandler(DefaultContentSourcePool csp, ContentSource cs, Session target) {
 			this.csp = csp;

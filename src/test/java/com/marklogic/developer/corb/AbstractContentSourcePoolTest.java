@@ -5,12 +5,15 @@ import org.junit.Test;
 
 import com.marklogic.xcc.ContentSource;
 
+import static com.marklogic.developer.corb.AbstractContentSourcePool.DEFAULT_CONNECTION_RETRY_INTERVAL;
+import static com.marklogic.developer.corb.AbstractContentSourcePool.DEFAULT_CONNECTION_RETRY_LIMIT;
+import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_INTERVAL;
+import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
@@ -20,49 +23,95 @@ public class AbstractContentSourcePoolTest {
 	public void setUp() throws FileNotFoundException {
 		clearSystemProperties();
 	}
+		
+	@Test
+    public void testInitWithNullSSLConfig() {
+        Properties properties = new Properties();
+        properties.put("foo", "bar");
+        SSLConfig sslConfig = null;
+        AbstractContentSourcePool csp = new AbstractContentSourcePoolImpl();
+        csp.init(properties, sslConfig);
+        assertEquals("bar", csp.getProperty("foo"));
+        assertNotNull(csp.sslConfig);
+    }
+
+    @Test
+    public void testInitWithSSLConfig() {
+        Properties properties = null;
+        SSLConfig sslConfig = new TrustAnyoneSSLConfig();
+        AbstractContentSourcePool csp = new AbstractContentSourcePoolImpl();
+        csp.init(properties, sslConfig);
+        assertNotNull(csp.sslConfig);
+    }
+
+    @Test
+    public void testGetSecurityOptions() throws Exception {
+        Properties properties = new Properties();
+        SSLConfig sslConfig = null;
+        AbstractContentSourcePool csp = new AbstractContentSourcePoolImpl();
+        csp.init(properties, sslConfig);
+        assertNotNull(csp.getSecurityOptions());
+    }
+
+    @Test
+    public void testGetConnectRetryLimit() {
+        Properties properties = new Properties();
+        SSLConfig sslConfig = null;
+        AbstractContentSourcePool csp = new AbstractContentSourcePoolImpl();
+        csp.init(properties, sslConfig);
+        assertEquals(DEFAULT_CONNECTION_RETRY_LIMIT, csp.getConnectRetryLimit());
+        csp.properties.setProperty(XCC_CONNECTION_RETRY_LIMIT, Integer.toString(5));
+        assertEquals(5, csp.getConnectRetryLimit());
+    }
+
+    @Test
+    public void testGetConnectRetryInterval() {
+        Properties properties = new Properties();
+        SSLConfig sslConfig = null;
+        AbstractContentSourcePool csp = new AbstractContentSourcePoolImpl();
+        csp.init(properties, sslConfig);
+        assertEquals(DEFAULT_CONNECTION_RETRY_INTERVAL, csp.getConnectRetryInterval());
+        csp.properties.setProperty(XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(10));
+        assertEquals(10, csp.getConnectRetryInterval());
+    }
+
+    /**
+     * Test of getIntProperty method, of class AbstractContentSourceManager.
+     */
+    @Test
+    public void testGetIntProperty() {
+        Properties properties = new Properties();
+        SSLConfig sslConfig = null;
+        AbstractContentSourcePool csp = new AbstractContentSourcePoolImpl();
+        csp.init(properties, sslConfig);
+        csp.properties.setProperty(XCC_CONNECTION_RETRY_INTERVAL, "ten");
+        assertEquals(DEFAULT_CONNECTION_RETRY_INTERVAL, csp.getConnectRetryInterval());
+    }
+    
+    
+    
 	 
 	@Test
 	public void testInit() {
 		SSLConfig sslConfig = mock(SSLConfig.class);
 		Properties props = new Properties();
 		props.put("foo", "bar");
-		ContentSourcePoolImpl csp = new ContentSourcePoolImpl();
+		AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
 		csp.init(props, sslConfig);
 		assertEquals(sslConfig,csp.getSSLConfig());
 		assertEquals("bar",csp.getProperty("foo"));
-	}
-	
-	@Test
-	public void testInitWithTrustAnyOneSSLConfig() throws KeyManagementException, NoSuchAlgorithmException {
-		SSLConfig sslConfig = new TrustAnyoneSSLConfig();
-		Properties props = new Properties();
-		props.put("foo", "bar");
-		ContentSourcePoolImpl csp = new ContentSourcePoolImpl();
-		csp.init(props, sslConfig);
-		assertEquals(sslConfig,csp.getSSLConfig());
-		assertEquals("bar",csp.getProperty("foo"));
-		assertArrayEquals(new TrustAnyoneSSLConfig().getSecurityOptions().getEnabledProtocols(), csp.getSecurityOptions().getEnabledProtocols());
-	}
-	
-	@Test
-	public void testNoInit() throws KeyManagementException, NoSuchAlgorithmException {
-		ContentSourcePoolImpl csp = new ContentSourcePoolImpl();
-		assertTrue(csp.getSSLConfig().getClass().equals(TrustAnyoneSSLConfig.class));
-		assertNotNull(csp.properties);
-		assertNotNull(csp.getSecurityOptions());
-		assertArrayEquals(new TrustAnyoneSSLConfig().getSecurityOptions().getEnabledProtocols(), csp.getSecurityOptions().getEnabledProtocols());
 	}
 	
 	@Test
 	public void testGetIntPropertyFromSystemProperty() {
 		System.setProperty("foo", "123");
-		ContentSourcePoolImpl csp = new ContentSourcePoolImpl();
+		AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
 		assertEquals(123,csp.getIntProperty("foo"));
 	}
 	
 	@Test
     public void testPrepareContentSource() {
-		ContentSourcePoolImpl csp = new ContentSourcePoolImpl();
+		AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
         ContentSource cs = csp.createContentSource("xcc://user:pass@localhost:8000");
         assertEquals("localhost",cs.getConnectionProvider().getHostName());
         assertEquals(8000,cs.getConnectionProvider().getPort());
@@ -70,7 +119,7 @@ public class AbstractContentSourcePoolTest {
 
     @Test
     public void testPrepareContentSourceSecureXCC() {
-    		ContentSourcePoolImpl csp = new ContentSourcePoolImpl();
+    		AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
         ContentSource cs = csp.createContentSource("xccs://user:pass@localhost:8000");
         assertEquals("localhost",cs.getConnectionProvider().getHostName());
         assertEquals(8000,cs.getConnectionProvider().getPort());
@@ -78,17 +127,34 @@ public class AbstractContentSourcePoolTest {
     
     @Test
     public void testPrepareContentSourceNoScheme() throws CorbException {
-    		ContentSourcePoolImpl csp = new ContentSourcePoolImpl();
+    		AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
         ContentSource cs = csp.createContentSource("//user:pass@localhost:8000");
         assertNull(cs);
     }
 	
-	private class ContentSourcePoolImpl extends AbstractContentSourcePool{
-		@Override public void init(Properties properties, SSLConfig sslConfig, String[] connectionStrings) {}
-		@Override public ContentSource get() {return null;}
-		@Override public void remove(ContentSource contentSource) {}
-		@Override public boolean available() {return false;}
-		@Override public ContentSource[] getAllContentSources() {return null;}
-		@Override public void close() throws IOException {}		
-	}
+    public class AbstractContentSourcePoolImpl extends AbstractContentSourcePool {
+        @Override
+        public ContentSource[] getAllContentSources() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+        @Override
+        public boolean available() {
+            throw new UnsupportedOperationException("Not supported");
+        }
+        @Override
+        public void remove(ContentSource contentSource) {
+            throw new UnsupportedOperationException("Not supported");
+        }
+        @Override
+        public ContentSource get() {
+            throw new UnsupportedOperationException("Not supported");
+        }
+        @Override
+        public void init(Properties properties, SSLConfig sslConfig, String[] connectionStrings){
+            throw new UnsupportedOperationException("Not supported");
+        }
+        @Override
+        public void close() {
+        }
+    }
 }
