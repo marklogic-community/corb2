@@ -41,7 +41,6 @@ import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import com.marklogic.developer.TestHandler;
 import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.xcc.AdhocQuery;
-import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;

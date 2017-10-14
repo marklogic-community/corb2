@@ -198,8 +198,8 @@ JavaScript module must have an .sjs file extension when deployed to Modules data
 
 For example, a simple URIS-MODULE may look like this:
 ```javascript
-var uris = cts.uris()
-fn.insertBefore(uris,0,fn.count(uris))
+var uris = cts.uris();
+fn.insertBefore(uris,0,fn.count(uris));
 ```
 
 To return URIS\_BATCH\_REF, we can do the following:

@@ -27,10 +27,10 @@ import com.marklogic.xcc.exceptions.XccConfigException;
 public abstract class AbstractContentSourcePool implements ContentSourcePool {
     protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
     protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
-    
+
     protected Properties properties = new Properties();
     protected SSLConfig sslConfig = new TrustAnyoneSSLConfig();
-    
+
     private static final Logger LOG = Logger.getLogger(AbstractContentSourcePool.class.getName());
 
     protected void init(Properties properties, SSLConfig sslConfig){
@@ -39,20 +39,20 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
     		}
         if(sslConfig != null){
             this.sslConfig = sslConfig;
-        }else{
+        } else {
             LOG.info("Using TrustAnyoneSSSLConfig because no " + SSL_CONFIG_CLASS + " value specified.");
-        }      
+        }
     }
-    
+
     @Override
     public SSLConfig getSSLConfig() {
     		return this.sslConfig;
     }
-    
+
     protected SecurityOptions getSecurityOptions() throws KeyManagementException, NoSuchAlgorithmException {
         return this.sslConfig != null ? this.sslConfig.getSecurityOptions() : null;
     }
-        
+
     protected int getConnectRetryLimit() {
         int connectRetryLimit = getIntProperty(XCC_CONNECTION_RETRY_LIMIT);
         return connectRetryLimit < 0 ? DEFAULT_CONNECTION_RETRY_LIMIT : connectRetryLimit;
@@ -62,7 +62,7 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
         int connectRetryInterval = getIntProperty(XCC_CONNECTION_RETRY_INTERVAL);
         return connectRetryInterval < 0 ? DEFAULT_CONNECTION_RETRY_INTERVAL : connectRetryInterval;
     }
-    
+
     /**
      * Retrieves an int value.
      *
@@ -76,13 +76,13 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
         if (isNotEmpty(value)) {
             try {
                 intVal = Integer.parseInt(value);
-            } catch (Exception exc) {
+            } catch (NumberFormatException exc) {
                 LOG.log(WARNING, MessageFormat.format("Unable to parse `{0}` value `{1}` as an int", key, value), exc);
             }
         }
         return intVal;
     }
-    
+
     public String getProperty(String key) {
         String val = System.getProperty(key);
         if (val == null && properties != null) {
@@ -90,18 +90,17 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
         }
         return trim(val);
     }
-    
+
     protected ContentSource createContentSource(String connectionString){
-        if(StringUtils.isNotBlank(connectionString)){       
+        if (StringUtils.isNotBlank(connectionString)){
             URI connectionUri = null;
             try {
                 connectionUri = new URI(connectionString);
-                boolean ssl = connectionUri != null && connectionUri.getScheme() != null
-                        && "xccs".equals(connectionUri.getScheme());
-                
+                boolean ssl = connectionUri.getScheme() != null && "xccs".equals(connectionUri.getScheme());
+
                 ContentSource contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
                         : ContentSourceFactory.newContentSource(connectionUri);
-                LOG.log(INFO, "Initialized content source for host "+connectionUri.getHost()+":"+connectionUri.getPort()+connectionUri.getPath());
+                LOG.log(INFO, "Initialized content source for host {0}:{1}{2}", new Object[]{connectionUri.getHost(), connectionUri.getPort(), connectionUri.getPath()});
                 return contentSource;
             } catch (XccConfigException ex) {
                 String hostname = (connectionUri != null) ? connectionUri.getHost() : null;

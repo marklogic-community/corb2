@@ -660,7 +660,7 @@ public class AbstractTaskTest {
     public void testToXdmItems() {
         AbstractTask instance = new AbstractTaskImpl();
         try {
-            XdmItem[] result = instance.toXdmItems(new String[]{"", FOO, EMPTY_DOC_ELEMENT});
+            XdmItem[] result = instance.toXdmItems("", FOO, EMPTY_DOC_ELEMENT);
             assertEquals(3, result.length);
             assertEquals("", result[0].asString());
             assertEquals(FOO, result[1].asString());
@@ -675,7 +675,7 @@ public class AbstractTaskTest {
     public void testToXdmItemsMalformedXML() {
         AbstractTask instance = new AbstractTaskImpl();
         try {
-            XdmItem[] result = instance.toXdmItems(new String[]{EMPTY_DOC_ELEMENT});
+            XdmItem[] result = instance.toXdmItems(EMPTY_DOC_ELEMENT);
             assertEquals(EMPTY_DOC_ELEMENT, result[0].asString());
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);

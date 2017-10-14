@@ -38,7 +38,7 @@ public class Monitor extends BaseMonitor implements Runnable {
 
     protected static final Logger LOG = Logger.getLogger(Monitor.class.getName());
     protected boolean shutdownNow;
-    protected long completed = 0l;
+    protected long completed = 0L;
     protected String[] lastUris;
     protected PausableThreadPoolExecutor pool;
     protected final CompletionService<String[]> cs;
