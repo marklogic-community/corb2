@@ -53,7 +53,7 @@ public class JobServer {
         setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
         addManager(manager);
 
-        createContext(HTTP_RESOURCE_PATH, (HttpExchange httpExchange) -> handleRequest(httpExchange));
+        createContext(HTTP_RESOURCE_PATH, this::handleRequest);
     }
 
     public void handleRequest(HttpExchange httpExchange) {
