@@ -663,7 +663,7 @@ public class Manager extends AbstractManager implements Closeable {
         String modulesDatabase = options.getModulesDatabase();
         LOG.log(INFO, () -> MessageFormat.format("checking modules, database: {0}", modulesDatabase));
 
-        ContentSource contentSource = contentSourceManager.get();
+        ContentSource contentSource = csp.get();
         try (Session session = contentSource.newSession(modulesDatabase)) {
             for (String resourceModule : resourceModules) {
                 insertModule(session, resourceModule);
@@ -784,7 +784,7 @@ public class Manager extends AbstractManager implements Closeable {
         }
 
         loader.setOptions(options);
-        loader.setContentSourceManager(contentSourceManager);
+        loader.setContentSourcePool(csp);
         loader.setCollection(collection);
         loader.setProperties(properties);
         return loader;

@@ -123,7 +123,7 @@ public class ModuleExecutorTest {
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
         System.setProperty(Options.EXPORT_FILE_NAME, EXPORT_FILE_NAME);
         ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
-        ContentSourceManager result = executor.getContentSourceManager();
+        ContentSourcePool result = executor.getContentSourcePool();
 
         assertNotNull(result);
     }
@@ -229,7 +229,7 @@ public class ModuleExecutorTest {
             String key = "systemProperty";
             System.setProperty(key, "hellowWorld");
             ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
-            executor.contentSourceManager = new DefaultContentSourceManager();
+            executor.csp = new DefaultContentSourcePool();
             executor.options = new TransformOptions();
             String result = executor.getProperty(key);
 
@@ -245,7 +245,7 @@ public class ModuleExecutorTest {
         try {
             clearSystemProperties();
             ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
-            executor.contentSourceManager = new DefaultContentSourceManager();
+            executor.csp = new DefaultContentSourcePool();
             executor.options = new TransformOptions();
             String key = Options.PROCESS_TASK;
 
@@ -323,7 +323,7 @@ public class ModuleExecutorTest {
         clearSystemProperties();
         try {
             ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
-            assertNotNull(executor.contentSourceManager);
+            assertNotNull(executor.csp);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -485,7 +485,7 @@ public class ModuleExecutorTest {
         try {
             RequestOptions opts = new RequestOptions();
             opts.setCacheResult(false);
-            Session session = executor.contentSourceManager.get().newSession();
+            Session session = executor.csp.get().newSession();
             Request req;
             TransformOptions options = executor.getOptions();
             Properties properties = executor.getProperties();
@@ -650,20 +650,20 @@ public class ModuleExecutorTest {
 
     public static ModuleExecutor getMockModuleExecutorCustomProcessResults() throws RequestException, CorbException {
         MockModuleExecutorResults manager = spy(new MockModuleExecutorResults());
-        ContentSourceManager contentSourceManager = getMockContentSourceManager(); 
-		when(manager.createContentSourceManager()).thenReturn(contentSourceManager);
+        ContentSourcePool contentSourcePool = getMockContentSourceManager(); 
+		when(manager.createContentSourceManager()).thenReturn(contentSourcePool);
         return manager;
     }
 
     public static ModuleExecutor getMockModuleExecutorWithEmptyResults() throws RequestException, CorbException {
         ModuleExecutor manager = spy(new ModuleExecutor());
-        ContentSourceManager contentSourceManager = getMockContentSourceManager(); 
-		when(manager.createContentSourceManager()).thenReturn(contentSourceManager);
+        ContentSourcePool contentSourcePool = getMockContentSourceManager(); 
+		when(manager.createContentSourceManager()).thenReturn(contentSourcePool);
         return manager;
     }
 
-    public static ContentSourceManager getMockContentSourceManager() throws RequestException {
-    		ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
+    public static ContentSourcePool getMockContentSourceManager() throws RequestException {
+    		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke moduleInvoke = mock(ModuleInvoke.class);
@@ -676,8 +676,8 @@ public class ModuleExecutorTest {
         XdmItem exampleValue = mock(XdmItem.class);
         XdmItem uriCount = mock(XdmItem.class);
         
-        when(contentSourceManager.get()).thenReturn(contentSource);
-        when(contentSourceManager.available()).thenReturn(true);
+        when(contentSourcePool.get()).thenReturn(contentSource);
+        when(contentSourcePool.available()).thenReturn(true);
         when(contentSource.newSession()).thenReturn(session);
         when(contentSource.newSession(any())).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(moduleInvoke).thenReturn(moduleInvoke);
@@ -695,7 +695,7 @@ public class ModuleExecutorTest {
         when(exampleValue.asString()).thenReturn(FOO);
         when(uriCount.asString()).thenReturn("1");
 
-        return contentSourceManager;
+        return contentSourcePool;
     }
 
     private static class MockModuleExecutorCannotWrite extends ModuleExecutor {

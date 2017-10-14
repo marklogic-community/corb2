@@ -5,9 +5,9 @@ import java.util.Properties;
 
 import com.marklogic.xcc.ContentSource;
 
-public interface ContentSourceManager extends Closeable{
+public interface ContentSourcePool extends Closeable{
     /**
-     * Initializes the connection manager. This method should only be called by AbstractManager class during initialization of corb.
+     * Initializes the ContentSourcePool. This method should only be called by AbstractManager class during initialization of corb.
      * @param properties
      * @param sslConfig
      * @param connectionStrings 
@@ -15,29 +15,34 @@ public interface ContentSourceManager extends Closeable{
     void init(Properties properties, SSLConfig sslConfig, String[] connectionStrings);
     
     /**
-     * Returns the next content source from the list of available connections.  
+     * Returns SSLConfig used by the content source manager
+     * @return sslConfig
+     */
+    SSLConfig getSSLConfig();
+    
+    /**
+     * Returns the next ContentSource from the list of available pool.  
      * DefaultConnectionManager uses either round-robin (default) or random policy to determine next content source. 
      * DefaultConnectionManager implementation waits for #Options.XCC_CONNECTION_RETRY_INTERVAL if the next available connection has failed earlier.
-     * @return contentSource
+     * @return ContentSource
      * @throws NullPointerException when content source is not available
      */
     ContentSource get();
     
     /**
-     * Removes contentSource from the list of available content sources. 
+     * Removes contentSource from the list of available ContentSource instances. 
      * @param contentSource
      */
     void remove(ContentSource contentSource);
         
     /**
-     * Checks if there is at least one content source available
+     * Checks if there is at least one ContentSource available
      * @return true if available
      */
     boolean available();
     
     /**
-     * Returns all the content sources managed by this manager pool
-     * @return content sources
+     * Returns all the content sources managed by this ContentSourcePool
      */
     ContentSource[] getAllContentSources();   
 }

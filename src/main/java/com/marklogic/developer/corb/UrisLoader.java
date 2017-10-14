@@ -26,7 +26,7 @@ public interface UrisLoader extends Closeable {
 
 	void setOptions(TransformOptions options);
 
-	void setContentSourceManager(ContentSourceManager csm);
+	void setContentSourcePool(ContentSourcePool csm);
 
 	void setCollection(String collection);
 

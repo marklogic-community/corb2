@@ -24,7 +24,7 @@ import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmVariable;
 
-public class DefaultContentSourceManager extends AbstractContentSourceManager{
+public class DefaultContentSourcePool extends AbstractContentSourcePool{
     protected static final String CONNECTION_POLICY_ROUND_ROBIN = "ROUND-ROBIN";
     protected static final String CONNECTION_POLICY_RANDOM = "RANDOM";
     protected static final String CONNECTION_POLICY_LOAD = "LOAD";
@@ -39,9 +39,9 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
     
     protected int roundRobinIndex =  -1;
     
-    private static final Logger LOG = Logger.getLogger(DefaultContentSourceManager.class.getName());
+    private static final Logger LOG = Logger.getLogger(DefaultContentSourcePool.class.getName());
     
-    public DefaultContentSourceManager(){}
+    public DefaultContentSourcePool(){}
     
     @Override
     public void init(Properties properties, SSLConfig sslConfig, String[] connectionStrings){
@@ -222,16 +222,16 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
     //methods to create dynamic proxy instances. 
     protected ContentSource createContentSourceProxy(ContentSource contentSource) {
     		return (ContentSource) Proxy.newProxyInstance(
-    				DefaultContentSourceManager.class.getClassLoader(), new Class[] { ContentSource.class }, 
+    				DefaultContentSourcePool.class.getClassLoader(), new Class[] { ContentSource.class }, 
     				  new ContentSourceInvocationHandler(this,contentSource));
     }
         
     //invocation handlers
     static protected class ContentSourceInvocationHandler implements InvocationHandler {
-    		DefaultContentSourceManager csm;
+    		DefaultContentSourcePool csp;
     		ContentSource target;
-    		protected ContentSourceInvocationHandler(DefaultContentSourceManager cm, ContentSource target) {
-    			this.csm = cm;
+    		protected ContentSourceInvocationHandler(DefaultContentSourcePool csp, ContentSource target) {
+    			this.csp = csp;
     			this.target = target;
     		}
 		
@@ -247,20 +247,20 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
 		
 	    public Session createSessionProxy(Session session) {
 			return (Session)Proxy.newProxyInstance(
-					DefaultContentSourceManager.class.getClassLoader(), new Class[] { Session.class }, 
-					  new SessionInvocationHandler(csm, target, session));
+					DefaultContentSourcePool.class.getClassLoader(), new Class[] { Session.class }, 
+					  new SessionInvocationHandler(csp, target, session));
 	    }
     	
     }
         
     static protected class SessionInvocationHandler implements InvocationHandler {
-    		DefaultContentSourceManager csm;
+    		DefaultContentSourcePool csp;
     		ContentSource cs;
     		Session target;
     		int attempts = 0;
     		
-		protected SessionInvocationHandler(DefaultContentSourceManager cm, ContentSource cs, Session target) {
-			this.csm = cm;
+		protected SessionInvocationHandler(DefaultContentSourcePool csp, ContentSource cs, Session target) {
+			this.csp = csp;
 			this.cs = cs;
 			this.target = target;
 		}
@@ -270,7 +270,7 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
 			if(isSubmitRequest(method) || isInsertContent(method)) {
 				if(isSubmitRequest(method)) validRequest(args);
 				
-				if(csm.isLoadPolicy()) csm.hold(cs);
+				if(csp.isLoadPolicy()) csp.hold(cs);
 				attempts++;
 			}
 			try {
@@ -278,19 +278,19 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
 				//TODO: connection is held longer for streaming result sequence even after request is submitted.
 				//We are ok now as we only use streaming results for query uris loader.
 				if(isSubmitRequest(method) || isInsertContent(method)) {
-					csm.success(cs);
-					if(csm.isLoadPolicy()) csm.release(cs);
+					csp.success(cs);
+					if(csp.isLoadPolicy()) csp.release(cs);
 				}
 				return obj;
 			}catch(Exception exc) {
 				if(exc.getCause() instanceof ServerConnectionException) {
-					csm.error(cs);
+					csp.error(cs);
 					
-					if(csm.isLoadPolicy() && (isSubmitRequest(method) || isInsertContent(method))) {
-						csm.release(cs); //we should don't this in finally clause. 
+					if(csp.isLoadPolicy() && (isSubmitRequest(method) || isInsertContent(method))) {
+						csp.release(cs); //we should don't this in finally clause. 
 					}
 					
-					int retryLimit = csm.getConnectRetryLimit();
+					int retryLimit = csp.getConnectRetryLimit();
 					if(isSubmitRequest(method) && attempts < retryLimit) {
 						LOG.info("Submit request failed "+attempts+" times. Max Limit is "+retryLimit+". Retrying..");
 						return submitAsNewRequest(args);
@@ -315,7 +315,7 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
 		
 		private Object submitAsNewRequest(Object[] args) throws RequestException{
 			Request request = (Request)args[0];
-			Session newSession = csm.get().newSession();
+			Session newSession = csp.get().newSession();
 			Request newRequest = null;
 			if(request instanceof AdhocQuery) {
 				newRequest = newSession.newAdhocQuery(((AdhocQuery)request).getQuery());
@@ -333,7 +333,7 @@ public class DefaultContentSourceManager extends AbstractContentSourceManager{
 		}
 		
 		private Object insertAsNewRequest(Object[] args) throws RequestException{
-			Session newSession = csm.get().newSession();
+			Session newSession = csp.get().newSession();
 			if(args[0] instanceof Content) {
 				newSession.insertContent((Content)args[0]);
 			}else if(args[0] instanceof Content[]) {

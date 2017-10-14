@@ -58,12 +58,12 @@ public class QueryUrisLoaderTest {
     @Test(expected = NullPointerException.class)
     public void testOpenNullPropertiesAndNullOptions() throws CorbException {
         QueryUrisLoader instance = new QueryUrisLoader();
-        ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
+        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
-        when(contentSourceManager.get()).thenReturn(contentSource);
+        when(contentSourcePool.get()).thenReturn(contentSource);
         when(contentSource.newSession()).thenReturn(session);
-        instance.csm = contentSourceManager;
+        instance.csp = contentSourcePool;
         try {
             instance.open();
         } finally {
@@ -75,15 +75,15 @@ public class QueryUrisLoaderTest {
     @Test(expected = IllegalArgumentException.class)
     public void testOpenWithBadUrisReplacePattern() {
         QueryUrisLoader instance = new QueryUrisLoader();
-        ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
+        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
-        when(contentSourceManager.get()).thenReturn(contentSource);
+        when(contentSourcePool.get()).thenReturn(contentSource);
         when(contentSource.newSession()).thenReturn(session);
         Properties props = new Properties();
         props.setProperty(Options.URIS_REPLACE_PATTERN, foo);
         instance.properties = props;
-        instance.csm = contentSourceManager;
+        instance.csp = contentSourcePool;
         try {
             instance.open();
         } catch (CorbException ex) {
@@ -96,7 +96,7 @@ public class QueryUrisLoaderTest {
 
     @Test(expected = CorbException.class)
     public void testOpenBadUriCount() throws CorbException {
-    		ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
+    		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke request = mock(ModuleInvoke.class);
@@ -105,7 +105,7 @@ public class QueryUrisLoaderTest {
         ResultItem item = mock(ResultItem.class);
         XdmItem xdmItem = mock(XdmItem.class);
 
-        when(contentSourceManager.get()).thenReturn(contentSource);
+        when(contentSourcePool.get()).thenReturn(contentSource);
         when(contentSource.newSession()).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(request);
         when(request.setNewStringVariable(anyString(), anyString())).thenReturn(var).thenReturn(var).thenReturn(var);
@@ -120,7 +120,7 @@ public class QueryUrisLoaderTest {
             transformOptions.setUrisModule("/module");
             transformOptions.setModuleRoot(root);
             instance.properties = props;
-            instance.csm = contentSourceManager;
+            instance.csp = contentSourcePool;
             instance.options = transformOptions;
 
             instance.open();
@@ -132,7 +132,7 @@ public class QueryUrisLoaderTest {
 
     @Test(expected = CorbException.class)
     public void testOpenInlineUriModule() throws CorbException {
-    		ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
+    		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         AdhocQuery request = mock(AdhocQuery.class);
@@ -141,7 +141,7 @@ public class QueryUrisLoaderTest {
         ResultItem item = mock(ResultItem.class);
         XdmItem xdmItem = mock(XdmItem.class);
 
-        when(contentSourceManager.get()).thenReturn(contentSource);
+        when(contentSourcePool.get()).thenReturn(contentSource);
         when(contentSource.newSession()).thenReturn(session);
         when(session.newAdhocQuery(anyString())).thenReturn(request);
         when(request.setNewStringVariable(anyString(), anyString())).thenReturn(var).thenReturn(var).thenReturn(var);
@@ -156,7 +156,7 @@ public class QueryUrisLoaderTest {
             transformOptions.setUrisModule("INLINE-XQUERY|for $i in (1 to 5) return $i || '.xml'");
             transformOptions.setModuleRoot(root);
             instance.properties = props;
-            instance.csm = contentSourceManager;
+            instance.csp = contentSourcePool;
             instance.options = transformOptions;
 
             instance.open();
@@ -168,7 +168,7 @@ public class QueryUrisLoaderTest {
 
     @Test(expected = IllegalStateException.class)
     public void testOpenNoCodeInInline() {
-    		ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
+    		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke request = mock(ModuleInvoke.class);
@@ -177,7 +177,7 @@ public class QueryUrisLoaderTest {
         ResultItem item = mock(ResultItem.class);
         XdmItem xdmItem = mock(XdmItem.class);
 
-        when(contentSourceManager.get()).thenReturn(contentSource);        
+        when(contentSourcePool.get()).thenReturn(contentSource);        
         when(contentSource.newSession()).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(request);
         when(request.setNewStringVariable(anyString(), anyString())).thenReturn(var).thenReturn(var).thenReturn(var);
@@ -193,7 +193,7 @@ public class QueryUrisLoaderTest {
             transformOptions.setModuleRoot(root);
 
             instance.properties = props;
-            instance.csm = contentSourceManager;
+            instance.csp = contentSourcePool;
             instance.options = transformOptions;
 
             instance.open();
@@ -206,15 +206,15 @@ public class QueryUrisLoaderTest {
     @Test(expected = IllegalStateException.class)
     public void testOpenAdHocIsDirectory() {
         QueryUrisLoader instance = new QueryUrisLoader();
-        ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
+        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
-        when(contentSourceManager.get()).thenReturn(contentSource);
+        when(contentSourcePool.get()).thenReturn(contentSource);
         when(contentSource.newSession()).thenReturn(session);
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule(ADHOC_SUFFIX);
         instance.options = transformOptions;
-        instance.csm = contentSourceManager;
+        instance.csp = contentSourcePool;
         try {
             instance.open();
         } catch (CorbException ex) {
@@ -227,10 +227,10 @@ public class QueryUrisLoaderTest {
 
     @Test(expected = IllegalStateException.class)
     public void testOpenAdHocIsEmpty() {
-    		ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
+    		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
-        when(contentSourceManager.get()).thenReturn(contentSource);
+        when(contentSourcePool.get()).thenReturn(contentSource);
         when(contentSource.newSession()).thenReturn(session);
         TransformOptions transformOptions = new TransformOptions();
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
@@ -238,7 +238,7 @@ public class QueryUrisLoaderTest {
             file.deleteOnExit();
             transformOptions.setUrisModule(file.getAbsolutePath() + ADHOC_SUFFIX);
             instance.options = transformOptions;
-            instance.csm = contentSourceManager;
+            instance.csp = contentSourcePool;
 
             instance.open();
         } catch (IOException | CorbException ex) {
@@ -257,7 +257,7 @@ public class QueryUrisLoaderTest {
             String keyEqualsBar = processModuleKey1 + equalsBar;
             String keyEqualsBar2 = processModuleKey2 + equalsBar;
             String keyEqualsBar3 = processModuleKey3 + equalsBar;
-            ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
+            ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
             ContentSource contentSource = mock(ContentSource.class);
             Session session = mock(Session.class);
             AdhocQuery request = mock(AdhocQuery.class);
@@ -267,7 +267,7 @@ public class QueryUrisLoaderTest {
             XdmItem xItem2 = mock(XdmItem.class);
             XdmItem xItem3 = mock(XdmItem.class);
             XdmItem xItemCount = mock(XdmItem.class);
-            when(contentSourceManager.get()).thenReturn(contentSource);
+            when(contentSourcePool.get()).thenReturn(contentSource);
             when(contentSource.newSession()).thenReturn(session);
             when(session.newAdhocQuery(anyString())).thenReturn(request);
             when(request.setNewStringVariable(anyString(), anyString())).thenReturn(null).thenReturn(null).thenReturn(null).thenReturn(null);
@@ -297,7 +297,7 @@ public class QueryUrisLoaderTest {
             try (QueryUrisLoader instance = new QueryUrisLoader()) {
                 instance.properties = props;
                 instance.options = transformOptions;
-                instance.csm = contentSourceManager;
+                instance.csp = contentSourcePool;
                 instance.collection = "";
                 instance.open();
                 assertEquals(1, instance.getTotalCount());
@@ -314,15 +314,15 @@ public class QueryUrisLoaderTest {
     @Test(expected = IllegalStateException.class)
     public void testOpenBadAdhocFilenameIsEmpty() {
         QueryUrisLoader instance = new QueryUrisLoader();
-        ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
+        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
-        when(contentSourceManager.get()).thenReturn(contentSource);
+        when(contentSourcePool.get()).thenReturn(contentSource);
         when(contentSource.newSession()).thenReturn(session);
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule("  " + ADHOC_SUFFIX);
         instance.options = transformOptions;
-        instance.csm = contentSourceManager;
+        instance.csp = contentSourcePool;
         try {
             instance.open();
         } catch (CorbException ex) {
@@ -336,10 +336,10 @@ public class QueryUrisLoaderTest {
     @Test(expected = IllegalStateException.class)
     public void testOpenMaxOptsFromModuleZero() {
         QueryUrisLoader instance = new QueryUrisLoader();
-        ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
+        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
-        when(contentSourceManager.get()).thenReturn(contentSource);
+        when(contentSourcePool.get()).thenReturn(contentSource);
         when(contentSource.newSession()).thenReturn(session);
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule("  " + ADHOC_SUFFIX);
@@ -347,7 +347,7 @@ public class QueryUrisLoaderTest {
         props.setProperty(Options.MAX_OPTS_FROM_MODULE, "0");
         instance.properties = props;
         instance.options = transformOptions;
-        instance.csm = contentSourceManager;
+        instance.csp = contentSourcePool;
         try {
             instance.open();
         } catch (CorbException ex) {
@@ -361,10 +361,10 @@ public class QueryUrisLoaderTest {
     @Test(expected = IllegalStateException.class)
     public void testOpenInvalidMaxOptsFromModuleZero() {
         QueryUrisLoader instance = new QueryUrisLoader();
-        ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
+        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
-        when(contentSourceManager.get()).thenReturn(contentSource);
+        when(contentSourcePool.get()).thenReturn(contentSource);
         when(contentSource.newSession()).thenReturn(session);
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setUrisModule("  " + ADHOC_SUFFIX);
@@ -372,7 +372,7 @@ public class QueryUrisLoaderTest {
         props.setProperty(Options.MAX_OPTS_FROM_MODULE, "one");
         instance.properties = props;
         instance.options = transformOptions;
-        instance.csm = contentSourceManager;
+        instance.csp = contentSourcePool;
         try {
             instance.open();
         } catch (CorbException ex) {
@@ -417,7 +417,7 @@ public class QueryUrisLoaderTest {
     @Test
     public void testHasNextResultSequenceHasNext() {
         try {
-        		ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
+        		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
             ContentSource contentSource = mock(ContentSource.class);
             Session session = mock(Session.class);
             ModuleInvoke request = mock(ModuleInvoke.class);
@@ -425,7 +425,7 @@ public class QueryUrisLoaderTest {
             ResultItem resultItem = mock(ResultItem.class);
             XdmItem xdmItem = mock(XdmItem.class);
 
-            when(contentSourceManager.get()).thenReturn(contentSource);
+            when(contentSourcePool.get()).thenReturn(contentSource);
             when(session.newModuleInvoke(anyString())).thenReturn(request);
             when(contentSource.newSession()).thenReturn(session);
             when(xdmItem.asString()).thenReturn(Integer.toString(1));
@@ -440,7 +440,7 @@ public class QueryUrisLoaderTest {
                 TransformOptions transformOptions = new TransformOptions();
                 transformOptions.setUrisModule(foo);
                 instance.options = transformOptions;
-                instance.csm = contentSourceManager;
+                instance.csp = contentSourcePool;
                 instance.resultSequence = resultSequence;
                 instance.open();
                 result = instance.hasNext();
@@ -470,7 +470,7 @@ public class QueryUrisLoaderTest {
     @Test
     public void testNext() {
         try {
-        		ContentSourceManager contentSourceManager = mock(ContentSourceManager.class);
+        		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
             ContentSource contentSource = mock(ContentSource.class);
             Session session = mock(Session.class);
             ModuleInvoke request = mock(ModuleInvoke.class);
@@ -478,7 +478,7 @@ public class QueryUrisLoaderTest {
             ResultItem resultItem = mock(ResultItem.class);
             XdmItem xdmItem = mock(XdmItem.class);
 
-            when(contentSourceManager.get()).thenReturn(contentSource);
+            when(contentSourcePool.get()).thenReturn(contentSource);
             when(session.newModuleInvoke(anyString())).thenReturn(request);
             when(contentSource.newSession()).thenReturn(session);
             when(xdmItem.asString()).thenReturn(Integer.toString(1));
@@ -493,7 +493,7 @@ public class QueryUrisLoaderTest {
                 TransformOptions transformOptions = new TransformOptions();
                 transformOptions.setUrisModule(foo);
                 instance.options = transformOptions;
-                instance.csm = contentSourceManager;
+                instance.csp = contentSourcePool;
                 instance.resultSequence = resultSequence;
                 instance.replacements = new String[]{"_", ",", "-", "\n"};
                 instance.open();
@@ -535,7 +535,7 @@ public class QueryUrisLoaderTest {
     public void testCleanup() {
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.options = new TransformOptions();
-        instance.csm = mock(ContentSourceManager.class);
+        instance.csp = mock(ContentSourcePool.class);
         instance.setCollection(foo);
         instance.properties = new Properties();
         instance.setBatchRef(bar);
@@ -543,7 +543,7 @@ public class QueryUrisLoaderTest {
         instance.cleanup();
         instance.close();
         assertNull(instance.options);
-        assertNull(instance.csm);
+        assertNull(instance.csp);
         assertNull(instance.collection);
         assertNull(instance.properties);
         assertNull(instance.getBatchRef());

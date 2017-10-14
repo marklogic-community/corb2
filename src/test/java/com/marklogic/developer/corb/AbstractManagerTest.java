@@ -458,7 +458,7 @@ public class AbstractManagerTest {
     }
     
     private void checkContentSource(AbstractManager instance, String user, String host, String port, String dbname) {
-		ContentSource[] contentSources = instance.getContentSourceManager().getAllContentSources();
+		ContentSource[] contentSources = instance.getContentSourcePool().getAllContentSources();
 	    assertEquals(1,contentSources.length);
 	    
 	    assertEquals(host, contentSources[0].getConnectionProvider().getHostName());
@@ -474,7 +474,7 @@ public class AbstractManagerTest {
     public void testInitConnectionManager() {
         AbstractManager instance = new AbstractManagerImpl();
         try {
-            instance.initContentSourceManager(XCC_CONNECTION_URI);
+            instance.initContentSourcePool(XCC_CONNECTION_URI);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -490,7 +490,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty(Options.XCC_HOSTNAME, HOST);
         instance.properties.setProperty(Options.XCC_PORT, PORT);
         try {
-            instance.initContentSourceManager(XCC_CONNECTION_URI);
+            instance.initContentSourcePool(XCC_CONNECTION_URI);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -503,7 +503,7 @@ public class AbstractManagerTest {
         AbstractManager instance = new AbstractManagerImpl();
         System.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
         try {
-            instance.initContentSourceManager(null);
+            instance.initContentSourcePool(null);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -516,14 +516,14 @@ public class AbstractManagerTest {
     public void testInitURIInvalidXCCURI() throws CorbException {
         String uriArg = "www.marklogic.com";
         AbstractManager instance = new AbstractManagerImpl();
-        instance.initContentSourceManager(uriArg);
+        instance.initContentSourcePool(uriArg);
         fail();
     }
 
     @Test(expected = CorbException.class)
     public void testInitURINullURI() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
-        instance.initContentSourceManager(null);
+        instance.initContentSourcePool(null);
         fail();
     }
 
@@ -535,7 +535,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty(Options.XCC_HOSTNAME, HOST);
         instance.properties.setProperty(Options.XCC_PORT, PORT);
         try {
-            instance.initContentSourceManager(null);
+            instance.initContentSourcePool(null);
             checkContentSource(instance,USERNAME,HOST,PORT,null);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -551,7 +551,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty(Options.XCC_HOSTNAME, HOST);
         instance.properties.setProperty(Options.XCC_PORT, PORT);
         try {
-            instance.initContentSourceManager(null);
+            instance.initContentSourcePool(null);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -568,7 +568,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty(Options.XCC_PORT, PORT);
         instance.properties.setProperty(Options.XCC_DBNAME, "documents database");
         try {
-            instance.initContentSourceManager(null);
+            instance.initContentSourcePool(null);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -585,7 +585,7 @@ public class AbstractManagerTest {
         instance.properties.setProperty(Options.XCC_PORT, PORT);
         instance.properties.setProperty(Options.XCC_DBNAME, "documents%20database");
         try {
-            instance.initContentSourceManager(null);
+            instance.initContentSourcePool(null);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -597,7 +597,7 @@ public class AbstractManagerTest {
     public void testInitURINullURIWithPassword() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.XCC_PASSWORD, PASSWORD);
-        instance.initContentSourceManager(null);
+        instance.initContentSourcePool(null);
         fail();
     }
 
@@ -605,7 +605,7 @@ public class AbstractManagerTest {
     public void testInitURINullURIWithPort() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.XCC_PORT, PORT);
-        instance.initContentSourceManager(null);
+        instance.initContentSourcePool(null);
         fail();
     }
 
@@ -613,7 +613,7 @@ public class AbstractManagerTest {
     public void testInitURINullURIWithHostname() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.XCC_HOSTNAME, HOST);
-        instance.initContentSourceManager(null);
+        instance.initContentSourcePool(null);
         fail();
     }
 
@@ -621,7 +621,7 @@ public class AbstractManagerTest {
     public void testInitURINullURIWithUsername() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
-        instance.initContentSourceManager(null);
+        instance.initContentSourcePool(null);
         fail();
     }
 
@@ -655,7 +655,7 @@ public class AbstractManagerTest {
     @Test
     public void testGetContentSourceManager() {
         AbstractManager instance = new AbstractManagerImpl();
-        ContentSourceManager result = instance.getContentSourceManager();
+        ContentSourcePool result = instance.getContentSourcePool();
         assertNull(result);
     }
 

@@ -85,7 +85,7 @@ public abstract class AbstractTask implements Task {
             = System.getProperty("line.separator") != null ? System.getProperty("line.separator").getBytes() : "\n".getBytes();
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
-    protected ContentSourceManager csm;
+    protected ContentSourcePool csp;
     protected String moduleType;
     protected String moduleUri;
     protected Properties properties = new Properties();
@@ -106,8 +106,8 @@ public abstract class AbstractTask implements Task {
     private static final String AT_URI = " at URI: ";
 
     @Override
-    public void setContentSourceManager(ContentSourceManager csm) {
-        this.csm = csm;
+    public void setContentSourcePool(ContentSourcePool csp) {
+        this.csp = csp;
     }
 
     @Override
@@ -160,7 +160,7 @@ public abstract class AbstractTask implements Task {
     }
 
     public Session newSession() {
-        return csm.get().newSession();
+        return csp.get().newSession();
     }
 
     @Override
@@ -414,7 +414,7 @@ public abstract class AbstractTask implements Task {
 
     protected void cleanup() {
         // release resources
-        csm = null;
+        csp = null;
         moduleType = null;
         moduleUri = null;
         properties = null;

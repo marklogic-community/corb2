@@ -22,7 +22,6 @@ import static com.marklogic.developer.corb.Options.URIS_REPLACE_PATTERN;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
-import com.marklogic.xcc.ContentSource;
 import java.util.Properties;
 
 /**
@@ -32,7 +31,7 @@ import java.util.Properties;
 public abstract class AbstractUrisLoader implements UrisLoader {
 
     protected TransformOptions options;
-    protected ContentSourceManager csm;
+    protected ContentSourcePool csp;
     protected String collection;
     protected Properties properties;
     private int total = 0;
@@ -49,8 +48,8 @@ public abstract class AbstractUrisLoader implements UrisLoader {
     }
     
     @Override
-    public void setContentSourceManager(ContentSourceManager csm) {
-        this.csm = csm;
+    public void setContentSourcePool(ContentSourcePool csp) {
+        this.csp = csp;
     }
 
     @Override
@@ -91,7 +90,7 @@ public abstract class AbstractUrisLoader implements UrisLoader {
 
     protected void cleanup() {
         options = null;
-        csm = null;
+        csp = null;
         collection = null;
         properties = null;
         replacements = null;
