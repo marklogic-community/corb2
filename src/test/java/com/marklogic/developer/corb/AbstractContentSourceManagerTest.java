@@ -11,8 +11,8 @@ import org.junit.Test;
 
 import javax.xml.bind.annotation.XmlType;
 
-import static com.marklogic.developer.corb.AbstractContentSourceManager.DEFAULT_CONNECTION_RETRY_INTERVAL;
-import static com.marklogic.developer.corb.AbstractContentSourceManager.DEFAULT_CONNECTION_RETRY_LIMIT;
+import static com.marklogic.developer.corb.AbstractContentSourcePool.DEFAULT_CONNECTION_RETRY_INTERVAL;
+import static com.marklogic.developer.corb.AbstractContentSourcePool.DEFAULT_CONNECTION_RETRY_LIMIT;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_INTERVAL;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
 import static org.junit.Assert.*;
@@ -28,50 +28,50 @@ public class AbstractContentSourceManagerTest {
         Properties properties = new Properties();
         properties.put("foo", "bar");
         SSLConfig sslConfig = null;
-        AbstractContentSourceManager contentSourceManager = new AbstractContentSourceManagerImpl();
-        contentSourceManager.init(properties, sslConfig);
-        assertEquals("bar", contentSourceManager.getProperty("foo"));
-        assertNotNull(contentSourceManager.sslConfig);
+        AbstractContentSourcePool contentSourcePool = new AbstractContentSourcePoolImpl();
+        contentSourcePool.init(properties, sslConfig);
+        assertEquals("bar", contentSourcePool.getProperty("foo"));
+        assertNotNull(contentSourcePool.sslConfig);
     }
 
     @Test
     public void testInitWithSSLConfig() {
         Properties properties = null;
         SSLConfig sslConfig = new TrustAnyoneSSLConfig();
-        AbstractContentSourceManager contentSourceManager = new AbstractContentSourceManagerImpl();
-        contentSourceManager.init(properties, sslConfig);
-        assertNotNull(contentSourceManager.sslConfig);
+        AbstractContentSourcePool contentSourcePool = new AbstractContentSourcePoolImpl();
+        contentSourcePool.init(properties, sslConfig);
+        assertNotNull(contentSourcePool.sslConfig);
     }
 
     @Test
     public void testGetSecurityOptions() throws Exception {
         Properties properties = new Properties();
         SSLConfig sslConfig = null;
-        AbstractContentSourceManager contentSourceManager = new AbstractContentSourceManagerImpl();
-        contentSourceManager.init(properties, sslConfig);
-        assertNotNull(contentSourceManager.getSecurityOptions());
+        AbstractContentSourcePool contentSourcePool = new AbstractContentSourcePoolImpl();
+        contentSourcePool.init(properties, sslConfig);
+        assertNotNull(contentSourcePool.getSecurityOptions());
     }
 
     @Test
     public void testGetConnectRetryLimit() {
         Properties properties = new Properties();
         SSLConfig sslConfig = null;
-        AbstractContentSourceManager contentSourceManager = new AbstractContentSourceManagerImpl();
-        contentSourceManager.init(properties, sslConfig);
-        assertEquals(DEFAULT_CONNECTION_RETRY_LIMIT, contentSourceManager.getConnectRetryLimit());
-        contentSourceManager.properties.setProperty(XCC_CONNECTION_RETRY_LIMIT, Integer.toString(5));
-        assertEquals(5, contentSourceManager.getConnectRetryLimit());
+        AbstractContentSourcePool contentSourcePool = new AbstractContentSourcePoolImpl();
+        contentSourcePool.init(properties, sslConfig);
+        assertEquals(DEFAULT_CONNECTION_RETRY_LIMIT, contentSourcePool.getConnectRetryLimit());
+        contentSourcePool.properties.setProperty(XCC_CONNECTION_RETRY_LIMIT, Integer.toString(5));
+        assertEquals(5, contentSourcePool.getConnectRetryLimit());
     }
 
     @Test
     public void testGetConnectRetryInterval() {
         Properties properties = new Properties();
         SSLConfig sslConfig = null;
-        AbstractContentSourceManager contentSourceManager = new AbstractContentSourceManagerImpl();
-        contentSourceManager.init(properties, sslConfig);
-        assertEquals(DEFAULT_CONNECTION_RETRY_INTERVAL, contentSourceManager.getConnectRetryInterval());
-        contentSourceManager.properties.setProperty(XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(10));
-        assertEquals(10, contentSourceManager.getConnectRetryInterval());
+        AbstractContentSourcePool contentSourcePool = new AbstractContentSourcePoolImpl();
+        contentSourcePool.init(properties, sslConfig);
+        assertEquals(DEFAULT_CONNECTION_RETRY_INTERVAL, contentSourcePool.getConnectRetryInterval());
+        contentSourcePool.properties.setProperty(XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(10));
+        assertEquals(10, contentSourcePool.getConnectRetryInterval());
     }
 
     /**
@@ -81,13 +81,13 @@ public class AbstractContentSourceManagerTest {
     public void testGetIntProperty() {
         Properties properties = new Properties();
         SSLConfig sslConfig = null;
-        AbstractContentSourceManager contentSourceManager = new AbstractContentSourceManagerImpl();
-        contentSourceManager.init(properties, sslConfig);
-        contentSourceManager.properties.setProperty(XCC_CONNECTION_RETRY_INTERVAL, "ten");
-        assertEquals(DEFAULT_CONNECTION_RETRY_INTERVAL, contentSourceManager.getConnectRetryInterval());
+        AbstractContentSourcePool contentSourcePool = new AbstractContentSourcePoolImpl();
+        contentSourcePool.init(properties, sslConfig);
+        contentSourcePool.properties.setProperty(XCC_CONNECTION_RETRY_INTERVAL, "ten");
+        assertEquals(DEFAULT_CONNECTION_RETRY_INTERVAL, contentSourcePool.getConnectRetryInterval());
     }
 
-    public class AbstractContentSourceManagerImpl extends AbstractContentSourceManager {
+    public class AbstractContentSourcePoolImpl extends AbstractContentSourcePool {
         @Override
         public ContentSource[] getAllContentSources() {
             throw new UnsupportedOperationException("Not supported yet.");
