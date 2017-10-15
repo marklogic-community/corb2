@@ -340,7 +340,7 @@ public abstract class AbstractManager {
         return false;
     }
 
-    protected void registerStatusInfo() {
+    protected void registerStatusInfo() throws CorbException{
     		ContentSource contentSource = csp.get();
         ResultSequence resultSequence = null;
         try (Session session = contentSource.newSession()) {

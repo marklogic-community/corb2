@@ -81,7 +81,7 @@ public class MetricsIT {
     }
 
     @Test
-    public void testManagerMetricsPeriodicSyncUsingSysPropsLargeUrisListJS() {
+    public void testManagerMetricsPeriodicSyncUsingSysPropsLargeUrisListJS() throws CorbException{
         clearSystemProperties();
         int uriCount = 10;
         String collectionName = "testManagerMetricsPeriodicSyncUsingSysPropsLargeUrisListJS";
@@ -93,7 +93,7 @@ public class MetricsIT {
     }
 
     @Test
-    public void testManagerMetricsPeriodicSyncUsingSysPropsLargeUrisListXQUERY() {
+    public void testManagerMetricsPeriodicSyncUsingSysPropsLargeUrisListXQUERY() throws CorbException{
         clearSystemProperties();
         int uriCount = 10;
         String collectionName = "testManagerMetricsPeriodicSyncUsingSysPropsLargeUrisListXQUERY";
@@ -104,7 +104,7 @@ public class MetricsIT {
     }
 
     @Test
-    public void testManagerMetricsNOPeriodicSyncJS() {
+    public void testManagerMetricsNOPeriodicSyncJS() throws CorbException{
         clearSystemProperties();
         int uriCount = 10;
         String collectionName = "testManagerMetricsNOPeriodicSyncJS";
@@ -113,7 +113,7 @@ public class MetricsIT {
     }
 
     @Test
-    public void testManagerMetricsNOPeriodicSyncXQUERY() {
+    public void testManagerMetricsNOPeriodicSyncXQUERY() throws CorbException{
         clearSystemProperties();
         int uriCount = 10;
         String collectionName = "testManagerMetricsNOPeriodicSyncXQUERY";
@@ -121,7 +121,7 @@ public class MetricsIT {
         testManager(uriCount, collectionName, exportFilename, null, null, XML_EXT);
     }
 
-    public static void cleanupDocs(ContentSourcePool contentSourcePool, String collection, String dbName) {
+    public static void cleanupDocs(ContentSourcePool contentSourcePool, String collection, String dbName) throws CorbException{
         try (Session session = contentSourcePool.get().newSession()) {
             AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML
                     + "xdmp:invoke-function(function(){xdmp:collection-delete('" + collection
@@ -133,7 +133,7 @@ public class MetricsIT {
         }
     }
 
-    public static List<String> collectionCount(ContentSourcePool contentSourcePool, String collection, String dbName) {
+    public static List<String> collectionCount(ContentSourcePool contentSourcePool, String collection, String dbName) throws CorbException{
         List<String> result = new ArrayList<>();
         try (Session session = contentSourcePool.get().newSession()) {
             AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML
@@ -148,7 +148,7 @@ public class MetricsIT {
         return result;
     }
 
-    public static List<String> docsWithEndTime(ContentSourcePool contentSourcePool, String collection, String dbName, boolean isXML) {
+    public static List<String> docsWithEndTime(ContentSourcePool contentSourcePool, String collection, String dbName, boolean isXML) throws CorbException{
         List<String> result = new ArrayList<>();
         try (Session session = contentSourcePool.get().newSession()) {
             AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML + "declare namespace corb2='http://marklogic.github.io/corb/';"
@@ -167,7 +167,7 @@ public class MetricsIT {
     }
 
     private void testManager(int uriCount, String collectionName, String exportFilename,
-            String JS_MODULE, String syncFrequency, String extension) {
+            String JS_MODULE, String syncFrequency, String extension) throws CorbException{
         Properties properties = getMetricsTestProperties(uriCount, collectionName, exportFilename, JS_MODULE,
                 syncFrequency);
 

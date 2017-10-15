@@ -662,7 +662,7 @@ public class ModuleExecutorTest {
         return manager;
     }
 
-    public static ContentSourcePool getMockContentSourceManager() throws RequestException {
+    public static ContentSourcePool getMockContentSourceManager() throws RequestException,CorbException {
     		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);

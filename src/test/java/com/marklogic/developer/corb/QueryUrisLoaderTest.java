@@ -73,7 +73,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testOpenWithBadUrisReplacePattern() {
+    public void testOpenWithBadUrisReplacePattern() throws CorbException{
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
@@ -167,7 +167,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpenNoCodeInInline() {
+    public void testOpenNoCodeInInline() throws CorbException{
     		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -204,7 +204,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpenAdHocIsDirectory() {
+    public void testOpenAdHocIsDirectory() throws CorbException{
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
@@ -226,7 +226,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpenAdHocIsEmpty() {
+    public void testOpenAdHocIsEmpty() throws CorbException{
     		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -312,7 +312,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpenBadAdhocFilenameIsEmpty() {
+    public void testOpenBadAdhocFilenameIsEmpty() throws CorbException{
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
@@ -334,7 +334,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpenMaxOptsFromModuleZero() {
+    public void testOpenMaxOptsFromModuleZero() throws CorbException{
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
@@ -359,7 +359,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testOpenInvalidMaxOptsFromModuleZero() {
+    public void testOpenInvalidMaxOptsFromModuleZero() throws CorbException{
         QueryUrisLoader instance = new QueryUrisLoader();
         ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
