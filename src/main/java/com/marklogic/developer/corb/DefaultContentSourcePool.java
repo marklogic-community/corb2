@@ -337,7 +337,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 				}
 
 				return newSession.submitRequest(newRequest);
-			} catch(CorbException exc) {
+			} catch (CorbException exc) {
 				throw new RequestException(exc.getMessage(),request,exc);
 			}
 		}
@@ -351,7 +351,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 					newSession.insertContent((Content[])args[0]);
 				}
 				return null;
-			} catch(CorbException exc) {
+			} catch (CorbException exc) {
 				throw new RequestException(exc.getMessage(),target.newAdhocQuery("()"),exc);
 			}
 		}

@@ -256,7 +256,7 @@ public abstract class AbstractManager {
                     XCC_CONNECTION_URI, XCC_USERNAME, XCC_PASSWORD, XCC_HOSTNAME, XCC_PORT));
         }
 
-        ArrayList<String> connectionUriList = new ArrayList<String>();
+        ArrayList<String> connectionUriList = new ArrayList<>();
         if (uriAsStrings == null) {
             if (this.decrypter != null) {
                 username = this.decrypter.decrypt(XCC_USERNAME, username);
@@ -310,10 +310,10 @@ public abstract class AbstractManager {
             if (ContentSourcePool.class.isAssignableFrom(cls)) {
                 return cls.asSubclass(ContentSourcePool.class).newInstance();
             } else {
-                throw new CorbException("ConnectionManager class "+className+" must be of type com.marklogic.developer.corb.Task");
+                throw new CorbException("ConnectionManager class " + className + " must be of type com.marklogic.developer.corb.Task");
             }
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException exc) {
-            throw new CorbException("Exception while creating the ContentSourcePool class "+className,exc);
+            throw new CorbException("Exception while creating the ContentSourcePool class " + className,exc);
         }
     }
 
