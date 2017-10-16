@@ -70,10 +70,10 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     }
 
     @Override
-    public ContentSource get(){
+    public ContentSource get() throws CorbException{
         ContentSource contentSource = nextContentSource();
         if (contentSource == null) {
-            throw new NullPointerException("ContentSource not available.");
+            throw new CorbException("ContentSource not available.");
         }
 
         Integer failedCount = errorCountsMap.get(contentSource);
@@ -293,7 +293,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
                     csp.error(cs);
 
                     if (csp.isLoadPolicy() && (isSubmitRequest(method) || isInsertContent(method))) {
-                        csp.release(cs); //we should do this in finally clause.
+                        csp.release(cs); //we should don't this in finally clause.
                     }
 
                     int retryLimit = csp.getConnectRetryLimit();
@@ -321,31 +321,39 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
 		private Object submitAsNewRequest(Object[] args) throws RequestException{
 			Request request = (Request)args[0];
-			Session newSession = csp.get().newSession();
-			Request newRequest;
-			if (request instanceof AdhocQuery) {
-				newRequest = newSession.newAdhocQuery(((AdhocQuery)request).getQuery());
-			} else {
-				newRequest = newSession.newModuleInvoke(((ModuleInvoke)request).getModuleUri());
-			}
-			newRequest.setOptions(request.getOptions());
+			try {
+				Session newSession = csp.get().newSession();
+				Request newRequest;
+				if (request instanceof AdhocQuery) {
+					newRequest = newSession.newAdhocQuery(((AdhocQuery)request).getQuery());
+				} else {
+					newRequest = newSession.newModuleInvoke(((ModuleInvoke)request).getModuleUri());
+				}
+				newRequest.setOptions(request.getOptions());
 
-			XdmVariable[] vars = request.getVariables();
-			for (int i = 0; vars != null && i < vars.length;i++) {
-				newRequest.setVariable(vars[i]);
-			}
+				XdmVariable[] vars = request.getVariables();
+				for (int i=0; vars!= null && i < vars.length;i++) {
+					newRequest.setVariable(vars[i]);
+				}
 
-			return newSession.submitRequest(newRequest);
+				return newSession.submitRequest(newRequest);
+			} catch(CorbException exc) {
+				throw new RequestException(exc.getMessage(),request,exc);
+			}
 		}
 
 		private Object insertAsNewRequest(Object[] args) throws RequestException{
-			Session newSession = csp.get().newSession();
-			if (args[0] instanceof Content) {
-				newSession.insertContent((Content)args[0]);
-			} else if (args[0] instanceof Content[]) {
-				newSession.insertContent((Content[])args[0]);
+			try {
+				Session newSession = csp.get().newSession();
+				if (args[0] instanceof Content) {
+					newSession.insertContent((Content)args[0]);
+				} else if (args[0] instanceof Content[]) {
+					newSession.insertContent((Content[])args[0]);
+				}
+				return null;
+			} catch(CorbException exc) {
+				throw new RequestException(exc.getMessage(),target.newAdhocQuery("()"),exc);
 			}
-			return null;
 		}
 
 		private boolean isSubmitRequest(Method method) {

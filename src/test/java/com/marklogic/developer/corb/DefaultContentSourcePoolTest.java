@@ -15,6 +15,23 @@ public class DefaultContentSourcePoolTest {
 	}
 	
 	@Test
+	public void testInitContentSources() {
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.init(null, null, new String[] {"xcc://foo:bar@localhost:8000"});
+		assertTrue(csp.available());
+		assertEquals(csp.getAllContentSources().length,1);
+	}
+	
+	@Test(expected = CorbException.class)
+	public void testInvalidContentSources() throws CorbException{
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.init(null, null, new String[] {"xcc://foo:bar@localhost1:8000"});
+		assertFalse(csp.available());
+		assertEquals(csp.getAllContentSources().length,0);
+		csp.get();
+	}
+	
+	@Test
 	public void testInitTwoContentSources() {
 		DefaultContentSourcePool csp = new DefaultContentSourcePool();
 		csp.init(null, null, new String[] {"xcc://foo:bar@localhost:8000","xcc://foo:bar@127.0.0.1:8000"});

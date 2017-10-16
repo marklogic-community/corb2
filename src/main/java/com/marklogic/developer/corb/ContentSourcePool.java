@@ -25,9 +25,9 @@ public interface ContentSourcePool extends Closeable{
      * DefaultConnectionManager uses either round-robin (default) or random policy to determine next content source. 
      * DefaultConnectionManager implementation waits for #Options.XCC_CONNECTION_RETRY_INTERVAL if the next available connection has failed earlier.
      * @return ContentSource
-     * @throws NullPointerException when content source is not available
+     * @throws CorbException when content source is not available
      */
-    ContentSource get();
+    ContentSource get() throws CorbException;
     
     /**
      * Removes contentSource from the list of available ContentSource instances. 

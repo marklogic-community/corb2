@@ -159,7 +159,7 @@ public abstract class AbstractTask implements Task {
         return this.exportDir;
     }
 
-    public Session newSession() {
+    public Session newSession() throws CorbException{
         return csp.get().newSession();
     }
 

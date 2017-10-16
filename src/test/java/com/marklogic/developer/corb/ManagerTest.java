@@ -1169,7 +1169,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testRegisterStatusInfo() {
+    public void testRegisterStatusInfo() throws CorbException{
         String xccRootValue = "xccRootValue";
 
         ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
@@ -1211,7 +1211,7 @@ public class ManagerTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testRegisterStatusInfoNullContentSource() {
+    public void testRegisterStatusInfoNullContentSource() throws CorbException{
         Manager instance = new Manager();
         instance.registerStatusInfo();
         fail();
@@ -1455,7 +1455,7 @@ public class ManagerTest {
     }
     
         
-    public static ContentSourcePool getMockContentSourceManagerWithEmptyResults() throws RequestException{
+    public static ContentSourcePool getMockContentSourceManagerWithEmptyResults() throws RequestException, CorbException{
         ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);

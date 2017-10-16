@@ -1,6 +1,5 @@
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.Options.SSL_CONFIG_CLASS;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_INTERVAL;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
@@ -99,21 +98,25 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
     protected ContentSource createContentSource(String connectionString){
         if (StringUtils.isNotBlank(connectionString)){
             URI connectionUri = null;
+            String hostname = (connectionUri != null) ? connectionUri.getHost() : "";
+            int port = (connectionUri != null) ? connectionUri.getPort() : -1;
+            String path = (connectionUri != null) ? connectionUri.getPath() : "";
             try {
                 connectionUri = new URI(connectionString);
                 boolean ssl = connectionUri.getScheme() != null && "xccs".equals(connectionUri.getScheme());
 
                 ContentSource contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
                         : ContentSourceFactory.newContentSource(connectionUri);
-                LOG.log(INFO, "Initialized content source for host {0}:{1}{2}", new Object[]{connectionUri.getHost(), connectionUri.getPort(), connectionUri.getPath()});
+                LOG.log(INFO, "Initialized content source for host ", new Object[]{hostname, port, path});
                 return contentSource;
-            } catch (XccConfigException ex) {
-                String hostname = (connectionUri != null) ? connectionUri.getHost() : null;
-                LOG.log(SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly for host "+hostname, ex);
+            } catch (XccConfigException ex) {               
+                LOG.log(SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly for host "+hostname+":"+port+path, ex);
             } catch (KeyManagementException | NoSuchAlgorithmException ex) {
-                LOG.log(SEVERE, "Problem creating content source with ssl", ex);
+                LOG.log(SEVERE, "Problem creating content source with ssl for host "+hostname+":"+port+path, ex);
             } catch (URISyntaxException ex) {
-                LOG.log(SEVERE, "XCC URI is invalid", ex);
+                LOG.log(SEVERE, "XCC URI is invalid for host "+hostname+":"+port+path, ex);
+            } catch (IllegalArgumentException ex){
+            		LOG.log(SEVERE, "XCC URI is invalid for host "+hostname+":"+port+path, ex);
             }
         }
         return null;

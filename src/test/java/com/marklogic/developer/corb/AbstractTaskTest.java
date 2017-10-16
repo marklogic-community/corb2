@@ -193,7 +193,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testNewSession() {
+    public void testNewSession() throws CorbException{
         AbstractTask instance = new AbstractTaskImpl();
         ContentSourcePool csp = mock(ContentSourcePool.class);
         ContentSource cs = mock(ContentSource.class);

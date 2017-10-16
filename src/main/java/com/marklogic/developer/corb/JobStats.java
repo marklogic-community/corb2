@@ -205,21 +205,31 @@ public class JobStats extends BaseMonitor {
 
     private void logToServer(String message, String metrics) {
         if (csp != null) {
-        		ContentSource contentSource = csp.get();
-            try (Session session = contentSource.newSession()) {
-                String logLevel = options.getLogMetricsToServerLog();
-                if (options.isMetricsLoggingEnabled(logLevel)) {
-                    String xquery = XQUERY_VERSION_ML
-                            + (message != null
-                                    ? String.format(XDMP_LOG_FORMAT, message, logLevel.toLowerCase()) + ","
-                                    : "")
-                            + String.format(XDMP_LOG_FORMAT, metrics, logLevel.toLowerCase());
-
-                    AdhocQuery query = session.newAdhocQuery(xquery);
-                    session.submitRequest(query);
-                }
+        		Session session =  null;
+        		try {
+        			ContentSource contentSource = csp.get();
+        			if(contentSource != null) {
+	        			session = contentSource.newSession();
+	        			String logLevel = options.getLogMetricsToServerLog();
+	        			if (options.isMetricsLoggingEnabled(logLevel)) {
+	                    String xquery = XQUERY_VERSION_ML
+	                            + (message != null
+	                                    ? String.format(XDMP_LOG_FORMAT, message, logLevel.toLowerCase()) + ","
+	                                    : "")
+	                            + String.format(XDMP_LOG_FORMAT, metrics, logLevel.toLowerCase());
+	
+	                    AdhocQuery query = session.newAdhocQuery(xquery);
+	                    session.submitRequest(query);
+	                }
+        			}else {
+        				LOG.log(SEVERE, "logJobStatsToServer request failed. ContentSourcePool.get() returned null");
+        			}
             } catch (Exception e) {
                 LOG.log(SEVERE, "logJobStatsToServer request failed", e);
+            }finally {
+            		if(session != null) {
+            			session.close();
+            		}
             }
         }
     }
@@ -238,48 +248,56 @@ public class JobStats extends BaseMonitor {
             Thread.yield();// try to avoid thread starvation
 
             if (csp != null) {
-            		ContentSource contentSource = csp.get();
-                try (Session session = contentSource.newSession()) {
-                    Request request = manager.getRequestForModule(processModule, session);
-
-                    request.setNewStringVariable(METRICS_DB_NAME_PARAM, metricsDatabase);
-                    if (uriRoot != null) {
-                        request.setNewStringVariable(METRICS_URI_ROOT_PARAM, uriRoot);
-                    } else {
-                        request.setNewStringVariable(METRICS_URI_ROOT_PARAM, NOT_APPLICABLE);
-                    }
-                    if (collections != null) {
-                        request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, collections);
-                    } else {
-                        request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, NOT_APPLICABLE);
-                    }
-                    if (isJavaScriptModule(processModule)) {
-                        requestOptions.setQueryLanguage("javascript");
-                        request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
-                                metrics == null ? toJSONString() : metrics);
-                    } else {
-                        request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
-                                metrics == null ? toXMLString() : metrics);
-                    }
-                    request.setOptions(requestOptions);
-
-                    seq = session.submitRequest(request);
-                    String uri = seq.hasNext() ? seq.next().asString() : null;
-                    if (uri != null) {
-                        this.uri = uri;
-                    }
-
-                    Thread.yield();// try to avoid thread starvation
-                    seq.close();
-                    Thread.yield();// try to avoid thread starvation
-
+            		Session session =  null;
+                try{
+            		 	ContentSource contentSource = csp.get();
+            		 	if(contentSource != null) {
+	            			session = contentSource.newSession();
+	            			Request request = manager.getRequestForModule(processModule, session);
+	
+	            			request.setNewStringVariable(METRICS_DB_NAME_PARAM, metricsDatabase);
+	            			if (uriRoot != null) {
+	            				request.setNewStringVariable(METRICS_URI_ROOT_PARAM, uriRoot);
+	            			} else {
+	                        request.setNewStringVariable(METRICS_URI_ROOT_PARAM, NOT_APPLICABLE);
+	            			}
+	            			if (collections != null) {
+	                        request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, collections);
+	            			} else {
+	                        request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, NOT_APPLICABLE);
+	            			}
+	            			if (isJavaScriptModule(processModule)) {
+	                        requestOptions.setQueryLanguage("javascript");
+	                        request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
+	                                metrics == null ? toJSONString() : metrics);
+	            			} else {
+	                        request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
+	                                metrics == null ? toXMLString() : metrics);
+	            			}
+	            			request.setOptions(requestOptions);
+	
+	            			seq = session.submitRequest(request);
+	            			String uri = seq.hasNext() ? seq.next().asString() : null;
+	            			if (uri != null) {
+	                        this.uri = uri;
+	            			}
+	
+	            			Thread.yield();// try to avoid thread starvation
+	            			seq.close();
+            		 	}else {
+            		 		LOG.log(SEVERE, "logJobStatsToServerDocument request failed. ContentSourcePool.get() returned null");
+            		 	}
+            		 	
+            			Thread.yield();// try to avoid thread starvation           			
                 } catch (Exception exc) {
                     LOG.log(SEVERE, "logJobStatsToServerDocument request failed", exc);
                 } finally {
-
                     if (null != seq && !seq.isClosed()) {
                         seq.close();
                         seq = null;
+                    }
+                    if(session != null) {
+                    		session.close();
                     }
                     Thread.yield();// try to avoid thread starvation
                 }

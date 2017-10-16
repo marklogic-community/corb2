@@ -88,9 +88,6 @@ public class AbstractContentSourcePoolTest {
         assertEquals(DEFAULT_CONNECTION_RETRY_INTERVAL, csp.getConnectRetryInterval());
     }
     
-    
-    
-	 
 	@Test
 	public void testInit() {
 		SSLConfig sslConfig = mock(SSLConfig.class);
