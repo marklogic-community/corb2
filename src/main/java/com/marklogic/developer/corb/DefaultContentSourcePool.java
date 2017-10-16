@@ -25,7 +25,7 @@ import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmVariable;
 import java.util.List;
 
-public class DefaultContentSourcePool extends AbstractContentSourcePool{
+public class DefaultContentSourcePool extends AbstractContentSourcePool {
     protected static final String CONNECTION_POLICY_ROUND_ROBIN = "ROUND-ROBIN";
     protected static final String CONNECTION_POLICY_RANDOM = "RANDOM";
     protected static final String CONNECTION_POLICY_LOAD = "LOAD";
@@ -46,8 +46,8 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 
     @Override
     public void init(Properties properties, SSLConfig sslConfig, String[] connectionStrings){
-        super.init(properties,sslConfig);
-        if(connectionStrings == null || connectionStrings.length == 0){
+        super.init(properties, sslConfig);
+        if (connectionStrings == null || connectionStrings.length == 0){
             throw new NullPointerException("XCC connection strings cannot be null or empty");
         }
 
@@ -82,7 +82,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
             String hostname = contentSource.getConnectionProvider().getHostName();
             int port = contentSource.getConnectionProvider().getPort();
             LOG.log(WARNING, "Connection failed from MarkLogic server at {0}:{1}. Waiting for {2} seconds before retry attempt {3}",
-                    new Object[]{hostname,port,retryInterval,failedCount + 1});
+                    new Object[]{hostname, port, retryInterval, failedCount + 1});
             try {
                 Thread.sleep(retryInterval * 1000L);
             } catch (Exception ex) {
@@ -93,7 +93,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
     }
 
     protected synchronized ContentSource nextContentSource(){
-    		List<ContentSource> availableList = getAvailableContentSources();
+        List<ContentSource> availableList = getAvailableContentSources();
         if (availableList.isEmpty()){
             return null;
         }
@@ -125,16 +125,16 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
     }
 
     protected List<ContentSource> getAvailableContentSources(){
-        //check if any errored connections are eligible for retries with out further wait
+        //check if any errored connections are eligible for retries without further wait
         if (!errorTimeMap.isEmpty()) {
             long current = System.currentTimeMillis();
             int retryInterval = getConnectRetryInterval();
             errorTimeMap.entrySet().removeIf(next -> (current - next.getValue()) >= (retryInterval * 1000L));
         }
         if (!errorTimeMap.isEmpty()) {
-            List<ContentSource> availableList = new ArrayList<>();
+            List<ContentSource> availableList = new ArrayList<>(contentSourceList.size());
             for (ContentSource cs: contentSourceList) {
-                if(!errorTimeMap.containsKey(cs)) {
+                if (!errorTimeMap.containsKey(cs)) {
                     availableList.add(cs);
                 }
             }
@@ -146,12 +146,12 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
     }
 
     @Override
-    public synchronized void remove(ContentSource contentSource){
+    public synchronized void remove(ContentSource contentSource) {
         if (contentSourceList.contains(contentSource)) {
             String hostname = contentSource.getConnectionProvider().getHostName();
             int port = contentSource.getConnectionProvider().getPort();
 
-            LOG.log(WARNING, "Removing the MarkLogic server at {0}:{1} from the content source pool.", new Object[]{hostname,port});
+            LOG.log(WARNING, "Removing the MarkLogic server at {0}:{1} from the content source pool.", new Object[]{hostname, port});
 	        contentSourceList.remove(contentSource);
 	        connectionCountsMap.remove(contentSource);
 	        errorCountsMap.remove(contentSource);
@@ -160,7 +160,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
     }
 
     @Override
-    public boolean available(){
+    public boolean available() {
         return !contentSourceList.isEmpty();
     }
 
@@ -208,12 +208,12 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
         String hostname = cs.getConnectionProvider().getHostName();
         int port = cs.getConnectionProvider().getPort();
         LOG.log(WARNING, "Connection error count for host {0}:{1} is {2}. Max limit is {3}.", new Object[]{hostname,port,count,limit});
-        if (count > limit){
+        if (count > limit) {
             remove(cs);
         }
 	}
 
-    protected int errorCount(ContentSource cs){
+    protected int errorCount(ContentSource cs) {
         Integer count = errorCountsMap.get(cs);
         return count != null ? count : 0;
     }
@@ -226,7 +226,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
     }
 
     //invocation handlers
-    static protected class ContentSourceInvocationHandler implements InvocationHandler {
+    static protected class ContentSourceInvocationHandler implements InvocationHandler{
         DefaultContentSourcePool csp;
         ContentSource target;
         protected ContentSourceInvocationHandler(DefaultContentSourcePool csp, ContentSource target) {
@@ -235,10 +235,10 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
         }
 
         @Override
-		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable  {
 			Object obj = method.invoke(target, args);
 
-			if (obj != null && method.getName().equals("newSession") && obj instanceof Session) {
+			if (obj != null && "newSession".equals(method.getName()) && obj instanceof Session) {
 				obj = createSessionProxy((Session)obj);
 			}
 
@@ -250,14 +250,13 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 					DefaultContentSourcePool.class.getClassLoader(), new Class[] { Session.class },
 					  new SessionInvocationHandler(csp, target, session));
 	    }
-
     }
 
     static protected class SessionInvocationHandler implements InvocationHandler {
         DefaultContentSourcePool csp;
-    		ContentSource cs;
-    		Session target;
-    		int attempts = 0;
+        ContentSource cs;
+        Session target;
+        int attempts = 0;
 
 		protected SessionInvocationHandler(DefaultContentSourcePool csp, ContentSource cs, Session target) {
 			this.csp = csp;
@@ -294,7 +293,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
                     csp.error(cs);
 
                     if (csp.isLoadPolicy() && (isSubmitRequest(method) || isInsertContent(method))) {
-                        csp.release(cs); //we should don't this in finally clause.
+                        csp.release(cs); //we should do this in finally clause.
                     }
 
                     int retryLimit = csp.getConnectRetryLimit();
@@ -332,7 +331,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 			newRequest.setOptions(request.getOptions());
 
 			XdmVariable[] vars = request.getVariables();
-			for(int i=0; vars!= null && i < vars.length;i++) {
+			for (int i = 0; vars != null && i < vars.length;i++) {
 				newRequest.setVariable(vars[i]);
 			}
 
@@ -343,18 +342,18 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 			Session newSession = csp.get().newSession();
 			if (args[0] instanceof Content) {
 				newSession.insertContent((Content)args[0]);
-			} else if(args[0] instanceof Content[]) {
+			} else if (args[0] instanceof Content[]) {
 				newSession.insertContent((Content[])args[0]);
 			}
 			return null;
 		}
 
 		private boolean isSubmitRequest(Method method) {
-			return method.getName().equals("submitRequest");
+			return "submitRequest".equals(method.getName());
 		}
 
 		private boolean isInsertContent(Method method) {
-			return method.getName().equals("insertContent");
+			return "insertContent".equals(method.getName());
 		}
 	}
 }

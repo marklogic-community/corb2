@@ -34,14 +34,14 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
     private static final Logger LOG = Logger.getLogger(AbstractContentSourcePool.class.getName());
 
     protected void init(Properties properties, SSLConfig sslConfig){
-    		if(properties != null) {
-    			this.properties = properties;
-    		}else {
-    			this.properties = new Properties();
-    			LOG.warning("Attempt to initialize with null properties. Using empty properties");
-    		}
-    		
-        if(sslConfig != null){
+        if (properties != null) {
+            this.properties = properties;
+        } else {
+            this.properties = new Properties();
+            LOG.warning("Attempt to initialize with null properties. Using empty properties");
+        }
+
+        if (sslConfig != null) {
             this.sslConfig = sslConfig;
         } else {
         	 	this.sslConfig = new TrustAnyoneSSLConfig();
