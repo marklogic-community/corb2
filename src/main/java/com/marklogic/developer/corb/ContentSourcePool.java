@@ -18,7 +18,7 @@ public interface ContentSourcePool extends Closeable{
      * Returns SSLConfig used by the content source manager
      * @return sslConfig
      */
-    SSLConfig getSSLConfig();
+    SSLConfig sslConfig();
     
     /**
      * Returns the next ContentSource from the list of available pool.  

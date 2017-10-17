@@ -49,7 +49,7 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
     }
 
     @Override
-    public SSLConfig getSSLConfig() {
+    public SSLConfig sslConfig() {
     		return this.sslConfig;
     }
 
@@ -107,7 +107,7 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
 
                 ContentSource contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
                         : ContentSourceFactory.newContentSource(connectionUri);
-                LOG.log(INFO, "Initialized content source for host ", new Object[]{hostname, port, path});
+                LOG.log(INFO, "Created content source for host ", new Object[]{hostname, port, path});
                 return contentSource;
             } catch (XccConfigException ex) {               
                 LOG.log(SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly for host "+hostname+":"+port+path, ex);

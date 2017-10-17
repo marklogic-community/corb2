@@ -457,16 +457,16 @@ public class AbstractManagerTest {
         fail();
     }
     
-    private void checkContentSource(AbstractManager instance, String user, String host, String port, String dbname) {
-		ContentSource[] contentSources = instance.getContentSourcePool().getAllContentSources();
-	    assertEquals(1,contentSources.length);
+    private void checkContentSource(AbstractManager instance, String user, String host, String port, String dbname) throws CorbException{
+		ContentSource contentSource = instance.getContentSourcePool().get();
+	    assertNotNull(contentSource);
 	    
-	    assertEquals(host, contentSources[0].getConnectionProvider().getHostName());
+	    assertEquals(host, contentSource.getConnectionProvider().getHostName());
 	    if (port != null) {
-            assertEquals(Integer.parseInt(port), contentSources[0].getConnectionProvider().getPort());
+            assertEquals(Integer.parseInt(port), contentSource.getConnectionProvider().getPort());
         }
 	    
-	    String csToStr = contentSources[0].toString();
+	    String csToStr = contentSource.toString();
 	    if (user != null) {
             assertTrue(csToStr.contains("user="+user));
         }
@@ -477,7 +477,7 @@ public class AbstractManagerTest {
 
 
     @Test
-    public void testInitConnectionManager() {
+    public void testInitConnectionManager() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
         try {
             instance.initContentSourcePool(XCC_CONNECTION_URI);
@@ -489,7 +489,7 @@ public class AbstractManagerTest {
     }
     
     @Test
-    public void testInitURIArgsTakePrecedenceOverProperties() {
+    public void testInitURIArgsTakePrecedenceOverProperties() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
         instance.properties.setProperty(Options.XCC_PASSWORD, PASSWORD);
@@ -505,7 +505,7 @@ public class AbstractManagerTest {
     }
 
     @Test
-    public void testInitURIAsSystemPropertyOnly() {
+    public void testInitURIAsSystemPropertyOnly() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
         System.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
         try {
@@ -550,7 +550,7 @@ public class AbstractManagerTest {
     }
 
     @Test
-    public void testInitURINullURIWithUnencodedValues() {
+    public void testInitURINullURIWithUnencodedValues() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
         instance.properties.setProperty(Options.XCC_PASSWORD, "p@ssword:+!");
@@ -566,7 +566,7 @@ public class AbstractManagerTest {
     }
 
     @Test
-    public void testInitURINullURIWithUnencodedValues2() {
+    public void testInitURINullURIWithUnencodedValues2() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
         instance.properties.setProperty(Options.XCC_PASSWORD, "p@ssword:+");
@@ -583,7 +583,7 @@ public class AbstractManagerTest {
     }
 
     @Test
-    public void testInitURINullURIWithEncodedValues() {
+    public void testInitURINullURIWithEncodedValues() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
         instance.properties.setProperty(Options.XCC_PASSWORD, "p%40assword%2B%3A");

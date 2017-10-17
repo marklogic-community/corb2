@@ -95,7 +95,7 @@ public class AbstractContentSourcePoolTest {
 		props.put("foo", "bar");
 		AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
 		csp.init(props, sslConfig);
-		assertEquals(sslConfig,csp.getSSLConfig());
+		assertEquals(sslConfig,csp.sslConfig());
 		assertEquals("bar",csp.getProperty("foo"));
 	}
 	
@@ -131,15 +131,7 @@ public class AbstractContentSourcePoolTest {
 	
     public class AbstractContentSourcePoolImpl extends AbstractContentSourcePool {
         @Override
-        public ContentSource[] getAllContentSources() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-        @Override
         public boolean available() {
-            throw new UnsupportedOperationException("Not supported");
-        }
-        @Override
-        public void remove(ContentSource contentSource) {
             throw new UnsupportedOperationException("Not supported");
         }
         @Override
@@ -153,5 +145,13 @@ public class AbstractContentSourcePoolTest {
         @Override
         public void close() {
         }
+		@Override
+		public void remove(ContentSource contentSource) {
+			throw new UnsupportedOperationException("Not supported");
+		}
+		@Override
+		public ContentSource[] getAllContentSources() {
+			throw new UnsupportedOperationException("Not supported");
+		}
     }
 }
