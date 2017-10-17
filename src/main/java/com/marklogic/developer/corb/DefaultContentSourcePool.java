@@ -218,17 +218,12 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 	}
 
     synchronized protected void error(ContentSource cs) {
-    		int index=-1;
-    		if((index=contentSourceList.indexOf(cs)) >= 0) {
+    		if(contentSourceList.contains(cs)) {
 	        Integer count = errorCountsMap.get(cs);
 	        count = count == null ? 1 : count + 1;
 	        errorCountsMap.put(cs, count);
 	        errorTimeMap.put(cs, System.currentTimeMillis());
 	        
-	        if(index <= roundRobinIndex) {
-	        		roundRobinIndex++; //avoid getting the same contentSource again
-	        }
-	
 	        int limit = getConnectRetryLimit();
 	        String hostname = cs.getConnectionProvider().getHostName();
 	        int port = cs.getConnectionProvider().getPort();

@@ -75,9 +75,9 @@ public class DefaultContentSourcePoolTest {
 		assertEquals(3,csp.getAllContentSources().length);
 		ContentSource ecs = null;
 		assertHostAndPort((ecs=csp.get()),"192.168.0.1",8001);
-		csp.error(csp.getContentSourceFromProxy(ecs));
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		assertHostAndPort(csp.get(),"192.168.0.3",8003);
+		csp.error(csp.getContentSourceFromProxy(ecs));
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 	}
 	
@@ -86,12 +86,13 @@ public class DefaultContentSourcePoolTest {
 		DefaultContentSourcePool csp = new DefaultContentSourcePool();
 		csp.init(null, null, new String[] {"xcc://foo:bar@192.168.0.1:8001","xcc://foo:bar@192.168.0.2:8002","xcc://foo:bar@192.168.0.3:8003"});
 		assertEquals(3,csp.getAllContentSources().length);
-		ContentSource ecs = null;
-		assertHostAndPort((ecs=csp.get()),"192.168.0.1",8001);
-		csp.error(csp.getContentSourceFromProxy(ecs));
-		assertHostAndPort((ecs=csp.get()),"192.168.0.2",8002);
-		csp.error(csp.getContentSourceFromProxy(ecs));
+		ContentSource ecs1 = null;
+		ContentSource ecs2 = null;
+		assertHostAndPort((ecs1=csp.get()),"192.168.0.1",8001);
+		assertHostAndPort((ecs2=csp.get()),"192.168.0.2",8002);
 		assertHostAndPort(csp.get(),"192.168.0.3",8003);
+		csp.error(csp.getContentSourceFromProxy(ecs1));
+		csp.error(csp.getContentSourceFromProxy(ecs2));
 		assertHostAndPort(csp.get(),"192.168.0.3",8003);
 	}
 	
@@ -99,8 +100,24 @@ public class DefaultContentSourcePoolTest {
 		
 	}
 	
+	@Test
 	public void testRoundRobinPolicyWithAllErrors() throws CorbException{
-		
+		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "1");
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.init(null, null, new String[] {"xcc://foo:bar@192.168.0.1:8001","xcc://foo:bar@192.168.0.2:8002","xcc://foo:bar@192.168.0.3:8003"});
+		assertEquals(3,csp.getAllContentSources().length);
+		ContentSource ecs1 = null;
+		ContentSource ecs2 = null;
+		ContentSource ecs3 = null;
+		assertHostAndPort((ecs1=csp.get()),"192.168.0.1",8001);
+		assertHostAndPort((ecs2=csp.get()),"192.168.0.2",8002);
+		assertHostAndPort((ecs3=csp.get()),"192.168.0.3",8003);
+		csp.error(csp.getContentSourceFromProxy(ecs1));
+		csp.error(csp.getContentSourceFromProxy(ecs2));
+		csp.error(csp.getContentSourceFromProxy(ecs3));
+		csp.get();
+	
 	}
 	
 	public void tryToTestRandomPolicy() throws CorbException{
