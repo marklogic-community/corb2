@@ -98,7 +98,7 @@ public class DefaultContentSourcePoolTest {
 	}
 	
 	@Test
-	public void testRoundRobinPolicyWithReactivatedContentSource() throws CorbException, InterruptedException{
+	public void testRoundRobinPolicyWithUnexpiredContentSource() throws CorbException, InterruptedException{
 		System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
 		DefaultContentSourcePool csp = new DefaultContentSourcePool();
 		csp.init(null, null, new String[] {"xcc://foo:bar@192.168.0.1:8001","xcc://foo:bar@192.168.0.2:8002"});
@@ -109,6 +109,21 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		Thread.sleep(1000L);
+		assertHostAndPort(csp.get(),"192.168.0.1",8001);
+	}
+	
+	@Test
+	public void testRoundRobinPolicyWithReactivatedContentSource() throws CorbException, InterruptedException{
+		System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.init(null, null, new String[] {"xcc://foo:bar@192.168.0.1:8001","xcc://foo:bar@192.168.0.2:8002"});
+		ContentSource ecs1 = null;
+		assertHostAndPort((ecs1=csp.get()),"192.168.0.1",8001);
+		assertHostAndPort(csp.get(),"192.168.0.2",8002);
+		csp.error(csp.getContentSourceFromProxy(ecs1));
+		assertHostAndPort(csp.get(),"192.168.0.2",8002);
+		assertHostAndPort(csp.get(),"192.168.0.2",8002);
+		csp.success(csp.getContentSourceFromProxy(ecs1));
 		assertHostAndPort(csp.get(),"192.168.0.1",8001);
 	}
 	
@@ -151,23 +166,124 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 	}
 	
+	@Test
 	public void testLoadPolicy() throws CorbException{
-		
+		System.setProperty(Options.CONNECTION_POLICY, "LOAD");
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.init(null, null, new String[] {"xcc://foo:bar@192.168.0.1:8001","xcc://foo:bar@192.168.0.2:8002"});
+		ContentSource[] csList = csp.getAllContentSources();
+		assertEquals(2,csList.length);
+		assertHostAndPort(csp.get(),"192.168.0.1",8001);
+		assertHostAndPort(csp.get(),"192.168.0.1",8001); //should get the same host as there is no load
+		csp.hold(csList[0]);
+		assertHostAndPort(csp.get(),"192.168.0.2",8002);
+		csp.release(csList[0]);
+		assertHostAndPort(csp.get(),"192.168.0.1",8001);
 	}
 	
+	@Test
+	public void testLoadPolicy2() throws CorbException{
+		System.setProperty(Options.CONNECTION_POLICY, "LOAD");
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.init(null, null, new String[] {"xcc://foo:bar@192.168.0.1:8001","xcc://foo:bar@192.168.0.2:8002"});
+		ContentSource[] csList = csp.getAllContentSources();
+		assertEquals(2,csList.length);
+		csp.hold(csList[0]);
+		csp.hold(csList[1]);
+		assertHostAndPort(csp.get(),"192.168.0.1",8001);
+		csp.hold(csList[0]);
+		assertHostAndPort(csp.get(),"192.168.0.2",8002);
+	}
+	
+	@Test
 	public void testLoadPolicyWithOneError() throws CorbException{
-		
+		System.setProperty(Options.CONNECTION_POLICY, "LOAD");
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.init(null, null, new String[] {"xcc://foo:bar@192.168.0.1:8001","xcc://foo:bar@192.168.0.2:8002","xcc://foo:bar@192.168.0.3:8003"});
+		ContentSource[] csList = csp.getAllContentSources();
+		assertEquals(3,csList.length);
+		assertHostAndPort(csp.get(),"192.168.0.1",8001);
+		csp.error(csList[0]);
+		csp.hold(csList[1]);
+		assertHostAndPort(csp.get(),"192.168.0.3",8003);
+		csp.release(csList[1]);
+		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 	}
 	
+	@Test
 	public void testLoadPolicyWithTwoErrors() throws CorbException{
-		
+		System.setProperty(Options.CONNECTION_POLICY, "LOAD");
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.init(null, null, new String[] {"xcc://foo:bar@192.168.0.1:8001","xcc://foo:bar@192.168.0.2:8002","xcc://foo:bar@192.168.0.3:8003"});
+		ContentSource[] csList = csp.getAllContentSources();
+		assertEquals(3,csList.length);
+		assertHostAndPort(csp.get(),"192.168.0.1",8001);
+		csp.error(csList[0]);
+		csp.error(csList[1]);
+		assertHostAndPort(csp.get(),"192.168.0.3",8003);
+		csp.hold(csList[2]);
+		assertHostAndPort(csp.get(),"192.168.0.3",8003);
 	}
 	
+	@Test
 	public void testLoadPolicyWithReactivatedContentSource() throws CorbException{
+		System.setProperty(Options.CONNECTION_POLICY, "LOAD");
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.init(null, null, new String[] {"xcc://foo:bar@192.168.0.1:8001","xcc://foo:bar@192.168.0.2:8002","xcc://foo:bar@192.168.0.3:8003"});
+		ContentSource[] csList = csp.getAllContentSources();
+		assertEquals(3,csList.length);
+		assertHostAndPort(csp.get(),"192.168.0.1",8001);
+		csp.hold(csList[0]);
+		csp.error(csList[1]);
+		assertHostAndPort(csp.get(),"192.168.0.3",8003);
+		csp.success(csList[1]);
+		assertHostAndPort(csp.get(),"192.168.0.2",8002);
+	}
+	
+	@Test(expected = CorbException.class)
+	public void testLoadPolicyWithAllErrors() throws CorbException{
+		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "1");
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
+		System.setProperty(Options.CONNECTION_POLICY, "LOAD");
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.init(null, null, new String[] {"xcc://foo:bar@192.168.0.1:8001","xcc://foo:bar@192.168.0.2:8002"});
+		ContentSource[] csList = csp.getAllContentSources();
+		assertEquals(2,csList.length);
+		assertHostAndPort(csp.get(),"192.168.0.1",8001);
+		csp.error(csList[0]);
+		csp.error(csList[1]);
+		assertHostAndPort(csp.get(),"192.168.0.1",8001);
+		csp.error(csList[0]);
+		assertHostAndPort(csp.get(),"192.168.0.2",8002);
+		csp.error(csList[1]);
+		csp.get();
+	}
+	
+	public void testSubmitWithMockRequest() {
 		
 	}
 	
-	public void testLoadPolicyWithAllErrors() throws CorbException{
+	public void testSubmitWithMockRequestAndError() {
+		
+	}
+	
+	public void testSubmitWithMockRequestAndErrorAndReactivate() {
+		
+	}
+	
+	public void testSubmitWithMockRequestAndErrorAndUnexpired() {
+		
+	}
+	
+	public void testSubmitWithMockRequestLoadPolicy() {
+	
+	}
+	
+	public void testSubmitWithMockRequestAndErrorLoadPolicy() {
+		
+	}
+	
+	public void testSubmitWithMockRequestAndErrorAndReactivateLoadPolicy() {
 		
 	}
 
