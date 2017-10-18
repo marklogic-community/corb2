@@ -92,7 +92,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
             }
         }
 
-        return createContentSourceProxy(contentSource);
+        return createContentSourceProxy(this,contentSource);
     }
 
     protected synchronized ContentSource nextContentSource(){
@@ -254,10 +254,16 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
     }
 
     //methods to create dynamic proxy instances.
-    protected ContentSource createContentSourceProxy(ContentSource contentSource) {
+    static protected ContentSource createContentSourceProxy(DefaultContentSourcePool csp, ContentSource cs) {
         return (ContentSource) Proxy.newProxyInstance(
                 DefaultContentSourcePool.class.getClassLoader(), new Class[] { ContentSource.class },
-                  new ContentSourceInvocationHandler(this,contentSource));
+                  new ContentSourceInvocationHandler(csp,cs));
+    }
+    
+    static protected Session createSessionProxy(DefaultContentSourcePool csp,ContentSource cs, Session session) {
+		return (Session)Proxy.newProxyInstance(
+				DefaultContentSourcePool.class.getClassLoader(), new Class[] { Session.class },
+				  new SessionInvocationHandler(csp, cs, session));
     }
 
     //invocation handlers
@@ -274,18 +280,11 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 			Object obj = method.invoke(target, args);
 
 			if (obj != null && method.getName().equals("newSession") && obj instanceof Session) {
-				obj = createSessionProxy((Session)obj);
+				obj = createSessionProxy(csp,target,(Session)obj);
 			}
 
 			return obj;
 		}
-
-        protected Session createSessionProxy(Session session) {
-			return (Session)Proxy.newProxyInstance(
-					DefaultContentSourcePool.class.getClassLoader(), new Class[] { Session.class },
-					  new SessionInvocationHandler(csp, target, session));
-	    }
-
     }
 
     static protected class SessionInvocationHandler implements InvocationHandler {

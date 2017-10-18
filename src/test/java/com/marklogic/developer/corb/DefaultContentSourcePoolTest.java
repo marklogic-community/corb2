@@ -4,6 +4,7 @@ import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static org.junit.Assert.*;
 
 import java.io.FileNotFoundException;
+import java.util.Arrays;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -96,8 +97,19 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.3",8003);
 	}
 	
-	public void testRoundRobinPolicyWithReactivatedContentSource() throws CorbException{
-		
+	@Test
+	public void testRoundRobinPolicyWithReactivatedContentSource() throws CorbException, InterruptedException{
+		System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.init(null, null, new String[] {"xcc://foo:bar@192.168.0.1:8001","xcc://foo:bar@192.168.0.2:8002"});
+		ContentSource ecs1 = null;
+		assertHostAndPort((ecs1=csp.get()),"192.168.0.1",8001);
+		assertHostAndPort(csp.get(),"192.168.0.2",8002);
+		csp.error(csp.getContentSourceFromProxy(ecs1));
+		assertHostAndPort(csp.get(),"192.168.0.2",8002);
+		assertHostAndPort(csp.get(),"192.168.0.2",8002);
+		Thread.sleep(1000L);
+		assertHostAndPort(csp.get(),"192.168.0.1",8001);
 	}
 	
 	@Test
@@ -116,16 +128,27 @@ public class DefaultContentSourcePoolTest {
 		csp.error(csp.getContentSourceFromProxy(ecs1));
 		csp.error(csp.getContentSourceFromProxy(ecs2));
 		csp.error(csp.getContentSourceFromProxy(ecs3));
-		csp.get();
-	
+		csp.get();	
 	}
 	
+	@Test
 	public void tryToTestRandomPolicy() throws CorbException{
-		
+		System.setProperty(Options.CONNECTION_POLICY, "RANDOM");
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.init(null, null, new String[] {"xcc://foo:bar@192.168.0.1:8001","xcc://foo:bar@192.168.0.2:8002"});
+		assertTrue(Arrays.asList(new String[]{"192.168.0.1","192.168.0.2"}).contains(csp.get().getConnectionProvider().getHostName()));
+		assertTrue(Arrays.asList(new String[]{"192.168.0.1","192.168.0.2"}).contains(csp.get().getConnectionProvider().getHostName()));
 	}
-		
+	
+	@Test
 	public void testRandomPolicyWithOneError() throws CorbException{
-		
+		System.setProperty(Options.CONNECTION_POLICY, "RANDOM");
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.init(null, null, new String[] {"xcc://foo:bar@192.168.0.1:8001","xcc://foo:bar@192.168.0.2:8002"});
+		assertTrue(Arrays.asList(new String[]{"192.168.0.1","192.168.0.2"}).contains(csp.get().getConnectionProvider().getHostName()));
+		assertTrue(Arrays.asList(new String[]{"192.168.0.1","192.168.0.2"}).contains(csp.get().getConnectionProvider().getHostName()));
+		csp.error(csp.getAllContentSources()[0]);
+		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 	}
 	
 	public void testLoadPolicy() throws CorbException{
