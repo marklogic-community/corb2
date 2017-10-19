@@ -99,7 +99,7 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
         if (StringUtils.isNotBlank(connectionString)){
             URI connectionUri = null;
             String hostname = (connectionUri != null) ? connectionUri.getHost() : "";
-            int port = (connectionUri != null) ? connectionUri.getPort() : -1;
+            String port = String.valueOf((connectionUri != null) ? connectionUri.getPort() : -1);
             String path = (connectionUri != null) ? connectionUri.getPath() : "";
             try {
                 connectionUri = new URI(connectionString);

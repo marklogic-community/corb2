@@ -83,7 +83,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
         if (failedCount != null && failedCount > 0){
             int retryInterval = getConnectRetryInterval();
             String hostname = contentSource.getConnectionProvider().getHostName();
-            int port = contentSource.getConnectionProvider().getPort();
+            String port = String.valueOf(contentSource.getConnectionProvider().getPort());
             LOG.log(WARNING, "Connection failed from MarkLogic server at {0}:{1}. Waiting for {2} seconds before retry attempt {3}",
                     new Object[]{hostname,port,retryInterval,failedCount + 1});
             try {
@@ -171,28 +171,6 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 		contentSourceList.clear();
     }
     
-    public ContentSource getContentSourceFromProxy(ContentSource proxy) {
-    		ContentSource target = proxy;
-    		if(Proxy.isProxyClass(proxy.getClass())) {
-    			InvocationHandler handler = Proxy.getInvocationHandler(proxy);
-    			if(handler instanceof ContentSourceInvocationHandler) {
-    				target = ((ContentSourceInvocationHandler)handler).target;
-    			}
-    		}
-    		return target;
-    }
-    
-    public Session getSessionFromProxy(Session proxy) {
-    		Session target = proxy;
-		if(Proxy.isProxyClass(proxy.getClass())) {
-			InvocationHandler handler = Proxy.getInvocationHandler(proxy);
-			if(handler instanceof SessionInvocationHandler) {
-				target = ((SessionInvocationHandler)handler).target;
-			}
-		}
-		return target;
-    }
-
     protected boolean isLoadPolicy() {
         return CONNECTION_POLICY_LOAD.equals(connectionPolicy);
     }
@@ -226,7 +204,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 	        
 	        int limit = getConnectRetryLimit();
 	        String hostname = cs.getConnectionProvider().getHostName();
-	        int port = cs.getConnectionProvider().getPort();
+	        String port = String.valueOf(cs.getConnectionProvider().getPort());
 	        LOG.log(WARNING, "Connection error count for host {0}:{1} is {2}. Max limit is {3}.", new Object[]{hostname,port,count,limit});
 	        if (count > limit){
 	        		removeInternal(cs);
@@ -243,7 +221,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
     protected synchronized void removeInternal(ContentSource cs) {
 	    	if (contentSourceList.contains(cs)) {	
 	    		String hostname = cs.getConnectionProvider().getHostName();
-	        int port = cs.getConnectionProvider().getPort();
+	        String port = String.valueOf(cs.getConnectionProvider().getPort());
 	
 	        LOG.log(WARNING, "Removing the MarkLogic server at {0}:{1} from the content source pool.", new Object[]{hostname,port});
 	        contentSourceList.remove(cs);
@@ -265,6 +243,28 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 				DefaultContentSourcePool.class.getClassLoader(), new Class[] { Session.class },
 				  new SessionInvocationHandler(csp, cs, session));
     }
+    
+    public ContentSource getContentSourceFromProxy(ContentSource proxy) {
+		ContentSource target = proxy;
+		if(Proxy.isProxyClass(proxy.getClass())) {
+			InvocationHandler handler = Proxy.getInvocationHandler(proxy);
+			if(handler instanceof ContentSourceInvocationHandler) {
+				target = ((ContentSourceInvocationHandler)handler).target;
+			}
+		}
+		return target;
+	}
+	
+	public Session getSessionFromProxy(Session proxy) {
+			Session target = proxy;
+		if(Proxy.isProxyClass(proxy.getClass())) {
+			InvocationHandler handler = Proxy.getInvocationHandler(proxy);
+			if(handler instanceof SessionInvocationHandler) {
+				target = ((SessionInvocationHandler)handler).target;
+			}
+		}
+		return target;
+	}
 
     //invocation handlers
     static protected class ContentSourceInvocationHandler implements InvocationHandler {
@@ -332,14 +332,14 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
                     }
 
                     int retryLimit = csp.getConnectRetryLimit();
-                    if (isSubmitRequest(method) && attempts < retryLimit) {
-                        LOG.log(INFO, "Submit request failed {0} times. Max Limit is {1}. Retrying..", new Object[]{attempts, retryLimit});
+                    if (isSubmitRequest(method) && attempts <= retryLimit) {
+                        LOG.log(WARNING, "Submit request failed {0} times. Max Limit is {1}. Retrying..", new Object[]{attempts, retryLimit});
                         return submitAsNewRequest(args);
-                    } else if (isInsertContent(method) && attempts < retryLimit) {
-                        LOG.log(INFO, "Insert content failed {0} times. Max Limit is {1}. Retrying..", new Object[]{attempts, retryLimit});
+                    } else if (isInsertContent(method) && attempts <= retryLimit) {
+                        LOG.log(WARNING, "Insert content failed {0} times. Max Limit is {1}. Retrying..", new Object[]{attempts, retryLimit});
                         return insertAsNewRequest(args);
                     } else {
-                        throw exc;
+                        throw exc.getCause();
                     }
                 } else {
 				    throw exc.getCause();
@@ -358,6 +358,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 			Request request = (Request)args[0];
 			try {
 				Session newSession = csp.get().newSession();
+				updateAttempts(newSession);
 				Request newRequest;
 				if (request instanceof AdhocQuery) {
 					newRequest = newSession.newAdhocQuery(((AdhocQuery)request).getQuery());
@@ -370,7 +371,6 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 				for(int i=0; vars!= null && i < vars.length;i++) {
 					newRequest.setVariable(vars[i]);
 				}
-	
 				return newSession.submitRequest(newRequest);
 			}catch(CorbException exc) {
 				throw new RequestException(exc.getMessage(),request,exc);
@@ -380,6 +380,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 		protected Object insertAsNewRequest(Object[] args) throws RequestException{
 			try {
 				Session newSession = csp.get().newSession();
+				updateAttempts(newSession);
 				if (args[0] instanceof Content) {
 					newSession.insertContent((Content)args[0]);
 				} else if(args[0] instanceof Content[]) {
@@ -397,6 +398,15 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 
 		protected boolean isInsertContent(Method method) {
 			return method.getName().equals("insertContent");
+		}
+		
+		protected void updateAttempts(Session newProxy) {
+			if(Proxy.isProxyClass(newProxy.getClass())) {
+				InvocationHandler handler = Proxy.getInvocationHandler(newProxy);
+				if(handler instanceof SessionInvocationHandler) {
+					((SessionInvocationHandler)handler).attempts = this.attempts;
+				}
+			}
 		}
 	}
 }

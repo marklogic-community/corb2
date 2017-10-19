@@ -2,14 +2,23 @@ package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.io.FileNotFoundException;
 import java.util.Arrays;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.marklogic.xcc.ContentSource;
+import com.marklogic.xcc.ResultSequence;
+import com.marklogic.xcc.Session;
+import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.exceptions.ServerConnectionException;
+import com.marklogic.xcc.impl.AdhocImpl;
+import com.marklogic.xcc.impl.SessionImpl;
+import com.marklogic.xcc.impl.SocketPoolProvider;
 
 public class DefaultContentSourcePoolTest {
 	@Before
@@ -259,12 +268,50 @@ public class DefaultContentSourcePoolTest {
 		csp.get();
 	}
 	
-	public void testSubmitWithMockRequest() {
+	@Test
+	public void testSubmitWithMockRequest() throws RequestException, CorbException {
+		ContentSource cs = mock(ContentSource.class);
+		Session session = mock(Session.class);
+		AdhocImpl request = mock(AdhocImpl.class);
+		ResultSequence rs = mock(ResultSequence.class);
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.contentSourceList.add(cs);
+		when(cs.newSession()).thenReturn(session);
+		when(session.newAdhocQuery(Mockito.any())).thenReturn(request);
+		when(request.getSession()).thenReturn(session);
+		when(session.submitRequest(request)).thenReturn(rs);
 		
+		csp.get().newSession().submitRequest(request);
 	}
 	
-	public void testSubmitWithMockRequestAndError() {
+	@Test
+	public void testSubmitWithMockRequestAndError() throws RequestException, CorbException {
+		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "1");
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
+		ContentSource cs1 = mock(ContentSource.class);
+		ContentSource cs2 = mock(ContentSource.class);
+		Session session = mock(SessionImpl.class);
+		AdhocImpl request = mock(AdhocImpl.class);
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
 		
+		csp.contentSourceList.add(cs1);
+		when(cs1.newSession()).thenReturn(session);
+		when(cs1.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost1",8001));
+		
+		csp.contentSourceList.add(cs2);
+		when(cs2.newSession()).thenReturn(session);
+		when(cs2.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost2",8002));
+		
+		when(session.newAdhocQuery(Mockito.any())).thenReturn(request);
+		when(request.getSession()).thenReturn(session);
+		when(session.submitRequest(request)).thenThrow(mock(ServerConnectionException.class));
+		
+		try{
+			csp.get().newSession().submitRequest(request);
+		}catch(Exception exc) {
+			exc.printStackTrace();
+		}
+		assertTrue(csp.errorCountsMap.get(cs1) == 1);
 	}
 	
 	public void testSubmitWithMockRequestAndErrorAndReactivate() {
