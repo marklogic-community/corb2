@@ -228,6 +228,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 	    	}
     }
     
+    //TODO: handle redaction if necessary?
     protected String asString(ContentSource cs) {
     		return cs == null ? "null" : cs.toString();
     }
