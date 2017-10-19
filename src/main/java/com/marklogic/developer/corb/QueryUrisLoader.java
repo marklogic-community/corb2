@@ -259,6 +259,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
 
     @Override
     public void close() {
+        super.close();
         closeRequestAndSession();
         if (queue != null) {
             queue.clear();

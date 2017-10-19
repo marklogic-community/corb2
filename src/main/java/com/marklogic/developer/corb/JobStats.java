@@ -217,7 +217,7 @@ public class JobStats extends BaseMonitor {
 	                                    ? String.format(XDMP_LOG_FORMAT, message, logLevel.toLowerCase()) + ","
 	                                    : "")
 	                            + String.format(XDMP_LOG_FORMAT, metrics, logLevel.toLowerCase());
-	
+
 	                    AdhocQuery query = session.newAdhocQuery(xquery);
 	                    session.submitRequest(query);
 	                }
@@ -248,47 +248,47 @@ public class JobStats extends BaseMonitor {
             Thread.yield();// try to avoid thread starvation
 
             if (csp != null) {
-            		Session session =  null;
-                try{
-            		 	ContentSource contentSource = csp.get();
-            		 	if(contentSource != null) {
-	            			session = contentSource.newSession();
-	            			Request request = manager.getRequestForModule(processModule, session);
-	
-	            			request.setNewStringVariable(METRICS_DB_NAME_PARAM, metricsDatabase);
-	            			if (uriRoot != null) {
-	            				request.setNewStringVariable(METRICS_URI_ROOT_PARAM, uriRoot);
-	            			} else {
-	                        request.setNewStringVariable(METRICS_URI_ROOT_PARAM, NOT_APPLICABLE);
-	            			}
-	            			if (collections != null) {
-	                        request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, collections);
-	            			} else {
-	                        request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, NOT_APPLICABLE);
-	            			}
-	            			if (isJavaScriptModule(processModule)) {
-	                        requestOptions.setQueryLanguage("javascript");
-	                        request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
-	                                metrics == null ? toJSONString() : metrics);
-	            			} else {
-	                        request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
-	                                metrics == null ? toXMLString() : metrics);
-	            			}
-	            			request.setOptions(requestOptions);
-	
-	            			seq = session.submitRequest(request);
-	            			String uri = seq.hasNext() ? seq.next().asString() : null;
-	            			if (uri != null) {
-	                        this.uri = uri;
-	            			}
-	
-	            			Thread.yield();// try to avoid thread starvation
-	            			seq.close();
-            		 	}else {
-            		 		LOG.log(SEVERE, "logJobStatsToServerDocument request failed. ContentSourcePool.get() returned null");
-            		 	}
-            		 	
-            			Thread.yield();// try to avoid thread starvation           			
+                Session session =  null;
+                try {
+                    ContentSource contentSource = csp.get();
+                    if (contentSource != null) {
+                        session = contentSource.newSession();
+                        Request request = manager.getRequestForModule(processModule, session);
+
+                        request.setNewStringVariable(METRICS_DB_NAME_PARAM, metricsDatabase);
+                        if (uriRoot != null) {
+                            request.setNewStringVariable(METRICS_URI_ROOT_PARAM, uriRoot);
+                        } else {
+                            request.setNewStringVariable(METRICS_URI_ROOT_PARAM, NOT_APPLICABLE);
+                        }
+                        if (collections != null) {
+                            request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, collections);
+                        } else {
+                            request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, NOT_APPLICABLE);
+                        }
+                        if (isJavaScriptModule(processModule)) {
+                            requestOptions.setQueryLanguage("javascript");
+                            request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
+                                metrics == null ? toJSONString() : metrics);
+                        } else {
+                            request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
+                                metrics == null ? toXMLString() : metrics);
+                        }
+                        request.setOptions(requestOptions);
+
+                        seq = session.submitRequest(request);
+                        String uri = seq.hasNext() ? seq.next().asString() : null;
+                        if (uri != null) {
+                            this.uri = uri;
+                        }
+
+                        Thread.yield();// try to avoid thread starvation
+                        seq.close();
+                    } else {
+                        LOG.log(SEVERE, "logJobStatsToServerDocument request failed. ContentSourcePool.get() returned null");
+                    }
+
+                    Thread.yield();// try to avoid thread starvation
                 } catch (Exception exc) {
                     LOG.log(SEVERE, "logJobStatsToServerDocument request failed", exc);
                 } finally {
@@ -296,8 +296,8 @@ public class JobStats extends BaseMonitor {
                         seq.close();
                         seq = null;
                     }
-                    if(session != null) {
-                    		session.close();
+                    if (session != null) {
+                        session.close();
                     }
                     Thread.yield();// try to avoid thread starvation
                 }

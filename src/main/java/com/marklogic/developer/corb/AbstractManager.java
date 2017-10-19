@@ -190,7 +190,7 @@ public abstract class AbstractManager {
         initDecrypter();
         initSSLConfig();
         initContentSourcePool(args.length > 0 ? args[0] : null);
-        
+
         initOptions(args);
         logRuntimeArgs();
         registerStatusInfo();
@@ -241,7 +241,7 @@ public abstract class AbstractManager {
         sslConfig.setProperties(this.properties);
         sslConfig.setDecrypter(this.decrypter);
     }
-    
+
     protected void initContentSourcePool(String uriArg) throws CorbException{
         String uriAsStrings = getOption(uriArg, XCC_CONNECTION_URI);
         String username = getOption(XCC_USERNAME);
@@ -255,8 +255,8 @@ public abstract class AbstractManager {
             throw new CorbException(String.format("Either %1$s or %2$s, %3$s, %4$s, and %5$s must be specified",
                     XCC_CONNECTION_URI, XCC_USERNAME, XCC_PASSWORD, XCC_HOSTNAME, XCC_PORT));
         }
-        
-        ArrayList<String> connectionUriList = new ArrayList<String>();        
+
+        ArrayList<String> connectionUriList = new ArrayList<>();
         if (uriAsStrings == null) {
             if (this.decrypter != null) {
                 username = this.decrypter.decrypt(XCC_USERNAME, username);
@@ -264,59 +264,59 @@ public abstract class AbstractManager {
                 port = this.decrypter.decrypt(XCC_PORT, port);
                 dbname = this.decrypter.decrypt(XCC_DBNAME, dbname);
             }
-            for (String host: hostnames.split(StringUtils.COMMA)){
+            for (String host: hostnames.split(StringUtils.COMMA)) {
                 if (this.decrypter != null) {
                     host = this.decrypter.decrypt(XCC_HOSTNAME,host);
                 }
                 String connectionUri = StringUtils.getXccUri(protocol,username, password, host, port, dbname);
-                if(connectionUri != null){
+                if (connectionUri != null) {
                     connectionUriList.add(connectionUri);
                 }
             }
-        }else{
-            for(String connectionUri : uriAsStrings.split(StringUtils.COMMA)){
+        } else {
+            for (String connectionUri : uriAsStrings.split(StringUtils.COMMA)) {
                 if (this.decrypter != null) {
                     connectionUri = this.decrypter.decrypt(XCC_CONNECTION_URI, connectionUri);
                 }
-                if(connectionUri != null){
+                if (connectionUri != null) {
                     connectionUriList.add(connectionUri);
                 }
             }
         }
-                
+
         this.csp = createContentSourceManager();
-        LOG.info("Using the content source manager "+this.csp.getClass().getName());
+        LOG.info("Using the content source manager " + this.csp.getClass().getName());
         this.csp.init(properties, sslConfig, connectionUriList.toArray(new String[connectionUriList.size()]));
-        
-        if(!this.csp.available()){
+
+        if (!this.csp.available()) {
             throw new CorbException("No connections available. Please check connection parameters or initialization errors");
         }
     }
-    
+
     protected ContentSourcePool createContentSourceManager() throws CorbException {
-    		ContentSourcePool csm = null;
-    		String contentSourcePoolClassName = getOption(Options.CONTENT_SOURCE_POOL);
-        if(contentSourcePoolClassName != null){
-        		csm = createContentSourcePool(contentSourcePoolClassName);
-        }else{
-        		csm = new DefaultContentSourcePool(); 
+        ContentSourcePool csm;
+        String contentSourcePoolClassName = getOption(Options.CONTENT_SOURCE_POOL);
+        if (contentSourcePoolClassName != null) {
+            csm = createContentSourcePool(contentSourcePoolClassName);
+        } else {
+            csm = new DefaultContentSourcePool();
         }
         return csm;
     }
-    
+
     protected ContentSourcePool createContentSourcePool(String className) throws CorbException{
-        try{
+        try {
             Class<?> cls = Class.forName(className);
             if (ContentSourcePool.class.isAssignableFrom(cls)) {
                 return cls.asSubclass(ContentSourcePool.class).newInstance();
             } else {
-                throw new CorbException("ConnectionManager class "+className+" must be of type com.marklogic.developer.corb.Task");
+                throw new CorbException("ConnectionManager class " + className + " must be of type com.marklogic.developer.corb.Task");
             }
-        }catch(ClassNotFoundException |IllegalAccessException | InstantiationException exc){
-            throw new CorbException("Exception while creating the ContentSourcePool class "+className,exc);
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException exc) {
+            throw new CorbException("Exception while creating the ContentSourcePool class " + className,exc);
         }
     }
-    
+
     public ContentSourcePool getContentSourcePool() {
         return this.csp;
     }
@@ -340,8 +340,8 @@ public abstract class AbstractManager {
         return false;
     }
 
-    protected void registerStatusInfo() throws CorbException{
-    		ContentSource contentSource = csp.get();
+    protected void registerStatusInfo() throws CorbException {
+        ContentSource contentSource = csp.get();
         ResultSequence resultSequence = null;
         try (Session session = contentSource.newSession()) {
 

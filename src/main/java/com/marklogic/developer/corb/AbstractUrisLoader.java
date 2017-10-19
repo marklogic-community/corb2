@@ -19,9 +19,13 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.URIS_REPLACE_PATTERN;
+
+import com.marklogic.developer.corb.util.IOUtils;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
+
+import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -46,7 +50,7 @@ public abstract class AbstractUrisLoader implements UrisLoader {
     public TransformOptions getOptions() {
         return options;
     }
-    
+
     @Override
     public void setContentSourcePool(ContentSourcePool csp) {
         this.csp = csp;
@@ -66,26 +70,32 @@ public abstract class AbstractUrisLoader implements UrisLoader {
     public String getBatchRef() {
         return batchRef;
     }
-    
+
     public void setBatchRef(String batchRef) {
         this.batchRef = batchRef;
     }
-    
+
     @Override
     public int getTotalCount() {
         return this.total;
     }
-    
+
     public void setTotalCount(int totalCount) {
         this.total = totalCount;
     }
-    
+
     public String getProperty(String key) {
         String val = System.getProperty(key);
         if (val == null && properties != null) {
             val = properties.getProperty(key);
         }
         return trim(val);
+    }
+
+    @Override
+    public void close() {
+        IOUtils.closeQuietly(csp);
+        cleanup();
     }
 
     protected void cleanup() {
@@ -107,7 +117,7 @@ public abstract class AbstractUrisLoader implements UrisLoader {
             }
         }
     }
-    
+
     protected boolean shouldSetBatchRef() {
         String setBatchRef = getProperty(Options.LOADER_SET_URIS_BATCH_REF);
         return StringUtils.stringToBoolean(setBatchRef, false);

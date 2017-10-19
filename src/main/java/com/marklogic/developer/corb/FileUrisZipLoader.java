@@ -105,7 +105,7 @@ public class FileUrisZipLoader extends AbstractFileUrisLoader {
 
     @Override
     public void close() {
+        super.close();
         IOUtils.closeQuietly(zipFile);
-        cleanup();
     }
 }
