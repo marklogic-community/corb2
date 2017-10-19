@@ -66,7 +66,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         ContentSource contentSource = super.createContentSource(connectionString);
         if (contentSource != null) {
             contentSourceList.add(contentSource);
-            LOG.log(INFO, "Initialized ContentSource {0}", new Object[]{contentSource});
+            LOG.log(INFO, "Initialized ContentSource {0}", new Object[]{asString(contentSource)});
         }
     }
     
@@ -80,11 +80,14 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
             throw new CorbException("ContentSource not available.");
         }
 
+        //if the nextContentSource() returns the connection with existing errors, then it means it could not find 
+        //any clean connections, so we need to wait. 
+        //TODO: if error, but wait expired, then no need to wait. 
         Integer failedCount = errorCountsMap.get(contentSource);
         if (failedCount != null && failedCount > 0){
             int retryInterval = getConnectRetryInterval();
             LOG.log(WARNING, "Connection failed for ContentSource {0}. Waiting for {1} seconds before retry attempt {2}",
-                    new Object[]{contentSource,retryInterval,failedCount + 1});
+                    new Object[]{asString(contentSource),retryInterval,failedCount + 1});
             try {
                 Thread.sleep(retryInterval * 1000L);
             } catch (Exception ex) {
@@ -202,7 +205,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 	        errorTimeMap.put(cs, System.currentTimeMillis());
 	        
 	        int limit = getConnectRetryLimit();
-	        LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{cs,count,limit});
+	        LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{asString(cs),count,limit});
 	        if (count > limit){
 	        		removeInternal(cs);
 	        }
@@ -217,12 +220,16 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     //this is not a proxy
     protected synchronized void removeInternal(ContentSource cs) {
 	    	if (contentSourceList.contains(cs)) {		
-	        LOG.log(WARNING, "Removing the ContentSource {0} from the content source pool.", new Object[]{cs});
+	        LOG.log(WARNING, "Removing the ContentSource {0} from the content source pool.", new Object[]{asString(cs)});
 	        contentSourceList.remove(cs);
 	        connectionCountsMap.remove(cs);
 	        errorCountsMap.remove(cs);
 	        errorTimeMap.remove(cs);
 	    	}
+    }
+    
+    protected String asString(ContentSource cs) {
+    		return cs == null ? "null" : cs.toString();
     }
 
     //methods to create dynamic proxy instances.
@@ -352,7 +359,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 			Request request = (Request)args[0];
 			try {
 				Session newSession = csp.get().newSession();
-				updateAttempts(newSession);
+				setAttemptsToNewSession(newSession);
 				Request newRequest;
 				if (request instanceof AdhocQuery) {
 					newRequest = newSession.newAdhocQuery(((AdhocQuery)request).getQuery());
@@ -375,7 +382,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 		protected Object insertAsNewRequest(Object[] args) throws RequestException{
 			try {
 				Session newSession = csp.get().newSession();
-				updateAttempts(newSession);
+				setAttemptsToNewSession(newSession);
 				if (args[0] instanceof Content) {
 					newSession.insertContent((Content)args[0]);
 				} else if (args[0] instanceof Content[]) {
@@ -395,7 +402,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 			return "insertContent".equals(method.getName());
 		}
 		
-		protected void updateAttempts(Session newProxy) {
+		protected void setAttemptsToNewSession(Session newProxy) {
 			if(Proxy.isProxyClass(newProxy.getClass())) {
 				InvocationHandler handler = Proxy.getInvocationHandler(newProxy);
 				if(handler instanceof SessionInvocationHandler) {
