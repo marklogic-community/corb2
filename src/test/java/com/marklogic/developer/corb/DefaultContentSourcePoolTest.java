@@ -114,6 +114,15 @@ public class DefaultContentSourcePoolTest {
     }
 
     @Test
+    public void testGetAvailableContentSources(){
+        DefaultContentSourcePool csp = initRoundRobinPool();
+        ContentSource cs = csp.nextContentSource();
+        assertEquals(3, csp.getAvailableContentSources().size());
+        csp.error(cs);
+        assertEquals(2, csp.getAvailableContentSources().size());
+    }
+
+    @Test
     public void testHoldAndRelease() {
         DefaultContentSourcePool csp = initRoundRobinPool();
         ContentSource cs = csp.nextContentSource();
