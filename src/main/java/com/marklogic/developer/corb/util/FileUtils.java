@@ -18,6 +18,8 @@
  */
 package com.marklogic.developer.corb.util;
 
+import com.marklogic.developer.corb.FileUrisXMLLoader;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -30,6 +32,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.TERMINATE;
 import java.nio.file.SimpleFileVisitor;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Common file manipulation utilities
@@ -37,7 +41,7 @@ import java.nio.file.SimpleFileVisitor;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public final class FileUtils {
-
+    private static final Logger LOG = Logger.getLogger(FileUtils.class.getName());
     private FileUtils() {
     }
 
@@ -59,6 +63,16 @@ public final class FileUtils {
      */
     public static void deleteFile(String path) throws IOException {
         deleteFile(new File(path));
+    }
+
+    public static void deleteQuietly(Path directory) {
+        if (directory != null && directory.toFile().exists()) {
+            try {
+                FileUtils.delete(directory);
+            } catch (IOException ex) {
+                LOG.log(Level.WARNING, "Unable to delete dir: " + directory.toString(), ex);
+            }
+        }
     }
 
     public static void delete(final Path path) throws IOException {

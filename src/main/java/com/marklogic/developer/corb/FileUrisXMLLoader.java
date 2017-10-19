@@ -222,6 +222,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
 
     @Override
     public void close() {
+        super.close();
         if (doc != null) {
             LOG.info("closing XML file reader");
             try {
@@ -233,7 +234,6 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
                 LOG.log(Level.SEVERE, "while closing XML file reader", exc);
             }
         }
-        cleanup();
     }
 
     protected void schemaValidate(File xmlFile) throws CorbException {

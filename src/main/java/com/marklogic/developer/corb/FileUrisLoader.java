@@ -49,7 +49,7 @@ public class FileUrisLoader extends AbstractUrisLoader {
             this.setTotalCount(lnr.getLineNumber() + 1);
             //these are closed in the close() method
             fileReader = new FileReader(fileName);
-            bufferedReader = new BufferedReader(fileReader);   
+            bufferedReader = new BufferedReader(fileReader);
         } catch (Exception exc) {
             throw new CorbException("Problem loading data from uris file " + getOptions().getUrisFile(), exc);
         }
@@ -96,6 +96,7 @@ public class FileUrisLoader extends AbstractUrisLoader {
 
     @Override
     public void close() {
+        super.close();
         IOUtils.closeQuietly(fileReader);
         IOUtils.closeQuietly(bufferedReader);
         cleanup();

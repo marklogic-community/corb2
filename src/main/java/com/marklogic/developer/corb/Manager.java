@@ -55,6 +55,7 @@ import static com.marklogic.developer.corb.Options.URIS_MODULE;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
 import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
 import com.marklogic.developer.corb.util.FileUtils;
+import com.marklogic.developer.corb.util.IOUtils;
 import com.marklogic.developer.corb.util.NumberUtils;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
@@ -155,6 +156,7 @@ public class Manager extends AbstractManager implements Closeable {
             //This will shutdown the scheduled executors for the command file watcher and logging JobStats
             scheduledExecutor.shutdown();
         }
+        IOUtils.closeQuietly(csp);
         stopJobServer();
     }
 
@@ -836,6 +838,7 @@ public class Manager extends AbstractManager implements Closeable {
             transformStartMillis = System.currentTimeMillis();
             urisCount = submitUriTasks(urisLoader, taskFactory, expectedTotalCount);
 
+
             if (urisCount == expectedTotalCount) {
                 LOG.log(INFO, MessageFormat.format("queue is populated with {0,number} tasks", urisCount));
             } else {
@@ -987,6 +990,7 @@ public class Manager extends AbstractManager implements Closeable {
         if (null != monitorThread) {
             monitorThread.interrupt();
         }
+
     }
 
     /**

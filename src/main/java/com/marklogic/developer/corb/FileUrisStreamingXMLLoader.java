@@ -137,17 +137,12 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
     @Override
     public void cleanup() {
         super.cleanup();
-        if (tempDir != null && tempDir.toFile().exists()) {
-            try {
-                FileUtils.delete(tempDir);
-            } catch (IOException ex) {
-                LOG.log(Level.WARNING, "Unable to delete temp dir: " + tempDir.toString(), ex);
-            }
-        }
+        FileUtils.deleteQuietly(tempDir);
     }
 
     @Override
     public void close() {
+        super.close();
         IOUtils.closeQuietly(directoryStream);
         cleanup();
     }
