@@ -66,6 +66,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
         ContentSource contentSource = super.createContentSource(connectionString);
         if (contentSource != null) {
             contentSourceList.add(contentSource);
+            LOG.log(INFO, "Initialized ContentSource {0}", new Object[]{contentSource});
         }
     }
     
@@ -82,10 +83,8 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
         Integer failedCount = errorCountsMap.get(contentSource);
         if (failedCount != null && failedCount > 0){
             int retryInterval = getConnectRetryInterval();
-            String hostname = contentSource.getConnectionProvider().getHostName();
-            String port = String.valueOf(contentSource.getConnectionProvider().getPort());
-            LOG.log(WARNING, "Connection failed from MarkLogic server at {0}:{1}. Waiting for {2} seconds before retry attempt {3}",
-                    new Object[]{hostname,port,retryInterval,failedCount + 1});
+            LOG.log(WARNING, "Connection failed for ContentSource {0}. Waiting for {1} seconds before retry attempt {2}",
+                    new Object[]{contentSource,retryInterval,failedCount + 1});
             try {
                 Thread.sleep(retryInterval * 1000L);
             } catch (Exception ex) {
@@ -203,9 +202,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
 	        errorTimeMap.put(cs, System.currentTimeMillis());
 	        
 	        int limit = getConnectRetryLimit();
-	        String hostname = cs.getConnectionProvider().getHostName();
-	        String port = String.valueOf(cs.getConnectionProvider().getPort());
-	        LOG.log(WARNING, "Connection error count for host {0}:{1} is {2}. Max limit is {3}.", new Object[]{hostname,port,count,limit});
+	        LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{cs,count,limit});
 	        if (count > limit){
 	        		removeInternal(cs);
 	        }
@@ -219,11 +216,8 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool{
      
     //this is not a proxy
     protected synchronized void removeInternal(ContentSource cs) {
-	    	if (contentSourceList.contains(cs)) {	
-	    		String hostname = cs.getConnectionProvider().getHostName();
-	        String port = String.valueOf(cs.getConnectionProvider().getPort());
-	
-	        LOG.log(WARNING, "Removing the MarkLogic server at {0}:{1} from the content source pool.", new Object[]{hostname,port});
+	    	if (contentSourceList.contains(cs)) {		
+	        LOG.log(WARNING, "Removing the ContentSource {0} from the content source pool.", new Object[]{cs});
 	        contentSourceList.remove(cs);
 	        connectionCountsMap.remove(cs);
 	        errorCountsMap.remove(cs);

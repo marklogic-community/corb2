@@ -50,7 +50,7 @@ public class DefaultContentSourcePoolTest {
 	@Test
 	public void testInitTwoContentSources() throws CorbException {
 		DefaultContentSourcePool csp = new DefaultContentSourcePool();
-		csp.init(null, null, new String[] {"xcc://foo:bar@localhost:8000","xcc://foo:bar@192.168.0.1:8000"});
+		csp.init(null, null, new String[] {"xcc://foo:bar@localhost:8000/dbase","xcc://foo:bar@192.168.0.1:8000/dbase"});
 		assertTrue(csp.available());
 		assertEquals(2,csp.getAllContentSources().length);
 		assertHostAndPort(csp.get(),"localhost",8000);
