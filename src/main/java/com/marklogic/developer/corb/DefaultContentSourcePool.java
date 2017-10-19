@@ -69,9 +69,9 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
             LOG.log(INFO, "Initialized ContentSource {0}", new Object[]{asString(contentSource)});
         }
     }
-    
+
     /**
-     * Note: Do not make this synchronized, it will affect performance significantly due to sleep. 
+     * Note: Do not make this synchronized, it will affect performance significantly due to sleep.
      */
     @Override
     public ContentSource get() throws CorbException{
@@ -80,11 +80,11 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
             throw new CorbException("ContentSource not available.");
         }
 
-        //if the nextContentSource() returns the connection with existing errors, then it means it could not find 
-        //any clean connections, so we need to wait. 
-        //even if errored, but wait expired, then no need to wait. 
+        //if the nextContentSource() returns the connection with existing errors, then it means it could not find
+        //any clean connections, so we need to wait.
+        //even if errored, but wait expired, then no need to wait.
         Integer failedCount = errorCountsMap.get(contentSource);
-        if (failedCount != null && failedCount > 0 && errorTimeMap.containsKey(contentSource)){
+        if (failedCount != null && failedCount > 0 && errorTimeMap.containsKey(contentSource)) {
             int retryInterval = getConnectRetryInterval();
             LOG.log(WARNING, "Connection failed for ContentSource {0}. Waiting for {1} seconds before retry attempt {2}",
                     new Object[]{asString(contentSource),retryInterval,failedCount + 1});
@@ -149,22 +149,22 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
             return contentSourceList;
         }
     }
-    
+
     @Override
     public void remove(ContentSource contentSource){
     		removeInternal(getContentSourceFromProxy(contentSource));
-    }   
+    }
 
     @Override
     public boolean available() {
         return !contentSourceList.isEmpty();
     }
-    
+
     @Override
     public ContentSource[] getAllContentSources() {
     		return contentSourceList.toArray(new ContentSource[contentSourceList.size()]);
     }
-    
+
     @Override
     public void close() {
         connectionCountsMap.clear();
@@ -172,7 +172,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         errorTimeMap.clear();
 		contentSourceList.clear();
     }
-    
+
     protected boolean isLoadPolicy() {
         return CONNECTION_POLICY_LOAD.equals(connectionPolicy);
     }
@@ -203,7 +203,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 	        count = count == null ? 1 : count + 1;
 	        errorCountsMap.put(cs, count);
 	        errorTimeMap.put(cs, System.currentTimeMillis());
-	        
+
 	        int limit = getConnectRetryLimit();
 	        LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{asString(cs),count,limit});
 	        if (count > limit){
@@ -216,10 +216,10 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         Integer count = errorCountsMap.get(cs);
         return count != null ? count : 0;
     }
-     
+
     //this is not a proxy
     protected synchronized void removeInternal(ContentSource cs) {
-	    	if (contentSourceList.contains(cs)) {		
+	    	if (contentSourceList.contains(cs)) {
 	        LOG.log(WARNING, "Removing the ContentSource {0} from the content source pool.", new Object[]{asString(cs)});
 	        contentSourceList.remove(cs);
 	        connectionCountsMap.remove(cs);
@@ -227,7 +227,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 	        errorTimeMap.remove(cs);
 	    	}
     }
-    
+
     //TODO: handle redaction if necessary?
     protected String asString(ContentSource cs) {
     		return cs == null ? "null" : cs.toString();
@@ -239,13 +239,13 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
                 DefaultContentSourcePool.class.getClassLoader(), new Class[] { ContentSource.class },
                   new ContentSourceInvocationHandler(csp,cs));
     }
-    
+
     static protected Session createSessionProxy(DefaultContentSourcePool csp,ContentSource cs, Session session) {
 		return (Session)Proxy.newProxyInstance(
 				DefaultContentSourcePool.class.getClassLoader(), new Class[] { Session.class },
 				  new SessionInvocationHandler(csp, cs, session));
     }
-    
+
     public ContentSource getContentSourceFromProxy(ContentSource proxy) {
 		ContentSource target = proxy;
 		if(proxy != null && Proxy.isProxyClass(proxy.getClass())) {
@@ -256,7 +256,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 		}
 		return target;
 	}
-	
+
 	public Session getSessionFromProxy(Session proxy) {
 			Session target = proxy;
 		if(proxy != null && Proxy.isProxyClass(proxy.getClass())) {
@@ -402,7 +402,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 		private boolean isInsertContent(Method method) {
 			return "insertContent".equals(method.getName());
 		}
-		
+
 		protected void setAttemptsToNewSession(Session newProxy) {
 			if(Proxy.isProxyClass(newProxy.getClass())) {
 				InvocationHandler handler = Proxy.getInvocationHandler(newProxy);
