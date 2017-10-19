@@ -94,7 +94,7 @@ public abstract class AbstractUrisLoader implements UrisLoader {
 
     @Override
     public void close() {
-        IOUtils.closeQuietly(csp);
+        //don't close the ContentSourcePool. It will be used by downstream stages.
         cleanup();
     }
 
