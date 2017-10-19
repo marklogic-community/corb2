@@ -82,9 +82,9 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
         //if the nextContentSource() returns the connection with existing errors, then it means it could not find 
         //any clean connections, so we need to wait. 
-        //TODO: if error, but wait expired, then no need to wait. 
+        //even if errored, but wait expired, then no need to wait. 
         Integer failedCount = errorCountsMap.get(contentSource);
-        if (failedCount != null && failedCount > 0){
+        if (failedCount != null && failedCount > 0 && errorTimeMap.containsKey(contentSource)){
             int retryInterval = getConnectRetryInterval();
             LOG.log(WARNING, "Connection failed for ContentSource {0}. Waiting for {1} seconds before retry attempt {2}",
                     new Object[]{asString(contentSource),retryInterval,failedCount + 1});
