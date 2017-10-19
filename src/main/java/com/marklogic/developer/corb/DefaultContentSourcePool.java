@@ -240,7 +240,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     
     public ContentSource getContentSourceFromProxy(ContentSource proxy) {
 		ContentSource target = proxy;
-		if(Proxy.isProxyClass(proxy.getClass())) {
+		if(proxy != null && Proxy.isProxyClass(proxy.getClass())) {
 			InvocationHandler handler = Proxy.getInvocationHandler(proxy);
 			if(handler instanceof ContentSourceInvocationHandler) {
 				target = ((ContentSourceInvocationHandler)handler).target;
@@ -251,7 +251,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 	
 	public Session getSessionFromProxy(Session proxy) {
 			Session target = proxy;
-		if(Proxy.isProxyClass(proxy.getClass())) {
+		if(proxy != null && Proxy.isProxyClass(proxy.getClass())) {
 			InvocationHandler handler = Proxy.getInvocationHandler(proxy);
 			if(handler instanceof SessionInvocationHandler) {
 				target = ((SessionInvocationHandler)handler).target;
