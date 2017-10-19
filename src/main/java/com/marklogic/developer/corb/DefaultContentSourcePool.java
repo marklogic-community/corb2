@@ -189,7 +189,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
     synchronized protected void release(ContentSource cs) {
         Integer count = connectionCountsMap.get(cs);
-        count = (count == null || count > 0 ) ? 0 : count - 1;
+        count = (count == null || count == 0 ) ? 0 : count - 1;
         connectionCountsMap.put(cs, count);
     }
 
