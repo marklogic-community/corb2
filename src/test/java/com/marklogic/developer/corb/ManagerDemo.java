@@ -88,7 +88,6 @@ public class ManagerDemo {
         startManager(100000);
         startManager(100000);
         startManager(100000);
-
     }
 
 }

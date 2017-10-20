@@ -4,19 +4,25 @@ import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 
-import java.io.StringReader;
+import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
+import com.marklogic.developer.corb.util.FileUtils;
+import org.w3c.dom.*;
+import org.w3c.dom.ls.DOMImplementationLS;
+import org.w3c.dom.ls.LSSerializer;
 
 import com.marklogic.developer.corb.util.StringUtils;
 import com.marklogic.xcc.AdhocQuery;
@@ -33,7 +39,7 @@ import java.time.format.DateTimeFormatter;
 public class JobStats extends BaseMonitor {
 
     private static final String NOT_APPLICABLE = "NA";
-    private static final long TPS_ETC_MIN_REFRESH_INTERVAL = 10000L;
+    private static final long TPS_ETC_MIN_REFRESH_INTERVAL = 10000l;
     private static final String METRICS_COLLECTIONS_PARAM = "collections";
     private static final String METRICS_DOCUMENT_STR_PARAM = "metricsDocumentStr";
     private static final String METRICS_DB_NAME_PARAM = "dbName";
@@ -42,20 +48,12 @@ public class JobStats extends BaseMonitor {
     private static final String XDMP_LOG_FORMAT = "xdmp:log('%1$s','%2$s')";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
     private static final String START_TIME = "startTime";
-    private static final String OPEN_SQUARE = "[";
-    private static final String CLOSE_SQUARE = "]";
-    private static final String GT = ">";
-    private static final String LT = "<";
-    private static final String QUOTE = "\"";
-    private static final String COLON = ":";
-    private static final String OPEN_CURLY = "{";
-    private static final String CLOSE_CURLY = "}";
-    private static final String COMMA = ",";
     private static final String URI = "uri";
     private static final String JOB_ID = "id";
     private static final String JOB_NAME = "name";
-    public static final String JOB_ROOT = "job";
-    public static final String CORB_NS = "http://marklogic.github.io/corb/";
+    public static final String JOB_ELEMENT = "job";
+    public static final String JOBS_ELEMENT = "jobs";
+    public static final String CORB_NAMESPACE = "http://marklogic.github.io/corb/";
     private static final String LONG_RUNNING_URIS = "slowTransactions";
     private static final String FAILED_URIS = "failedTransactions";
     private static final String URIS_LOAD_TIME = "urisLoadTimeInMillis";
@@ -86,14 +84,14 @@ public class JobStats extends BaseMonitor {
     private String endTime = null;
     private String host = null;
 
-    private Long numberOfFailedTasks = 0L;
-    private Long numberOfSucceededTasks = 0L;
+    private Long numberOfFailedTasks = 0l;
+    private Long numberOfSucceededTasks = 0l;
     private Double averageTransactionTime = 0.0d;
-    private Long urisLoadTime = -1L;
-    private Long preBatchRunTime = -1L;
-    private Long postBatchRunTime = -1L;
-    private Long initTaskRunTime = -1L;
-    private Long totalRunTimeInMillis = -1L;
+    private Long urisLoadTime = -1l;
+    private Long preBatchRunTime = -1l;
+    private Long postBatchRunTime = -1l;
+    private Long initTaskRunTime = -1l;
+    private Long totalRunTimeInMillis = -1l;
     private String jobRunLocation = null;
     private String jobId = null;
     private String jobName = null;
@@ -101,11 +99,15 @@ public class JobStats extends BaseMonitor {
     private List<String> failedUris = null;
     private String uri = null;
     private boolean paused;
-    private Long currentThreadCount = 0L;
-    private Long jobServerPort = -1L;
+    private Long currentThreadCount = 0l;
+    private Long jobServerPort = -1l;
 
     private ContentSourcePool csp;
     private TransformOptions options;
+
+    protected final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+    private final TransformerFactory transformerFactory  = TransformerFactory.newInstance();
+    private Templates jobStatsToJsonTemplates;
 
     private static final Logger LOG = Logger.getLogger(JobStats.class.getName());
 
@@ -159,7 +161,7 @@ public class JobStats extends BaseMonitor {
                     Long currentTimeMillis = System.currentTimeMillis();
                     Long totalTime = manager.getEndMillis() - manager.getStartMillis();
                     if (totalTime > 0) {
-                        currentThreadCount = 0L;
+                        currentThreadCount = 0l;
                         totalRunTimeInMillis = totalTime;
                         long totalTransformTime = currentTimeMillis - manager.getTransformStartMillis();
                         averageTransactionTime = totalTransformTime / Double.valueOf(numberOfFailedTasks) + Double.valueOf(numberOfSucceededTasks);
@@ -189,38 +191,35 @@ public class JobStats extends BaseMonitor {
 
     public void logToServer(String message, boolean concise) {
         String processModule = options.getMetricsModule();
+        Document doc = toXML(concise);
+        String metricsLogMessage = toJSON(doc);
         String metricsDocument;
-        String metricsLogMessage = null;
-
         if (isJavaScriptModule(processModule)) {
-            metricsDocument = toJSONString(concise);
-            metricsLogMessage = metricsDocument;
+            metricsDocument = metricsLogMessage;
         } else {
-            metricsDocument = toXMLString(concise);
-            metricsLogMessage = getJsonFromXML(metricsDocument);
+            metricsDocument = toXmlString(doc);
         }
         executeModule(metricsDocument);
+
         logToServer(message, metricsLogMessage);
     }
 
     private void logToServer(String message, String metrics) {
-        if (csp != null) {
+    		String logLevel = options.getLogMetricsToServerLog();
+        if (csp != null && options.isMetricsLoggingEnabled(logLevel)) {
         		Session session =  null;
         		try {
         			ContentSource contentSource = csp.get();
         			if(contentSource != null) {
-	        			session = contentSource.newSession();
-	        			String logLevel = options.getLogMetricsToServerLog();
-	        			if (options.isMetricsLoggingEnabled(logLevel)) {
-	                    String xquery = XQUERY_VERSION_ML
-	                            + (message != null
-	                                    ? String.format(XDMP_LOG_FORMAT, message, logLevel.toLowerCase()) + ","
-	                                    : "")
-	                            + String.format(XDMP_LOG_FORMAT, metrics, logLevel.toLowerCase());
+        				session = contentSource.newSession();
+        				String xquery = XQUERY_VERSION_ML
+                                + (message != null
+                                        ? String.format(XDMP_LOG_FORMAT, message, logLevel.toLowerCase()) + ','
+                                        : "")
+                                + String.format(XDMP_LOG_FORMAT, metrics, logLevel.toLowerCase());
 
-	                    AdhocQuery query = session.newAdhocQuery(xquery);
-	                    session.submitRequest(query);
-	                }
+                    AdhocQuery query = session.newAdhocQuery(xquery);
+                    session.submitRequest(query);
         			}else {
         				LOG.log(SEVERE, "logJobStatsToServer request failed. ContentSourcePool.get() returned null");
         			}
@@ -242,53 +241,43 @@ public class JobStats extends BaseMonitor {
             ResultSequence seq = null;
             RequestOptions requestOptions = new RequestOptions();
             requestOptions.setCacheResult(false);
+
             String collections = options.getMetricsCollections();
             String processModule = options.getMetricsModule();
 
             Thread.yield();// try to avoid thread starvation
 
             if (csp != null) {
-                Session session =  null;
-                try {
-                    ContentSource contentSource = csp.get();
-                    if (contentSource != null) {
-                        session = contentSource.newSession();
-                        Request request = manager.getRequestForModule(processModule, session);
-
-                        request.setNewStringVariable(METRICS_DB_NAME_PARAM, metricsDatabase);
-                        if (uriRoot != null) {
-                            request.setNewStringVariable(METRICS_URI_ROOT_PARAM, uriRoot);
-                        } else {
-                            request.setNewStringVariable(METRICS_URI_ROOT_PARAM, NOT_APPLICABLE);
-                        }
-                        if (collections != null) {
-                            request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, collections);
-                        } else {
-                            request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, NOT_APPLICABLE);
-                        }
-                        if (isJavaScriptModule(processModule)) {
-                            requestOptions.setQueryLanguage("javascript");
-                            request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
-                                metrics == null ? toJSONString() : metrics);
-                        } else {
-                            request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
-                                metrics == null ? toXMLString() : metrics);
-                        }
-                        request.setOptions(requestOptions);
-
-                        seq = session.submitRequest(request);
-                        String uri = seq.hasNext() ? seq.next().asString() : null;
-                        if (uri != null) {
-                            this.uri = uri;
-                        }
-
-                        Thread.yield();// try to avoid thread starvation
-                        seq.close();
-                    } else {
-                        LOG.log(SEVERE, "logJobStatsToServerDocument request failed. ContentSourcePool.get() returned null");
-                    }
-
-                    Thread.yield();// try to avoid thread starvation
+            		Session session = null;
+                try{
+                		ContentSource contentSource = csp.get();
+                		if (contentSource != null) {
+	                	    session = contentSource.newSession();
+	                    Request request = manager.getRequestForModule(processModule, session);
+	                    request.setNewStringVariable(METRICS_DB_NAME_PARAM, metricsDatabase);
+	                    request.setNewStringVariable(METRICS_URI_ROOT_PARAM, uriRoot != null ? uriRoot : NOT_APPLICABLE);
+	                    request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, collections != null ? collections : NOT_APPLICABLE);
+	
+	                    if (isJavaScriptModule(processModule)) {
+	                        requestOptions.setQueryLanguage("javascript");
+	                        request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
+	                                metrics == null ? toJSON() : metrics);
+	                    } else {
+	                        request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
+	                                metrics == null ? toXmlString() : metrics);
+	                    }
+	                    request.setOptions(requestOptions);
+	
+	                    seq = session.submitRequest(request);
+	                    String uri = seq.hasNext() ? seq.next().asString() : null;
+	                    if (uri != null) {
+	                        this.uri = uri;
+	                    }
+	
+	                    Thread.yield();// try to avoid thread starvation
+	                    seq.close();
+	                    Thread.yield();// try to avoid thread starvation
+                		}
                 } catch (Exception exc) {
                     LOG.log(SEVERE, "logJobStatsToServerDocument request failed", exc);
                 } finally {
@@ -299,6 +288,7 @@ public class JobStats extends BaseMonitor {
                     if (session != null) {
                         session.close();
                     }
+
                     Thread.yield();// try to avoid thread starvation
                 }
             }
@@ -311,254 +301,218 @@ public class JobStats extends BaseMonitor {
     }
 
     public String toString(boolean concise) {
-        return toJSONString(concise);
+        return toJSON(concise);
     }
 
-    public String toXMLString() {
-        return toXMLString(false);
+    public String toXmlString() {
+        return toXmlString(false);
     }
 
-    public String toXMLString(boolean concise) {
-        StringBuilder strBuff = new StringBuilder();
-        refresh();
-        strBuff.append(xmlNode(JOB_LOCATION, jobRunLocation))
-                .append(xmlNode(JOB_ID, jobId))
-                .append(xmlNode(JOB_NAME, jobName))
-                .append(xmlNode(HOST, host))
-                .append(concise ? "" : xmlNode(USER_PROVIDED_OPTIONS, userProvidedOptions))
-                .append(xmlNode(START_TIME, startTime))
-                .append(xmlNode(END_TIME, endTime))
-                .append(concise ? "" : xmlNode(INIT_TASK_TIME, initTaskRunTime))
-                .append(concise ? "" : xmlNode(PRE_BATCH_RUN_TIME, preBatchRunTime))
-                .append(concise ? "" : xmlNode(URIS_LOAD_TIME, urisLoadTime))
-                .append(concise ? "" : xmlNode(POST_BATCH_RUN_TIME, postBatchRunTime))
-                .append(xmlNode(AVERAGE_TRANSACTION_TIME, averageTransactionTime))
-                .append(concise ? "" : xmlNode(TOTAL_NUMBER_OF_TASKS, taskCount))
-                .append(xmlNode(TOTAL_JOB_RUN_TIME, totalRunTimeInMillis))
-                .append(xmlNode(NUMBER_OF_FAILED_TASKS, numberOfFailedTasks))
-                .append(xmlNode(NUMBER_OF_SUCCEEDED_TASKS, numberOfSucceededTasks))
-                .append(xmlNode(METRICS_DOC_URI, uri))
-                .append(xmlNode(PAUSED, Boolean.toString(paused)))
-                .append(xmlNode(JOB_SERVER_PORT, jobServerPort))
-                .append(xmlNode(AVERAGE_TPS, avgTps > 0 ? formatTransactionsPerSecond(avgTps) : ""))
-                .append(xmlNode(CURRENT_TPS, currentTps > 0 ? formatTransactionsPerSecond(currentTps) : ""))
-                .append(xmlNode(ESTIMATED_TIME_OF_COMPLETION, estimatedTimeOfCompletion))
-                .append(xmlNode(CURRENT_THREAD_COUNT, currentThreadCount))
-                .append(xmlNode(METRICS_TIMESTAMP, LocalDateTime.now().format(DATE_FORMATTER)))
-                .append(concise ? "" : xmlNodeArray(FAILED_URIS, URI, failedUris))
-                .append(concise ? "" : xmlNodeRanks(LONG_RUNNING_URIS, longRunningUris));
-        return xmlNode(JOB_ROOT, strBuff.toString(), CORB_NS);
+    public String toXmlString(boolean concise) {
+        Document doc = toXML(concise);
+        return toXmlString(doc);
     }
 
-    public String toJSONString() {
-        return toJSONString(false);
+    public static String toXmlString(Document doc)    {
+        DOMImplementationLS domImplementation = (DOMImplementationLS) doc.getImplementation();
+        LSSerializer lsSerializer = domImplementation.createLSSerializer();
+        return lsSerializer.writeToString(doc);
     }
 
-    public String toJSONString(boolean concise) {
-        return getJsonFromXML(toXMLString(concise));
-    }
-
-    private static String getJsonFromXML(String xml) {
-        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder dBuilder;
+    public static Document toXML(DocumentBuilderFactory documentBuilderFactory, List<JobStats> jobStatsList, boolean concise) {
+        Document doc = null;
         try {
-            dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.parse(new InputSource(new StringReader(xml)));
-
-            StringBuilder strBuff = new StringBuilder();
-            Node root = doc.getDocumentElement();
-            strBuff.append(OPEN_CURLY + "\"").append(root.getNodeName()).append("\"" + COLON + OPEN_CURLY);
-            strBuff.append(getJson(root));
-            strBuff.append("}}");
-            return strBuff.toString();
-        } catch (Exception e) {
-            // unable to generate json
-            // Log and continue
-            LOG.log(INFO, "Unable to generate JSON document", e);
-        }
-        return "";
-    }
-
-    private static String getJson(Node node) {
-        StringBuffer strBuff = new StringBuffer();
-
-        NodeList nodeList = node.getChildNodes();
-        for (int i = 0; i < nodeList.getLength(); i++) {
-            if (i != 0) {
-                strBuff.append(COMMA);
+            DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+            doc = documentBuilder.newDocument();
+            Element element = doc.createElementNS(CORB_NAMESPACE, JOBS_ELEMENT);
+            for (JobStats jobStats : jobStatsList) {
+                element.appendChild(jobStats.createJobElement(doc, concise));
             }
-            Node child = nodeList.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE) {
-                if (child.getNodeName().equals(LONG_RUNNING_URIS)) {
-                    strBuff.append(toJsonProperty(child.getNodeName()))
-                            .append(COLON)
-                            .append(OPEN_SQUARE);
-                    NodeList uris = child.getChildNodes();
-                    for (int j = 0; j < uris.getLength(); j++) {
-                        if (uris.item(j).hasChildNodes()) {
-                            if (j != 0) {
-                                strBuff.append(COMMA);
-                            }
-                            strBuff.append(OPEN_CURLY);
-                            NodeList innerUris = uris.item(j).getChildNodes();
-                            for (int k = 0; k < innerUris.getLength(); k++) {
-                                Node uri = innerUris.item(k);
-                                if (k != 0) {
-                                    strBuff.append(COMMA);
-                                }
-                                strBuff.append(toJsonProperty(uri.getNodeName()))
-                                        .append(COLON)
-                                        .append(toJsonValue(uri.getTextContent()));
-                            }
-                            strBuff.append(CLOSE_CURLY);
-                        }
-                    }
-                    strBuff.append(CLOSE_SQUARE);
-                } else if (child.getNodeName().equals(FAILED_URIS)) {
-                    strBuff.append(toJsonProperty(child.getNodeName()))
-                            .append(COLON)
-                            .append(OPEN_SQUARE);
-                    NodeList uris = child.getChildNodes();
-                    for (int j = 0; j < uris.getLength(); j++) {
-                        if (uris.item(j).hasChildNodes()) {
-                            if (j != 0) {
-                                strBuff.append(COMMA);
-                            }
-                            NodeList innerUris = uris.item(j).getChildNodes();
-                            for (int k = 0; k < innerUris.getLength(); k++) {
-                                Node uri = innerUris.item(k);
-                                if (k != 0) {
-                                    strBuff.append(COMMA);
-                                }
-                                strBuff.append(toJsonValue(uri.getTextContent()));
-                            }
-                        }
-                    }
-                    strBuff.append(CLOSE_SQUARE);
-                } else if (child.hasChildNodes() && child.getFirstChild().getNodeType() == Node.TEXT_NODE) {
-                    strBuff.append(toJsonProperty(child.getNodeName()))
-                            .append(COLON)
-                            .append(toJsonValue(child.getTextContent()));
-                } else {
-                    strBuff.append(toJsonProperty(child.getNodeName()))
-                            .append(COLON)
-                            .append(OPEN_CURLY)
-                            .append(getJson(child))
-                            .append(CLOSE_CURLY);
-                }
+            doc.appendChild(element);
+        } catch (ParserConfigurationException ex) {
+            LOG.log(SEVERE, "Unable to create a new XML Document", ex);
+        }
+        return doc;
+    }
+
+    public Document toXML(boolean concise) {
+
+        refresh();
+
+        Document doc = null;
+        try {
+            DocumentBuilder docBuilder = documentBuilderFactory.newDocumentBuilder();
+            doc = docBuilder.newDocument();
+            Element docElement = createJobElement(doc, concise);
+            doc.appendChild(docElement);
+        } catch (ParserConfigurationException ex) {
+            LOG.log(Level.SEVERE, "Unable to create a new XML Document", ex);
+        }
+        return doc;
+    }
+
+    protected Element createJobElement(Document doc, boolean concise) {
+        Element element = doc.createElementNS(CORB_NAMESPACE, JOB_ELEMENT);
+
+        createAndAppendElement(element, METRICS_TIMESTAMP, LocalDateTime.now().format(DATE_FORMATTER));
+        createAndAppendElement(element, METRICS_DOC_URI, uri);
+        createAndAppendElement(element, JOB_LOCATION, jobRunLocation);
+        createAndAppendElement(element, JOB_NAME, jobName);
+        createAndAppendElement(element, JOB_ID, jobId);
+        if (!concise) {
+            createAndAppendElement(element, USER_PROVIDED_OPTIONS, userProvidedOptions);
+        }
+        createAndAppendElement(element, HOST, host);
+        createAndAppendElement(element, JOB_SERVER_PORT, jobServerPort);
+
+        createAndAppendElement(element, START_TIME, startTime);
+        createAndAppendElement(element, INIT_TASK_TIME, initTaskRunTime);
+        createAndAppendElement(element, PRE_BATCH_RUN_TIME, preBatchRunTime);
+        createAndAppendElement(element, URIS_LOAD_TIME, urisLoadTime);
+        createAndAppendElement(element, POST_BATCH_RUN_TIME, postBatchRunTime);
+        createAndAppendElement(element, END_TIME, endTime);
+        createAndAppendElement(element, TOTAL_JOB_RUN_TIME, totalRunTimeInMillis);
+
+        createAndAppendElement(element, PAUSED, Boolean.toString(paused));
+        createAndAppendElement(element, TOTAL_NUMBER_OF_TASKS, taskCount);
+        createAndAppendElement(element, CURRENT_THREAD_COUNT, currentThreadCount);
+        createAndAppendElement(element, CURRENT_TPS, currentTps > 0 ? formatTransactionsPerSecond(currentTps) : "");
+        createAndAppendElement(element, AVERAGE_TPS, avgTps > 0 ? formatTransactionsPerSecond(avgTps) : "");
+        createAndAppendElement(element, AVERAGE_TRANSACTION_TIME, averageTransactionTime);
+        createAndAppendElement(element, ESTIMATED_TIME_OF_COMPLETION, estimatedTimeOfCompletion);
+
+        createAndAppendElement(element, NUMBER_OF_SUCCEEDED_TASKS, numberOfSucceededTasks);
+        createAndAppendElement(element, NUMBER_OF_FAILED_TASKS, numberOfFailedTasks);
+        if (!concise) {
+            addLongRunningUris(element);
+            addFailedUris(element);
+        }
+        return element;
+    }
+
+    protected void createAndAppendElement(Node parent, String localName, String value) {
+        if (StringUtils.isNotEmpty(value)) {
+            Element element = createElement(parent, localName, value);
+            parent.appendChild(element);
+        }
+    }
+
+    protected void createAndAppendElement(Node parent, String localName, Long value) {
+        if (value != null && value >= 0l) {
+            createAndAppendElement(parent, localName, value.toString());
+        }
+    }
+
+    protected void createAndAppendElement(Node parent, String localName, Double value) {
+        if (value != null && value >= 0l) {
+            createAndAppendElement(parent, localName, value.toString());
+        }
+    }
+
+    protected void createAndAppendElement(Node parent, String localName, Map<String, String>value){
+        if (value != null && !value.isEmpty()) {
+            Document doc = parent.getOwnerDocument();
+            Element element = doc.createElementNS(CORB_NAMESPACE, localName);
+            for (Map.Entry<String, String> entry : value.entrySet()) {
+                createAndAppendElement(element, entry.getKey(), entry.getValue());
             }
+            parent.appendChild(element);
         }
-        return strBuff.toString();
     }
 
-    public static StringBuffer toJsonProperty(String propertyName) {
-        return new StringBuffer(QUOTE).append(propertyName).append(QUOTE);
+    protected Element createElement(Node parent, String localName, String value) {
+        Document doc = parent.getOwnerDocument();
+        Element element = doc.createElementNS(CORB_NAMESPACE, localName);
+        Text text = doc.createTextNode(value);
+        element.appendChild(text);
+        return element;
     }
 
-    public static StringBuffer toJsonValue(String value) {
-        StringBuffer buffer = new StringBuffer();
-        if (isNumeric(value)) {
-            buffer.append(value);
-        } else if (Boolean.TRUE.toString().equalsIgnoreCase(value) || Boolean.FALSE.toString().equalsIgnoreCase(value)) {
-            buffer.append(Boolean.toString(StringUtils.stringToBoolean(value)));
-        } else {
-            buffer.append(QUOTE)
-                .append(value.replace(QUOTE, "\\\""))
-                .append(QUOTE);
-        }
-        return buffer;
+    public String toJSON() {
+        return toJSON(false);
     }
 
-    public static boolean isNumeric(String str) {
-        return str.matches("-?\\d+(\\.\\d+)?");
+    public String toJSON(boolean concise) {
+        Document doc = toXML(concise);
+        return toJSON(doc);
     }
 
-    private static String xmlNode(String nodeName, String nodeVal) {
-        return xmlNode(nodeName, nodeVal, null);
+    public static String toJSON(Templates jobStatsToJsonTemplates, Document doc) throws TransformerException {
+        StringWriter sw = new StringWriter();
+        Transformer autobot = jobStatsToJsonTemplates.newTransformer();
+        autobot.transform(new DOMSource(doc), new StreamResult(sw));
+        return sw.toString();
     }
 
-    private static String xmlNode(String nodeName, Long nodeVal) {
-        return xmlNode(nodeName, nodeVal != null && nodeVal >= 0L ? nodeVal.toString() : null);
-    }
-
-    protected static String xmlNode(String nodeName, Double nodeVal) {
-        return xmlNode(nodeName, nodeVal != null && nodeVal >= 0.0 ? nodeVal.toString() : null);
-    }
-
-    protected static String xmlNode(String nodeName, Integer nodeVal) {
-        return xmlNode(nodeName, nodeVal != null && nodeVal >= 0 ? nodeVal.toString() : null);
-    }
-
-    protected static String xmlNodeArray(String nodeName, String childNodeName, List<String> nodeVals) {
-        if (nodeVals != null && !nodeVals.isEmpty()) {
-
-            StringBuffer strBuff = new StringBuffer();
-            for (String nodeVal : nodeVals) {
-                strBuff.append(xmlNode(childNodeName, nodeVal));
+    public String toJSON(Document doc) {
+        StringBuilder json = new StringBuilder();
+        try {
+            if (jobStatsToJsonTemplates == null) {
+                jobStatsToJsonTemplates = newJobStatsToJsonTemplates(transformerFactory);
             }
-            return xmlNode(nodeName, strBuff.toString(), null);
-        } else {
-            return "";
+            json.append(toJSON(jobStatsToJsonTemplates, doc));
+        } catch (TransformerException e) {
+            LOG.log(SEVERE, "Unable to transform to JSON", e);
         }
+        return json.toString();
     }
 
-    protected static String xmlNode(String nodeName, String nodeVal, String defaultNS) {
-        if (StringUtils.isNotEmpty(nodeVal)) {
-            StringBuffer strBuff = new StringBuffer();
-            strBuff.append(LT).append(nodeName);
-            if (defaultNS != null) {
-                strBuff.append(" xmlns='").append(defaultNS).append('\'');
-            }
-
-            strBuff.append(GT).append(nodeVal).append("</").append(nodeName).append(GT);
-            return strBuff.toString();
-        } else {
-            return "";
-        }
+    public static Templates newJobStatsToJsonTemplates(TransformerFactory transformerFactory) throws TransformerConfigurationException {
+        return newTemplates(transformerFactory, "jobStatsToJson.xsl");
+    }
+    protected static Templates newTemplates(TransformerFactory transformerFactory, String stylesheetFilename) throws TransformerConfigurationException {
+        StreamSource styleSource = new StreamSource(FileUtils.getFile(stylesheetFilename));
+        return transformerFactory.newTemplates(styleSource);
     }
 
-    protected static String xmlNode(String nodeName, Map<String, String> nodeVal) {
-        if (nodeVal != null && !nodeVal.isEmpty()) {
-            StringBuffer strBuff = new StringBuffer();
-            for (Map.Entry<String, String> entry : nodeVal.entrySet()){
-                strBuff.append(xmlNode(entry.getKey(), entry.getValue()));
-            }
-            return xmlNode(nodeName, strBuff.toString());
-        } else {
-            return "";
-        }
-    }
+    protected void addLongRunningUris(Node parent) {
 
-    protected static String xmlNodeRanks(String nodeName, Map<String, Long> nodeVal) {
-        if (nodeVal != null && !nodeVal.isEmpty()) {
-            StringBuffer strBuff = new StringBuffer();
+        if (longRunningUris != null && !longRunningUris.isEmpty()) {
+            Document doc = parent.getOwnerDocument();
+            Element rankingElement = doc.createElementNS(CORB_NAMESPACE, LONG_RUNNING_URIS);
+
             NavigableSet<Long> ranks = new TreeSet<>();
-            ranks.addAll(nodeVal.values());
-            Map<Integer, String> rankToXML = new HashMap<>();
-            int numUris = nodeVal.keySet().size();
-            for (Map.Entry<String, Long> entry : nodeVal.entrySet()) {
-                StringBuffer rankXml = new StringBuffer();
+            ranks.addAll(longRunningUris.values());
+            Map<Integer, List<Element>> rankToXML = new HashMap<>();
+            int numUris = longRunningUris.keySet().size();
+            for (Map.Entry<String, Long> entry : longRunningUris.entrySet()) {
                 Long time = entry.getValue();
                 Integer rank = numUris - ranks.headSet(time).size();
-                String urisWithSameRank = rankToXML.get(rank);
+                List<Element> urisWithSameRank = rankToXML.get(rank);
+
                 if (urisWithSameRank != null) {
-                    rankXml.append(urisWithSameRank).append(xmlNode(URI, entry.getKey()));
+                    urisWithSameRank.add(createElement(rankingElement, URI, entry.getKey()));
                 } else {
-                    rankXml.append(xmlNode(URI, entry.getKey()))
-                            .append(xmlNode("rank", rank))
-                            .append(xmlNode("timeInMillis", time));
+                    List<Element> rankData = new ArrayList<>();
+                    rankData.add(createElement(rankingElement, URI, entry.getKey()));
+                    rankData.add(createElement(rankingElement, "rank", rank.toString()));
+                    rankData.add(createElement(rankingElement, "timeInMillis", time.toString()));
+                    urisWithSameRank = rankData;
                 }
-                rankToXML.put(rank, rankXml.toString());
+                rankToXML.put(rank, urisWithSameRank);
             }
-            for (Map.Entry<Integer, String> entry : rankToXML.entrySet()){
-                strBuff.append(xmlNode("Uri", entry.getValue()));
+
+            for (Map.Entry<Integer, List<Element>> entry : rankToXML.entrySet()){
+                Element uriElement = doc.createElementNS(CORB_NAMESPACE, "Uri");
+                for (Element element : entry.getValue()) {
+                    uriElement.appendChild(element);
+                }
+                rankingElement.appendChild(uriElement);
             }
-            return xmlNode(nodeName, strBuff.toString());
-        } else {
-            return "";
+            parent.appendChild(rankingElement);
         }
     }
 
+    protected void addFailedUris(Node parent) {
+        if (failedUris != null && !failedUris.isEmpty()) {
+            Document doc = parent.getOwnerDocument();
+            Element failedUrisElement = doc.createElementNS(CORB_NAMESPACE, FAILED_URIS);
+            for (String nodeVal : failedUris) {
+                createAndAppendElement(failedUrisElement, URI, nodeVal);
+            }
+            parent.appendChild(failedUrisElement);
+        }
+    }
     /**
      * @param initTaskRunTime the initTaskRunTime to set
      */

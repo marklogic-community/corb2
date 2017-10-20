@@ -1,10 +1,14 @@
 package com.marklogic.developer.corb;
 
 import com.sun.net.httpserver.*;
+import org.w3c.dom.Document;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Templates;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
@@ -33,6 +37,9 @@ public class JobServer {
     private HttpServer server;
     private List<Manager> managers = new ArrayList<>();
     private Map<String, HttpContext> contexts = new HashMap<>();
+    private final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+    private TransformerFactory transformerFactory  = TransformerFactory.newInstance();
+    private Templates jobStatsToJsonTemplates;
 
     public static JobServer create(Integer port) throws IOException {
         return JobServer.create(Collections.singleton(port), null);
@@ -72,33 +79,25 @@ public class JobServer {
             }
             httpExchange.getResponseHeaders().add(HEADER_CONTENT_TYPE, contentType);
 
-            StringBuffer response = new StringBuffer();
+            StringBuilder response = new StringBuilder();
 
-            String finalContentType = contentType;
-            String managerStats = managers.stream()
-                .filter(manager -> manager.jobId != null)
+            List<JobStats> managerJobStats = managers.stream()
+                .filter(manager -> manager.jobId != null) //don't include jobs that have not started
                 .map(manager -> {
-
                     // In case the Manager was added prior to the jobId being assigned, create an HTTPContext now that it is available
                     String jobPath = HTTP_RESOURCE_PATH + manager.jobId;
                     if (!contexts.containsKey(jobPath)) {
                         addManagerContext(manager);
                     }
+                   return manager.jobStats;
+                }).collect(Collectors.toList());
 
-                    if (MIME_XML.equals(finalContentType)) {
-                        return manager.jobStats.toXMLString(concise);
-                    } else {
-                        return manager.jobStats.toJSONString(concise);
-                    }
-                })
-                .collect(Collectors.joining(MIME_XML.equals(finalContentType) ? "" : ","));
+            Document jobs = JobStats.toXML(documentBuilderFactory, managerJobStats, concise);
 
-            if (MIME_XML.equals(finalContentType)){
-                response.append(JobStats.xmlNode(JobStats.JOB_ROOT + "s", managerStats, JobStats.CORB_NS));
+            if (MIME_XML.equals(contentType)) {
+                response.append(JobStats.toXmlString(jobs));
             } else {
-                response.append('[');
-                response.append(managerStats);
-                response.append(']');
+                response.append(toJson(jobs));
             }
 
             httpExchange.getResponseHeaders().add(HEADER_CONTENT_TYPE, contentType);
@@ -118,6 +117,19 @@ public class JobServer {
             }
             handleStaticRequest(path, httpExchange);
         }
+    }
+
+    protected String toJson(Document doc) {
+        StringBuilder json = new StringBuilder();
+        try {
+            if (jobStatsToJsonTemplates == null) {
+                jobStatsToJsonTemplates = JobStats.newJobStatsToJsonTemplates(transformerFactory);
+            }
+            json.append(JobStats.toJSON(jobStatsToJsonTemplates, doc));
+        } catch (TransformerException e) {
+            LOG.log(Level.SEVERE, "Unable to transform to JSON", e);
+        }
+        return json.toString();
     }
 
     public static void handleStaticRequest(String path, HttpExchange httpExchange) {

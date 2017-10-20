@@ -2,15 +2,17 @@ package com.marklogic.developer.corb;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletionService;
 
+import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.junit.Test;
 import org.w3c.dom.Document;
@@ -39,51 +41,13 @@ public class JobStatsTest {
         assertEquals(20, JobStats.epochMillisAsFormattedDateString(0).length());
     }
 
-    @Test
-    public void isNumeric() throws Exception {
-        assertTrue(JobStats.isNumeric("1.0"));
-        assertFalse(JobStats.isNumeric("one"));
-    }
-
-    @Test
-    public void testXmlNodeInteger() {
-        Integer value = null;
-        assertEquals("", JobStats.xmlNode(FOO, value));
-        value = -1;
-        assertEquals("", JobStats.xmlNode(FOO, value));
-        value = 0;
-        assertEquals("<foo>0</foo>", JobStats.xmlNode(FOO, value));
-        value = 5;
-        assertEquals("<foo>5</foo>", JobStats.xmlNode(FOO, value));
-    }
-
-    @Test
-    public void testXmlNodeDouble() {
-        Double value = null;
-        assertEquals("", JobStats.xmlNode(FOO, value));
-        value = -1.0d;
-        assertEquals("", JobStats.xmlNode(FOO, value));
-        value = 0.0d;
-        assertEquals("<foo>0.0</foo>", JobStats.xmlNode(FOO, value));
-        value = 5d;
-        assertEquals("<foo>5.0</foo>", JobStats.xmlNode(FOO, value));
-    }
 
     @Test
     public void testToString() {
         Manager manager = new Manager();
         JobStats jobStats = new JobStats(manager);
         assertEquals(jobStats.toString(), jobStats.toString(true));
-        assertNotEquals(jobStats.toString(), jobStats.toString(false));
-    }
-
-    @Test
-    public void testXmlNodeArray() {
-        List<String> value = new ArrayList<>(3);
-        value.add("");
-        value.add("a");
-        value.add("1");
-        assertEquals("<foo><foo>a</foo><foo>1</foo></foo>", JobStats.xmlNodeArray(FOO, FOO, value));
+//        assertNotEquals(jobStats.toString(), jobStats.toString(false));
     }
 
     @Test
@@ -106,21 +70,22 @@ public class JobStatsTest {
 	}
 
 	private void assertXMLJSONNotNull(JobStats jobStats) {
-		String xml = jobStats.toXMLString();
+		String xml = jobStats.toXmlString();
 		assertTrue("Empty Failed URIs", xml != null);
-		assertTrue("Job is  null", jobStats.toJSONString() != null);
-		assertTrue("Job is  null", jobStats.toJSONString(true) != null);
+		assertTrue("Job is  null", jobStats.toJSON() != null);
+		assertTrue("Job is  null", jobStats.toJSON(true) != null);
 	}
 
 	@Test
-	public void testXMLRanks() throws ParserConfigurationException, SAXException, IOException {
+	public void testXMLRanks() throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
 		Map<String, Long> nodeVal = new HashMap<>();
-		nodeVal.put("URI1", 6L);
-		nodeVal.put("URI2", 5L);
-		nodeVal.put("URI3", 4L);
-		nodeVal.put("URI4", 3L);
-		nodeVal.put("URI5", 2L);
-		nodeVal.put("URI6", 1L);
+        nodeVal.put("URI6", 1l);
+        nodeVal.put("URI3", 4l);
+        nodeVal.put("URI1", 6l);
+		nodeVal.put("URI2", 5l);
+		nodeVal.put("URI4", 3l);
+		nodeVal.put("URI5", 2l);
+
 		Manager manager = new Manager();
 		PausableThreadPoolExecutor threadPoolExecutor = mock(PausableThreadPoolExecutor.class);
 		when(threadPoolExecutor.getTopUris()).thenReturn(nodeVal);
@@ -131,12 +96,35 @@ public class JobStatsTest {
 
 		assertXMLJSONNotNull(jobStats);
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+		dbFactory.setNamespaceAware(true);
 		DocumentBuilder dBuilder;
 		dBuilder = dbFactory.newDocumentBuilder();
-		Document doc = dBuilder.parse(new InputSource(new StringReader(jobStats.toXMLString())));
-		String uri = doc.getElementsByTagName("Uri").item(0).getFirstChild().getFirstChild().getNodeValue();
-		String rank = doc.getElementsByTagName("Uri").item(0).getFirstChild().getNextSibling().getFirstChild().getNodeValue();
-		assertTrue("Rank is Correct", uri.equals("URI" + rank));
+		Document doc = dBuilder.parse(new InputSource(new StringReader(jobStats.toXmlString())));
+        XPathFactory factory = XPathFactory.newInstance();
+        NamespaceContext nsContext = new NamespaceContext() {
+            public String getNamespaceURI(String prefix) {
+                return "c".equals(prefix) ? JobStats.CORB_NAMESPACE : null;
+            }
+            public Iterator getPrefixes(String val) {
+                return null;
+            }
+            public String getPrefix(String uri) {
+                return null;
+            }
+        };
+        XPath xpath = factory.newXPath();
+        xpath.setNamespaceContext(nsContext);
+
+        String uri = (String) xpath.evaluate("/c:job/c:slowTransactions/c:Uri[1]/c:uri/text()", doc, XPathConstants.STRING);
+        String rank = (String) xpath.evaluate("/c:job/c:slowTransactions/c:Uri[1]/c:rank/text()", doc, XPathConstants.STRING);
+        assertEquals("Rank is Correct", "1", rank);
+        assertTrue("Rank is Correct", uri.equals("URI" + rank));
+
+        uri = (String) xpath.evaluate("/c:job/c:slowTransactions/c:Uri[last()]/c:uri/text()", doc, XPathConstants.STRING);
+        rank = (String) xpath.evaluate("/c:job/c:slowTransactions/c:Uri[last()]/c:rank/text()", doc, XPathConstants.STRING);
+        assertEquals("Rank is Correct", "6", rank);
+        assertTrue("Rank is Correct", uri.equals("URI" + rank));
+
 	}
 	/*
 	 * 1: Log once at the start and once at the end XML
