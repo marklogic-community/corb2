@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Properties;
 
+import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentSource;
 import org.junit.Before;
 import org.junit.Test;
@@ -433,53 +434,125 @@ public class DefaultContentSourcePoolTest {
 	}
 
 	@Test
-	public void testSubmitWithMockRequestAndError() throws RequestException, CorbException {
+	public void testSubmitWithMockRequestWithFailOver() throws RequestException, CorbException {
 		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "1");
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
 		ContentSource cs1 = mock(ContentSource.class);
+		Session session1 = mock(SessionImpl.class);
+		
 		ContentSource cs2 = mock(ContentSource.class);
-		Session session = mock(SessionImpl.class);
+		Session session2 = mock(SessionImpl.class);
+		
 		AdhocImpl request = mock(AdhocImpl.class);
-		DefaultContentSourcePool csp = new DefaultContentSourcePool();
-
-		csp.contentSourceList.add(cs1);
-		when(cs1.newSession()).thenReturn(session);
+		ResultSequence result = mock(ResultSequence.class);
+		
+		when(cs1.newSession()).thenReturn(session1);
 		when(cs1.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost1",8001));
 
-		csp.contentSourceList.add(cs2);
-		when(cs2.newSession()).thenReturn(session);
+		when(cs2.newSession()).thenReturn(session2);
 		when(cs2.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost2",8002));
 
-		when(session.newAdhocQuery(Mockito.any())).thenReturn(request);
-		when(request.getSession()).thenReturn(session);
-		when(session.submitRequest(request)).thenThrow(mock(ServerConnectionException.class));
+		when(session1.newAdhocQuery(Mockito.any())).thenReturn(request);
+		when(session1.submitRequest(Mockito.any())).thenThrow(mock(ServerConnectionException.class));
+		
+		when(session2.newAdhocQuery(Mockito.any())).thenReturn(request);
+		when(session2.submitRequest(Mockito.any())).thenReturn(result);
 
-		try{
-			csp.get().newSession().submitRequest(request);
-		}catch(Exception exc) {
-			exc.printStackTrace();
-		}
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.contentSourceList.add(cs1);
+		csp.contentSourceList.add(cs2);
+		
+		ResultSequence gotResult = csp.get().newSession().submitRequest(request);
+		assertTrue(csp.errorCountsMap.get(cs1) == 1);
+		assertEquals(result,gotResult);
+		csp.close();
+	}
+	
+	@Test
+	public void testSubmitWithMockInsertWithFailOver() throws RequestException, CorbException {
+		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "1");
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
+		ContentSource cs1 = mock(ContentSource.class);
+		Session session1 = mock(SessionImpl.class);
+		
+		ContentSource cs2 = mock(ContentSource.class);
+		Session session2 = mock(SessionImpl.class);
+		
+		Content content = mock(Content.class);
+				
+		when(cs1.newSession()).thenReturn(session1);
+		when(cs1.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost1",8001));
+
+		when(cs2.newSession()).thenReturn(session2);
+		when(cs2.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost2",8002));
+
+		doThrow(mock(ServerConnectionException.class)).when(session1).insertContent(content);		
+		doNothing().when(session2).insertContent(content);
+
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.contentSourceList.add(cs1);
+		csp.contentSourceList.add(cs2);
+		
+		csp.get().newSession().insertContent(content);
 		assertTrue(csp.errorCountsMap.get(cs1) == 1);
 		csp.close();
 	}
+	
+	@Test
+	public void testSubmitWithMockRequestAndErrorAndWait() throws RequestException, CorbException {
+		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "1");
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
+		ContentSource cs = mock(ContentSource.class);
+		Session session = mock(SessionImpl.class);
+				
+		AdhocImpl request = mock(AdhocImpl.class);
+		ResultSequence result = mock(ResultSequence.class);
+	
+		when(cs.newSession()).thenReturn(session);
+		when(cs.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost1",8001));
 
-	public void testSubmitWithMockRequestAndErrorAndReactivate() {
-
+		when(session.newAdhocQuery(Mockito.any())).thenReturn(request);
+		when(session.submitRequest(Mockito.any())).thenReturn(result);
+		
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.contentSourceList.add(cs);
+		csp.error(cs);
+		
+		ResultSequence gotResult = csp.get().newSession().submitRequest(request);
+		assertEquals(result,gotResult);
+		
+		csp.close();
 	}
 
-	public void testSubmitWithMockRequestAndErrorAndUnexpired() {
+	@Test(expected = ServerConnectionException.class)
+	public void testSubmitWithMockRequestAndError() throws RequestException, CorbException {
+		System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
+		ContentSource cs1 = mock(ContentSource.class);
+		Session session1 = mock(SessionImpl.class);
+		
+		ContentSource cs2 = mock(ContentSource.class);
+		Session session2 = mock(SessionImpl.class);
+		
+		AdhocImpl request = mock(AdhocImpl.class);
+		
+		when(cs1.newSession()).thenReturn(session1);
+		when(cs1.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost1",8001));
 
+		when(cs2.newSession()).thenReturn(session2);
+		when(cs2.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost2",8002));
+
+		when(session1.newAdhocQuery(Mockito.any())).thenReturn(request);
+		when(session1.submitRequest(Mockito.any())).thenThrow(mock(ServerConnectionException.class));
+		
+		when(session2.newAdhocQuery(Mockito.any())).thenReturn(request);
+		when(session2.submitRequest(Mockito.any())).thenThrow(mock(ServerConnectionException.class));
+
+		DefaultContentSourcePool csp = new DefaultContentSourcePool();
+		csp.contentSourceList.add(cs1);
+		csp.contentSourceList.add(cs2);
+		
+		csp.get().newSession().submitRequest(request);
+		csp.close();
 	}
 
-	public void testSubmitWithMockRequestLoadPolicy() {
-
-	}
-
-	public void testSubmitWithMockRequestAndErrorLoadPolicy() {
-
-	}
-
-	public void testSubmitWithMockRequestAndErrorAndReactivateLoadPolicy() {
-
-	}
 }
