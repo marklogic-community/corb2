@@ -397,8 +397,10 @@ public abstract class AbstractTask implements Task {
             throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
         } else {
             LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
-            String errorCode = requestException instanceof QueryException ? ((QueryException)requestException).getCode()+":" : "";
-            writeToErrorFile(inputUris, errorCode+requestException.getMessage());
+            String code = requestException instanceof QueryException ? ((QueryException)requestException).getCode() : null;
+            String message = requestException.getMessage();
+            message = (message != null && code != null) ? (code+":"+message) : (code != null ? code : (message != null ? message : null));
+            writeToErrorFile(inputUris, message);
             Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
             return inputUris;
         }

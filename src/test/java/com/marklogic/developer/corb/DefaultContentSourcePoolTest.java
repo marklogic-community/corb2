@@ -26,12 +26,12 @@ public class DefaultContentSourcePoolTest {
 	public void setUp() throws FileNotFoundException {
 		clearSystemProperties();
 	}
-	
+
 	private void assertHostAndPort(ContentSource cs, String hostname, int port) {
 		assertEquals(hostname,cs.getConnectionProvider().getHostName());
 		assertEquals(port,cs.getConnectionProvider().getPort());
 	}
-	
+
 	@Test
 	public void testInitContentSources() throws CorbException{
 		DefaultContentSourcePool csp = new DefaultContentSourcePool();
@@ -52,6 +52,22 @@ public class DefaultContentSourcePoolTest {
 		csp.close();
 	}
 
+    @Test
+    public void testGetWillPauseWhenError() throws CorbException {
+	    Properties properties = new Properties();
+	    properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
+        DefaultContentSourcePool csp = new DefaultContentSourcePool();
+        csp.init(properties, null, new String[] {"xcc://foo:bar@localhost:8000"});
+
+        ContentSource cs = csp.nextContentSource();
+        csp.error(cs);
+        long before = System.currentTimeMillis();
+        csp.get();
+        long after = System.currentTimeMillis();
+
+        assertTrue(csp.getConnectRetryInterval() * 1000 <= after - before );
+    }
+
     @Test(expected = NullPointerException.class)
     public void testInitNullConnectionStrings() throws CorbException{
         DefaultContentSourcePool csp = new DefaultContentSourcePool();
@@ -69,7 +85,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.1",8000);
 		csp.close();
 	}
-	
+
 	@Test
 	public void testInitTwoWithOneInvalidContentSource() throws CorbException{
 		DefaultContentSourcePool csp = new DefaultContentSourcePool();
@@ -80,7 +96,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"localhost",8000);
 		csp.close();
 	}
-	
+
 	@Test
     public void testInitConnectionPolicyRandom() {
 	    Properties properties = new Properties();
@@ -183,7 +199,7 @@ public class DefaultContentSourcePoolTest {
         csp.init(properties, null, new String[] {"xcc://foo:bar@localhost:8000","xcc://foo:bar@localhost:8010","xcc://foo:bar@localhost:8020"});
         return csp;
     }
-		
+
 	@Test
 	public void testRoundRobinPolicy() throws CorbException{
 		DefaultContentSourcePool csp = new DefaultContentSourcePool();
@@ -195,7 +211,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.1",8001);
 		csp.close();
 	}
-		
+
 	@Test
 	public void testRoundRobinPolicyWithOneError() throws CorbException{
 		DefaultContentSourcePool csp = new DefaultContentSourcePool();
@@ -209,7 +225,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		csp.close();
 	}
-	
+
 	@Test
 	public void testRoundRobinPolicyWithTwoErrors() throws CorbException{
 		DefaultContentSourcePool csp = new DefaultContentSourcePool();
@@ -225,7 +241,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.3",8003);
 		csp.close();
 	}
-	
+
 	@Test
 	public void testRoundRobinPolicyWithUnexpiredContentSource() throws CorbException, InterruptedException{
 		System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
@@ -241,7 +257,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.1",8001);
 		csp.close();
 	}
-	
+
 	@Test
 	public void testRoundRobinPolicyWithReactivatedContentSource() throws CorbException, InterruptedException{
 		System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
@@ -257,7 +273,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.1",8001);
 		csp.close();
 	}
-	
+
 	@Test
 	public void testRoundRobinPolicyWithAllErrors() throws CorbException{
 		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "1");
@@ -277,7 +293,7 @@ public class DefaultContentSourcePoolTest {
 		csp.get();	
 		csp.close();
 	}
-	
+
 	@Test
 	public void tryToTestRandomPolicy() throws CorbException{
 		System.setProperty(Options.CONNECTION_POLICY, "RANDOM");
@@ -287,7 +303,7 @@ public class DefaultContentSourcePoolTest {
 		assertTrue(Arrays.asList(new String[]{"192.168.0.1","192.168.0.2"}).contains(csp.get().getConnectionProvider().getHostName()));
 		csp.close();
 	}
-	
+
 	@Test
 	public void testRandomPolicyWithOneError() throws CorbException{
 		System.setProperty(Options.CONNECTION_POLICY, "RANDOM");
@@ -299,7 +315,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		csp.close();
 	}
-	
+
 	@Test
 	public void testLoadPolicy() throws CorbException{
 		System.setProperty(Options.CONNECTION_POLICY, "LOAD");
@@ -315,7 +331,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.1",8001);
 		csp.close();
 	}
-	
+
 	@Test
 	public void testLoadPolicy2() throws CorbException{
 		System.setProperty(Options.CONNECTION_POLICY, "LOAD");
@@ -330,7 +346,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		csp.close();
 	}
-	
+
 	@Test
 	public void testLoadPolicyWithOneError() throws CorbException{
 		System.setProperty(Options.CONNECTION_POLICY, "LOAD");
@@ -346,7 +362,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		csp.close();
 	}
-	
+
 	@Test
 	public void testLoadPolicyWithTwoErrors() throws CorbException{
 		System.setProperty(Options.CONNECTION_POLICY, "LOAD");
@@ -362,7 +378,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.3",8003);
 		csp.close();
 	}
-	
+
 	@Test
 	public void testLoadPolicyWithReactivatedContentSource() throws CorbException{
 		System.setProperty(Options.CONNECTION_POLICY, "LOAD");
@@ -378,7 +394,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		csp.close();
 	}
-	
+
 	@Test(expected = CorbException.class)
 	public void testLoadPolicyWithAllErrors() throws CorbException{
 		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "1");
@@ -398,7 +414,7 @@ public class DefaultContentSourcePoolTest {
 		csp.get();
 		csp.close();
 	}
-	
+
 	@Test
 	public void testSubmitWithMockRequest() throws RequestException, CorbException {
 		ContentSource cs = mock(ContentSource.class);
@@ -411,11 +427,11 @@ public class DefaultContentSourcePoolTest {
 		when(session.newAdhocQuery(Mockito.any())).thenReturn(request);
 		when(request.getSession()).thenReturn(session);
 		when(session.submitRequest(request)).thenReturn(rs);
-		
+
 		csp.get().newSession().submitRequest(request);
 		csp.close();
 	}
-	
+
 	@Test
 	public void testSubmitWithMockRequestAndError() throws RequestException, CorbException {
 		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "1");
@@ -425,19 +441,19 @@ public class DefaultContentSourcePoolTest {
 		Session session = mock(SessionImpl.class);
 		AdhocImpl request = mock(AdhocImpl.class);
 		DefaultContentSourcePool csp = new DefaultContentSourcePool();
-		
+
 		csp.contentSourceList.add(cs1);
 		when(cs1.newSession()).thenReturn(session);
 		when(cs1.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost1",8001));
-		
+
 		csp.contentSourceList.add(cs2);
 		when(cs2.newSession()).thenReturn(session);
 		when(cs2.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost2",8002));
-		
+
 		when(session.newAdhocQuery(Mockito.any())).thenReturn(request);
 		when(request.getSession()).thenReturn(session);
 		when(session.submitRequest(request)).thenThrow(mock(ServerConnectionException.class));
-		
+
 		try{
 			csp.get().newSession().submitRequest(request);
 		}catch(Exception exc) {
@@ -446,24 +462,24 @@ public class DefaultContentSourcePoolTest {
 		assertTrue(csp.errorCountsMap.get(cs1) == 1);
 		csp.close();
 	}
-	
+
 	public void testSubmitWithMockRequestAndErrorAndReactivate() {
-		
+
 	}
-	
+
 	public void testSubmitWithMockRequestAndErrorAndUnexpired() {
-		
+
 	}
-	
+
 	public void testSubmitWithMockRequestLoadPolicy() {
-	
+
 	}
-	
+
 	public void testSubmitWithMockRequestAndErrorLoadPolicy() {
-		
+
 	}
-	
+
 	public void testSubmitWithMockRequestAndErrorAndReactivateLoadPolicy() {
-		
+
 	}
 }
