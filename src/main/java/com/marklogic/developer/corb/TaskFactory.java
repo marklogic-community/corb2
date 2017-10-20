@@ -65,7 +65,7 @@ public class TaskFactory {
             throw new NullPointerException("null process task and xquery module");
         }
         if (null != options.getProcessModule()
-                && (null == uris || uris.length == 0 || null == manager.getContentSource())) {
+                && (null == uris || uris.length == 0 || null == manager.getContentSourcePool())) {
             throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT + " or input uri");
         }
         try {
@@ -82,7 +82,7 @@ public class TaskFactory {
         if (null == options.getPreBatchTaskClass() && null == options.getPreBatchModule()) {
             return null;
         }
-        if (null != options.getPreBatchModule() && null == manager.getContentSource()) {
+        if (null != options.getPreBatchModule() && null == manager.getContentSourcePool()) {
             throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
@@ -99,7 +99,7 @@ public class TaskFactory {
         if (null == options.getPostBatchTaskClass() && null == options.getPostBatchModule()) {
             return null;
         }
-        if (null != options.getPostBatchModule() && null == manager.getContentSource()) {
+        if (null != options.getPostBatchModule() && null == manager.getContentSourcePool()) {
             throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
@@ -116,7 +116,7 @@ public class TaskFactory {
         if (null == manager.getOptions().getInitTaskClass() && null == options.getInitModule()) {
             return null;
         }
-        if (null != options.getInitModule() && null == manager.getContentSource()) {
+        if (null != options.getInitModule() && null == manager.getContentSourcePool()) {
             throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
@@ -167,7 +167,7 @@ public class TaskFactory {
             }
         }
         task.setModuleType(moduleType);
-        task.setContentSource(manager.getContentSource());
+        task.setContentSourcePool(manager.getContentSourcePool());
 
         Properties managerProperties = manager.getProperties();
         task.setProperties(managerProperties);

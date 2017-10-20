@@ -18,7 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-import com.marklogic.xcc.ContentSource;
 import java.util.Properties;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -43,10 +42,10 @@ public class AbstractUrisLoaderTest {
 
     @Test
     public void testSetContentSource() {
-        ContentSource cs = mock(ContentSource.class);
+        ContentSourcePool csp = mock(ContentSourcePool.class);
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        instance.setContentSource(cs);
-        assertEquals(cs, instance.cs);
+        instance.setContentSourcePool(csp);
+        assertEquals(csp, instance.csp);
     }
 
     @Test
@@ -113,7 +112,7 @@ public class AbstractUrisLoaderTest {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         instance.cleanup();
         assertNull(instance.options);
-        assertNull(instance.cs);
+        assertNull(instance.csp);
         assertNull(instance.collection);
         assertNull(instance.properties);
         assertNull(instance.replacements);

@@ -48,7 +48,7 @@ public class JobServicesHandler implements HttpHandler {
 
         } else {
             LOG.log(Level.WARNING, "Unsupported method {0}", method);
-            httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0l);
+            httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0L);
         }
     }
 

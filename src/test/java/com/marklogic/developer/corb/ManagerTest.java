@@ -23,13 +23,11 @@ import java.io.File;
 import org.junit.*;
 import static org.junit.Assert.*;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
-import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
 import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentSource;
-import com.marklogic.xcc.ContentSourceFactory;
 import com.marklogic.xcc.ModuleInvoke;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.ResultItem;
@@ -40,7 +38,6 @@ import com.marklogic.xcc.types.XdmItem;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,6 +56,7 @@ import org.mockito.Mockito;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import org.mockito.exceptions.base.MockitoException;
 
@@ -97,6 +95,12 @@ public class ManagerTest {
     public static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
     public static final String SLOW_RECEIVE_MESSAGE = "Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC";
 
+    private void clearSystemProperties() {
+    		TestUtils.clearSystemProperties();
+        System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
+        System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
+    }
+    
     @Before
     public void setUp() throws IOException {
         clearSystemProperties();
@@ -779,7 +783,7 @@ public class ManagerTest {
             manager.properties = null;
             manager.normalizeLegacyProperties();
             assertNull(manager.properties);
-        } catch (RequestException ex) {
+        } catch (RequestException|CorbException ex ) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -800,7 +804,7 @@ public class ManagerTest {
 
             assertEquals(legacyValue1, manager.properties.getProperty(Options.PROCESS_MODULE));
             assertEquals(legacyValue2, manager.properties.getProperty(Options.PROCESS_MODULE + ".bar"));
-        } catch (RequestException ex) {
+        } catch (RequestException|CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -818,7 +822,7 @@ public class ManagerTest {
             manager.normalizeLegacyProperties();
 
             assertEquals(processVal, manager.properties.getProperty("PROCESS-MODULE.bar"));
-        } catch (RequestException ex) {
+        } catch (RequestException|CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -1137,7 +1141,8 @@ public class ManagerTest {
         Manager instance = new Manager();
         instance.options.setUrisModule("someFile2.xqy");
         try {
-            instance.contentSource = ContentSourceFactory.newContentSource(new URI(XCC_CONNECTION_URI));
+            instance.initContentSourcePool(XCC_CONNECTION_URI);
+            
             instance.run();
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -1152,6 +1157,7 @@ public class ManagerTest {
     public void testRunGetURILoaderWithURISMODULE() {
         try {
             Manager instance = getMockManagerWithEmptyResults();
+            instance.initContentSourcePool(XCC_CONNECTION_URI);
             instance.collection = "URILoader_Modules";
             instance.options.setUrisModule("someFile3.xqy");
             int count = instance.run();
@@ -1163,9 +1169,10 @@ public class ManagerTest {
     }
 
     @Test
-    public void testRegisterStatusInfo() {
+    public void testRegisterStatusInfo() throws CorbException{
         String xccRootValue = "xccRootValue";
 
+        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         AdhocQuery adhocQuery = mock(AdhocQuery.class);
@@ -1174,7 +1181,8 @@ public class ManagerTest {
         XdmItem firstXdmItem = mock(XdmItem.class);
         ResultItem second = mock(ResultItem.class);
         XdmItem secondXdmItem = mock(XdmItem.class);
-
+        
+        when(contentSourcePool.get()).thenReturn(contentSource);
         when(contentSource.newSession()).thenReturn(session);
         when(session.newAdhocQuery(anyString())).thenReturn(adhocQuery);
         when(resultSequence.hasNext()).thenReturn(true, true, false);
@@ -1190,20 +1198,20 @@ public class ManagerTest {
             when(session.submitRequest(any(Request.class))).thenReturn(resultSequence);
 
             Manager instance = getMockManagerWithEmptyResults();
-            instance.contentSource = contentSource;
+            instance.csp = contentSourcePool;
             instance.registerStatusInfo();
 
             assertEquals(xccRootValue, instance.options.getXDBC_ROOT());
             List<LogRecord> records = testLogger.getLogRecords();
             assertEquals(19, records.size());
-        } catch (RequestException ex) {
+        } catch (RequestException|CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
 
     @Test(expected = NullPointerException.class)
-    public void testRegisterStatusInfoNullContentSource() {
+    public void testRegisterStatusInfoNullContentSource() throws CorbException{
         Manager instance = new Manager();
         instance.registerStatusInfo();
         fail();
@@ -1216,7 +1224,7 @@ public class ManagerTest {
             instance.logOptions();
             List<LogRecord> records = testLogger.getLogRecords();
             assertEquals(19, records.size());
-        } catch (RequestException ex) {
+        } catch (RequestException|CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -1438,10 +1446,17 @@ public class ManagerTest {
         Files.write(path, lines, Charset.forName("UTF-8"));
         return file;
     }
-
-    public static Manager getMockManagerWithEmptyResults() throws RequestException {
-        Manager manager = new MockManager();
-
+    
+    public static Manager getMockManagerWithEmptyResults() throws RequestException, CorbException{
+    		Manager manager = spy(new Manager());
+    		ContentSourcePool contentSourcePool = getMockContentSourceManagerWithEmptyResults(); 
+    		when(manager.createContentSourceManager()).thenReturn(contentSourcePool);
+    		return manager;
+    }
+    
+        
+    public static ContentSourcePool getMockContentSourceManagerWithEmptyResults() throws RequestException, CorbException{
+        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke moduleInvoke = mock(ModuleInvoke.class);
@@ -1451,6 +1466,8 @@ public class ManagerTest {
         XdmItem batchRefItem = mock(XdmItem.class);
         XdmItem uriCount = mock(XdmItem.class);
 
+        when(contentSourcePool.get()).thenReturn(contentSource);
+        when(contentSourcePool.available()).thenReturn(true);
         when(contentSource.newSession()).thenReturn(session);
         when(contentSource.newSession(any())).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(moduleInvoke);
@@ -1460,9 +1477,7 @@ public class ManagerTest {
         when(uriCountResult.getItem()).thenReturn(uriCount);
         when(batchRefItem.asString()).thenReturn("batchRefVal");
         when(uriCount.asString()).thenReturn(Integer.toString(0));
-
-        manager.contentSource = contentSource;
-        return manager;
+        return contentSourcePool;
     }
 
     @Test
@@ -1500,14 +1515,6 @@ public class ManagerTest {
         @Override
         public void open() throws CorbException {
             this.setTotalCount(0);
-        }
-    }
-
-    private static class MockManager extends Manager {
-
-        @Override
-        protected void prepareContentSource() throws CorbException {
-            //Want to retain the mock contentSoure that we set in our tests
         }
     }
 }

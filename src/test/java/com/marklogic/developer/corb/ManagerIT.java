@@ -19,7 +19,6 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.TestUtils.clearFile;
-import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
 import static com.marklogic.developer.corb.util.FileUtilsTest.getBytes;
 import static org.junit.Assert.assertEquals;
@@ -73,6 +72,12 @@ public class ManagerIT {
     private static final String PRE_XQUERY_MODULE_OUTPUT = "This is being returned from the PRE-BATCH-MODULE which is often used for column headers.";
     protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\";\n";
 
+    private void clearSystemProperties() {
+		TestUtils.clearSystemProperties();
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
+	}
+    
     @Before
     public void setUp() throws IOException {
         clearSystemProperties();

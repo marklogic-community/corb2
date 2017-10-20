@@ -35,6 +35,7 @@ public final class StringUtils {
 
     public static final String EMPTY = "";
     public static final String SLASH = "/";
+    public static final String COMMA = ",";
     public static final String XQUERY_EXTENSION = ".xqy";
     private static final Pattern ADHOC_PATTERN = Pattern.compile("(?i).*\\|ADHOC");
     private static final Pattern JAVASCRIPT_MODULE_FILENAME_PATTERN = Pattern.compile("(?i).*\\.s?js(\\|ADHOC)?$");
@@ -397,4 +398,22 @@ public final class StringUtils {
 		return jobServerPorts;
 	}
 
+
+    /**
+     * Build an XCC URI from the values provided. Values will be URLEncoded, if it does not appear that they have already been URLEncoded.
+     * @param protocol
+     * @param username
+     * @param password
+     * @param host
+     * @param port
+     * @param dbname
+     * @return
+     */
+    public static String getXccUri(String protocol, String username, String password, String host, String port, String dbname) {
+        if(isBlank(protocol)) {
+            protocol = "xcc";
+        }
+        return protocol+"://" + urlEncodeIfNecessary(username) + ':' + urlEncodeIfNecessary(password) + '@' + host + ':' + port + (isBlank(dbname) ? "" : '/' + urlEncodeIfNecessary(dbname));
+    }
+    
 }

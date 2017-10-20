@@ -37,9 +37,7 @@ import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.SecurityOptions;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
-import com.marklogic.xcc.jndi.ContentSourceBean;
 import static com.marklogic.developer.corb.TestUtils.clearFile;
-import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import com.marklogic.developer.corb.util.StringUtils;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ModuleInvoke;
@@ -56,6 +54,7 @@ import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 /**
@@ -80,6 +79,12 @@ public class ModuleExecutorTest {
     private PrintStream systemOut = System.out;
     private PrintStream systemErr = System.err;
 
+    private void clearSystemProperties() {
+		TestUtils.clearSystemProperties();
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
+	}
+    
     @Before
     public void setUp() {
         clearSystemProperties();
@@ -118,7 +123,7 @@ public class ModuleExecutorTest {
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
         System.setProperty(Options.EXPORT_FILE_NAME, EXPORT_FILE_NAME);
         ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
-        ContentSource result = executor.getContentSource();
+        ContentSourcePool result = executor.getContentSourcePool();
 
         assertNotNull(result);
     }
@@ -130,7 +135,7 @@ public class ModuleExecutorTest {
             instance.logOptions();
             List<LogRecord> records = testLogger.getLogRecords();
             assertEquals(3, records.size());
-        } catch (RequestException ex) {
+        } catch (RequestException|CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -224,7 +229,7 @@ public class ModuleExecutorTest {
             String key = "systemProperty";
             System.setProperty(key, "hellowWorld");
             ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
-            executor.contentSource = new ContentSourceBean();
+            executor.csp = new DefaultContentSourcePool();
             executor.options = new TransformOptions();
             String result = executor.getProperty(key);
 
@@ -240,7 +245,7 @@ public class ModuleExecutorTest {
         try {
             clearSystemProperties();
             ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
-            executor.contentSource = new ContentSourceBean();
+            executor.csp = new DefaultContentSourcePool();
             executor.options = new TransformOptions();
             String key = Options.PROCESS_TASK;
 
@@ -318,8 +323,7 @@ public class ModuleExecutorTest {
         clearSystemProperties();
         try {
             ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
-            executor.prepareContentSource();
-            assertNotNull(executor.contentSource);
+            assertNotNull(executor.csp);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -479,11 +483,9 @@ public class ModuleExecutorTest {
     private ResultSequence run(ModuleExecutor executor) throws CorbException {
         ResultSequence res;
         try {
-            executor.prepareContentSource();
-
             RequestOptions opts = new RequestOptions();
             opts.setCacheResult(false);
-            Session session = executor.contentSource.newSession();
+            Session session = executor.csp.get().newSession();
             Request req;
             TransformOptions options = executor.getOptions();
             Properties properties = executor.getProperties();
@@ -646,19 +648,22 @@ public class ModuleExecutorTest {
         }
     }
 
-    public static ModuleExecutor getMockModuleExecutorCustomProcessResults() throws RequestException {
-        MockModuleExecutorResults manager = new MockModuleExecutorResults();
-        manager.contentSource = getMockContentSource();
+    public static ModuleExecutor getMockModuleExecutorCustomProcessResults() throws RequestException, CorbException {
+        MockModuleExecutorResults manager = spy(new MockModuleExecutorResults());
+        ContentSourcePool contentSourcePool = getMockContentSourceManager(); 
+		when(manager.createContentSourceManager()).thenReturn(contentSourcePool);
         return manager;
     }
 
-    public static ModuleExecutor getMockModuleExecutorWithEmptyResults() throws RequestException {
-        ModuleExecutor manager = new MockModuleExecutor();
-        manager.contentSource = getMockContentSource();
+    public static ModuleExecutor getMockModuleExecutorWithEmptyResults() throws RequestException, CorbException {
+        ModuleExecutor manager = spy(new ModuleExecutor());
+        ContentSourcePool contentSourcePool = getMockContentSourceManager(); 
+		when(manager.createContentSourceManager()).thenReturn(contentSourcePool);
         return manager;
     }
 
-    public static ContentSource getMockContentSource() throws RequestException {
+    public static ContentSourcePool getMockContentSourceManager() throws RequestException,CorbException {
+    		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke moduleInvoke = mock(ModuleInvoke.class);
@@ -670,7 +675,9 @@ public class ModuleExecutorTest {
         XdmItem batchRefItem = mock(XdmItem.class);
         XdmItem exampleValue = mock(XdmItem.class);
         XdmItem uriCount = mock(XdmItem.class);
-
+        
+        when(contentSourcePool.get()).thenReturn(contentSource);
+        when(contentSourcePool.available()).thenReturn(true);
         when(contentSource.newSession()).thenReturn(session);
         when(contentSource.newSession(any())).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(moduleInvoke).thenReturn(moduleInvoke);
@@ -688,15 +695,7 @@ public class ModuleExecutorTest {
         when(exampleValue.asString()).thenReturn(FOO);
         when(uriCount.asString()).thenReturn("1");
 
-        return contentSource;
-    }
-
-    private static class MockModuleExecutor extends ModuleExecutor {
-
-        @Override
-        protected void prepareContentSource() throws CorbException {
-            //Want to retain the mock contentSource that we set in our tests
-        }
+        return contentSourcePool;
     }
 
     private static class MockModuleExecutorCannotWrite extends ModuleExecutor {
@@ -708,7 +707,7 @@ public class ModuleExecutorTest {
         }
     }
 
-    private static class MockModuleExecutorResults extends MockModuleExecutor {
+    private static class MockModuleExecutorResults extends ModuleExecutor {
 
         private List<String> results = new ArrayList<>();
 

@@ -31,6 +31,8 @@ import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
+
+import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
 import com.marklogic.xcc.ResultSequence;
@@ -196,6 +198,7 @@ public class ModuleExecutor extends AbstractManager {
         propertyNames.addAll(System.getProperties().stringPropertyNames());
         String processModule = options.getProcessModule();
 
+        ContentSource contentSource = csp.get();
         try (Session session = contentSource.newSession()) {
             request = getRequestForModule(processModule, session);
             if (isJavaScriptModule(processModule)) {

@@ -104,10 +104,10 @@ public class AbstractTaskTest {
 
     @Test
     public void testSetContentSource() {
-        ContentSource cs = mock(ContentSource.class);
+        ContentSourcePool csp = mock(ContentSourcePool.class);
         AbstractTask instance = new AbstractTaskImpl();
-        instance.setContentSource(cs);
-        assertEquals(cs, instance.cs);
+        instance.setContentSourcePool(csp);
+        assertEquals(csp, instance.csp);
     }
 
     @Test
@@ -193,12 +193,14 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testNewSession() {
+    public void testNewSession() throws CorbException{
         AbstractTask instance = new AbstractTaskImpl();
+        ContentSourcePool csp = mock(ContentSourcePool.class);
         ContentSource cs = mock(ContentSource.class);
         Session session = mock(Session.class);
+        when(csp.get()).thenReturn(cs);
         when(cs.newSession()).thenReturn(session);
-        instance.cs = cs;
+        instance.csp = csp;
         Session result = instance.newSession();
         assertEquals(session, result);
     }
@@ -212,18 +214,20 @@ public class AbstractTaskTest {
         instance.inputUris = inputUris;
 
         try {
+        		ContentSourcePool csp = mock(ContentSourcePool.class);
             ContentSource cs = mock(ContentSource.class);
             Session session = mock(Session.class);
             ModuleInvoke request = mock(ModuleInvoke.class);
             ResultSequence seq = mock(ResultSequence.class);
 
+            when(csp.get()).thenReturn(cs);
             when(cs.newSession()).thenReturn(session);
             when(session.newModuleInvoke(anyString())).thenReturn(request);
             when(request.setNewStringVariable(anyString(), anyString())).thenReturn(null);
             when(session.submitRequest(request)).thenReturn(seq);
             String key1 = "foo.bar";
             String key2 = "foo.baz";
-            instance.cs = cs;
+            instance.csp = csp;
             instance.moduleType = FOO;
             Properties props = new Properties();
             props.setProperty(key1, BAZ);
@@ -570,18 +574,6 @@ public class AbstractTaskTest {
         fail();
     }
 
-    @Test
-    public void testHandleRequestExceptionServerConnectionException() {
-        Request req = mock(Request.class);
-        ServerConnectionException serverException = new ServerConnectionException(ERROR_MSG, req);
-        try {
-            assertTrue(testHandleRequestException(serverException, false, 2));
-        } catch (CorbException | IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
-    }
-
     @Test(expected = CorbException.class)
     public void testHandleRequestExceptionServerConnectionExceptionFail() throws CorbException {
         Request req = mock(Request.class);
@@ -668,7 +660,7 @@ public class AbstractTaskTest {
     public void testToXdmItems() {
         AbstractTask instance = new AbstractTaskImpl();
         try {
-            XdmItem[] result = instance.toXdmItems(new String[]{"", FOO, EMPTY_DOC_ELEMENT});
+            XdmItem[] result = instance.toXdmItems("", FOO, EMPTY_DOC_ELEMENT);
             assertEquals(3, result.length);
             assertEquals("", result[0].asString());
             assertEquals(FOO, result[1].asString());
@@ -683,7 +675,7 @@ public class AbstractTaskTest {
     public void testToXdmItemsMalformedXML() {
         AbstractTask instance = new AbstractTaskImpl();
         try {
-            XdmItem[] result = instance.toXdmItems(new String[]{EMPTY_DOC_ELEMENT});
+            XdmItem[] result = instance.toXdmItems(EMPTY_DOC_ELEMENT);
             assertEquals(EMPTY_DOC_ELEMENT, result[0].asString());
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -849,14 +841,14 @@ public class AbstractTaskTest {
     @Test
     public void testCleanup() {
         AbstractTask instance = new AbstractTaskImpl();
-        instance.cs = mock(ContentSource.class);
+        instance.csp = mock(ContentSourcePool.class);
         instance.moduleType = "moduleType";
         instance.moduleUri = "moduleUri";
         instance.properties = new Properties();
         instance.inputUris = new String[]{};
         instance.adhocQuery = "adhocQuery";
         instance.cleanup();
-        assertNull(instance.cs);
+        assertNull(instance.csp);
         assertNull(instance.moduleType);
         assertNull(instance.moduleUri);
         assertNull(instance.properties);
@@ -1068,17 +1060,14 @@ public class AbstractTaskTest {
             return variable;
         }
 
-        @Override
         public void setNewVariables(String string, ValueType vt, Object[] o) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
         public void setNewVariables(String string, String string2, ValueType vt, Object[] o) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
         public void setNewVariables(XName string, XdmValue[] xdmValue) {
             throw new UnsupportedOperationException();
         }

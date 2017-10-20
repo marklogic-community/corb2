@@ -96,7 +96,7 @@ shadowJar {
     archiveName = "${baseName}-${version}.${extension}"
     manifest {
         attributes 'Application-Version': project.version
-        attributes 'Build-date' : new Date();
+        attributes 'Build-date' : new Date()
         attributes 'Main-Class' : 'com.marklogic.developer.corb.Manager'
 
         attributes 'Name': 'com/marklogic/developer/corb/'

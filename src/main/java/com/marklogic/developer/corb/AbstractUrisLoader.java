@@ -19,10 +19,13 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.URIS_REPLACE_PATTERN;
+
+import com.marklogic.developer.corb.util.IOUtils;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
-import com.marklogic.xcc.ContentSource;
+
+import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -32,7 +35,7 @@ import java.util.Properties;
 public abstract class AbstractUrisLoader implements UrisLoader {
 
     protected TransformOptions options;
-    protected ContentSource cs;
+    protected ContentSourcePool csp;
     protected String collection;
     protected Properties properties;
     private int total = 0;
@@ -47,10 +50,10 @@ public abstract class AbstractUrisLoader implements UrisLoader {
     public TransformOptions getOptions() {
         return options;
     }
-    
+
     @Override
-    public void setContentSource(ContentSource cs) {
-        this.cs = cs;
+    public void setContentSourcePool(ContentSourcePool csp) {
+        this.csp = csp;
     }
 
     @Override
@@ -67,20 +70,20 @@ public abstract class AbstractUrisLoader implements UrisLoader {
     public String getBatchRef() {
         return batchRef;
     }
-    
+
     public void setBatchRef(String batchRef) {
         this.batchRef = batchRef;
     }
-    
+
     @Override
     public int getTotalCount() {
         return this.total;
     }
-    
+
     public void setTotalCount(int totalCount) {
         this.total = totalCount;
     }
-    
+
     public String getProperty(String key) {
         String val = System.getProperty(key);
         if (val == null && properties != null) {
@@ -89,9 +92,15 @@ public abstract class AbstractUrisLoader implements UrisLoader {
         return trim(val);
     }
 
+    @Override
+    public void close() {
+        //don't close the ContentSourcePool. It will be used by downstream stages.
+        cleanup();
+    }
+
     protected void cleanup() {
         options = null;
-        cs = null;
+        csp = null;
         collection = null;
         properties = null;
         replacements = null;
@@ -108,7 +117,7 @@ public abstract class AbstractUrisLoader implements UrisLoader {
             }
         }
     }
-    
+
     protected boolean shouldSetBatchRef() {
         String setBatchRef = getProperty(Options.LOADER_SET_URIS_BATCH_REF);
         return StringUtils.stringToBoolean(setBatchRef, false);

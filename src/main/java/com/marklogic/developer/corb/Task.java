@@ -18,7 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-import com.marklogic.xcc.ContentSource;
 import java.util.concurrent.Callable;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -28,7 +27,7 @@ import java.util.TimeZone;
  */
 public interface Task extends Callable<String[]> {
 
-	void setContentSource(ContentSource cs);
+	void setContentSourcePool(ContentSourcePool csp);
 
 	/**
 	 * INIT-MODULE,PRE-BATCH-MODULE,PROCESS-MODULE,POST-BATCH-MODULE

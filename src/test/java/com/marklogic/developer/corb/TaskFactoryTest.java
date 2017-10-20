@@ -18,7 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-import com.marklogic.xcc.ContentSource;
 import java.io.File;
 import java.io.IOException;
 import java.util.TimeZone;
@@ -69,7 +68,7 @@ public class TaskFactoryTest {
         String[] uris = null;
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
         instance.newProcessTask(uris);
         fail();
@@ -81,7 +80,7 @@ public class TaskFactoryTest {
         Manager manager = new Manager();
         manager.options.setProcessTaskClass(ExportBatchToFileTask.class);
         manager.options.setProcessModule(MODULE);
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
         instance.newProcessTask(uris);
         fail();
@@ -92,7 +91,7 @@ public class TaskFactoryTest {
         String[] uris = new String[]{};
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
 
         TaskFactory instance = new TaskFactory(manager);
         instance.newProcessTask(uris);
@@ -104,7 +103,7 @@ public class TaskFactoryTest {
         String[] uris = new String[]{"a"};
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
 
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newProcessTask(uris);
@@ -118,7 +117,7 @@ public class TaskFactoryTest {
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
         manager.getProperties().setProperty(Options.XCC_TIME_ZONE, timeZoneID);
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
 
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newProcessTask(uris);
@@ -130,7 +129,7 @@ public class TaskFactoryTest {
         String[] uris = new String[]{"testDefaultTimeZone"};
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
 
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newProcessTask(uris);
@@ -144,7 +143,7 @@ public class TaskFactoryTest {
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
         manager.getProperties().setProperty(Options.XCC_TIME_ZONE, timeZoneID);
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
 
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newProcessTask(uris);
@@ -155,7 +154,7 @@ public class TaskFactoryTest {
     public void testNewProcessTaskStringArrNullProcessModule() {
         String[] uris = new String[]{"a"};
         Manager manager = new Manager();
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
 
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newProcessTask(uris);
@@ -181,7 +180,7 @@ public class TaskFactoryTest {
         boolean failOnError = false;
         Manager manager = new Manager();
         manager.options.setProcessModule("mod-print-uri.sjs|ADHOC");
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newProcessTask(uris, failOnError);
         assertNotNull(result);
@@ -208,7 +207,7 @@ public class TaskFactoryTest {
     public void testNewPreBatchTaskWithClassModuleAndSource() {
         Manager manager = new Manager();
         manager.options.setPreBatchModule(MODULE);
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newPreBatchTask();
         assertNotNull(result);
@@ -228,7 +227,7 @@ public class TaskFactoryTest {
     public void testNewPreBatchTaskWithPreBatchTaskClassAndContent() {
         Manager manager = new Manager();
         manager.options.setPreBatchTaskClass(ExportBatchToFileTask.class);
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
         instance.newPreBatchTask();
         fail();
@@ -275,7 +274,7 @@ public class TaskFactoryTest {
         Manager manager = new Manager();
         manager.options.setPostBatchTaskClass(ExportBatchToFileTask.class);
         manager.options.setPostBatchModule(MODULE);
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
         instance.newPostBatchTask();
         fail();
@@ -285,7 +284,7 @@ public class TaskFactoryTest {
     public void testNewPostBatchTask() {
         Manager manager = new Manager();
         manager.options.setPostBatchTaskClass(ExportBatchToFileTask.class);
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
         instance.newPostBatchTask();
         fail();
@@ -340,7 +339,7 @@ public class TaskFactoryTest {
     public void testNewInitTaskWithInitModuleAndContentSource() {
         Manager manager = new Manager();
         manager.options.setInitModule(MODULE);
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newInitTask();
         assertNotNull(result);
@@ -351,7 +350,7 @@ public class TaskFactoryTest {
         Manager manager = new Manager();
 
         manager.options.setInitTaskClass(ExportBatchToFileTask.class);
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newInitTask();
         assertNotNull(result);
@@ -366,7 +365,7 @@ public class TaskFactoryTest {
             emptyModule.deleteOnExit();
             manager.options.setInitModule(emptyModule.getAbsolutePath() + "|ADHOC");
             manager.options.setInitTaskClass(ExportBatchToFileTask.class);
-            manager.contentSource = mock(ContentSource.class);
+            manager.csp = mock(ContentSourcePool.class);
             TaskFactory instance = new TaskFactory(manager);
             Task result = instance.newInitTask();
             assertNotNull(result);
@@ -382,7 +381,7 @@ public class TaskFactoryTest {
         Manager manager = new Manager();
         manager.options.setInitModule("INLINE-XQUERY|for $i in (1 to 5) $i");
         manager.options.setInitTaskClass(ExportBatchToFileTask.class);
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newInitTask();
         assertNotNull(result);
@@ -394,7 +393,7 @@ public class TaskFactoryTest {
         Manager manager = new Manager();
         manager.options.setInitModule("INLINE-JAVASCRIPT|");
         manager.options.setInitTaskClass(ExportBatchToFileTask.class);
-        manager.contentSource = mock(ContentSource.class);
+        manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newInitTask();
         assertNotNull(result);

@@ -113,6 +113,27 @@ public final class Options {
     public static final String COMMAND_FILE_POLL_INTERVAL = "COMMAND-FILE-POLL-INTERVAL";
 
     /**
+     * Connection policy for allocating connections to tasks used by DefaultConnectionManager
+     * 
+     * @see com.marklogic.developer.corb.DefaultContentSourcePool
+     * 
+     * @since 2.4.0
+     */
+    @Usage(description = "Connection policy for allocating connections to tasks while using DefaultConnectionPool. Acceptable values ROUNBD-ROBIN, RANDOM and LOAD. Default is ROUND-ROBIN")
+    public static final String CONNECTION_POLICY = "CONNECTION-POLICY";
+        
+    /**
+     * Java class to manage marklogic connections. If none specified, DefaultConnectionManager is used.
+     * 
+     * @see com.marklogic.developer.corb.ContentSourcePool
+     * @see com.marklogic.developer.corb.DefaultContentSourcePool
+     * 
+     * @since 2.4.0
+     */
+    @Usage(description = "Java class to manage marklogic connections. If none specified, DefaultConnectionPool is used.")
+    public static final String CONTENT_SOURCE_POOL="CONTENT-SOURCE-POOL";
+    
+    /**
      * The class name of the options value decrypter, which must implement
      * {@link com.marklogic.developer.corb.Decrypter}.
      * <p>
@@ -1040,7 +1061,7 @@ public final class Options {
     /**
      * Connection string to MarkLogic XDBC Server.
      */
-    @Usage(description = "Connection string to MarkLogic XDBC Server.")
+    @Usage(description = "Connection string to MarkLogic XDBC Server. Supports multiple connection strings separated by comma.")
     public static final String XCC_CONNECTION_URI = "XCC-CONNECTION-URI";
 
     /**
@@ -1052,7 +1073,7 @@ public final class Options {
     /**
      * Required if {@value #XCC_CONNECTION_URI} is not specified.
      */
-    @Usage(description = "Required if XCC-CONNECTION-URI is not specified.")
+    @Usage(description = "Required if XCC-CONNECTION-URI is not specified. Supports multiple hostnames separated by comma")
     public static final String XCC_HOSTNAME = "XCC-HOSTNAME";
 
     /**
@@ -1080,6 +1101,12 @@ public final class Options {
     @Usage(description = "Required if XCC-CONNECTION-URI is not specified.")
     public static final String XCC_PORT = "XCC-PORT";
 
+    /**
+     * Optional if {@value #XCC_CONNECTION_URI} is not specified. Default is xcc. 
+     */
+    @Usage(description = "Used if XCC-CONNECTION-URI is not specified. Default is xcc")
+    public static final String XCC_PROTOCOL = "XCC-PROTOCOL";
+    
     /**
      * The ID for the TimeZone that should be set on XCC RequestOption. When a
      * value is specified, it is parsed using TimeZone.getTimeZone() and set on

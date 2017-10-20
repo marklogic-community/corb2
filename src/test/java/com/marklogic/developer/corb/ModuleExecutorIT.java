@@ -18,7 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,6 +36,12 @@ public class ModuleExecutorIT {
     @Rule
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
+    private void clearSystemProperties() {
+		TestUtils.clearSystemProperties();
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
+	}
+    
     @Test
     public void testRunMain() {
         clearSystemProperties();

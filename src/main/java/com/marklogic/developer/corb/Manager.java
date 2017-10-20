@@ -55,6 +55,7 @@ import static com.marklogic.developer.corb.Options.URIS_MODULE;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
 import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
 import com.marklogic.developer.corb.util.FileUtils;
+import com.marklogic.developer.corb.util.IOUtils;
 import com.marklogic.developer.corb.util.NumberUtils;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
@@ -64,6 +65,7 @@ import static com.marklogic.developer.corb.util.StringUtils.stringToBoolean;
 import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentCreateOptions;
 import com.marklogic.xcc.ContentFactory;
+import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 
@@ -154,6 +156,7 @@ public class Manager extends AbstractManager implements Closeable {
             //This will shutdown the scheduled executors for the command file watcher and logging JobStats
             scheduledExecutor.shutdown();
         }
+        IOUtils.closeQuietly(csp);
         stopJobServer();
     }
 
@@ -662,6 +665,7 @@ public class Manager extends AbstractManager implements Closeable {
         String modulesDatabase = options.getModulesDatabase();
         LOG.log(INFO, () -> MessageFormat.format("checking modules, database: {0}", modulesDatabase));
 
+        ContentSource contentSource = csp.get();
         try (Session session = contentSource.newSession(modulesDatabase)) {
             for (String resourceModule : resourceModules) {
                 insertModule(session, resourceModule);
@@ -782,7 +786,7 @@ public class Manager extends AbstractManager implements Closeable {
         }
 
         loader.setOptions(options);
-        loader.setContentSource(contentSource);
+        loader.setContentSourcePool(csp);
         loader.setCollection(collection);
         loader.setProperties(properties);
         return loader;
@@ -833,6 +837,7 @@ public class Manager extends AbstractManager implements Closeable {
 
             transformStartMillis = System.currentTimeMillis();
             urisCount = submitUriTasks(urisLoader, taskFactory, expectedTotalCount);
+
 
             if (urisCount == expectedTotalCount) {
                 LOG.log(INFO, MessageFormat.format("queue is populated with {0,number} tasks", urisCount));
@@ -985,6 +990,7 @@ public class Manager extends AbstractManager implements Closeable {
         if (null != monitorThread) {
             monitorThread.interrupt();
         }
+
     }
 
     /**
