@@ -40,6 +40,7 @@ public class DefaultContentSourcePoolTest {
 		assertNotNull(csp.get());
 		assertEquals(csp.getAllContentSources().length,1);
         assertEquals(DefaultContentSourcePool.CONNECTION_POLICY_ROUND_ROBIN, csp.connectionPolicy);
+        csp.close();
 	}
 
 	@Test(expected = CorbException.class)
@@ -48,12 +49,14 @@ public class DefaultContentSourcePoolTest {
 		csp.init(null, null, new String[] {"xcc://foo:bar@localhost1:8000"});
 		assertFalse(csp.available());
 		csp.get();
+		csp.close();
 	}
 
     @Test(expected = NullPointerException.class)
     public void testInitNullConnectionStrings() throws CorbException{
         DefaultContentSourcePool csp = new DefaultContentSourcePool();
         csp.init(null, null, null);
+        csp.close();
     }
 
 	@Test
@@ -64,6 +67,7 @@ public class DefaultContentSourcePoolTest {
 		assertEquals(2,csp.getAllContentSources().length);
 		assertHostAndPort(csp.get(),"localhost",8000);
 		assertHostAndPort(csp.get(),"192.168.0.1",8000);
+		csp.close();
 	}
 	
 	@Test
@@ -74,6 +78,7 @@ public class DefaultContentSourcePoolTest {
 		assertEquals(1,csp.getAllContentSources().length);
 		assertHostAndPort(csp.get(),"localhost",8000);
 		assertHostAndPort(csp.get(),"localhost",8000);
+		csp.close();
 	}
 	
 	@Test
@@ -87,6 +92,7 @@ public class DefaultContentSourcePoolTest {
         assertNotNull(csp.nextContentSource());
         assertNotNull(csp.nextContentSource());
         assertNotNull(csp.nextContentSource());
+        csp.close();
     }
 
     @Test
@@ -102,6 +108,7 @@ public class DefaultContentSourcePoolTest {
         assertNotNull(csp.nextContentSource());
         assertNotNull(csp.nextContentSource());
         assertNotNull(csp.nextContentSource());
+        csp.close();
     }
 
     @Test
@@ -121,6 +128,7 @@ public class DefaultContentSourcePoolTest {
         csp.remove(csp.nextContentSource());
         csp.remove(csp.nextContentSource());
         assertNull(csp.nextContentSource());
+        csp.close();
     }
 
     @Test
@@ -139,6 +147,7 @@ public class DefaultContentSourcePoolTest {
         assertEquals(3, csp.errorCount(cs));
         csp.error(cs);
         assertEquals(0, csp.errorCount(cs));
+        csp.close();
     }
 
     @Test
@@ -148,6 +157,7 @@ public class DefaultContentSourcePoolTest {
         assertEquals(3, csp.getAvailableContentSources().size());
         csp.error(cs);
         assertEquals(2, csp.getAvailableContentSources().size());
+        csp.close();
     }
 
     @Test
@@ -163,6 +173,7 @@ public class DefaultContentSourcePoolTest {
         assertEquals(1, csp.connectionCountsMap.get(cs).intValue());
         csp.release(cs);
         assertEquals(0, csp.connectionCountsMap.get(cs).intValue());
+        csp.close();
     }
 
     private DefaultContentSourcePool initRoundRobinPool() {
@@ -182,6 +193,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		assertHostAndPort(csp.get(),"192.168.0.3",8003);
 		assertHostAndPort(csp.get(),"192.168.0.1",8001);
+		csp.close();
 	}
 		
 	@Test
@@ -195,6 +207,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.3",8003);
 		csp.error(csp.getContentSourceFromProxy(ecs));
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
+		csp.close();
 	}
 	
 	@Test
@@ -210,6 +223,7 @@ public class DefaultContentSourcePoolTest {
 		csp.error(csp.getContentSourceFromProxy(ecs1));
 		csp.error(csp.getContentSourceFromProxy(ecs2));
 		assertHostAndPort(csp.get(),"192.168.0.3",8003);
+		csp.close();
 	}
 	
 	@Test
@@ -225,6 +239,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		Thread.sleep(1000L);
 		assertHostAndPort(csp.get(),"192.168.0.1",8001);
+		csp.close();
 	}
 	
 	@Test
@@ -240,6 +255,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		csp.success(csp.getContentSourceFromProxy(ecs1));
 		assertHostAndPort(csp.get(),"192.168.0.1",8001);
+		csp.close();
 	}
 	
 	@Test
@@ -259,6 +275,7 @@ public class DefaultContentSourcePoolTest {
 		csp.error(csp.getContentSourceFromProxy(ecs2));
 		csp.error(csp.getContentSourceFromProxy(ecs3));
 		csp.get();	
+		csp.close();
 	}
 	
 	@Test
@@ -268,6 +285,7 @@ public class DefaultContentSourcePoolTest {
 		csp.init(null, null, new String[] {"xcc://foo:bar@192.168.0.1:8001","xcc://foo:bar@192.168.0.2:8002"});
 		assertTrue(Arrays.asList(new String[]{"192.168.0.1","192.168.0.2"}).contains(csp.get().getConnectionProvider().getHostName()));
 		assertTrue(Arrays.asList(new String[]{"192.168.0.1","192.168.0.2"}).contains(csp.get().getConnectionProvider().getHostName()));
+		csp.close();
 	}
 	
 	@Test
@@ -279,6 +297,7 @@ public class DefaultContentSourcePoolTest {
 		assertTrue(Arrays.asList(new String[]{"192.168.0.1","192.168.0.2"}).contains(csp.get().getConnectionProvider().getHostName()));
 		csp.error(csp.getAllContentSources()[0]);
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
+		csp.close();
 	}
 	
 	@Test
@@ -294,6 +313,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		csp.release(csList[0]);
 		assertHostAndPort(csp.get(),"192.168.0.1",8001);
+		csp.close();
 	}
 	
 	@Test
@@ -308,6 +328,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.1",8001);
 		csp.hold(csList[0]);
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
+		csp.close();
 	}
 	
 	@Test
@@ -323,6 +344,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.3",8003);
 		csp.release(csList[1]);
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
+		csp.close();
 	}
 	
 	@Test
@@ -338,6 +360,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.3",8003);
 		csp.hold(csList[2]);
 		assertHostAndPort(csp.get(),"192.168.0.3",8003);
+		csp.close();
 	}
 	
 	@Test
@@ -353,6 +376,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.3",8003);
 		csp.success(csList[1]);
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
+		csp.close();
 	}
 	
 	@Test(expected = CorbException.class)
@@ -372,6 +396,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		csp.error(csList[1]);
 		csp.get();
+		csp.close();
 	}
 	
 	@Test
@@ -388,6 +413,7 @@ public class DefaultContentSourcePoolTest {
 		when(session.submitRequest(request)).thenReturn(rs);
 		
 		csp.get().newSession().submitRequest(request);
+		csp.close();
 	}
 	
 	@Test
@@ -418,6 +444,7 @@ public class DefaultContentSourcePoolTest {
 			exc.printStackTrace();
 		}
 		assertTrue(csp.errorCountsMap.get(cs1) == 1);
+		csp.close();
 	}
 	
 	public void testSubmitWithMockRequestAndErrorAndReactivate() {

@@ -375,9 +375,10 @@ public abstract class AbstractTask implements Task {
             int retryInterval = this.getQueryRetryInterval();
             if (retryCount < retryLimit) {
                 retryCount++;
+                String errorCode = requestException instanceof QueryException ? ((QueryException)requestException).getCode()+":" : "";
                 LOG.log(WARNING,
-                        "Encountered " + name + " from Marklogic Server. Retrying attempt {0} after {1} seconds..: {2}{3}{4}",
-                        new Object[]{retryCount, retryInterval, requestException.getMessage(), AT_URI, asString(inputUris)});
+                        "Encountered " + name + " from Marklogic Server. Retrying attempt {0} after {1} seconds..: {2}{3}{4}{5}",
+                        new Object[]{retryCount, retryInterval, errorCode, requestException.getMessage(), AT_URI, asString(inputUris)});
                 try {
                     Thread.sleep(retryInterval * 1000L);
                 } catch (Exception ex) {
@@ -396,7 +397,8 @@ public abstract class AbstractTask implements Task {
             throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
         } else {
             LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
-            writeToErrorFile(inputUris, requestException.getMessage());
+            String errorCode = requestException instanceof QueryException ? ((QueryException)requestException).getCode()+":" : "";
+            writeToErrorFile(inputUris, errorCode+requestException.getMessage());
             Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
             return inputUris;
         }

@@ -332,13 +332,14 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
                     if (csp.isLoadPolicy() && (isSubmitRequest(method) || isInsertContent(method))) {
                         csp.release(cs); //we should don't this in finally clause.
                     }
-
+                    
+                    String name = exc.getCause().getClass().getSimpleName();
                     int retryLimit = csp.getConnectRetryLimit();
                     if (isSubmitRequest(method) && attempts <= retryLimit) {
-                        LOG.log(WARNING, "Submit request failed {0} times. Max Limit is {1}. Retrying..", new Object[]{attempts, retryLimit});
+                        LOG.log(WARNING, "Submit request failed {0} times with {1}. Max Limit is {2}. Retrying..", new Object[]{attempts, name, retryLimit});
                         return submitAsNewRequest(args);
                     } else if (isInsertContent(method) && attempts <= retryLimit) {
-                        LOG.log(WARNING, "Insert content failed {0} times. Max Limit is {1}. Retrying..", new Object[]{attempts, retryLimit});
+                        LOG.log(WARNING, "Insert content failed {0} times {1}. Max Limit is {2}. Retrying..", new Object[]{attempts, name, retryLimit});
                         return insertAsNewRequest(args);
                     } else {
                         throw exc.getCause();
