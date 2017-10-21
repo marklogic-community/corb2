@@ -19,7 +19,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import com.marklogic.developer.corb.util.FileUtils;
 import org.w3c.dom.*;
 import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSSerializer;
@@ -461,7 +460,7 @@ public class JobStats extends BaseMonitor {
         return newTemplates(transformerFactory, "jobStatsToJson.xsl");
     }
     protected static Templates newTemplates(TransformerFactory transformerFactory, String stylesheetFilename) throws TransformerConfigurationException {
-        StreamSource styleSource = new StreamSource(FileUtils.getFile(stylesheetFilename));
+    		StreamSource styleSource = new StreamSource(Manager.class.getResourceAsStream("/"+stylesheetFilename));
         return transformerFactory.newTemplates(styleSource);
     }
 
