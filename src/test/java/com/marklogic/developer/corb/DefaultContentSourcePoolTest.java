@@ -277,17 +277,18 @@ public class DefaultContentSourcePoolTest {
 
 	@Test
 	public void testRoundRobinPolicyWithAllErrors() throws CorbException{
-		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "1");
-	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
+	    Properties properties = new Properties();
+        properties.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "1");
+        properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
 		DefaultContentSourcePool csp = new DefaultContentSourcePool();
-		csp.init(null, null, new String[] {"xcc://foo:bar@localhost:8001","xcc://foo:bar@localhost:8002","xcc://foo:bar@localhost:8003"});
+		csp.init(properties, null, new String[] {"xcc://foo:bar@192.168.0.1:8001","xcc://foo:bar@192.168.0.2:8002","xcc://foo:bar@192.168.0.3:8003"});
 		assertEquals(3,csp.getAllContentSources().length);
 		ContentSource ecs1 = null;
 		ContentSource ecs2 = null;
 		ContentSource ecs3 = null;
-		assertHostAndPort((ecs1=csp.get()),"localhost",8001);
-		assertHostAndPort((ecs2=csp.get()),"localhost",8002);
-		assertHostAndPort((ecs3=csp.get()),"localhost",8003);
+		assertHostAndPort((ecs1=csp.get()),"192.168.0.1",8001);
+		assertHostAndPort((ecs2=csp.get()),"192.168.0.2",8002);
+		assertHostAndPort((ecs3=csp.get()),"192.168.0.3",8003);
 		csp.error(csp.getContentSourceFromProxy(ecs1));
 		csp.error(csp.getContentSourceFromProxy(ecs2));
 		csp.error(csp.getContentSourceFromProxy(ecs3));
