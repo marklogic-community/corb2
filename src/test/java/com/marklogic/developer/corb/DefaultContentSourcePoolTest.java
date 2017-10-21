@@ -280,18 +280,18 @@ public class DefaultContentSourcePoolTest {
 		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "1");
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
 		DefaultContentSourcePool csp = new DefaultContentSourcePool();
-		csp.init(null, null, new String[] {"xcc://foo:bar@192.168.0.1:8001","xcc://foo:bar@192.168.0.2:8002","xcc://foo:bar@192.168.0.3:8003"});
+		csp.init(null, null, new String[] {"xcc://foo:bar@localhost:8001","xcc://foo:bar@localhost:8002","xcc://foo:bar@localhost:8003"});
 		assertEquals(3,csp.getAllContentSources().length);
 		ContentSource ecs1 = null;
 		ContentSource ecs2 = null;
 		ContentSource ecs3 = null;
-		assertHostAndPort((ecs1=csp.get()),"192.168.0.1",8001);
-		assertHostAndPort((ecs2=csp.get()),"192.168.0.2",8002);
-		assertHostAndPort((ecs3=csp.get()),"192.168.0.3",8003);
+		assertHostAndPort((ecs1=csp.get()),"localhost",8001);
+		assertHostAndPort((ecs2=csp.get()),"localhost",8002);
+		assertHostAndPort((ecs3=csp.get()),"localhost",8003);
 		csp.error(csp.getContentSourceFromProxy(ecs1));
 		csp.error(csp.getContentSourceFromProxy(ecs2));
 		csp.error(csp.getContentSourceFromProxy(ecs3));
-		csp.get();	
+		csp.get();
 		csp.close();
 	}
 
@@ -439,13 +439,13 @@ public class DefaultContentSourcePoolTest {
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
 		ContentSource cs1 = mock(ContentSource.class);
 		Session session1 = mock(SessionImpl.class);
-		
+
 		ContentSource cs2 = mock(ContentSource.class);
 		Session session2 = mock(SessionImpl.class);
-		
+
 		AdhocImpl request = mock(AdhocImpl.class);
 		ResultSequence result = mock(ResultSequence.class);
-		
+
 		when(cs1.newSession()).thenReturn(session1);
 		when(cs1.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost1",8001));
 
@@ -454,73 +454,73 @@ public class DefaultContentSourcePoolTest {
 
 		when(session1.newAdhocQuery(Mockito.any())).thenReturn(request);
 		when(session1.submitRequest(Mockito.any())).thenThrow(mock(ServerConnectionException.class));
-		
+
 		when(session2.newAdhocQuery(Mockito.any())).thenReturn(request);
 		when(session2.submitRequest(Mockito.any())).thenReturn(result);
 
 		DefaultContentSourcePool csp = new DefaultContentSourcePool();
 		csp.contentSourceList.add(cs1);
 		csp.contentSourceList.add(cs2);
-		
+
 		ResultSequence gotResult = csp.get().newSession().submitRequest(request);
 		assertTrue(csp.errorCountsMap.get(cs1) == 1);
 		assertEquals(result,gotResult);
 		csp.close();
 	}
-	
+
 	@Test
 	public void testSubmitWithMockInsertWithFailOver() throws RequestException, CorbException {
 		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "1");
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
 		ContentSource cs1 = mock(ContentSource.class);
 		Session session1 = mock(SessionImpl.class);
-		
+
 		ContentSource cs2 = mock(ContentSource.class);
 		Session session2 = mock(SessionImpl.class);
-		
+
 		Content content = mock(Content.class);
-				
+
 		when(cs1.newSession()).thenReturn(session1);
 		when(cs1.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost1",8001));
 
 		when(cs2.newSession()).thenReturn(session2);
 		when(cs2.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost2",8002));
 
-		doThrow(mock(ServerConnectionException.class)).when(session1).insertContent(content);		
+		doThrow(mock(ServerConnectionException.class)).when(session1).insertContent(content);
 		doNothing().when(session2).insertContent(content);
 
 		DefaultContentSourcePool csp = new DefaultContentSourcePool();
 		csp.contentSourceList.add(cs1);
 		csp.contentSourceList.add(cs2);
-		
+
 		csp.get().newSession().insertContent(content);
 		assertTrue(csp.errorCountsMap.get(cs1) == 1);
 		csp.close();
 	}
-	
+
 	@Test
 	public void testSubmitWithMockRequestAndErrorAndWait() throws RequestException, CorbException {
 		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "1");
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
 		ContentSource cs = mock(ContentSource.class);
 		Session session = mock(SessionImpl.class);
-				
+
 		AdhocImpl request = mock(AdhocImpl.class);
 		ResultSequence result = mock(ResultSequence.class);
-	
+
 		when(cs.newSession()).thenReturn(session);
 		when(cs.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost1",8001));
 
 		when(session.newAdhocQuery(Mockito.any())).thenReturn(request);
 		when(session.submitRequest(Mockito.any())).thenReturn(result);
-		
+
 		DefaultContentSourcePool csp = new DefaultContentSourcePool();
 		csp.contentSourceList.add(cs);
 		csp.error(cs);
-		
+
 		ResultSequence gotResult = csp.get().newSession().submitRequest(request);
 		assertEquals(result,gotResult);
-		
+
 		csp.close();
 	}
 
@@ -529,12 +529,12 @@ public class DefaultContentSourcePoolTest {
 		System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
 		ContentSource cs1 = mock(ContentSource.class);
 		Session session1 = mock(SessionImpl.class);
-		
+
 		ContentSource cs2 = mock(ContentSource.class);
 		Session session2 = mock(SessionImpl.class);
-		
+
 		AdhocImpl request = mock(AdhocImpl.class);
-		
+
 		when(cs1.newSession()).thenReturn(session1);
 		when(cs1.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost1",8001));
 
@@ -543,14 +543,14 @@ public class DefaultContentSourcePoolTest {
 
 		when(session1.newAdhocQuery(Mockito.any())).thenReturn(request);
 		when(session1.submitRequest(Mockito.any())).thenThrow(mock(ServerConnectionException.class));
-		
+
 		when(session2.newAdhocQuery(Mockito.any())).thenReturn(request);
 		when(session2.submitRequest(Mockito.any())).thenThrow(mock(ServerConnectionException.class));
 
 		DefaultContentSourcePool csp = new DefaultContentSourcePool();
 		csp.contentSourceList.add(cs1);
 		csp.contentSourceList.add(cs2);
-		
+
 		csp.get().newSession().submitRequest(request);
 		csp.close();
 	}
