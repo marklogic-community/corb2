@@ -463,10 +463,9 @@ public class JobStats extends BaseMonitor {
     protected static Templates newTemplates(TransformerFactory transformerFactory, String stylesheetFilename) throws TransformerConfigurationException {
     		InputStream is = Manager.class.getResourceAsStream("/"+stylesheetFilename);
     		if(is == null) {
-    			throw new TransformerConfigurationException("Could not fine the template file "+stylesheetFilename+" in the classpath");
+    			throw new TransformerConfigurationException("Could not find the template file "+stylesheetFilename+" in the classpath");
     		}
-    		StreamSource styleSource = new StreamSource(is);
-        return transformerFactory.newTemplates(styleSource);
+        return transformerFactory.newTemplates(new StreamSource(is));
     }
 
     protected void addLongRunningUris(Node parent) {
