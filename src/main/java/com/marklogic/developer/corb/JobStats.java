@@ -4,6 +4,7 @@ import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -460,7 +461,11 @@ public class JobStats extends BaseMonitor {
         return newTemplates(transformerFactory, "jobStatsToJson.xsl");
     }
     protected static Templates newTemplates(TransformerFactory transformerFactory, String stylesheetFilename) throws TransformerConfigurationException {
-    		StreamSource styleSource = new StreamSource(Manager.class.getResourceAsStream("/"+stylesheetFilename));
+    		InputStream is = Manager.class.getResourceAsStream("/"+stylesheetFilename);
+    		if(is == null) {
+    			throw new TransformerConfigurationException("Could not fine the template file "+stylesheetFilename+" in the classpath");
+    		}
+    		StreamSource styleSource = new StreamSource(is);
         return transformerFactory.newTemplates(styleSource);
     }
 
