@@ -1530,6 +1530,60 @@ public class ManagerTest {
         assertTrue(records.isEmpty());
     }
 
+    @Test
+    public void testPause() {
+        PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
+        when(pool.isRunning()).thenReturn(Boolean.TRUE);
+        JobStats jobStats = mock(JobStats.class);
+        Manager manager = new Manager();
+        manager.pool = pool;
+        manager.jobStats = jobStats;
+
+        manager.pause();
+        Mockito.verify(pool).pause();
+    }
+
+    @Test
+    public void testPauseNotRunning() {
+        PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
+        when(pool.isRunning()).thenReturn(Boolean.FALSE);
+        JobStats jobStats = mock(JobStats.class);
+        Manager manager = new Manager();
+        manager.pool = pool;
+        manager.jobStats = jobStats;
+
+        manager.pause();
+        Mockito.verify(pool, Mockito.never()).pause();
+    }
+
+    @Test
+    public void testResume() {
+        PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
+        when(pool.isPaused()).thenReturn(Boolean.TRUE);
+        when(pool.isRunning()).thenReturn(Boolean.TRUE);
+        JobStats jobStats = mock(JobStats.class);
+        Manager manager = new Manager();
+        manager.pool = pool;
+        manager.jobStats = jobStats;
+
+        manager.resume();
+        Mockito.verify(pool).resume();
+    }
+
+    @Test
+    public void testResumeNotPaused() {
+        PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
+        when(pool.isPaused()).thenReturn(Boolean.FALSE);
+        when(pool.isRunning()).thenReturn(Boolean.TRUE);
+        JobStats jobStats = mock(JobStats.class);
+        Manager manager = new Manager();
+        manager.pool = pool;
+        manager.jobStats = jobStats;
+
+        manager.resume();
+        Mockito.verify(pool, Mockito.never()).resume();
+    }
+
     public static class MockEmptyFileUrisLoader extends FileUrisLoader {
 
         @Override
