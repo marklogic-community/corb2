@@ -53,7 +53,7 @@ public class JobStats extends BaseMonitor {
     private static final String JOB_NAME = "name";
     public static final String JOB_ELEMENT = "job";
     public static final String JOBS_ELEMENT = "jobs";
-    public static final String CORB_NAMESPACE = "http://marklogic.github.io/corb/";
+    public static final String CORB_NAMESPACE = "http://developer.marklogic.com/code/corb";
     private static final String LONG_RUNNING_URIS = "slowTransactions";
     private static final String FAILED_URIS = "failedTransactions";
     private static final String URIS_LOAD_TIME = "urisLoadTimeInMillis";
@@ -257,7 +257,7 @@ public class JobStats extends BaseMonitor {
 	                    request.setNewStringVariable(METRICS_DB_NAME_PARAM, metricsDatabase);
 	                    request.setNewStringVariable(METRICS_URI_ROOT_PARAM, uriRoot != null ? uriRoot : NOT_APPLICABLE);
 	                    request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, collections != null ? collections : NOT_APPLICABLE);
-	
+
 	                    if (isJavaScriptModule(processModule)) {
 	                        requestOptions.setQueryLanguage("javascript");
 	                        request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
@@ -267,13 +267,13 @@ public class JobStats extends BaseMonitor {
 	                                metrics == null ? toXmlString() : metrics);
 	                    }
 	                    request.setOptions(requestOptions);
-	
+
 	                    seq = session.submitRequest(request);
 	                    String uri = seq.hasNext() ? seq.next().asString() : null;
 	                    if (uri != null) {
 	                        this.uri = uri;
 	                    }
-	
+
 	                    Thread.yield();// try to avoid thread starvation
 	                    seq.close();
 	                    Thread.yield();// try to avoid thread starvation
