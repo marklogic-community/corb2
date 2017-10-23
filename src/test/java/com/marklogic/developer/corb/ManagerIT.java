@@ -123,6 +123,25 @@ public class ManagerIT {
     }
 
     @Test
+    public void testInitOptionsSetNumTPSForETC() {
+        Properties properties = ManagerTest.getDefaultProperties();
+        properties.setProperty(Options.NUM_TPS_FOR_ETC, Integer.toString(500));
+        Manager manager = new Manager();
+        try {
+            manager.init(properties);
+        } catch (CorbException ex) {
+            fail();
+        }
+        assertEquals(500, manager.options.getNumTpsForETC());
+    }
+
+    @Test
+    public void testMainErrorRunning() {
+        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_PROCESSING_ERROR);
+        Manager.main(ManagerTest.XCC_CONNECTION_URI, "", "missing.xqy|ADHOC", "1", "missing.xqy|ADHOC");
+    }
+
+    @Test
     public void testManagerUsingProgArgs() {
 
         clearSystemProperties();

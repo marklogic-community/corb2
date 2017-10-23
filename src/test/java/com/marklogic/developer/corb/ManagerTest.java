@@ -120,13 +120,6 @@ public class ManagerTest {
         Manager.main();
     }
 
-
-    @Test
-    public void testMainErrorRunning() {
-        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_PROCESSING_ERROR);
-        Manager.main(XCC_CONNECTION_URI, "", "missing.xqy|ADHOC", "1", "missing.xqy|ADHOC");
-    }
-
     @Test(expected = NullPointerException.class)
     public void testRejectedExecutionNpe() {
         Runnable r = mock(Runnable.class);
@@ -1020,19 +1013,6 @@ public class ManagerTest {
             fail();
         }
 
-    }
-
-    @Test
-    public void testInitOptionsSetNumTPSForETC() {
-        Properties properties = getDefaultProperties();
-        properties.setProperty(Options.NUM_TPS_FOR_ETC, Integer.toString(500));
-        Manager manager = new Manager();
-        try {
-            manager.init(properties);
-        } catch (CorbException ex) {
-            fail();
-        }
-        assertEquals(500, manager.options.getNumTpsForETC());
     }
 
     @Test
