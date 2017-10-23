@@ -44,20 +44,18 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+
 import org.mockito.Mockito;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+
 import org.mockito.exceptions.base.MockitoException;
 
 /**
@@ -100,7 +98,7 @@ public class ManagerTest {
         System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
         System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
     }
-    
+
     @Before
     public void setUp() throws IOException {
         clearSystemProperties();
@@ -114,6 +112,19 @@ public class ManagerTest {
         FileUtils.deleteFile(ManagerTest.EXPORT_FILE_DIR);
         clearSystemProperties();
         System.setErr(systemErr);
+    }
+
+    @Test
+    public void testMainWithoutOptionsInitFailure() {
+        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_INIT_ERROR);
+        Manager.main();
+    }
+
+
+    @Test
+    public void testMainErrorRunning() {
+        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_PROCESSING_ERROR);
+        Manager.main(XCC_CONNECTION_URI, "", "missing.xqy|ADHOC", "1", "missing.xqy|ADHOC");
     }
 
     @Test(expected = NullPointerException.class)
@@ -829,6 +840,22 @@ public class ManagerTest {
     }
 
     @Test
+    public void testClose() {
+        ContentSourcePool csp = mock(ContentSourcePool.class);
+        ScheduledExecutorService scheduledExecutor = mock(ScheduledExecutorService.class);
+        Manager manager = new Manager();
+        manager.scheduledExecutor = scheduledExecutor;
+        manager.csp = csp;
+        try {
+            manager.close();
+            Mockito.verify(scheduledExecutor).shutdown();
+            Mockito.verify(csp).close();
+        } catch (IOException ex) {
+            fail();
+        }
+    }
+
+    @Test
     public void testCommandFileWatcherOnChangeFile() {
         File file = FileUtils.getFile("helloWorld.properties");
         Manager manager = new Manager();
@@ -996,6 +1023,19 @@ public class ManagerTest {
     }
 
     @Test
+    public void testInitOptionsSetNumTPSForETC() {
+        Properties properties = getDefaultProperties();
+        properties.setProperty(Options.NUM_TPS_FOR_ETC, Integer.toString(500));
+        Manager manager = new Manager();
+        try {
+            manager.init(properties);
+        } catch (CorbException ex) {
+            fail();
+        }
+        assertEquals(500, manager.options.getNumTpsForETC());
+    }
+
+    @Test
     public void testSetPoolSizeGrow() {
         int size = 5;
         ThreadPoolExecutor threadPool = testSetPoolSize(5, size);
@@ -1142,7 +1182,7 @@ public class ManagerTest {
         instance.options.setUrisModule("someFile2.xqy");
         try {
             instance.initContentSourcePool(XCC_CONNECTION_URI);
-            
+
             instance.run();
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -1181,7 +1221,7 @@ public class ManagerTest {
         XdmItem firstXdmItem = mock(XdmItem.class);
         ResultItem second = mock(ResultItem.class);
         XdmItem secondXdmItem = mock(XdmItem.class);
-        
+
         when(contentSourcePool.get()).thenReturn(contentSource);
         when(contentSource.newSession()).thenReturn(session);
         when(session.newAdhocQuery(anyString())).thenReturn(adhocQuery);
@@ -1446,15 +1486,15 @@ public class ManagerTest {
         Files.write(path, lines, Charset.forName("UTF-8"));
         return file;
     }
-    
+
     public static Manager getMockManagerWithEmptyResults() throws RequestException, CorbException{
     		Manager manager = spy(new Manager());
-    		ContentSourcePool contentSourcePool = getMockContentSourceManagerWithEmptyResults(); 
+    		ContentSourcePool contentSourcePool = getMockContentSourceManagerWithEmptyResults();
     		when(manager.createContentSourceManager()).thenReturn(contentSourcePool);
     		return manager;
     }
-    
-        
+
+
     public static ContentSourcePool getMockContentSourceManagerWithEmptyResults() throws RequestException, CorbException{
         ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
