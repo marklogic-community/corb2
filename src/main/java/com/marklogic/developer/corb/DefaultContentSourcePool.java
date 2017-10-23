@@ -24,7 +24,9 @@ import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmVariable;
 import java.util.List;
-
+/**
+ * @since 2.4.0
+ */
 public class DefaultContentSourcePool extends AbstractContentSourcePool {
     protected static final String CONNECTION_POLICY_ROUND_ROBIN = "ROUND-ROBIN";
     protected static final String CONNECTION_POLICY_RANDOM = "RANDOM";
@@ -332,7 +334,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
                 	if(exc instanceof InvocationTargetException) {
 	                	if (exc.getCause() instanceof ServerConnectionException) {
 	                    csp.error(cs); //we should do this before the recursion.. not finally.
-	                    
+
 	                    String name = exc.getCause().getClass().getSimpleName();
 	                    int retryLimit = csp.getConnectRetryLimit();
 	                    if (isSubmitRequest(method) && attempts <= retryLimit) {
