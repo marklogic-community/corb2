@@ -190,7 +190,10 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
      */
     protected Path getTempDir() throws IOException {
         Path dir;
-        String tempDirOption = getProperty(Options.TEMP_DIR);
+        String tempDirOption = getProperty(Options.XML_TEMP_DIR);
+        if (StringUtils.isBlank(tempDirOption)) {
+            tempDirOption = getProperty(Options.TEMP_DIR);
+        }
         if (!StringUtils.isBlank(tempDirOption)) {
             File temporaryDirectory = new File(tempDirOption);
             if (!(temporaryDirectory.exists() && temporaryDirectory.isDirectory() && temporaryDirectory.canWrite())) {
