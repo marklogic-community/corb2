@@ -110,7 +110,7 @@ public class JobStats extends BaseMonitor {
     private Templates jobStatsToJsonTemplates;
 
     private static final Logger LOG = Logger.getLogger(JobStats.class.getName());
-    private static final Object LOCK = new Object();
+    private final Object lock = new Object();
 
     public JobStats(Manager manager) {
         super(manager);
@@ -137,7 +137,7 @@ public class JobStats extends BaseMonitor {
     }
 
     private void refresh() {
-        synchronized (LOCK) {
+        synchronized (lock) {
 
             if (manager != null && manager.monitor != null) {
                 jobId = manager.jobId;
