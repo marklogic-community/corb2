@@ -26,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.junit.Test;
+
+import static com.marklogic.developer.corb.TransformOptions.FAILED_URI_TOKEN;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
@@ -76,6 +78,48 @@ public class PausableThreadPoolExecutorTest {
         executor.beforeExecute(thread, runnable);
         Duration elapsedTime = Duration.between(startedAt, LocalDateTime.now());
         assertTrue(elapsedTime.toMillis() >= howLongToWait);
+    }
+
+    @Test
+    public void testAfterExecutePassing() {
+        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
+        RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
+        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+        Runnable runnable = mock(Runnable.class);
+        Throwable throwable = mock(Throwable.class);
+        Thread thread = mock(Thread.class);
+        Thread.currentThread().setName("passing");
+        executor.beforeExecute(thread, runnable);
+        executor.afterExecute(runnable, throwable);
+        assertEquals(1, executor.getNumSucceededUris());
+        assertEquals(0, executor.getNumFailedUris());
+    }
+
+    @Test
+    public void testAfterExecuteFailing() {
+        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
+        RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
+        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+        Runnable runnable = mock(Runnable.class);
+        Throwable throwable = mock(Throwable.class);
+        Thread thread = mock(Thread.class);
+        Thread.currentThread().setName(FAILED_URI_TOKEN + "foo");
+        executor.beforeExecute(thread, runnable);
+        executor.afterExecute(runnable, throwable);
+        assertEquals(0, executor.getNumSucceededUris());
+        assertEquals(1, executor.getNumFailedUris());
+    }
+
+    @Test
+    public void testAfterExecuteThrowsException() {
+        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
+        RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
+        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+        Runnable runnable = mock(Runnable.class);
+        Throwable throwable = mock(Throwable.class);
+        executor.afterExecute(runnable, throwable);
+        assertEquals(0, executor.getNumSucceededUris());
+        assertEquals(0, executor.getNumFailedUris());
     }
 
     @Test
