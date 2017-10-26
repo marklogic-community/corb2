@@ -292,13 +292,14 @@ Option | Description
 **<a name="SSL-CIPHER-SUITES"></a>SSL-CIPHER-SUITES** | A comma separated list of acceptable cipher suites used.
 
 ### Load Balance and Failover
-Corb 2.4+ supports load balance and failover using `com.marklogic.developer.corb.ContentSourcePool`. This is automatically enabled when multiple comma separated values (supports encryption) are specified for for **XCC-CONNECTION-URI** or **XCC-HOSTNAME**. 
+Corb 2.4+ supports load balance and failover using `com.marklogic.developer.corb.ContentSourcePool`. This is automatically enabled when multiple comma separated values (supports encryption) are specified for for **XCC-CONNECTION-URI** or **XCC-HOSTNAME**.
+
 Ex: `XCC-CONNECTION-URI=xcc://hostname1:8000/dbname,xcc://hostname2:8000/dbname,..`
 
 The default implementation for `com.marklogic.developer.corb.ContentSourcePool` is `com.marklogic.developer.corb.DefaultContentSourcePool`. The `DefaultContentSourcePool` uses **CONNECTION-POLICY** for allocating connections to callers. 
-*ROUND-ROBIN - (Default) Connections are allocated using round-robin algorithm. 
-*RANDOM - Connections are randomly allocated.
-*LOAD - Host with least number of active connections is allocated to caller.    
+* ROUND-ROBIN - (Default) Connections are allocated using round-robin algorithm. 
+* RANDOM - Connections are randomly allocated.
+* LOAD - Host with least number of active connections is allocated to caller.    
 
 ### Usage
 #### Usage 1 - Command line options:
