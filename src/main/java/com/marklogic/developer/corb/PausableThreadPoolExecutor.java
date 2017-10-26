@@ -288,7 +288,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
                 if (this.timeTaken != null && o.timeTaken != null) {
                     return this.timeTaken.compareTo(o.timeTaken);
                 } else {
-                    return 0;//should never get here
+                    return 1;//should never get here
                 }
             }
         }

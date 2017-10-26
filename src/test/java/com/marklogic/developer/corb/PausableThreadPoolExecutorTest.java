@@ -77,20 +77,25 @@ public class PausableThreadPoolExecutorTest {
         Duration elapsedTime = Duration.between(startedAt, LocalDateTime.now());
         assertTrue(elapsedTime.toMillis() >= howLongToWait);
     }
+
     @Test
     public void testTopURIs() {
-    	BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
+        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
-       PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
-       executor.topUriList.setSize(2);
-       executor.topUriList.add("URI1", 6L);
-       executor.topUriList.add("URI1", 6L);
-       executor.topUriList.add("URI2", 5L);
-       executor.topUriList.add("URI3", 4L);
-       executor.topUriList.add("URI4", 3L);
-       executor.topUriList.add("URI5", 2L);
-       executor.topUriList.add("URI6", 1L);
-       assertTrue(executor.topUriList.getData().size()==2);
+        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+        executor.topUriList.setSize(2);
+        executor.topUriList.add("URI1", 6L);
+        executor.topUriList.add("URI1", 6L);
+        executor.topUriList.add("URI2", 5L);
+        executor.topUriList.add("URI3", 4L);
+        executor.topUriList.add("URI4", 3L);
+        executor.topUriList.add("URI5", 2L);
+        executor.topUriList.add("URI6", 7L);
+        executor.topUriList.add("URI7", 1L);
+        executor.topUriList.add("URI8", null);
+        assertTrue(executor.topUriList.getData().size()==2);
+        assertNotNull(executor.topUriList.getData().get("URI1"));
+        assertNotNull(executor.topUriList.getData().get("URI6"));
     }
 
 }
