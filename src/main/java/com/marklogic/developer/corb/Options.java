@@ -1057,6 +1057,13 @@ public final class Options {
     @Usage(description = "Time interval, in seconds, between retry attempts. "
             + "Default is 60.")
     public static final String XCC_CONNECTION_RETRY_INTERVAL = "XCC-CONNECTION-RETRY-INTERVAL";
+    
+    /**
+     * Number attempts to connect to ML before giving up on a given host. Default is 3
+     */
+    @Usage(description = "Number attempts to connect to ML before giving up. "
+            + "Default is XCC-CONNECTION-RETRY-LIMIT")
+    public static final String XCC_CONNECTION_HOST_RETRY_LIMIT = "XCC-CONNECTION-HOST-RETRY-LIMIT";
 
     /**
      * Connection string to MarkLogic XDBC Server.

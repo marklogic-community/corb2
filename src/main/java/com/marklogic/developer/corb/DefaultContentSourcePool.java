@@ -94,7 +94,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
             }
         }
 
-        return createContentSourceProxy(this,contentSource);
+        return createContentSourceProxy(contentSource);
     }
 
     protected synchronized ContentSource nextContentSource(){
@@ -196,19 +196,28 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 		errorCountsMap.remove(cs);
 		errorTimeMap.remove(cs);
 	}
+    
+    protected void error(ContentSource cs) {
+    		error(cs,-1);
+    }
 
-    synchronized protected void error(ContentSource cs) {
+    synchronized protected void error(ContentSource cs, long allocTime) {
     		if(contentSourceList.contains(cs)) {
-	        Integer count = errorCountsMap.get(cs);
-	        count = count == null ? 1 : count + 1;
-	        errorCountsMap.put(cs, count);
-	        errorTimeMap.put(cs, System.currentTimeMillis());
-
-	        int limit = getConnectRetryLimit();
-	        LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{asString(cs),count,limit});
-	        if (count > limit){
-	        		removeInternal(cs);
-	        }
+    	        Long lastErrorTime = errorTimeMap.get(cs);
+    	        if(lastErrorTime == null || allocTime <= 0 || allocTime > lastErrorTime.longValue()) {
+		        Integer count = errorCountsMap.get(cs);
+		        count = count == null ? 1 : count + 1;
+		        errorCountsMap.put(cs, count);
+		        errorTimeMap.put(cs, System.currentTimeMillis());
+		        
+		        int limit = getConnectHostRetryLimit();
+		        LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{asString(cs),count,limit});
+		        if (count > limit){
+		        		removeInternal(cs);
+		        }
+    	        }else {
+    	        		LOG.log(WARNING, "Connection error for ContentSource {0} is not counted towards the limit as it was allocated before last error.", new Object[]{asString(cs)});
+    	        }
     		}
 	}
 
@@ -234,16 +243,10 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     }
 
     //methods to create dynamic proxy instances.
-    static protected ContentSource createContentSourceProxy(DefaultContentSourcePool csp, ContentSource cs) {
+    protected ContentSource createContentSourceProxy(ContentSource cs) {
         return (ContentSource) Proxy.newProxyInstance(
                 DefaultContentSourcePool.class.getClassLoader(), new Class[] { ContentSource.class },
-                  new ContentSourceInvocationHandler(csp,cs));
-    }
-
-    static protected Session createSessionProxy(DefaultContentSourcePool csp,ContentSource cs, Session session) {
-		return (Session)Proxy.newProxyInstance(
-				DefaultContentSourcePool.class.getClassLoader(), new Class[] { Session.class },
-				  new SessionInvocationHandler(csp, cs, session));
+                  new ContentSourceInvocationHandler(this,cs));
     }
 
     static public ContentSource getContentSourceFromProxy(ContentSource proxy) {
@@ -272,21 +275,33 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     static protected class ContentSourceInvocationHandler implements InvocationHandler{
         DefaultContentSourcePool csp;
         ContentSource target;
+        long allocTime;
         protected ContentSourceInvocationHandler(DefaultContentSourcePool csp, ContentSource target) {
             this.csp = csp;
             this.target = target;
+            this.allocTime = System.currentTimeMillis();
         }
 
         @Override
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable  {
 			Object obj = method.invoke(target, args);
 
-			if (obj != null && "newSession".equals(method.getName()) && obj instanceof Session) {
-				obj = createSessionProxy(csp,target,(Session)obj);
+			if (obj != null && isNewSession(method) && obj instanceof Session) {
+				obj = createSessionProxy((Session)obj);
 			}
 
 			return obj;
 		}
+        
+        protected Session createSessionProxy(Session session) {
+    			return (Session)Proxy.newProxyInstance(
+    				DefaultContentSourcePool.class.getClassLoader(), new Class[] { Session.class },
+    				  new SessionInvocationHandler(csp, target, session, allocTime));
+        }
+        
+        private boolean isNewSession(Method method) {
+        		return "newSession".equals(method.getName());
+        }
     }
 
     //TODO: This code does not handle explicit commits and rollbacks. 
@@ -294,14 +309,17 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         DefaultContentSourcePool csp;
         ContentSource cs;
         Session target;
+        long allocTime;
+        
         int attempts = 0;
         
         Session retryProxy;
 
-		protected SessionInvocationHandler(DefaultContentSourcePool csp, ContentSource cs, Session target) {
+		protected SessionInvocationHandler(DefaultContentSourcePool csp, ContentSource cs, Session target, long allocTime) {
 			this.csp = csp;
 			this.cs = cs;
 			this.target = target;
+			this.allocTime = allocTime;
 		}
 
         @Override
@@ -320,7 +338,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 				attempts++;
 			}
 			try {
-				if(retryProxy != null && "close".equals(method.getName())) {
+				if(retryProxy != null && isClose(method)) {
 					retryProxy.close(); //Use proxy only as there can be multiple retry attemps in a chain. 
 				}
 				Object obj = method.invoke(target, args);
@@ -339,7 +357,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
                 	}
                 	if(exc instanceof InvocationTargetException) {
 	                	if (exc.getCause() instanceof ServerConnectionException) {
-	                    csp.error(cs); //we should do this before the recursion.. not finally.
+	                    csp.error(cs,allocTime); //we should do this before the recursion.. not finally.
 	                    
 	                    String name = exc.getCause().getClass().getSimpleName();
 	                    int retryLimit = csp.getConnectRetryLimit();
@@ -413,6 +431,10 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
 		private boolean isInsertContent(Method method) {
 			return "insertContent".equals(method.getName());
+		}
+		
+		private boolean isClose(Method method) {
+			return "close".equals(method.getName());
 		}
 		
 		private void checkUnsupported(Method method) {

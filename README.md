@@ -135,6 +135,7 @@ Option | Description
 **<a name="URIS-REPLACE-PATTERN"></a>URIS-REPLACE-PATTERN** | One or more replace patterns for URIs - Used by java to truncate the length of URIs on the client side, typically to reduce java heap size in very large batch jobs, as the CORB java client holds all the URIS in memory while processing is in progress. If truncated, PROCESS-MODULE needs to reconstruct the URI before trying to do `fn:doc()` to fetch the document. <br/>Usage: `URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2,...)`<br/>**Example:**<br/>`URIS-REPLACE-PATTERN=/com/marklogic/sample/,,.xml,` - Replace /com/marklogic/sample/ and .xml with empty strings. So, CORB client only needs to cache the id '1234' instead of the entire URI /com/marklogic/sample/1234.xml. In the transform **PROCESS-MODULE**, we need to do `let $URI := fn:concat("/com/marklogic/sample/",$URI,".xml")`
 **<a name="XCC-CONNECTION-RETRY-LIMIT"></a>XCC-CONNECTION-RETRY-LIMIT** | Number attempts to connect to ML before giving up. Default is 3
 **<a name="XCC-CONNECTION-RETRY-INTERVAL"></a>XCC-CONNECTION-RETRY-INTERVAL** | Time interval, in seconds, between retry attempts. Default is 60.
+**<a name="XCC-CONNECTION-HOST-RETRY-LIMIT"></a>XCC-CONNECTION-HOST-RETRY-LIMIT** | Number attempts to connect to ML before giving up on a host. Default is **XCC-CONNECTION-RETRY-LIMIT**
 **<a name="XCC-HTTPCOMPLIANT"></a>XCC-HTTPCOMPLIANT** | Optional boolean flag to indicate whether to enable HTTP 1.1 compliance in XCC. If this option is set, the [`xcc.httpcompliant`](https://docs.marklogic.com/guide/xcc/concepts#id_28335) System property will be set.
 **<a name="XCC-TIME-ZONE"></a>XCC-TIME-ZONE** | The ID for the TimeZone that should be set on XCC RequestOption. When a value is specified, it is parsed using [`TimeZone.getTimeZone()`](https://docs.oracle.com/javase/8/docs/api/java/util/TimeZone.html#getTimeZone-java.lang.String-) and set on XCC RequestOption for each Task. Invalid ID values will produce the GMT TimeZone. If not specified, XCC uses the JVM default TimeZone.
 **<a name="XML-FILE"></a>XML-FILE** | In order to use this option a class `com.marklogic.developer.corb.FileUrisXMLLoader` has to be specified in the **URIS-LOADER** option. If defined instead of **URIS-MODULE**, XML nodes will be used as URIs from the file located on the client. The file path may be relative or absolute. Default processing will select all of the child elements of the document element (i.e. `/*/*`). The **XML-NODE** option can be specified with an XPath to address a different set of nodes.
@@ -289,6 +290,15 @@ Option | Description
 **<a name="SSL-KEYSTORE-TYPE"></a>SSL-KEYSTORE-TYPE** | Type of the keystore such as 'JKS' or 'PKCS12'.
 **<a name="SSL-ENABLED-PROTOCOLS"></a>SSL-ENABLED-PROTOCOLS** | (Optional) A comma separated list of acceptable SSL protocols.
 **<a name="SSL-CIPHER-SUITES"></a>SSL-CIPHER-SUITES** | A comma separated list of acceptable cipher suites used.
+
+### Load Balance and Failover
+Corb 2.4+ supports load balance and failover using `com.marklogic.developer.corb.ContentSourcePool`. This is automatically enabled by specifying more than one comma separated values (supports encryption) for **XCC-CONNECTION-URI** or **XCC-HOSTNAME**. 
+Ex: `XCC-CONNECTION-URI=xcc://hostname1:8000/dbname,xcc://hostname2:8000/dbname,..`
+
+The default implementation for `com.marklogic.developer.corb.ContentSourcePool` is `com.marklogic.developer.corb.DefaultContentSourcePool`. The default implementations following **CONNECTION-POLICY** values for allocating connections to callers. 
+**<a name="ROUND-ROBIN"></a>ROUND-ROBIN** | (Default) Connections are allocated using round-robin algorithm. 
+**<a name="RANDOM"></a>RANDOM** | Connections are randomly allocated.
+**<a name="LOAD"></a>LOAD** | Connections allocated based on the load which is determined by host with least number of active connections.  
 
 ### Usage
 #### Usage 1 - Command line options:

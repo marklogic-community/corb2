@@ -222,7 +222,7 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort((ecs=csp.get()),"192.168.0.1",8001);
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		assertHostAndPort(csp.get(),"192.168.0.3",8003);
-		csp.error(csp.getContentSourceFromProxy(ecs));
+		csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs));
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		csp.close();
 	}
@@ -237,8 +237,8 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort((ecs1=csp.get()),"192.168.0.1",8001);
 		assertHostAndPort((ecs2=csp.get()),"192.168.0.2",8002);
 		assertHostAndPort(csp.get(),"192.168.0.3",8003);
-		csp.error(csp.getContentSourceFromProxy(ecs1));
-		csp.error(csp.getContentSourceFromProxy(ecs2));
+		csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs1));
+		csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs2));
 		assertHostAndPort(csp.get(),"192.168.0.3",8003);
 		csp.close();
 	}
@@ -251,7 +251,7 @@ public class DefaultContentSourcePoolTest {
 		ContentSource ecs1 = null;
 		assertHostAndPort((ecs1=csp.get()),"192.168.0.1",8001);
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
-		csp.error(csp.getContentSourceFromProxy(ecs1));
+		csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs1));
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		Thread.sleep(1000L);
@@ -267,10 +267,10 @@ public class DefaultContentSourcePoolTest {
 		ContentSource ecs1 = null;
 		assertHostAndPort((ecs1=csp.get()),"192.168.0.1",8001);
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
-		csp.error(csp.getContentSourceFromProxy(ecs1));
+		csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs1));
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
 		assertHostAndPort(csp.get(),"192.168.0.2",8002);
-		csp.success(csp.getContentSourceFromProxy(ecs1));
+		csp.success(DefaultContentSourcePool.getContentSourceFromProxy(ecs1));
 		assertHostAndPort(csp.get(),"192.168.0.1",8001);
 		csp.close();
 	}
@@ -289,9 +289,9 @@ public class DefaultContentSourcePoolTest {
 		assertHostAndPort((ecs1=csp.get()),"192.168.0.1",8001);
 		assertHostAndPort((ecs2=csp.get()),"192.168.0.2",8002);
 		assertHostAndPort((ecs3=csp.get()),"192.168.0.3",8003);
-		csp.error(csp.getContentSourceFromProxy(ecs1));
-		csp.error(csp.getContentSourceFromProxy(ecs2));
-		csp.error(csp.getContentSourceFromProxy(ecs3));
+		csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs1));
+		csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs2));
+		csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs3));
 		csp.get();
 		csp.close();
 	}

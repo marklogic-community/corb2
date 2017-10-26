@@ -2,6 +2,7 @@ package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_INTERVAL;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
+import static com.marklogic.developer.corb.Options.XCC_CONNECTION_HOST_RETRY_LIMIT;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 import static java.util.logging.Level.INFO;
@@ -65,6 +66,11 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
     protected int getConnectRetryInterval() {
         int connectRetryInterval = getIntProperty(XCC_CONNECTION_RETRY_INTERVAL);
         return connectRetryInterval < 0 ? DEFAULT_CONNECTION_RETRY_INTERVAL : connectRetryInterval;
+    }
+    
+    protected int getConnectHostRetryLimit() {
+        int connectHostRetryLimit = getIntProperty(XCC_CONNECTION_HOST_RETRY_LIMIT);
+        return connectHostRetryLimit < 0 ? getConnectRetryLimit() : connectHostRetryLimit;
     }
 
     /**
