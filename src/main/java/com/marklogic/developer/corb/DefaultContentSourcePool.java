@@ -246,7 +246,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 				  new SessionInvocationHandler(csp, cs, session));
     }
 
-    public ContentSource getContentSourceFromProxy(ContentSource proxy) {
+    static public ContentSource getContentSourceFromProxy(ContentSource proxy) {
 		ContentSource target = proxy;
 		if(proxy != null && Proxy.isProxyClass(proxy.getClass())) {
 			InvocationHandler handler = Proxy.getInvocationHandler(proxy);
@@ -257,8 +257,8 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 		return target;
 	}
 
-	public Session getSessionFromProxy(Session proxy) {
-			Session target = proxy;
+	static public Session getSessionFromProxy(Session proxy) {
+		Session target = proxy;
 		if(proxy != null && Proxy.isProxyClass(proxy.getClass())) {
 			InvocationHandler handler = Proxy.getInvocationHandler(proxy);
 			if(handler instanceof SessionInvocationHandler) {
@@ -289,11 +289,14 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 		}
     }
 
+    //TODO: This code does not handle explicit commits and rollbacks. 
     static protected class SessionInvocationHandler implements InvocationHandler {
         DefaultContentSourcePool csp;
         ContentSource cs;
         Session target;
         int attempts = 0;
+        
+        Session retryProxy;
 
 		protected SessionInvocationHandler(DefaultContentSourcePool csp, ContentSource cs, Session target) {
 			this.csp = csp;
@@ -303,6 +306,8 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
         @Override
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        		checkUnsupported(method);
+        		
 			//NOTE: We only need to track connection counts for LOAD policy
 			if (isSubmitRequest(method) || isInsertContent(method)) {
 				if (isSubmitRequest(method)) {
@@ -315,6 +320,9 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 				attempts++;
 			}
 			try {
+				if(retryProxy != null && "close".equals(method.getName())) {
+					retryProxy.close(); //Use proxy only as there can be multiple retry attemps in a chain. 
+				}
 				Object obj = method.invoke(target, args);
 				//TODO: connection is held longer for streaming result sequence even after request is submitted.
 				//We are ok now as we only use streaming results for query uris loader.
@@ -363,13 +371,13 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 		protected Object submitAsNewRequest(Object[] args) throws RequestException{
 			Request request = (Request)args[0];
 			try {
-				Session newSession = csp.get().newSession();
-				setAttemptsToNewSession(newSession);
+				retryProxy = csp.get().newSession();
+				setAttemptsToNewSession(retryProxy);
 				Request newRequest;
 				if (request instanceof AdhocQuery) {
-					newRequest = newSession.newAdhocQuery(((AdhocQuery)request).getQuery());
+					newRequest = retryProxy.newAdhocQuery(((AdhocQuery)request).getQuery());
 				} else {
-					newRequest = newSession.newModuleInvoke(((ModuleInvoke)request).getModuleUri());
+					newRequest = retryProxy.newModuleInvoke(((ModuleInvoke)request).getModuleUri());
 				}
 				newRequest.setOptions(request.getOptions());
 
@@ -378,7 +386,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 					newRequest.setVariable(vars[i]);
 				}
 
-				return newSession.submitRequest(newRequest);
+				return retryProxy.submitRequest(newRequest);
 			} catch (CorbException exc) {
 				throw new RequestException(exc.getMessage(),request,exc);
 			}
@@ -386,12 +394,12 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
 		protected Object insertAsNewRequest(Object[] args) throws RequestException{
 			try {
-				Session newSession = csp.get().newSession();
-				setAttemptsToNewSession(newSession);
+				retryProxy = csp.get().newSession();
+				setAttemptsToNewSession(retryProxy);
 				if (args[0] instanceof Content) {
-					newSession.insertContent((Content)args[0]);
+					retryProxy.insertContent((Content)args[0]);
 				} else if (args[0] instanceof Content[]) {
-					newSession.insertContent((Content[])args[0]);
+					retryProxy.insertContent((Content[])args[0]);
 				}
 				return null;
 			} catch (CorbException exc) {
@@ -405,6 +413,12 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
 		private boolean isInsertContent(Method method) {
 			return "insertContent".equals(method.getName());
+		}
+		
+		private void checkUnsupported(Method method) {
+			if("commit".equals(method.getName()) || "rollback".equals(method.getName())) {
+				throw new UnsupportedOperationException(method.getName()+" is not supported by "+getClass().getName());
+			}
 		}
 
 		protected void setAttemptsToNewSession(Session newProxy) {
