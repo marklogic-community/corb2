@@ -42,7 +42,7 @@ import java.util.logging.Logger;
  */
 public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 
-    private static final Object SYNC_OBJ = new Object();
+    private final Object sync_obj = new Object();
     private static final Logger LOG = Logger.getLogger(PausableThreadPoolExecutor.class.getName());
     private boolean isPaused;
     private final ReentrantLock pauseLock = new ReentrantLock();
@@ -112,7 +112,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
                 boolean failed = result.toUpperCase().startsWith(FAILED_URI_TOKEN);
                 if (failed) {
                     String[] tokens = result.split(FAILED_URI_TOKEN);
-                    synchronized (SYNC_OBJ) {
+                    synchronized (sync_obj) {
                         if (tokens.length > 1 && !tokens[1].isEmpty() && failedUris.size() < numFailedUrisToCapture) {
                             failedUris.add(tokens[1]);
                         }
@@ -124,7 +124,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
                     long durationInMs = TimeUnit.MILLISECONDS.convert(taskTime, TimeUnit.NANOSECONDS);
 
                     topUriList.add(result, durationInMs);
-                    synchronized (SYNC_OBJ) {
+                    synchronized (sync_obj) {
                         numSucceededUris++;
                     }
                 }
@@ -220,7 +220,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
         void add(String uri, Long timeTaken) {
             UriObject newObj = new UriObject(uri, timeTaken);
             if (list.size() < this.size || list.last().compareTo(newObj) < 1) {
-                synchronized (SYNC_OBJ) {
+                synchronized (sync_obj) {
                     if (list.size() >= this.size) {
                         for (int i = 0; i <= list.size() - this.size; i++) {
                             list.remove(list.first());
@@ -288,7 +288,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
                 if (this.timeTaken != null && o.timeTaken != null) {
                     return this.timeTaken.compareTo(o.timeTaken);
                 } else {
-                    return 0;//should never get here
+                    return 1;//should never get here
                 }
             }
         }

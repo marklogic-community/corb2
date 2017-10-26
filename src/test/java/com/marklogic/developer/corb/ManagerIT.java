@@ -77,7 +77,7 @@ public class ManagerIT {
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
 	}
-    
+
     @Before
     public void setUp() throws IOException {
         clearSystemProperties();
@@ -108,6 +108,37 @@ public class ManagerIT {
             LOG.log(Level.SEVERE, null, ex);
         }
         return passed;
+    }
+
+    @Test
+    public void testMainNoUris() {
+        try {
+            File empty = File.createTempFile(this.getClass().getSimpleName(), "txt");
+            empty.deleteOnExit();
+            exit.expectSystemExitWithStatus(Manager.EXIT_CODE_NO_URIS);
+            Manager.main(ManagerTest.XCC_CONNECTION_URI, "", "src/test/resources/transform.xqy|ADHOC", "1", "", "", "", "", "", "", "", "", "", "", "", empty.getAbsolutePath());
+        } catch (IOException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testInitOptionsSetNumTPSForETC() {
+        Properties properties = ManagerTest.getDefaultProperties();
+        properties.setProperty(Options.NUM_TPS_FOR_ETC, Integer.toString(500));
+        Manager manager = new Manager();
+        try {
+            manager.init(properties);
+        } catch (CorbException ex) {
+            fail();
+        }
+        assertEquals(500, manager.options.getNumTpsForETC());
+    }
+
+    @Test
+    public void testMainErrorRunning() {
+        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_PROCESSING_ERROR);
+        Manager.main(ManagerTest.XCC_CONNECTION_URI, "", "missing.xqy|ADHOC", "1", "missing.xqy|ADHOC");
     }
 
     @Test

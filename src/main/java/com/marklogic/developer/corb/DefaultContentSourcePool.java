@@ -24,7 +24,9 @@ import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
 import com.marklogic.xcc.types.XdmVariable;
 import java.util.List;
-
+/**
+ * @since 2.4.0
+ */
 public class DefaultContentSourcePool extends AbstractContentSourcePool {
     protected static final String CONNECTION_POLICY_ROUND_ROBIN = "ROUND-ROBIN";
     protected static final String CONNECTION_POLICY_RANDOM = "RANDOM";

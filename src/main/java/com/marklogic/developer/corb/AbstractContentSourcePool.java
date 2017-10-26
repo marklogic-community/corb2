@@ -23,7 +23,9 @@ import com.marklogic.xcc.ContentSourceFactory;
 import com.marklogic.xcc.SecurityOptions;
 import com.marklogic.xcc.exceptions.XccConfigException;
 
-
+/**
+ * @since 2.4.0
+ */
 public abstract class AbstractContentSourcePool implements ContentSourcePool {
     protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
     protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
@@ -114,7 +116,7 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
                 ContentSource contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
                         : ContentSourceFactory.newContentSource(connectionUri);
                 return contentSource;
-            } catch (XccConfigException ex) {               
+            } catch (XccConfigException ex) {
                 LOG.log(SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly for host "+hostname+":"+port+path, ex);
             } catch (KeyManagementException | NoSuchAlgorithmException ex) {
                 LOG.log(SEVERE, "Problem creating content source with ssl for host "+hostname+":"+port+path, ex);

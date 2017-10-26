@@ -53,7 +53,7 @@ public class JobStats extends BaseMonitor {
     private static final String JOB_NAME = "name";
     public static final String JOB_ELEMENT = "job";
     public static final String JOBS_ELEMENT = "jobs";
-    public static final String CORB_NAMESPACE = "http://marklogic.github.io/corb/";
+    public static final String CORB_NAMESPACE = "http://developer.marklogic.com/code/corb";
     private static final String LONG_RUNNING_URIS = "slowTransactions";
     private static final String FAILED_URIS = "failedTransactions";
     private static final String URIS_LOAD_TIME = "urisLoadTimeInMillis";
@@ -110,6 +110,7 @@ public class JobStats extends BaseMonitor {
     private Templates jobStatsToJsonTemplates;
 
     private static final Logger LOG = Logger.getLogger(JobStats.class.getName());
+    private final Object lock = new Object();
 
     public JobStats(Manager manager) {
         super(manager);
@@ -136,42 +137,41 @@ public class JobStats extends BaseMonitor {
     }
 
     private void refresh() {
-        synchronized (this) {
+        synchronized (lock) {
 
             if (manager != null && manager.monitor != null) {
                 jobId = manager.jobId;
                 paused = manager.isPaused();
+                startTime = epochMillisAsFormattedDateString(manager.getStartMillis());
 
                 if (options != null) {
                     jobName = options.getJobName();
                     jobServerPort = options.getJobServerPort().longValue();
+                    currentThreadCount = Long.valueOf(options.getThreadCount());
                 }
-
-                startTime = epochMillisAsFormattedDateString(manager.getStartMillis());
 
                 taskCount = manager.monitor.getTaskCount();
                 if (taskCount > 0) {
 
                     PausableThreadPoolExecutor threadPool = manager.monitor.pool;
-                    longRunningUris = threadPool.getTopUris();
-                    failedUris = threadPool.getFailedUris();
-                    numberOfFailedTasks = Integer.toUnsignedLong(threadPool.getNumFailedUris());
-                    numberOfSucceededTasks = Integer.toUnsignedLong(threadPool.getNumSucceededUris());
+                    if (threadPool != null) {
+                        longRunningUris = threadPool.getTopUris();
+                        failedUris = threadPool.getFailedUris();
+                        numberOfFailedTasks = Integer.toUnsignedLong(threadPool.getNumFailedUris());
+                        numberOfSucceededTasks = Integer.toUnsignedLong(threadPool.getNumSucceededUris());
+                    }
 
                     Long currentTimeMillis = System.currentTimeMillis();
                     Long totalTime = manager.getEndMillis() - manager.getStartMillis();
                     if (totalTime > 0) {
-                        currentThreadCount = 0l;
+                        currentThreadCount = 0L;
                         totalRunTimeInMillis = totalTime;
                         long totalTransformTime = currentTimeMillis - manager.getTransformStartMillis();
                         averageTransactionTime = totalTransformTime / Double.valueOf(numberOfFailedTasks) + Double.valueOf(numberOfSucceededTasks);
                         endTime = epochMillisAsFormattedDateString(manager.getEndMillis());
                         estimatedTimeOfCompletion = null;
                     } else {
-
-                        currentThreadCount = Long.valueOf(options.getThreadCount());
                         totalRunTimeInMillis = currentTimeMillis - manager.getStartMillis();
-
                         long timeSinceLastReq = currentTimeMillis - prevMillis;
                         //refresh it every 10 seconds or more.. ignore more frequent requests
                         if (timeSinceLastReq > TPS_ETC_MIN_REFRESH_INTERVAL) {
@@ -205,30 +205,29 @@ public class JobStats extends BaseMonitor {
     }
 
     private void logToServer(String message, String metrics) {
-    		String logLevel = options.getLogMetricsToServerLog();
+        String logLevel = options.getLogMetricsToServerLog();
         if (csp != null && options.isMetricsLoggingEnabled(logLevel)) {
-        		Session session =  null;
-        		try {
-        			ContentSource contentSource = csp.get();
-        			if(contentSource != null) {
-        				session = contentSource.newSession();
-        				String xquery = XQUERY_VERSION_ML
+            Session session =  null;
+        	try {
+        	    ContentSource contentSource = csp.get();
+        		if (contentSource != null) {
+                    session = contentSource.newSession();
+                    String xquery = XQUERY_VERSION_ML
                                 + (message != null
                                         ? String.format(XDMP_LOG_FORMAT, message, logLevel.toLowerCase()) + ','
                                         : "")
                                 + String.format(XDMP_LOG_FORMAT, metrics, logLevel.toLowerCase());
-
                     AdhocQuery query = session.newAdhocQuery(xquery);
                     session.submitRequest(query);
-        			}else {
-        				LOG.log(SEVERE, "logJobStatsToServer request failed. ContentSourcePool.get() returned null");
-        			}
+                } else {
+                    LOG.log(SEVERE, "logJobStatsToServer request failed. ContentSourcePool.get() returned null");
+                }
             } catch (Exception e) {
                 LOG.log(SEVERE, "logJobStatsToServer request failed", e);
-            }finally {
-            		if(session != null) {
-            			session.close();
-            		}
+            } finally {
+                if (session != null) {
+                    session.close();
+                }
             }
         }
     }
@@ -248,16 +247,16 @@ public class JobStats extends BaseMonitor {
             Thread.yield();// try to avoid thread starvation
 
             if (csp != null) {
-            		Session session = null;
-                try{
-                		ContentSource contentSource = csp.get();
-                		if (contentSource != null) {
-	                	    session = contentSource.newSession();
+                Session session = null;
+                try {
+                    ContentSource contentSource = csp.get();
+                    if (contentSource != null) {
+                        session = contentSource.newSession();
 	                    Request request = manager.getRequestForModule(processModule, session);
 	                    request.setNewStringVariable(METRICS_DB_NAME_PARAM, metricsDatabase);
 	                    request.setNewStringVariable(METRICS_URI_ROOT_PARAM, uriRoot != null ? uriRoot : NOT_APPLICABLE);
 	                    request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, collections != null ? collections : NOT_APPLICABLE);
-	
+
 	                    if (isJavaScriptModule(processModule)) {
 	                        requestOptions.setQueryLanguage("javascript");
 	                        request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
@@ -267,17 +266,17 @@ public class JobStats extends BaseMonitor {
 	                                metrics == null ? toXmlString() : metrics);
 	                    }
 	                    request.setOptions(requestOptions);
-	
+
 	                    seq = session.submitRequest(request);
 	                    String uri = seq.hasNext() ? seq.next().asString() : null;
 	                    if (uri != null) {
 	                        this.uri = uri;
 	                    }
-	
+
 	                    Thread.yield();// try to avoid thread starvation
 	                    seq.close();
 	                    Thread.yield();// try to avoid thread starvation
-                		}
+                    }
                 } catch (Exception exc) {
                     LOG.log(SEVERE, "logJobStatsToServerDocument request failed", exc);
                 } finally {
@@ -461,10 +460,10 @@ public class JobStats extends BaseMonitor {
         return newTemplates(transformerFactory, "jobStatsToJson.xsl");
     }
     protected static Templates newTemplates(TransformerFactory transformerFactory, String stylesheetFilename) throws TransformerConfigurationException {
-    		InputStream is = Manager.class.getResourceAsStream("/"+stylesheetFilename);
-    		if(is == null) {
-    			throw new TransformerConfigurationException("Could not find the template file "+stylesheetFilename+" in the classpath");
-    		}
+        InputStream is = Manager.class.getResourceAsStream("/" + stylesheetFilename);
+        if (is == null) {
+            throw new TransformerConfigurationException("Could not find the template file " + stylesheetFilename + " in the classpath");
+        }
         return transformerFactory.newTemplates(new StreamSource(is));
     }
 
