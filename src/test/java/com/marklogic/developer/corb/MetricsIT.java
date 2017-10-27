@@ -100,7 +100,7 @@ public class MetricsIT {
         String exportFilename = "testManagerMetricsUsingSysProps1.txt";
         String extension = XML_EXT;
         String syncFrequency = "2";
-        testManager(uriCount, collectionName, exportFilename, null, syncFrequency, extension);
+        testManager(uriCount, collectionName, exportFilename, XQUERY_MODULE, syncFrequency, extension);
     }
 
     @Test
