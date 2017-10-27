@@ -55,6 +55,7 @@ public class MetricsIT {
     private static final String XML_EXT = ".xml";
     private static final String METRICS_DB_NAME = "Documents";
     private static final String JS_MODULE = "saveMetrics.sjs|ADHOC";
+    private static final String XQUERY_MODULE = "save-metrics.xqy|ADHOC";
 
     @Rule
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
@@ -89,7 +90,6 @@ public class MetricsIT {
         String extension = JSON_EXT;
         String syncFrequency = "2";
         testManager(uriCount, collectionName, exportFilename, JS_MODULE, syncFrequency, extension);
-
     }
 
     @Test
@@ -151,10 +151,10 @@ public class MetricsIT {
     public static List<String> docsWithEndTime(ContentSourcePool contentSourcePool, String collection, String dbName, boolean isXML) throws CorbException{
         List<String> result = new ArrayList<>();
         try (Session session = contentSourcePool.get().newSession()) {
-            AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML + "declare namespace corb2='http://marklogic.github.io/corb/';"
+            AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML + "declare namespace corb='" + JobStats.CORB_NAMESPACE + "';"
                     + "xdmp:invoke-function(function(){cts:uris((),(),cts:and-query(("
                     + "		cts:element-query(xs:QName('"
-                    + (isXML ? "corb2:" : "")
+                    + (isXML ? "corb:" : "")
                     + "endTime'),cts:true-query()),"
                     + "	cts:collection-query('" + collection + "'))))}, <options  xmlns='xdmp:eval'><database>{xdmp:database('" + dbName
                     + "')}</database><transaction-mode>update-auto-commit</transaction-mode></options>)");
@@ -167,9 +167,8 @@ public class MetricsIT {
     }
 
     private void testManager(int uriCount, String collectionName, String exportFilename,
-            String JS_MODULE, String syncFrequency, String extension) throws CorbException{
-        Properties properties = getMetricsTestProperties(uriCount, collectionName, exportFilename, JS_MODULE,
-                syncFrequency);
+                             String METRICS_MODULE, String syncFrequency, String extension) throws CorbException{
+        Properties properties = getMetricsTestProperties(uriCount, collectionName, exportFilename, METRICS_MODULE, syncFrequency);
 
         Manager manager = new Manager();
         try {
@@ -201,7 +200,7 @@ public class MetricsIT {
     }
 
     private Properties getMetricsTestProperties(int uriCount, String collectionName, String exportFilename,
-            String JS_MODULE, String syncFrequency) {
+            String METRICS_MODULE, String syncFrequency) {
         Properties properties = ManagerTest.getDefaultProperties();
         properties.setProperty(Options.THREAD_COUNT, String.valueOf(4));
         properties.setProperty(Options.URIS_MODULE, LARGE_URIS_MODULE);
@@ -218,8 +217,8 @@ public class MetricsIT {
         }
         properties.setProperty(Options.METRICS_DATABASE, METRICS_DB_NAME);
         properties.setProperty(Options.METRICS_COLLECTIONS, collectionName);
-        if (JS_MODULE != null) {
-            properties.setProperty(Options.METRICS_MODULE, JS_MODULE);
+        if (METRICS_MODULE != null) {
+            properties.setProperty(Options.METRICS_MODULE, METRICS_MODULE);
         }
         return properties;
     }

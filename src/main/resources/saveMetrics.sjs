@@ -10,8 +10,8 @@ var insertDoc = function(metricsDocumentStr, collection, uriRoot){
     var json = JSON.parse(metricsDocumentStr);
     var jobName = json["job"]["name"];
     if (!jobName) { jobName = json["job"]["runLocation"]; }
-    if (fn.startsWith(jobName,"/")) {
-      jobName=fn.substring(jobName,2);
+    if (fn.startsWith(jobName, "/")) {
+      jobName=fn.substring(jobName, 2);
     }
     var coll = [];
     if (collection != "NA") {
@@ -21,11 +21,11 @@ var insertDoc = function(metricsDocumentStr, collection, uriRoot){
     var dateTime = fn.currentDateTime();
     var uri_root = uriRoot;
     if (uriRoot == "NA") { uri_root = "/ServiceMetrics/"; }
-    if (!fn.startsWith(uri_root,"/")) { uri_root="/"+$uri_root; }
-    if (fn.endsWith(uri_root,"/"))  { uri_root = uri_root+"/"; }
+    if (!fn.startsWith(uri_root, "/")) { uri_root = "/" + $uri_root; }
+    if (fn.endsWith(uri_root, "/"))  { uri_root = uri_root + "/"; }
     var orig_uri = json["job"]["metricsDocUri"];
     var uri = orig_uri;
-    if (!uri) { 
+    if (!uri) {
       uri = uri_root + "CORB/" +
                     jobName + "/" +
                     fn.yearFromDateTime(dateTime) + "/" +
@@ -34,7 +34,7 @@ var insertDoc = function(metricsDocumentStr, collection, uriRoot){
                     fn.hoursFromDateTime(dateTime) + "/" +
                     fn.minutesFromDateTime(dateTime) + "/" +
                     xdmp.random() + ".json";
-      orig_uri = uri;        
+      orig_uri = uri;
     }
     else if (!json["job"]["endTime"]) {//Job finished so update the root document
         	uri = uri + "/" + xdmp.random();

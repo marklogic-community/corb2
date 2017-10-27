@@ -1,5 +1,5 @@
 xquery version "1.0-ml";
-declare namespace corb = "http://marklogic.github.io/corb/";
+declare namespace corb = "http://developer.marklogic.com/code/corb";
 declare variable $dbName as xs:string external;
 declare variable $uriRoot as xs:string external;
 declare variable $metricsDocumentStr as xs:string external;
@@ -22,7 +22,7 @@ declare private function local:save-metrics-document($svc-name as xs:string,
 };
 let $metrics-document := xdmp:unquote($metricsDocumentStr)/corb:job
 (:Job name defaults to job run location:)
-let $job-name := if($metrics-document/corb:name) then $metrics-document/corb:name/text() else $metrics-document/corb:runLocation/text()
+let $job-name := if ($metrics-document/corb:name) then $metrics-document/corb:name/text() else $metrics-document/corb:runLocation/text()
 let $collections := if($collections and $collections != 'NA') then $collections else ""
 let $uri := $metrics-document/corb:metricsDocUri/text()
 let $has-end-time := $metrics-document/corb:endTime
