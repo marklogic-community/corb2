@@ -639,7 +639,7 @@ public class Manager extends AbstractManager implements Closeable {
     }
 
     protected boolean shouldRunPostBatch(int count) {
-        return !execError && options.shouldPrePostBatchAlwaysExecute() || count >= options.getPostBatchMinimumCount();
+        return !execError && (options.shouldPrePostBatchAlwaysExecute() || count >= options.getPostBatchMinimumCount());
     }
 
     protected boolean shouldRunPreBatch(int count) {
