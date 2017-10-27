@@ -130,22 +130,28 @@ public class Manager extends AbstractManager implements Closeable {
             } catch (Exception exc) {
                 LOG.log(SEVERE, "Error initializing CORB " + exc.getMessage(), exc);
                 manager.usage();
+                LOG.info("init error - exiting with code "+EXIT_CODE_INIT_ERROR);
                 System.exit(EXIT_CODE_INIT_ERROR);
             }
             //now we can start corb.
             try {
                 int count = manager.run();
                 if (manager.execError) {
+                		LOG.info("processing error - exiting with code "+EXIT_CODE_PROCESSING_ERROR);
                     System.exit(EXIT_CODE_PROCESSING_ERROR);
                 } else if (manager.stopCommand) {
+                		LOG.info("stop command - exiting with code "+EXIT_CODE_STOP_COMMAND);
                     System.exit(EXIT_CODE_STOP_COMMAND);
                 } else if (count == 0) {
+                		LOG.info("no uris found - exiting with code "+EXIT_CODE_NO_URIS);
                     System.exit(EXIT_CODE_NO_URIS);
                 } else {
+                		LOG.info("success - exiting with code "+EXIT_CODE_SUCCESS);
                     System.exit(EXIT_CODE_SUCCESS);
                 }
             } catch (Exception exc) {
                 LOG.log(SEVERE, "Error while running CORB", exc);
+                LOG.info("unexpected error - exiting with code "+EXIT_CODE_PROCESSING_ERROR);
                 System.exit(EXIT_CODE_PROCESSING_ERROR);
             }
         }
@@ -846,8 +852,12 @@ public class Manager extends AbstractManager implements Closeable {
                 monitor.setTaskCount(urisCount);
             }
 
-            pool.shutdown();
-
+            if(pool != null) {
+            		LOG.info("Shutting down the thread pool");
+            		pool.shutdown();
+            }else {
+            		LOG.warning("Thread pool is set null - closed already?");
+            }
         } catch (Exception exc) {
             stop();
             throw exc;
@@ -876,6 +886,7 @@ public class Manager extends AbstractManager implements Closeable {
         while (urisLoader.hasNext()) {
             // check pool occasionally, for fast-fail
             if (null == pool) {
+            		LOG.warning("Thread pool is set to null. Exiting out of the task submission loop prematurely.");
                 break;
             }
 
@@ -978,6 +989,7 @@ public class Manager extends AbstractManager implements Closeable {
             if (pool.isPaused()) {
                 pool.resume();
             }
+            LOG.info("Shutting down the thread pool");
             List<Runnable> remaining = pool.shutdownNow();
             if (!remaining.isEmpty()) {
                 LOG.log(WARNING, () -> MessageFormat.format("thread pool was shut down with {0,number} pending tasks", remaining.size()));
