@@ -49,11 +49,11 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     @Override
     public void init(Properties properties, SSLConfig sslConfig, String[] connectionStrings){
         super.init(properties, sslConfig);
-        if (connectionStrings == null || connectionStrings.length == 0){
+        if (connectionStrings == null || connectionStrings.length == 0) {
             throw new NullPointerException("XCC connection strings cannot be null or empty");
         }
 
-        for (String connectionString : connectionStrings){
+        for (String connectionString : connectionStrings) {
             initContentSource(connectionString);
         }
 
@@ -96,7 +96,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
             }
         }
 
-        return createContentSourceProxy(this,contentSource);
+        return createContentSourceProxy(this, contentSource);
     }
 
     protected synchronized ContentSource nextContentSource(){
@@ -113,7 +113,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         } else if (CONNECTION_POLICY_LOAD.equals(connectionPolicy)) {
             for (ContentSource next: availableList){
                 Integer count = connectionCountsMap.get(next);
-                if (count == null || count == 0){
+                if (count == null || count == 0) {
                     contentSource = next;
                     break;
                 } else if(contentSource == null || count < connectionCountsMap.get(contentSource)){
@@ -164,7 +164,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
     @Override
     public ContentSource[] getAllContentSources() {
-    		return contentSourceList.toArray(new ContentSource[contentSourceList.size()]);
+        return contentSourceList.toArray(new ContentSource[contentSourceList.size()]);
     }
 
     @Override
@@ -180,17 +180,17 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     }
 
     synchronized protected void hold(ContentSource cs) {
-    		if(contentSourceList.contains(cs)) {
+        if (contentSourceList.contains(cs)) {
 	        Integer count = connectionCountsMap.get(cs);
 	        count = count == null ? 1 : count + 1;
 	        connectionCountsMap.put(cs, count);
-    		}
+        }
     }
 
     synchronized protected void release(ContentSource cs) {
-    		Integer count = connectionCountsMap.get(cs);
-        if(count != null && count > 0) {
-        		connectionCountsMap.put(cs, count-1);
+        Integer count = connectionCountsMap.get(cs);
+        if (count != null && count > 0) {
+            connectionCountsMap.put(cs, count-1);
         }
     }
 
@@ -200,18 +200,20 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 	}
 
     synchronized protected void error(ContentSource cs) {
-    		if(contentSourceList.contains(cs)) {
+        if (contentSourceList.contains(cs)) {
 	        Integer count = errorCountsMap.get(cs);
 	        count = count == null ? 1 : count + 1;
 	        errorCountsMap.put(cs, count);
-	        errorTimeMap.put(cs, System.currentTimeMillis());
 
-	        int limit = getConnectRetryLimit();
-	        LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{asString(cs),count,limit});
-	        if (count > limit){
-	        		removeInternal(cs);
-	        }
-    		}
+            if (errorTimeMap.get(cs) >= getConnectRetryInterval() * 1000L) {
+                int limit = getConnectRetryLimit();
+                LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{asString(cs), count, limit});
+                if (count > limit) {
+                    removeInternal(cs);
+                }
+            }
+            errorTimeMap.put(cs, System.currentTimeMillis());
+        }
 	}
 
     protected int errorCount(ContentSource cs) {
@@ -221,13 +223,13 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
     //this is not a proxy
     protected synchronized void removeInternal(ContentSource cs) {
-	    	if (contentSourceList.contains(cs)) {
+        if (contentSourceList.contains(cs)) {
 	        LOG.log(WARNING, "Removing the ContentSource {0} from the content source pool.", new Object[]{asString(cs)});
 	        contentSourceList.remove(cs);
 	        connectionCountsMap.remove(cs);
 	        errorCountsMap.remove(cs);
 	        errorTimeMap.remove(cs);
-	    	}
+        }
     }
 
     //TODO: handle redaction if necessary?
@@ -239,7 +241,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     static protected ContentSource createContentSourceProxy(DefaultContentSourcePool csp, ContentSource cs) {
         return (ContentSource) Proxy.newProxyInstance(
                 DefaultContentSourcePool.class.getClassLoader(), new Class[] { ContentSource.class },
-                  new ContentSourceInvocationHandler(csp,cs));
+                  new ContentSourceInvocationHandler(csp, cs));
     }
 
     static protected Session createSessionProxy(DefaultContentSourcePool csp,ContentSource cs, Session session) {
@@ -250,9 +252,9 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
     public ContentSource getContentSourceFromProxy(ContentSource proxy) {
 		ContentSource target = proxy;
-		if(proxy != null && Proxy.isProxyClass(proxy.getClass())) {
+		if (proxy != null && Proxy.isProxyClass(proxy.getClass())) {
 			InvocationHandler handler = Proxy.getInvocationHandler(proxy);
-			if(handler instanceof ContentSourceInvocationHandler) {
+			if (handler instanceof ContentSourceInvocationHandler) {
 				target = ((ContentSourceInvocationHandler)handler).target;
 			}
 		}
@@ -260,10 +262,10 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 	}
 
 	public Session getSessionFromProxy(Session proxy) {
-			Session target = proxy;
-		if(proxy != null && Proxy.isProxyClass(proxy.getClass())) {
+        Session target = proxy;
+		if (proxy != null && Proxy.isProxyClass(proxy.getClass())) {
 			InvocationHandler handler = Proxy.getInvocationHandler(proxy);
-			if(handler instanceof SessionInvocationHandler) {
+			if (handler instanceof SessionInvocationHandler) {
 				target = ((SessionInvocationHandler)handler).target;
 			}
 		}
@@ -284,7 +286,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 			Object obj = method.invoke(target, args);
 
 			if (obj != null && "newSession".equals(method.getName()) && obj instanceof Session) {
-				obj = createSessionProxy(csp,target,(Session)obj);
+				obj = createSessionProxy(csp, target, (Session)obj);
 			}
 
 			return obj;
@@ -330,9 +332,9 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 			} catch (Exception exc) {
 				if (csp.isLoadPolicy() && (isSubmitRequest(method) || isInsertContent(method))) {
                     csp.release(cs); //we should do this before the recursion.. not finally.
-                	}
-                	if(exc instanceof InvocationTargetException) {
-	                	if (exc.getCause() instanceof ServerConnectionException) {
+                }
+                if (exc instanceof InvocationTargetException) {
+                    if (exc.getCause() instanceof ServerConnectionException) {
 	                    csp.error(cs); //we should do this before the recursion.. not finally.
 
 	                    String name = exc.getCause().getClass().getSimpleName();
@@ -376,7 +378,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 				newRequest.setOptions(request.getOptions());
 
 				XdmVariable[] vars = request.getVariables();
-				for (int i=0; vars!= null && i < vars.length;i++) {
+				for (int i = 0; vars != null && i < vars.length; i++) {
 					newRequest.setVariable(vars[i]);
 				}
 
@@ -410,9 +412,9 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 		}
 
 		protected void setAttemptsToNewSession(Session newProxy) {
-			if(Proxy.isProxyClass(newProxy.getClass())) {
+			if (Proxy.isProxyClass(newProxy.getClass())) {
 				InvocationHandler handler = Proxy.getInvocationHandler(newProxy);
-				if(handler instanceof SessionInvocationHandler) {
+				if (handler instanceof SessionInvocationHandler) {
 					((SessionInvocationHandler)handler).attempts = this.attempts;
 				}
 			}

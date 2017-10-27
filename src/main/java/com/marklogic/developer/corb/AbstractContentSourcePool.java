@@ -98,7 +98,7 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
     }
 
     protected ContentSource createContentSource(String connectionString){
-        if (StringUtils.isNotBlank(connectionString)){
+        if (StringUtils.isNotBlank(connectionString)) {
             URI connectionUri = null;
             String hostname = (connectionUri != null) ? connectionUri.getHost() : "";
             String port = String.valueOf((connectionUri != null) ? connectionUri.getPort() : -1);
@@ -117,7 +117,7 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
             } catch (URISyntaxException ex) {
                 LOG.log(SEVERE, "XCC URI is invalid for host "+hostname+":"+port+path, ex);
             } catch (IllegalArgumentException ex){
-            		LOG.log(SEVERE, "XCC URI is invalid for host "+hostname+":"+port+path, ex);
+                LOG.log(SEVERE, "XCC URI is invalid for host "+hostname+":"+port+path, ex);
             }
         }
         return null;
