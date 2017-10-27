@@ -23,6 +23,7 @@ import static com.marklogic.developer.corb.Options.JASYPT_PROPERTIES_FILE;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.Properties;
@@ -78,7 +79,8 @@ public class JasyptDecrypter extends AbstractDecrypter {
                 Method decrypt = decrypterCls.getMethod("decrypt", String.class);
                 dValue = (String) decrypt.invoke(decrypter, value);
             } catch (Exception exc) {
-                LOG.log(INFO, MessageFormat.format("Cannot decrypt {0}. Ignore if clear text.", property), exc);
+            		Throwable th = exc instanceof InvocationTargetException ? exc.getCause() : exc;
+                LOG.log(INFO, MessageFormat.format("Cannot decrypt {0}. Ignore if clear text.", property), th);
             }
         }
         return dValue == null ? value : dValue.trim();
