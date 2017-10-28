@@ -207,27 +207,23 @@ public class JobStats extends BaseMonitor {
     private void logToServer(String message, String metrics) {
         String logLevel = options.getLogMetricsToServerLog();
         if (csp != null && options.isMetricsLoggingEnabled(logLevel)) {
-            Session session =  null;
         	try {
         	    ContentSource contentSource = csp.get();
         		if (contentSource != null) {
-                    session = contentSource.newSession();
-                    String xquery = XQUERY_VERSION_ML
-                                + (message != null
-                                        ? String.format(XDMP_LOG_FORMAT, message, logLevel.toLowerCase()) + ','
-                                        : "")
-                                + String.format(XDMP_LOG_FORMAT, metrics, logLevel.toLowerCase());
-                    AdhocQuery query = session.newAdhocQuery(xquery);
-                    session.submitRequest(query);
+                    try (Session session = contentSource.newSession()) {
+                        String xquery = XQUERY_VERSION_ML
+                            + (message != null
+                            ? String.format(XDMP_LOG_FORMAT, message, logLevel.toLowerCase()) + ','
+                            : "")
+                            + String.format(XDMP_LOG_FORMAT, metrics, logLevel.toLowerCase());
+                        AdhocQuery query = session.newAdhocQuery(xquery);
+                        session.submitRequest(query);
+                    }
                 } else {
                     LOG.log(SEVERE, "logJobStatsToServer request failed. ContentSourcePool.get() returned null");
                 }
             } catch (Exception e) {
                 LOG.log(SEVERE, "logJobStatsToServer request failed", e);
-            } finally {
-                if (session != null) {
-                    session.close();
-                }
             }
         }
     }
@@ -247,35 +243,36 @@ public class JobStats extends BaseMonitor {
             Thread.yield();// try to avoid thread starvation
 
             if (csp != null) {
-                Session session = null;
+
                 try {
                     ContentSource contentSource = csp.get();
                     if (contentSource != null) {
-                        session = contentSource.newSession();
-	                    Request request = manager.getRequestForModule(processModule, session);
-	                    request.setNewStringVariable(METRICS_DB_NAME_PARAM, metricsDatabase);
-	                    request.setNewStringVariable(METRICS_URI_ROOT_PARAM, uriRoot != null ? uriRoot : NOT_APPLICABLE);
-	                    request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, collections != null ? collections : NOT_APPLICABLE);
+                        try (Session session = contentSource.newSession()) {
+                            Request request = manager.getRequestForModule(processModule, session);
+                            request.setNewStringVariable(METRICS_DB_NAME_PARAM, metricsDatabase);
+                            request.setNewStringVariable(METRICS_URI_ROOT_PARAM, uriRoot != null ? uriRoot : NOT_APPLICABLE);
+                            request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, collections != null ? collections : NOT_APPLICABLE);
 
-	                    if (isJavaScriptModule(processModule)) {
-	                        requestOptions.setQueryLanguage("javascript");
-	                        request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
-	                                metrics == null ? toJSON() : metrics);
-	                    } else {
-	                        request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
-	                                metrics == null ? toXmlString() : metrics);
-	                    }
-	                    request.setOptions(requestOptions);
+                            if (isJavaScriptModule(processModule)) {
+                                requestOptions.setQueryLanguage("javascript");
+                                request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
+                                    metrics == null ? toJSON() : metrics);
+                            } else {
+                                request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
+                                    metrics == null ? toXmlString() : metrics);
+                            }
+                            request.setOptions(requestOptions);
 
-	                    seq = session.submitRequest(request);
-	                    String uri = seq.hasNext() ? seq.next().asString() : null;
-	                    if (uri != null) {
-	                        this.uri = uri;
-	                    }
+                            seq = session.submitRequest(request);
+                            String uri = seq.hasNext() ? seq.next().asString() : null;
+                            if (uri != null) {
+                                this.uri = uri;
+                            }
 
-	                    Thread.yield();// try to avoid thread starvation
-	                    seq.close();
-	                    Thread.yield();// try to avoid thread starvation
+                            Thread.yield();// try to avoid thread starvation
+                            seq.close();
+                            Thread.yield();// try to avoid thread starvation
+                        }
                     }
                 } catch (Exception exc) {
                     LOG.log(SEVERE, "logJobStatsToServerDocument request failed", exc);
@@ -284,10 +281,6 @@ public class JobStats extends BaseMonitor {
                         seq.close();
                         seq = null;
                     }
-                    if (session != null) {
-                        session.close();
-                    }
-
                     Thread.yield();// try to avoid thread starvation
                 }
             }
