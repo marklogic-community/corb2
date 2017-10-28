@@ -189,10 +189,14 @@ public class JobStats extends BaseMonitor {
         return date.format(DATE_FORMATTER);
     }
 
-    public void logToServer(String message, boolean concise) {
+    public void logMetrics(String message, boolean concise, boolean console) {
         String processModule = options.getMetricsModule();
         Document doc = toXML(concise);
         String metricsLogMessage = toJSON(doc);
+        if(console) {
+    			LOG.info(metricsLogMessage);
+        }
+        
         String metricsDocument;
         if (isJavaScriptModule(processModule)) {
             metricsDocument = metricsLogMessage;
