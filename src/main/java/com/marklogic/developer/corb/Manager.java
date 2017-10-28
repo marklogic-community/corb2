@@ -563,7 +563,7 @@ public class Manager extends AbstractManager implements Closeable {
 
         startMillis = System.currentTimeMillis();
 
-        jobStats.logToServer(START_RUNNING_JOB_MESSAGE, false);
+        jobStats.logMetrics(START_RUNNING_JOB_MESSAGE, false, false);
 
         LOG.log(INFO, () -> MessageFormat.format("{0} starting: {1}", NAME, VERSION_MSG));
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
@@ -592,7 +592,7 @@ public class Manager extends AbstractManager implements Closeable {
 
             endMillis = System.currentTimeMillis();
 
-            jobStats.logToServer(END_RUNNING_JOB_MESSAGE, false);
+            jobStats.logMetrics(END_RUNNING_JOB_MESSAGE, false, true);
             LOG.info("all done");
 
             return count;
@@ -631,7 +631,7 @@ public class Manager extends AbstractManager implements Closeable {
         if (interval != null && interval > 0) {
             Runnable jobMetricsLogger = () -> {
                 if (!isPaused()){
-                    jobStats.logToServer(RUNNING_JOB_MESSAGE, true);
+                    jobStats.logMetrics(RUNNING_JOB_MESSAGE, true, false);
                 }
             };
             scheduledExecutor.scheduleWithFixedDelay(jobMetricsLogger, interval, interval, TimeUnit.MILLISECONDS);
@@ -853,7 +853,7 @@ public class Manager extends AbstractManager implements Closeable {
             }
 
             if(pool != null) {
-            		LOG.info("Shutting down the thread pool");
+            		LOG.info("All tasks are populated. Invoking graceful shutdown the thread pool and waiting for all the tasks to complete.");
             		pool.shutdown();
             }else {
             		LOG.warning("Thread pool is set null - closed already?");
@@ -960,7 +960,7 @@ public class Manager extends AbstractManager implements Closeable {
     public void pause() {
         if (pool != null && pool.isRunning()) {
             LOG.info("pausing");
-            jobStats.logToServer(PAUSING_JOB_MESSAGE, false);
+            jobStats.logMetrics(PAUSING_JOB_MESSAGE, false, true);
             pool.pause();
         }
     }
@@ -975,7 +975,7 @@ public class Manager extends AbstractManager implements Closeable {
     public void resume() {
         if (isPaused()) {
             LOG.info("resuming");
-            jobStats.logToServer(RESUMING_JOB_MESSAGE, false);
+            jobStats.logMetrics(RESUMING_JOB_MESSAGE, true, false);
             pool.resume();
         }
     }
