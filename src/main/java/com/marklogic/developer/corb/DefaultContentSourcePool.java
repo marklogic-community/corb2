@@ -39,6 +39,10 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     protected Map<ContentSource,Integer> errorCountsMap = new HashMap<>();
     protected Map<ContentSource,Integer> connectionCountsMap = new HashMap<>();
     protected Map<ContentSource,Long> errorTimeMap = new HashMap<>();
+    
+    protected int retryInterval = 0;
+    protected int hostRetryLimit = 0;
+    protected int retryLimit = 0;
 
     protected int roundRobinIndex =  -1;
 
@@ -53,15 +57,19 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
             throw new NullPointerException("XCC connection strings cannot be null or empty");
         }
 
-        for (String connectionString : connectionStrings) {
-            initContentSource(connectionString);
-        }
-
+        retryInterval = getConnectRetryInterval();
+        retryLimit = getConnectRetryLimit();
+        hostRetryLimit = getConnectHostRetryLimit();
+        
         String policy = getProperty(CONNECTION_POLICY);
         if (CONNECTION_POLICY_RANDOM.equals(policy) || CONNECTION_POLICY_LOAD.equals(policy)) {
             this.connectionPolicy = policy;
         }
         LOG.log(INFO, "Using the connection policy {0}", this.connectionPolicy);
+        
+        for (String connectionString : connectionStrings) {
+            initContentSource(connectionString);
+        }
     }
 
     protected void initContentSource(String connectionString){
@@ -87,7 +95,6 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         //even if errored, but wait expired, then no need to wait.
         Integer failedCount = errorCountsMap.get(contentSource);
         if (failedCount != null && failedCount > 0 && errorTimeMap.containsKey(contentSource)) {
-            int retryInterval = getConnectRetryInterval();
             LOG.log(WARNING, "Connection failed for ContentSource {0}. Waiting for {1} seconds before retry attempt {2}",
                     new Object[]{asString(contentSource),retryInterval,failedCount + 1});
             try {
@@ -135,7 +142,6 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         //check if any errored connections are eligible for retries with out further wait
         if (!errorTimeMap.isEmpty()) {
             long current = System.currentTimeMillis();
-            int retryInterval = getConnectRetryInterval();
             errorTimeMap.entrySet().removeIf(next -> (current - next.getValue()) >= (retryInterval * 1000L));
         }
         if (!errorTimeMap.isEmpty()) {
@@ -212,9 +218,9 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 		        errorCountsMap.put(cs, count);
 		        errorTimeMap.put(cs, System.currentTimeMillis());
 
-		        int limit = getConnectHostRetryLimit();
-		        LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{asString(cs),count,limit});
-		        if (count > limit) {
+		        
+		        LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{asString(cs),count,hostRetryLimit});
+		        if (count > hostRetryLimit) {
                     removeInternal(cs);
 		        }
             } else {
@@ -275,6 +281,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
     //invocation handlers
     static protected class ContentSourceInvocationHandler implements InvocationHandler{
+    		static final String NEW_SESSION = "newSession";
         DefaultContentSourcePool csp;
         ContentSource target;
         long allocTime;
@@ -303,12 +310,19 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         }
 
         private boolean isNewSession(Method method) {
-        		return "newSession".equals(method.getName());
+        		return NEW_SESSION.equals(method.getName());
         }
     }
 
     //TODO: This code does not handle explicit commits and rollbacks.
     static protected class SessionInvocationHandler implements InvocationHandler {
+    		static final String SUBMIT_REQUEST = "submitRequest";
+    		static final String INSERT_CONTENT = "insertContent";
+    		static final String COMMIT = "commit";
+    		static final String ROLLBACK = "rollback";
+    		static final String CLOSE = "close";
+    		static final String EMPTY_SEQ = "";
+    		
         DefaultContentSourcePool csp;
         ContentSource cs;
         Session target;
@@ -363,12 +377,11 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 	                    csp.error(cs,allocTime); //we should do this before the recursion.. not finally.
 
 	                    String name = exc.getCause().getClass().getSimpleName();
-	                    int retryLimit = csp.getConnectRetryLimit();
-	                    if (isSubmitRequest(method) && attempts <= retryLimit) {
-	                        LOG.log(WARNING, "Submit request failed {0} times with {1}. Max Limit is {2}. Retrying..", new Object[]{attempts, name, retryLimit});
+	                    if (isSubmitRequest(method) && attempts <= csp.retryLimit) {
+	                        LOG.log(WARNING, "Submit request failed {0} times with {1}. Max Limit is {2}. Retrying..", new Object[]{attempts, name, csp.retryLimit});
 	                        return submitAsNewRequest(args);
-	                    } else if (isInsertContent(method) && attempts <= retryLimit) {
-	                        LOG.log(WARNING, "Insert content failed {0} times {1}. Max Limit is {2}. Retrying..", new Object[]{attempts, name, retryLimit});
+	                    } else if (isInsertContent(method) && attempts <= csp.retryLimit) {
+	                        LOG.log(WARNING, "Insert content failed {0} times {1}. Max Limit is {2}. Retrying..", new Object[]{attempts, name, csp.retryLimit});
 	                        return insertAsNewRequest(args);
 	                    } else {
 	                        throw exc.getCause();
@@ -424,24 +437,24 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 				}
 				return null;
 			} catch (CorbException exc) {
-				throw new RequestException(exc.getMessage(),target.newAdhocQuery("()"),exc);
+				throw new RequestException(exc.getMessage(),target.newAdhocQuery(EMPTY_SEQ),exc);
 			}
 		}
 
 		private boolean isSubmitRequest(Method method) {
-			return "submitRequest".equals(method.getName());
+			return SUBMIT_REQUEST.equals(method.getName());
 		}
 
 		private boolean isInsertContent(Method method) {
-			return "insertContent".equals(method.getName());
+			return INSERT_CONTENT.equals(method.getName());
 		}
 
 		private boolean isClose(Method method) {
-			return "close".equals(method.getName());
+			return CLOSE.equals(method.getName());
 		}
 
 		private void checkUnsupported(Method method) {
-			if ("commit".equals(method.getName()) || "rollback".equals(method.getName())) {
+			if (COMMIT.equals(method.getName()) || ROLLBACK.equals(method.getName())) {
 				throw new UnsupportedOperationException(method.getName()+" is not supported by "+getClass().getName());
 			}
 		}
