@@ -39,7 +39,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     protected Map<ContentSource,Integer> errorCountsMap = new HashMap<>();
     protected Map<ContentSource,Integer> connectionCountsMap = new HashMap<>();
     protected Map<ContentSource,Long> errorTimeMap = new HashMap<>();
-    
+
     protected int retryInterval = 0;
     protected int hostRetryLimit = 0;
     protected int retryLimit = 0;
@@ -51,7 +51,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     public DefaultContentSourcePool(){}
 
     @Override
-    public void init(Properties properties, SSLConfig sslConfig, String[] connectionStrings){
+    public void init(Properties properties, SSLConfig sslConfig, String... connectionStrings){
         super.init(properties, sslConfig);
         if (connectionStrings == null || connectionStrings.length == 0) {
             throw new NullPointerException("XCC connection strings cannot be null or empty");
@@ -60,13 +60,13 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         retryInterval = getConnectRetryInterval();
         retryLimit = getConnectRetryLimit();
         hostRetryLimit = getConnectHostRetryLimit();
-        
+
         String policy = getProperty(CONNECTION_POLICY);
         if (CONNECTION_POLICY_RANDOM.equals(policy) || CONNECTION_POLICY_LOAD.equals(policy)) {
             this.connectionPolicy = policy;
         }
         LOG.log(INFO, "Using the connection policy {0}", this.connectionPolicy);
-        
+
         for (String connectionString : connectionStrings) {
             initContentSource(connectionString);
         }
@@ -218,7 +218,6 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 		        errorCountsMap.put(cs, count);
 		        errorTimeMap.put(cs, System.currentTimeMillis());
 
-		        
 		        LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{asString(cs),count,hostRetryLimit});
 		        if (count > hostRetryLimit) {
                     removeInternal(cs);
@@ -316,13 +315,13 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
     //TODO: This code does not handle explicit commits and rollbacks.
     static protected class SessionInvocationHandler implements InvocationHandler {
-    		static final String SUBMIT_REQUEST = "submitRequest";
-    		static final String INSERT_CONTENT = "insertContent";
-    		static final String COMMIT = "commit";
-    		static final String ROLLBACK = "rollback";
-    		static final String CLOSE = "close";
-    		static final String EMPTY_SEQ = "";
-    		
+        static final String SUBMIT_REQUEST = "submitRequest";
+        static final String INSERT_CONTENT = "insertContent";
+        static final String COMMIT = "commit";
+        static final String ROLLBACK = "rollback";
+        static final String CLOSE = "close";
+        static final String EMPTY_SEQ = "";
+
         DefaultContentSourcePool csp;
         ContentSource cs;
         Session target;
