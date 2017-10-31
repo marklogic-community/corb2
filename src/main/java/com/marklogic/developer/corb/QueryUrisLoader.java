@@ -203,7 +203,9 @@ public class QueryUrisLoader extends AbstractUrisLoader {
     }
 
     protected Queue<String> populateQueue(Queue<String> queue, ResultSequence resultSequence) {
-        long i = 0;
+        long lastMessageMillis = System.currentTimeMillis();
+        long totalCount = getTotalCount();
+        long uriIndex = 0;
         String uri;
         while (resultSequence != null && resultSequence.hasNext()) {
             uri = resultSequence.next().asString();
@@ -219,14 +221,23 @@ public class QueryUrisLoader extends AbstractUrisLoader {
                 uri = uri.replaceAll(replacements[j], replacements[j + 1]);
             }
 
-            if (!queue.offer(uri)) {
-                LOG.log(SEVERE, MessageFormat.format("Unabled to add uri {0} to queue. Received uris {1} which is more than expected {2}", uri, i + 1, getTotalCount()));
-            } else if (i >= getTotalCount()) {
-                LOG.log(WARNING, MessageFormat.format("Received uri {0} at index {1} which is more than expected {2}", uri, i + 1, getTotalCount()));
+            if (!queue.offer(uri)) { //put the uri into the queue
+                LOG.log(SEVERE, MessageFormat.format("Unabled to add uri {0} to queue. Received uris {1} which is more than expected {2}", uri, uriIndex + 1, totalCount));
+            } else if (uriIndex >= totalCount) {
+                LOG.log(WARNING, MessageFormat.format("Received uri {0} at index {1} which is more than expected {2}", uri, uriIndex + 1, totalCount));
             }
+            
+            uriIndex++;  //increment before logging the status with received count
 
-            logQueueStatus(i, uri, getTotalCount());
-            i++;
+            if (0 == uriIndex % 25000) { 
+                logQueueStatus(uriIndex, uri, totalCount, lastMessageMillis);
+                lastMessageMillis = System.currentTimeMillis(); //save this for next iteration
+            }
+            
+            if (uriIndex > totalCount) {
+                LOG.log(WARNING, MessageFormat.format("expected {0}, got {1}", totalCount, uriIndex));
+                LOG.warning("check your uri module!");
+            }          
         }
         return queue;
     }
@@ -303,20 +314,18 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         return max;
     }
 
-    protected void logQueueStatus(long currentIndex, String uri, long total) {
-        if (0 == currentIndex % 50000) {
-            long freeMemory = Runtime.getRuntime().freeMemory();
-            double megabytes = 1024d * 1024d;
-            if (freeMemory < (16 * megabytes)) {
-                LOG.log(WARNING, () -> MessageFormat.format("free memory: {0} MiB", freeMemory / megabytes));
-            }
+    protected void logQueueStatus(long currentIndex, String uri, long totalCount, long lastMessageMillis) {
+        LOG.log(INFO, () -> MessageFormat.format("queued {0}/{1}: {2}", currentIndex, totalCount, uri));
+        
+        boolean slowReceive = false;
+        if (slowReceive = (System.currentTimeMillis() - lastMessageMillis > (1000 * 4))) {
+            LOG.log(WARNING, () -> "Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
         }
-        if (0 == currentIndex % 25000) {
-            LOG.log(INFO, () -> MessageFormat.format("queued {0}/{1}: {2}", currentIndex, total, uri));
-        }
-        if (currentIndex > total) {
-            LOG.log(WARNING, () -> MessageFormat.format("expected {0}, got {1}", total, currentIndex));
-            LOG.warning("check your uri module!");
-        }
+        
+        double megabytes = 1024d * 1024d;
+        long freeMemory = Runtime.getRuntime().freeMemory();
+        if (slowReceive || freeMemory < (16 * megabytes)) {
+            LOG.log(WARNING, () -> MessageFormat.format("free memory: {0} MiB", freeMemory / megabytes));
+        }            
     }
 }

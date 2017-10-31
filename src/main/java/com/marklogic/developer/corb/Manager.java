@@ -853,7 +853,7 @@ public class Manager extends AbstractManager implements Closeable {
             }
 
             if(pool != null) {
-            		LOG.info("All tasks are populated. Invoking graceful shutdown the thread pool and waiting for all the tasks to complete.");
+            		LOG.info("Invoking graceful shutdown of the thread pool and wait for remaining tasks in the queue to complete.");
             		pool.shutdown();
             }else {
             		LOG.warning("Thread pool is set null - closed already?");
@@ -878,8 +878,6 @@ public class Manager extends AbstractManager implements Closeable {
      */
     protected long submitUriTasks(UrisLoader urisLoader, TaskFactory taskFactory, long expectedTotalCount) throws CorbException {
         long urisCount = 0;
-        long lastMessageMillis = System.currentTimeMillis();
-        final long totalMemory = Runtime.getRuntime().totalMemory();
         String uri;
         List<String> uriBatch = new ArrayList<>(options.getBatchSize());
 
@@ -906,21 +904,19 @@ public class Manager extends AbstractManager implements Closeable {
 
             if (0 == urisCount % 25000) {
                 LOG.log(INFO, MessageFormat.format("received {0,number}/{1,number}: {2}", urisCount, expectedTotalCount, uri));
-                logIfSlowReceive(lastMessageMillis, totalMemory);
-                lastMessageMillis = System.currentTimeMillis();
+                long totalMemory = Runtime.getRuntime().totalMemory(); //according to java doc this value may vary over time
+                logIfLowMemory(totalMemory);
             }
         }
         return urisCount;
     }
-
-    protected void logIfSlowReceive(long lastMessageMillis, long totalMemory) {
-        if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
-            long freeMemory = Runtime.getRuntime().freeMemory();
-            if (freeMemory < totalMemory * 0.2d) {
-                final int megabytes = 1024 * 1024;
-                LOG.log(WARNING, () -> MessageFormat.format("free memory: {0,number} MiB of {1,number}", freeMemory / megabytes, totalMemory / megabytes));
-                LOG.log(WARNING,"Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
-            }
+    
+    protected void logIfLowMemory(long totalMemory) {   		
+    		long freeMemory = Runtime.getRuntime().freeMemory();
+        if (freeMemory < totalMemory * 0.2d) { //less than 20% of total memory
+            final int megabytes = 1024 * 1024;
+            LOG.log(WARNING, () -> MessageFormat.format("free memory: {0,number} MiB of {1,number}", freeMemory / megabytes, totalMemory / megabytes));
+            LOG.warning("Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
         }
     }
 
@@ -961,8 +957,8 @@ public class Manager extends AbstractManager implements Closeable {
     public void pause() {
         if (pool != null && pool.isRunning()) {
             LOG.info("pausing");
-            jobStats.logMetrics(PAUSING_JOB_MESSAGE, false, true);
             pool.pause();
+            jobStats.logMetrics(PAUSING_JOB_MESSAGE, false, true);
         }
     }
 

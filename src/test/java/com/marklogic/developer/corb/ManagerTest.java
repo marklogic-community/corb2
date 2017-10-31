@@ -23,6 +23,8 @@ import java.io.File;
 import org.junit.*;
 import static org.junit.Assert.*;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
+import org.junit.runner.RunWith;
+
 import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
 import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.xcc.AdhocQuery;
@@ -1501,29 +1503,21 @@ public class ManagerTest {
     }
 
     @Test
-    public void testLogIfSlowReceiveNotLowMemory() {
+    public void testLogIfNotLowMemory() {
         Manager manager = new Manager();
-        manager.logIfSlowReceive(System.currentTimeMillis() - 5000, Runtime.getRuntime().freeMemory());
+        manager.logIfLowMemory(Runtime.getRuntime().totalMemory());
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(0, records.size());
     }
 
     @Test
-    public void testLogIfSlowReceiveLowMemory() {
+    public void testLogLowMemory() {
         Manager manager = new Manager();
-        manager.logIfSlowReceive(System.currentTimeMillis() - 5000, Runtime.getRuntime().freeMemory() * 6);
+        manager.logIfLowMemory(Runtime.getRuntime().freeMemory() * 6);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(2, records.size());
         assertEquals(Level.WARNING, records.get(0).getLevel());
         assertEquals(Level.WARNING, records.get(1).getLevel());
-    }
-
-    @Test
-    public void testLogIfSlowReceiveNotSlow() {
-        Manager manager = new Manager();
-        manager.logIfSlowReceive(System.currentTimeMillis() - 1, 100000000);
-        List<LogRecord> records = testLogger.getLogRecords();
-        assertTrue(records.isEmpty());
     }
 
     @Test
