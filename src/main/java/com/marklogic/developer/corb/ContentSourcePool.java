@@ -14,7 +14,7 @@ public interface ContentSourcePool extends Closeable{
      * @param sslConfig
      * @param connectionStrings
      */
-    void init(Properties properties, SSLConfig sslConfig, String[] connectionStrings);
+    void init(Properties properties, SSLConfig sslConfig, String... connectionStrings);
 
     /**
      * Returns SSLConfig used by the content source manager
