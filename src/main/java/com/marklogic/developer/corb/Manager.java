@@ -135,7 +135,7 @@ public class Manager extends AbstractManager implements Closeable {
             }
             //now we can start corb.
             try {
-                int count = manager.run();
+                long count = manager.run();
                 if (manager.execError) {
                 		LOG.info("processing error - exiting with code "+EXIT_CODE_PROCESSING_ERROR);
                     System.exit(EXIT_CODE_PROCESSING_ERROR);
@@ -552,7 +552,7 @@ public class Manager extends AbstractManager implements Closeable {
         err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
     }
 
-    public int run() throws Exception {
+    public long run() throws Exception {
         if (jobId == null) {
             jobId = UUID.randomUUID().toString();
         }
@@ -573,7 +573,7 @@ public class Manager extends AbstractManager implements Closeable {
         monitorThread = preparePool();
 
         try {
-            int count = populateQueue();
+            long count = populateQueue();
 
             while (monitorThread.isAlive()) {
                 try {
@@ -638,11 +638,11 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
-    protected boolean shouldRunPostBatch(int count) {
+    protected boolean shouldRunPostBatch(long count) {
         return !execError && (options.shouldPrePostBatchAlwaysExecute() || count >= options.getPostBatchMinimumCount());
     }
 
-    protected boolean shouldRunPreBatch(int count) {
+    protected boolean shouldRunPreBatch(long count) {
         return options.shouldPrePostBatchAlwaysExecute() || count >= options.getPreBatchMinimumCount();
     }
 
@@ -810,12 +810,12 @@ public class Manager extends AbstractManager implements Closeable {
         jobStats.setUrisLoadTime(TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS));
     }
 
-    private int populateQueue() throws Exception {
+    private long populateQueue() throws Exception {
         LOG.info("populating queue");
         TaskFactory taskFactory = new TaskFactory(this);
 
-        int expectedTotalCount = -1;
-        int urisCount = 0;
+        long expectedTotalCount = -1;
+        long urisCount = 0;
         try (UrisLoader urisLoader = getUriLoader()) {
 
             // run init task
@@ -876,8 +876,8 @@ public class Manager extends AbstractManager implements Closeable {
      * @return
      * @throws CorbException
      */
-    protected int submitUriTasks(UrisLoader urisLoader, TaskFactory taskFactory, int expectedTotalCount) throws CorbException {
-        int urisCount = 0;
+    protected long submitUriTasks(UrisLoader urisLoader, TaskFactory taskFactory, long expectedTotalCount) throws CorbException {
+        long urisCount = 0;
         long lastMessageMillis = System.currentTimeMillis();
         final long totalMemory = Runtime.getRuntime().totalMemory();
         String uri;
@@ -915,11 +915,12 @@ public class Manager extends AbstractManager implements Closeable {
 
     protected void logIfSlowReceive(long lastMessageMillis, long totalMemory) {
         if (System.currentTimeMillis() - lastMessageMillis > (1000 * 4)) {
-            LOG.warning("Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
             long freeMemory = Runtime.getRuntime().freeMemory();
-            Level memoryLogLevel = freeMemory < totalMemory * 0.2d ? WARNING : INFO;
-            final int megabytes = 1024 * 1024;
-            LOG.log(memoryLogLevel, () -> MessageFormat.format("free memory: {0,number} MiB of {1,number}", freeMemory / megabytes, totalMemory / megabytes));
+            if (freeMemory < totalMemory * 0.2d) {
+                final int megabytes = 1024 * 1024;
+                LOG.log(WARNING, () -> MessageFormat.format("free memory: {0,number} MiB of {1,number}", freeMemory / megabytes, totalMemory / megabytes));
+                LOG.log(WARNING,"Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
+            }
         }
     }
 

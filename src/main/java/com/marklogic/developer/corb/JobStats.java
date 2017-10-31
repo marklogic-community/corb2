@@ -157,8 +157,8 @@ public class JobStats extends BaseMonitor {
                     if (threadPool != null) {
                         longRunningUris = threadPool.getTopUris();
                         failedUris = threadPool.getFailedUris();
-                        numberOfFailedTasks = Integer.toUnsignedLong(threadPool.getNumFailedUris());
-                        numberOfSucceededTasks = Integer.toUnsignedLong(threadPool.getNumSucceededUris());
+                        numberOfFailedTasks = threadPool.getNumFailedUris();
+                        numberOfSucceededTasks = threadPool.getNumSucceededUris();
                     }
 
                     Long currentTimeMillis = System.currentTimeMillis();
@@ -196,7 +196,7 @@ public class JobStats extends BaseMonitor {
         if(console) {
     			LOG.info(metricsLogMessage);
         }
-        
+
         String metricsDocument;
         if (isJavaScriptModule(processModule)) {
             metricsDocument = metricsLogMessage;

@@ -177,7 +177,7 @@ public class QueryUrisLoaderTest {
         ResultItem item = mock(ResultItem.class);
         XdmItem xdmItem = mock(XdmItem.class);
 
-        when(contentSourcePool.get()).thenReturn(contentSource);        
+        when(contentSourcePool.get()).thenReturn(contentSource);
         when(contentSource.newSession()).thenReturn(session);
         when(session.newModuleInvoke(anyString())).thenReturn(request);
         when(request.setNewStringVariable(anyString(), anyString())).thenReturn(var).thenReturn(var).thenReturn(var);
@@ -394,7 +394,7 @@ public class QueryUrisLoaderTest {
 
     @Test
     public void testGetTotalCount() {
-        int result;
+        long result;
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
             result = instance.getTotalCount();
         }

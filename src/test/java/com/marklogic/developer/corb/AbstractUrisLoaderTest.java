@@ -73,7 +73,7 @@ public class AbstractUrisLoaderTest {
     @Test
     public void testGetTotalCount() {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        int result = instance.getTotalCount();
+        long result = instance.getTotalCount();
         assertEquals(0, result);
     }
 

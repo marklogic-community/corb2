@@ -155,7 +155,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
      * @throws CorbException
      */
     private Iterator<Path> readToTempDir(Path xmlFile) throws CorbException {
-        int extractedDocumentCount = 0;
+        long extractedDocumentCount = 0;
 
         XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
         try (Reader fileReader = Files.newBufferedReader(xmlFile)) {

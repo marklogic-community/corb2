@@ -53,8 +53,8 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
     private final ThreadLocal<Long> startTime = new ThreadLocal<>();
     private final ThreadLocal<String> threadName = new ThreadLocal<>();
     private int numFailedUrisToCapture = 0;
-    private int numFailedUris = 0;
-    private int numSucceededUris = 0;
+    private long numFailedUris = 0;
+    private long numSucceededUris = 0;
 
     public PausableThreadPoolExecutor(int corePoolSize,
             int maximumPoolSize,
@@ -177,14 +177,14 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
     /**
      * @return the numFailedUris
      */
-    public int getNumFailedUris() {
+    public long getNumFailedUris() {
         return numFailedUris;
     }
 
     /**
      * @return the numSucceededUris
      */
-    public int getNumSucceededUris() {
+    public long getNumSucceededUris() {
         return numSucceededUris;
     }
 

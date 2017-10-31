@@ -36,7 +36,7 @@ public interface UrisLoader extends Closeable {
 
 	String getBatchRef();
 
-	int getTotalCount();
+	long getTotalCount();
 
 	boolean hasNext() throws CorbException;
 

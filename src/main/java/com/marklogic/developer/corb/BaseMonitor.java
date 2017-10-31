@@ -55,7 +55,7 @@ public class BaseMonitor {
         return  getProgressMessage( completed,  taskCount,  tps,  curTps,  etc,  threads,0);
     }
 
-    protected static String getProgressMessage(long completed, long taskCount, double tps, double curTps, String etc, int threads, int failedTasks) {
+    protected static String getProgressMessage(long completed, long taskCount, double tps, double curTps, String etc, int threads, long failedTasks) {
         String failedTaskMessage = failedTasks > 0 ? failedTasks + " tasks failed, " : "";
     	return completed + "/" + taskCount + ", "
         		+ failedTaskMessage

@@ -46,7 +46,7 @@ public class FileUrisLoader extends AbstractUrisLoader {
         }
         try (LineNumberReader lnr = new LineNumberReader(new FileReader(fileName))) {
             lnr.skip(Long.MAX_VALUE);
-            this.setTotalCount(lnr.getLineNumber() + 1);
+            setTotalCount(lnr.getLineNumber() + 1);
             //these are closed in the close() method
             fileReader = new FileReader(fileName);
             bufferedReader = new BufferedReader(fileReader);

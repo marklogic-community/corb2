@@ -38,7 +38,7 @@ public abstract class AbstractUrisLoader implements UrisLoader {
     protected ContentSourcePool csp;
     protected String collection;
     protected Properties properties;
-    private int total = 0;
+    private long total = 0;
     protected String[] replacements = new String[0];
     protected String batchRef;
 
@@ -76,11 +76,11 @@ public abstract class AbstractUrisLoader implements UrisLoader {
     }
 
     @Override
-    public int getTotalCount() {
+    public long getTotalCount() {
         return this.total;
     }
 
-    public void setTotalCount(int totalCount) {
+    public void setTotalCount(long totalCount) {
         this.total = totalCount;
     }
 

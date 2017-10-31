@@ -923,7 +923,7 @@ public class ManagerTest {
         commandFileWatcherOnChangeThreadCount(0, 1);
     }
 
-    public void commandFileWatcherOnChangeThreadCount(int threads, int expectedThreadCount) {
+    public void commandFileWatcherOnChangeThreadCount(int threads, long expectedThreadCount) {
         try {
             File file = createTempFile("THREAD-COUNT=" + Integer.toString(threads));
             Manager manager = new Manager();
@@ -1180,8 +1180,8 @@ public class ManagerTest {
             instance.initContentSourcePool(XCC_CONNECTION_URI);
             instance.collection = "URILoader_Modules";
             instance.options.setUrisModule("someFile3.xqy");
-            int count = instance.run();
-            assertEquals(0, count);
+            long count = instance.run();
+            assertEquals(0L, count);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -1505,10 +1505,7 @@ public class ManagerTest {
         Manager manager = new Manager();
         manager.logIfSlowReceive(System.currentTimeMillis() - 5000, Runtime.getRuntime().freeMemory());
         List<LogRecord> records = testLogger.getLogRecords();
-        assertEquals(2, records.size());
-        assertEquals(Level.WARNING, records.get(0).getLevel());
-        assertEquals(SLOW_RECEIVE_MESSAGE, records.get(0).getMessage());
-        assertEquals(Level.INFO, records.get(1).getLevel());
+        assertEquals(0, records.size());
     }
 
     @Test
@@ -1518,7 +1515,6 @@ public class ManagerTest {
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(2, records.size());
         assertEquals(Level.WARNING, records.get(0).getLevel());
-        assertEquals(SLOW_RECEIVE_MESSAGE, records.get(0).getMessage());
         assertEquals(Level.WARNING, records.get(1).getLevel());
     }
 

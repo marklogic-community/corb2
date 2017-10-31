@@ -46,6 +46,8 @@ import java.util.Queue;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
+
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -201,7 +203,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
     }
 
     protected Queue<String> populateQueue(Queue<String> queue, ResultSequence resultSequence) {
-        int i = 0;
+        long i = 0;
         String uri;
         while (resultSequence != null && resultSequence.hasNext()) {
             uri = resultSequence.next().asString();
@@ -239,7 +241,11 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         if (options != null && options.shouldUseDiskQueue()) {
             uriQueue = new DiskQueue<>(options.getDiskQueueMaxInMemorySize(), options.getDiskQueueTempDir());
         } else {
-            uriQueue = new ArrayQueue<>(getTotalCount());
+            long total = getTotalCount();
+            if (total > Integer.MAX_VALUE) {
+                LOG.log(Level.WARNING, MessageFormat.format("Total number of URIs {0, number} is greater than Array capacity. Enable {1}", total, Options.DISK_QUEUE));
+            }
+            uriQueue = new ArrayQueue<>(Long.valueOf(total).intValue());
         }
         return uriQueue;
     }
@@ -297,7 +303,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         return max;
     }
 
-    protected void logQueueStatus(int currentIndex, String uri, int total) {
+    protected void logQueueStatus(long currentIndex, String uri, long total) {
         if (0 == currentIndex % 50000) {
             long freeMemory = Runtime.getRuntime().freeMemory();
             double megabytes = 1024d * 1024d;
