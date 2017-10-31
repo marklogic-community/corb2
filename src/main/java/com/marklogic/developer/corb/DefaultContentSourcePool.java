@@ -320,7 +320,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         static final String COMMIT = "commit";
         static final String ROLLBACK = "rollback";
         static final String CLOSE = "close";
-        static final String EMPTY_SEQ = "";
+        static final String EMPTY_SEQ = "()";
 
         DefaultContentSourcePool csp;
         ContentSource cs;
