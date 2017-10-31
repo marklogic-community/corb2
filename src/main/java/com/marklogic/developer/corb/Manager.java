@@ -901,9 +901,12 @@ public class Manager extends AbstractManager implements Closeable {
             }
 
             urisCount++;
-
-            if (0 == urisCount % 25000) {
+            
+            if(0 == urisCount % 50000) {
                 LOG.log(INFO, MessageFormat.format("received {0,number}/{1,number}: {2}", urisCount, expectedTotalCount, uri));
+            }
+            
+            if (0 == urisCount % 25000) {
                 long totalMemory = Runtime.getRuntime().totalMemory(); //according to java doc this value may vary over time
                 logIfLowMemory(totalMemory);
             }
