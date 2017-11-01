@@ -852,11 +852,11 @@ public class Manager extends AbstractManager implements Closeable {
                 monitor.setTaskCount(urisCount);
             }
 
-            if(pool != null) {
-            		LOG.info("Invoking graceful shutdown of the thread pool and wait for remaining tasks in the queue to complete.");
-            		pool.shutdown();
-            }else {
-            		LOG.warning("Thread pool is set null - closed already?");
+            if (pool != null) {
+                LOG.info("Invoking graceful shutdown of the thread pool and wait for remaining tasks in the queue to complete.");
+                pool.shutdown();
+            } else {
+                LOG.warning("Thread pool is set null - closed already?");
             }
         } catch (Exception exc) {
             stop();
@@ -901,11 +901,11 @@ public class Manager extends AbstractManager implements Closeable {
             }
 
             urisCount++;
-            
-            if(0 == urisCount % 50000) {
+
+            if (0 == urisCount % 50000) {
                 LOG.log(INFO, MessageFormat.format("received {0,number}/{1,number}: {2}", urisCount, expectedTotalCount, uri));
             }
-            
+
             if (0 == urisCount % 25000) {
                 long totalMemory = Runtime.getRuntime().totalMemory(); //according to java doc this value may vary over time
                 logIfLowMemory(totalMemory);
@@ -913,9 +913,9 @@ public class Manager extends AbstractManager implements Closeable {
         }
         return urisCount;
     }
-    
-    protected void logIfLowMemory(long totalMemory) {   		
-    		long freeMemory = Runtime.getRuntime().freeMemory();
+
+    protected void logIfLowMemory(long totalMemory) {
+        long freeMemory = Runtime.getRuntime().freeMemory();
         if (freeMemory < totalMemory * 0.2d) { //less than 20% of total memory
             final int megabytes = 1024 * 1024;
             LOG.log(WARNING, () -> MessageFormat.format("free memory: {0,number} MiB of {1,number}", freeMemory / megabytes, totalMemory / megabytes));
