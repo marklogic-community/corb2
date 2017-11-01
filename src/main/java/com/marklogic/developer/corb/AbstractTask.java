@@ -188,10 +188,8 @@ public abstract class AbstractTask implements Task {
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);
             retryCount = 0;
-            // no need to hold on to the session as results will be cached.
-            session.close();
-            Thread.yield();// try to avoid thread starvation
 
+            Thread.yield();// try to avoid thread starvation
             processResult(seq);
             seq.close();
             Thread.yield();// try to avoid thread starvation
