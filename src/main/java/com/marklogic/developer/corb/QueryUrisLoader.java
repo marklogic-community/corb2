@@ -226,18 +226,18 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             } else if (uriIndex >= totalCount) {
                 LOG.log(WARNING, MessageFormat.format("Received uri {0} at index {1} which is more than expected {2}", uri, uriIndex + 1, totalCount));
             }
-            
+
             uriIndex++;  //increment before logging the status with received count
 
-            if (0 == uriIndex % 25000) { 
+            if (0 == uriIndex % 25000) {
                 logQueueStatus(uriIndex, uri, totalCount, lastMessageMillis);
                 lastMessageMillis = System.currentTimeMillis(); //save this for next iteration
             }
-            
+
             if (uriIndex > totalCount) {
                 LOG.log(WARNING, MessageFormat.format("expected {0}, got {1}", totalCount, uriIndex));
                 LOG.warning("check your uri module!");
-            }          
+            }
         }
         return queue;
     }
@@ -256,7 +256,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             if (total > Integer.MAX_VALUE) {
                 LOG.log(Level.WARNING, MessageFormat.format("Total number of URIs {0, number} is greater than Array capacity. Enable {1}", total, Options.DISK_QUEUE));
             }
-            uriQueue = new ArrayQueue<>(Long.valueOf(total).intValue());
+            uriQueue = new ArrayQueue<>(Math.toIntExact(total));
         }
         return uriQueue;
     }
@@ -316,16 +316,16 @@ public class QueryUrisLoader extends AbstractUrisLoader {
 
     protected void logQueueStatus(long currentIndex, String uri, long totalCount, long lastMessageMillis) {
         LOG.log(INFO, () -> MessageFormat.format("queued {0}/{1}: {2}", currentIndex, totalCount, uri));
-        
-        boolean slowReceive = false;
-        if (slowReceive = (System.currentTimeMillis() - lastMessageMillis > (1000 * 4))) {
+
+        boolean slowReceive = System.currentTimeMillis() - lastMessageMillis > (1000 * 4);
+        if (slowReceive) {
             LOG.log(WARNING, () -> "Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
         }
-        
+
         double megabytes = 1024d * 1024d;
         long freeMemory = Runtime.getRuntime().freeMemory();
         if (slowReceive || freeMemory < (16 * megabytes)) {
             LOG.log(WARNING, () -> MessageFormat.format("free memory: {0} MiB", freeMemory / megabytes));
-        }            
+        }
     }
 }
