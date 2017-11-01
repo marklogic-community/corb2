@@ -35,7 +35,7 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
 
     private static final Logger LOG = Logger.getLogger(AbstractContentSourcePool.class.getName());
 
-    protected void init(Properties properties, SSLConfig sslConfig){
+    protected void init(Properties properties, SSLConfig sslConfig) {
         if (properties != null) {
             this.properties = properties;
         } else {
@@ -46,14 +46,14 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
         if (sslConfig != null) {
             this.sslConfig = sslConfig;
         } else {
-        	 	this.sslConfig = new TrustAnyoneSSLConfig();
+            this.sslConfig = new TrustAnyoneSSLConfig();
             LOG.info("Using TrustAnyoneSSSLConfig as sslConfig is null.");
         }
     }
 
     @Override
     public SSLConfig sslConfig() {
-    		return this.sslConfig;
+        return this.sslConfig;
     }
 
     protected SecurityOptions getSecurityOptions() throws KeyManagementException, NoSuchAlgorithmException {
@@ -69,7 +69,7 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
         int connectRetryInterval = getIntProperty(XCC_CONNECTION_RETRY_INTERVAL);
         return connectRetryInterval < 0 ? DEFAULT_CONNECTION_RETRY_INTERVAL : connectRetryInterval;
     }
-    
+
     protected int getConnectHostRetryLimit() {
         int connectHostRetryLimit = getIntProperty(XCC_CONNECTION_HOST_RETRY_LIMIT);
         return connectHostRetryLimit < 0 ? getConnectRetryLimit() : connectHostRetryLimit;
@@ -103,27 +103,26 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
         return trim(val);
     }
 
-    protected ContentSource createContentSource(String connectionString){
+    protected ContentSource createContentSource(String connectionString) {
         if (StringUtils.isNotBlank(connectionString)) {
-            URI connectionUri = null;
-            String hostname = (connectionUri != null) ? connectionUri.getHost() : "";
-            String port = String.valueOf((connectionUri != null) ? connectionUri.getPort() : -1);
-            String path = (connectionUri != null) ? connectionUri.getPath() : "";
             try {
-                connectionUri = new URI(connectionString);
-                boolean ssl = connectionUri.getScheme() != null && "xccs".equals(connectionUri.getScheme());
-
-                ContentSource contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
-                        : ContentSourceFactory.newContentSource(connectionUri);
-                return contentSource;
-            } catch (XccConfigException ex) {
-                LOG.log(SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly for host "+hostname+":"+port+path, ex);
-            } catch (KeyManagementException | NoSuchAlgorithmException ex) {
-                LOG.log(SEVERE, "Problem creating content source with ssl for host "+hostname+":"+port+path, ex);
+                URI connectionUri = new URI(connectionString);
+                String hostname = (connectionUri != null) ? connectionUri.getHost() : "";
+                String port = String.valueOf((connectionUri != null) ? connectionUri.getPort() : -1);
+                String path = (connectionUri != null) ? connectionUri.getPath() : "";
+                try {
+                    boolean ssl = connectionUri.getScheme() != null && "xccs".equals(connectionUri.getScheme());
+                    return ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
+                                : ContentSourceFactory.newContentSource(connectionUri);
+                } catch (XccConfigException ex) {
+                    LOG.log(SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly for host " + hostname + ":" + port + path, ex);
+                } catch (KeyManagementException | NoSuchAlgorithmException ex) {
+                    LOG.log(SEVERE, "Problem creating content source with ssl for host " + hostname + ":" + port + path, ex);
+                } catch (IllegalArgumentException ex) {
+                    LOG.log(SEVERE, "XCC URI is invalid for host " + hostname + ":" + port + path, ex);
+                }
             } catch (URISyntaxException ex) {
-                LOG.log(SEVERE, "XCC URI is invalid for host "+hostname+":"+port+path, ex);
-            } catch (IllegalArgumentException ex){
-                LOG.log(SEVERE, "XCC URI is invalid for host "+hostname+":"+port+path, ex);
+                LOG.log(SEVERE, "XCC URI is invalid for host " + connectionString, ex);
             }
         }
         return null;
