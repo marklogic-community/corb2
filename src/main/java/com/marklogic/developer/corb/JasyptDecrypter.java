@@ -32,7 +32,7 @@ import java.util.logging.Logger;
 
 public class JasyptDecrypter extends AbstractDecrypter {
 
-    protected transient Properties jaspytProperties;
+    protected Properties jaspytProperties;
     protected Class<?> decrypterCls;
     protected Object decrypter;
 
