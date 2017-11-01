@@ -193,7 +193,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     }
 
     @Override
-    protected void init_decrypter() throws IOException, ClassNotFoundException {
+    protected synchronized void init_decrypter() throws IOException, ClassNotFoundException {
         try {
             privateKey = getPrivateKey();
             LOG.log(INFO, "Initialized HostKeyDecrypter");
