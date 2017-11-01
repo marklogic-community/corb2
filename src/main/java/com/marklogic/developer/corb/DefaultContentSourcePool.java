@@ -185,7 +185,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         return CONNECTION_POLICY_LOAD.equals(connectionPolicy);
     }
 
-    synchronized protected void hold(ContentSource cs) {
+    protected synchronized void hold(ContentSource cs) {
         if (contentSourceList.contains(cs)) {
 	        Integer count = connectionCountsMap.get(cs);
 	        count = count == null ? 1 : count + 1;
@@ -193,14 +193,14 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         }
     }
 
-    synchronized protected void release(ContentSource cs) {
+    protected synchronized void release(ContentSource cs) {
         Integer count = connectionCountsMap.get(cs);
         if (count != null && count > 0) {
             connectionCountsMap.put(cs, count-1);
         }
     }
 
-    synchronized protected void success(ContentSource cs) {
+    protected synchronized void success(ContentSource cs) {
 		errorCountsMap.remove(cs);
 		errorTimeMap.remove(cs);
 	}
@@ -209,7 +209,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         error(cs,-1);
     }
 
-    synchronized protected void error(ContentSource cs, long allocTime) {
+    protected synchronized void error(ContentSource cs, long allocTime) {
         if (contentSourceList.contains(cs)) {
             Long lastErrorTime = errorTimeMap.get(cs);
             if (lastErrorTime == null || allocTime <= 0 || allocTime > lastErrorTime.longValue()) {
@@ -256,7 +256,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
                   new ContentSourceInvocationHandler(this, cs));
     }
 
-    static public ContentSource getContentSourceFromProxy(ContentSource proxy) {
+    public static ContentSource getContentSourceFromProxy(ContentSource proxy) {
 		ContentSource target = proxy;
 		if (proxy != null && Proxy.isProxyClass(proxy.getClass())) {
 			InvocationHandler handler = Proxy.getInvocationHandler(proxy);
@@ -267,7 +267,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 		return target;
 	}
 
-	static public Session getSessionFromProxy(Session proxy) {
+    public static Session getSessionFromProxy(Session proxy) {
 		Session target = proxy;
 		if (proxy != null && Proxy.isProxyClass(proxy.getClass())) {
 			InvocationHandler handler = Proxy.getInvocationHandler(proxy);
@@ -279,7 +279,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 	}
 
     //invocation handlers
-    static protected class ContentSourceInvocationHandler implements InvocationHandler{
+    protected static class ContentSourceInvocationHandler implements InvocationHandler{
     		static final String NEW_SESSION = "newSession";
         DefaultContentSourcePool csp;
         ContentSource target;
@@ -314,7 +314,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     }
 
     //TODO: This code does not handle explicit commits and rollbacks.
-    static protected class SessionInvocationHandler implements InvocationHandler {
+    protected static class SessionInvocationHandler implements InvocationHandler {
         static final String SUBMIT_REQUEST = "submitRequest";
         static final String INSERT_CONTENT = "insertContent";
         static final String COMMIT = "commit";
