@@ -107,9 +107,9 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
         if (StringUtils.isNotBlank(connectionString)) {
             try {
                 URI connectionUri = new URI(connectionString);
-                String hostname = (connectionUri != null) ? connectionUri.getHost() : "";
-                String port = String.valueOf((connectionUri != null) ? connectionUri.getPort() : -1);
-                String path = (connectionUri != null) ? connectionUri.getPath() : "";
+                String hostname = connectionUri.getHost();
+                String port = String.valueOf(connectionUri.getPort());
+                String path = connectionUri.getPath();
                 try {
                     boolean ssl = connectionUri.getScheme() != null && "xccs".equals(connectionUri.getScheme());
                     return ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
