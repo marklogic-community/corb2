@@ -20,12 +20,10 @@ package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.URIS_REPLACE_PATTERN;
 
-import com.marklogic.developer.corb.util.IOUtils;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 
-import java.io.IOException;
 import java.util.Properties;
 
 /**

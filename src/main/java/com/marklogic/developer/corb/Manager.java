@@ -73,7 +73,6 @@ import java.io.*;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.logging.Level;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
