@@ -35,8 +35,9 @@ public class StreamingXPath {
     public static final String SLASH = "/";
     public static final String DOUBLE_SLASH = SLASH + SLASH;
     public static final String STAR = "*";
-    public static final String COLON = ":";
-    public static final String LEFT_SQUARE = "[";
+    public static final String CHILD_AXIS = "child::";
+    public static final String DESCENDANT_AXIS = "descendant::";
+    public static final String SELF_AXIS = "self::";
 
     private Pattern regexPath;
     private Pattern localNamePattern = Pattern.compile(".*?((?<=:)[^\\[]+).*?"); //group matches local name from an axis path
@@ -53,17 +54,17 @@ public class StreamingXPath {
 
     protected String normalizeAxes(final String xpath) {
         String normalizedXPath = xpath;
-        // +replace axis /descendant:: with //
-        if (normalizedXPath.contains("descendant::")) {
-            normalizedXPath = normalizedXPath.replaceAll(SLASH + "descendant::", DOUBLE_SLASH);
+        // replace axis /descendant::foo with //foo
+        if (normalizedXPath.contains(DESCENDANT_AXIS)) {
+            normalizedXPath = normalizedXPath.replaceAll(SLASH + DESCENDANT_AXIS, DOUBLE_SLASH);
         }
-        // +replace /child:: with ""
-        if (normalizedXPath.contains("child::")) {
-            normalizedXPath = normalizedXPath.replaceAll(SLASH + "child::", SLASH);
+        // replace /child::foo with "/foo"
+        if (normalizedXPath.contains(CHILD_AXIS)) {
+            normalizedXPath = normalizedXPath.replaceAll(SLASH + CHILD_AXIS, SLASH);
         }
-        ///*/self::foo == /*|foo will be less specific and grab false-positives, but better than nothing
-        if (normalizedXPath.contains(SLASH + "self::")) {
-            normalizedXPath = normalizedXPath.replaceAll(SLASH + "self::", "|");
+        // /*/self::foo == /*|foo will be less specific and grab false-positives, but better than nothing
+        if (normalizedXPath.contains(SLASH + SELF_AXIS)) {
+            normalizedXPath = normalizedXPath.replaceAll(SLASH + SELF_AXIS, "|");
         }
         // if match pattern specified (only an element name or partial), then prepend //
         if (!normalizedXPath.startsWith(SLASH)) {
@@ -94,7 +95,7 @@ public class StreamingXPath {
             "preceding::",
             "preceding-sibling::",
             "sibling::",
-            "self::"
+            SELF_AXIS
         };
         for (String unsupportedAxis : Arrays.asList(unsupportedAxes)) {
             if (axis.contains(unsupportedAxis)) {

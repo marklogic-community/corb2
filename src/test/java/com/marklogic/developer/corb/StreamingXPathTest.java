@@ -65,8 +65,14 @@ public class StreamingXPathTest {
     public void testNormalizeAxesElementNameMatchPattern() {
         testNormalizeAxes("a:baz", "//a:baz");
     }
-
+    
+    @Test
     public void testValidateAxis() {
+        try {
+            xpathInstance.validateAxis("/*/*");
+        } catch (CorbException ex) {
+            fail();
+        }
     }
 
     @Test(expected = CorbException.class)
