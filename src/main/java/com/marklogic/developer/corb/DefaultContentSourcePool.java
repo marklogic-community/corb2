@@ -280,7 +280,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
     //invocation handlers
     protected static class ContentSourceInvocationHandler implements InvocationHandler{
-    		static final String NEW_SESSION = "newSession";
+        static final String NEW_SESSION = "newSession";
         DefaultContentSourcePool csp;
         ContentSource target;
         long allocTime;

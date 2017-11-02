@@ -674,6 +674,7 @@ public class QueryUrisLoaderTest {
 
     @Test
     public void testGetPropertyNullProperties() {
+        System.clearProperty(foo);
         String result;
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
             result = instance.getProperty(foo);
@@ -683,6 +684,7 @@ public class QueryUrisLoaderTest {
 
     @Test
     public void testGetProperty() {
+        System.clearProperty(foo);
         String result;
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
             instance.properties = new Properties();
@@ -702,7 +704,7 @@ public class QueryUrisLoaderTest {
             instance.properties = props;
             result = instance.getProperty(key);
         }
-        assertEquals(value, result);
+        assertTrue(value.equals(result));
     }
 
     @Test

@@ -29,16 +29,18 @@ public class DefaultContentSourcePoolTest {
 	}
 
 	private void assertHostAndPort(ContentSource cs, String hostname, int port) {
-        String hostName = cs.getConnectionProvider().getHostName();
-        //CircleCI has Amazon EC2 internal IP hostnames
-        if (hostName.contains("ec2.internal")) {
-            assertTrue(hostName.replaceAll("-", ".").contains(hostname));
-        } else {
-            assertEquals(port, cs.getConnectionProvider().getPort());
-        }
+        assertEquals(hostname, normalizeHostName(cs.getConnectionProvider().getHostName()));
 		assertEquals(port, cs.getConnectionProvider().getPort());
 	}
 
+    //CircleCI has Amazon EC2 internal IP hostnames, so normalize
+	private String normalizeHostName(String hostName) {
+	    if (hostName.contains("ec2.internal")) {
+	        return hostName.substring(3, hostName.indexOf(".ec2.internal")).replaceAll("-", ".");
+        } else {
+	        return hostName;
+        }
+    }
 	@Test
 	public void testInitContentSources() throws CorbException{
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
@@ -307,8 +309,8 @@ public class DefaultContentSourcePoolTest {
 		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_RANDOM);
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.init(null, null, new String[]{"xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002"});
-            assertTrue(Arrays.asList(new String[]{"192.168.0.1", "192.168.0.2"}).contains(csp.get().getConnectionProvider().getHostName()));
-            assertTrue(Arrays.asList(new String[]{"192.168.0.1", "192.168.0.2"}).contains(csp.get().getConnectionProvider().getHostName()));
+            assertTrue(Arrays.asList(new String[]{"192.168.0.1", "192.168.0.2"}).contains(normalizeHostName(csp.get().getConnectionProvider().getHostName())));
+            assertTrue(Arrays.asList(new String[]{"192.168.0.1", "192.168.0.2"}).contains(normalizeHostName(csp.get().getConnectionProvider().getHostName())));
         }
 	}
 
@@ -317,8 +319,8 @@ public class DefaultContentSourcePoolTest {
 		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_RANDOM);
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.init(null, null, new String[]{"xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002"});
-            assertTrue(Arrays.asList(new String[]{"192.168.0.1", "192.168.0.2"}).contains(csp.get().getConnectionProvider().getHostName()));
-            assertTrue(Arrays.asList(new String[]{"192.168.0.1", "192.168.0.2"}).contains(csp.get().getConnectionProvider().getHostName()));
+            assertTrue(Arrays.asList(new String[]{"192.168.0.1", "192.168.0.2"}).contains(normalizeHostName(csp.get().getConnectionProvider().getHostName())));
+            assertTrue(Arrays.asList(new String[]{"192.168.0.1", "192.168.0.2"}).contains(normalizeHostName(csp.get().getConnectionProvider().getHostName())));
             csp.error(csp.getAllContentSources()[0]);
             assertHostAndPort(csp.get(), "192.168.0.2", 8002);
         }
