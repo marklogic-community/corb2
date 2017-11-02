@@ -118,11 +118,14 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
                     LOG.log(SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly for host " + hostname + ":" + port + path, ex);
                 } catch (KeyManagementException | NoSuchAlgorithmException ex) {
                     LOG.log(SEVERE, "Problem creating content source with ssl for host " + hostname + ":" + port + path, ex);
-                } catch (IllegalArgumentException ex) {
+                } catch (IllegalArgumentException | IllegalStateException ex) {
                     LOG.log(SEVERE, "XCC URI is invalid for host " + hostname + ":" + port + path, ex);
                 }
             } catch (URISyntaxException ex) {
-                LOG.log(SEVERE, "XCC URI is invalid for host " + connectionString, ex);
+                //attempt to strip off credential info if we can 
+                int hostIndex = connectionString.lastIndexOf('@') + 1;
+                connectionString = hostIndex > 1 && connectionString.length() > hostIndex ? connectionString.substring(hostIndex) : connectionString;
+                LOG.log(SEVERE, "XCC URI is invalid " + connectionString, ex);
             }
         }
         return null;
