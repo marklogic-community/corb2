@@ -29,8 +29,9 @@ public class DefaultContentSourcePoolTest {
 	}
 
 	private void assertHostAndPort(ContentSource cs, String hostname, int port) {
-		assertEquals(hostname,cs.getConnectionProvider().getHostName());
-		assertEquals(port,cs.getConnectionProvider().getPort());
+	    System.out.println("assert that " + hostname + ":" + port + " equals " + cs.getConnectionProvider().getHostName() + ":" + cs.getConnectionProvider().getPort());
+		assertEquals(hostname, cs.getConnectionProvider().getHostName());
+		assertEquals(port, cs.getConnectionProvider().getPort());
 	}
 
 	@Test
