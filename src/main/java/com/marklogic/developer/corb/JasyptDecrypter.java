@@ -27,7 +27,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.util.Properties;
-import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import java.util.logging.Logger;
 
@@ -80,8 +79,8 @@ public class JasyptDecrypter extends AbstractDecrypter {
                 Method decrypt = decrypterCls.getMethod("decrypt", String.class);
                 dValue = (String) decrypt.invoke(decrypter, value);
             } catch (Exception exc) {
-            		Throwable th = exc instanceof InvocationTargetException ? exc.getCause() : exc;
-                LOG.log(INFO, MessageFormat.format("Cannot decrypt {0}. Ignore if clear text. Error: {1}",property,th.getClass().getName()));
+                Throwable th = exc instanceof InvocationTargetException ? exc.getCause() : exc;
+                LOG.log(INFO, MessageFormat.format("Cannot decrypt {0}. Ignore if clear text. Error: {1}", property, th.getClass().getName()));
             }
         }
         return dValue == null ? value : dValue.trim();
