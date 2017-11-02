@@ -695,16 +695,15 @@ public class QueryUrisLoaderTest {
 
     @Test
     public void testGetPropertyExists() {
-        String key = foo;
-        String value = bar;
+        System.clearProperty(foo);
         String result;
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
             Properties props = new Properties();
-            props.setProperty(key, value);
+            props.setProperty(foo, bar);
             instance.properties = props;
-            result = instance.getProperty(key);
+            result = instance.getProperty(foo);
         }
-        assertTrue(value.equals(result));
+        assertEquals(bar, result);
     }
 
     @Test
