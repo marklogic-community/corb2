@@ -77,14 +77,17 @@ public class ModuleExecutor extends AbstractManager {
         } catch (Exception exc) {
             LOG.log(SEVERE, "Error initializing ModuleExecutor", exc);
             moduleExecutor.usage();
+            LOG.info("init error - exiting with code "+EXIT_CODE_INIT_ERROR);
             System.exit(EXIT_CODE_INIT_ERROR);
         }
 
         try {
             moduleExecutor.run();
+            LOG.info("success - exiting with code "+EXIT_CODE_SUCCESS);
             System.exit(EXIT_CODE_SUCCESS);
         } catch (Exception exc) {
             LOG.log(SEVERE, "Error while running CORB", exc);
+            LOG.info("processing error - exiting with code "+EXIT_CODE_PROCESSING_ERROR);
             System.exit(EXIT_CODE_PROCESSING_ERROR);
         }
     }
