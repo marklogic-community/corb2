@@ -262,7 +262,7 @@ public abstract class AbstractManager {
                 username = this.decrypter.decrypt(XCC_USERNAME, username);
                 password = this.decrypter.decrypt(XCC_PASSWORD, password);
                 port = this.decrypter.decrypt(XCC_PORT, port);
-                dbname = this.decrypter.decrypt(XCC_DBNAME, dbname);
+                dbname = !isBlank(dbname) ? this.decrypter.decrypt(XCC_DBNAME, dbname) : null;
             }
             for (String host: hostnames.split(StringUtils.COMMA)) {
                 if (this.decrypter != null) {
