@@ -95,4 +95,14 @@ public class JobServerTest {
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(5, records.size());
     }
+
+    @Test
+    public void testAddManagerWithJobIDWillAddContext() throws Exception {
+        Manager manager = new Manager();
+        manager.jobId = "foo";
+        JobServer server = JobServer.create(Collections.singleton(9998), manager);
+        server.addManager(manager);
+        assertNotNull(manager.jobServer);
+        assertEquals(server, manager.jobServer);
+    }
 }
