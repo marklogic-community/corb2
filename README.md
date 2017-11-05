@@ -1,6 +1,5 @@
 [![Download the latest version](https://api.bintray.com/packages/marklogic/maven/marklogic-corb/images/download.svg)](https://bintray.com/marklogic/maven/marklogic-corb/_latestVersion)
 [![Javadocs](https://www.javadoc.io/badge/com.marklogic/marklogic-corb.svg?color=blue)](https://www.javadoc.io/doc/com.marklogic/marklogic-corb)
-[![Dependency Status](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed/badge.svg?style=flat)](https://www.versioneye.com/user/projects/57451ecbce8d0e004505eeed)
 
 [![Travis-ci gradle build status](https://travis-ci.org/marklogic-community/corb2.svg?branch=development)](https://travis-ci.org/marklogic-community/corb2)
 [![CircleCI maven build status](https://circleci.com/gh/marklogic-community/corb2/tree/development.svg?style=shield)](https://circleci.com/gh/marklogic-community/corb2/tree/development)
