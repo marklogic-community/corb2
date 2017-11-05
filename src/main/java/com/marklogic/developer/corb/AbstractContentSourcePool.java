@@ -107,27 +107,33 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
         if (StringUtils.isNotBlank(connectionString)) {
             try {
                 URI connectionUri = new URI(connectionString);
-                String hostname = connectionUri.getHost();
-                String port = String.valueOf(connectionUri.getPort());
-                String path = connectionUri.getPath();
-                try {
-                    boolean ssl = connectionUri.getScheme() != null && "xccs".equals(connectionUri.getScheme());
-                    return ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
-                                : ContentSourceFactory.newContentSource(connectionUri);
-                } catch (XccConfigException ex) {
-                    LOG.log(SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly for host " + hostname + ":" + port + path, ex);
-                } catch (KeyManagementException | NoSuchAlgorithmException ex) {
-                    LOG.log(SEVERE, "Problem creating content source with ssl for host " + hostname + ":" + port + path, ex);
-                } catch (IllegalArgumentException | IllegalStateException ex) {
-                    LOG.log(SEVERE, "XCC URI is invalid for host " + hostname + ":" + port + path, ex);
-                }
+                return createContentSource(connectionUri);
             } catch (URISyntaxException ex) {
-                //attempt to strip off credential info if we can 
+                //attempt to strip off credential info if we can
                 int hostIndex = connectionString.lastIndexOf('@') + 1;
                 connectionString = hostIndex > 1 && connectionString.length() > hostIndex ? connectionString.substring(hostIndex) : connectionString;
                 LOG.log(SEVERE, "XCC URI is invalid " + connectionString, ex);
             }
         }
         return null;
+    }
+
+    protected ContentSource createContentSource(URI connectionUri) {
+        ContentSource contentSource = null;
+        boolean ssl = connectionUri.getScheme() != null && "xccs".equals(connectionUri.getScheme());
+        String hostname = connectionUri.getHost();
+        String port = String.valueOf(connectionUri.getPort());
+        String path = connectionUri.getPath();
+        try {
+            contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
+                : ContentSourceFactory.newContentSource(connectionUri);
+        } catch (XccConfigException ex) {
+            LOG.log(SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly for host " + hostname + ":" + port + path, ex);
+        } catch (KeyManagementException | NoSuchAlgorithmException ex) {
+            LOG.log(SEVERE, "Problem creating content source with ssl for host " + hostname + ":" + port + path, ex);
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            LOG.log(SEVERE, "XCC URI is invalid for host " + hostname + ":" + port + path, ex);
+        }
+        return contentSource;
     }
 }

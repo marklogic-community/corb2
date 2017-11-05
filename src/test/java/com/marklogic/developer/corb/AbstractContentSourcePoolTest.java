@@ -23,7 +23,7 @@ public class AbstractContentSourcePoolTest {
 	public void setUp() throws FileNotFoundException {
 		clearSystemProperties();
 	}
-		
+
 	@Test
     public void testInitWithNullSSLConfig() {
         Properties properties = new Properties();
@@ -87,7 +87,7 @@ public class AbstractContentSourcePoolTest {
         csp.properties.setProperty(XCC_CONNECTION_RETRY_INTERVAL, "ten");
         assertEquals(DEFAULT_CONNECTION_RETRY_INTERVAL, csp.getConnectRetryInterval());
     }
-    
+
 	@Test
 	public void testInit() {
 		SSLConfig sslConfig = mock(SSLConfig.class);
@@ -98,14 +98,14 @@ public class AbstractContentSourcePoolTest {
 		assertEquals(sslConfig,csp.sslConfig());
 		assertEquals("bar",csp.getProperty("foo"));
 	}
-	
+
 	@Test
 	public void testGetIntPropertyFromSystemProperty() {
 		System.setProperty("foo", "123");
 		AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
 		assertEquals(123,csp.getIntProperty("foo"));
 	}
-	
+
 	@Test
     public void testPrepareContentSource() {
 		AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
@@ -116,19 +116,26 @@ public class AbstractContentSourcePoolTest {
 
     @Test
     public void testPrepareContentSourceSecureXCC() {
-    		AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
+        AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
         ContentSource cs = csp.createContentSource("xccs://user:pass@localhost:8000");
         assertEquals("localhost",cs.getConnectionProvider().getHostName());
         assertEquals(8000,cs.getConnectionProvider().getPort());
     }
-    
+
     @Test
     public void testPrepareContentSourceNoScheme() throws CorbException {
-    		AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
+        AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
         ContentSource cs = csp.createContentSource("//user:pass@localhost:8000");
         assertNull(cs);
     }
-	
+
+    @Test
+    public void testCreateContentSourceWithInvalidUri() {
+        AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
+        ContentSource contentSource = csp.createContentSource("not a valid uri");
+        assertNull(contentSource);
+    }
+
     public class AbstractContentSourcePoolImpl extends AbstractContentSourcePool {
         @Override
         public boolean available() {
