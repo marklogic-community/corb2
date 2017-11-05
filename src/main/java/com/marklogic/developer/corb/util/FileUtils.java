@@ -18,8 +18,6 @@
  */
 package com.marklogic.developer.corb.util;
 
-import com.marklogic.developer.corb.FileUrisXMLLoader;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
