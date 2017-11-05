@@ -324,9 +324,7 @@ public class JobStats extends BaseMonitor {
             Element corbJobsElement = doc.createElementNS(CORB_NAMESPACE, JOBS_ELEMENT);
             jobStatsList.stream()
                 .filter(Objects::nonNull)
-                .forEach(jobStats ->{
-                    corbJobsElement.appendChild(jobStats.createJobElement(doc, concise));
-                });
+                .forEach(jobStats -> corbJobsElement.appendChild(jobStats.createJobElement(doc, concise)));
             doc.appendChild(corbJobsElement);
             return doc;
         } catch (ParserConfigurationException ex) {
