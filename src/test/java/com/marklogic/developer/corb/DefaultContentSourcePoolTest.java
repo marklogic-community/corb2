@@ -47,7 +47,7 @@ public class DefaultContentSourcePoolTest {
             csp.init(null, null, new String[]{"xcc://foo:bar@localhost:8000"});
             assertTrue(csp.available());
             assertNotNull(csp.get());
-            assertEquals(csp.getAllContentSources().length, 1);
+            assertEquals(1, csp.getAllContentSources().length);
             assertEquals(DefaultContentSourcePool.CONNECTION_POLICY_ROUND_ROBIN, csp.connectionPolicy);
         }
 	}
