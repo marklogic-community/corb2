@@ -258,7 +258,7 @@ public class JobServer {
     public static boolean hasParamFormatXml(Map<String, String> params) {
         return
             hasParameter(params, JobServicesHandler.PARAM_FORMAT) &&
-            getParameter(params, JobServicesHandler.PARAM_FORMAT).equalsIgnoreCase("xml");
+            "xml".equalsIgnoreCase(getParameter(params, JobServicesHandler.PARAM_FORMAT));
     }
 
     protected static String getParameter(Map<String, String> map, String key) {
