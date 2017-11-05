@@ -14,13 +14,21 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import com.marklogic.xcc.ContentSource;
+import com.marklogic.xcc.Request;
+import com.marklogic.xcc.ResultSequence;
+import com.marklogic.xcc.Session;
+import com.marklogic.xcc.exceptions.RequestException;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class JobStatsTest {
@@ -47,7 +55,6 @@ public class JobStatsTest {
         Manager manager = new Manager();
         JobStats jobStats = new JobStats(manager);
         assertEquals(jobStats.toString(), jobStats.toString(true));
-//        assertNotEquals(jobStats.toString(), jobStats.toString(false));
     }
 
     @Test
@@ -124,8 +131,204 @@ public class JobStatsTest {
         rank = (String) xpath.evaluate("/c:job/c:slowTransactions/c:Uri[last()]/c:rank/text()", doc, XPathConstants.STRING);
         assertEquals("Rank is Correct", "6", rank);
         assertTrue("Rank is Correct", uri.equals("URI" + rank));
-
 	}
+
+	@Test
+    public void testToXMLWithEmptyJobStats() {
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        List<JobStats> jobStatsList = new ArrayList<>();
+        Document doc = JobStats.toXML(documentBuilderFactory, jobStatsList, true);
+        assertNotNull(doc);
+        assertEquals(0,doc.getDocumentElement().getChildNodes().getLength());
+    }
+
+    @Test
+    public void testToXMLParserConfigurationException() {
+        DocumentBuilderFactory documentBuilderFactory = mock(DocumentBuilderFactory.class);
+        try {
+            when(documentBuilderFactory.newDocumentBuilder()).thenThrow(ParserConfigurationException.class);
+            List<JobStats> jobStatsList = new ArrayList<>();
+            Document doc = JobStats.toXML(documentBuilderFactory, jobStatsList, true);
+            assertNull(doc);
+        } catch (ParserConfigurationException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testToXML() {
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        List<JobStats> jobStatsList = new ArrayList<>();
+
+        Manager manager = mock(Manager.class);
+        jobStatsList.add(new JobStats(manager));
+        jobStatsList.add(null);
+        jobStatsList.add(new JobStats(manager));
+
+        Document doc = JobStats.toXML(documentBuilderFactory, jobStatsList, true);
+        assertEquals(2, doc.getDocumentElement().getChildNodes().getLength());
+    }
+
+	@Test
+    public void testLogToServerNullContentSource() {
+        ContentSource contentSource = mock(ContentSource.class);
+        Manager manager = mock(Manager.class);
+        ContentSourcePool csp = mock(ContentSourcePool.class);
+        try {
+            when(csp.get()).thenReturn(null);
+            when(manager.getContentSourcePool()).thenReturn(csp);
+            when(manager.getOptions()).thenReturn(mock(TransformOptions.class));
+            JobStats jobStats = new JobStats(manager);
+            jobStats.logToServer("foo", "bar");
+            verify(contentSource, Mockito.never()).newSession();
+        } catch (CorbException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testLogToServerException() {
+        ContentSource contentSource = mock(ContentSource.class);
+        Manager manager = mock(Manager.class);
+        ContentSourcePool csp = mock(ContentSourcePool.class);
+        try {
+            when(csp.get()).thenThrow(RequestException.class);
+            when(manager.getContentSourcePool()).thenReturn(csp);
+            when(manager.getOptions()).thenReturn(mock(TransformOptions.class));
+            JobStats jobStats = new JobStats(manager);
+            jobStats.logToServer("foo", "bar");
+            verify(contentSource, Mockito.never()).newSession();
+        } catch (CorbException ex) {
+            fail();
+        }
+    }
+
+	@Test
+    public void testLogToServerDefaultLevelNone() {
+        ContentSource contentSource = mock(ContentSource.class);
+        Manager manager = mock(Manager.class);
+        when(manager.getOptions()).thenReturn(mock(TransformOptions.class));
+        JobStats jobStats = new JobStats(manager);
+        try {
+            jobStats.logToServer(contentSource, "foo", "bar");
+            verify(contentSource, Mockito.never()).newSession();
+        } catch (RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testLogToServerWithLogLevel() {
+        ContentSource contentSource = mock(ContentSource.class);
+        Manager manager = mock(Manager.class);
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setLogMetricsToServerLog("info");
+        when(manager.getOptions()).thenReturn(transformOptions);
+        when(contentSource.newSession()).thenReturn(mock(Session.class));
+        JobStats jobStats = new JobStats(manager);
+        try {
+            jobStats.logToServer(contentSource, "foo", "bar");
+            verify(contentSource, Mockito.times(1)).newSession();
+        } catch (RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testExecuteModuleWithoutDatabaseConfigured() {
+        ContentSource contentSource = mock(ContentSource.class);
+        ContentSourcePool csp = mock(ContentSourcePool.class);
+        Manager manager = mock(Manager.class);
+        TransformOptions transformOptions = new TransformOptions();
+        when(manager.getOptions()).thenReturn(transformOptions);
+        when(manager.getContentSourcePool()).thenReturn(csp);
+        try {
+            when(csp.get()).thenReturn(contentSource);
+            when(contentSource.newSession()).thenReturn(mock(Session.class));
+            JobStats jobStats = new JobStats(manager);
+            jobStats.executeModule("foo");
+            verify(contentSource, Mockito.never()).newSession();
+        } catch (CorbException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testExecuteModule() {
+        ContentSource contentSource = mock(ContentSource.class);
+        ContentSourcePool csp = mock(ContentSourcePool.class);
+        Manager manager = mock(Manager.class);
+        when(manager.getContentSourcePool()).thenReturn(csp);
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setMetricsDatabase("metricsDB");
+        when(manager.getOptions()).thenReturn(transformOptions);
+        when(manager.getRequestForModule(any(),any())).thenReturn(mock(Request.class));
+        Session session = mock(Session.class);
+
+        try {
+            when(session.submitRequest(any())).thenReturn(mock(ResultSequence.class));
+            when(csp.get()).thenReturn(contentSource);
+            when(contentSource.newSession()).thenReturn(session);
+            JobStats jobStats = new JobStats(manager);
+            jobStats.executeModule("foo");
+            verify(contentSource, Mockito.times(1)).newSession();
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testExecuteModuleWithoutCSP() {
+        ContentSource contentSource = mock(ContentSource.class);
+        Manager manager = mock(Manager.class);
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setMetricsDatabase("metricsDB");
+        when(manager.getOptions()).thenReturn(transformOptions);
+        when(contentSource.newSession()).thenReturn(mock(Session.class));
+        JobStats jobStats = new JobStats(manager);
+        jobStats.executeModule("foo");
+        verify(contentSource, Mockito.never()).newSession();
+    }
+
+    @Test
+    public void testExecuteModuleWithNullContentSource() {
+        ContentSource contentSource = mock(ContentSource.class);
+        ContentSourcePool csp = mock(ContentSourcePool.class);
+        Manager manager = mock(Manager.class);
+        when(manager.getContentSourcePool()).thenReturn(csp);
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setMetricsDatabase("metricsDB");
+        when(manager.getOptions()).thenReturn(transformOptions);
+        try {
+            when(csp.get()).thenReturn(null);
+            JobStats jobStats = new JobStats(manager);
+            jobStats.executeModule("foo");
+            verify(contentSource, Mockito.never()).newSession();
+        } catch (CorbException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testExecuteModuleContentSourcePoolGetThrows()  {
+        ContentSource contentSource = mock(ContentSource.class);
+        ContentSourcePool csp = mock(ContentSourcePool.class);
+        Manager manager = mock(Manager.class);
+        when(manager.getContentSourcePool()).thenReturn(csp);
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setMetricsDatabase("metricsDB");
+        when(manager.getOptions()).thenReturn(transformOptions);
+        try {
+            when(csp.get()).thenThrow(CorbException.class);
+
+            JobStats jobStats = new JobStats(manager);
+            jobStats.executeModule("foo");
+            verify(contentSource, Mockito.never()).newSession();
+        } catch (CorbException ex) {
+            fail();
+        }
+    }
+
 	/*
 	 * 1: Log once at the start and once at the end XML
 	 * 		Log to DB Document

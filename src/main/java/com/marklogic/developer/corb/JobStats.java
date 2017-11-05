@@ -3,6 +3,7 @@ package com.marklogic.developer.corb;
 import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
 
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -20,6 +21,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import com.marklogic.xcc.exceptions.RequestException;
 import org.w3c.dom.*;
 import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSSerializer;
@@ -84,14 +86,14 @@ public class JobStats extends BaseMonitor {
     private String endTime = null;
     private String host = null;
 
-    private Long numberOfFailedTasks = 0l;
-    private Long numberOfSucceededTasks = 0l;
+    private Long numberOfFailedTasks = 0L;
+    private Long numberOfSucceededTasks = 0L;
     private Double averageTransactionTime = 0.0d;
-    private Long urisLoadTime = -1l;
-    private Long preBatchRunTime = -1l;
-    private Long postBatchRunTime = -1l;
-    private Long initTaskRunTime = -1l;
-    private Long totalRunTimeInMillis = -1l;
+    private Long urisLoadTime = -1L;
+    private Long preBatchRunTime = -1L;
+    private Long postBatchRunTime = -1L;
+    private Long initTaskRunTime = -1L;
+    private Long totalRunTimeInMillis = -1L;
     private String jobRunLocation = null;
     private String jobId = null;
     private String jobName = null;
@@ -99,8 +101,8 @@ public class JobStats extends BaseMonitor {
     private List<String> failedUris = null;
     private String uri = null;
     private boolean paused;
-    private Long currentThreadCount = 0l;
-    private Long jobServerPort = -1l;
+    private Long currentThreadCount = 0L;
+    private Long jobServerPort = -1L;
 
     private ContentSourcePool csp;
     private TransformOptions options;
@@ -114,7 +116,7 @@ public class JobStats extends BaseMonitor {
 
     public JobStats(Manager manager) {
         super(manager);
-        options = manager.options;
+        options = manager.getOptions();
         csp = manager.getContentSourcePool();
         host = getHost();
         jobRunLocation = System.getProperty("user.dir");
@@ -147,7 +149,7 @@ public class JobStats extends BaseMonitor {
                 if (options != null) {
                     jobName = options.getJobName();
                     jobServerPort = options.getJobServerPort().longValue();
-                    currentThreadCount = Long.valueOf(options.getThreadCount());
+                    currentThreadCount = (long) options.getThreadCount();
                 }
 
                 taskCount = manager.monitor.getTaskCount();
@@ -193,8 +195,8 @@ public class JobStats extends BaseMonitor {
         String processModule = options.getMetricsModule();
         Document doc = toXML(concise);
         String metricsLogMessage = toJSON(doc);
-        if(console) {
-    			LOG.info(metricsLogMessage);
+        if (console) {
+            LOG.info(metricsLogMessage);
         }
 
         String metricsDocument;
@@ -203,90 +205,89 @@ public class JobStats extends BaseMonitor {
         } else {
             metricsDocument = toXmlString(doc);
         }
-        executeModule(metricsDocument);
 
+        executeModule(metricsDocument);
         logToServer(message, metricsLogMessage);
     }
 
-    private void logToServer(String message, String metrics) {
-        String logLevel = options.getLogMetricsToServerLog();
-        if (csp != null && options.isMetricsLoggingEnabled(logLevel)) {
-        	try {
-        	    ContentSource contentSource = csp.get();
-        		if (contentSource != null) {
-                    try (Session session = contentSource.newSession()) {
-                        String xquery = XQUERY_VERSION_ML
-                            + (message != null
-                            ? String.format(XDMP_LOG_FORMAT, message, logLevel.toLowerCase()) + ','
-                            : "")
-                            + String.format(XDMP_LOG_FORMAT, metrics, logLevel.toLowerCase());
-                        AdhocQuery query = session.newAdhocQuery(xquery);
-                        session.submitRequest(query);
-                    }
+    protected void logToServer(String message, String metrics) {
+        if (csp != null) {
+            try {
+                ContentSource contentSource = csp.get();
+                if (contentSource != null) {
+                    logToServer(contentSource, message, metrics);
                 } else {
-                    LOG.log(SEVERE, "logJobStatsToServer request failed. ContentSourcePool.get() returned null");
+                    LOG.log(WARNING, "Unable to log to server, no content source available");
                 }
-            } catch (Exception e) {
-                LOG.log(SEVERE, "logJobStatsToServer request failed", e);
+            } catch (CorbException | RequestException ex) {
+                LOG.log(SEVERE, "logJobStatsToServer request failed", ex);
             }
         }
     }
 
-    private void executeModule(String metrics) {
-        String metricsDatabase = options.getMetricsDatabase();
-        if (metricsDatabase != null) {
-            String uriRoot = options.getMetricsRoot();
+    protected void logToServer(ContentSource contentSource, String message, String metrics) throws RequestException {
+        String logLevel = options.getLogMetricsToServerLog();
+        if (options.isMetricsLoggingEnabled(logLevel)) {
+            try (Session session = contentSource.newSession()) {
+                String xquery = XQUERY_VERSION_ML
+                    + (message != null
+                    ? String.format(XDMP_LOG_FORMAT, message, logLevel.toLowerCase()) + ','
+                    : "")
+                    + String.format(XDMP_LOG_FORMAT, metrics, logLevel.toLowerCase());
+                AdhocQuery query = session.newAdhocQuery(xquery);
+                session.submitRequest(query);
+            }
+        }
+    }
 
-            ResultSequence seq = null;
+    protected void executeModule(String metrics) {
+        String metricsDatabase = options.getMetricsDatabase();
+        if (metricsDatabase != null && csp != null) {
+            try {
+                ContentSource contentSource = csp.get();
+                if (contentSource != null) {
+                    executeModule(contentSource, metricsDatabase, metrics);
+                } else {
+                    LOG.log(WARNING, "Unable to execute metrics module, no content source available");
+                }
+            } catch (CorbException | RequestException ex) {
+                LOG.log(SEVERE, "logJobStatsToServerDocument request failed", ex);
+            }
+        }
+    }
+
+    protected void executeModule(ContentSource contentSource, String metricsDatabase, String metrics) throws RequestException {
+        String uriRoot = options.getMetricsRoot();
+        String collections = options.getMetricsCollections();
+        String processModule = options.getMetricsModule();
+
+        ResultSequence seq = null;
+
+        try (Session session = contentSource.newSession()) {
+            Request request = manager.getRequestForModule(processModule, session);
+            request.setNewStringVariable(METRICS_DB_NAME_PARAM, metricsDatabase);
+            request.setNewStringVariable(METRICS_URI_ROOT_PARAM, uriRoot != null ? uriRoot : NOT_APPLICABLE);
+            request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, collections != null ? collections : NOT_APPLICABLE);
+
             RequestOptions requestOptions = new RequestOptions();
             requestOptions.setCacheResult(false);
+            if (isJavaScriptModule(processModule)) {
+                requestOptions.setQueryLanguage("javascript");
+                request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM, metrics == null ? toJSON() : metrics);
+            } else {
+                request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM, metrics == null ? toXmlString() : metrics);
+            }
+            request.setOptions(requestOptions);
 
-            String collections = options.getMetricsCollections();
-            String processModule = options.getMetricsModule();
-
-            Thread.yield();// try to avoid thread starvation
-
-            if (csp != null) {
-
-                try {
-                    ContentSource contentSource = csp.get();
-                    if (contentSource != null) {
-                        try (Session session = contentSource.newSession()) {
-                            Request request = manager.getRequestForModule(processModule, session);
-                            request.setNewStringVariable(METRICS_DB_NAME_PARAM, metricsDatabase);
-                            request.setNewStringVariable(METRICS_URI_ROOT_PARAM, uriRoot != null ? uriRoot : NOT_APPLICABLE);
-                            request.setNewStringVariable(METRICS_COLLECTIONS_PARAM, collections != null ? collections : NOT_APPLICABLE);
-
-                            if (isJavaScriptModule(processModule)) {
-                                requestOptions.setQueryLanguage("javascript");
-                                request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
-                                    metrics == null ? toJSON() : metrics);
-                            } else {
-                                request.setNewStringVariable(METRICS_DOCUMENT_STR_PARAM,
-                                    metrics == null ? toXmlString() : metrics);
-                            }
-                            request.setOptions(requestOptions);
-
-                            seq = session.submitRequest(request);
-                            String uri = seq.hasNext() ? seq.next().asString() : null;
-                            if (uri != null) {
-                                this.uri = uri;
-                            }
-
-                            Thread.yield();// try to avoid thread starvation
-                            seq.close();
-                            Thread.yield();// try to avoid thread starvation
-                        }
-                    }
-                } catch (Exception exc) {
-                    LOG.log(SEVERE, "logJobStatsToServerDocument request failed", exc);
-                } finally {
-                    if (null != seq && !seq.isClosed()) {
-                        seq.close();
-                        seq = null;
-                    }
-                    Thread.yield();// try to avoid thread starvation
-                }
+            seq = session.submitRequest(request);
+            String uri = seq.hasNext() ? seq.next().asString() : null;
+            if (uri != null) {
+                this.uri = uri;
+            }
+        } finally {
+            if (null != seq && !seq.isClosed()) {
+                seq.close();
+                seq = null;
             }
         }
     }
@@ -316,19 +317,22 @@ public class JobStats extends BaseMonitor {
     }
 
     public static Document toXML(DocumentBuilderFactory documentBuilderFactory, List<JobStats> jobStatsList, boolean concise) {
-        Document doc = null;
+
         try {
             DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-            doc = documentBuilder.newDocument();
-            Element element = doc.createElementNS(CORB_NAMESPACE, JOBS_ELEMENT);
-            for (JobStats jobStats : jobStatsList) {
-                element.appendChild(jobStats.createJobElement(doc, concise));
-            }
-            doc.appendChild(element);
+            Document doc = documentBuilder.newDocument();
+            Element corbJobsElement = doc.createElementNS(CORB_NAMESPACE, JOBS_ELEMENT);
+            jobStatsList.stream()
+                .filter(Objects::nonNull)
+                .forEach(jobStats ->{
+                    corbJobsElement.appendChild(jobStats.createJobElement(doc, concise));
+                });
+            doc.appendChild(corbJobsElement);
+            return doc;
         } catch (ParserConfigurationException ex) {
             LOG.log(SEVERE, "Unable to create a new XML Document", ex);
         }
-        return doc;
+        return null;
     }
 
     public Document toXML(boolean concise) {
@@ -339,8 +343,8 @@ public class JobStats extends BaseMonitor {
         try {
             DocumentBuilder docBuilder = documentBuilderFactory.newDocumentBuilder();
             doc = docBuilder.newDocument();
-            Element docElement = createJobElement(doc, concise);
-            doc.appendChild(docElement);
+            Element jobElement = createJobElement(doc, concise);
+            doc.appendChild(jobElement);
         } catch (ParserConfigurationException ex) {
             LOG.log(Level.SEVERE, "Unable to create a new XML Document", ex);
         }
@@ -394,13 +398,13 @@ public class JobStats extends BaseMonitor {
     }
 
     protected void createAndAppendElement(Node parent, String localName, Long value) {
-        if (value != null && value >= 0l) {
+        if (value != null && value >= 0L) {
             createAndAppendElement(parent, localName, value.toString());
         }
     }
 
     protected void createAndAppendElement(Node parent, String localName, Double value) {
-        if (value != null && value >= 0l) {
+        if (value != null && value >= 0L) {
             createAndAppendElement(parent, localName, value.toString());
         }
     }
