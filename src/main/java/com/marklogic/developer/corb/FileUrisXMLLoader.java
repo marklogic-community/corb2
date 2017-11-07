@@ -24,8 +24,6 @@ import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -34,35 +32,24 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
 import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stax.StAXSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 import javax.xml.xpath.XPathExpressionException;
 
+import com.marklogic.developer.corb.util.XmlUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 /**
  * Split an XML file {@value Options#XML_FILE} into multiple documents using the XPath
@@ -87,16 +74,17 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
 
     @Override
     public void open() throws CorbException {
-        try {
-            String fileName = getProperty(XML_FILE);
-            xmlFile = new File(fileName);
-            schemaValidate(xmlFile);
-            nodeIterator = readNodes(xmlFile.toPath());
-            if (shouldSetBatchRef()) {
+        String fileName = getProperty(XML_FILE);
+        xmlFile = new File(fileName);
+        schemaValidate(xmlFile);
+        nodeIterator = readNodes(xmlFile.toPath());
+
+        if (shouldSetBatchRef()) {
+            try {
                 batchRef = xmlFile.getCanonicalPath();
+            } catch (IOException exc) {
+                throw new CorbException("Problem loading data from XML file ", exc);
             }
-        } catch (IOException exc) {
-            throw new CorbException("Problem loading data from XML file ", exc);
         }
     }
 
@@ -135,7 +123,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
                 nodeMap.put(i, node);
             }
 
-            this.setTotalCount(nodeMap.size());
+            setTotalCount(nodeMap.size());
         } catch (SAXException | IOException | XPathExpressionException | ParserConfigurationException ex) {
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
         }
@@ -150,7 +138,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
 
             if (nextNodeType == Node.ELEMENT_NODE || nextNodeType == Node.DOCUMENT_NODE) {
                 //serialize the XML into a string
-                line = trim(nodeToString(nextNode));
+                line = trim(XmlUtils.nodeToString(nextNode));
             } else {
                 line = nextNode.getNodeValue();
             }
@@ -169,14 +157,14 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
 
                     Document loaderDoc;
                     if (shouldBase64Encode()) {
-                        try (InputStream inputStream = toInputStream(nextNode)) {
+                        try (InputStream inputStream = XmlUtils.toInputStream(nextNode)) {
                             loaderDoc = toLoaderDoc(metadata, inputStream);
                         }
                     } else {
                         loaderDoc = toLoaderDoc(metadata, nextNode, false);
                     }
-                    return nodeToString(loaderDoc);
-                } catch (IOException | TransformerException ex) {
+                    return XmlUtils.documentToString(loaderDoc);
+                } catch (IOException ex) {
                     LOG.log(Level.SEVERE, null, ex);
                 }
             } else {
@@ -190,14 +178,6 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
     protected boolean shouldBase64Encode() {
         String shouldEncode = getProperty(Options.LOADER_BASE64_ENCODE);
         return StringUtils.stringToBoolean(shouldEncode, false);
-    }
-
-    protected InputStream toInputStream(Node node) throws TransformerException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        Source xmlSource = new DOMSource(node);
-        Result outputTarget = new StreamResult(outputStream);
-        getTransformerFactory().newTransformer().transform(xmlSource, outputTarget);
-        return new ByteArrayInputStream(outputStream.toByteArray());
     }
 
     @Override
@@ -240,26 +220,11 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
         String schemaFilename = getProperty(Options.XML_SCHEMA);
         if (StringUtils.isNotEmpty(schemaFilename)) {
             File schemaFile = FileUtils.getFile(schemaFilename);
-            schemaValidate(xmlFile, schemaFile);
+            List<SAXParseException> validationErrors = XmlUtils.schemaValidate(xmlFile, schemaFile);
+            if (!validationErrors.isEmpty()) {
+                throw new CorbException("File is not schema valid", validationErrors.get(0) );
+            }
         }
     }
 
-    protected void schemaValidate(File xmlFile, File schemaFile) throws CorbException {
-        SchemaFactory sf = SchemaFactory.newInstance(W3C_XML_SCHEMA_NS_URI);
-        XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
-        try (Reader fileReader = new FileReader(xmlFile)) {
-            Source source = new StAXSource(xmlInputFactory.createXMLStreamReader(fileReader));
-            Schema schema = sf.newSchema(schemaFile);
-            Validator validator = schema.newValidator();
-            try {
-                validator.validate(source);
-            } catch (SAXException ex) {
-                LOG.log(Level.SEVERE, xmlFile.getCanonicalPath() + " is not schema valid", ex);
-                throw new CorbException(ex.getMessage());
-            }
-        } catch (IOException | SAXException | XMLStreamException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            throw new CorbException(ex.getMessage());
-        }
-    }
 }

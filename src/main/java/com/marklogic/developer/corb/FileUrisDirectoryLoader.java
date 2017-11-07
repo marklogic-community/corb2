@@ -18,6 +18,8 @@
  */
 package com.marklogic.developer.corb;
 
+import com.marklogic.developer.corb.util.XmlUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,6 +33,7 @@ import java.util.stream.Stream;
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
+ * @since 2.4.0
  */
 public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
 
@@ -38,7 +41,7 @@ public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
     protected static final String EXCEPTION_MSG_PROBLEM_READING_FILE = "Problem while reading the file";
     private Iterator<Path> fileIterator;
     private Stream<Path> fileStream;
-    
+
     @Override
     public void open() throws CorbException {
 
@@ -55,7 +58,7 @@ public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
                 batchRef = dir.toFile().getCanonicalPath();
             }
             fileStream = Files.walk(dir);
-            fileIterator = fileStream.filter(this::accept).iterator(); 
+            fileIterator = fileStream.filter(this::accept).iterator();
             setTotalCount(fileCount(dir));
         } catch (IOException ex) {
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_FILE, ex);
@@ -91,14 +94,14 @@ public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
     public String next() throws CorbException {
         Path path = fileIterator.next();
         File file = path.toFile();
-        return nodeToString(toLoaderDoc(file));
+        return XmlUtils.documentToString(toLoaderDoc(file));
     }
 
     @Override
     public void close() {
+        super.close();
         if (fileStream != null) {
             fileStream.close();
         }
-        cleanup();
     }
 }

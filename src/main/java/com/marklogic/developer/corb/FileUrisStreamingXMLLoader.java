@@ -23,8 +23,8 @@ import static com.marklogic.developer.corb.Options.XML_NODE;
 import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.developer.corb.util.IOUtils;
 import com.marklogic.developer.corb.util.StringUtils;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
+
+import javax.xml.transform.*;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,10 +37,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.security.InvalidParameterException;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.Map;
+import java.text.MessageFormat;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -50,8 +48,9 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.stax.StAXSource;
+
+import com.marklogic.developer.corb.util.XmlUtils;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 /**
@@ -70,12 +69,14 @@ import org.xml.sax.SAXException;
 public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
 
     protected static final Logger LOG = Logger.getLogger(FileUrisStreamingXMLLoader.class.getName());
+    private static final String YES = "yes";
     private static final String SLASH = "/";
     private Path tempDir;
     private DirectoryStream<Path> directoryStream;
     private Iterator<Path> files;
     private final FileAttribute<?>[] fileAttributes = new FileAttribute<?>[0];
     private StreamingXPath streamingXPath;
+    private TransformerFactory transformerFactory;
 
     @Override
     public void open() throws CorbException {
@@ -85,18 +86,18 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         xPath = StringUtils.isBlank(xPath) ? "/*/*" : xPath;
         streamingXPath = new StreamingXPath(xPath);
         xmlFile = FileUtils.getFile(xmlFilename);
+        schemaValidate(xmlFile);
         try {
-            schemaValidate(xmlFile);
             if (shouldSetBatchRef()) {
                 //set the original XML filename, for reference in processing modules
                 batchRef = xmlFile.getCanonicalPath();
             }
             tempDir = getTempDir();
-            files = readToTempDir(xmlFile.toPath());
         } catch (IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, MessageFormat.format("IOException occurred processing {0}", xmlFilename), ex);
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
         }
+        files = readToTempDir(xmlFile.toPath());
     }
 
     @Override
@@ -113,17 +114,17 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
                 File file = path.toFile();
                 Map<String, String> metadata = getMetadata(file);
                 metadata.put(META_SOURCE, xmlFile.getCanonicalPath());
-                Node node;
+                Document document;
                 if (shouldBase64Encode()) {
                     try (InputStream inputStream = new FileInputStream(file)) {
-                        node = toLoaderDoc(metadata, inputStream);
+                        document = toLoaderDoc(metadata, inputStream);
                     }
                 } else {
                     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-                    Document document = docBuilder.parse(file);
-                    node = toLoaderDoc(metadata, document.getDocumentElement(), false);
+                    Document originalDocument = docBuilder.parse(file);
+                    document = toLoaderDoc(metadata, originalDocument.getDocumentElement(), false);
                 }
-                content = nodeToString(node);
+                content = XmlUtils.documentToString(document);
             } else {
                 content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
             }
@@ -178,7 +179,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
         }
         setTotalCount(extractedDocumentCount);
-        return directoryStream.iterator(); //tempDir.toFile().listFiles();
+        return directoryStream.iterator();
     }
 
     /**
@@ -232,7 +233,6 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
                 elementWasExtracted = true;
             } catch (IOException | TransformerException ex) {
                 LOG.log(Level.SEVERE, EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
-                //TODO rethrow? should an exception reading one element halt the entire set, or just move on?
             } finally {
                 context.pop();
             }
@@ -240,4 +240,31 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         return elementWasExtracted;
     }
 
+    /**
+     * Instantiates a new Transformer object with output options to omit the XML
+     * declaration and indent enabled.
+     *
+     * @return
+     * @throws TransformerConfigurationException
+     */
+    protected Transformer newTransformer() throws TransformerConfigurationException {
+        Transformer transformer = getTransformerFactory().newTransformer();
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, YES);
+        transformer.setOutputProperty(OutputKeys.INDENT, YES);
+        return transformer;
+    }
+
+    /**
+     * Lazy-load a new instance of a TransformerFactory. Subsequent calls,
+     * re-use the existing TransformerFactory.
+     *
+     * @return TransformerFactory
+     */
+    protected TransformerFactory getTransformerFactory() {
+        //Creating a transformerFactory is expensive, only do it once
+        if (transformerFactory == null) {
+            transformerFactory = TransformerFactory.newInstance();
+        }
+        return transformerFactory;
+    }
 }

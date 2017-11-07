@@ -20,6 +20,8 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.developer.corb.util.IOUtils;
 import com.marklogic.developer.corb.util.StringUtils;
+import com.marklogic.developer.corb.util.XmlUtils;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +39,7 @@ import java.util.zip.ZipFile;
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
+ * @since 2.4.0
  */
 public class FileUrisZipLoader extends AbstractFileUrisLoader {
 
@@ -49,18 +52,22 @@ public class FileUrisZipLoader extends AbstractFileUrisLoader {
 
     @Override
     public void open() throws CorbException {
-        String zipFilename = getProperty(Options.ZIP_FILE); //TODO: ability to set either ZIP_FILE or LOADER_PATH
-        Predicate<ZipEntry> isFile = ze -> !ze.isDirectory();
+
+        String zipFilename = getProperty(Options.ZIP_FILE);
+        if (zipFilename == null) {
+            zipFilename = getProperty(Options.LOADER_PATH);
+        }
         try {
             zipFile = new ZipFile(zipFilename);
             if (shouldSetBatchRef()) {
                 batchRef = zipFile.getName();
             }
-            files = zipFile.stream().filter(isFile).iterator();
-            setTotalCount(Math.toIntExact(zipFile.stream().parallel().filter(isFile).count()));
         } catch (IOException ex) {
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_ZIP_FILE, ex);
         }
+        Predicate<ZipEntry> isFile = ze -> !ze.isDirectory();
+        files = zipFile.stream().filter(isFile).iterator();
+        setTotalCount(Math.toIntExact(zipFile.stream().parallel().filter(isFile).count()));
     }
 
     @Override
@@ -73,7 +80,7 @@ public class FileUrisZipLoader extends AbstractFileUrisLoader {
         ZipEntry zipEntry = files.next();
         Map<String, String> metadata = getMetadata(zipEntry);
         try (InputStream stream = new BufferedInputStream(zipFile.getInputStream(zipEntry))) {
-            return nodeToString(toLoaderDoc(metadata, stream));
+            return XmlUtils.documentToString(toLoaderDoc(metadata, stream));
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_ZIP_FILE, ex);

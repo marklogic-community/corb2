@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
@@ -35,13 +34,7 @@ import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -50,6 +43,7 @@ import org.w3c.dom.Text;
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
+ * @since 2.4.0
  */
 public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
 
@@ -64,8 +58,6 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
     public static final String META_SOURCE = "source";
 
     protected final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-    private TransformerFactory transformerFactory;
-    private static final String YES = "yes";
 
     protected Document toLoaderDoc(File file) throws CorbException {
         try (InputStream inputStream = new FileInputStream(file)) {
@@ -146,52 +138,6 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
         return DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mmX")
                 .withZone(ZoneOffset.UTC)
                 .format(instant);
-    }
-
-    /**
-     * Lazy-load a new instance of a TransformerFactory. Subsequent calls,
-     * re-use the existing TransformerFactory.
-     *
-     * @return TransformerFactory
-     */
-    protected TransformerFactory getTransformerFactory() {
-        //Creating a transformerFactory is expensive, only do it once
-        if (transformerFactory == null) {
-            transformerFactory = TransformerFactory.newInstance();
-        }
-        return transformerFactory;
-    }
-
-    /**
-     * Instantiates a new Transformer object with output options to omit the XML
-     * declaration and indent enabled.
-     *
-     * @return
-     * @throws TransformerConfigurationException
-     */
-    protected Transformer newTransformer() throws TransformerConfigurationException {
-        Transformer transformer = getTransformerFactory().newTransformer();
-        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, YES);
-        transformer.setOutputProperty(OutputKeys.INDENT, YES);
-        return transformer;
-    }
-
-    /**
-     * Use an identity transform to serialize a Node to a string.
-     *
-     * @param node
-     * @return
-     * @throws CorbException
-     */
-    protected String nodeToString(Node node) throws CorbException {
-        StringWriter sw = new StringWriter();
-        try {
-            Transformer autobot = newTransformer();
-            autobot.transform(new DOMSource(node), new StreamResult(sw));
-        } catch (TransformerException te) {
-            throw new CorbException("nodeToString Transformer Exception", te);
-        }
-        return sw.toString();
     }
 
     protected boolean shouldUseEnvelope() {

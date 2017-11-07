@@ -1,5 +1,6 @@
 package com.marklogic.developer.corb;
 
+import com.marklogic.developer.corb.util.XmlUtils;
 import com.sun.net.httpserver.*;
 import org.w3c.dom.Document;
 
@@ -95,7 +96,7 @@ public class JobServer {
             Document jobs = JobStats.toXML(documentBuilderFactory, managerJobStats, concise);
 
             if (MIME_XML.equals(contentType)) {
-                response.append(JobStats.toXmlString(jobs));
+                response.append(XmlUtils.documentToString(jobs));
             } else {
                 response.append(toJson(jobs));
             }

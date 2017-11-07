@@ -40,7 +40,7 @@ public class FileUrisXMLLoaderTest {
     private static final String ANCHOR1 = "<a href=\"test1.html\">test1</a>";
     private static final String ANCHOR2 = "<a href=\"test2.html\">test2</a>";
     private static final String ANCHOR3 = "<a href=\"test3.html\">test3</a>";
-    private static final String ANCHOR4 = "<a href=\"\">\n<!---->\n</a>"; //indent options result in extra carriage returns
+    private static final String ANCHOR4 = "<a href=\"\"><!----></a>";
     private static final String TEST1 = "test1";
     private static final String TEST2 = "test2";
     private static final String TEST3 = "test3";
@@ -152,7 +152,6 @@ public class FileUrisXMLLoaderTest {
                 nodes.add(instance.next());
             }
             assertEquals(4, nodes.size());
-
             assertEquals(4, nodes.stream()
                     .filter(p
                             -> (p.contains(ANCHOR1) || p.contains(ANCHOR2) || p.contains(ANCHOR3) || p.contains(ANCHOR4))
@@ -178,8 +177,8 @@ public class FileUrisXMLLoaderTest {
                 nodes.add(instance.next());
             }
             assertEquals(4, nodes.size());
-            String firstNode = nodes.get(0);
-            System.out.println(firstNode);
+
+
             assertEquals(4, nodes.stream()
                     .filter(p
                             -> !(p.contains(ANCHOR1) || p.contains(ANCHOR2) || p.contains(ANCHOR3) || p.contains(ANCHOR4))

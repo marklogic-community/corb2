@@ -21,6 +21,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import com.marklogic.developer.corb.util.XmlUtils;
 import com.marklogic.xcc.exceptions.RequestException;
 import org.w3c.dom.*;
 import org.w3c.dom.ls.DOMImplementationLS;
@@ -203,7 +204,7 @@ public class JobStats extends BaseMonitor {
         if (isJavaScriptModule(processModule)) {
             metricsDocument = metricsLogMessage;
         } else {
-            metricsDocument = toXmlString(doc);
+            metricsDocument = XmlUtils.documentToString(doc);
         }
 
         executeModule(metricsDocument);
@@ -307,13 +308,7 @@ public class JobStats extends BaseMonitor {
 
     public String toXmlString(boolean concise) {
         Document doc = toXML(concise);
-        return toXmlString(doc);
-    }
-
-    public static String toXmlString(Document doc)    {
-        DOMImplementationLS domImplementation = (DOMImplementationLS) doc.getImplementation();
-        LSSerializer lsSerializer = domImplementation.createLSSerializer();
-        return lsSerializer.writeToString(doc);
+        return XmlUtils.documentToString(doc);
     }
 
     public static Document toXML(DocumentBuilderFactory documentBuilderFactory, List<JobStats> jobStatsList, boolean concise) {
