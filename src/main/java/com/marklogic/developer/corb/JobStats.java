@@ -24,8 +24,6 @@ import javax.xml.transform.stream.StreamSource;
 import com.marklogic.developer.corb.util.XmlUtils;
 import com.marklogic.xcc.exceptions.RequestException;
 import org.w3c.dom.*;
-import org.w3c.dom.ls.DOMImplementationLS;
-import org.w3c.dom.ls.LSSerializer;
 
 import com.marklogic.developer.corb.util.StringUtils;
 import com.marklogic.xcc.AdhocQuery;
