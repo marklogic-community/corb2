@@ -28,7 +28,7 @@ import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 /**
  * @since 2.4.0
  */
-public class XmlUtils {
+public final class XmlUtils {
 
     private static final Logger LOG = Logger.getLogger(XmlUtils.class.getName());
 
