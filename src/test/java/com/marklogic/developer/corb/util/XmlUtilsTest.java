@@ -1,9 +1,7 @@
 package com.marklogic.developer.corb.util;
 
 import com.marklogic.developer.corb.CorbException;
-import com.marklogic.developer.corb.FileUrisStreamingXMLLoader;
 import org.junit.Test;
-import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import java.io.File;
