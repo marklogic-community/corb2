@@ -10,9 +10,9 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 public class XmlUtilsTest {
-    String dir = "src/test/resources/streamingXMLUrisLoader/";
-    File xmlDoc = new File(dir , "EDI.ICF15T.D150217.T113100716.T");
-    File schema = new File(dir + "BenefitEnrollment.xsd");
+    private String dir = "src/test/resources/streamingXMLUrisLoader/";
+    private File xmlDoc = new File(dir , "EDI.ICF15T.D150217.T113100716.T");
+    private File schema = new File(dir + "BenefitEnrollment.xsd");
 
     @Test
     public void schemaValidate() {
@@ -39,7 +39,7 @@ public class XmlUtilsTest {
     @Test (expected = CorbException.class)
     public void schemaValidateMissingFile() throws CorbException {
         File missingFile = new File("does-not-exist.xml");
-        List<SAXParseException> exceptionList = XmlUtils.schemaValidate(missingFile, schema);
+        XmlUtils.schemaValidate(missingFile, schema);
     }
 
 }
