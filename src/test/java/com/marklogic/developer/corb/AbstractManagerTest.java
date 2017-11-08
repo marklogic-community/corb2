@@ -369,6 +369,13 @@ public class AbstractManagerTest {
         assertNull(instance.decrypter);
     }
 
+    @Test (expected=CorbException.class)
+    public void testInitDecrypterBadClassname() throws CorbException {
+        AbstractManager instance = new AbstractManagerImpl();
+        instance.properties.setProperty(Options.DECRYPTER, "bogus");
+        instance.initDecrypter();
+    }
+
     @Test
     public void testInitDecrypterValidDecrypter() {
         AbstractManager instance = new AbstractManagerImpl();
@@ -445,6 +452,20 @@ public class AbstractManagerTest {
         assertNotNull(instance.sslConfig);
     }
 
+    @Test
+    public void testInitSSLConfigCustomClass() {
+        AbstractManager instance = new AbstractManagerImpl();
+        instance.properties.setProperty(Options.SSL_CONFIG_CLASS, TwoWaySSLConfig.class.getName());
+        try {
+            instance.initSSLConfig();
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+        assertNotNull(instance.sslConfig);
+        assertTrue(instance.sslConfig instanceof TwoWaySSLConfig);
+    }
+    
     @Test(expected = IllegalArgumentException.class)
     public void testInitSSLConfigInvalidConfigClass() {
         AbstractManager instance = new AbstractManagerImpl();
@@ -455,6 +476,13 @@ public class AbstractManagerTest {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
+    }
+
+    @Test(expected = CorbException.class)
+    public void testInitSSLConfigBadClass() throws CorbException {
+        AbstractManager instance = new AbstractManagerImpl();
+        instance.properties.setProperty(Options.SSL_CONFIG_CLASS, "not a valid class");
+        instance.initSSLConfig();
     }
 
     private void checkContentSource(AbstractManager instance, String user, String host, String port, String dbname) throws CorbException{
