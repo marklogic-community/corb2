@@ -294,14 +294,14 @@ public abstract class AbstractManager {
     }
 
     protected ContentSourcePool createContentSourceManager() throws CorbException {
-        ContentSourcePool csm;
+        ContentSourcePool contentSourcePool;
         String contentSourcePoolClassName = getOption(Options.CONTENT_SOURCE_POOL);
         if (contentSourcePoolClassName != null) {
-            csm = createContentSourcePool(contentSourcePoolClassName);
+            contentSourcePool = createContentSourcePool(contentSourcePoolClassName);
         } else {
-            csm = new DefaultContentSourcePool();
+            contentSourcePool = new DefaultContentSourcePool();
         }
-        return csm;
+        return contentSourcePool;
     }
 
     protected ContentSourcePool createContentSourcePool(String className) throws CorbException{

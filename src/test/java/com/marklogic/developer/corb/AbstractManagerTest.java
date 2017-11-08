@@ -51,14 +51,14 @@ public class AbstractManagerTest {
     private static final Logger ABSTRACT_MANAGER_LOG = Logger.getLogger(AbstractManager.class.getName());
     private static final Logger LOG = Logger.getLogger(AbstractManagerTest.class.getName());
     private final TestHandler testLogger = new TestHandler();
-    
+
     private static final String XCC_URI_USER = "foo";
     private static final String XCC_URI_PASS = "bar";
     private static final String XCC_URI_HOST = "localhost";
     private static final String XCC_URI_PORT = "8008";
     private static final String XCC_URI_DB = "baz";
     private static final String XCC_CONNECTION_URI = "xcc://"+XCC_URI_USER+":"+XCC_URI_PASS+"@"+XCC_URI_HOST+":"+XCC_URI_PORT+"/"+XCC_URI_DB;
-    
+
     private static final String PROPERTY_XCC_HTTPCOMPLIANT = "xcc.httpcompliant";
     private static final String PROPERTIES_FILE_NAME = "helloWorld.properties";
     private static final String PROPERTIES_FILE_DIR = "src/test/resources/";
@@ -69,12 +69,12 @@ public class AbstractManagerTest {
     private static final String KEY = "key";
     private static final String VALUE = "value";
     private String selectorAsText;
-    
+
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
     private static final String HOST = "localhost";
     private static final String PORT = "80";
-    
+
     private static final PrintStream ERROR = System.err;
 
     private String originalValue;
@@ -456,16 +456,16 @@ public class AbstractManagerTest {
         }
         fail();
     }
-    
+
     private void checkContentSource(AbstractManager instance, String user, String host, String port, String dbname) throws CorbException{
 		ContentSource contentSource = instance.getContentSourcePool().get();
 	    assertNotNull(contentSource);
-	    
+
 	    assertEquals(host, contentSource.getConnectionProvider().getHostName());
 	    if (port != null) {
             assertEquals(Integer.parseInt(port), contentSource.getConnectionProvider().getPort());
         }
-	    
+
 	    String csToStr = contentSource.toString();
 	    if (user != null) {
             assertTrue(csToStr.contains("user="+user));
@@ -487,7 +487,7 @@ public class AbstractManagerTest {
         }
         checkContentSource(instance,XCC_URI_USER,XCC_URI_HOST,XCC_URI_PORT,XCC_URI_DB);
     }
-    
+
     @Test
     public void testInitURIArgsTakePrecedenceOverProperties() throws CorbException {
         AbstractManager instance = new AbstractManagerImpl();
@@ -500,7 +500,7 @@ public class AbstractManagerTest {
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
-        }       
+        }
         checkContentSource(instance,XCC_URI_USER,XCC_URI_HOST,XCC_URI_PORT,XCC_URI_DB);
     }
 
@@ -686,8 +686,36 @@ public class AbstractManagerTest {
         assertTrue(records.get(0).getMessage().startsWith("runtime arguments = "));
     }
 
+    @Test(expected = CorbException.class)
+    public void testCreateContentSourceManagerBadClassname() throws CorbException{
+        AbstractManager instance = new AbstractManagerImpl();
+        instance.properties.setProperty(Options.CONTENT_SOURCE_POOL, "does-not-exist");
+        instance.createContentSourceManager();
+    }
+
+    @Test(expected = CorbException.class)
+    public void testCreateContentSourceManagerNotCSP() throws CorbException{
+        AbstractManager instance = new AbstractManagerImpl();
+        instance.properties.setProperty(Options.CONTENT_SOURCE_POOL, "com.marklogic.developer.corb.Manager");
+        instance.createContentSourceManager();
+    }
+
+    @Test
+    public void testCreateContentSourceManager() {
+        AbstractManager instance = new AbstractManagerImpl();
+        instance.properties.setProperty(Options.CONTENT_SOURCE_POOL, TestContentSourcePool.class.getName());
+        try {
+            ContentSourcePool csp = instance.createContentSourceManager();
+            assertTrue(csp instanceof TestContentSourcePool);
+        } catch (CorbException ex) {
+            fail();
+        }
+    }
+
+    public static class TestContentSourcePool extends DefaultContentSourcePool { }
+
     public static class AbstractManagerImpl extends AbstractManager {
-        
+
         @Override
         public void init(String[] args, Properties props) throws CorbException {
             this.properties = props;
