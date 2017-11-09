@@ -94,8 +94,7 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
     }
 
     private String extract() {
-        final char[][] items = this.queue;
-        String x = new String(items[takeIndex]);
+        String x = new String(queue[takeIndex]);
         queue[takeIndex] = null;
         takeIndex = increment(takeIndex);
         --count;
