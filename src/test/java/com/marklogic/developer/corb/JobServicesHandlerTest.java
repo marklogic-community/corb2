@@ -78,7 +78,6 @@ public class JobServicesHandlerTest {
     public void writeMetricsOut() throws Exception {
         Manager manager = new Manager();
         manager.jobStats = new JobStats(manager);
-        JobServicesHandler handler = new JobServicesHandler(manager);
         Map<String, String> params = new HashMap<>();
         HttpExchange exchange = mock(HttpExchange.class);
         Headers headers = new Headers();
