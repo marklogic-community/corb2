@@ -14,8 +14,6 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 import java.io.FileNotFoundException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 
 public class AbstractContentSourcePoolTest {

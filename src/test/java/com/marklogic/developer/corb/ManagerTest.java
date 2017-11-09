@@ -23,7 +23,6 @@ import java.io.File;
 import org.junit.*;
 import static org.junit.Assert.*;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
-import org.junit.runner.RunWith;
 
 import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
 import com.marklogic.developer.corb.util.FileUtils;
