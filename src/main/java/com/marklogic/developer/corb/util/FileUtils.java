@@ -30,6 +30,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.TERMINATE;
 import java.nio.file.SimpleFileVisitor;
+import java.text.MessageFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -112,9 +113,13 @@ public final class FileUtils {
     public static void moveFile(final File source, final File dest) {
         if (!source.getAbsolutePath().equals(dest.getAbsolutePath()) && source.exists()) {
             if (dest.exists()) {
-                dest.delete();
+                if (!dest.delete()) {
+                    LOG.log(Level.WARNING, () -> MessageFormat.format("Unable to delete file: {0}", dest.toString()));
+                }
             }
-            source.renameTo(dest);
+            if (!source.renameTo(dest)){
+                LOG.log(Level.WARNING, () -> MessageFormat.format("Unable to rename {0} to {1}", source.toString(), dest.toString()));
+            }
         }
     }
 
