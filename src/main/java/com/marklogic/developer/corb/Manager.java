@@ -129,28 +129,28 @@ public class Manager extends AbstractManager implements Closeable {
             } catch (Exception exc) {
                 LOG.log(SEVERE, "Error initializing CORB " + exc.getMessage(), exc);
                 manager.usage();
-                LOG.info("init error - exiting with code "+EXIT_CODE_INIT_ERROR);
+                LOG.log(INFO, () -> "init error - exiting with code " + EXIT_CODE_INIT_ERROR);
                 System.exit(EXIT_CODE_INIT_ERROR);
             }
             //now we can start corb.
             try {
                 long count = manager.run();
                 if (manager.execError) {
-                		LOG.info("processing error - exiting with code "+EXIT_CODE_PROCESSING_ERROR);
+                    LOG.log(INFO, () -> "processing error - exiting with code " + EXIT_CODE_PROCESSING_ERROR);
                     System.exit(EXIT_CODE_PROCESSING_ERROR);
                 } else if (manager.stopCommand) {
-                		LOG.info("stop command - exiting with code "+EXIT_CODE_STOP_COMMAND);
+                    LOG.info("stop command - exiting with code " + EXIT_CODE_STOP_COMMAND);
                     System.exit(EXIT_CODE_STOP_COMMAND);
                 } else if (count == 0) {
-                		LOG.info("no uris found - exiting with code "+EXIT_CODE_NO_URIS);
+                    LOG.log(INFO, () -> "no uris found - exiting with code " + EXIT_CODE_NO_URIS);
                     System.exit(EXIT_CODE_NO_URIS);
                 } else {
-                		LOG.info("success - exiting with code "+EXIT_CODE_SUCCESS);
+                    LOG.log(INFO, () -> "success - exiting with code " + EXIT_CODE_SUCCESS);
                     System.exit(EXIT_CODE_SUCCESS);
                 }
             } catch (Exception exc) {
                 LOG.log(SEVERE, "Error while running CORB", exc);
-                LOG.info("unexpected error - exiting with code "+EXIT_CODE_PROCESSING_ERROR);
+                LOG.log(INFO, () -> "unexpected error - exiting with code " + EXIT_CODE_PROCESSING_ERROR);
                 System.exit(EXIT_CODE_PROCESSING_ERROR);
             }
         }
