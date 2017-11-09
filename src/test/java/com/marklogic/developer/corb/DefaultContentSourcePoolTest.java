@@ -434,7 +434,7 @@ public class DefaultContentSourcePoolTest {
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.contentSourceList.add(cs);
             when(cs.newSession()).thenReturn(session);
-            when(session.newAdhocQuery(Mockito.any())).thenReturn(request);
+            when(session.newAdhocQuery(any())).thenReturn(request);
             when(request.getSession()).thenReturn(session);
             when(session.submitRequest(request)).thenReturn(rs);
 
@@ -461,11 +461,11 @@ public class DefaultContentSourcePoolTest {
 		when(cs2.newSession()).thenReturn(session2);
 		when(cs2.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost2",8002));
 
-		when(session1.newAdhocQuery(Mockito.any())).thenReturn(request);
-		when(session1.submitRequest(Mockito.any())).thenThrow(mock(ServerConnectionException.class));
+		when(session1.newAdhocQuery(any())).thenReturn(request);
+		when(session1.submitRequest(any())).thenThrow(mock(ServerConnectionException.class));
 
-		when(session2.newAdhocQuery(Mockito.any())).thenReturn(request);
-		when(session2.submitRequest(Mockito.any())).thenReturn(result);
+		when(session2.newAdhocQuery(any())).thenReturn(request);
+		when(session2.submitRequest(any())).thenReturn(result);
 
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.init(null, null, "");
@@ -522,8 +522,8 @@ public class DefaultContentSourcePoolTest {
         when(cs.newSession()).thenReturn(session);
         when(cs.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost1", 8001));
 
-        when(session.newAdhocQuery(Mockito.any())).thenReturn(request);
-        when(session.submitRequest(Mockito.any())).thenReturn(result);
+        when(session.newAdhocQuery(any())).thenReturn(request);
+        when(session.submitRequest(any())).thenReturn(result);
 
         try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.init(null, null, "");
@@ -552,11 +552,11 @@ public class DefaultContentSourcePoolTest {
 		when(cs2.newSession()).thenReturn(session2);
 		when(cs2.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost2",8002));
 
-		when(session1.newAdhocQuery(Mockito.any())).thenReturn(request);
-		when(session1.submitRequest(Mockito.any())).thenThrow(mock(ServerConnectionException.class));
+		when(session1.newAdhocQuery(any())).thenReturn(request);
+		when(session1.submitRequest(any())).thenThrow(mock(ServerConnectionException.class));
 
-		when(session2.newAdhocQuery(Mockito.any())).thenReturn(request);
-		when(session2.submitRequest(Mockito.any())).thenThrow(mock(ServerConnectionException.class));
+		when(session2.newAdhocQuery(any())).thenReturn(request);
+		when(session2.submitRequest(any())).thenThrow(mock(ServerConnectionException.class));
 
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.contentSourceList.add(cs1);

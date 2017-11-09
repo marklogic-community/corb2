@@ -337,7 +337,7 @@ public class JobStats extends BaseMonitor {
             Element jobElement = createJobElement(doc, concise);
             doc.appendChild(jobElement);
         } catch (ParserConfigurationException ex) {
-            LOG.log(Level.SEVERE, "Unable to create a new XML Document", ex);
+            LOG.log(SEVERE, "Unable to create a new XML Document", ex);
         }
         return doc;
     }
