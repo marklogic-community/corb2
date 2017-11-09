@@ -256,7 +256,7 @@ public abstract class AbstractManager {
                     XCC_CONNECTION_URI, XCC_USERNAME, XCC_PASSWORD, XCC_HOSTNAME, XCC_PORT));
         }
 
-        ArrayList<String> connectionUriList = new ArrayList<>();
+        List<String> connectionUriList = new ArrayList<>();
         if (uriAsStrings == null) {
             if (this.decrypter != null) {
                 username = this.decrypter.decrypt(XCC_USERNAME, username);
