@@ -324,14 +324,14 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         static final String CLOSE = "close";
         static final String EMPTY_SEQ = "()";
 
-        DefaultContentSourcePool csp;
-        ContentSource cs;
-        Session target;
-        long allocTime;
+        private DefaultContentSourcePool csp;
+        private ContentSource cs;
+        private Session target;
+        private long allocTime;
 
-        int attempts = 0;
+        private int attempts = 0;
 
-        Session retryProxy;
+        private Session retryProxy;
 
 		protected SessionInvocationHandler(DefaultContentSourcePool csp, ContentSource cs, Session target, long allocTime) {
 			this.csp = csp;
