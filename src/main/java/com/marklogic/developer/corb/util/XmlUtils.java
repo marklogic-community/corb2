@@ -79,17 +79,17 @@ public final class XmlUtils {
         //collect all validation errors with a custom handler
         validator.setErrorHandler(new ErrorHandler() {
             @Override
-            public void warning(SAXParseException exception) throws SAXException {
+            public void warning(SAXParseException exception) {
                 exceptions.add(exception);
             }
 
             @Override
-            public void fatalError(SAXParseException exception) throws SAXException {
+            public void fatalError(SAXParseException exception) {
                 exceptions.add(exception);
             }
 
             @Override
-            public void error(SAXParseException exception) throws SAXException {
+            public void error(SAXParseException exception) {
                 exceptions.add(exception);
             }
         });
