@@ -33,7 +33,8 @@ import static org.mockito.Mockito.when;
 
 public class JobStatsTest {
     private static final String FOO = "foo";
-
+    private static final String METRICS_DB = "metricsDB";
+    
     @Test
     public void getHostName() throws Exception {
         TransformOptions transformOptions = new TransformOptions();
@@ -48,7 +49,6 @@ public class JobStatsTest {
     public void epochMillisAsFormattedDateString() throws Exception {
         assertEquals(20, JobStats.epochMillisAsFormattedDateString(0).length());
     }
-
 
     @Test
     public void testToString() {
@@ -180,7 +180,7 @@ public class JobStatsTest {
             when(manager.getContentSourcePool()).thenReturn(csp);
             when(manager.getOptions()).thenReturn(mock(TransformOptions.class));
             JobStats jobStats = new JobStats(manager);
-            jobStats.logToServer("foo", "bar");
+            jobStats.logToServer(FOO, "bar");
             verify(contentSource, Mockito.never()).newSession();
         } catch (CorbException ex) {
             fail();
@@ -197,7 +197,7 @@ public class JobStatsTest {
             when(manager.getContentSourcePool()).thenReturn(csp);
             when(manager.getOptions()).thenReturn(mock(TransformOptions.class));
             JobStats jobStats = new JobStats(manager);
-            jobStats.logToServer("foo", "bar");
+            jobStats.logToServer(FOO, "bar");
             verify(contentSource, Mockito.never()).newSession();
         } catch (CorbException ex) {
             fail();
@@ -211,7 +211,7 @@ public class JobStatsTest {
         when(manager.getOptions()).thenReturn(mock(TransformOptions.class));
         JobStats jobStats = new JobStats(manager);
         try {
-            jobStats.logToServer(contentSource, "foo", "bar");
+            jobStats.logToServer(contentSource, FOO, "bar");
             verify(contentSource, Mockito.never()).newSession();
         } catch (RequestException ex) {
             fail();
@@ -228,7 +228,7 @@ public class JobStatsTest {
         when(contentSource.newSession()).thenReturn(mock(Session.class));
         JobStats jobStats = new JobStats(manager);
         try {
-            jobStats.logToServer(contentSource, "foo", "bar");
+            jobStats.logToServer(contentSource, FOO, "bar");
             verify(contentSource, Mockito.times(1)).newSession();
         } catch (RequestException ex) {
             fail();
@@ -247,7 +247,7 @@ public class JobStatsTest {
             when(csp.get()).thenReturn(contentSource);
             when(contentSource.newSession()).thenReturn(mock(Session.class));
             JobStats jobStats = new JobStats(manager);
-            jobStats.executeModule("foo");
+            jobStats.executeModule(FOO);
             verify(contentSource, Mockito.never()).newSession();
         } catch (CorbException ex) {
             fail();
@@ -261,7 +261,7 @@ public class JobStatsTest {
         Manager manager = mock(Manager.class);
         when(manager.getContentSourcePool()).thenReturn(csp);
         TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setMetricsDatabase("metricsDB");
+        transformOptions.setMetricsDatabase(METRICS_DB);
         when(manager.getOptions()).thenReturn(transformOptions);
         when(manager.getRequestForModule(any(),any())).thenReturn(mock(Request.class));
         Session session = mock(Session.class);
@@ -271,7 +271,7 @@ public class JobStatsTest {
             when(csp.get()).thenReturn(contentSource);
             when(contentSource.newSession()).thenReturn(session);
             JobStats jobStats = new JobStats(manager);
-            jobStats.executeModule("foo");
+            jobStats.executeModule(FOO);
             verify(contentSource, Mockito.times(1)).newSession();
         } catch (CorbException | RequestException ex) {
             fail();
@@ -283,11 +283,11 @@ public class JobStatsTest {
         ContentSource contentSource = mock(ContentSource.class);
         Manager manager = mock(Manager.class);
         TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setMetricsDatabase("metricsDB");
+        transformOptions.setMetricsDatabase(METRICS_DB);
         when(manager.getOptions()).thenReturn(transformOptions);
         when(contentSource.newSession()).thenReturn(mock(Session.class));
         JobStats jobStats = new JobStats(manager);
-        jobStats.executeModule("foo");
+        jobStats.executeModule(FOO);
         verify(contentSource, Mockito.never()).newSession();
     }
 
@@ -298,12 +298,12 @@ public class JobStatsTest {
         Manager manager = mock(Manager.class);
         when(manager.getContentSourcePool()).thenReturn(csp);
         TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setMetricsDatabase("metricsDB");
+        transformOptions.setMetricsDatabase(METRICS_DB);
         when(manager.getOptions()).thenReturn(transformOptions);
         try {
             when(csp.get()).thenReturn(null);
             JobStats jobStats = new JobStats(manager);
-            jobStats.executeModule("foo");
+            jobStats.executeModule(FOO);
             verify(contentSource, Mockito.never()).newSession();
         } catch (CorbException ex) {
             fail();
@@ -317,13 +317,13 @@ public class JobStatsTest {
         Manager manager = mock(Manager.class);
         when(manager.getContentSourcePool()).thenReturn(csp);
         TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setMetricsDatabase("metricsDB");
+        transformOptions.setMetricsDatabase(METRICS_DB);
         when(manager.getOptions()).thenReturn(transformOptions);
         try {
             when(csp.get()).thenThrow(CorbException.class);
 
             JobStats jobStats = new JobStats(manager);
-            jobStats.executeModule("foo");
+            jobStats.executeModule(FOO);
             verify(contentSource, Mockito.never()).newSession();
         } catch (CorbException ex) {
             fail();
