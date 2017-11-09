@@ -290,7 +290,7 @@ Option | Description
 **<a name="SSL-ENABLED-PROTOCOLS"></a>SSL-ENABLED-PROTOCOLS** | (Optional) A comma separated list of acceptable SSL protocols.
 **<a name="SSL-CIPHER-SUITES"></a>SSL-CIPHER-SUITES** | A comma separated list of acceptable cipher suites used.
 
-### Load Balancing and Failover with multiple hosts
+### Load Balancing and Failover with Multiple Hosts
 Corb 2.4+ supports load balancing and failover using `com.marklogic.developer.corb.ContentSourcePool`. This is automatically enabled when multiple comma separated values (supports encryption) are specified for for **XCC-CONNECTION-URI** or **XCC-HOSTNAME**.
 
 ```properties
