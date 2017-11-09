@@ -54,7 +54,8 @@ public class JobStatsTest {
     public void testToString() {
         Manager manager = new Manager();
         JobStats jobStats = new JobStats(manager);
-        assertEquals(jobStats.toString(), jobStats.toString(true));
+        assertTrue(jobStats.toString().startsWith("{"));
+        assertTrue(jobStats.toString().endsWith("}"));
     }
 
     @Test
