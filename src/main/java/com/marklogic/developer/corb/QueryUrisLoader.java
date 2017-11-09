@@ -254,7 +254,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         } else {
             long total = getTotalCount();
             if (total > Integer.MAX_VALUE) {
-                LOG.log(Level.WARNING, () -> MessageFormat.format("Total number of URIs {0, number} is greater than Array capacity. Enable {1}", total, Options.DISK_QUEUE));
+                LOG.log(WARNING, () -> MessageFormat.format("Total number of URIs {0, number} is greater than Array capacity. Enable {1}", total, Options.DISK_QUEUE));
             }
             uriQueue = new ArrayQueue<>(Math.toIntExact(total));
         }
