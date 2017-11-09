@@ -234,7 +234,7 @@ public final class StringUtils {
      */
     public static List<String> commaSeparatedValuesToList(String value) {
         List<String> values = new ArrayList<>();
-        for (String item : split(value, ",")) {
+        for (String item : split(value, COMMA)) {
             values.add(item.trim());
         }
         return values;
@@ -374,8 +374,7 @@ public final class StringUtils {
 	public static Set<Integer> parsePortRanges(String jobServerPort) {
 		Set<Integer> jobServerPorts = new LinkedHashSet<>();
 		if (isNotBlank(jobServerPort)) {
-            String[] splitByComma = jobServerPort.trim().split("\\s*,\\s*");
-            for (String aSplitByComma : splitByComma) {
+            for (String aSplitByComma : commaSeparatedValuesToList(jobServerPort)) {
                 if (aSplitByComma.contains("-")) {
                     String[] splitByDash = aSplitByComma.split("\\s*-\\s*");
                     if (splitByDash.length == 2) {
@@ -410,10 +409,10 @@ public final class StringUtils {
      * @return
      */
     public static String getXccUri(String protocol, String username, String password, String host, String port, String dbname) {
-        if(isBlank(protocol)) {
+        if (isBlank(protocol)) {
             protocol = "xcc";
         }
-        return protocol+"://" + urlEncodeIfNecessary(username) + ':' + urlEncodeIfNecessary(password) + '@' + host + ':' + port + (isBlank(dbname) ? "" : '/' + urlEncodeIfNecessary(dbname));
+        return protocol + "://" + urlEncodeIfNecessary(username) + ':' + urlEncodeIfNecessary(password) + '@' + host + ':' + port + (isBlank(dbname) ? EMPTY : SLASH + urlEncodeIfNecessary(dbname));
     }
-    
+
 }

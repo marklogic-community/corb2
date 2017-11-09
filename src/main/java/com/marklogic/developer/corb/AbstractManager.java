@@ -264,17 +264,17 @@ public abstract class AbstractManager {
                 port = this.decrypter.decrypt(XCC_PORT, port);
                 dbname = !isBlank(dbname) ? this.decrypter.decrypt(XCC_DBNAME, dbname) : null;
             }
-            for (String host: hostnames.split(StringUtils.COMMA)) {
+            for (String host: StringUtils.commaSeparatedValuesToList(hostnames)) {
                 if (this.decrypter != null) {
-                    host = this.decrypter.decrypt(XCC_HOSTNAME,host);
+                    host = this.decrypter.decrypt(XCC_HOSTNAME, host);
                 }
-                String connectionUri = StringUtils.getXccUri(protocol,username, password, host, port, dbname);
+                String connectionUri = StringUtils.getXccUri(protocol, username, password, host, port, dbname);
                 if (connectionUri != null) {
                     connectionUriList.add(connectionUri);
                 }
             }
         } else {
-            for (String connectionUri : uriAsStrings.split(StringUtils.COMMA)) {
+            for (String connectionUri : StringUtils.commaSeparatedValuesToList(uriAsStrings)) {
                 if (this.decrypter != null) {
                     connectionUri = this.decrypter.decrypt(XCC_CONNECTION_URI, connectionUri);
                 }
