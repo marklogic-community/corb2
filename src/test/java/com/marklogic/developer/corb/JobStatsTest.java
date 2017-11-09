@@ -34,7 +34,7 @@ import static org.mockito.Mockito.when;
 public class JobStatsTest {
     private static final String FOO = "foo";
     private static final String METRICS_DB = "metricsDB";
-    
+
     @Test
     public void getHostName() throws Exception {
         TransformOptions transformOptions = new TransformOptions();

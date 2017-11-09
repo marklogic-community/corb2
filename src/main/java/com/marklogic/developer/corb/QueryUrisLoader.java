@@ -47,7 +47,6 @@ import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
