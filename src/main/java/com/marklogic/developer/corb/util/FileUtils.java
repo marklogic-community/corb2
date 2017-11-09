@@ -112,11 +112,13 @@ public final class FileUtils {
      */
     public static void moveFile(final File source, final File dest) {
         if (!source.getAbsolutePath().equals(dest.getAbsolutePath()) && source.exists()) {
-            if (dest.exists() && !dest.delete()) {
-                LOG.log(Level.WARNING, () -> MessageFormat.format("Unable to delete file: {0}", dest.toString()));
+            try {
+                Files.deleteIfExists(dest.toPath());
+            } catch (IOException ex) {
+                LOG.log(Level.WARNING, MessageFormat.format("Unable to delete file: {0}", dest), ex);
             }
             if (!source.renameTo(dest)){
-                LOG.log(Level.WARNING, () -> MessageFormat.format("Unable to rename {0} to {1}", source.toString(), dest.toString()));
+                LOG.log(Level.WARNING, () -> MessageFormat.format("Unable to rename {0} to {1}", source, dest));
             }
         }
     }
