@@ -44,7 +44,7 @@ public class DefaultContentSourcePoolTest {
 	@Test
 	public void testInitContentSources() throws CorbException{
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@localhost:8000"});
+            csp.init(null, null, "xcc://foo:bar@localhost:8000");
             assertTrue(csp.available());
             assertNotNull(csp.get());
             assertEquals(1, csp.getAllContentSources().length);
@@ -55,7 +55,7 @@ public class DefaultContentSourcePoolTest {
 	@Test(expected = CorbException.class)
 	public void testInitInvalidContentSources() throws CorbException{
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@localhost1:8000"});
+            csp.init(null, null, "xcc://foo:bar@localhost1:8000");
             assertFalse(csp.available());
             csp.get();
         }
@@ -66,7 +66,7 @@ public class DefaultContentSourcePoolTest {
 	    Properties properties = new Properties();
 	    properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
         try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(properties, null, new String[]{"xcc://foo:bar@localhost:8000"});
+            csp.init(properties, null, "xcc://foo:bar@localhost:8000");
 
             ContentSource cs = csp.nextContentSource();
             csp.error(cs);
@@ -88,7 +88,7 @@ public class DefaultContentSourcePoolTest {
 	@Test
 	public void testInitTwoContentSources() throws CorbException {
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@localhost:8000/dbase", "xcc://foo:bar@192.168.0.1:8000/dbase"});
+            csp.init(null, null, "xcc://foo:bar@localhost:8000/dbase", "xcc://foo:bar@192.168.0.1:8000/dbase");
             assertTrue(csp.available());
             assertEquals(2, csp.getAllContentSources().length);
             assertHostAndPort(csp.get(), "localhost", 8000);
@@ -99,7 +99,7 @@ public class DefaultContentSourcePoolTest {
 	@Test
 	public void testInitTwoWithOneInvalidContentSource() throws CorbException{
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@localhost:8000", "xcc://foo:bar@localhost1:8000"});
+            csp.init(null, null, "xcc://foo:bar@localhost:8000", "xcc://foo:bar@localhost1:8000");
             assertTrue(csp.available());
             assertEquals(1, csp.getAllContentSources().length);
             assertHostAndPort(csp.get(), "localhost", 8000);
@@ -112,7 +112,7 @@ public class DefaultContentSourcePoolTest {
 	    Properties properties = new Properties();
 	    properties.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_RANDOM);
         try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(properties, null, new String[]{"xcc://foo:bar@localhost:8000", "xcc://foo:bar@localhost:8010", "xcc://foo:bar@localhost:8020"});
+            csp.init(properties, null, "xcc://foo:bar@localhost:8000", "xcc://foo:bar@localhost:8010", "xcc://foo:bar@localhost:8020");
             assertEquals(DefaultContentSourcePool.CONNECTION_POLICY_RANDOM, csp.connectionPolicy);
             assertNotNull(csp.nextContentSource());
             assertNotNull(csp.nextContentSource());
@@ -126,7 +126,7 @@ public class DefaultContentSourcePoolTest {
         Properties properties = new Properties();
         properties.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_LOAD);
         try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(properties, null, new String[]{"xcc://foo:bar@localhost:8000", "xcc://foo:bar@localhost:8010", "xcc://foo:bar@localhost:8020"});
+            csp.init(properties, null, "xcc://foo:bar@localhost:8000", "xcc://foo:bar@localhost:8010", "xcc://foo:bar@localhost:8020");
 
             assertEquals(DefaultContentSourcePool.CONNECTION_POLICY_LOAD, csp.connectionPolicy);
             assertTrue(csp.isLoadPolicy());
@@ -205,14 +205,14 @@ public class DefaultContentSourcePoolTest {
         Properties properties = new Properties();
         properties.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_ROUND_ROBIN);
         DefaultContentSourcePool csp = new DefaultContentSourcePool();
-        csp.init(properties, null, new String[]{"xcc://foo:bar@localhost:8000", "xcc://foo:bar@localhost:8010", "xcc://foo:bar@localhost:8020"});
+        csp.init(properties, null, "xcc://foo:bar@localhost:8000", "xcc://foo:bar@localhost:8010", "xcc://foo:bar@localhost:8020");
         return csp;
     }
 
 	@Test
 	public void testRoundRobinPolicy() throws CorbException{
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003"});
+            csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             assertEquals(3, csp.getAllContentSources().length);
             assertHostAndPort(csp.get(), "192.168.0.1", 8001);
             assertHostAndPort(csp.get(), "192.168.0.2", 8002);
@@ -224,7 +224,7 @@ public class DefaultContentSourcePoolTest {
 	@Test
 	public void testRoundRobinPolicyWithOneError() throws CorbException{
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003"});
+            csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             assertEquals(3, csp.getAllContentSources().length);
             ContentSource ecs = null;
             assertHostAndPort((ecs = csp.get()), "192.168.0.1", 8001);
@@ -238,7 +238,7 @@ public class DefaultContentSourcePoolTest {
 	@Test
 	public void testRoundRobinPolicyWithTwoErrors() throws CorbException{
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003"});
+            csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             assertEquals(3, csp.getAllContentSources().length);
             ContentSource ecs1 = null;
             ContentSource ecs2 = null;
@@ -255,7 +255,7 @@ public class DefaultContentSourcePoolTest {
 	public void testRoundRobinPolicyWithUnexpiredContentSource() throws CorbException, InterruptedException{
 		System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002"});
+            csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             ContentSource ecs1 = null;
             assertHostAndPort((ecs1 = csp.get()), "192.168.0.1", 8001);
             assertHostAndPort(csp.get(), "192.168.0.2", 8002);
@@ -271,7 +271,7 @@ public class DefaultContentSourcePoolTest {
 	public void testRoundRobinPolicyWithReactivatedContentSource() throws CorbException, InterruptedException{
 		System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002"});
+            csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             ContentSource ecs1 = null;
             assertHostAndPort((ecs1 = csp.get()), "192.168.0.1", 8001);
             assertHostAndPort(csp.get(), "192.168.0.2", 8002);
@@ -289,7 +289,7 @@ public class DefaultContentSourcePoolTest {
         properties.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(1));
         properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(0));
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(properties, null, new String[]{"xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003"});
+            csp.init(properties, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             assertEquals(3, csp.getAllContentSources().length);
             ContentSource ecs1 = null;
             ContentSource ecs2 = null;
@@ -308,7 +308,7 @@ public class DefaultContentSourcePoolTest {
 	public void tryToTestRandomPolicy() throws CorbException{
 		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_RANDOM);
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002"});
+            csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             assertTrue(Arrays.asList(new String[]{"192.168.0.1", "192.168.0.2"}).contains(normalizeHostName(csp.get().getConnectionProvider().getHostName())));
             assertTrue(Arrays.asList(new String[]{"192.168.0.1", "192.168.0.2"}).contains(normalizeHostName(csp.get().getConnectionProvider().getHostName())));
         }
@@ -318,7 +318,7 @@ public class DefaultContentSourcePoolTest {
 	public void testRandomPolicyWithOneError() throws CorbException{
 		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_RANDOM);
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002"});
+            csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             assertTrue(Arrays.asList(new String[]{"192.168.0.1", "192.168.0.2"}).contains(normalizeHostName(csp.get().getConnectionProvider().getHostName())));
             assertTrue(Arrays.asList(new String[]{"192.168.0.1", "192.168.0.2"}).contains(normalizeHostName(csp.get().getConnectionProvider().getHostName())));
             csp.error(csp.getAllContentSources()[0]);
@@ -330,7 +330,7 @@ public class DefaultContentSourcePoolTest {
 	public void testLoadPolicy() throws CorbException{
 		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_LOAD);
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002"});
+            csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             ContentSource[] csList = csp.getAllContentSources();
             assertEquals(2, csList.length);
             assertHostAndPort(csp.get(), "192.168.0.1", 8001);
@@ -346,7 +346,7 @@ public class DefaultContentSourcePoolTest {
 	public void testLoadPolicy2() throws CorbException{
 		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_LOAD);
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002"});
+            csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             ContentSource[] csList = csp.getAllContentSources();
             assertEquals(2, csList.length);
             csp.hold(csList[0]);
@@ -361,7 +361,7 @@ public class DefaultContentSourcePoolTest {
 	public void testLoadPolicyWithOneError() throws CorbException{
 		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_LOAD);
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003"});
+            csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             ContentSource[] csList = csp.getAllContentSources();
             assertEquals(3, csList.length);
             assertHostAndPort(csp.get(), "192.168.0.1", 8001);
@@ -377,7 +377,7 @@ public class DefaultContentSourcePoolTest {
 	public void testLoadPolicyWithTwoErrors() throws CorbException{
 		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_LOAD);
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003"});
+            csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             ContentSource[] csList = csp.getAllContentSources();
             assertEquals(3, csList.length);
             assertHostAndPort(csp.get(), "192.168.0.1", 8001);
@@ -393,7 +393,7 @@ public class DefaultContentSourcePoolTest {
 	public void testLoadPolicyWithReactivatedContentSource() throws CorbException{
 		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_LOAD);
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003"});
+            csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             ContentSource[] csList = csp.getAllContentSources();
             assertEquals(3, csList.length);
             assertHostAndPort(csp.get(), "192.168.0.1", 8001);
@@ -411,7 +411,7 @@ public class DefaultContentSourcePoolTest {
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(0));
 		System.setProperty(Options.CONNECTION_POLICY, "LOAD");
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, new String[]{"xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002"});
+            csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             ContentSource[] csList = csp.getAllContentSources();
             assertEquals(2, csList.length);
             assertHostAndPort(csp.get(), "192.168.0.1", 8001);
