@@ -165,7 +165,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
 
     @Override
     public Iterator<String> iterator() {
-        throw new RuntimeException(MessageFormat.format("Iterator is not supported for {0}", DiskQueue.class.getSimpleName()));
+        throw new UnsupportedOperationException(MessageFormat.format("Iterator is not supported for {0}", DiskQueue.class.getSimpleName()));
     }
 
     @Override
