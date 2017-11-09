@@ -94,9 +94,10 @@ public class Monitor extends BaseMonitor implements Runnable {
 
             if (completed >= taskCount) {
                 try {
-                    Thread.sleep(100);
-                } catch(InterruptedException exc) {
-                    //sleep a little for the pool to align
+                    Thread.sleep(100); //sleep a little for the pool to align
+                } catch(InterruptedException ex) {
+                    LOG.log(WARNING, "Interrupted!", ex);
+                    Thread.currentThread().interrupt();
                 }
                 if (pool.getActiveCount() > 0 || (pool.getTaskCount() - pool.getCompletedTaskCount()) > 0) {
                     LOG.log(WARNING, "Thread pool is still active with all the tasks completed and received. We shouldn't see this message.");

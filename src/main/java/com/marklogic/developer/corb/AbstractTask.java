@@ -380,7 +380,8 @@ public abstract class AbstractTask implements Task {
                 try {
                     Thread.sleep(retryInterval * 1000L);
                 } catch (InterruptedException ex) {
-                    //tried to wait, but not a problem if interrupted
+                    LOG.log(WARNING, "Interrupted!", ex);
+                    Thread.currentThread().interrupt();
                 }
                 return invokeModule();
             } else if (failOnError) {

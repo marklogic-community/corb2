@@ -100,7 +100,8 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
             try {
                 Thread.sleep(retryInterval * 1000L);
             } catch (InterruptedException ex) {
-                //tried to give it some time, but not critical if we haven't waited
+                LOG.log(WARNING, "Interrupted!", ex);
+                Thread.currentThread().interrupt();
             }
         }
 
