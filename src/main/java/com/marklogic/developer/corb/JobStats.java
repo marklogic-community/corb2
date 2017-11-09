@@ -40,7 +40,7 @@ import java.time.format.DateTimeFormatter;
 public class JobStats extends BaseMonitor {
 
     private static final String NOT_APPLICABLE = "NA";
-    private static final long TPS_ETC_MIN_REFRESH_INTERVAL = 10000l;
+    private static final long TPS_ETC_MIN_REFRESH_INTERVAL = 10000L;
     private static final String METRICS_COLLECTIONS_PARAM = "collections";
     private static final String METRICS_DOCUMENT_STR_PARAM = "metricsDocumentStr";
     private static final String METRICS_DB_NAME_PARAM = "dbName";

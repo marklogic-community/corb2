@@ -87,12 +87,12 @@ public class JobStatsTest {
 	@Test
 	public void testXMLRanks() throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
 		Map<String, Long> nodeVal = new HashMap<>();
-        nodeVal.put("URI6", 1l);
-        nodeVal.put("URI3", 4l);
-        nodeVal.put("URI1", 6l);
-		nodeVal.put("URI2", 5l);
-		nodeVal.put("URI4", 3l);
-		nodeVal.put("URI5", 2l);
+        nodeVal.put("URI6", 1L);
+        nodeVal.put("URI3", 4L);
+        nodeVal.put("URI1", 6L);
+		nodeVal.put("URI2", 5L);
+		nodeVal.put("URI4", 3L);
+		nodeVal.put("URI5", 2L);
 
 		Manager manager = new Manager();
 		PausableThreadPoolExecutor threadPoolExecutor = mock(PausableThreadPoolExecutor.class);
