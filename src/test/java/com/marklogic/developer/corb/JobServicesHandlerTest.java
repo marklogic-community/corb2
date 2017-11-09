@@ -86,13 +86,13 @@ public class JobServicesHandlerTest {
         when(exchange.getResponseHeaders()).thenReturn(headers);
         when(exchange.getResponseBody()).thenReturn(out);
 
-        handler.writeMetricsOut(exchange, params, manager);
+        JobServicesHandler.writeMetricsOut(exchange, params, manager);
         assertEquals(1, headers.size());
         assertEquals(1, headers.get(JobServer.HEADER_CONTENT_TYPE).size());
         assertTrue(headers.get(JobServer.HEADER_CONTENT_TYPE).contains("application/json"));
 
         params.put(JobServicesHandler.PARAM_FORMAT, "xml");
-        handler.writeMetricsOut(exchange, params, manager);
+        JobServicesHandler.writeMetricsOut(exchange, params, manager);
         assertEquals( 1, headers.size());
         assertEquals(2, headers.get(JobServer.HEADER_CONTENT_TYPE).size());
         assertTrue(headers.get(JobServer.HEADER_CONTENT_TYPE).contains("application/xml"));

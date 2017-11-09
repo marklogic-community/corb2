@@ -48,7 +48,7 @@ public class JobServerTest {
             assertNotNull(content);
 
             // ensure that base path (without extenstion) gets a response
-            url = new URL("http://localhost:" + port +  server.METRICS_PATH);
+            url = new URL("http://localhost:" + port +  JobServer.METRICS_PATH);
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             content = IOUtils.toByteArray(conn.getInputStream());
