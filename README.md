@@ -307,9 +307,14 @@ The default implementation for `com.marklogic.developer.corb.ContentSourcePool` 
 * LOAD - Host with least number of active connections is allocated to caller.    
 
 ### Query and Connection Retries
-Corb automatically retries the requests a given URI when it encounters `com.marklogic.xcc.exceptions.ServerConnectionException` from MarkLogic. The number of retry attempts can be configured using **XCC-CONNECTION-RETRY-LIMIT** (default is 3). If multiple hosts are specified, we can additionally configure max retries per each host using **XCC-CONNECTION-HOST-RETRY-LIMIT** (default is 3). Corb waits at least **XCC-CONNECTION-RETRY-INTERVAL** (default 60sec) before a connection is retried on a failed host. 
+Corb automatically retries the requests a given URI when it encounters `com.marklogic.xcc.exceptions.ServerConnectionException` from MarkLogic. If necessary, the number of retry attempts can be configured using **XCC-CONNECTION-RETRY-LIMIT**. If multiple hosts are specified, we can optionally configure retries per each host using **XCC-CONNECTION-HOST-RETRY-LIMIT**. Corb waits at least **XCC-CONNECTION-RETRY-INTERVAL** seconds before a connection is retried on a failed host. 
 
-Corb also supports retries of requests failed due to query errors. This feature is only intended for sporadic query errors which are not specific to a particular URI. A good example may include occasional time out exceptions from MarkLogic when the ML is too busy and request time limit is low. We can configure which queries can be retried using **QUERY-RETRY-ERROR-CODES** (comma separated MarkLogic error codes) or **QUERY-RETRY-ERROR-MESSAGE** (comma separated partial error messages - when error codes are not available). The number of query retries can be configured using **QUERY-RETRY-LIMIT** (default is 2) and interval between query retries using **QUERY-RETRY-INTERVAL** (default 20 seconds).
+Corb also supports retries of requests failed due to query errors. This feature is only intended for sporadic query errors which are not specific to a particular URI. A good example may include occasional time out exceptions from MarkLogic when the ML is too busy and request time limit is low. We can configure which queries can be retried using **QUERY-RETRY-ERROR-CODES** or **QUERY-RETRY-ERROR-MESSAGE** (when error codes are not available). If necessary, the number of query retry attempts can be configured using **QUERY-RETRY-LIMIT**. Corb waits at least **QUERY-RETRY-INTERVAL** seconds before retrying a query.
+
+```properties
+QUERY-RETRY-ERROR-CODES=XDMP-EXTIME,SVC-EXTIME
+QUERY-RETRY-ERROR-MESSAGE=ErrorMsg1,ErrorMsg2
+```
 
 ### Usage
 #### Usage 1 - Command line options:
