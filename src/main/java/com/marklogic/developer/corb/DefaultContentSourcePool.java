@@ -96,10 +96,11 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         Integer failedCount = errorCountsMap.get(contentSource);
         if (failedCount != null && failedCount > 0 && errorTimeMap.containsKey(contentSource)) {
             LOG.log(WARNING, "Connection failed for ContentSource {0}. Waiting for {1} seconds before retry attempt {2}",
-                    new Object[]{asString(contentSource),retryInterval,failedCount + 1});
+                    new Object[]{asString(contentSource), retryInterval, failedCount + 1});
             try {
                 Thread.sleep(retryInterval * 1000L);
-            } catch (Exception ex) {
+            } catch (InterruptedException ex) {
+                //tried to give it some time, but not critical if we haven't waited
             }
         }
 
@@ -355,7 +356,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 			}
 			try {
 				if (retryProxy != null && isClose(method)) {
-					retryProxy.close(); //Use proxy only as there can be multiple retry attemps in a chain.
+					retryProxy.close(); //Use proxy only as there can be multiple retry attempts in a chain.
 				}
 				Object obj = method.invoke(target, args);
 				//TODO: connection is held longer for streaming result sequence even after request is submitted.

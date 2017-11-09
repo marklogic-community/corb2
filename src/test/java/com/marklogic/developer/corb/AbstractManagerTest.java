@@ -465,7 +465,7 @@ public class AbstractManagerTest {
         assertNotNull(instance.sslConfig);
         assertTrue(instance.sslConfig instanceof TwoWaySSLConfig);
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void testInitSSLConfigInvalidConfigClass() {
         AbstractManager instance = new AbstractManagerImpl();
