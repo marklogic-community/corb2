@@ -45,25 +45,21 @@ public class ManagerDemo {
         try {
             manager.init(properties);
 
-            Thread managerThread = new Thread() {
-                @Override
-                public void run() {
-
+            Thread managerThread = new Thread(() -> {
+                try {
+                    manager.run();
+                } catch (Exception e) {
+                    LOG.log(Level.SEVERE, "Encountered an error running a job", e);
+                } finally {
+                    File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFilename);
+                    report.deleteOnExit();
                     try {
-                        manager.run();
-                    } catch (Exception e) {
-                        LOG.log(Level.SEVERE, "Encountered an error running a job", e);
-                    } finally {
-                        File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFilename);
-                        report.deleteOnExit();
-                        try {
-                            int lineCount = FileUtils.getLineCount(report);
-                        } catch (IOException e) {
-                            LOG.log(Level.SEVERE, "Encountered an error reading export", e);
-                        }
+                        int lineCount = FileUtils.getLineCount(report);
+                    } catch (IOException e) {
+                        LOG.log(Level.SEVERE, "Encountered an error reading export", e);
                     }
                 }
-            };
+            });
             managerThread.start();
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
