@@ -651,14 +651,14 @@ public class ModuleExecutorTest {
     public static ModuleExecutor getMockModuleExecutorCustomProcessResults() throws RequestException, CorbException {
         MockModuleExecutorResults manager = spy(new MockModuleExecutorResults());
         ContentSourcePool contentSourcePool = getMockContentSourceManager(); 
-		when(manager.createContentSourceManager()).thenReturn(contentSourcePool);
+		when(manager.createContentSourcePool()).thenReturn(contentSourcePool);
         return manager;
     }
 
     public static ModuleExecutor getMockModuleExecutorWithEmptyResults() throws RequestException, CorbException {
         ModuleExecutor manager = spy(new ModuleExecutor());
         ContentSourcePool contentSourcePool = getMockContentSourceManager(); 
-		when(manager.createContentSourceManager()).thenReturn(contentSourcePool);
+		when(manager.createContentSourcePool()).thenReturn(contentSourcePool);
         return manager;
     }
 

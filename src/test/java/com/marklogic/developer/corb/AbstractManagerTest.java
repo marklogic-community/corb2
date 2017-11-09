@@ -718,14 +718,14 @@ public class AbstractManagerTest {
     public void testCreateContentSourceManagerBadClassname() throws CorbException{
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.CONTENT_SOURCE_POOL, "does-not-exist");
-        instance.createContentSourceManager();
+        instance.createContentSourcePool();
     }
 
     @Test(expected = CorbException.class)
     public void testCreateContentSourceManagerNotCSP() throws CorbException{
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.CONTENT_SOURCE_POOL, "com.marklogic.developer.corb.Manager");
-        instance.createContentSourceManager();
+        instance.createContentSourcePool();
     }
 
     @Test
@@ -733,7 +733,7 @@ public class AbstractManagerTest {
         AbstractManager instance = new AbstractManagerImpl();
         instance.properties.setProperty(Options.CONTENT_SOURCE_POOL, TestContentSourcePool.class.getName());
         try {
-            ContentSourcePool csp = instance.createContentSourceManager();
+            ContentSourcePool csp = instance.createContentSourcePool();
             assertTrue(csp instanceof TestContentSourcePool);
         } catch (CorbException ex) {
             fail();
