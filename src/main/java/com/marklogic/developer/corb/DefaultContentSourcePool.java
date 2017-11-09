@@ -214,7 +214,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     protected synchronized void error(ContentSource cs, long allocTime) {
         if (contentSourceList.contains(cs)) {
             Long lastErrorTime = errorTimeMap.get(cs);
-            if (lastErrorTime == null || allocTime <= 0 || allocTime > lastErrorTime.longValue()) {
+            if (lastErrorTime == null || allocTime <= 0 || allocTime > lastErrorTime) {
 		        Integer count = errorCountsMap.get(cs);
 		        count = count == null ? 1 : count + 1;
 		        errorCountsMap.put(cs, count);
