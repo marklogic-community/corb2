@@ -365,8 +365,8 @@ public abstract class AbstractTask implements Task {
     protected String[] handleRequestException(RequestException requestException) throws CorbException {
         String name = requestException.getClass().getSimpleName();
 
-        if(requestException instanceof ServerConnectionException) {
-        		Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
+        if (requestException instanceof ServerConnectionException) {
+            Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
             throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
         } else if (shouldRetry(requestException)) {
             int retryLimit = this.getQueryRetryLimit();
@@ -379,7 +379,8 @@ public abstract class AbstractTask implements Task {
                         new Object[]{retryCount, retryInterval, errorCode, requestException.getMessage(), AT_URI, asString(inputUris)});
                 try {
                     Thread.sleep(retryInterval * 1000L);
-                } catch (Exception ex) {
+                } catch (InterruptedException ex) {
+                    //tried to wait, but not a problem if interrupted
                 }
                 return invokeModule();
             } else if (failOnError) {
@@ -397,8 +398,15 @@ public abstract class AbstractTask implements Task {
             LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
             String code = requestException instanceof QueryException ? ((QueryException)requestException).getCode() : null;
             String message = requestException.getMessage();
-            message = (message != null && code != null) ? (code+":"+message) : (code != null ? code : (message != null ? message : null));
-            writeToErrorFile(inputUris, message);
+            String errorMessage;
+            if (message != null && code != null) {
+                errorMessage = code + ":" + message;
+            } else if (code != null) {
+                errorMessage = code;
+            } else {
+                errorMessage = message;
+            }
+            writeToErrorFile(inputUris, errorMessage);
             Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
             return inputUris;
         }
