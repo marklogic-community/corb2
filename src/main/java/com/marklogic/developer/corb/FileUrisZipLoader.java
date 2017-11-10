@@ -18,6 +18,7 @@
  */
 package com.marklogic.developer.corb;
 
+import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.developer.corb.util.IOUtils;
 import com.marklogic.developer.corb.util.StringUtils;
 import com.marklogic.developer.corb.util.XmlUtils;
@@ -35,6 +36,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import static java.util.zip.ZipFile.OPEN_READ;
 
 /**
  *
@@ -58,7 +61,8 @@ public class FileUrisZipLoader extends AbstractFileUrisLoader {
             zipFilename = getProperty(Options.LOADER_PATH);
         }
         try {
-            zipFile = new ZipFile(zipFilename);
+            File file = FileUtils.getFile(zipFilename);
+            zipFile = new ZipFile(file);
             if (shouldSetBatchRef()) {
                 batchRef = zipFile.getName();
             }

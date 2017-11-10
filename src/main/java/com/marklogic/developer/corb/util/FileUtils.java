@@ -50,7 +50,7 @@ public final class FileUtils {
      * @param file The file to be deleted.
      * @throws IOException
      */
-    public static void deleteFile(File file) throws IOException {
+    public static void deleteFile(final File file) throws IOException {
         delete(file.toPath());
     }
 
@@ -60,17 +60,24 @@ public final class FileUtils {
      * @param path Path to the file to be deleted.
      * @throws IOException
      */
-    public static void deleteFile(String path) throws IOException {
-        deleteFile(new File(path));
+    public static void deleteFile(final String path) throws IOException {
+        deleteFile(getFile(path));
     }
 
-    public static void deleteQuietly(Path directory) {
+    public static void deleteQuietly(final Path directory) {
         if (directory != null && directory.toFile().exists()) {
             try {
                 FileUtils.delete(directory);
             } catch (IOException ex) {
                 LOG.log(Level.WARNING, "Unable to delete dir: " + directory.toString(), ex);
             }
+        }
+    }
+
+    public static void deleteFileQuietly(final String directory, final String filename) {
+        if (filename != null) {
+            File file = new File(directory, filename);
+            FileUtils.deleteQuietly(file.toPath());
         }
     }
 

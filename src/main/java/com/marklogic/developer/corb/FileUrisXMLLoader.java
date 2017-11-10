@@ -75,7 +75,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
     @Override
     public void open() throws CorbException {
         String fileName = getProperty(XML_FILE);
-        xmlFile = new File(fileName);
+        xmlFile = FileUtils.getFile(fileName);
         schemaValidate(xmlFile);
         nodeIterator = readNodes(xmlFile.toPath());
 

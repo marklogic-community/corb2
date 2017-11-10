@@ -437,8 +437,8 @@ public class Manager extends AbstractManager implements Closeable {
         }
 
         // delete the export file if it exists
-        deleteFileIfExists(exportFileDir, exportFileName);
-        deleteFileIfExists(exportFileDir, errorFileName);
+        FileUtils.deleteFileQuietly(exportFileDir, exportFileName);
+        FileUtils.deleteFileQuietly(exportFileDir, errorFileName);
 
         normalizeLegacyProperties();
     }
@@ -883,7 +883,7 @@ public class Manager extends AbstractManager implements Closeable {
         while (urisLoader.hasNext()) {
             // check pool occasionally, for fast-fail
             if (null == pool) {
-            		LOG.warning("Thread pool is set to null. Exiting out of the task submission loop prematurely.");
+                LOG.warning("Thread pool is set to null. Exiting out of the task submission loop prematurely.");
                 break;
             }
 
@@ -1036,6 +1036,14 @@ public class Manager extends AbstractManager implements Closeable {
      */
     public long getEndMillis() {
         return endMillis;
+    }
+
+    public String getJobId() {
+        return jobId;
+    }
+
+    public Monitor getMonitor() {
+        return monitor;
     }
 
     public static class CommandFileWatcher implements Runnable {

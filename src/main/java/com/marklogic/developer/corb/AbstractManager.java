@@ -29,6 +29,8 @@ import static com.marklogic.developer.corb.Options.XCC_PORT;
 import static com.marklogic.developer.corb.Options.XCC_USERNAME;
 import static com.marklogic.developer.corb.Options.XCC_PROTOCOL;
 import static com.marklogic.developer.corb.util.IOUtils.isDirectory;
+
+import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
@@ -326,18 +328,6 @@ public abstract class AbstractManager {
         if (isNotBlank(xccHttpCompliant)) {
             System.setProperty("xcc.httpcompliant", Boolean.toString(StringUtils.stringToBoolean(xccHttpCompliant)));
         }
-    }
-
-    protected boolean deleteFileIfExists(String directory, String filename) {
-        if (filename != null) {
-            File file = new File(directory, filename);
-            try {
-                return Files.deleteIfExists(file.toPath());
-            } catch (IOException ex) {
-                LOG.log(SEVERE, MessageFormat.format("Unable to remove {0}", file), ex);
-            }
-        }
-        return false;
     }
 
     protected void registerStatusInfo() throws CorbException {

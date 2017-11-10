@@ -27,6 +27,8 @@ import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
 import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
+
+import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
@@ -140,7 +142,7 @@ public class ModuleExecutor extends AbstractManager {
             }
         }
 
-        deleteFileIfExists(exportFileDir, exportFileName);
+        FileUtils.deleteFileQuietly(exportFileDir, exportFileName);
     }
 
     @Override
