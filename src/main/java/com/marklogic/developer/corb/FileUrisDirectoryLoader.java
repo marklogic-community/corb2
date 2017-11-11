@@ -27,7 +27,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.Iterator;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /**
@@ -36,7 +35,7 @@ import java.util.stream.Stream;
  * @since 2.4.0
  */
 public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
-    
+
     protected static final String EXCEPTION_MSG_PROBLEM_READING_FILE = "Problem while reading the file";
     private Iterator<Path> fileIterator;
     private Stream<Path> fileStream;
