@@ -37,8 +37,6 @@ import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import static java.util.zip.ZipFile.OPEN_READ;
-
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
