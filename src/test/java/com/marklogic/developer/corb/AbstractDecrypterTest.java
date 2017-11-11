@@ -105,7 +105,7 @@ public class AbstractDecrypterTest {
         AbstractDecrypter instance = new AbstractDecrypterImpl();
 
         String result = instance.getConnectionURI(uri, USER, PASS, LOCALHOST, PORT, dbname);
-        assertEquals("xcc://USER:PASS@LOCALHOST:8003/", result);
+        assertEquals("xcc://USER:PASS@LOCALHOST:8003", result);
     }
 
     @Test
