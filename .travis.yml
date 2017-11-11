@@ -17,6 +17,8 @@ env:
    - secure: "O3337iQ9rOOnc9fBYLAu7yoJftNHBoGqNJ/fh1usZIVGQK2Idrk4BZ4PqjEePtYJaqtBpRFqdPTVgOc/MADncfnXWvi/1G0yGQeLXmpKMT5JdIBC6NmT+A+QpDOOwwYo6TU9qKmmlh8ED5KPYxTfHkxc5IhIu0xafU/tIUj2V10="
 
 before_install:
+  - sudo apt-get install jq
+  - wget -O ~/codacy-coverage-reporter-assembly-latest.jar $(curl https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url)
 
 script:
   # disable integration and performance tests, since we don't have a MarkLogic instance to use
@@ -28,7 +30,7 @@ after_success:
   # sonarqube.com https://sonarqube.com/dashboard?id=com.marklogic%3Amarklogic-corb%3Adevelopment
   - ./gradlew sonarqube -Dsonar.login=$SONAR_TOKEN -Dsonar.host.url=https://sonarqube.com
   # codacy https://www.codacy.com/app/mads-hansen/corb2/dashboard
-  - ./gradlew codacyUpload
+    - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r build/reports/jacoco/test/jacocoTestReport.xml
   # coveralls.io
   - ./gradlew jacocoTestReport coveralls -PskipIntegrationTest -PskipPerformanceTest
 
