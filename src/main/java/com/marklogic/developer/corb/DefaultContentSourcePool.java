@@ -48,7 +48,9 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
     private static final Logger LOG = Logger.getLogger(DefaultContentSourcePool.class.getName());
 
-    public DefaultContentSourcePool(){}
+    public DefaultContentSourcePool(){
+        super();
+    }
 
     @Override
     public void init(Properties properties, SSLConfig sslConfig, String... connectionStrings){
