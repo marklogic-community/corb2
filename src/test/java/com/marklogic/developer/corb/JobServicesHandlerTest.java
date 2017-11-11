@@ -169,8 +169,6 @@ public class JobServicesHandlerTest {
     public void getParameterLowerCaseFirst() {
         Map<String, String> parameters = new HashMap<>(2);
         parameters.put(Options.THREAD_COUNT, Integer.toString(8));
-        Manager manager = new Manager();
-        JobServicesHandler handler = new JobServicesHandler(manager);
         assertEquals(Integer.toString(8), JobServer.getParameter(parameters, Options.THREAD_COUNT));
 
         parameters.put(Options.THREAD_COUNT.toLowerCase(Locale.ENGLISH), Integer.toString(4));
