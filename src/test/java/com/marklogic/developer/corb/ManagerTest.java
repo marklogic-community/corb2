@@ -1471,7 +1471,7 @@ public class ManagerTest {
     public static Manager getMockManagerWithEmptyResults() throws RequestException, CorbException{
     		Manager manager = spy(new Manager());
     		ContentSourcePool contentSourcePool = getMockContentSourceManagerWithEmptyResults();
-    		when(manager.createContentSourceManager()).thenReturn(contentSourcePool);
+    		when(manager.createContentSourcePool()).thenReturn(contentSourcePool);
     		return manager;
     }
 

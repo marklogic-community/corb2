@@ -126,14 +126,14 @@ Option | Description
 **<a name="PRE-POST-BATCH-ALWAYS-EXECUTE"></a>PRE-POST-BATCH-ALWAYS-EXECUTE** | Boolean value indicating whether the PRE_BATCH and POST_BATCH module or task should be executed without evaluating how many URIs were returned by the URI selector.
 **<a name="PRE-BATCH-MINIMUM-COUNT"></a>PRE-BATCH-MINIMUM-COUNT** | The minimum number of results that must be returned for the **PRE-BATCH-MODULE** or **PRE-BATCH-TASK** to be executed. Default is 1
 **<a name="QUERY-RETRY-LIMIT"></a>QUERY-RETRY-LIMIT** | Number of re-query attempts before giving up. Default is 2.
-**<a name="QUERY-RETRY-INTERVAL"></a>QUERY-RETRY-INTERVAL** | Time interval, in seconds, between re-query attempts. Default is 20.
+**<a name="QUERY-RETRY-INTERVAL"></a>QUERY-RETRY-INTERVAL** | Time interval, in seconds, between re-query attempts. Default is 20 seconds.
 **<a name="QUERY-RETRY-ERROR-CODES"></a>QUERY-RETRY-ERROR-CODES** | A comma separated list of MarkLogic error codes for which a QueryException should be retried.
 **<a name="QUERY-RETRY-ERROR-MESSAGE"></a>QUERY-RETRY-ERROR-MESSAGE** | A comma separated list of values that if contained in an exception message a QueryException should be retried.
 **<a name="SSL-CONFIG-CLASS"></a>SSL-CONFIG-CLASS** | A java class that must implement `com.marklogic.developer.corb.SSLConfig`. If not specified, CORB defaults to `com.marklogic.developer.corb.TrustAnyoneSSLConfig` for `xccs` connections.
 **<a name="URIS-LOADER"></a>URIS-LOADER** | Java class that implements `com.marklogic.developer.corb.UrisLoader`. A custom class to load URIs instead of built-in loaders for **URIS-MODULE** or **URIS-FILE** options. Example: com.marklogic.developer.corb.FileUrisXMLLoader
 **<a name="URIS-REPLACE-PATTERN"></a>URIS-REPLACE-PATTERN** | One or more replace patterns for URIs - Used by java to truncate the length of URIs on the client side, typically to reduce java heap size in very large batch jobs, as the CORB java client holds all the URIS in memory while processing is in progress. If truncated, PROCESS-MODULE needs to reconstruct the URI before trying to do `fn:doc()` to fetch the document. <br/>Usage: `URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2,...)`<br/>**Example:**<br/>`URIS-REPLACE-PATTERN=/com/marklogic/sample/,,.xml,` - Replace /com/marklogic/sample/ and .xml with empty strings. So, CORB client only needs to cache the id '1234' instead of the entire URI /com/marklogic/sample/1234.xml. In the transform **PROCESS-MODULE**, we need to do `let $URI := fn:concat("/com/marklogic/sample/",$URI,".xml")`
 **<a name="XCC-CONNECTION-RETRY-LIMIT"></a>XCC-CONNECTION-RETRY-LIMIT** | Number attempts to connect to ML before giving up. Default is 3
-**<a name="XCC-CONNECTION-RETRY-INTERVAL"></a>XCC-CONNECTION-RETRY-INTERVAL** | Time interval, in seconds, between retry attempts. Default is 60.
+**<a name="XCC-CONNECTION-RETRY-INTERVAL"></a>XCC-CONNECTION-RETRY-INTERVAL** | Time interval, in seconds, between retry attempts. Default is 60 seconds.
 **<a name="XCC-CONNECTION-HOST-RETRY-LIMIT"></a>XCC-CONNECTION-HOST-RETRY-LIMIT** | Number attempts to connect to ML before giving up on a host. If not specified, it defaults to **XCC-CONNECTION-RETRY-LIMIT**
 **<a name="XCC-HTTPCOMPLIANT"></a>XCC-HTTPCOMPLIANT** | Optional boolean flag to indicate whether to enable HTTP 1.1 compliance in XCC. If this option is set, the [`xcc.httpcompliant`](https://docs.marklogic.com/guide/xcc/concepts#id_28335) System property will be set.
 **<a name="XCC-TIME-ZONE"></a>XCC-TIME-ZONE** | The ID for the TimeZone that should be set on XCC RequestOption. When a value is specified, it is parsed using [`TimeZone.getTimeZone()`](https://docs.oracle.com/javase/8/docs/api/java/util/TimeZone.html#getTimeZone-java.lang.String-) and set on XCC RequestOption for each Task. Invalid ID values will produce the GMT TimeZone. If not specified, XCC uses the JVM default TimeZone.
@@ -290,15 +290,31 @@ Option | Description
 **<a name="SSL-ENABLED-PROTOCOLS"></a>SSL-ENABLED-PROTOCOLS** | (Optional) A comma separated list of acceptable SSL protocols.
 **<a name="SSL-CIPHER-SUITES"></a>SSL-CIPHER-SUITES** | A comma separated list of acceptable cipher suites used.
 
-### Load Balance and Failover
-Corb 2.4+ supports load balance and automatic failover using `com.marklogic.developer.corb.ContentSourcePool`. This is enabled when multiple comma separated values (supports encryption) are specified for for **XCC-CONNECTION-URI** or **XCC-HOSTNAME**.
+### Load Balancing and Failover with Multiple Hosts
+Corb 2.4+ supports load balancing and failover using `com.marklogic.developer.corb.ContentSourcePool`. This is automatically enabled when multiple comma separated values (supports encryption) are specified for for **XCC-CONNECTION-URI** or **XCC-HOSTNAME**.
 
-Ex: `XCC-CONNECTION-URI=xcc://hostname1:8000/dbname,xcc://hostname2:8000/dbname,..`
+```properties
+XCC-CONNECTION-URI=xcc://hostname1:8000/dbname,xcc://hostname2:8000/dbname,..
+```
+OR
+```properties
+XCC-HOST-NAME=hostname1,hostname2,..
+```
 
 The default implementation for `com.marklogic.developer.corb.ContentSourcePool` is `com.marklogic.developer.corb.DefaultContentSourcePool`. It uses below options for **CONNECTION-POLICY** for allocating connections to callers. 
 * ROUND-ROBIN - (Default) Connections are allocated using round-robin algorithm. 
 * RANDOM - Connections are randomly allocated.
 * LOAD - Host with least number of active connections is allocated to caller.    
+
+### Query and Connection Retries
+Corb automatically retries the requests a given URI when it encounters `com.marklogic.xcc.exceptions.ServerConnectionException` from MarkLogic. If necessary, the number of retry attempts can be configured using **XCC-CONNECTION-RETRY-LIMIT**. If multiple hosts are specified, we can optionally configure retries per each host using **XCC-CONNECTION-HOST-RETRY-LIMIT**. Corb waits at least **XCC-CONNECTION-RETRY-INTERVAL** seconds before a connection is retried on a failed host. 
+
+Corb also supports retries of requests failed due to query errors. This feature is only intended for sporadic query errors which are not specific to a particular URI. A good example may include occasional time out exceptions from MarkLogic when the ML is too busy and request time limit is low. We can configure which queries can be retried using **QUERY-RETRY-ERROR-CODES** or **QUERY-RETRY-ERROR-MESSAGE** (when error codes are not available). If necessary, the number of query retry attempts can be configured using **QUERY-RETRY-LIMIT**. Corb waits at least **QUERY-RETRY-INTERVAL** seconds before retrying a query.
+
+```properties
+QUERY-RETRY-ERROR-CODES=XDMP-EXTIME,SVC-EXTIME
+QUERY-RETRY-ERROR-MESSAGE=ErrorMsg1,ErrorMsg2
+```
 
 ### Usage
 #### Usage 1 - Command line options:

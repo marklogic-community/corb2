@@ -286,7 +286,7 @@ public abstract class AbstractManager {
             }
         }
 
-        this.csp = createContentSourceManager();
+        this.csp = createContentSourcePool();
         LOG.info("Using the content source manager " + this.csp.getClass().getName());
         this.csp.init(properties, sslConfig, connectionUriList.toArray(new String[connectionUriList.size()]));
 
@@ -295,7 +295,7 @@ public abstract class AbstractManager {
         }
     }
 
-    protected ContentSourcePool createContentSourceManager() throws CorbException {
+    protected ContentSourcePool createContentSourcePool() throws CorbException {
         ContentSourcePool contentSourcePool;
         String contentSourcePoolClassName = getOption(Options.CONTENT_SOURCE_POOL);
         if (contentSourcePoolClassName != null) {
