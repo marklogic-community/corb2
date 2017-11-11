@@ -54,7 +54,7 @@ public class ManagerDemo {
                     File report = Paths.get(ManagerTest.EXPORT_FILE_DIR, exportFilename).toFile();
                     report.deleteOnExit();
                     try {
-                        int lineCount = FileUtils.getLineCount(report);
+                        FileUtils.getLineCount(report);
                     } catch (IOException e) {
                         LOG.log(Level.SEVERE, "Encountered an error reading export", e);
                     }

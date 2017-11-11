@@ -162,9 +162,6 @@ public class JobServicesHandlerTest {
     @Test
     public void getParameterDoesNotExist() {
         Map<String, String> parameters = new HashMap<>(2);
-        Manager manager = new Manager();
-        JobServicesHandler handler = new JobServicesHandler(manager);
-
         assertNull(JobServer.getParameter(parameters, "doesNotExist"));
     }
 

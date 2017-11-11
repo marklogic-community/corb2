@@ -12,7 +12,6 @@ import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentSource;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;

@@ -36,8 +36,7 @@ import java.util.stream.Stream;
  * @since 2.4.0
  */
 public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
-
-    private static final Logger LOG = Logger.getLogger(FileUrisDirectoryLoader.class.getName());
+    
     protected static final String EXCEPTION_MSG_PROBLEM_READING_FILE = "Problem while reading the file";
     private Iterator<Path> fileIterator;
     private Stream<Path> fileStream;
