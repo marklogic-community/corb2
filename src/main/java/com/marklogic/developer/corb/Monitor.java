@@ -24,6 +24,7 @@ import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
@@ -39,17 +40,17 @@ public class Monitor extends BaseMonitor implements Runnable {
     protected static final Logger LOG = Logger.getLogger(Monitor.class.getName());
     protected boolean shutdownNow;
     protected long completed = 0L;
-    protected String[] lastUris;
-    protected PausableThreadPoolExecutor pool;
+
+    protected PausableThreadPoolExecutor threadPoolExecutor;
     protected final CompletionService<String[]> cs;
     /**
-     * @param pool
+     * @param threadPoolExecutor
      * @param cs
      * @param manager
      */
-    public Monitor(PausableThreadPoolExecutor pool, CompletionService<String[]> cs, Manager manager) {
+    public Monitor(PausableThreadPoolExecutor threadPoolExecutor, CompletionService<String[]> cs, Manager manager) {
         super(manager);
-        this.pool = pool;
+        this.threadPoolExecutor = threadPoolExecutor;
         this.cs = cs;
     }
 
@@ -99,26 +100,26 @@ public class Monitor extends BaseMonitor implements Runnable {
                     LOG.log(WARNING, "Interrupted!", ex);
                     Thread.currentThread().interrupt();
                 }
-                if (pool.getActiveCount() > 0 || (pool.getTaskCount() - pool.getCompletedTaskCount()) > 0) {
+                if (threadPoolExecutor.getActiveCount() > 0 || (threadPoolExecutor.getTaskCount() - threadPoolExecutor.getCompletedTaskCount()) > 0) {
                     LOG.log(WARNING, "Thread pool is still active with all the tasks completed and received. We shouldn't see this message.");
                     //wait for the ThreadPool numbers to align
                 } else {
                     //everyone agrees; all tasks are completed and the threadPool reports all tasks are complete.
                     break;
                 }
-            } else if (future == null && pool.getActiveCount() == 0) {
+            } else if (future == null && threadPoolExecutor.getActiveCount() == 0) {
                 LOG.log(WARNING, () -> MessageFormat.format("No active tasks found with {0,number} tasks remains to be completed", taskCount - completed));
             }
         }
         LOG.info("waiting for pool to terminate");
-        pool.awaitTermination(1, TimeUnit.SECONDS);
+        threadPoolExecutor.awaitTermination(1, TimeUnit.SECONDS);
         LOG.log(INFO, () -> MessageFormat.format("completed all tasks {0,number}/{1,number}", completed, taskCount));
     }
 
     private long showProgress() {
         long current = System.currentTimeMillis();
         if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
-            if (pool.isPaused()) {
+            if (threadPoolExecutor.isPaused()) {
                 LOG.log(INFO, "CoRB2 has been paused. Resume execution by changing the " + Options.COMMAND + " option in the command file {0} to RESUME", manager.getOption(COMMAND_FILE));
             }
             LOG.log(INFO, () -> MessageFormat.format("completed {0}", getProgressMessage(completed)));
@@ -135,7 +136,7 @@ public class Monitor extends BaseMonitor implements Runnable {
 
     protected String getProgressMessage(long completed) {
         populateTps(completed);
-        return getProgressMessage(completed, taskCount, avgTps, currentTps, estimatedTimeOfCompletion, pool.getActiveCount(), pool.getNumFailedUris());
+        return getProgressMessage(completed, taskCount, avgTps, currentTps, estimatedTimeOfCompletion, threadPoolExecutor.getActiveCount(), threadPoolExecutor.getNumFailedUris());
     }
 
     /**
@@ -146,11 +147,15 @@ public class Monitor extends BaseMonitor implements Runnable {
     }
 
     public long getTaskCount() {
-        return this.taskCount;
+        return taskCount;
     }
 
     public long getCompletedCount() {
         return this.completed;
+    }
+
+    public PausableThreadPoolExecutor getThreadPoolExecutor() {
+        return threadPoolExecutor;
     }
 
      /**
