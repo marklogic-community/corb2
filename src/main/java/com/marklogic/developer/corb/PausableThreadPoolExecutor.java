@@ -78,8 +78,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
             BlockingQueue<Runnable> workQueue,
             RejectedExecutionHandler handler,
             TransformOptions options) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
-                Executors.defaultThreadFactory(), handler);
+        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, Executors.defaultThreadFactory(), handler);
         topUriList = new TopUriList(options.getNumberOfLongRunningUris());
         failedUris = new ArrayList<>();
         numFailedUrisToCapture = options.getNumberOfFailedUris();
