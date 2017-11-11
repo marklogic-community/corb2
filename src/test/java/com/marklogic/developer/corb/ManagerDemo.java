@@ -4,6 +4,7 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -12,7 +13,6 @@ import com.marklogic.developer.corb.util.FileUtils;
 
 public class ManagerDemo {
 
-    public static final String SLASH = "/";
     private static final Logger LOG = Logger.getLogger(ManagerDemo.class.getName());
     private static final String TRANSFORM_SLOW_MODULE = "src/test/resources/transformSlow.xqy|ADHOC";
 
@@ -51,7 +51,7 @@ public class ManagerDemo {
                 } catch (Exception e) {
                     LOG.log(Level.SEVERE, "Encountered an error running a job", e);
                 } finally {
-                    File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFilename);
+                    File report = Paths.get(ManagerTest.EXPORT_FILE_DIR, exportFilename).toFile();
                     report.deleteOnExit();
                     try {
                         int lineCount = FileUtils.getLineCount(report);
@@ -61,12 +61,18 @@ public class ManagerDemo {
                 }
             });
             managerThread.start();
-        } catch (CorbException ex) {
+            Thread.sleep(10);
+            if (manager.getJobId() == null) {
+                LOG.info("waiting for job to start...");
+                Thread.sleep(100);
+            }
+        } catch (InterruptedException | CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             manager.stop();
             fail();
         }
-        LOG.info("Running with id: " + manager.jobId);
+
+        LOG.info("Running with id: " + manager.getJobId());
         return manager;
     }
 
