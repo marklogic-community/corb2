@@ -178,7 +178,7 @@ public class MetricsIT {
             File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFilename);
             report.deleteOnExit();
             int lineCount = FileUtils.getLineCount(report);
-            assertEquals((uriCount / 2) + 2, lineCount);
+            assertEquals(uriCount / 2 + 2, lineCount);
             List<String> uris = collectionCount(manager.csp, collectionName, METRICS_DB_NAME);
             if (syncFrequency == null) {
                 assertTrue(uris.size() == 1);//more than one as it will log periodically
@@ -190,7 +190,7 @@ public class MetricsIT {
                 assertTrue("Extension should be " + extension, uri.contains(extension));
             }
             List<String> urisWithEndTime = docsWithEndTime(manager.csp, collectionName, METRICS_DB_NAME, XML_EXT.equals(extension));
-            assertTrue("Only one URI with End Time", (urisWithEndTime.size() == 1));
+            assertTrue("Only one URI with End Time", urisWithEndTime.size() == 1);
         } catch (Exception ex) {
             LOG.log(SEVERE, null, ex);
             fail();
