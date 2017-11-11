@@ -610,6 +610,10 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    public JobServer getJobServer() {
+        return jobServer;
+    }
+
     protected void setJobServer(JobServer jobServer) {
         this.jobServer = jobServer;
         options.setJobServerPort(jobServer.getAddress().getPort());
@@ -1044,6 +1048,10 @@ public class Manager extends AbstractManager implements Closeable {
 
     public Monitor getMonitor() {
         return monitor;
+    }
+
+    public JobStats getJobStats() {
+        return jobStats;
     }
 
     public static class CommandFileWatcher implements Runnable {

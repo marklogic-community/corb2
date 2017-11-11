@@ -138,49 +138,61 @@ public class JobStats extends BaseMonitor {
 
     private void refresh() {
         synchronized (lock) {
-
-            if (manager != null && manager.monitor != null) {
-                jobId = manager.jobId;
+            if (manager != null) {
+                jobId = manager.getJobId();
                 paused = manager.isPaused();
                 startTime = epochMillisAsFormattedDateString(manager.getStartMillis());
+                refreshOptions(options);
+                Monitor monitor = manager.getMonitor();
+                refreshMonitorStats(monitor);
+            }
+        }
+    }
 
-                if (options != null) {
-                    jobName = options.getJobName();
-                    jobServerPort = options.getJobServerPort().longValue();
-                    currentThreadCount = (long) options.getThreadCount();
-                }
+    protected void refreshOptions(TransformOptions options){
+        if (options != null) {
+            jobName = options.getJobName();
+            jobServerPort = options.getJobServerPort().longValue();
+            currentThreadCount = (long) options.getThreadCount();
+        }
+    }
 
-                taskCount = manager.monitor.getTaskCount();
-                if (taskCount > 0) {
+    protected void refreshMonitorStats(Monitor monitor){
+        if (monitor != null) {
 
-                    PausableThreadPoolExecutor threadPool = manager.monitor.pool;
-                    if (threadPool != null) {
-                        longRunningUris = threadPool.getTopUris();
-                        failedUris = threadPool.getFailedUris();
-                        numberOfFailedTasks = threadPool.getNumFailedUris();
-                        numberOfSucceededTasks = threadPool.getNumSucceededUris();
-                    }
+            taskCount = monitor.getTaskCount();
+            if (taskCount > 0) { //job has selected URIs to process
 
-                    Long currentTimeMillis = System.currentTimeMillis();
-                    Long totalTime = manager.getEndMillis() - manager.getStartMillis();
-                    if (totalTime > 0) {
-                        currentThreadCount = 0L;
-                        totalRunTimeInMillis = totalTime;
-                        long totalTransformTime = currentTimeMillis - manager.getTransformStartMillis();
-                        averageTransactionTime = totalTransformTime / Double.valueOf(numberOfFailedTasks) + Double.valueOf(numberOfSucceededTasks);
-                        endTime = epochMillisAsFormattedDateString(manager.getEndMillis());
-                        estimatedTimeOfCompletion = null;
-                    } else {
-                        totalRunTimeInMillis = currentTimeMillis - manager.getStartMillis();
-                        long timeSinceLastReq = currentTimeMillis - prevMillis;
-                        //refresh it every 10 seconds or more.. ignore more frequent requests
-                        if (timeSinceLastReq > TPS_ETC_MIN_REFRESH_INTERVAL) {
-                            long completed = numberOfSucceededTasks + numberOfFailedTasks;
-                            populateTps(completed);
-                        }
+                refreshThreadPoolExecutorStats(monitor.getThreadPoolExecutor());
+
+                Long currentTimeMillis = System.currentTimeMillis();
+                Long totalTime = manager.getEndMillis() - manager.getStartMillis();
+                if (totalTime > 0) { //job has completed
+                    currentThreadCount = 0L;
+                    totalRunTimeInMillis = totalTime;
+                    long totalTransformTime = currentTimeMillis - manager.getTransformStartMillis();
+                    averageTransactionTime = totalTransformTime / Double.valueOf(numberOfFailedTasks) + Double.valueOf(numberOfSucceededTasks);
+                    endTime = epochMillisAsFormattedDateString(manager.getEndMillis());
+                    estimatedTimeOfCompletion = null;
+                } else { //still running, update the stats
+                    totalRunTimeInMillis = currentTimeMillis - manager.getStartMillis();
+                    long timeSinceLastReq = currentTimeMillis - prevMillis;
+                    //refresh it every 10 seconds or more.. ignore more frequent requests
+                    if (timeSinceLastReq > TPS_ETC_MIN_REFRESH_INTERVAL) {
+                        long completed = numberOfSucceededTasks + numberOfFailedTasks;
+                        populateTps(completed);
                     }
                 }
             }
+        }
+    }
+
+    protected void refreshThreadPoolExecutorStats(PausableThreadPoolExecutor threadPool) {
+        if (threadPool != null) {
+            longRunningUris = threadPool.getTopUris();
+            failedUris = threadPool.getFailedUris();
+            numberOfFailedTasks = threadPool.getNumFailedUris();
+            numberOfSucceededTasks = threadPool.getNumSucceededUris();
         }
     }
 
@@ -189,11 +201,11 @@ public class JobStats extends BaseMonitor {
         return date.format(DATE_FORMATTER);
     }
 
-    public void logMetrics(String message, boolean concise, boolean console) {
+    public void logMetrics(String message, boolean concise, boolean logToConsole) {
         String processModule = options.getMetricsModule();
         Document doc = toXML(concise);
         String metricsLogMessage = toJSON(doc);
-        if (console) {
+        if (logToConsole) {
             LOG.info(metricsLogMessage);
         }
 

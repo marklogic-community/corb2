@@ -22,14 +22,14 @@ import com.marklogic.xcc.exceptions.RequestException;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class JobStatsTest {
     private static final String FOO = "foo";
@@ -236,6 +236,37 @@ public class JobStatsTest {
     }
 
     @Test
+    public void testLogToServerWithNullMessage() {
+        ContentSource contentSource = mock(ContentSource.class);
+        Manager manager = mock(Manager.class);
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setLogMetricsToServerLog("info");
+        when(manager.getOptions()).thenReturn(transformOptions);
+        when(contentSource.newSession()).thenReturn(mock(Session.class));
+        JobStats jobStats = new JobStats(manager);
+        try {
+            jobStats.logToServer(contentSource, null, "bar");
+            verify(contentSource, Mockito.times(1)).newSession();
+        } catch (RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test (expected = RequestException.class)
+    public void testLogToServerWithRequestException() throws RequestException {
+        ContentSource contentSource = mock(ContentSource.class);
+
+        Manager manager = mock(Manager.class);
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setLogMetricsToServerLog("info");
+        when(manager.getOptions()).thenReturn(transformOptions);
+        when(contentSource.newSession()).thenThrow(RequestException.class);
+        JobStats jobStats = new JobStats(manager);
+
+        jobStats.logToServer(contentSource, null, "bar");
+    }
+
+    @Test
     public void testExecuteModuleWithoutDatabaseConfigured() {
         ContentSource contentSource = mock(ContentSource.class);
         ContentSourcePool csp = mock(ContentSourcePool.class);
@@ -330,6 +361,43 @@ public class JobStatsTest {
         }
     }
 
+    @Test
+    public void testRefreshMonitorStatsWhenDone() {
+        Manager manager = mock(Manager.class);
+        Monitor monitor = mock(Monitor.class);
+        when(monitor.getTaskCount()).thenReturn(1L);
+        when(monitor.getCompletedCount()).thenReturn(1L);
+        when(manager.getEndMillis()).thenReturn(5L);
+        when(manager.getStartMillis()).thenReturn(1L);
+        JobStats jobStats = new JobStats(manager);
+        jobStats.refreshMonitorStats(monitor);
+        assertNull(jobStats.estimatedTimeOfCompletion);
+    }
+
+    @Test
+    public void testAddFailedUris() {
+
+    }
+
+    @Test
+    public void testAddFailedUrisWhenNull() {
+        Manager manager = mock(Manager.class);
+        PausableThreadPoolExecutor threadPoolExecutor = mock(PausableThreadPoolExecutor.class);
+        List<String> uris = new ArrayList<>(1);
+        uris.add("uri1");
+        when(threadPoolExecutor.getFailedUris()).thenReturn(uris);
+        JobStats jobStats = new JobStats(manager);
+        jobStats.refreshThreadPoolExecutorStats(threadPoolExecutor);
+        try {
+            Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+            Element element = document.createElement("foo");
+            document.appendChild(element);
+            jobStats.addFailedUris(element);
+            assertTrue(element.hasChildNodes());
+        } catch (ParserConfigurationException ex) {
+            fail();
+        }
+    }
 	/*
 	 * 1: Log once at the start and once at the end XML
 	 * 		Log to DB Document

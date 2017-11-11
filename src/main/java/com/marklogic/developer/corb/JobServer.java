@@ -83,14 +83,14 @@ public class JobServer {
             StringBuilder response = new StringBuilder();
 
             List<JobStats> managerJobStats = managers.stream()
-                .filter(manager -> manager.jobId != null) //don't include jobs that have not started
+                .filter(manager -> manager.getJobId() != null) //don't include jobs that have not started
                 .map(manager -> {
                     // In case the Manager was added prior to the jobId being assigned, create an HTTPContext now that it is available
-                    String jobPath = HTTP_RESOURCE_PATH + manager.jobId;
+                    String jobPath = HTTP_RESOURCE_PATH + manager.getJobId();
                     if (!contexts.containsKey(jobPath)) {
                         addManagerContext(manager);
                     }
-                   return manager.jobStats;
+                   return manager.getJobStats();
                 }).collect(Collectors.toList());
 
             Document jobs = JobStats.toXML(documentBuilderFactory, managerJobStats, concise);
@@ -187,7 +187,7 @@ public class JobServer {
 
     public void addManager(Manager manager) {
         if (manager != null) {
-            if (manager.jobId != null) {
+            if (manager.getJobId() != null) {
                 addManagerContext(manager);
                 LOG.log(INFO, () -> MessageFormat.format("Monitor and manage the job at http://localhost:{0,number,#}/{1}", server.getAddress().getPort(), manager.jobId));
                 LOG.log(INFO, () -> MessageFormat.format("Retrieve job metrics data at http://localhost:{0,number,#}/{1}{2}", server.getAddress().getPort(), manager.jobId, METRICS_PATH));
@@ -198,11 +198,11 @@ public class JobServer {
 
     protected void addManagerContext(Manager manager) {
         //if the job was started without it's own JobServer, set this one as it's server
-        if (manager.jobServer == null) {
+        if (manager.getJobServer() == null) {
             manager.setJobServer(this);
         }
         HttpHandler handler = new JobServicesHandler(manager);
-        createContext(HTTP_RESOURCE_PATH + manager.jobId, handler);
+        createContext(HTTP_RESOURCE_PATH + manager.getJobId(), handler);
     }
 
     public void logUsage() {

@@ -28,9 +28,11 @@ public class JobServicesHandlerTest {
         when(exchange.getResponseHeaders()).thenReturn(headers);
         OutputStream out = new ByteArrayOutputStream();
         when(exchange.getResponseBody()).thenReturn(out);
+        JobStats jobStats = mock(JobStats.class);
+        when(jobStats.toJSON(false)).thenReturn("{}");
         Manager manager = mock(Manager.class);
         when(manager.getOptions()).thenReturn(new TransformOptions());
-        manager.jobStats = new JobStats(manager);
+        when(manager.getJobStats()).thenReturn(jobStats);
         JobServicesHandler handler = new JobServicesHandler(manager);
         handler.handle(exchange);
         assertTrue(out.toString().startsWith("{"));
@@ -45,10 +47,11 @@ public class JobServicesHandlerTest {
         when(exchange.getResponseHeaders()).thenReturn(headers);
         OutputStream out = new ByteArrayOutputStream();
         when(exchange.getResponseBody()).thenReturn(out);
-
+        JobStats jobStats = mock(JobStats.class);
+        when(jobStats.toJSON(false)).thenReturn("{}");
         Manager manager = mock(Manager.class);
         when(manager.getOptions()).thenReturn(new TransformOptions());
-        manager.jobStats = new JobStats(manager);
+        when(manager.getJobStats()).thenReturn(jobStats);
 
         JobServicesHandler handler = new JobServicesHandler(manager);
         handler.handle(exchange);

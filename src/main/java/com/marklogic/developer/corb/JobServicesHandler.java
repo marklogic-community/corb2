@@ -38,7 +38,7 @@ public class JobServicesHandler implements HttpHandler {
                 JobServer.alowXSS(httpExchange);
                 writeMetricsOut(httpExchange, params, manager);
             } else {
-                String jobId = manager.jobId;
+                String jobId = manager.getJobId();
                 String relativePath = path.substring(path.indexOf(jobId) + jobId.length());
                 if (relativePath.isEmpty() || "/".equals(relativePath)) {
                     relativePath = "/index.html";
@@ -56,12 +56,13 @@ public class JobServicesHandler implements HttpHandler {
         boolean concise = JobServer.hasParameter(params, PARAM_CONCISE);
         String response;
         String contentType;
+        JobStats jobStats = manager.getJobStats();
         if (JobServer.hasParamFormatXml(params)) {
             contentType = JobServer.MIME_XML;
-            response = manager.jobStats.toXmlString(concise);
+            response = jobStats.toXmlString(concise);
         } else {
             contentType = JobServer.MIME_JSON;
-            response =  manager.jobStats.toJSON(concise);
+            response =  jobStats.toJSON(concise);
         }
 
         httpExchange.getResponseHeaders().add(JobServer.HEADER_CONTENT_TYPE, contentType);
