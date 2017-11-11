@@ -30,7 +30,7 @@ after_success:
   # sonarqube.com https://sonarqube.com/dashboard?id=com.marklogic%3Amarklogic-corb%3Adevelopment
   - ./gradlew sonarqube -Dsonar.login=$SONAR_TOKEN -Dsonar.host.url=https://sonarqube.com
   # codacy https://www.codacy.com/app/mads-hansen/corb2/dashboard
-    - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r build/reports/jacoco/test/jacocoTestReport.xml
+  - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r build/reports/jacoco/test/jacocoTestReport.xml
   # coveralls.io
   - ./gradlew jacocoTestReport coveralls -PskipIntegrationTest -PskipPerformanceTest
 
