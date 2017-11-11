@@ -23,7 +23,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -181,7 +180,7 @@ public class JobStatsTest {
             when(manager.getOptions()).thenReturn(mock(TransformOptions.class));
             JobStats jobStats = new JobStats(manager);
             jobStats.logToServer(FOO, "bar");
-            verify(contentSource, Mockito.never()).newSession();
+            verify(contentSource, never()).newSession();
         } catch (CorbException ex) {
             fail();
         }
@@ -198,7 +197,7 @@ public class JobStatsTest {
             when(manager.getOptions()).thenReturn(mock(TransformOptions.class));
             JobStats jobStats = new JobStats(manager);
             jobStats.logToServer(FOO, "bar");
-            verify(contentSource, Mockito.never()).newSession();
+            verify(contentSource, never()).newSession();
         } catch (CorbException ex) {
             fail();
         }
@@ -212,7 +211,7 @@ public class JobStatsTest {
         JobStats jobStats = new JobStats(manager);
         try {
             jobStats.logToServer(contentSource, FOO, "bar");
-            verify(contentSource, Mockito.never()).newSession();
+            verify(contentSource, never()).newSession();
         } catch (RequestException ex) {
             fail();
         }
@@ -229,7 +228,7 @@ public class JobStatsTest {
         JobStats jobStats = new JobStats(manager);
         try {
             jobStats.logToServer(contentSource, FOO, "bar");
-            verify(contentSource, Mockito.times(1)).newSession();
+            verify(contentSource, times(1)).newSession();
         } catch (RequestException ex) {
             fail();
         }
@@ -246,7 +245,7 @@ public class JobStatsTest {
         JobStats jobStats = new JobStats(manager);
         try {
             jobStats.logToServer(contentSource, null, "bar");
-            verify(contentSource, Mockito.times(1)).newSession();
+            verify(contentSource, times(1)).newSession();
         } catch (RequestException ex) {
             fail();
         }
@@ -279,7 +278,7 @@ public class JobStatsTest {
             when(contentSource.newSession()).thenReturn(mock(Session.class));
             JobStats jobStats = new JobStats(manager);
             jobStats.executeModule(FOO);
-            verify(contentSource, Mockito.never()).newSession();
+            verify(contentSource, never()).newSession();
         } catch (CorbException ex) {
             fail();
         }
@@ -303,7 +302,7 @@ public class JobStatsTest {
             when(contentSource.newSession()).thenReturn(session);
             JobStats jobStats = new JobStats(manager);
             jobStats.executeModule(FOO);
-            verify(contentSource, Mockito.times(1)).newSession();
+            verify(contentSource, times(1)).newSession();
         } catch (CorbException | RequestException ex) {
             fail();
         }
@@ -319,7 +318,7 @@ public class JobStatsTest {
         when(contentSource.newSession()).thenReturn(mock(Session.class));
         JobStats jobStats = new JobStats(manager);
         jobStats.executeModule(FOO);
-        verify(contentSource, Mockito.never()).newSession();
+        verify(contentSource, never()).newSession();
     }
 
     @Test
@@ -335,7 +334,7 @@ public class JobStatsTest {
             when(csp.get()).thenReturn(null);
             JobStats jobStats = new JobStats(manager);
             jobStats.executeModule(FOO);
-            verify(contentSource, Mockito.never()).newSession();
+            verify(contentSource, never()).newSession();
         } catch (CorbException ex) {
             fail();
         }
@@ -355,7 +354,7 @@ public class JobStatsTest {
 
             JobStats jobStats = new JobStats(manager);
             jobStats.executeModule(FOO);
-            verify(contentSource, Mockito.never()).newSession();
+            verify(contentSource, never()).newSession();
         } catch (CorbException ex) {
             fail();
         }
