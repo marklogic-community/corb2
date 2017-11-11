@@ -363,52 +363,55 @@ public abstract class AbstractTask implements Task {
     }
 
     protected String[] handleRequestException(RequestException requestException) throws CorbException {
-        String name = requestException.getClass().getSimpleName();
 
         if (requestException instanceof ServerConnectionException) {
             Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
             throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
         } else if (shouldRetry(requestException)) {
-            int retryLimit = this.getQueryRetryLimit();
-            int retryInterval = this.getQueryRetryInterval();
-            if (retryCount < retryLimit) {
-                retryCount++;
-                String errorCode = requestException instanceof QueryException ? ((QueryException)requestException).getCode()+":" : "";
-                LOG.log(WARNING,
-                        "Encountered " + name + " from Marklogic Server. Retrying attempt {0} after {1} seconds..: {2}{3}{4}{5}",
-                        new Object[]{retryCount, retryInterval, errorCode, requestException.getMessage(), AT_URI, asString(inputUris)});
-                try {
-                    Thread.sleep(retryInterval * 1000L);
-                } catch (InterruptedException ex) {
-                    LOG.log(WARNING, "Interrupted!", ex);
-                    Thread.currentThread().interrupt();
-                }
-                return invokeModule();
-            } else if (failOnError) {
-                Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
-                throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
-            } else {
-                LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
-                writeToErrorFile(inputUris, requestException.getMessage());
-                return inputUris;
-            }
+            return handleRetry(requestException);
         } else if (failOnError) {
             Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
             throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
         } else {
-            LOG.log(WARNING, failOnErrorIsFalseMessage(name, inputUris), requestException);
+            String exceptionName = requestException.getClass().getSimpleName();
             String code = requestException instanceof QueryException ? ((QueryException)requestException).getCode() : null;
             String message = requestException.getMessage();
-            String errorMessage;
+            String errorMessage = message;
             if (message != null && code != null) {
                 errorMessage = code + ":" + message;
             } else if (code != null) {
                 errorMessage = code;
-            } else {
-                errorMessage = message;
             }
+            LOG.log(WARNING, failOnErrorIsFalseMessage(exceptionName, inputUris), requestException);
             writeToErrorFile(inputUris, errorMessage);
             Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
+            return inputUris;
+        }
+    }
+
+    protected String[] handleRetry(RequestException requestException) throws CorbException {
+        String exceptionName = requestException.getClass().getSimpleName();
+        int retryInterval = this.getQueryRetryInterval();
+        if (retryCount < getQueryRetryLimit()) {
+            retryCount++;
+
+            String errorCode = requestException instanceof QueryException ? ((QueryException)requestException).getCode() + ":" : "";
+            LOG.log(WARNING,
+                "Encountered {0} from Marklogic Server. Retrying attempt {1} after {2} seconds..: {3}{4}{5}{6}",
+                new Object[]{exceptionName, retryCount, retryInterval, errorCode, requestException.getMessage(), AT_URI, asString(inputUris)});
+            try {
+                Thread.sleep(retryInterval * 1000L);
+            } catch (InterruptedException ex) {
+                LOG.log(WARNING, "Interrupted!", ex);
+                Thread.currentThread().interrupt();
+            }
+            return invokeModule();
+        } else if (failOnError) {
+            Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
+            throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
+        } else {
+            LOG.log(WARNING, failOnErrorIsFalseMessage(exceptionName, inputUris), requestException);
+            writeToErrorFile(inputUris, requestException.getMessage());
             return inputUris;
         }
     }
