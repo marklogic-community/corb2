@@ -75,14 +75,14 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr ng-repeat="i in availableServerData | orderBy : ['startTime', 'port', 'jobId']">
+                  <tr ng-repeat="i in availableServerData | orderBy : ['startTime', 'port', 'id']">
                     <td>{{::i.startTime}}</td>
-                    <td>{{::i.averageTransactionsPerSecond | number:2}}</td>
-                    <td>{{::i.currentTransactionsPerSecond | number:2}}</td>
+                    <td>{{i.averageTransactionsPerSecond | number:2}}</td>
+                    <td>{{i.currentTransactionsPerSecond | number:2}}</td>
                     <td><a ng-click="openJob(i)" target="_blank">{{::i.host}}/{{::i.port}}</a></td>
-                    <td>{{::i.currentThreadCount | number:0}}</td>
-                    <td>{{::i.numberOfSucceededTasks | number:0}}</td>
-                    <td>{{::i.numberOfFailedTasks | number:0}}</td>
+                    <td>{{i.currentThreadCount | number:0}}</td>
+                    <td>{{i.numberOfSucceededTasks | number:0}}</td>
+                    <td>{{i.numberOfFailedTasks | number:0}}</td>
                     <td>{{::i.runLocation}}</td>
                     <td>{{::i.totalNumberOfTasks | number:0}}</td>
                     <td>{{msToTime(i.totalRunTimeInMillis)}}</td>
@@ -108,6 +108,7 @@
     <script src="/js/jquery-3.1.1.slim.min.js"></script>
     <script src="/js/angular.min.js"></script>
     <script src="/js/bootstrap.min.js"></script>
-    <script src="/js/allJobs.js"></script>
+    <script src="/js/common.js"></script>
+    <script src="/js/dashboard.js"></script>
   </body>
 </html>

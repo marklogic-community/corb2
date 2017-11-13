@@ -11,7 +11,7 @@
 	<link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/dashboard.css" rel="stylesheet">
   </head>
-  <body ng-app="dashboard" ng-controller="mainCtrl">
+  <body ng-app="details" ng-controller="mainCtrl">
     <div class="container-fluid">
       <div class="row">
         <div class="col-sm-9 col-md-9">
@@ -74,7 +74,7 @@
                               <dt>Start Time</dt>
                               <dd>{{::job.startTime}}</dd>
                               <dt>Thread Count</dt>
-                              <dd>{{::job.currentThreadCount}}</dd>
+                              <dd>{{job.currentThreadCount}}</dd>
                           </dl>
                       </div>
                   </div>
@@ -89,11 +89,11 @@
                               <dt>Total Number Of Tasks</dt>
                               <dd>{{::totalNumberOfTasks | number : 0}}</dd>
                               <dt>Number Of Failed Tasks</dt>
-                              <dd>{{::job.numberOfFailedTasks | number : 0}} ({{failedPercent}}%)</dd>
+                              <dd>{{job.numberOfFailedTasks | number : 0}} ({{failedPercent}}%)</dd>
                               <dt>Number Of Succeeded Tasks</dt>
-                              <dd>{{::job.numberOfSucceededTasks | number : 0}} ({{successPercent}}%)</dd>
+                              <dd>{{job.numberOfSucceededTasks | number : 0}} ({{successPercent}}%)</dd>
                               <dt>Job Duration</dt>
-                              <dd>{{::jobDuration}}</dd>
+                              <dd>{{jobDuration}}</dd>
                           </dl>
                       </div>
                   </div>
@@ -156,6 +156,7 @@
     <script src="/js/jquery-3.1.1.slim.min.js"></script>
     <script src="/js/angular.min.js"></script>
     <script src="/js/bootstrap.min.js"></script>
-    <script src="/js/dashboard.js"></script>
+    <script src="/js/common.js"></script>
+    <script src="/js/details.js"></script>
   </body>
 </html>

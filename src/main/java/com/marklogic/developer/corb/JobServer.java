@@ -114,7 +114,7 @@ public class JobServer {
         } else {
             // filename and extensions aren't necessary in the request, but now we need to find the file
             if (path.isEmpty() || HTTP_RESOURCE_PATH.equals(path)) {
-                path = "/jobs.html";
+                path = "/dashboard.html";
             }
             handleStaticRequest(path, httpExchange);
         }
