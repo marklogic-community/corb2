@@ -22,6 +22,12 @@ import com.marklogic.xcc.impl.SessionImpl;
 import com.marklogic.xcc.impl.SocketPoolProvider;
 
 public class DefaultContentSourcePoolTest {
+
+    private String localhost = "localhost";
+    private String localIP1 = "192.168.0.1";
+    private String localIP2 = "192.168.0.2";
+    private String localIP3 = "192.168.0.3";
+
 	@Before
 	public void setUp() throws FileNotFoundException {
 		clearSystemProperties();
@@ -90,8 +96,8 @@ public class DefaultContentSourcePoolTest {
             csp.init(null, null, "xcc://foo:bar@localhost:8000/dbase", "xcc://foo:bar@192.168.0.1:8000/dbase");
             assertTrue(csp.available());
             assertEquals(2, csp.getAllContentSources().length);
-            assertHostAndPort(csp.get(), "localhost", 8000);
-            assertHostAndPort(csp.get(), "192.168.0.1", 8000);
+            assertHostAndPort(csp.get(), localhost, 8000);
+            assertHostAndPort(csp.get(), localIP1, 8000);
         }
 	}
 
@@ -101,8 +107,8 @@ public class DefaultContentSourcePoolTest {
             csp.init(null, null, "xcc://foo:bar@localhost:8000", "xcc://foo:bar@localhost1:8000");
             assertTrue(csp.available());
             assertEquals(1, csp.getAllContentSources().length);
-            assertHostAndPort(csp.get(), "localhost", 8000);
-            assertHostAndPort(csp.get(), "localhost", 8000);
+            assertHostAndPort(csp.get(), localhost, 8000);
+            assertHostAndPort(csp.get(), localhost, 8000);
         }
 	}
 
@@ -213,10 +219,10 @@ public class DefaultContentSourcePoolTest {
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             assertEquals(3, csp.getAllContentSources().length);
-            assertHostAndPort(csp.get(), "192.168.0.1", 8001);
-            assertHostAndPort(csp.get(), "192.168.0.2", 8002);
-            assertHostAndPort(csp.get(), "192.168.0.3", 8003);
-            assertHostAndPort(csp.get(), "192.168.0.1", 8001);
+            assertHostAndPort(csp.get(), localIP1, 8001);
+            assertHostAndPort(csp.get(), localIP2, 8002);
+            assertHostAndPort(csp.get(), localIP3, 8003);
+            assertHostAndPort(csp.get(), localIP1, 8001);
         }
 	}
 
@@ -226,11 +232,11 @@ public class DefaultContentSourcePoolTest {
             csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             assertEquals(3, csp.getAllContentSources().length);
             ContentSource ecs = null;
-            assertHostAndPort((ecs = csp.get()), "192.168.0.1", 8001);
-            assertHostAndPort(csp.get(), "192.168.0.2", 8002);
-            assertHostAndPort(csp.get(), "192.168.0.3", 8003);
+            assertHostAndPort((ecs = csp.get()), localIP1, 8001);
+            assertHostAndPort(csp.get(), localIP2, 8002);
+            assertHostAndPort(csp.get(), localIP3, 8003);
             csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs));
-            assertHostAndPort(csp.get(), "192.168.0.2", 8002);
+            assertHostAndPort(csp.get(), localIP2, 8002);
         }
 	}
 
@@ -241,12 +247,12 @@ public class DefaultContentSourcePoolTest {
             assertEquals(3, csp.getAllContentSources().length);
             ContentSource ecs1 = null;
             ContentSource ecs2 = null;
-            assertHostAndPort((ecs1 = csp.get()), "192.168.0.1", 8001);
-            assertHostAndPort((ecs2 = csp.get()), "192.168.0.2", 8002);
-            assertHostAndPort(csp.get(), "192.168.0.3", 8003);
+            assertHostAndPort((ecs1 = csp.get()), localIP1, 8001);
+            assertHostAndPort((ecs2 = csp.get()), localIP2, 8002);
+            assertHostAndPort(csp.get(), localIP3, 8003);
             csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs1));
             csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs2));
-            assertHostAndPort(csp.get(), "192.168.0.3", 8003);
+            assertHostAndPort(csp.get(), localIP3, 8003);
         }
 	}
 
@@ -256,13 +262,13 @@ public class DefaultContentSourcePoolTest {
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             ContentSource ecs1 = null;
-            assertHostAndPort((ecs1 = csp.get()), "192.168.0.1", 8001);
-            assertHostAndPort(csp.get(), "192.168.0.2", 8002);
+            assertHostAndPort((ecs1 = csp.get()), localIP1, 8001);
+            assertHostAndPort(csp.get(), localIP2, 8002);
             csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs1));
-            assertHostAndPort(csp.get(), "192.168.0.2", 8002);
-            assertHostAndPort(csp.get(), "192.168.0.2", 8002);
+            assertHostAndPort(csp.get(), localIP2, 8002);
+            assertHostAndPort(csp.get(), localIP2, 8002);
             Thread.sleep(1000L);
-            assertHostAndPort(csp.get(), "192.168.0.1", 8001);
+            assertHostAndPort(csp.get(), localIP1, 8001);
         }
 	}
 
@@ -272,13 +278,13 @@ public class DefaultContentSourcePoolTest {
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             ContentSource ecs1 = null;
-            assertHostAndPort((ecs1 = csp.get()), "192.168.0.1", 8001);
-            assertHostAndPort(csp.get(), "192.168.0.2", 8002);
+            assertHostAndPort((ecs1 = csp.get()), localIP1, 8001);
+            assertHostAndPort(csp.get(), localIP2, 8002);
             csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs1));
-            assertHostAndPort(csp.get(), "192.168.0.2", 8002);
-            assertHostAndPort(csp.get(), "192.168.0.2", 8002);
+            assertHostAndPort(csp.get(), localIP2, 8002);
+            assertHostAndPort(csp.get(), localIP2, 8002);
             csp.success(DefaultContentSourcePool.getContentSourceFromProxy(ecs1));
-            assertHostAndPort(csp.get(), "192.168.0.1", 8001);
+            assertHostAndPort(csp.get(), localIP1, 8001);
         }
 	}
 
@@ -293,9 +299,9 @@ public class DefaultContentSourcePoolTest {
             ContentSource ecs1 = null;
             ContentSource ecs2 = null;
             ContentSource ecs3 = null;
-            assertHostAndPort((ecs1 = csp.get()), "192.168.0.1", 8001);
-            assertHostAndPort((ecs2 = csp.get()), "192.168.0.2", 8002);
-            assertHostAndPort((ecs3 = csp.get()), "192.168.0.3", 8003);
+            assertHostAndPort((ecs1 = csp.get()), localIP1, 8001);
+            assertHostAndPort((ecs2 = csp.get()), localIP2, 8002);
+            assertHostAndPort((ecs3 = csp.get()), localIP3, 8003);
             csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs1));
             csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs2));
             csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs3));
@@ -308,8 +314,8 @@ public class DefaultContentSourcePoolTest {
 		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_RANDOM);
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
-            assertTrue(Arrays.asList(new String[]{"192.168.0.1", "192.168.0.2"}).contains(normalizeHostName(csp.get().getConnectionProvider().getHostName())));
-            assertTrue(Arrays.asList(new String[]{"192.168.0.1", "192.168.0.2"}).contains(normalizeHostName(csp.get().getConnectionProvider().getHostName())));
+            assertTrue(Arrays.asList(new String[]{localIP1, localIP2}).contains(normalizeHostName(csp.get().getConnectionProvider().getHostName())));
+            assertTrue(Arrays.asList(new String[]{localIP1, localIP2}).contains(normalizeHostName(csp.get().getConnectionProvider().getHostName())));
         }
 	}
 
@@ -318,10 +324,10 @@ public class DefaultContentSourcePoolTest {
 		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_RANDOM);
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
-            assertTrue(Arrays.asList(new String[]{"192.168.0.1", "192.168.0.2"}).contains(normalizeHostName(csp.get().getConnectionProvider().getHostName())));
-            assertTrue(Arrays.asList(new String[]{"192.168.0.1", "192.168.0.2"}).contains(normalizeHostName(csp.get().getConnectionProvider().getHostName())));
+            assertTrue(Arrays.asList(new String[]{localIP1, localIP2}).contains(normalizeHostName(csp.get().getConnectionProvider().getHostName())));
+            assertTrue(Arrays.asList(new String[]{localIP1, localIP2}).contains(normalizeHostName(csp.get().getConnectionProvider().getHostName())));
             csp.error(csp.getAllContentSources()[0]);
-            assertHostAndPort(csp.get(), "192.168.0.2", 8002);
+            assertHostAndPort(csp.get(), localIP2, 8002);
         }
 	}
 
@@ -332,12 +338,12 @@ public class DefaultContentSourcePoolTest {
             csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             ContentSource[] csList = csp.getAllContentSources();
             assertEquals(2, csList.length);
-            assertHostAndPort(csp.get(), "192.168.0.1", 8001);
-            assertHostAndPort(csp.get(), "192.168.0.1", 8001); //should get the same host as there is no load
+            assertHostAndPort(csp.get(), localIP1, 8001);
+            assertHostAndPort(csp.get(), localIP1, 8001); //should get the same host as there is no load
             csp.hold(csList[0]);
-            assertHostAndPort(csp.get(), "192.168.0.2", 8002);
+            assertHostAndPort(csp.get(), localIP2, 8002);
             csp.release(csList[0]);
-            assertHostAndPort(csp.get(), "192.168.0.1", 8001);
+            assertHostAndPort(csp.get(), localIP1, 8001);
         }
 	}
 
@@ -350,9 +356,9 @@ public class DefaultContentSourcePoolTest {
             assertEquals(2, csList.length);
             csp.hold(csList[0]);
             csp.hold(csList[1]);
-            assertHostAndPort(csp.get(), "192.168.0.1", 8001);
+            assertHostAndPort(csp.get(), localIP1, 8001);
             csp.hold(csList[0]);
-            assertHostAndPort(csp.get(), "192.168.0.2", 8002);
+            assertHostAndPort(csp.get(), localIP2, 8002);
         }
 	}
 
@@ -363,12 +369,12 @@ public class DefaultContentSourcePoolTest {
             csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             ContentSource[] csList = csp.getAllContentSources();
             assertEquals(3, csList.length);
-            assertHostAndPort(csp.get(), "192.168.0.1", 8001);
+            assertHostAndPort(csp.get(), localIP1, 8001);
             csp.error(csList[0]);
             csp.hold(csList[1]);
-            assertHostAndPort(csp.get(), "192.168.0.3", 8003);
+            assertHostAndPort(csp.get(), localIP3, 8003);
             csp.release(csList[1]);
-            assertHostAndPort(csp.get(), "192.168.0.2", 8002);
+            assertHostAndPort(csp.get(), localIP2, 8002);
         }
 	}
 
@@ -379,12 +385,12 @@ public class DefaultContentSourcePoolTest {
             csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             ContentSource[] csList = csp.getAllContentSources();
             assertEquals(3, csList.length);
-            assertHostAndPort(csp.get(), "192.168.0.1", 8001);
+            assertHostAndPort(csp.get(), localIP1, 8001);
             csp.error(csList[0]);
             csp.error(csList[1]);
-            assertHostAndPort(csp.get(), "192.168.0.3", 8003);
+            assertHostAndPort(csp.get(), localIP3, 8003);
             csp.hold(csList[2]);
-            assertHostAndPort(csp.get(), "192.168.0.3", 8003);
+            assertHostAndPort(csp.get(), localIP3, 8003);
         }
 	}
 
@@ -395,12 +401,12 @@ public class DefaultContentSourcePoolTest {
             csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             ContentSource[] csList = csp.getAllContentSources();
             assertEquals(3, csList.length);
-            assertHostAndPort(csp.get(), "192.168.0.1", 8001);
+            assertHostAndPort(csp.get(), localIP1, 8001);
             csp.hold(csList[0]);
             csp.error(csList[1]);
-            assertHostAndPort(csp.get(), "192.168.0.3", 8003);
+            assertHostAndPort(csp.get(), localIP3, 8003);
             csp.success(csList[1]);
-            assertHostAndPort(csp.get(), "192.168.0.2", 8002);
+            assertHostAndPort(csp.get(), localIP2, 8002);
         }
 	}
 
@@ -413,12 +419,12 @@ public class DefaultContentSourcePoolTest {
             csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             ContentSource[] csList = csp.getAllContentSources();
             assertEquals(2, csList.length);
-            assertHostAndPort(csp.get(), "192.168.0.1", 8001);
+            assertHostAndPort(csp.get(), localIP1, 8001);
             csp.error(csList[0]);
             csp.error(csList[1]);
-            assertHostAndPort(csp.get(), "192.168.0.1", 8001);
+            assertHostAndPort(csp.get(), localIP1, 8001);
             csp.error(csList[0]);
-            assertHostAndPort(csp.get(), "192.168.0.2", 8002);
+            assertHostAndPort(csp.get(), localIP2, 8002);
             csp.error(csList[1]);
             csp.get();
         }
@@ -455,10 +461,10 @@ public class DefaultContentSourcePoolTest {
 		ResultSequence result = mock(ResultSequence.class);
 
 		when(cs1.newSession()).thenReturn(session1);
-		when(cs1.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost1",8001));
+		when(cs1.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost,8001));
 
 		when(cs2.newSession()).thenReturn(session2);
-		when(cs2.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost2",8002));
+		when(cs2.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost,8002));
 
 		when(session1.newAdhocQuery(any())).thenReturn(request);
 		when(session1.submitRequest(any())).thenThrow(mock(ServerConnectionException.class));
@@ -490,10 +496,10 @@ public class DefaultContentSourcePoolTest {
 		Content content = mock(Content.class);
 
 		when(cs1.newSession()).thenReturn(session1);
-		when(cs1.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost1",8001));
+		when(cs1.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost,8001));
 
 		when(cs2.newSession()).thenReturn(session2);
-		when(cs2.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost2",8002));
+		when(cs2.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost,8002));
 
 		doThrow(mock(ServerConnectionException.class)).when(session1).insertContent(content);
 		doNothing().when(session2).insertContent(content);
@@ -519,7 +525,7 @@ public class DefaultContentSourcePoolTest {
         ResultSequence result = mock(ResultSequence.class);
 
         when(cs.newSession()).thenReturn(session);
-        when(cs.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost1", 8001));
+        when(cs.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8001));
 
         when(session.newAdhocQuery(any())).thenReturn(request);
         when(session.submitRequest(any())).thenReturn(result);
@@ -546,10 +552,10 @@ public class DefaultContentSourcePoolTest {
 		AdhocImpl request = mock(AdhocImpl.class);
 
 		when(cs1.newSession()).thenReturn(session1);
-		when(cs1.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost1",8001));
+		when(cs1.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost,8001));
 
 		when(cs2.newSession()).thenReturn(session2);
-		when(cs2.getConnectionProvider()).thenReturn(new SocketPoolProvider("localhost2",8002));
+		when(cs2.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost,8002));
 
 		when(session1.newAdhocQuery(any())).thenReturn(request);
 		when(session1.submitRequest(any())).thenThrow(mock(ServerConnectionException.class));
