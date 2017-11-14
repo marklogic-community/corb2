@@ -27,39 +27,41 @@ public class JobServerTest {
     @Test
     public void testCreateAndGet() {
         int port = 9999;
+        String localhostUrl = "http://localhost:" + port;
+        String GET = "GET";
         try {
             JobServer server = JobServer.create(port);
             assertNotNull(server);
             server.start();
 
             //request to base URL for job page
-            URL url = new URL("http://localhost:" + port );
+            URL url = new URL(localhostUrl );
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
+            conn.setRequestMethod(GET);
             byte[] content = IOUtils.toByteArray(conn.getInputStream());
-            assertEquals(200, conn.getResponseCode());
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
             assertNotNull(content);
 
-            url = new URL("http://localhost:" + port + "/");
+            url = new URL(localhostUrl + "/");
             conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
+            conn.setRequestMethod(GET);
             content = IOUtils.toByteArray(conn.getInputStream());
-            assertEquals(200, conn.getResponseCode());
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
             assertNotNull(content);
 
             // ensure that base path (without extenstion) gets a response
-            url = new URL("http://localhost:" + port +  JobServer.METRICS_PATH);
+            url = new URL(localhostUrl +  JobServer.METRICS_PATH);
             conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
+            conn.setRequestMethod(GET);
             content = IOUtils.toByteArray(conn.getInputStream());
-            assertEquals(200, conn.getResponseCode());
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
             assertNotNull(content);
 
             //verify that invalid paths result in 404
-            url = new URL("http://localhost:" + port + "/DoesNotExist");
+            url = new URL(localhostUrl + "/DoesNotExist");
             conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            assertEquals(404, conn.getResponseCode());
+            conn.setRequestMethod(GET);
+            assertEquals(HttpURLConnection.HTTP_NOT_FOUND, conn.getResponseCode());
 
             server.stop(0);
         } catch (IOException e) {
