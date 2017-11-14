@@ -162,14 +162,6 @@ app.controller("jobCtrl", ["$scope", "$http", "$interval",
             $scope.updateThreadsButtonStyle = "disabled";
         };
 
-        var scheduleUpdates = function() {
-            //Start polling for job stats updates
-            promise = $interval(function() {
-                var concise = isNaN(+$scope.totalNumberOfTasks) && typeof $scope.job.totalNumberOfTasks === "undefined" ? "" : "?concise";
-                $http.get(serviceUrl + concise).then(loadData, handleError);
-            }, 5000);
-        };
-
         var loadData = function(response) {
             var job = response.data.job;
             $scope.job = job;
@@ -206,6 +198,14 @@ app.controller("jobCtrl", ["$scope", "$http", "$interval",
                 $scope.pauseButtonText = "pause";
                 $scope.pauseButtonStyle = "btn-success";
             }
+        };
+
+        var scheduleUpdates = function() {
+            //Start polling for job stats updates
+            promise = $interval(function() {
+                var concise = isNaN(+$scope.totalNumberOfTasks) && typeof $scope.job.totalNumberOfTasks === "undefined" ? "" : "?concise";
+                $http.get(serviceUrl + concise).then(loadData, handleError);
+            }, 5000);
         };
 
         var handleCommandResponse = function(response) {
