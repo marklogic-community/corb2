@@ -139,7 +139,7 @@ public class Manager extends AbstractManager implements Closeable {
                     LOG.log(INFO, () -> "processing error - exiting with code " + EXIT_CODE_PROCESSING_ERROR);
                     System.exit(EXIT_CODE_PROCESSING_ERROR);
                 } else if (manager.stopCommand) {
-                    LOG.info("stop command - exiting with code " + EXIT_CODE_STOP_COMMAND);
+                    LOG.log(INFO, () -> "stop command - exiting with code " + EXIT_CODE_STOP_COMMAND);
                     System.exit(EXIT_CODE_STOP_COMMAND);
                 } else if (count == 0) {
                     LOG.log(INFO, () -> "no uris found - exiting with code " + EXIT_CODE_NO_URIS);
