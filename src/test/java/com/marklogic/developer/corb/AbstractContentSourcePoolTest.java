@@ -17,6 +17,11 @@ import java.io.FileNotFoundException;
 import java.util.Properties;
 
 public class AbstractContentSourcePoolTest {
+
+    private String foo = "foo";
+    private String bar = "bar";
+    private String localhostXccUri = "xcc://user:pass@localhost:8000";
+
 	@Before
 	public void setUp() throws FileNotFoundException {
 		clearSystemProperties();
@@ -25,11 +30,11 @@ public class AbstractContentSourcePoolTest {
 	@Test
     public void testInitWithNullSSLConfig() {
         Properties properties = new Properties();
-        properties.put("foo", "bar");
+        properties.put(foo, bar);
         SSLConfig sslConfig = null;
         AbstractContentSourcePool csp = new AbstractContentSourcePoolImpl();
         csp.init(properties, sslConfig);
-        assertEquals("bar", csp.getProperty("foo"));
+        assertEquals(bar, csp.getProperty(foo));
         assertNotNull(csp.sslConfig);
     }
 
@@ -90,24 +95,24 @@ public class AbstractContentSourcePoolTest {
 	public void testInit() {
 		SSLConfig sslConfig = mock(SSLConfig.class);
 		Properties props = new Properties();
-		props.put("foo", "bar");
+		props.put(foo, bar);
 		AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
 		csp.init(props, sslConfig);
 		assertEquals(sslConfig,csp.sslConfig());
-		assertEquals("bar",csp.getProperty("foo"));
+		assertEquals(bar,csp.getProperty(foo));
 	}
 
 	@Test
 	public void testGetIntPropertyFromSystemProperty() {
 		System.setProperty("foo", "123");
 		AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
-		assertEquals(123,csp.getIntProperty("foo"));
+		assertEquals(123,csp.getIntProperty(foo));
 	}
 
 	@Test
     public void testPrepareContentSource() {
 		AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
-        ContentSource cs = csp.createContentSource("xcc://user:pass@localhost:8000");
+        ContentSource cs = csp.createContentSource(localhostXccUri);
         assertEquals("localhost",cs.getConnectionProvider().getHostName());
         assertEquals(8000,cs.getConnectionProvider().getPort());
     }
@@ -115,7 +120,7 @@ public class AbstractContentSourcePoolTest {
     @Test
     public void testPrepareContentSourceSecureXCC() {
         AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl();
-        ContentSource cs = csp.createContentSource("xccs://user:pass@localhost:8000");
+        ContentSource cs = csp.createContentSource(localhostXccUri);
         assertEquals("localhost",cs.getConnectionProvider().getHostName());
         assertEquals(8000,cs.getConnectionProvider().getPort());
     }
@@ -135,13 +140,14 @@ public class AbstractContentSourcePoolTest {
     }
 
     public class AbstractContentSourcePoolImpl extends AbstractContentSourcePool {
+        private UnsupportedOperationException unsupported = new UnsupportedOperationException("Not supported");
         @Override
         public boolean available() {
-            throw new UnsupportedOperationException("Not supported");
+            throw unsupported;
         }
         @Override
         public ContentSource get() {
-            throw new UnsupportedOperationException("Not supported");
+            throw unsupported;
         }
         @Override
         public void init(Properties properties, SSLConfig sslConfig, String[] connectionStrings){
@@ -152,11 +158,11 @@ public class AbstractContentSourcePoolTest {
         }
 		@Override
 		public void remove(ContentSource contentSource) {
-			throw new UnsupportedOperationException("Not supported");
+			throw unsupported;
 		}
 		@Override
 		public ContentSource[] getAllContentSources() {
-			throw new UnsupportedOperationException("Not supported");
+			throw unsupported;
 		}
     }
 }

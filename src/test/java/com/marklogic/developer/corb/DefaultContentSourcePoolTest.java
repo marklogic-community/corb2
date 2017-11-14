@@ -27,6 +27,7 @@ public class DefaultContentSourcePoolTest {
     private String localIP1 = "192.168.0.1";
     private String localIP2 = "192.168.0.2";
     private String localIP3 = "192.168.0.3";
+    private String localhostXccUri = "xcc://foo:bar@localhost:8000";
 
 	@Before
 	public void setUp() throws FileNotFoundException {
@@ -49,7 +50,7 @@ public class DefaultContentSourcePoolTest {
 	@Test
 	public void testInitContentSources() throws CorbException{
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, "xcc://foo:bar@localhost:8000");
+            csp.init(null, null, localhostXccUri);
             assertTrue(csp.available());
             assertNotNull(csp.get());
             assertEquals(1, csp.getAllContentSources().length);
@@ -71,7 +72,7 @@ public class DefaultContentSourcePoolTest {
 	    Properties properties = new Properties();
 	    properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
         try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(properties, null, "xcc://foo:bar@localhost:8000");
+            csp.init(properties, null, localhostXccUri);
 
             ContentSource cs = csp.nextContentSource();
             csp.error(cs);
@@ -93,7 +94,7 @@ public class DefaultContentSourcePoolTest {
 	@Test
 	public void testInitTwoContentSources() throws CorbException {
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, "xcc://foo:bar@localhost:8000/dbase", "xcc://foo:bar@192.168.0.1:8000/dbase");
+            csp.init(null, null, localhostXccUri, "xcc://foo:bar@192.168.0.1:8000/dbase");
             assertTrue(csp.available());
             assertEquals(2, csp.getAllContentSources().length);
             assertHostAndPort(csp.get(), localhost, 8000);
@@ -104,7 +105,7 @@ public class DefaultContentSourcePoolTest {
 	@Test
 	public void testInitTwoWithOneInvalidContentSource() throws CorbException{
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, "xcc://foo:bar@localhost:8000", "xcc://foo:bar@localhost1:8000");
+            csp.init(null, null, localhostXccUri, "xcc://foo:bar@localhost1:8000");
             assertTrue(csp.available());
             assertEquals(1, csp.getAllContentSources().length);
             assertHostAndPort(csp.get(), localhost, 8000);
@@ -117,7 +118,7 @@ public class DefaultContentSourcePoolTest {
 	    Properties properties = new Properties();
 	    properties.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_RANDOM);
         try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(properties, null, "xcc://foo:bar@localhost:8000", "xcc://foo:bar@localhost:8010", "xcc://foo:bar@localhost:8020");
+            csp.init(properties, null, localhostXccUri, "xcc://foo:bar@localhost:8010", "xcc://foo:bar@localhost:8020");
             assertEquals(DefaultContentSourcePool.CONNECTION_POLICY_RANDOM, csp.connectionPolicy);
             assertNotNull(csp.nextContentSource());
             assertNotNull(csp.nextContentSource());
@@ -131,7 +132,7 @@ public class DefaultContentSourcePoolTest {
         Properties properties = new Properties();
         properties.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_LOAD);
         try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(properties, null, "xcc://foo:bar@localhost:8000", "xcc://foo:bar@localhost:8010", "xcc://foo:bar@localhost:8020");
+            csp.init(properties, null, localhostXccUri, "xcc://foo:bar@localhost:8010", "xcc://foo:bar@localhost:8020");
 
             assertEquals(DefaultContentSourcePool.CONNECTION_POLICY_LOAD, csp.connectionPolicy);
             assertTrue(csp.isLoadPolicy());
@@ -210,7 +211,7 @@ public class DefaultContentSourcePoolTest {
         Properties properties = new Properties();
         properties.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_ROUND_ROBIN);
         DefaultContentSourcePool csp = new DefaultContentSourcePool();
-        csp.init(properties, null, "xcc://foo:bar@localhost:8000", "xcc://foo:bar@localhost:8010", "xcc://foo:bar@localhost:8020");
+        csp.init(properties, null, localhostXccUri, "xcc://foo:bar@localhost:8010", "xcc://foo:bar@localhost:8020");
         return csp;
     }
 
@@ -414,7 +415,7 @@ public class DefaultContentSourcePoolTest {
 	public void testLoadPolicyWithAllErrors() throws CorbException{
 		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(1));
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(0));
-		System.setProperty(Options.CONNECTION_POLICY, "LOAD");
+		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_LOAD);
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             ContentSource[] csList = csp.getAllContentSources();
