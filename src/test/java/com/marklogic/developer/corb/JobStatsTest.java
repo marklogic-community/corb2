@@ -31,6 +31,7 @@ import static org.mockito.Mockito.*;
 
 public class JobStatsTest {
     private static final String FOO = "foo";
+    private static final String BAR = "bar";
     private static final String METRICS_DB = "metricsDB";
 
     @Test
@@ -178,7 +179,7 @@ public class JobStatsTest {
             when(manager.getContentSourcePool()).thenReturn(csp);
             when(manager.getOptions()).thenReturn(mock(TransformOptions.class));
             JobStats jobStats = new JobStats(manager);
-            jobStats.logToServer(FOO, "bar");
+            jobStats.logToServer(FOO, BAR);
             verify(contentSource, never()).newSession();
         } catch (CorbException ex) {
             fail();
@@ -195,7 +196,7 @@ public class JobStatsTest {
             when(manager.getContentSourcePool()).thenReturn(csp);
             when(manager.getOptions()).thenReturn(mock(TransformOptions.class));
             JobStats jobStats = new JobStats(manager);
-            jobStats.logToServer(FOO, "bar");
+            jobStats.logToServer(FOO, BAR);
             verify(contentSource, never()).newSession();
         } catch (CorbException ex) {
             fail();
@@ -209,7 +210,7 @@ public class JobStatsTest {
         when(manager.getOptions()).thenReturn(mock(TransformOptions.class));
         JobStats jobStats = new JobStats(manager);
         try {
-            jobStats.logToServer(contentSource, FOO, "bar");
+            jobStats.logToServer(contentSource, FOO, BAR);
             verify(contentSource, never()).newSession();
         } catch (RequestException ex) {
             fail();
@@ -226,7 +227,7 @@ public class JobStatsTest {
         when(contentSource.newSession()).thenReturn(mock(Session.class));
         JobStats jobStats = new JobStats(manager);
         try {
-            jobStats.logToServer(contentSource, FOO, "bar");
+            jobStats.logToServer(contentSource, FOO, BAR);
             verify(contentSource, times(1)).newSession();
         } catch (RequestException ex) {
             fail();
@@ -243,7 +244,7 @@ public class JobStatsTest {
         when(contentSource.newSession()).thenReturn(mock(Session.class));
         JobStats jobStats = new JobStats(manager);
         try {
-            jobStats.logToServer(contentSource, null, "bar");
+            jobStats.logToServer(contentSource, null, BAR);
             verify(contentSource, times(1)).newSession();
         } catch (RequestException ex) {
             fail();
@@ -261,7 +262,7 @@ public class JobStatsTest {
         when(contentSource.newSession()).thenThrow(RequestException.class);
         JobStats jobStats = new JobStats(manager);
 
-        jobStats.logToServer(contentSource, null, "bar");
+        jobStats.logToServer(contentSource, null, BAR);
     }
 
     @Test
