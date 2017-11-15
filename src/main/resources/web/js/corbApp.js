@@ -38,7 +38,7 @@ var app = angular.module("corbApp", []);
 app.controller("dashboardCtrl", ["$scope", "$http", "$interval",
     function($scope, $http, $interval) {
 
-        var metricsPath = "/metrics";
+        var metricsPath = "?format=json";
         var host = location.hostname || "localhost";
         var port = location.port;
         var promises = {};
@@ -90,12 +90,11 @@ app.controller("dashboardCtrl", ["$scope", "$http", "$interval",
         };
 
         $scope.pauseResumeButtonClick = function(job) {
-            $http.post(toUrl(job) + metricsPath + "?" + commandActionParameter(job)).then(loadData, handleError);
+            $http.post(toUrl(job) + metricsPath + "&" + commandActionParameter(job)).then(loadData, handleError);
         };
 
         $scope.updateThreadCount = function(job) {
-            var reqStr = "thread-count=" + $scope.threadCounts[job.id];
-            $http.post(toUrl(job) + metricsPath + "?" + reqStr).then(loadData, handleError);
+            $http.post(toUrl(job) + metricsPath + "&thread-count=" + $scope.threadCounts[job.id]).then(loadData, handleError);
         };
 
         $scope.openJob = function(job) {
@@ -147,7 +146,7 @@ app.controller("dashboardCtrl", ["$scope", "$http", "$interval",
 app.controller("jobCtrl", ["$scope", "$http", "$interval",
     function($scope, $http, $interval) {
 
-        var serviceUrl = location.href + "/metrics";
+        var serviceUrl = location.protocol + '//' + location.host + location.pathname + "?format=json";
         var promise;
 
         var handleError = function (error, status) {
@@ -203,7 +202,7 @@ app.controller("jobCtrl", ["$scope", "$http", "$interval",
         var scheduleUpdates = function() {
             //Start polling for job stats updates
             promise = $interval(function() {
-                var concise = isNaN(+$scope.totalNumberOfTasks) && typeof $scope.job.totalNumberOfTasks === "undefined" ? "" : "?concise";
+                var concise = isNaN(+$scope.totalNumberOfTasks) && typeof $scope.job.totalNumberOfTasks === "undefined" ? "" : "&concise";
                 $http.get(serviceUrl + concise).then(loadData, handleError);
             }, 5000);
         };
@@ -216,14 +215,14 @@ app.controller("jobCtrl", ["$scope", "$http", "$interval",
         $scope.pauseResumeButtonClick = function(){
             $interval.cancel(promise);
             $scope.loading = true;
-            $http.post(serviceUrl + "?concise=true&" + commandActionParameter($scope.job)).then(handleCommandResponse, handleError);
+            $http.post(serviceUrl + "&concise=true&" + commandActionParameter($scope.job)).then(handleCommandResponse, handleError);
         };
 
         $scope.updateThreadCount = function(){
             $interval.cancel(promise);
             $scope.loading = true;
             $scope.updateThreadButtonStyle = "btn glyphicon glyphicon-refresh";
-            $http.post(serviceUrl + "?concise=true&thread-count=" + $scope.threadCount).then(handleCommandResponse, handleError);
+            $http.post(serviceUrl + "&concise=true&thread-count=" + $scope.threadCount).then(handleCommandResponse, handleError);
         };
 
         $scope.updateThreadsButtonStyle = "btn-primary";

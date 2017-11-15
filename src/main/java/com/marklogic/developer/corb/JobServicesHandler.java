@@ -34,7 +34,7 @@ public class JobServicesHandler implements HttpHandler {
             pauseResumeJob(params);
             updateThreads(params);
             String path = httpExchange.getRequestURI().getPath();
-            if (path.contains(JobServer.METRICS_PATH)) {
+            if (path.contains(JobServer.METRICS_PATH) || JobServer.hasParameter(params, JobServicesHandler.PARAM_FORMAT)) {
                 JobServer.alowXSS(httpExchange);
                 writeMetricsOut(httpExchange, params, manager);
             } else {

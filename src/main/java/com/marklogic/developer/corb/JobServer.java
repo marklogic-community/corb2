@@ -66,18 +66,13 @@ public class JobServer {
 
     public void handleRequest(HttpExchange httpExchange) {
         String path = httpExchange.getRequestURI().getPath();
-        if (METRICS_PATH.equals(path)) {
+        String querystring = httpExchange.getRequestURI().getQuery();
+        Map<String,String> params = JobServicesHandler.querystringToMap(querystring);
+
+        if (METRICS_PATH.equals(path) || hasParameter(params, JobServicesHandler.PARAM_FORMAT)) {
             alowXSS(httpExchange);
 
-            String querystring = httpExchange.getRequestURI().getQuery();
-            Map<String,String> params = JobServicesHandler.querystringToMap(querystring);
-
-            boolean concise = hasParameter(params, JobServicesHandler.PARAM_CONCISE);
-
-            String contentType = MIME_JSON;
-            if (hasParamFormatXml(params)) {
-                contentType = MIME_XML;
-            }
+            String contentType = determineContentType(params);
             httpExchange.getResponseHeaders().add(HEADER_CONTENT_TYPE, contentType);
 
             StringBuilder response = new StringBuilder();
@@ -93,6 +88,7 @@ public class JobServer {
                    return manager.getJobStats();
                 }).collect(Collectors.toList());
 
+            boolean concise = hasParameter(params, JobServicesHandler.PARAM_CONCISE);
             Document jobs = JobStats.toXML(documentBuilderFactory, managerJobStats, concise);
 
             if (MIME_XML.equals(contentType)) {
@@ -259,7 +255,11 @@ public class JobServer {
     public static boolean hasParamFormatXml(Map<String, String> params) {
         return
             hasParameter(params, JobServicesHandler.PARAM_FORMAT) &&
-            "xml".equalsIgnoreCase(getParameter(params, JobServicesHandler.PARAM_FORMAT));
+                "xml".equalsIgnoreCase(getParameter(params, JobServicesHandler.PARAM_FORMAT));
+    }
+
+    public static String determineContentType(Map<String, String> params) {
+        return hasParamFormatXml(params) ? MIME_XML : MIME_JSON;
     }
 
     protected static String getParameter(Map<String, String> map, String key) {
