@@ -45,6 +45,9 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     protected int retryLimit = 0;
 
     protected int roundRobinIndex =  -1;
+    
+    protected boolean isLoadPolicy = false;
+    protected boolean isRandomPolicy = false;
 
     private static final Logger LOG = Logger.getLogger(DefaultContentSourcePool.class.getName());
 
@@ -72,6 +75,10 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         for (String connectionString : connectionStrings) {
             initContentSource(connectionString);
         }
+        
+        //for better performance avoid to many string equals later for every get and submit
+        isRandomPolicy = CONNECTION_POLICY_RANDOM.equals(this.connectionPolicy);
+        isLoadPolicy = CONNECTION_POLICY_LOAD.equals(this.connectionPolicy);
     }
 
     protected void initContentSource(String connectionString){
@@ -119,9 +126,9 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         ContentSource contentSource = null;
         if (availableList.size() == 1) {
             contentSource = availableList.get(0);
-        } else if (CONNECTION_POLICY_RANDOM.equals(connectionPolicy)) {
+        } else if (this.isRandomPolicy) {
             contentSource = availableList.get((int)(Math.random() * availableList.size()));
-        } else if (CONNECTION_POLICY_LOAD.equals(connectionPolicy)) {
+        } else if (this.isLoadPolicy) {
             for (ContentSource next: availableList){
                 Integer count = connectionCountsMap.get(next);
                 if (count == null || count == 0) {
@@ -184,11 +191,15 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         errorTimeMap.clear();
 		contentSourceList.clear();
     }
-
-    protected boolean isLoadPolicy() {
-        return CONNECTION_POLICY_LOAD.equals(connectionPolicy);
+    
+    protected boolean isRandomPolicy() {
+        return this.isRandomPolicy;
     }
 
+    protected boolean isLoadPolicy() {
+        return this.isLoadPolicy;
+    }
+    
     protected synchronized void hold(ContentSource cs) {
         if (contentSourceList.contains(cs)) {
 	        Integer count = connectionCountsMap.get(cs);
