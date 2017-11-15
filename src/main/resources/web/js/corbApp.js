@@ -146,7 +146,7 @@ app.controller("dashboardCtrl", ["$scope", "$http", "$interval",
 app.controller("jobCtrl", ["$scope", "$http", "$interval",
     function($scope, $http, $interval) {
 
-        var serviceUrl = location.protocol + '//' + location.host + location.pathname + "?format=json";
+        var serviceUrl = location.protocol + "//" + location.host + location.pathname + "?format=json";
         var promise;
 
         var handleError = function (error, status) {
