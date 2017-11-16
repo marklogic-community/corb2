@@ -37,8 +37,6 @@ import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation

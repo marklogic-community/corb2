@@ -22,7 +22,6 @@ import static com.marklogic.developer.corb.Options.URIS_REPLACE_PATTERN;
 
 import com.marklogic.developer.corb.util.StringUtils;
 
-import static com.marklogic.developer.corb.Options.XML_FILE;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
