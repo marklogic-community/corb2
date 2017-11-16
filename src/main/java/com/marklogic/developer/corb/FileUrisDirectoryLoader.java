@@ -43,7 +43,7 @@ public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
     @Override
     public void open() throws CorbException {
 
-        String dirName = getProperty(Options.LOADER_PATH);
+        String dirName = getLoaderPath();
 
         Path dir = Paths.get(dirName);
         File file = dir.toFile();

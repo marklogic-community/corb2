@@ -20,6 +20,7 @@ package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.XML_FILE;
 import static com.marklogic.developer.corb.Options.XML_NODE;
+
 import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.developer.corb.util.IOUtils;
 import com.marklogic.developer.corb.util.StringUtils;
@@ -80,7 +81,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
 
     @Override
     public void open() throws CorbException {
-        String xmlFilename = getProperty(XML_FILE);
+        String xmlFilename = getLoaderPath(XML_FILE);
         String xPath = getProperty(XML_NODE);
         // default processing will split on child elements of the document element
         xPath = StringUtils.isBlank(xPath) ? "/*/*" : xPath;

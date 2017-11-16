@@ -41,6 +41,9 @@ public class FileUrisLoader extends AbstractUrisLoader {
         parseUriReplacePatterns();
 
         String fileName = getOptions().getUrisFile();
+        if (isBlank(fileName)) {
+            fileName = getLoaderPath();
+        }
         if (shouldSetBatchRef()) {
             batchRef = fileName;
         }

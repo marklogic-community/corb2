@@ -444,12 +444,13 @@ public final class Options {
     public static final String LOADER_BASE64_ENCODE = "LOADER-BASE64-ENCODE";
 
     /**
-     * The path to the resource (file or folder) that will be the source for a class that
-     * extends the AbstractFileUrisLoader
+     * TThe path to the resource (file or folder) that will be the input source for a loader class that extends
+     * AbstractFileUrisLoader, such as FileUrisDirectoryLoader, FileUrisLoader, FileUrisStreamingXmlLoader,
+     * FileUrisXmlLoader, and FileUrisZipLoader
      *
      * @since 2.4.0
      */
-    @Usage(description = "The path to the resource (file or folder) that will be the source for a class that extends the AbstractFileUrisLoader")
+    @Usage(description = "The path to the resource (file or folder) that will be the input source for a loader class that extends AbstractFileUrisLoader, such as FileUrisDirectoryLoader, FileUrisLoader, FileUrisStreamingXmlLoader, FileUrisXmlLoader, and FileUrisZipLoader")
     public static final String LOADER_PATH = "LOADER-PATH";
 
     /**
@@ -1058,7 +1059,7 @@ public final class Options {
     @Usage(description = "Time interval, in seconds, between retry attempts. "
             + "Default is 60.")
     public static final String XCC_CONNECTION_RETRY_INTERVAL = "XCC-CONNECTION-RETRY-INTERVAL";
-    
+
     /**
      * Number attempts to connect to ML before giving up on a given host. Default is 3
      */

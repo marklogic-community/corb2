@@ -21,6 +21,9 @@ package com.marklogic.developer.corb;
 import static com.marklogic.developer.corb.Options.URIS_REPLACE_PATTERN;
 
 import com.marklogic.developer.corb.util.StringUtils;
+
+import static com.marklogic.developer.corb.Options.XML_FILE;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 
@@ -119,5 +122,18 @@ public abstract class AbstractUrisLoader implements UrisLoader {
     protected boolean shouldSetBatchRef() {
         String setBatchRef = getProperty(Options.LOADER_SET_URIS_BATCH_REF);
         return StringUtils.stringToBoolean(setBatchRef, false);
+    }
+
+    protected String getLoaderPath(String... propertyName) {
+        String loaderPath = null;
+        for (String name : propertyName) {
+            if (isBlank(loaderPath)) {
+                loaderPath = getProperty(name);
+            }
+        }
+        if (isBlank(loaderPath)) {
+            loaderPath = getProperty(Options.LOADER_PATH);
+        }
+        return loaderPath;
     }
 }

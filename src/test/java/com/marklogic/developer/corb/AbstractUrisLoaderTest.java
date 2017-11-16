@@ -139,6 +139,21 @@ public class AbstractUrisLoaderTest {
         assertTrue(instance.replacements.length == 2);
     }
 
+    @Test
+    public void testGetLoaderPath() {
+        AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
+        Properties props = new Properties();
+        props.setProperty(Options.XML_FILE, FOO);
+        props.setProperty(Options.LOADER_PATH, BAR);
+        instance.setProperties(props);
+
+        assertEquals(BAR, instance.getLoaderPath());
+        assertEquals(FOO, instance.getLoaderPath(Options.XML_FILE));
+        assertEquals(FOO, instance.getLoaderPath(Options.ZIP_FILE, Options.XML_FILE));
+        assertEquals(FOO, instance.getLoaderPath(Options.XML_FILE, Options.ZIP_FILE));
+        assertEquals(BAR, instance.getLoaderPath(Options.ZIP_FILE));
+    }
+
     public static class AbstractUrisLoaderImpl extends AbstractUrisLoader {
 
         @Override

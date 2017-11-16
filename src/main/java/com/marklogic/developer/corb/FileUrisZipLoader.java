@@ -37,6 +37,8 @@ import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
@@ -54,10 +56,8 @@ public class FileUrisZipLoader extends AbstractFileUrisLoader {
     @Override
     public void open() throws CorbException {
 
-        String zipFilename = getProperty(Options.ZIP_FILE);
-        if (zipFilename == null) {
-            zipFilename = getProperty(Options.LOADER_PATH);
-        }
+        String zipFilename = getLoaderPath(Options.ZIP_FILE);
+
         try {
             File file = FileUtils.getFile(zipFilename);
             zipFile = new ZipFile(file);
