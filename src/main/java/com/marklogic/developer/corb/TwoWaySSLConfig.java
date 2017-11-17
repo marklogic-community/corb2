@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
@@ -40,7 +39,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
 /**
- * 
+ *
  * @since 2.2.0
  */
 public class TwoWaySSLConfig extends AbstractSSLConfig {
@@ -53,8 +52,8 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
     public static final String SSL_KEYSTORE_PASSWORD = com.marklogic.developer.corb.Options.SSL_KEYSTORE_PASSWORD;
     public static final String SSL_KEYSTORE_TYPE = com.marklogic.developer.corb.Options.SSL_KEYSTORE_TYPE;
     public static final String SSL_PROPERTIES_FILE = com.marklogic.developer.corb.Options.SSL_PROPERTIES_FILE;
-    private static final String delimiter = ",";
-    
+    private static final String DELIMITER = ",";
+
     /**
      * @return acceptable list of cipher suites
      */
@@ -63,8 +62,8 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
         if (properties != null) {
             String cipherSuites = properties.getProperty(SSL_CIPHER_SUITES);
             if (isNotEmpty(cipherSuites)) {
-                String[] cipherSuitesList = cipherSuites.split(delimiter);
-                LOG.log(Level.INFO, "Using cipher suites: {0}", cipherSuitesList);
+                String[] cipherSuitesList = cipherSuites.split(DELIMITER);
+                LOG.log(Level.INFO, () -> MessageFormat.format("Using cipher suites: {0}", (Object[]) cipherSuitesList));
                 return cipherSuitesList;
             }
         }
@@ -79,8 +78,8 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
         if (properties != null) {
             String enabledProtocols = properties.getProperty(SSL_ENABLED_PROTOCOLS);
             if (isNotEmpty(enabledProtocols)) {
-                String[] enabledProtocolsList = enabledProtocols.split(delimiter);
-                LOG.log(Level.INFO, "Using enabled protocols: {0}", enabledProtocolsList);
+                String[] enabledProtocolsList = enabledProtocols.split(DELIMITER);
+                LOG.log(Level.INFO, () -> MessageFormat.format("Using enabled protocols: {0}", (Object[]) enabledProtocolsList));
                 return enabledProtocolsList;
             }
         }
@@ -105,25 +104,22 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
         if (isNotBlank(securityFileName)) {
             File f = new File(securityFileName);
             if (f.exists() && !f.isDirectory()) {
-                LOG.log(Level.INFO, "Loading SSL configuration file {0} from filesystem", securityFileName);
-                InputStream is = null;
-                try {
-                    is = new FileInputStream(f);
+                LOG.log(Level.INFO, () -> MessageFormat.format("Loading SSL configuration file {0} from filesystem", securityFileName));
+
+                try (InputStream is = new FileInputStream(f)) {
                     if (properties == null) {
                         properties = new Properties();
                     }
                     properties.load(is);
                 } catch (IOException e) {
-                    LOG.severe(MessageFormat.format("Error loading ssl properties file {0}", SSL_PROPERTIES_FILE));
+                    LOG.log(Level.SEVERE, () -> MessageFormat.format("Error loading ssl properties file {0}", SSL_PROPERTIES_FILE));
                     throw new RuntimeException(e);
-                } finally {
-                    closeQuietly(is);
                 }
             } else {
                 throw new IllegalStateException("Unable to load " + securityFileName);
             }
         } else {
-            LOG.info(MessageFormat.format("Property {0} not present", SSL_PROPERTIES_FILE));
+            LOG.log(Level.INFO, () -> MessageFormat.format("Property {0} not present", SSL_PROPERTIES_FILE));
         }
     }
 
@@ -157,12 +153,9 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
             // adding custom key store
             KeyStore clientKeyStore = KeyStore.getInstance(sslkeyStoreType);
             char[] sslkeyStorePasswordChars = sslkeyStorePassword != null ? sslkeyStorePassword.toCharArray() : null;
-            InputStream keystoreInputStream = null;
-            try {
-                keystoreInputStream = new FileInputStream(sslkeyStore);
+
+            try (InputStream keystoreInputStream = new FileInputStream(sslkeyStore)) {
                 clientKeyStore.load(keystoreInputStream, sslkeyStorePasswordChars);
-            } finally {
-                closeQuietly(keystoreInputStream);
             }
             char[] sslkeyPasswordChars = sslkeyPassword != null ? sslkeyPassword.toCharArray() : null;
             // using SunX509 format

@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
 
     /**
      * Construct a disk-backed queue that keeps at most
-     * <code>maxInMemorySize</code> elements in memory.
+     * {@code maxInMemorySize} elements in memory.
      *
      * @param maxInMemorySize Maximum number of elements to keep in memory.
      */
@@ -92,7 +92,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
 
     /**
      * Construct a disk-backed queue that keeps at most
-     * <code>maxInMemorySize</code> elements in memory.
+     * {@code maxInMemorySize} elements in memory.
      *
      * @param maxInMemorySize Maximum number of elements to keep in memory.
      * @param tempDir Directory where queue temporary files will be written to.
@@ -107,7 +107,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
         }
 
         this.tempDir = tempDir;
-        memoryQueue = new MemoryQueue<E>(maxInMemorySize);
+        memoryQueue = new MemoryQueue<>(maxInMemorySize);
         refillMemoryRatio = DEFAULT_REFILL_RATIO;
     }
 
@@ -119,7 +119,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
     @Override
     protected void finalize() throws Throwable {
         if (closeFile()) {
-            LOG.warning(MessageFormat.format("{0} still had open file in finalize", DiskQueue.class.getSimpleName()));
+            LOG.log(Level.WARNING, () -> MessageFormat.format("{0} still had open file in finalize", DiskQueue.class.getSimpleName()));
         }
         super.finalize();
     }
@@ -153,7 +153,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
         if (fileQueue == null) {
             fileQueue = File.createTempFile(DiskQueue.class.getSimpleName() + "-backingstore-", null, tempDir);
             fileQueue.deleteOnExit();
-            LOG.log(Level.INFO, "created backing store {0}", fileQueue.getAbsolutePath());
+            LOG.log(Level.INFO, () -> MessageFormat.format("created backing store {0}", fileQueue.getAbsolutePath()));
             fileOut = new BufferedWriter(new FileWriter(fileQueue));
 
             // Flush output file, so there's something written when we open the input stream.
@@ -165,7 +165,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
 
     @Override
     public Iterator<String> iterator() {
-        throw new RuntimeException(MessageFormat.format("Iterator is not supported for {0}", DiskQueue.class.getSimpleName()));
+        throw new UnsupportedOperationException(MessageFormat.format("Iterator is not supported for {0}", DiskQueue.class.getSimpleName()));
     }
 
     @Override
@@ -187,7 +187,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
                 fileOut.newLine();
                 fileElementCount += 1;
             } catch (IOException e) {
-                LOG.severe(MessageFormat.format("Error writing to {0} backing store", DiskQueue.class.getSimpleName()));
+                LOG.log(Level.SEVERE, MessageFormat.format("Error writing to {0} backing store {1}", DiskQueue.class.getSimpleName(), fileQueue.getAbsolutePath()), e);
                 return false;
             }
         }
@@ -262,7 +262,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
                 // to start from zero instead of closing file (but for current use case of fill once, drain
                 // once this works just fine)
             } catch (IOException e) {
-                LOG.severe(MessageFormat.format("Error reading from {0} backing store", DiskQueue.class.getSimpleName()));
+                LOG.log(Level.SEVERE, MessageFormat.format("Error reading from {0} backing store", DiskQueue.class.getSimpleName()), e);
             }
         }
     }
@@ -275,7 +275,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
         public MemoryQueue(int capacity) {
             super();
             this.capacity = capacity;
-            queue = new ArrayList<String>(capacity);
+            queue = new ArrayList<>(capacity);
         }
 
         @Override

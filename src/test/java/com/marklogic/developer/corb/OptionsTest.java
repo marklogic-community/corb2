@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -37,7 +37,6 @@ public class OptionsTest {
             //Verify that all of the String constants
             if (String.class.isInstance(field.getType())) {
                 Usage usage = field.getAnnotation(Usage.class);
-                System.out.println(field.getName());
                 assertNotNull(usage);
             }
         }

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Job Dashboard</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/dashboard.css" rel="stylesheet">
+  </head>
+  <body ng-app="corbApp" ng-controller="dashboardCtrl">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3>Job Dashboard</h3>
+            </div>
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h4 class="panel-title">
+                  <a data-toggle="collapse" href="#monitorHosts" ng-click="isCollapsed = !isCollapsed">
+                      <span ng-class="{'glyphicon glyphicon-triangle-bottom': isCollapsed, 'glyphicon glyphicon-triangle-top': !isCollapsed }"></span>
+                      Monitor Hosts
+                  </a>
+                </h4>
+              </div>
+              <div id="monitorHosts" class="panel-collapse collapse">
+                <form name="externalForm" class="form-inline" novalidate>
+                    <div ng-repeat="e in external">
+                        <ng-form name="portForm">
+                            <div class="input-group">
+                                <span class="input-group-addon">Host: </span>
+                                <input class="form-control" ng-readonly="$first" ng-model="e.host" ng-change="parseExternalHostAndPorts($index)" ng-model-options="'{ debounce: 5000 }'" ng-required="true" required/>
+                            </div>
+
+                            <div class="input-group">
+                                <span class="input-group-addon">Port Range: </span>
+                                <input class="form-control" name="port" ng-readonly="$first" ng-model="e.port" ng-change="parseExternalHostAndPorts($index)" ng-model-options='{ debounce: 2000 }' ng-pattern="/^(\d+[-,\s]?)*$/" ng-required="true" required/>
+
+                                <span class="alert alert-danger" ng-show="portForm.port.$touched && portForm.port.$invalid">Invalid format. Specify port ranges with dashes, or a list of ports with commas. i.e. 8005-8010,9001,9002</span>
+                            </div>
+
+                            <button ng-if="$first === false" ng-click="removeExternal($index)">
+                                <span class="glyphicon glyphicon-minus"></span> REMOVE
+                            </button>
+                        </ng-form>
+                    </div>
+                    <button ng-click="addExternal()">
+                        <span class="glyphicon glyphicon-plus"></span> ADD
+                    </button>
+                </form>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-striped table-bordered table-hover">
+                <thead>
+                  <tr>
+                    <th> Start Time </th>
+                    <th> Avg TPS </th>
+                    <th> Curr TPS </th>
+                    <th> Host/Port </th>
+                    <th> Threads</th>
+                    <th> Succeeded Tasks </th>
+                    <th> Failed Tasks </th>
+                    <th> Job Location </th>
+                    <th> Total #Tasks </th>
+                    <th> Total Run Time  </th>
+                    <th> Pause / Resume   </th>
+                    <th> Threads   </th>
+                    <th> Details   </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat="i in availableServerData | orderBy : ['startTime', 'port', 'id']">
+                    <td>{{::i.startTime}}</td>
+                    <td>{{i.averageTransactionsPerSecond | number:2}}</td>
+                    <td>{{i.currentTransactionsPerSecond | number:2}}</td>
+                    <td><a ng-click="openJob(i)" target="_blank">{{::i.host}}/{{::i.port}}</a></td>
+                    <td>{{i.currentThreadCount | number:0}}</td>
+                    <td>{{i.numberOfSucceededTasks | number:0}}</td>
+                    <td>{{i.numberOfFailedTasks | number:0}}</td>
+                    <td>{{::i.runLocation}}</td>
+                    <td>{{::i.totalNumberOfTasks | number:0}}</td>
+                    <td>{{msToTime(i.totalRunTimeInMillis)}}</td>
+                    <td>
+                        <button class="btn {{i.paused ? 'btn-info' : 'btn-success'}}" ng-click="pauseResumeButtonClick(i)">
+                            <md-icon ng-hide="i.loading" class="glyphicon {{i.paused ? 'glyphicon-play' : 'glyphicon-pause'}}"></md-icon>
+                            <md-icon ng-if="i.loading" class="glyphicon glyphicon-refresh"></md-icon>
+                          <!--  {{ i.paused ? "resume" : "pause" }} -->
+                        </button>
+                    </td>
+                    <td>
+                        <select class="custom-select" ng-options="i for i in allThreadCounts" ng-model="threadCounts[i.id]" ng-change="updateThreadCount(i)"></select>
+                    </td>
+                    <td><a ng-click="openJob(i)" target="_blank" class="glyphicon glyphicon-fullscreen"></a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="/js/jquery-3.1.1.slim.min.js"></script>
+    <script src="/js/angular.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/corbApp.js"></script>
+  </body>
+</html>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,62 +18,54 @@
  */
 package com.marklogic.developer.corb;
 
-import com.marklogic.developer.corb.util.IOUtils;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class TestUtils {
+public final class TestUtils {
 
+    private static final Logger LOG = Logger.getLogger(TestUtils.class.getName());
+    private TestUtils() {
+        //No need for an instance
+    }
+
+    /**
+     * clear System properties that are CoRB options
+     */
     public static void clearSystemProperties() {
-        System.clearProperty("DECRYPTER");
-        System.clearProperty("URIS-MODULE");
-        System.clearProperty("OPTIONS-FILE");
-        System.clearProperty("XCC-CONNECTION-URI");
-        System.clearProperty("COLLECTION-NAME");
-        System.clearProperty("XQUERY-MODULE");
-        System.clearProperty("PROCESS-MODULE");
-        System.clearProperty("THREAD-COUNT");
-        System.clearProperty("MODULE-ROOT");
-        System.clearProperty("MODULES-DATABASE");
-        System.clearProperty("INSTALL");
-        System.clearProperty("INIT-MODULE");
-        System.clearProperty("INIT-TASK");
-        System.clearProperty("BATCH-SIZE");
-        System.clearProperty("PRIVATE-KEY-FILE");
-        System.clearProperty("PROCESS-TASK");
-        System.clearProperty("PRE-BATCH-MODULE");
-        System.clearProperty("PRE-BATCH-XQUERY-MODULE");
-        System.clearProperty("PRE-BATCH-TASK");
-        System.clearProperty("POST-BATCH-MODULE");
-        System.clearProperty("POST-BATCH-XQUERY-MODULE");
-        System.clearProperty("POST-BATCH-TASK");
-        System.clearProperty("EXPORT-FILE-DIR");
-        System.clearProperty("EXPORT-FILE-NAME");
-        System.clearProperty("URIS-FILE");
-        // TODO consider looking for any properties starting with, to ensure they all get cleared
-        System.clearProperty("XQUERY-MODULE.foo");
-        System.clearProperty("PROCESS-MODULE.foo");
-        System.clearProperty("PRE-BATCH-MODULE.foo");
-        System.clearProperty("PRE-BATCH-XQUERY-MODULE.foo");
-        System.clearProperty("POST-BATCH-MODULE.foo");
-        System.clearProperty("POST-BATCH-XQUERY-MODULE.foo");
-        System.clearProperty("EXPORT_FILE_AS_ZIP");
-        System.clearProperty("EXPORT-FILE-BOTTOM-CONTENT)");
-        System.clearProperty("EXPORT-FILE-PART-EXT");
-        System.clearProperty("ERROR-FILE-NAME");
-        System.clearProperty("FAIL-ON-ERROR");
-        System.clearProperty("URIS-QUEUE-MAX-IN-MEMORY-SIZE");
-        System.clearProperty("URIS-QUEUE-TEMP-DIR");
-        System.clearProperty("URIS-MODULE.count");
+        Set<String> systemProperties = System.getProperties().stringPropertyNames();
+        Class<Options> optionsClass = Options.class;
+        Arrays.stream(optionsClass.getFields())
+                .map(field -> {
+                    try {
+                        field.setAccessible(true);
+                        //obtain the CoRB option name
+                        return (String) field.get(optionsClass);
+                    } catch (IllegalAccessException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                })
+                .forEach(option -> {
+                    //remove the standard CoRB option
+                    System.clearProperty(option);
+                    //remove any custom input properties (i.e. URIS-MODULE.foo)
+                    systemProperties.stream()
+                            .filter(property -> property.startsWith(option + '.'))
+                            .forEach(System::clearProperty);
+                });
     }
 
     public static String readFile(String filePath) throws FileNotFoundException {
@@ -81,43 +73,29 @@ public class TestUtils {
     }
 
     public static String readFile(File file) throws FileNotFoundException {
-        // \A == The beginning of the input
-        Scanner scanner = new Scanner(file, "UTF-8");
-        String result = scanner.useDelimiter("\\A").next();
-        scanner.close();
+        String result;
+        try ( // \A == The beginning of the input
+                Scanner scanner = new Scanner(file, "UTF-8")) {
+            result = scanner.useDelimiter("\\A").next();
+        }
         return result;
     }
 
     public static void clearFile(File file) {
-        PrintWriter pw = null;
-        try {
-            pw = new PrintWriter(file);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        try (PrintWriter pw = new PrintWriter(file)) {
+            //Instantiating new PRintWriter wipes the file
+        } catch (FileNotFoundException ex) {
+            LOG.log(Level.SEVERE, null, ex);
         }
-        IOUtils.closeQuietly(pw);
     }
 
-    //TODO: remove this, and upgrade code to use Files.createTempDirectory() when we upgrade to a JRE >= 1.7
     public static File createTempDirectory() throws IOException {
-        final File temp;
-        temp = File.createTempFile("temp", Long.toString(System.nanoTime()));
-        if (!(temp.delete())) {
-            throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
-        }
-        if (!(temp.mkdir())) {
-            throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
-        }
-        return temp;
+        return Files.createTempDirectory("temp").toFile();
     }
 
     public static boolean containsLogRecord(List<LogRecord> logRecords, LogRecord logRecord) {
-        for (LogRecord record : logRecords) {
-            if (record.getLevel().equals(logRecord.getLevel())
-                    && record.getMessage().equals(logRecord.getMessage())) {
-                return true;
-            }
-        }
-        return false;
+        return logRecords.stream()
+                .anyMatch(record -> record.getLevel().equals(logRecord.getLevel())
+                        && record.getMessage().equals(logRecord.getMessage()));
     }
 }

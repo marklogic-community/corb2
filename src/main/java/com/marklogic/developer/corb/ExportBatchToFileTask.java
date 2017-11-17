@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ package com.marklogic.developer.corb;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_PART_EXT;
 import static com.marklogic.developer.corb.Options.URIS_BATCH_REF;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
@@ -30,6 +29,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 public class ExportBatchToFileTask extends ExportToFileTask {
 
@@ -49,37 +49,33 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 		}
 		return fileName;
 	}
-	
+
 	protected String getPartFileName() {
 		String fileName = getFileName();
 		if (isNotEmpty(fileName)) {
 			String partExt = getProperty(EXPORT_FILE_PART_EXT);
 			if (isNotEmpty(partExt)) {
 				if (!partExt.startsWith(".")) {
-					partExt = "." + partExt;
+					partExt = '.' + partExt;
 				}
 				fileName += partExt;
 			}
 		}
 		return fileName;
 	}
-	      
+
 	@Override
 	protected void writeToFile(ResultSequence seq) throws IOException {
 		if (seq == null || !seq.hasNext()) {
 			return;
 		}
 		synchronized (SYNC_OBJ) {
-			BufferedOutputStream writer = null;
-			try {
-				writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, getPartFileName()), true));
+			try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, getPartFileName()), true))){
 				while (seq.hasNext()) {
 					writer.write(getValueAsBytes(seq.next().getItem()));
 					writer.write(NEWLINE);
 				}
 				writer.flush();
-			} finally {
-                closeQuietly(writer);
 			}
 		}
 	}

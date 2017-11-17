@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,14 +20,13 @@ package com.marklogic.developer.corb;
 
 import java.util.Properties;
 
-import com.marklogic.xcc.ContentSource;
 import java.io.Closeable;
 
 public interface UrisLoader extends Closeable {
 
 	void setOptions(TransformOptions options);
 
-	void setContentSource(ContentSource cs);
+	void setContentSourcePool(ContentSourcePool csm);
 
 	void setCollection(String collection);
 
@@ -37,7 +36,7 @@ public interface UrisLoader extends Closeable {
 
 	String getBatchRef();
 
-	int getTotalCount();
+	long getTotalCount();
 
 	boolean hasNext() throws CorbException;
 

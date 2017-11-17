@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import static com.marklogic.developer.corb.Options.INIT_MODULE;
 import static com.marklogic.developer.corb.Options.POST_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
+import static com.marklogic.developer.corb.Options.XCC_TIME_ZONE;
 import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 import static com.marklogic.developer.corb.util.StringUtils.getInlineModuleCode;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
@@ -32,6 +33,8 @@ import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
+import java.util.TimeZone;
 
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
@@ -41,8 +44,8 @@ import java.util.Map;
 public class TaskFactory {
 
     protected Manager manager;
-    private final Map<String, String> moduleToAdhocQueryMap = new HashMap<String, String>();
-    private final Map<String, String> moduleToPathMap = new HashMap<String, String>();
+    private final Map<String, String> moduleToAdhocQueryMap = new HashMap<>();
+    private final Map<String, String> moduleToPathMap = new HashMap<>();
     private static final String EXCEPTION_MSG_UNABLE_READ_ADHOC = "Unable to read adhoc query ";
     private static final String EXCEPTION_MSG_NULL_CONTENT = "null content source";
     /**
@@ -62,7 +65,7 @@ public class TaskFactory {
             throw new NullPointerException("null process task and xquery module");
         }
         if (null != options.getProcessModule()
-                && (null == uris || uris.length == 0 || null == manager.getContentSource())) {
+                && (null == uris || uris.length == 0 || null == manager.getContentSourcePool())) {
             throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT + " or input uri");
         }
         try {
@@ -79,12 +82,12 @@ public class TaskFactory {
         if (null == options.getPreBatchTaskClass() && null == options.getPreBatchModule()) {
             return null;
         }
-        if (null != options.getPreBatchModule() && null == manager.getContentSource()) {
+        if (null != options.getPreBatchModule() && null == manager.getContentSourcePool()) {
             throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
             Task task = options.getPreBatchTaskClass() == null ? new Transform() : options.getPreBatchTaskClass().newInstance();
-            setupTask(task, PRE_BATCH_MODULE, options.getPreBatchModule(), new String[0]);
+            setupTask(task, PRE_BATCH_MODULE, options.getPreBatchModule());
             return task;
         } catch (Exception exc) {
             throw new IllegalArgumentException(exc.getMessage(), exc);
@@ -96,12 +99,12 @@ public class TaskFactory {
         if (null == options.getPostBatchTaskClass() && null == options.getPostBatchModule()) {
             return null;
         }
-        if (null != options.getPostBatchModule() && null == manager.getContentSource()) {
+        if (null != options.getPostBatchModule() && null == manager.getContentSourcePool()) {
             throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
             Task task = options.getPostBatchTaskClass() == null ? new Transform() : options.getPostBatchTaskClass().newInstance();
-            setupTask(task, POST_BATCH_MODULE, options.getPostBatchModule(), new String[0]);
+            setupTask(task, POST_BATCH_MODULE, options.getPostBatchModule());
             return task;
         } catch (Exception exc) {
             throw new IllegalArgumentException(exc.getMessage(), exc);
@@ -113,12 +116,12 @@ public class TaskFactory {
         if (null == manager.getOptions().getInitTaskClass() && null == options.getInitModule()) {
             return null;
         }
-        if (null != options.getInitModule() && null == manager.getContentSource()) {
+        if (null != options.getInitModule() && null == manager.getContentSourcePool()) {
             throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
             Task task = options.getInitTaskClass() == null ? new Transform() : options.getInitTaskClass().newInstance();
-            setupTask(task, INIT_MODULE, options.getInitModule(), new String[0]);
+            setupTask(task, INIT_MODULE, options.getInitModule());
             return task;
         } catch (Exception exc) {
             throw new IllegalArgumentException(exc.getMessage(), exc);
@@ -164,14 +167,22 @@ public class TaskFactory {
             }
         }
         task.setModuleType(moduleType);
-        task.setContentSource(manager.contentSource);
-        task.setProperties(manager.properties);
+        task.setContentSourcePool(manager.getContentSourcePool());
+
+        Properties managerProperties = manager.getProperties();
+        task.setProperties(managerProperties);
+
+        String timeZoneId = managerProperties.getProperty(XCC_TIME_ZONE);
+        if (timeZoneId != null) {
+            TimeZone timeZone = TimeZone.getTimeZone(timeZoneId);
+            task.setTimeZone(timeZone);
+        }
         task.setInputURI(uris);
         task.setFailOnError(failOnError);
         task.setExportDir(manager.getOptions().getExportFileDir());
 
         if (task instanceof ExportBatchToFileTask) {
-            String fileName = ((ExportBatchToFileTask) task).getFileName();
+            String fileName = ((ExportToFileTask) task).getFileName();
             if (isBlank(fileName)) {
                 throw new IllegalArgumentException("No file name for ExportBatchToFileTask");
             }

@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -18,12 +18,21 @@
  */
 package com.marklogic.developer.corb.util;
 
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.net.URL;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import static java.nio.file.FileVisitResult.CONTINUE;
+import static java.nio.file.FileVisitResult.TERMINATE;
+import java.nio.file.SimpleFileVisitor;
+import java.text.MessageFormat;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Common file manipulation utilities
@@ -31,7 +40,7 @@ import java.net.URL;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public final class FileUtils {
-
+    private static final Logger LOG = Logger.getLogger(FileUtils.class.getName());
     private FileUtils() {
     }
 
@@ -41,30 +50,8 @@ public final class FileUtils {
      * @param file The file to be deleted.
      * @throws IOException
      */
-    public static void deleteFile(File file) throws IOException {
-        if (!file.exists()) {
-            return;
-        }
-        boolean success;
-        if (!file.isDirectory()) {
-            success = file.delete();
-            if (!success) {
-                throw new IOException("error deleting " + file.getCanonicalPath());
-            }
-            return;
-        }
-        // directory, so recurse
-        File[] children = file.listFiles();
-        if (children != null) {
-            for (File children1 : children) {
-                // recurse
-                deleteFile(children1);
-            }
-        }
-        // now this directory should be empty
-        if (file.exists()) {
-            file.delete();
-        }
+    public static void deleteFile(final File file) throws IOException {
+        delete(file.toPath());
     }
 
     /**
@@ -73,8 +60,54 @@ public final class FileUtils {
      * @param path Path to the file to be deleted.
      * @throws IOException
      */
-    public static void deleteFile(String path) throws IOException {
-        deleteFile(new File(path));
+    public static void deleteFile(final String path) throws IOException {
+        deleteFile(getFile(path));
+    }
+
+    public static void deleteQuietly(final Path directory) {
+        if (directory != null && directory.toFile().exists()) {
+            try {
+                FileUtils.delete(directory);
+            } catch (IOException ex) {
+                LOG.log(Level.WARNING, "Unable to delete dir: " + directory.toString(), ex);
+            }
+        }
+    }
+
+    public static void deleteFileQuietly(final String directory, final String filename) {
+        if (filename != null) {
+            File file = new File(directory, filename);
+            FileUtils.deleteQuietly(file.toPath());
+        }
+    }
+
+    public static void delete(final Path path) throws IOException {
+        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+
+            @Override
+            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+                Files.delete(file);
+                return CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(final Path file, final IOException e) {
+                return handleException();
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(final Path dir, final IOException e) throws IOException {
+                if (e != null) {
+                    return handleException();
+                }
+                Files.delete(dir);
+                return CONTINUE;
+            }
+
+            private FileVisitResult handleException() {
+                return TERMINATE;
+            }
+        });
     }
 
     /**
@@ -86,10 +119,14 @@ public final class FileUtils {
      */
     public static void moveFile(final File source, final File dest) {
         if (!source.getAbsolutePath().equals(dest.getAbsolutePath()) && source.exists()) {
-            if (dest.exists()) {
-                dest.delete();
+            try {
+                Files.deleteIfExists(dest.toPath());
+            } catch (IOException ex) {
+                LOG.log(Level.WARNING, MessageFormat.format("Unable to delete file: {0}", dest), ex);
             }
-            source.renameTo(dest);
+            if (!source.renameTo(dest)){
+                LOG.log(Level.WARNING, () -> MessageFormat.format("Unable to rename {0} to {1}", source, dest));
+            }
         }
     }
 
@@ -103,13 +140,9 @@ public final class FileUtils {
      */
     public static int getLineCount(final File file) throws IOException {
         if (file != null && file.exists()) {
-            LineNumberReader lnr = null;
-            try {
-                lnr = new LineNumberReader(new FileReader(file));
+            try (LineNumberReader lnr = new LineNumberReader(new FileReader(file))) {
                 lnr.skip(Long.MAX_VALUE);
                 return lnr.getLineNumber();
-            } finally {
-                closeQuietly(lnr);
             }
         }
         return 0;
@@ -133,4 +166,5 @@ public final class FileUtils {
         }
         return file;
     }
+
 }

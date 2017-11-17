@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,16 +27,20 @@ import static com.marklogic.developer.corb.Options.XCC_HOSTNAME;
 import static com.marklogic.developer.corb.Options.XCC_PASSWORD;
 import static com.marklogic.developer.corb.Options.XCC_PORT;
 import static com.marklogic.developer.corb.Options.XCC_USERNAME;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
+import static com.marklogic.developer.corb.Options.XCC_PROTOCOL;
 import static com.marklogic.developer.corb.util.IOUtils.isDirectory;
+
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
+import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ContentSource;
-import com.marklogic.xcc.ContentSourceFactory;
-import com.marklogic.xcc.SecurityOptions;
+import com.marklogic.xcc.Request;
+import com.marklogic.xcc.ResultItem;
+import com.marklogic.xcc.ResultSequence;
+import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
-import com.marklogic.xcc.exceptions.XccConfigException;
+import com.marklogic.xcc.types.XdmItem;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -46,33 +50,37 @@ import java.io.PrintStream;
 import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.GeneralSecurityException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
+import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
+import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 
 public abstract class AbstractManager {
 
-    public static final String VERSION = "2.3.2";
+    //Obtain the version from META-INF/MANIFEST.MF Implementation-Version attribute
+    public static final String VERSION = AbstractManager.class.getPackage().getImplementationVersion();
 
-    protected static final String VERSION_MSG = "version " + VERSION + " on " + System.getProperty("java.version") + " (" + System.getProperty("java.runtime.name") + ")";
+    protected static final String VERSION_MSG = "version " + VERSION + " on " + System.getProperty("java.version") + " (" + System.getProperty("java.runtime.name") + ')';
     protected static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server';\n";
     protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\";\n";
 
     protected Decrypter decrypter;
     protected SSLConfig sslConfig;
-    protected URI connectionUri;
     protected String collection;
-	protected TransformOptions options = new TransformOptions();
+    protected ContentSourcePool csp;
+    protected TransformOptions options = new TransformOptions();
     protected Properties properties = new Properties();
-	protected ContentSource contentSource;
+    protected Map<String, String> userProvidedOptions = new HashMap<>();
 
     protected static final int EXIT_CODE_SUCCESS = 0;
     protected static final int EXIT_CODE_INIT_ERROR = 1;
@@ -90,43 +98,33 @@ public abstract class AbstractManager {
         return loadPropertiesFile(filename, excIfNotFound, props);
     }
 
-    protected static Properties loadPropertiesFile(String filename, boolean excIfNotFound, Properties props) throws IOException {
+    protected static Properties loadPropertiesFile(String filename, boolean exceptionIfNotFound, Properties props) throws IOException {
         String name = trim(filename);
         if (isNotBlank(name)) {
-            InputStream is = null;
-            try {
-                is = Manager.class.getResourceAsStream("/" + name);
+            try (InputStream is = Manager.class.getResourceAsStream('/' + name)) {
                 if (is != null) {
-                    LOG.log(INFO, "Loading {0} from classpath", name);
+                    LOG.log(INFO, () -> MessageFormat.format("Loading {0} from classpath", name));
                     props.load(is);
                 } else {
                     File f = new File(filename);
                     if (f.exists() && !f.isDirectory()) {
-                        LOG.log(INFO, "Loading {0} from filesystem", name);
-                        FileInputStream fis = null;
-                        try {
-                            fis = new FileInputStream(f);
+                        LOG.log(INFO, () -> MessageFormat.format("Loading {0} from filesystem", name));
+                        try (FileInputStream fis = new FileInputStream(f)) {
                             props.load(fis);
-                        } finally {
-                            closeQuietly(fis);
                         }
-                    } else if (excIfNotFound) {
+                    } else if (exceptionIfNotFound) {
                         throw new IllegalStateException("Unable to load properties file " + name);
                     }
                 }
-            } finally {
-                closeQuietly(is);
             }
         }
         return props;
     }
 
     public static String getAdhocQuery(String module) {
-        InputStream is = null;
-        InputStreamReader reader = null;
-        StringWriter writer = null;
+
         try {
-            is = TaskFactory.class.getResourceAsStream("/" + module);
+            InputStream is = TaskFactory.class.getResourceAsStream('/' + module);
             if (is == null) {
                 File f = new File(module);
                 if (f.exists() && !f.isDirectory()) {
@@ -138,28 +136,23 @@ public abstract class AbstractManager {
                 throw new IllegalStateException("Adhoc query module cannot be a directory");
             }
 
-            reader = new InputStreamReader(is);
-            writer = new StringWriter();
-            char[] buffer = new char[512];
-            int n = 0;
-            while (-1 != (n = reader.read(buffer))) {
-                writer.write(buffer, 0, n);
-            }
-            writer.close();
-            reader.close();
+            try (InputStreamReader reader = new InputStreamReader(is);
+                    StringWriter writer = new StringWriter()) {
 
-            return writer.toString().trim();
+                char[] buffer = new char[512];
+                int n = 0;
+                while (-1 != (n = reader.read(buffer))) {
+                    writer.write(buffer, 0, n);
+                }
+                return writer.toString().trim();
+            }
         } catch (IOException exc) {
             throw new IllegalStateException("Problem reading adhoc query module " + module, exc);
-        } finally {
-            closeQuietly(writer);
-            closeQuietly(reader);
-            closeQuietly(is);
         }
     }
 
     public Properties getProperties() {
-        return this.properties;
+        return properties;
     }
 
     public TransformOptions getOptions() {
@@ -171,83 +164,239 @@ public abstract class AbstractManager {
         loadPropertiesFile(propsFileName, true, this.properties);
     }
 
-    public void init(String... args) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException {
+    public void init(String... args) throws CorbException {
         init(args, null);
     }
 
-    public abstract void init(String[] args, Properties props) throws IOException, URISyntaxException, ClassNotFoundException, InstantiationException, IllegalAccessException, XccConfigException, GeneralSecurityException, RequestException;
+    public void init(Properties props) throws CorbException {
+        String[] args = {};
+        init(args, props);
+    }
+
+    public void init(String[] commandlineArgs, Properties props) throws CorbException {
+        String[] args = commandlineArgs;
+        if (args == null) {
+            args = new String[0];
+        }
+        if (props == null || props.isEmpty()) {
+            try {
+                initPropertiesFromOptionsFile();
+            } catch (IOException ex) {
+                throw new CorbException("Failed to initialized properties from options file", ex);
+            }
+        } else {
+            this.properties = props;
+        }
+        initDecrypter();
+        initSSLConfig();
+        initContentSourcePool(args.length > 0 ? args[0] : null);
+
+        initOptions(args);
+        logRuntimeArgs();
+        registerStatusInfo();
+    }
 
     /**
      * function that is used to get the Decrypter, returns null if not specified
      *
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws InstantiationException
-     * @throws IllegalAccessException
+     * @throws CorbException
      */
-    protected void initDecrypter() throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
+    protected void initDecrypter() throws CorbException {
         String decrypterClassName = getOption(DECRYPTER);
         if (decrypterClassName != null) {
-            Class<?> decrypterCls = Class.forName(decrypterClassName);
-            if (Decrypter.class.isAssignableFrom(decrypterCls)) {
-                this.decrypter = (Decrypter) decrypterCls.newInstance();
-                decrypter.init(this.properties);
-            } else {
-                throw new IllegalArgumentException(DECRYPTER + " must be of type com.marklogic.developer.corb.Decrypter");
+            try {
+                Class<?> decrypterCls = Class.forName(decrypterClassName);
+                if (Decrypter.class.isAssignableFrom(decrypterCls)) {
+                    this.decrypter = (Decrypter) decrypterCls.newInstance();
+                    decrypter.init(this.properties);
+                } else {
+                    throw new IllegalArgumentException(DECRYPTER + " must be of type com.marklogic.developer.corb.Decrypter");
+                }
+            } catch (ClassNotFoundException | IOException | InstantiationException | IllegalAccessException ex) {
+                throw new CorbException(MessageFormat.format("Unable to instantiate {0} {1}", SSL_CONFIG_CLASS, decrypterClassName), ex);
             }
         } else {
             this.decrypter = null;
         }
     }
 
-    protected void initSSLConfig() throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    protected void initSSLConfig() throws CorbException {
         String sslConfigClassName = getOption(SSL_CONFIG_CLASS);
         if (sslConfigClassName != null) {
-            Class<?> decrypterCls = Class.forName(sslConfigClassName);
-            if (SSLConfig.class.isAssignableFrom(decrypterCls)) {
-                this.sslConfig = (SSLConfig) decrypterCls.newInstance();
-            } else {
-                throw new IllegalArgumentException("SSL Options must be of type com.marklogic.developer.corb.SSLConfig");
+            try {
+                Class<?> decrypterCls = Class.forName(sslConfigClassName);
+                if (SSLConfig.class.isAssignableFrom(decrypterCls)) {
+                    this.sslConfig = (SSLConfig) decrypterCls.newInstance();
+                    LOG.log(INFO, () -> MessageFormat.format("Using SSLConfig {0}",decrypterCls.getName()));
+                } else {
+                    throw new IllegalArgumentException("SSL Options must be of type com.marklogic.developer.corb.SSLConfig");
+                }
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
+                throw new CorbException(MessageFormat.format("Unable to instantiate {0} {1}", SSL_CONFIG_CLASS, sslConfigClassName), ex);
             }
         } else {
+            LOG.log(INFO, () -> "Using TrustAnyoneSSSLConfig because no " + SSL_CONFIG_CLASS + " value specified.");
             this.sslConfig = new TrustAnyoneSSLConfig();
         }
         sslConfig.setProperties(this.properties);
         sslConfig.setDecrypter(this.decrypter);
     }
 
-    protected void initURI(String uriArg) throws InstantiationException, URISyntaxException {
-        String uriAsString = getOption(uriArg, XCC_CONNECTION_URI);
+    protected void initContentSourcePool(String uriArg) throws CorbException{
+        String uriAsStrings = getOption(uriArg, XCC_CONNECTION_URI);
         String username = getOption(XCC_USERNAME);
         String password = getOption(XCC_PASSWORD);
-        String host = getOption(XCC_HOSTNAME);
+        String hostnames = getOption(XCC_HOSTNAME);
         String port = getOption(XCC_PORT);
         String dbname = getOption(XCC_DBNAME);
+        String protocol = getOption(XCC_PROTOCOL);
 
-        if (uriAsString == null && (username == null || password == null || host == null || port == null)) {
-            throw new InstantiationException(XCC_CONNECTION_URI + " or "
-                    + XCC_USERNAME + ", " + XCC_PASSWORD + ", " + XCC_HOSTNAME
-                    + " and " + XCC_PORT + " must be specified");
+        if (StringUtils.anyIsNull(uriAsStrings) && StringUtils.anyIsNull(username, password, hostnames, port)) {
+            throw new CorbException(String.format("Either %1$s or %2$s, %3$s, %4$s, and %5$s must be specified",
+                    XCC_CONNECTION_URI, XCC_USERNAME, XCC_PASSWORD, XCC_HOSTNAME, XCC_PORT));
         }
 
-        if (this.decrypter != null) {
-            uriAsString = this.decrypter.getConnectionURI(uriAsString, username, password, host, port, dbname);
-        } else if (uriAsString == null) {
-            uriAsString = "xcc://" + username + ":" + password + "@" + host + ":" + port + (dbname != null ? "/" + dbname : "");
+        List<String> connectionUriList = new ArrayList<>();
+        if (uriAsStrings == null) {
+            if (this.decrypter != null) {
+                username = this.decrypter.decrypt(XCC_USERNAME, username);
+                password = this.decrypter.decrypt(XCC_PASSWORD, password);
+                port = this.decrypter.decrypt(XCC_PORT, port);
+                dbname = !isBlank(dbname) ? this.decrypter.decrypt(XCC_DBNAME, dbname) : null;
+            }
+            for (String host: StringUtils.commaSeparatedValuesToList(hostnames)) {
+                if (this.decrypter != null) {
+                    host = this.decrypter.decrypt(XCC_HOSTNAME, host);
+                }
+                String connectionUri = StringUtils.getXccUri(protocol, username, password, host, port, dbname);
+                if (connectionUri != null) {
+                    connectionUriList.add(connectionUri);
+                }
+            }
+        } else {
+            for (String connectionUri : StringUtils.commaSeparatedValuesToList(uriAsStrings)) {
+                if (this.decrypter != null) {
+                    connectionUri = this.decrypter.decrypt(XCC_CONNECTION_URI, connectionUri);
+                }
+                if (connectionUri != null) {
+                    connectionUriList.add(connectionUri);
+                }
+            }
         }
 
-        this.connectionUri = new URI(uriAsString);
+        this.csp = createContentSourcePool();
+        LOG.info("Using the content source manager " + this.csp.getClass().getName());
+        this.csp.init(properties, sslConfig, connectionUriList.toArray(new String[connectionUriList.size()]));
+
+        if (!this.csp.available()) {
+            throw new CorbException("No connections available. Please check connection parameters or initialization errors");
+        }
+    }
+
+    protected ContentSourcePool createContentSourcePool() throws CorbException {
+        ContentSourcePool contentSourcePool;
+        String contentSourcePoolClassName = getOption(Options.CONTENT_SOURCE_POOL);
+        if (contentSourcePoolClassName != null) {
+            contentSourcePool = createContentSourcePool(contentSourcePoolClassName);
+        } else {
+            contentSourcePool = new DefaultContentSourcePool();
+        }
+        return contentSourcePool;
+    }
+
+    protected ContentSourcePool createContentSourcePool(String className) throws CorbException{
+        try {
+            Class<?> cls = Class.forName(className);
+            if (ContentSourcePool.class.isAssignableFrom(cls)) {
+                return cls.asSubclass(ContentSourcePool.class).newInstance();
+            } else {
+                throw new CorbException("ConnectionManager class " + className + " must be of type com.marklogic.developer.corb.Task");
+            }
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException exc) {
+            throw new CorbException("Exception while creating the ContentSourcePool class " + className,exc);
+        }
+    }
+
+    public ContentSourcePool getContentSourcePool() {
+        return this.csp;
+    }
+
+    protected void initOptions(String... args) throws CorbException {
+        String xccHttpCompliant = getOption(Options.XCC_HTTPCOMPLIANT);
+        if (isNotBlank(xccHttpCompliant)) {
+            System.setProperty("xcc.httpcompliant", Boolean.toString(StringUtils.stringToBoolean(xccHttpCompliant)));
+        }
+    }
+
+    protected void registerStatusInfo() throws CorbException {
+        ContentSource contentSource = csp.get();
+        ResultSequence resultSequence = null;
+        try (Session session = contentSource.newSession()) {
+
+            AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML + DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER
+                    + "let $status := xdmp:server-status(xdmp:host(), xdmp:server())\n"
+                    + "let $modules := $status/mlss:modules\n"
+                    + "let $root := $status/mlss:root\n"
+                    + "return (data($modules), data($root))");
+            resultSequence = session.submitRequest(q);
+
+            while (null != resultSequence && resultSequence.hasNext()) {
+                ResultItem rsItem = resultSequence.next();
+                XdmItem item = rsItem.getItem();
+                if (rsItem.getIndex() == 0 && "0".equals(item.asString())) {
+                    options.setModulesDatabase("");
+                }
+                if (rsItem.getIndex() == 1) {
+                    options.setXDBC_ROOT(item.asString());
+                }
+            }
+        } catch (RequestException e) {
+            LOG.log(SEVERE, "registerStatusInfo request failed", e);
+        } finally {
+            if (null != resultSequence && !resultSequence.isClosed()) {
+                resultSequence.close();
+            }
+        }
+        logOptions();
+        logProperties();
+    }
+
+    protected void logOptions() {
+        //default behavior is not to log anything
+    }
+
+    protected void logProperties() {
+        for (Entry<Object, Object> e : properties.entrySet()) {
+            if (e.getKey() != null && !e.getKey().toString().toUpperCase().startsWith("XCC-")) {
+                LOG.log(INFO, () -> MessageFormat.format("Loaded property {0}={1}", e.getKey(), e.getValue()));
+            }
+        }
     }
 
     /**
      * Retrieve the value of the specified key from either the System
      * properties, or the properties object.
      *
-     * @param propName
+     * @param propertyName
      * @return the trimmed property value
      */
-    protected String getOption(String propName) {
-        return getOption(null, propName);
+    protected String getOption(String propertyName) {
+        return getOption(null, propertyName);
+    }
+
+    /**
+     * Retrieve either the value from the commandline arguments at the argIndex,
+     * or the first property value from the System.properties or properties
+     * object that is not empty or null.
+     *
+     * @param commandlineArgs
+     * @param argIndex
+     * @param propertyName
+     * @return the trimmed property value
+     */
+    protected String getOption(String[] commandlineArgs, int argIndex, String propertyName) {
+        String argValue = commandlineArgs.length > argIndex ? commandlineArgs[argIndex] : null;
+        return getOption(argValue, propertyName);
     }
 
     /**
@@ -255,53 +404,36 @@ public abstract class AbstractManager {
      * System.properties or properties object that is not empty or null.
      *
      * @param argVal
-     * @param propName
+     * @param propertyName
      * @return the trimmed property value
      */
-    protected String getOption(String argVal, String propName) {
+    protected String getOption(String argVal, String propertyName) {
+        String retVal = null;
         if (isNotBlank(argVal)) {
-            return argVal.trim();
-        } else if (isNotBlank(System.getProperty(propName))) {
-            return System.getProperty(propName).trim();
-        } else if (this.properties.containsKey(propName) && isNotBlank(this.properties.getProperty(propName))) {
-            String val = this.properties.getProperty(propName).trim();
-            this.properties.remove(propName); //remove from properties file as we would like to keep the properties file simple. 
-            return val;
+            retVal = argVal.trim();
+        } else if (isNotBlank(System.getProperty(propertyName))) {
+            retVal = System.getProperty(propertyName).trim();
+        } else if (this.properties.containsKey(propertyName) && isNotBlank(this.properties.getProperty(propertyName))) {
+            retVal = this.properties.getProperty(propertyName).trim();
         }
-        return null;
-    }
-
-    protected void prepareContentSource() throws XccConfigException, GeneralSecurityException {
-        String error_msg_ssl = "Problem creating content source with ssl. {0}";
-        try {
-            // support SSL
-            boolean ssl = connectionUri != null && connectionUri.getScheme() != null
-                    && connectionUri.getScheme().equals("xccs");
-            contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
-                    : ContentSourceFactory.newContentSource(connectionUri);
-        } catch (XccConfigException e) {
-            LOG.log(SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly.{0}", e.getMessage());
-            throw e;
-        } catch (KeyManagementException e) {
-            LOG.log(SEVERE, error_msg_ssl, e.getMessage());
-            throw e;
-        } catch (NoSuchAlgorithmException e) {
-            LOG.log(SEVERE, error_msg_ssl, e.getMessage());
-            throw e;
+        //doesn't capture defaults, only user provided.
+        String[] secureWords = {"XCC", "PASSWORD", "SSL"};
+        boolean hasSecureWords = false;
+        for (String secureWord : secureWords) {
+            if (retVal != null && retVal.toUpperCase().contains(secureWord) || propertyName.toUpperCase().contains(secureWord)) {
+                hasSecureWords = true;
+                break;
+            }
         }
-    }
-
-    protected SecurityOptions getSecurityOptions() throws KeyManagementException, NoSuchAlgorithmException {
-        return this.sslConfig.getSecurityOptions();
-    }
-
-    public ContentSource getContentSource() {
-        return this.contentSource;
+        if (retVal != null && !hasSecureWords) {
+            this.userProvidedOptions.put(propertyName, retVal);
+        }
+        return retVal;
     }
 
     protected void usage() {
         PrintStream err = System.err;
-        err.println("CoRB2 requires options to be specified through one or more of the following mechanisms:\n"
+        err.println("CoRB2 " + VERSION_MSG + " requires options to be specified through one or more of the following mechanisms:\n"
                 + "1.) command-line parameters\n"
                 + "2.) Java system properties ex: -DXCC-CONNECTION-URI=xcc://user:password@localhost:8202\n"
                 + "3.) As properties file in the class path specified using -DOPTIONS-FILE=myjob.properties. "
@@ -309,16 +441,16 @@ public abstract class AbstractManager {
                 + "If specified in more than one place, a command line parameter takes precedence over "
                 + "a Java system property, which take precedence over a property "
                 + "from the OPTIONS-FILE properties file.\n\n"
-                + "CoRB2 Options:\n");
+                + "CoRB2 Options:\n"); // NOPMD
 
         for (java.lang.reflect.Field field : Options.class.getDeclaredFields()) {
             Usage usage = field.getAnnotation(Usage.class);
             if (usage != null && StringUtils.isNotEmpty(usage.description())) {
-                err.println(field.getName() + "\n\t" + usage.description());
+                err.println(field.getName() + "\n\t" + usage.description()); // NOPMD
             }
         }
 
-        err.println("\nPlease report issues at: https://github.com/marklogic/corb2/issues\n");
+        err.println("\nPlease report issues at: https://github.com/marklogic-community/corb2/issues\n"); // NOPMD
     }
 
     protected String buildSystemPropertyArg(String property, String value) {
@@ -334,13 +466,49 @@ public abstract class AbstractManager {
     protected void logRuntimeArgs() {
         RuntimeMXBean runtimemxBean = ManagementFactory.getRuntimeMXBean();
         List<String> arguments = runtimemxBean.getInputArguments();
-        List<String> argsToLog = new ArrayList<String>(arguments.size());
+        List<String> argsToLog = new ArrayList<>(arguments.size());
         for (String argument : arguments) {
             if (!argument.startsWith("-DXCC")) {
                 argsToLog.add(argument);
             }
         }
-        LOG.log(INFO, "runtime arguments = {0}", StringUtils.join(argsToLog, SPACE));
+        LOG.log(INFO, () -> MessageFormat.format("runtime arguments = {0}", StringUtils.join(argsToLog, SPACE)));
     }
 
+    public void setUserProvidedOptions(Map<String, String> userProvidedOptions) {
+        this.userProvidedOptions = userProvidedOptions;
+    }
+
+    protected Request getRequestForModule(String processModule, Session session) {
+        Request request;
+        if (isInlineOrAdhoc(processModule)) {
+            String adhocQuery;
+            if (isInlineModule(processModule)) {
+                adhocQuery = StringUtils.getInlineModuleCode(processModule);
+                if (isBlank(adhocQuery)) {
+                    throw new IllegalStateException("Unable to read inline query ");
+                }
+                LOG.log(INFO, "invoking inline process module");
+            } else {
+                String queryPath = processModule.substring(0, processModule.indexOf('|'));
+                adhocQuery = getAdhocQuery(queryPath);
+                if (isBlank(adhocQuery)) {
+                    throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
+                }
+                LOG.log(INFO, () -> MessageFormat.format("invoking adhoc process module {0}", queryPath));
+            }
+            request = session.newAdhocQuery(adhocQuery);
+
+        } else {
+            String root = options.getModuleRoot();
+            String modulePath = buildModulePath(root, processModule);
+            LOG.log(INFO, () -> MessageFormat.format("invoking module {0}", modulePath));
+            request = session.newModuleInvoke(modulePath);
+        }
+        return request;
+    }
+
+    public Map<String, String> getUserProvidedOptions() {
+        return userProvidedOptions;
+    }
 }

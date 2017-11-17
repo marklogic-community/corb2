@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -27,32 +27,26 @@ import static org.junit.Assert.*;
  */
 public class NumberUtilsTest {
 
-    /**
-     * Test of toInt method, of class NumberUtils.
-     */
     @Test
-    public void testToInt_String() {
+    public void testToIntString() {
         int result = NumberUtils.toInt("6");
         assertEquals(6, result);
     }
 
     @Test
-    public void testToInt_String_invalid() {
+    public void testToIntStringInvalid() {
         int result = NumberUtils.toInt("six");
         assertEquals(0, result);
     }
-    
-    /**
-     * Test of toInt method, of class NumberUtils.
-     */
+
     @Test
-    public void testToInt_String_int() {
+    public void testToIntStringInt() {
         int result = NumberUtils.toInt("7", -1);
         assertEquals(7, result);
     }
     
     @Test
-    public void testToInt_String_int_invalid() {
+    public void testToIntStringIntInvalid() {
         int result = NumberUtils.toInt("seven", -1);
         assertEquals(-1, result);
     }

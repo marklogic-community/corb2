@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -30,6 +30,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -39,44 +41,39 @@ import static org.junit.Assert.*;
  */
 public class IOUtilsTest {
 
+    private static final Logger LOG = Logger.getLogger(IOUtilsTest.class.getName());
     private final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
     private final String exampleContent;
     private static final String NULL_OUTPUTSTREAM_MSG = "null OutputStream";
-    
+
     public IOUtilsTest() throws IOException {
         exampleContent = cat(new FileReader(exampleContentFile));
     }
 
-    /**
-     * Test of closeQuietly method, of class IOUtils.
-     */
     @Test
-    public void testCloseQuietly() throws IOException {
+    public void testCloseQuietly() {
         Closeable obj = new StringReader("foo");
         IOUtils.closeQuietly(obj);
     }
 
     @Test
-    public void testCloseQuietly_throws() throws IOException {
-        Closeable closeable = new Closeable() {
-            @Override
-            public void close() throws IOException {
-                throw new IOException("test IO");
-            }
+    public void testCloseQuietlyThrows() {
+        Closeable closeable = () -> {
+            throw new IOException("test IO");
         };
         IOUtils.closeQuietly(closeable);
         //did not throw IOException
     }
 
     @Test
-    public void testCloseQuietly_null() throws IOException {
+    public void testCloseQuietlyNull() {
         Closeable closeable = null;
         IOUtils.closeQuietly(closeable);
         //did not throw IOException
     }
 
     @Test(expected = IOException.class)
-    public void testCopy_null_InputStream() throws Exception {
+    public void testCopyNullInputStream() throws IOException {
         InputStream in = null;
         File out = File.createTempFile("copiedFile", "txt");
         out.deleteOnExit();
@@ -84,108 +81,94 @@ public class IOUtilsTest {
     }
 
     @Test(expected = IOException.class)
-    public void testCopy_InputStream_null() throws Exception {
+    public void testCopyInputStreamNull() throws IOException {
         InputStream in = new FileInputStream(exampleContentFile);
         copy(in, null);
     }
 
-    /**
-     * Test of copy method, of class Utilities.
-     *
-     * @throws java.lang.Exception
-     */
     @Test
-    public void testCopy_Reader_OutputStream() throws Exception {
-        Reader in = new FileReader(exampleContentFile);
-        OutputStream out = new ByteArrayOutputStream();
-
-        long result = copy(in, out);
-        assertEquals(exampleContent.length(), result);
+    public void testCopyReaderOutputStream() {
+        try (Reader in = new FileReader(exampleContentFile)){
+            OutputStream out = new ByteArrayOutputStream();
+            long result = copy(in, out);
+            assertEquals(exampleContent.length(), result);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test(expected = IOException.class)
-    public void testCopy_ReaderIsNull_OutputStream() throws IOException {
+    public void testCopyReaderIsNullOutputStream() throws IOException {
         Reader in = null;
         OutputStream out = new ByteArrayOutputStream();
         copy(in, out);
     }
 
     @Test(expected = IOException.class)
-    public void testCopy_Reader_OutputStreamIsNull() throws IOException {
-        Reader in = new FileReader(exampleContentFile);
-        OutputStream out = null;
-        copy(in, out);
+    public void testCopyReaderOutputStreamIsNull() throws IOException {
+        try (Reader in = new FileReader(exampleContentFile)) {
+            OutputStream out = null;
+            copy(in, out);
+        }
     }
 
-    /**
-     * Test of cat method, of class Utilities.
-     *
-     * @throws java.lang.Exception
-     */
     @Test
-    public void testCat_Reader() throws Exception {
-        Reader reader = new FileReader(exampleContentFile);
-        String result = cat(reader);
-        assertEquals(exampleContent, result);
+    public void testCatReader() {
+        try (Reader reader = new FileReader(exampleContentFile)) {
+            String result = cat(reader);
+            assertEquals(exampleContent, result);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
-    /**
-     * Test of cat method, of class Utilities.
-     *
-     * @throws java.lang.Exception
-     */
     @Test
-    public void testCat_InputStream() throws Exception {
-        InputStream is = new FileInputStream(exampleContentFile);
-        byte[] result = cat(is);
-        assertArrayEquals(exampleContent.getBytes(), result);
+    public void testCatInputStream() {
+        try (InputStream is = new FileInputStream(exampleContentFile)) {
+            byte[] result = cat(is);
+            assertArrayEquals(exampleContent.getBytes(), result);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
-    /**
-     * Test of getSize method, of class Utilities.
-     *
-     * @throws java.lang.Exception
-     */
     @Test
-    public void testGetSize_InputStream() throws Exception {
+    public void testGetSizeInputStream() {
         long result = -1;
-        InputStream is;
-        try {
-            is = new FileInputStream(exampleContentFile);
+        try (InputStream is = new FileInputStream(exampleContentFile)) {
             result = getSize(is);
-        } catch (Exception ex) {
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
         assertEquals(exampleContent.length(), result);
     }
 
-    /**
-     * Test of getSize method, of class Utilities.
-     *
-     * @throws java.lang.Exception
-     */
     @Test
-    public void testGetSize_Reader() throws Exception {
-        Reader reader = new FileReader(exampleContentFile);
-        long result = getSize(reader);
-        assertEquals(exampleContent.length(), result);
+    public void testGetSizeReader() {
+        try (Reader reader = new FileReader(exampleContentFile)) {
+            long result = getSize(reader);
+            assertEquals(exampleContent.length(), result);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
-    /**
-     * Test of getBytes method, of class Utilities.
-     *
-     * @throws java.lang.Exception
-     */
     @Test
-    public void testGetBytes() throws Exception {
-        byte[] result = FileUtilsTest.getBytes(exampleContentFile);
-        assertArrayEquals(exampleContent.getBytes(), result);
+    public void testGetBytes() {
+        try {
+            byte[] result = FileUtilsTest.getBytes(exampleContentFile);
+            assertArrayEquals(exampleContent.getBytes(), result);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
-    /**
-     * @param r
-     * @return
-     * @throws IOException
-     */
     public static String cat(Reader r) throws IOException {
         StringBuilder rv = new StringBuilder();
         int size;
@@ -196,24 +179,12 @@ public class IOUtilsTest {
         return rv.toString();
     }
 
-    /**
-     * @param is
-     * @return
-     * @throws IOException
-     */
     public static byte[] cat(InputStream is) throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream(BUFFER_SIZE);
         copy(is, bos);
         return bos.toByteArray();
     }
 
-    /**
-     *
-     * @param inputStream
-     * @param outputStream
-     * @return
-     * @throws IOException
-     */
     public static long copy(final InputStream inputStream, final OutputStream outputStream) throws IOException {
         if (inputStream == null) {
             throw new IOException("null InputStream");
@@ -240,13 +211,6 @@ public class IOUtilsTest {
         return totalBytes;
     }
 
-    /**
-     *
-     * @param source
-     * @param destination
-     * @return
-     * @throws IOException
-     */
     public static long copy(final Reader source, final OutputStream destination) throws IOException {
         if (source == null) {
             throw new IOException("null Reader");
@@ -257,7 +221,7 @@ public class IOUtilsTest {
         long totalBytes = 0;
         int len;
         char[] buf = new char[BUFFER_SIZE];
-        byte[] bite = null;
+        byte[] bite;
         while ((len = source.read(buf)) > -1) {
             bite = new String(buf).getBytes();
             // len? different for char vs byte?
@@ -274,12 +238,6 @@ public class IOUtilsTest {
         return totalBytes;
     }
 
-    /**
-     *
-     * @param is
-     * @return
-     * @throws IOException
-     */
     public static long getSize(InputStream is) throws IOException {
         long size = 0;
         int b;
@@ -290,12 +248,6 @@ public class IOUtilsTest {
         return size;
     }
 
-    /**
-     *
-     * @param r
-     * @return
-     * @throws IOException
-     */
     public static long getSize(Reader r) throws IOException {
         long size = 0;
         int b;

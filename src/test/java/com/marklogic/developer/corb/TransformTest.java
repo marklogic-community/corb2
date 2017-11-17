@@ -1,5 +1,5 @@
 /*
- * * Copyright (c) 2004-2016 MarkLogic Corporation
+ * * Copyright (c) 2004-2017 MarkLogic Corporation
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.xcc.ResultSequence;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -28,26 +30,30 @@ import static org.junit.Assert.*;
  */
 public class TransformTest {
 
-    /**
-     * Test of processResult method, of class Transform.
-     */
     @Test
-    public void testProcessResult() throws Exception {
-        ResultSequence seq = null;
-        Transform instance = new Transform();
-        String result = instance.processResult(seq);
-        assertEquals(Transform.TRUE, result);
+    public void testProcessResult()  {
+        try {
+            ResultSequence seq = null;
+            Transform instance = new Transform();
+            String result = instance.processResult(seq);
+            assertEquals(Transform.TRUE, result);
+        } catch (CorbException ex) {
+            Logger.getLogger(TransformTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
-    /**
-     * Test of call method, of class Transform.
-     */
     @Test
-    public void testCall() throws Exception {
-        Transform instance = new Transform();
-        String[] result = instance.call();
-        assertNotNull(result);
-        assertTrue(result.length == 0);
+    public void testCall()  {
+        try {
+            Transform instance = new Transform();
+            String[] result = instance.call();
+            assertNotNull(result);
+            assertTrue(result.length == 0);
+        } catch (Exception ex) {
+            Logger.getLogger(TransformTest.class.getName()).log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
 }

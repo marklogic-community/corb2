@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -22,6 +22,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -31,6 +34,7 @@ import static org.junit.Assert.*;
  */
 public class StringUtilsTest {
 
+    private static final Logger LOG = Logger.getLogger(StringUtilsTest.class.getName());
     private static final String ADHOC_SUFFIX = "|ADHOC";
     private static final String INLINE_JAVASCRIPT_CODE = "var i = 0; return i;";
     private static final String UTILITIES_FILENAME = "Utilities.xqy";
@@ -41,16 +45,37 @@ public class StringUtilsTest {
     private static final String DELIM = ",";
     private static final String A_B_C = "a,b,c";
     private static final String FOO = "foo";
-    
+
     @Test
-    public void testStringToBoolean_String_empty() {
+    public void testAnyIsNull() {
+        String missing = null;
+        assertTrue(StringUtils.anyIsNull("a", missing, "c"));
+    }
+
+    @Test
+    public void testAnyIsNullWithoutNull() {
+        assertFalse(StringUtils.anyIsNull("a", "b"));
+    }
+
+    @Test
+    public void testAnyIsNullWithSingleNullString() {
+        String missing = null;
+        assertTrue(StringUtils.anyIsNull(missing));
+    }
+
+    @Test
+    public void testEncodeIfNecessary() {
+        assertEquals("foo%2Bbar", StringUtils.urlEncodeIfNecessary("foo+bar"));
+        assertEquals("foo+bar", StringUtils.urlEncodeIfNecessary("foo bar"));
+        assertEquals("foo+%2Bbar", StringUtils.urlEncodeIfNecessary("foo +bar"));
+    }
+
+    @Test
+    public void testStringToBooleanStringIsEmpty() {
         boolean result = StringUtils.stringToBoolean("");
         assertFalse(result);
     }
 
-    /**
-     * Test of getPathExtension method, of class Utilities.
-     */
     @Test
     public void testGetPathExtension() {
         String result = StringUtils.getPathExtension("dirA/dirB/filename.csv");
@@ -58,47 +83,41 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testGetPathExtension_multipleDotsInPath() {
+    public void testGetPathExtensionMultipleDotsInPath() {
         String result = StringUtils.getPathExtension("dir1/dir2/file.name.csv.txt");
         assertEquals("txt", result);
     }
 
     @Test
-    public void testGetPathExtension_noExtension() {
+    public void testGetPathExtensionNoExtension() {
         String path = "dir/dir/filename";
         String result = StringUtils.getPathExtension(path);
         assertEquals(path, result);
     }
 
-    /**
-     * Test of join method, of class Utilities.
-     */
     @Test
-    public void testJoin_List_String() {
-        List<String> items = Arrays.asList(new String[]{"a", "b", "c"});
+    public void testJoinListString() {
+        List<String> items = Arrays.asList("a", "b", "c");
         String result = StringUtils.join(items, DELIM);
         assertEquals(A_B_C, result);
     }
 
     @Test
-    public void testJoin_List_StringIsNull() {
+    public void testJoinListStringIsNull() {
         List<String> items = null;
         String result = StringUtils.join(items, DELIM);
         assertEquals(null, result);
     }
 
     @Test
-    public void testJoin_emptyList() {
-        List<String> items = new ArrayList<String>();
+    public void testJoinEmptyList() {
+        List<String> items = new ArrayList<>(0);
         String result = StringUtils.join(items, DELIM);
         assertEquals("", result);
     }
 
-    /**
-     * Test of join method, of class Utilities.
-     */
     @Test
-    public void testJoin_ObjectArr_String() {
+    public void testJoinObjectArrString() {
         Object[] items = new Object[2];
         items[0] = 2;
         items[1] = FOO;
@@ -108,34 +127,26 @@ public class StringUtilsTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testJoin_ObjectArr_StringIsNull() {
+    public void testJoinObjectArrStringIsNull() {
         Object[] items = null;
         StringUtils.join(items, DELIM);
     }
 
-    /**
-     * Test of join method, of class Utilities.
-     */
     @Test
-    public void testJoin_StringArr_String() {
+    public void testJoinStringArrString() {
         String[] items = new String[]{"a", "b", "c"};
-        String delim = DELIM;
-        String result = StringUtils.join(items, delim);
+        String result = StringUtils.join(items, DELIM);
         assertEquals(A_B_C, result);
     }
 
     @Test(expected = NullPointerException.class)
-    public void testJoin_StringArr_StringIsNull() {
+    public void testJoinStringArrStringIsNull() {
         String[] items = null;
-        String delim = DELIM;
-        StringUtils.join(items, delim);
+        StringUtils.join(items, DELIM);
     }
 
-    /**
-     * Test of stringToBoolean method, of class Utilities.
-     */
     @Test
-    public void testStringToBoolean_String() {
+    public void testStringToBooleanString() {
         assertFalse(StringUtils.stringToBoolean(""));
         assertFalse(StringUtils.stringToBoolean("0"));
         assertFalse(StringUtils.stringToBoolean("f"));
@@ -148,7 +159,7 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testStringToBoolean_String_true() {
+    public void testStringToBooleanStringisTrue() {
         assertTrue(StringUtils.stringToBoolean("true"));
         assertTrue(StringUtils.stringToBoolean("asdf"));
         assertTrue(StringUtils.stringToBoolean("123"));
@@ -156,36 +167,27 @@ public class StringUtilsTest {
         assertTrue(StringUtils.stringToBoolean("Y"));
     }
 
-    /**
-     * Test of stringToBoolean method, of class Utilities.
-     */
     @Test
-    public void testStringToBoolean_String_boolean() {
+    public void testStringToBooleanStringBoolean() {
         assertFalse(StringUtils.stringToBoolean(null, false));
         assertTrue(StringUtils.stringToBoolean(null, true));
     }
 
-    /**
-     * Test of buildModulePath method, of class Utilities.
-     */
     @Test
-    public void testBuildModulePath_Class() {
+    public void testBuildModulePathClass() {
         String result = StringUtils.buildModulePath(String.class);
         assertEquals("/java/lang/String.xqy", result);
     }
 
-    /**
-     * Test of buildModulePath method, of class Utilities.
-     */
     @Test
-    public void testBuildModulePath_Package_String() {
+    public void testBuildModulePathPackageString() {
         Package modulePackage = this.getClass().getPackage();
         String result = StringUtils.buildModulePath(modulePackage, "Utilities");
         assertEquals("/com/marklogic/developer/corb/util/Utilities.xqy", result);
     }
 
     @Test
-    public void testBuildModulePath_Package_String_withSuffix() {
+    public void testBuildModulePathPackageStringWithSuffix() {
         Package modulePackage = this.getClass().getPackage();
         String result = StringUtils.buildModulePath(modulePackage, UTILITIES_FILENAME);
         assertEquals("/com/marklogic/developer/corb/util/" + UTILITIES_FILENAME, result);
@@ -193,33 +195,38 @@ public class StringUtilsTest {
 
     @Test
     public void testBuildModulePath() {
+        String fooUtilities = "/foo/Utilities.xqy";
         assertEquals(ABSOLUTE_UTILITIES_FILE, StringUtils.buildModulePath(SLASH, ABSOLUTE_UTILITIES_FILE));
         assertEquals(ABSOLUTE_UTILITIES_FILE, StringUtils.buildModulePath(SLASH, UTILITIES_FILENAME));
-        assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo", UTILITIES_FILENAME));
-        assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo", ABSOLUTE_UTILITIES_FILE));
-        assertEquals("/foo/Utilities.xqy", StringUtils.buildModulePath("/foo/", UTILITIES_FILENAME));
+        assertEquals(fooUtilities, StringUtils.buildModulePath("/foo", UTILITIES_FILENAME));
+        assertEquals(fooUtilities, StringUtils.buildModulePath("/foo", ABSOLUTE_UTILITIES_FILE));
+        assertEquals(fooUtilities, StringUtils.buildModulePath("/foo/", UTILITIES_FILENAME));
         assertEquals("/foo//", StringUtils.buildModulePath("/foo/", SLASH));
     }
 
-    /**
-     * Test of dumpHex method, of class Utilities.
-     *
-     * @throws java.lang.Exception
-     */
     @Test
-    public void testDumpHex() throws Exception {
-        String result = StringUtils.dumpHex("abcd", "UTF-8");
-        assertEquals("61 62 63 64", result);
+    public void testDumpHex() {
+        try {
+            String result = StringUtils.dumpHex("abcd", "UTF-8");
+            assertEquals("61 62 63 64", result);
+        } catch (UnsupportedEncodingException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test(expected = NullPointerException.class)
-    public void testDumpHex_null() throws Exception {
-        StringUtils.dumpHex(null, "UTF-8");
+    public void testDumpHexNull() {
+        try {
+            StringUtils.dumpHex(null, "UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
         fail();
     }
 
     @Test(expected = UnsupportedEncodingException.class)
-    public void testDumpHex_unsupportedEncoding() throws Exception {
+    public void testDumpHexUnsupportedEncoding() throws UnsupportedEncodingException {
         StringUtils.dumpHex(FOO, "does not exist");
         fail();
     }
@@ -238,12 +245,12 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testTrim_blank() {
+    public void testTrimBlank() {
         assertEquals("", StringUtils.trim("    "));
     }
 
     @Test
-    public void testTrim_null() {
+    public void testTrimNull() {
         assertNull(StringUtils.trim(null));
     }
 
@@ -253,12 +260,12 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testTrimToEmpty_null() {
+    public void testTrimToEmptyNull() {
         assertEquals("", StringUtils.trimToEmpty(null));
     }
 
     @Test
-    public void testTrimToEmpty_blank() {
+    public void testTrimToEmptyBlank() {
         assertEquals("", StringUtils.trimToEmpty("   "));
     }
 
@@ -269,7 +276,7 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testIsAdhoc_doesNotMatch() {
+    public void testIsAdhocDoesNotMatch() {
         assertFalse(StringUtils.isAdhoc("/myModule.xqy"));
         assertFalse(StringUtils.isAdhoc("adhoc.xqy"));
         assertFalse(StringUtils.isAdhoc("/myModule.xqy|adhoc "));
@@ -293,7 +300,7 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testIsJavaScript_doesNotMatch() {
+    public void testIsJavaScriptDoesNotMatch() {
         assertFalse(StringUtils.isJavaScriptModule(null));
         assertFalse(StringUtils.isJavaScriptModule(""));
         assertFalse(StringUtils.isJavaScriptModule("/myModule.xqy"));
@@ -305,9 +312,6 @@ public class StringUtilsTest {
         assertFalse(StringUtils.isJavaScriptModule(INLINE_XQUERY_PREFIX + "var foo = 1; return foo;|ADHOC"));
     }
 
-    /**
-     * Test of isInlineModule method, of class StringUtils.
-     */
     @Test
     public void testIsInlineModule() {
         String code = INLINE_JAVASCRIPT_CODE;
@@ -315,30 +319,26 @@ public class StringUtilsTest {
         assertTrue(StringUtils.isInlineModule(INLINE_XQUERY_PREFIX + code));
         assertTrue(StringUtils.isInlineModule("INLINE-JavaScript|" + code));
         assertTrue(StringUtils.isInlineModule(INLINE_XQUERY_PREFIX + code));
-        assertTrue(StringUtils.isInlineModule(INLINE_JAVASCRIPT_PREFIX+ code + ADHOC_SUFFIX));
+        assertTrue(StringUtils.isInlineModule(INLINE_JAVASCRIPT_PREFIX + code + ADHOC_SUFFIX));
         assertTrue(StringUtils.isInlineModule(INLINE_XQUERY_PREFIX + code + ADHOC_SUFFIX));
     }
 
     @Test
-    public void testIsInlineModule_false() {
+    public void testIsInlineModuleFalse() {
         String code = INLINE_JAVASCRIPT_CODE;
         assertFalse(StringUtils.isInlineModule("INLINE-JAVASCRIPT" + code)); //missing the |
         assertFalse(StringUtils.isInlineModule("INLINE-RUBY|" + code)); //wrong language
     }
 
-    /**
-     * Test of inlineModuleLanguage method, of class StringUtils.
-     */
     @Test
-    public void testInlineModuleLanguage_JAVASCRIPT() {
-        String code = INLINE_JAVASCRIPT_CODE;
-        String value = INLINE_JAVASCRIPT_PREFIX + code + ADHOC_SUFFIX;
+    public void testInlineModuleLanguageJavaScript() {
+        String value = INLINE_JAVASCRIPT_PREFIX + INLINE_JAVASCRIPT_CODE + ADHOC_SUFFIX;
         String result = StringUtils.inlineModuleLanguage(value);
         assertEquals("JAVASCRIPT", result);
     }
 
     @Test
-    public void testInlineModuleLanguage_XQUERY() {
+    public void testInlineModuleLanguageXQuery() {
         String code = "for $i in (1 to 10) return $i";
         String value = INLINE_XQUERY_PREFIX + code;
         String result = StringUtils.inlineModuleLanguage(value);
@@ -346,14 +346,11 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testInlineModuleLanguage_null() {
+    public void testInlineModuleLanguageNull() {
         String result = StringUtils.inlineModuleLanguage(null);
         assertEquals("", result);
     }
 
-    /**
-     * Test of inlineModuleCode method, of class StringUtils.
-     */
     @Test
     public void testInlineModuleCode() {
         String code = INLINE_JAVASCRIPT_CODE;
@@ -364,7 +361,7 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testInlineModuleCode_badLanguage() {
+    public void testInlineModuleCodeBadLanguage() {
         String code = "for $i in (1 to 10) return $i";
         String value = "INLINE-JAVA|" + code + ADHOC_SUFFIX;
 
@@ -373,9 +370,53 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testInlineModuleCode_null() {
-
+    public void testInlineModuleCodeNull() {
         String result = StringUtils.getInlineModuleCode(null);
         assertEquals("", result);
     }
+
+    @Test
+    public void testParsePortRangesSingleNumber() {
+        Set<Integer> result = StringUtils.parsePortRanges("80");
+        assertEquals(1, result.size());
+        assertEquals(80, result.toArray()[0]);
+    }
+
+    @Test
+    public void testParsePortRanges() {
+        Set<Integer> result = StringUtils.parsePortRanges("80,443, 8000-8002, 8003 -8005, 8006- 8008, 8010 - 8009,443 ");
+        assertEquals(13, result.size());
+        Integer[] ports = result.toArray(new Integer[result.size()]);
+        assertEquals(443, ports[1].intValue());
+        assertEquals(8010, ports[12].intValue());
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void testParsePortRangesWithNegativeNumber() {
+        StringUtils.parsePortRanges("-8002");
+        fail();
+    }
+
+    @Test
+    public void testParsePortRangesWithBlankValue() {
+        Set<Integer> result = StringUtils.parsePortRanges("  ");
+        assertEquals(0, result.size());
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void testParsePortRangesNoNumbers() {
+        StringUtils.parsePortRanges("1 to 5");
+        fail();
+    }
+
+    @Test
+    public void testUrlEncode() {
+        assertEquals("a+b", StringUtils.urlEncode("a b"));
+    }
+
+    @Test
+    public void testUrlDecode() {
+        assertEquals("a b", StringUtils.urlDecode("a+b"));
+    }
+
 }

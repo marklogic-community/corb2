@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,26 +18,20 @@
  */
 package com.marklogic.developer.corb;
 
-import java.util.Properties;
-
-/**
- * @author Bhagat Bandlamudi, MarkLogic Corporation
- * 
- */
 import java.util.concurrent.Callable;
-
-import com.marklogic.xcc.ContentSource;
+import java.util.Properties;
+import java.util.TimeZone;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  */
 public interface Task extends Callable<String[]> {
 
-	void setContentSource(ContentSource cs);
+	void setContentSourcePool(ContentSourcePool csp);
 
 	/**
-	 * XQUERY-MODULE,PRE-BATCH-MODULE,POST-BATCH-MODULE,INIT-MODULE
-	 * 
+	 * INIT-MODULE,PRE-BATCH-MODULE,PROCESS-MODULE,POST-BATCH-MODULE
+	 *
 	 * @param moduleType
 	 */
 	void setModuleType(String moduleType);
@@ -48,10 +42,12 @@ public interface Task extends Callable<String[]> {
 
 	void setQueryLanguage(String language);
 
+    void setTimeZone(TimeZone timeZone);
+
 	/**
 	 * If additional data is sent from CUSTOM URI module, it is available in
 	 * properties with key @{value #URIS_BATCH_REF}
-	 * 
+	 *
 	 * @param props
 	 */
 	void setProperties(Properties props);
@@ -59,6 +55,6 @@ public interface Task extends Callable<String[]> {
 	void setInputURI(String... inputUri);
 
 	void setFailOnError(boolean failOnError);
-	
+
 	void setExportDir(String exportFileDir);
 }

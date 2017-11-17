@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,9 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Rule;
@@ -30,39 +31,55 @@ import org.junit.contrib.java.lang.system.ExpectedSystemExit;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class ModuleExecutorIT {
-    
+
+    private static final Logger LOG = Logger.getLogger(ModuleExecutorIT.class.getName());
     @Rule
     public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
+    private void clearSystemProperties() {
+		TestUtils.clearSystemProperties();
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
+	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
+	}
+    
     @Test
-    public void testRun_main() throws Exception {
+    public void testRunMain() {
         clearSystemProperties();
         String[] args = {};
+        String exportFileName = "testRunMain.txt";
         System.setProperty(Options.XCC_CONNECTION_URI, ModuleExecutorTest.XCC_CONNECTION_URI);
         System.setProperty(Options.PROCESS_MODULE, "INLINE-JAVASCRIPT|var uri = '/a/b/c'; uri;");
-        System.setProperty(Options.EXPORT_FILE_NAME, ModuleExecutorTest.EXPORT_FILE_NAME);
+        System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
+        File report = new File(exportFileName);
+        report.deleteOnExit();
         exit.expectSystemExit();
-        ModuleExecutor.main(args);
-        String result = TestUtils.readFile(new File(ModuleExecutorTest.EXPORT_FILE_NAME));
-        assertEquals("/a/b/c\n", result);
+        ModuleExecutor.main(args);       
     }
 
     @Test
-    public void testRun_inline() throws Exception {
+    public void testRunInline() {
         clearSystemProperties();
         String[] args = {};
+        String exportFileName = "testRunInline.txt";
         System.setProperty(Options.XCC_CONNECTION_URI, ModuleExecutorTest.XCC_CONNECTION_URI);
         System.setProperty(Options.PROCESS_MODULE, "INLINE-JAVASCRIPT|var uri = '/d/e/f'; uri;");
-        System.setProperty(Options.EXPORT_FILE_NAME, ModuleExecutorTest.EXPORT_FILE_NAME);
+        System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
         ModuleExecutor executor = new ModuleExecutor();
-        executor.init(args);
-        executor.run();
-        String reportPath = executor.getProperty(Options.EXPORT_FILE_NAME);
-        File report = new File(reportPath);
-        boolean fileExists = report.exists();
-        assertTrue(fileExists);
-        String result = TestUtils.readFile(report);
-        assertEquals("/d/e/f\n", result);
+        try {
+            executor.init(args);
+            executor.run();
+            String reportPath = executor.getProperty(Options.EXPORT_FILE_NAME);
+            File report = new File(reportPath);
+            
+            boolean fileExists = report.exists();
+            assertTrue(fileExists);
+            String result = TestUtils.readFile(report);
+            assertEquals("/d/e/f\n", result);
+            report.delete();
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
 }

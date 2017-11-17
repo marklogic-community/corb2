@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-import com.marklogic.xcc.ContentSource;
 import java.util.Properties;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -32,10 +31,7 @@ public class AbstractUrisLoaderTest {
 
     private static final String FOO = "foo";
     private static final String BAR = "bar";
-    
-    /**
-     * Test of setOptions method, of class AbstractUrisLoader.
-     */
+
     @Test
     public void testSetOptions() {
         TransformOptions options = new TransformOptions();
@@ -44,20 +40,14 @@ public class AbstractUrisLoaderTest {
         assertEquals(options, instance.options);
     }
 
-    /**
-     * Test of setContentSource method, of class AbstractUrisLoader.
-     */
     @Test
     public void testSetContentSource() {
-        ContentSource cs = mock(ContentSource.class);
+        ContentSourcePool csp = mock(ContentSourcePool.class);
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        instance.setContentSource(cs);
-        assertEquals(cs, instance.cs);
+        instance.setContentSourcePool(csp);
+        assertEquals(csp, instance.csp);
     }
 
-    /**
-     * Test of setCollection method, of class AbstractUrisLoader.
-     */
     @Test
     public void testSetCollection() {
         String collection = FOO;
@@ -66,9 +56,6 @@ public class AbstractUrisLoaderTest {
         assertEquals(collection, instance.collection);
     }
 
-    /**
-     * Test of setProperties method, of class AbstractUrisLoader.
-     */
     @Test
     public void testSetProperties() {
         Properties properties = new Properties();
@@ -77,28 +64,19 @@ public class AbstractUrisLoaderTest {
         assertEquals(properties, instance.properties);
     }
 
-    /**
-     * Test of getBatchRef method, of class AbstractUrisLoader.
-     */
     @Test
     public void testGetBatchRef() {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         assertNull(instance.getBatchRef());
     }
 
-    /**
-     * Test of getTotalCount method, of class AbstractUrisLoader.
-     */
     @Test
     public void testGetTotalCount() {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        int result = instance.getTotalCount();
+        long result = instance.getTotalCount();
         assertEquals(0, result);
     }
 
-    /**
-     * Test of getProperty method, of class AbstractUrisLoader.
-     */
     @Test
     public void testGetProperty() {
         String key = FOO;
@@ -112,44 +90,37 @@ public class AbstractUrisLoaderTest {
     }
 
     @Test
-    public void testGetProperty_systemPropAndNullProperties() {
+    public void testGetPropertySystemPropAndNullProperties() {
         String key = FOO;
         String value = BAR;
         System.setProperty(key, value);
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         String result = instance.getProperty(key);
         System.clearProperty(key);
-        assertEquals(value, result);       
+        assertEquals(value, result);
     }
-    
+
     @Test
-    public void testGetProperty_isNull() {
-        String key = FOO;
+    public void testGetPropertyIsNull() {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        String result = instance.getProperty(key);
+        String result = instance.getProperty(FOO);
         assertEquals(null, result);
     }
 
-    /**
-     * Test of cleanup method, of class AbstractUrisLoader.
-     */
     @Test
     public void testCleanup() {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         instance.cleanup();
         assertNull(instance.options);
-        assertNull(instance.cs);
+        assertNull(instance.csp);
         assertNull(instance.collection);
         assertNull(instance.properties);
         assertNull(instance.replacements);
         assertNull(instance.batchRef);
     }
 
-    /**
-     * Test of parseUriReplacePatterns method, of class AbstractUrisLoader.
-     */
     @Test(expected = IllegalArgumentException.class)
-    public void testParseUriReplacePatterns_uneven() {
+    public void testParseUriReplacePatternsUneven() {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         Properties props = new Properties();
         props.setProperty(Options.URIS_REPLACE_PATTERN, "foo|bar");
@@ -168,6 +139,21 @@ public class AbstractUrisLoaderTest {
         assertTrue(instance.replacements.length == 2);
     }
 
+    @Test
+    public void testGetLoaderPath() {
+        AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
+        Properties props = new Properties();
+        props.setProperty(Options.XML_FILE, FOO);
+        props.setProperty(Options.LOADER_PATH, BAR);
+        instance.setProperties(props);
+
+        assertEquals(BAR, instance.getLoaderPath());
+        assertEquals(FOO, instance.getLoaderPath(Options.XML_FILE));
+        assertEquals(FOO, instance.getLoaderPath(Options.ZIP_FILE, Options.XML_FILE));
+        assertEquals(FOO, instance.getLoaderPath(Options.XML_FILE, Options.ZIP_FILE));
+        assertEquals(BAR, instance.getLoaderPath(Options.ZIP_FILE));
+    }
+
     public static class AbstractUrisLoaderImpl extends AbstractUrisLoader {
 
         @Override
@@ -182,12 +168,12 @@ public class AbstractUrisLoaderTest {
 
         @Override
         public void open() {
-
+            //needed to implement interface
         }
 
         @Override
         public void close() {
-
+            //needed to implement interface
         }
     }
 

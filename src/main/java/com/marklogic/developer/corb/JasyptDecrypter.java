@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,14 +23,16 @@ import static com.marklogic.developer.corb.Options.JASYPT_PROPERTIES_FILE;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.MessageFormat;
 import java.util.Properties;
 import static java.util.logging.Level.INFO;
 import java.util.logging.Logger;
 
 public class JasyptDecrypter extends AbstractDecrypter {
 
-    protected transient Properties jaspytProperties;
+    protected Properties jaspytProperties;
     protected Class<?> decrypterCls;
     protected Object decrypter;
 
@@ -77,7 +79,8 @@ public class JasyptDecrypter extends AbstractDecrypter {
                 Method decrypt = decrypterCls.getMethod("decrypt", String.class);
                 dValue = (String) decrypt.invoke(decrypter, value);
             } catch (Exception exc) {
-                LOG.log(INFO, "Cannot decrypt {0}. Ignore if clear text.", property);
+                Throwable th = exc instanceof InvocationTargetException ? exc.getCause() : exc;
+                LOG.log(INFO, MessageFormat.format("Cannot decrypt {0}. Ignore if clear text. Error: {1}", property, th.getClass().getName()));
             }
         }
         return dValue == null ? value : dValue.trim();

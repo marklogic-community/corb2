@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import static com.marklogic.developer.corb.Options.XCC_HOSTNAME;
 import static com.marklogic.developer.corb.Options.XCC_PASSWORD;
 import static com.marklogic.developer.corb.Options.XCC_PORT;
 import static com.marklogic.developer.corb.Options.XCC_USERNAME;
+import static com.marklogic.developer.corb.util.StringUtils.getXccUri;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 import java.io.IOException;
@@ -33,12 +34,12 @@ import java.util.regex.Pattern;
 
 public abstract class AbstractDecrypter implements Decrypter {
 
-    protected transient Properties properties;
+    protected Properties properties;
     private static final Pattern ENCRYPTED_VALUE_REGEX = Pattern.compile("^ENC\\((.*)\\)$");
 
     @Override
     public void init(Properties properties) throws IOException, ClassNotFoundException {
-        this.properties = (properties == null ? new Properties() : properties);
+        this.properties = properties == null ? new Properties() : properties;
 
         init_decrypter();
     }
@@ -48,9 +49,11 @@ public abstract class AbstractDecrypter implements Decrypter {
         if (uri != null) {
             return decrypt(XCC_CONNECTION_URI, uri);
         } else {
-            return "xcc://" + decrypt(XCC_USERNAME, username) + ":" + decrypt(XCC_PASSWORD, password) + "@"
-                    + decrypt(XCC_HOSTNAME, host) + ":" + decrypt(XCC_PORT, port)
-                    + (dbname != null ? "/" + decrypt(XCC_DBNAME, dbname) : "");
+            return getXccUri(decrypt(XCC_USERNAME, username), 
+                    decrypt(XCC_PASSWORD, password), 
+                    decrypt(XCC_HOSTNAME, host), 
+                    decrypt(XCC_PORT, port), 
+                    dbname == null ?  null : decrypt(XCC_DBNAME, dbname));
         }
     }
 

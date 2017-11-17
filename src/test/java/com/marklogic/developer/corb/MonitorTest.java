@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -44,14 +44,13 @@ public class MonitorTest {
     private static final Logger LOG = Logger.getLogger(Monitor.class.getName());
 
     @Before
-    public void setUp()
-            throws Exception {
+    public void setUp() {
         clearSystemProperties();
         LOG.addHandler(testLogger);
     }
 
     @Test
-    public void testRun_whenPaused() {
+    public void testRunWhenPaused() {
         PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
         when(pool.isPaused()).thenReturn(true);
         Monitor instance = new Monitor(pool, mock(CompletionService.class), mock(Manager.class));
@@ -61,11 +60,8 @@ public class MonitorTest {
                 new LogRecord(Level.INFO, "CoRB2 has been paused. Resume execution by changing the state in the command file null to RESUME")));
     }
 
-    /**
-     * Test of calculateThreadsPerSecond method, of class Monitor.
-     */
     @Test
-    public void testCalculateTransactionsPerSecond_3args() {
+    public void testCalculateTransactionsPerSecond3args() {
         long amountCompleted = 10L;
         long previousMillis = 1000L;
         long currentMillis = 2000L;
@@ -74,11 +70,8 @@ public class MonitorTest {
         assertEquals(expResult, result, DOUBLE_DELTA);
     }
 
-    /**
-     * Test of calculateThreadsPerSecond method, of class Monitor.
-     */
     @Test
-    public void testCalculateThreadsPerSecond_4args() {
+    public void testCalculateThreadsPerSecond4args() {
         long amountCompleted = 110L;
         long previouslyCompleted = 10L;
         long currentMillis = 2000L;
@@ -87,12 +80,9 @@ public class MonitorTest {
         double result = Monitor.calculateTransactionsPerSecond(amountCompleted, previouslyCompleted, currentMillis, previousMillis);
         assertEquals(expResult, result, DOUBLE_DELTA);
     }
-
-    /**
-     * Test of calculateThreadsPerSecond method, of class Monitor.
-     */
+    
     @Test
-    public void testCalculateThreadsPerSecond_fractional() {
+    public void testCalculateThreadsPerSecondFractional() {
         long amountCompleted = 10L;
         long previouslyCompleted = 9L;
         long currentMillis = 3000L;
@@ -113,7 +103,7 @@ public class MonitorTest {
     }
 
     @Test
-    public void testGetEstimatedTimeCompletion_zero() {
+    public void testGetEstimatedTimeCompletionZero() {
     	assertEquals("00:00:-1", Monitor.getEstimatedTimeCompletion(100, 50, 0, false));
         assertEquals("00:00:-1 (paused)", Monitor.getEstimatedTimeCompletion(100, 50, 0, true));
     }

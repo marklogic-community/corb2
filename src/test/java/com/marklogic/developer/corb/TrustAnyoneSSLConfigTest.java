@@ -1,5 +1,5 @@
 /*
- * * Copyright (c) 2004-2016 MarkLogic Corporation
+ * * Copyright (c) 2004-2017 MarkLogic Corporation
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -18,6 +18,10 @@
  */
 package com.marklogic.developer.corb;
 
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -28,19 +32,20 @@ import static org.junit.Assert.*;
  */
 public class TrustAnyoneSSLConfigTest {
 
-    /**
-     * Test of getSSLContext method, of class TrustAnyoneSSLConfig.
-     */
+    private static final Logger LOG = Logger.getLogger(TrustAnyoneSSLConfigTest.class.getName());
+
     @Test
-    public void testGetSSLContext() throws Exception {
-        TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
-        SSLContext result = instance.getSSLContext();
-        assertNotNull(result);
+    public void testGetSSLContext() {
+        try {
+            TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
+            SSLContext result = instance.getSSLContext();
+            assertNotNull(result);
+        } catch (NoSuchAlgorithmException | KeyManagementException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
-    /**
-     * Test of getEnabledCipherSuites method, of class TrustAnyoneSSLConfig.
-     */
     @Test
     public void testGetEnabledCipherSuites() {
         TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
@@ -49,9 +54,6 @@ public class TrustAnyoneSSLConfigTest {
         assertEquals(0, result.length);
     }
 
-    /**
-     * Test of getEnabledProtocols method, of class TrustAnyoneSSLConfig.
-     */
     @Test
     public void testGetEnabledProtocols() {
         TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();

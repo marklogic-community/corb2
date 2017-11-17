@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import static com.marklogic.developer.corb.Options.PRIVATE_KEY_FILE;
 import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,17 +30,23 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.text.MessageFormat;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.xml.bind.DatatypeConverter;
 
 public class PrivateKeyDecrypter extends AbstractDecrypter {
@@ -85,17 +90,17 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
             algorithm = DEFAULT_ALGORITHM;
         }
 
-        String filename = trim(getProperty(PRIVATE_KEY_FILE));
+        String filename = getProperty(PRIVATE_KEY_FILE);
         if (isNotBlank(filename)) {
             InputStream is = null;
             try {
-                is = Manager.class.getResourceAsStream("/" + filename);
+                is = Manager.class.getResourceAsStream('/' + filename);
                 if (is != null) {
-                    LOG.log(INFO, "Loading private key file {0} from classpath", filename);
+                    LOG.log(INFO, () -> MessageFormat.format("Loading private key file {0} from classpath", filename));
                 } else {
                     File f = new File(filename);
                     if (f.exists() && !f.isDirectory()) {
-                        LOG.log(INFO, "Loading private key file {0} from filesystem", filename);
+                        LOG.log(INFO, () -> MessageFormat.format("Loading private key file {0} from filesystem", filename));
                         is = new FileInputStream(f);
                     } else {
                         throw new IllegalStateException("Unable to load " + filename);
@@ -107,7 +112,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
                 try {
                     privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(keyAsBytes));
                 } catch (Exception exc) {
-                    LOG.info("Attempting to decode private key with base64. Ignore this message if keys are generated with openssl");
+                    LOG.log(INFO, "Attempting to decode private key with base64. Ignore this message if keys are generated with openssl", exc);
                     String keyAsString = new String(keyAsBytes);
                     // remove the begin and end key lines if present.
                     keyAsString = keyAsString.replaceAll("[-]+(BEGIN|END)[A-Z ]*KEY[-]+", "");
@@ -116,18 +121,18 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
                 }
                 LOG.log(INFO, "Initialized PrivateKeyDecrypter");
             } catch (Exception exc) {
-                LOG.log(SEVERE, "Problem initializing PrivateKeyDecrypter", exc);
+                LOG.log(SEVERE, "Problem initializing PrivateKeyDecrypter");
             } finally {
                 closeQuietly(is);
             }
         } else {
-            LOG.severe(PRIVATE_KEY_FILE + " property must be defined");
+            LOG.log(SEVERE, () -> MessageFormat.format("{0} property must be defined", PRIVATE_KEY_FILE));
         }
     }
 
     private static void copy(InputStream input, OutputStream output) throws IOException {
         byte[] buffer = new byte[1024];
-        int n = 0;
+        int n;
         while (-1 != (n = input.read(buffer))) {
             output.write(buffer, 0, n);
         }
@@ -147,8 +152,8 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
                 final Cipher cipher = Cipher.getInstance(algorithm);
                 cipher.init(Cipher.DECRYPT_MODE, privateKey);
                 dValue = new String(cipher.doFinal(DatatypeConverter.parseBase64Binary(value)));
-            } catch (Exception exc) {
-                LOG.log(INFO, "Cannot decrypt {0}. Ignore if clear text.", property);
+            } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException exc) {
+                LOG.log(INFO, MessageFormat.format("Cannot decrypt {0}. Ignore if clear text.", property), exc);
             }
         }
         return dValue == null ? value : dValue.trim();
@@ -173,7 +178,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
             length = Integer.parseInt(args[4].trim());
         }
         if (privateKeyPathName == null || publicKeyPathName == null) {
-            System.err.println(GEN_KEYS_USAGE);
+            System.err.println(GEN_KEYS_USAGE); // NOPMD
             return;
         }
 
@@ -183,19 +188,14 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
         PrivateKey privateKey = keyPair.getPrivate();
         PublicKey publicKey = keyPair.getPublic();
 
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(new File(privateKeyPathName));
-            fos.write(privateKey.getEncoded());
-            fos.close();
-            System.out.println("Generated private key: " + privateKeyPathName);
+        try (FileOutputStream privateFos = new FileOutputStream(new File(privateKeyPathName));
+                FileOutputStream publicFos = new FileOutputStream(new File(publicKeyPathName))) {
 
-            fos = new FileOutputStream(new File(publicKeyPathName));
-            fos.write(publicKey.getEncoded());
-            fos.close();
-            System.out.println("Generated public key: " + publicKeyPathName);
-        } finally {
-            closeQuietly(fos);
+            privateFos.write(privateKey.getEncoded());
+            System.out.println("Generated private key: " + privateKeyPathName); // NOPMD
+
+            publicFos.write(publicKey.getEncoded());
+            System.out.println("Generated public key: " + publicKeyPathName); // NOPMD
         }
     }
 
@@ -213,20 +213,16 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
             algorithm = args[3].trim();
         }
         if (publicKeyPathName == null || clearText == null) {
-            System.err.println(ENCRYPT_USAGE);
+            System.err.println(ENCRYPT_USAGE); // NOPMD
             return;
         }
 
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(publicKeyPathName);
+        try (FileInputStream fis = new FileInputStream(publicKeyPathName)) {
             X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(toByteArray(fis));
             Cipher cipher = Cipher.getInstance(algorithm);
             cipher.init(Cipher.ENCRYPT_MODE, KeyFactory.getInstance(algorithm).generatePublic(x509EncodedKeySpec));
             String encryptedText = DatatypeConverter.printBase64Binary(cipher.doFinal(clearText.getBytes("UTF-8")));
-            System.out.println("Input: " + clearText + "\nOutput: " + encryptedText);
-        } finally {
-            closeQuietly(fis);
+            System.out.println("Input: " + clearText + "\nOutput: " + encryptedText); // NOPMD
         }
     }
 
@@ -238,7 +234,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
         } else if ("encrypt".equals(method)) {
             encrypt(args);
         } else {
-            System.out.println(GEN_KEYS_USAGE + "\n" + ENCRYPT_USAGE);
+            System.out.println(GEN_KEYS_USAGE + '\n' + ENCRYPT_USAGE); // NOPMD
         }
     }
 }

@@ -1,0 +1,5 @@
+{
+  "role-name" : "%%NAME%%-internal",
+  "description" : "Internal role used for amping",
+  "role" : [ "%%NAME%%-writer" ]
+}

@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -43,10 +43,10 @@ public final class Options {
      * option {@value #BATCH_URI_DELIM}.
      * </p>
      * Sample code for transform:
-     * <pre><code>
+     * <pre>{@code
      * declare variable URI as xs:string exernal;
      * let $all-uris := fn:tokenize($URI,";")
-     * </code></pre>
+     * }</pre>
      */
     @Usage(description = "The number of uris to be executed in single transform. "
             + "Default value is 1. If greater than 1, the PROCESS-MODULE will "
@@ -111,6 +111,27 @@ public final class Options {
             + "the COMMAND-FILE is tested can be controlled by using this property. "
             + "Default is 1.")
     public static final String COMMAND_FILE_POLL_INTERVAL = "COMMAND-FILE-POLL-INTERVAL";
+
+    /**
+     * Connection policy for allocating connections to tasks used by DefaultConnectionManager
+     *
+     * @see com.marklogic.developer.corb.DefaultContentSourcePool
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Connection policy for allocating connections to tasks while using DefaultConnectionPool. Acceptable values ROUNBD-ROBIN, RANDOM and LOAD. Default is ROUND-ROBIN")
+    public static final String CONNECTION_POLICY = "CONNECTION-POLICY";
+
+    /**
+     * Java class to manage marklogic connections. If none specified, DefaultConnectionManager is used.
+     *
+     * @see com.marklogic.developer.corb.ContentSourcePool
+     * @see com.marklogic.developer.corb.DefaultContentSourcePool
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Java class to manage marklogic connections. If none specified, DefaultConnectionPool is used.")
+    public static final String CONTENT_SOURCE_POOL="CONTENT-SOURCE-POOL";
 
     /**
      * The class name of the options value decrypter, which must implement
@@ -183,7 +204,8 @@ public final class Options {
      */
     @Usage(description = "The directory where the URIs queue can write to disk when "
             + "the maximum in-memory items has been exceeded. "
-            + "Default behavior is to use java.io.tmpdir.")
+            + "If not specified then **TEMP-DIR** value will be used. "
+            + "If neither are specified, then the default Java java.io.tmpdir will be used.")
     public static final String DISK_QUEUE_TEMP_DIR = "DISK-QUEUE-TEMP-DIR";
 
     /**
@@ -379,6 +401,89 @@ public final class Options {
     public static final String INSTALL = "INSTALL";
 
     /**
+     * Name of the current Job.
+     * If {@value #JOB_NAME} is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Name of the current Job. If it is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.")
+    public static final String JOB_NAME = "JOB-NAME";
+
+    /**
+     * Optional Port number to start a light weight HTTP Server which can be used to monitor, change the number of threads, pause/resume the current CORB job.
+     * Port number must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090
+     * The job server has a service URL http://host:port/metrics
+     * It supports the following params:
+     * <ul><li>
+     * paused=true|false will pause/resume the Corb job. </li>
+     * <li>threads=# will adjust the number of threads for the executing job. </li>
+     * <li>json=true returns metrics in json format</li>
+     * <li>xml=true returns in xml format</li>
+     * <li>concise=true returns a concise format.</li>
+     * </ul>
+     * By Default if this property is not specified, the Job server is not started.
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Port number to start a light weight HTTP Server which can be used to monitor ,change the number of threads, pause/resume the current corb job. Port number must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090")
+    public static final String JOB_SERVER_PORT = "JOB-SERVER-PORT";
+
+    /**
+     * Boolean option specifying whether the content loaded by
+     * FileUrisStreamingXMLLoader or FileUrisXMLLoader (with the option
+     * FILE-LOADER-USE-ENVELOPE=true) should be base64 encoded, or appended as
+     * the child of the `/corb-loader/content` element.
+     * Default is `false`
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Boolean option specifying whether the content loaded by "
+            + "FileUrisStreamingXMLLoader or FileUrisXMLLoader (with the option LOADER-USE-ENVELOPE=true) "
+            + "should be base64 encoded, or appended as the child of the `/corb-loader/content` element. "
+            + " Default is `false`")
+    public static final String LOADER_BASE64_ENCODE = "LOADER-BASE64-ENCODE";
+
+    /**
+     * TThe path to the resource (file or folder) that will be the input source for a loader class that extends
+     * AbstractFileUrisLoader, such as FileUrisDirectoryLoader, FileUrisLoader, FileUrisStreamingXmlLoader,
+     * FileUrisXmlLoader, and FileUrisZipLoader
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "The path to the resource (file or folder) that will be the input source for a loader class that extends AbstractFileUrisLoader, such as FileUrisDirectoryLoader, FileUrisLoader, FileUrisStreamingXmlLoader, FileUrisXmlLoader, and FileUrisZipLoader")
+    public static final String LOADER_PATH = "LOADER-PATH";
+
+    /**
+     * Boolean option indicating whether a loader should set the
+     * #URIS_BATCH_REF(https://github.com/marklogic-community/corb2#uris_batch_ref) with information about the source of the items.
+     * Default is false
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Boolean option indicating whether a loader should set the URIS_BATCH_REF with information about the source of the items. Default is false")
+    public static final String LOADER_SET_URIS_BATCH_REF = "LOADER-SET-URIS-BATCH-REF";
+
+    /**
+     * Boolean value indicating whether loader should use an XML envelope,
+     * in order to send file metadata in addition to the file content.
+     * Default is true.
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Boolean value indicating whether a loader should use an XML envelope, "
+            + "in order to send file metadata in addition to the file content. Default is true.")
+    public static final String LOADER_USE_ENVELOPE = "LOADER-USE-ENVELOPE";
+
+    /**
+     * Specify which external variable to set when invoking the loader process module.
+     * Choices are: URI or DOC.
+     * Default is URI.
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Specify which external variable to set when invoking the loader process module. Choices are URI or DOC. Default is URI.")
+    public static final String LOADER_VARIABLE = "LOADER-VARIABLE";
+    /**
      * (Optional) Property file for the
      * {@link com.marklogic.developer.corb.JasyptDecrypter}.
      * <p>
@@ -396,6 +501,96 @@ public final class Options {
      */
     @Usage(description = "Default is 10. Max number of custom inputs from the URIS-MODULE to other modules.")
     public static final String MAX_OPTS_FROM_MODULE = "MAX_OPTS_FROM_MODULE";
+
+    /**
+     * Adds the metrics document to the specified collection.
+     * If {@value #JOB_NAME} is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.
+     * If {@value #METRICS_DATABASE} is not specified then {@value #METRICS_COLLECTIONS} is ignored.
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Adds the metrics document to the specified collection.")
+    public static final String METRICS_COLLECTIONS = "METRICS-COLLECTIONS";
+
+    /**
+     * Uses the value provided to save the metrics document to the specified Database.
+     * Does not save metrics document to the ML database if this property is not populated.
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = " Uses the value provided to save the metrics document to the specified Database.")
+    public static final String METRICS_DATABASE = "METRICS-DATABASE";
+
+    //public static final String METRICS_DOC_FORMAT = "XML";
+
+    /**
+     * NONE,INFO,DEBUG,...
+     * String value indicating the log level that the CoRB job should use to log metrics to ML Server Error log.
+     * Default value is NONE.
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "LOG Level the CoRB job should log metrics to ML Server Error Log."
+        + "Possible values are one of: " + Options.ML_LOG_LEVELS
+        + "Default value is none( which means metrics are not logged ).")
+    public static final String METRICS_LOG_LEVEL = "METRICS-LOG-LEVEL";
+
+    /**
+     * XQuery or JavaScript to be executed at the end of the Corb Job to save the metrics document to the Database.
+     * There is an XQuery module (save-metric-to-db.xqy) and a JavaScript module (saveMetrics.sjs) provided with CoRB2 Distribution.
+     * The default value is save-metric-to-db.xqy and it saves the metrics document as XML to the specified DB.
+     * You can use these modules as a template to customize the the document can be saved to the DB.
+     * XQuery and JavaScript modules need to have "{@code .xqy}" and "{@code .sjs}" extensions respectively.
+     * If {@value #METRICS_DATABASE} is not specified then {@value #METRICS_MODULE} is ignored.
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "XQuery or JavaScript to be executed at the end of the Corb Job to save the metrics document to the database."
+        + "There is an XQuery module (save-metrics.xqy) and a JavaScript module (saveMetrics.sjs) provided with the CoRB2 distribution."
+        + "You can use these modules as a template to customize the the document can be saved to the database."
+        + "XQuery and JavaScript modules need to have '{@code .xqy}' and"
+        + "{@code .sjs} extensions respectively.")
+    public static final String METRICS_MODULE = "METRICS-MODULE";
+
+    /**
+     * Maximum number of failed transaction to be logged in the metrics.
+     * The default value is 0.
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Maximum number of failed transaction to be logged in the metrics. The default value is 0.")
+    public static final String METRICS_NUM_FAILED_TRANSACTIONS = "METRICS-NUM-FAILED-TRANSACTIONS";
+
+    /**
+     * Maximum number of Slow transaction to be logged in the metrics.
+     * The default value is 5.
+     */
+    @Usage(description = "Maximum number of slow transaction to be logged in the metrics. The default value is 5.")
+    public static final String METRICS_NUM_SLOW_TRANSACTIONS = "METRICS-NUM-SLOW-TRANSACTIONS";
+
+    /**
+     * Uses the value provided as the URI Root for saving the metrics document.
+     * Default value is "/ServiceMetrics/"
+     * If {@value #METRICS_DATABASE} is not specified then {@value #METRICS_ROOT} is ignored.
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Uses the value provided as the URI Root for saving the metrics document.")
+    public static final String METRICS_ROOT = "METRICS-ROOT";
+
+    /**
+     * Frequency (in seconds) at which the Metrics document needs to be updated in the database.
+     * By Default the metrics document is not periodically updated and is written once at the end of the job.
+     * If {@value #METRICS_DATABASE} is not specified then {@value #METRICS_SYNC_FREQUENCY} is ignored.
+     */
+
+    @Usage(description = "Frequency ( in seconds) at which the Metrics document needs to be updated in the Database. This value is ignored if METRICS-DB-NAME is not specified")
+    public static final String METRICS_SYNC_FREQUENCY = "METRICS-SYNC-FREQUENCY";
+
+    /**
+     * @since 2.4.0
+     */
+    public static final String ML_LOG_LEVELS = "none|emergency|alert|critical|error|warning|notice|info|config|debug|fine|finer|finest";
 
     /**
      * Uses the {@value #XCC_CONNECTION_URI} if not provided; use 0 for file
@@ -424,6 +619,16 @@ public final class Options {
     @Usage(description = "A properties file containing any of the CoRB2 options. "
             + "Relative and full file system paths are supported.")
     public static final String OPTIONS_FILE = "OPTIONS-FILE";
+
+    /**
+     * The minimum number of results that must be returned for the POST-BATCH-MODULE
+     *  or POST-BATCH-TASK to be executed.
+     * Default is 1
+     * @since 2.4.0
+     */
+    @Usage(description = "The minimum number of results that must be returned "
+            + "for the POST-BATCH-MODULE or POST-BATCH-TASK to be executed. Default is 1")
+    public static final String POST_BATCH_MINIMUM_COUNT = "POST-BATCH-MINIMUM-COUNT";
 
     /**
      * An XQuery or JavaScript module which, if specified, will be run after
@@ -475,8 +680,19 @@ public final class Options {
      * @deprecated Use the {@link #POST_BATCH_MODULE} option instead.
      * @see #POST_BATCH_MODULE
      */
+    @Deprecated
     @Usage
     public static final String POST_BATCH_XQUERY_MODULE = "POST-BATCH-XQUERY-MODULE";
+
+    /**
+     * The minimum number of results that must be returned for the PRE-BATCH-MODULE
+     * or PRE-BATCH-TASK to be executed.
+     * Default is 1
+     * @since 2.4.0
+     */
+    @Usage(description = "The minimum number of results that must be returned "
+            + "for the PRE-BATCH-MODULE or PRE-BATCH-TASK to be executed. Default is 1")
+    public static final String PRE_BATCH_MINIMUM_COUNT = "PRE-BATCH-MINIMUM-COUNT";
 
     /**
      * An XQuery or JavaScript module which, if specified, will be run before
@@ -534,8 +750,22 @@ public final class Options {
      * @deprecated Use the {@link #PRE_BATCH_MODULE} option instead.
      * @see #PRE_BATCH_MODULE
      */
+    @Deprecated
     @Usage
     public static final String PRE_BATCH_XQUERY_MODULE = "PRE-BATCH-XQUERY-MODULE";
+
+    /**
+     * Boolean value indicating whether the PRE_BATCH and POST_BATCH module or task
+     * should always be executed without evaluating how many URIs were returned by the URI selector.
+     * Default is false
+     * @see #POST_BATCH_MINIMUM_COUNT
+     * @see #PRE_BATCH_MINIMUM_COUNT
+     * @since 2.4.0
+     */
+    @Usage(description="Boolean value indicating whether the PRE_BATCH and POST_BATCH module or task \n" +
+        " should always be executed without evaluating how many URIs were returned by the URI selector.\n" +
+        " Default is false")
+    public static final String PRE_POST_BATCH_ALWAYS_EXECUTE = "PRE-POST-BATCH-ALWAYS-EXECUTE";
 
     /**
      * (Optional)
@@ -709,13 +939,19 @@ public final class Options {
     public static final String SSL_PROPERTIES_FILE = "SSL-PROPERTIES-FILE";
 
     /**
+     * Path to a directory that can be used for temporary storage while processing records.
+     */
+    @Usage(description = "Path to a directory that can be used for temporary processing files.")
+    public static final String TEMP_DIR = "TEMP-DIR";
+
+    /**
      * The number of worker threads. Default is 1.
      */
     @Usage(description = "The number of worker threads. Default is 1.")
     public static final String THREAD_COUNT = "THREAD-COUNT";
 
     /**
-     * <a href="https://github.com/marklogic/corb2#uris_batch_ref">URIS_BATCH_REF</a>
+     * <a href="https://github.com/marklogic-community/corb2#uris_batch_ref">URIS_BATCH_REF</a>
      */
     @Usage
     public static final String URIS_BATCH_REF = "URIS_BATCH_REF";
@@ -760,7 +996,7 @@ public final class Options {
      * sequence containing the URIs count followed by all the URIs. Optionally,
      * it can also return an arbitrary string as a first item in this sequence -
      * refer to
-     * <a href="https://github.com/marklogic/corb2#uris_batch_ref">URIS_BATCH_REF</a>
+     * <a href="https://github.com/marklogic-community/corb2#uris_batch_ref">URIS_BATCH_REF</a>
      * section.
      * <p>
      * XQuery and JavaScript modules need to have "{@code .xqy}" and
@@ -801,12 +1037,12 @@ public final class Options {
             + "reduce java heap size in very large batch jobs, as the CoRB java "
             + "client holds all the URIS in memory while processing is in progress. "
             + "If truncated, PROCESS-MODULE needs to reconstruct the URI before "
-            + "trying to duse fn:doc() to fetch the document. "
+            + "trying to use fn:doc() to fetch the document. "
             + "Usage: URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2,...)"
             + "Example:"
             + "URIS-REPLACE-PATTERN=/com/marklogic/sample/,,.xml, - Replace /com/marklogic/sample/ "
-            + "and .xml with empty strings. So, CoRB client only needs to cache the id '1234' i"
-            + "nstead of the entire URI /com/marklogic/sample/1234.xml. In the transform "
+            + "and .xml with empty strings. So, CoRB client only needs to cache the id '1234' "
+            + "instead of the entire URI /com/marklogic/sample/1234.xml. In the transform "
             + "PROCESS-MODULE, we need to do let $URI := fn:concat(\"/com/marklogic/sample/\",$URI,\".xml\")")
     public static final String URIS_REPLACE_PATTERN = "URIS-REPLACE-PATTERN";
 
@@ -825,9 +1061,16 @@ public final class Options {
     public static final String XCC_CONNECTION_RETRY_INTERVAL = "XCC-CONNECTION-RETRY-INTERVAL";
 
     /**
+     * Number attempts to connect to ML before giving up on a given host. Default is 3
+     */
+    @Usage(description = "Number attempts to connect to ML before giving up. "
+            + "Default is XCC-CONNECTION-RETRY-LIMIT")
+    public static final String XCC_CONNECTION_HOST_RETRY_LIMIT = "XCC-CONNECTION-HOST-RETRY-LIMIT";
+
+    /**
      * Connection string to MarkLogic XDBC Server.
      */
-    @Usage(description = "Connection string to MarkLogic XDBC Server.")
+    @Usage(description = "Connection string to MarkLogic XDBC Server. Supports multiple connection strings separated by comma.")
     public static final String XCC_CONNECTION_URI = "XCC-CONNECTION-URI";
 
     /**
@@ -839,8 +1082,21 @@ public final class Options {
     /**
      * Required if {@value #XCC_CONNECTION_URI} is not specified.
      */
-    @Usage(description = "Required if XCC-CONNECTION-URI is not specified.")
+    @Usage(description = "Required if XCC-CONNECTION-URI is not specified. Supports multiple hostnames separated by comma")
     public static final String XCC_HOSTNAME = "XCC-HOSTNAME";
+
+    /**
+     * Optional boolean flag to indicate whether to enable HTTP 1.1 compliance
+     * in XCC. If this option is set, the "xcc.httpcompliant" System property
+     * will be set.
+     *
+     * @see <a href="https://docs.marklogic.com/guide/xcc/concepts#id_28335">XCC
+     * Developer's Guide</a>
+     * @since 2.4.0
+     */
+    @Usage(description = "Optional boolean flag to indicate whether to enable HTTP 1.1 Compliance in XCC. "
+            + "If this option is set, the \"xcc.httpcompliant\" System property will be set.")
+    public static final String XCC_HTTPCOMPLIANT = "XCC-HTTPCOMPLIANT";
 
     /**
      * Required if {@value #XCC_CONNECTION_URI} is not specified.
@@ -853,6 +1109,27 @@ public final class Options {
      */
     @Usage(description = "Required if XCC-CONNECTION-URI is not specified.")
     public static final String XCC_PORT = "XCC-PORT";
+
+    /**
+     * Optional if {@value #XCC_CONNECTION_URI} is not specified. Default is xcc.
+     */
+    @Usage(description = "Used if XCC-CONNECTION-URI is not specified. Default is xcc")
+    public static final String XCC_PROTOCOL = "XCC-PROTOCOL";
+
+    /**
+     * The ID for the TimeZone that should be set on XCC RequestOption. When a
+     * value is specified, it is parsed using TimeZone.getTimeZone() and set on
+     * XCC RequestOption for each Task. Invalid ID values will produce the GMT
+     * TimeZone. If not specified, XCC uses the JVM default TimeZone.
+     *
+     * @see java.util.TimeZone
+     * @since 2.4.0
+     */
+    @Usage(description = "The ID for the TimeZone that should be set on XCC RequestOption. When a\n"
+            + " value is specified, it is parsed using TimeZone.getTimeZone() and set on\n"
+            + " XCC RequestOption for each Task. Invalid ID values will produce the GMT\n"
+            + " TimeZone. If not specified, XCC uses the JVM default TimeZone.")
+    public static final String XCC_TIME_ZONE = "XCC-TIME-ZONE";
 
     /**
      * Required if {@value #XCC_CONNECTION_URI} is not specified.
@@ -876,7 +1153,7 @@ public final class Options {
      * @see #XML_NODE
      * @since 2.3.1
      */
-    @Usage(description = "n order to use this option a class com.marklogic.developer.corb.FileUrisXMLLoader "
+    @Usage(description = "In order to use this option a class com.marklogic.developer.corb.FileUrisXMLLoader "
             + "has to be specified in the URIS-LOADER option. If defined instead of "
             + "URIS-MODULE, XML nodes will be used as URIs from the file located on the client. "
             + "The file path may be relative or absolute. Default processing will "
@@ -908,10 +1185,37 @@ public final class Options {
     public static final String XML_NODE = "XML-NODE";
 
     /**
+     * @since 2.4.0
+     */
+    @Usage(description = "Path to a W3C XML Schema to be used by com.marklogic.developer.corb.FileUrisStreamingXMLLoader "
+            + "or com.marklogic.developer.corb.FileUrisXMLLoader to validate an XML-FILE.")
+    public static final String XML_SCHEMA = "XML-SCHEMA";
+
+    /**
+     *
+     * @since 2.4.0
+     */
+    @Usage(description = "Temporary directory used by com.marklogic.developer.corb.FileUrisStreamingXMLLoader to store " +
+        "files extracted from the XML-FILE. " +
+        "If not specified, TEMP-DIR value will be used. " +
+        "If not specified, then the default Java java.tmp.dir will be used.")
+    public static final String XML_TEMP_DIR = "XML-TEMP-DIR";
+
+    @Usage(description = "In order to use this option a class com.marklogic.developer.corb.FileUrisZipLoader "
+            + "has to be specified in the URIS-LOADER option. If defined instead of "
+            + "URIS-MODULE, each file will be base64 encoded and set as the "
+            + "content of corb-loader XML files and sent as a serialized string in the URI parameter of "
+            + "the process module. "
+            + "The zip file path may be relative or absolute. Default processing will "
+            + "select all of the files in the zip file. ")
+    public static final String ZIP_FILE = "ZIP-FILE";
+
+    /**
      *
      * @deprecated Use the {@link #PROCESS_MODULE} option instead.
      * @see #PROCESS_MODULE
      */
+    @Deprecated
     @Usage(description = "Use PROCESS_MODULE instead")
     public static final String XQUERY_MODULE = "XQUERY-MODULE";
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import static com.marklogic.developer.corb.Options.EXPORT_FILE_SORT;
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_SORT_COMPARATOR;
 import com.marklogic.developer.corb.util.FileUtils;
 import static com.marklogic.developer.corb.util.FileUtils.deleteFile;
-import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
@@ -43,12 +42,14 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -57,11 +58,11 @@ import java.util.zip.ZipOutputStream;
  */
 public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     public static final String DISTINCT_FILE_SUFFIX = ".distinct";
-    protected static final String SORT_DIRECTION = "(?i)^(a|de)sc.*";
-    protected static final String DESCENDING = "(?i)^desc.*";
-    protected static final String DISTINCT = "(?i).*(distinct|uniq).*";
+    protected static final Pattern SORT_DIRECTION_PATTERN = Pattern.compile("(?i)^(a|de)sc.*");
+    protected static final Pattern DESCENDING_PATTERN = Pattern.compile("(?i)^desc.*");
+    protected static final Pattern DISTINCT_PATTERN = Pattern.compile("(?i).*(distinct|uniq).*");
     private static final Logger LOG = Logger.getLogger(PostBatchUpdateFileTask.class.getName());
-     
+
     protected void sortAndRemoveDuplicates() {
         File origFile = new File(exportDir, getPartFileName());
         if (!origFile.exists()) {
@@ -73,7 +74,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             String comparatorCls = getProperty(EXPORT_FILE_SORT_COMPARATOR);
 
             //You must either specify asc/desc or provide your own comparator
-            if ((sort == null || !sort.matches(SORT_DIRECTION)) && isBlank(comparatorCls)) {
+            if ((sort == null || !SORT_DIRECTION_PATTERN.matcher(sort).matches()) && isBlank(comparatorCls)) {
                 return;
             }
 
@@ -88,17 +89,17 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             Comparator<String> comparator = ExternalSort.defaultcomparator;
             if (isNotBlank(comparatorCls)) {
                 comparator = getComparatorCls(comparatorCls).newInstance();
-            } else if (sort.matches(DESCENDING)) {
+            } else if (DESCENDING_PATTERN.matcher(sort).matches()) {
                 comparator = Collections.reverseOrder();
             }
 
-            boolean distinct = isBlank(sort) ? false : sort.matches(DISTINCT);
+            boolean distinct = !isBlank(sort) && DISTINCT_PATTERN.matcher(sort).matches();
 
             Charset charset = Charset.defaultCharset();
             boolean useGzip = false;
 
             List<File> fragments = ExternalSort.sortInBatch(origFile, comparator, ExternalSort.DEFAULTMAXTEMPFILES, charset, tempFileStore, distinct, headerLineCount, useGzip);
-            LOG.log(INFO, "Created {0} temp files for sort and dedup", fragments.size());
+            LOG.log(INFO, () -> MessageFormat.format("Created {0} temp files for sort and dedup", fragments.size()));
 
             copyHeaderIntoFile(origFile, headerLineCount, sortedFile);
             boolean append = true;
@@ -109,7 +110,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             LOG.log(WARNING, "Unexpected error while sorting the report file " + origFile.getPath() + ". The file can still be sorted locally after the job is finished.", exc);
         }
     }
-    
+
     @SuppressWarnings("unchecked")
 	protected Class<? extends Comparator<String>> getComparatorCls(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         Class<?> cls = Class.forName(className);
@@ -120,13 +121,11 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             throw new IllegalArgumentException("Comparator must be of type java.util.Comparator");
         }
     }
-    
+
     protected void copyHeaderIntoFile(File inputFile, int headerLineCount, File outputFile) throws IOException {
-        BufferedWriter writer = null;
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(inputFile));
-            writer = new BufferedWriter(new FileWriter(outputFile, false));
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, false))) {
             String line;
             int currentLine = 0;
             while ((line = reader.readLine()) != null && currentLine < headerLineCount) {
@@ -135,11 +134,6 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
                 currentLine++;
             }
             writer.flush();
-            reader.close();
-            writer.close();
-        } finally {
-            closeQuietly(reader);
-            closeQuietly(writer);
         }
     }
 
@@ -151,38 +145,34 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
         String bottomContent = getBottomContent();
         bottomContent = trimToEmpty(bottomContent);
         if (isNotEmpty(bottomContent)) {
-            BufferedOutputStream writer = null;
-            try {
-                writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, getPartFileName()), true));
+            try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, getPartFileName()), true))) {
                 writer.write(bottomContent.getBytes());
                 writer.write(NEWLINE);
                 writer.flush();
-            } finally {
-                closeQuietly(writer);
             }
         }
     }
-    
-    protected void moveFile(String srcFilename, String destFilename) throws IOException {
+
+    protected void moveFile(String srcFilename, String destFilename) {
         File srcFile = new File(exportDir, srcFilename);
         File destFile = new File(exportDir, destFilename);
         FileUtils.moveFile(srcFile, destFile);
     }
-    
-    protected void moveFile() throws IOException {
+
+    protected void moveFile() {
         moveFile(getPartFileName(), getFileName());
     }
-    
+
     protected String getPartExt() {
         String partExt = getProperty(EXPORT_FILE_PART_EXT);
         if (isEmpty(partExt)) {
             partExt = ".part";
         } else if (!partExt.startsWith(".")) {
-            partExt = "." + partExt;
+            partExt = '.' + partExt;
         }
         return partExt;
     }
-       
+
     protected void compressFile() throws IOException {
         if ("true".equalsIgnoreCase(getProperty(EXPORT_FILE_AS_ZIP))) {
             String outFileName = getFileName();
@@ -193,37 +183,25 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             File outFile = new File(exportDir, outFileName);
             File zipFile = new File(exportDir, partZipFileName);
 
-            ZipOutputStream zos = null;
-            FileOutputStream fos = null;
-            
-            try {
-                if (outFile.exists()) {
-                    deleteFile(zipFile);
+            if (outFile.exists()) {
+                deleteFile(zipFile);
 
-                    fos = new FileOutputStream(zipFile);
-                    zos = new ZipOutputStream(fos);
-
+                try (FileOutputStream fos = new FileOutputStream(zipFile);
+                        ZipOutputStream zos = new ZipOutputStream(fos)) {
                     ZipEntry ze = new ZipEntry(outFileName);
                     zos.putNextEntry(ze);
-
                     byte[] buffer = new byte[2048];
-                    FileInputStream fis = null; 
-                    try {
-                        fis = new FileInputStream(outFile);
+                    try (FileInputStream fis = new FileInputStream(outFile)) {
                         int len;
                         while ((len = fis.read(buffer)) > 0) {
                             zos.write(buffer, 0, len);
                         }
-                    } finally {
-                        closeQuietly(fis);
                     }
                     zos.closeEntry();
                     zos.flush();
                 }
-            } finally {
-                closeQuietly(zos);
-                closeQuietly(fos);
             }
+
             // move the file if required
             moveFile(partZipFileName, outZipFileName);
 

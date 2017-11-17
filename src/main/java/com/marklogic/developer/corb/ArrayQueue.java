@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -61,8 +61,7 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
         if (count == 0) {
             return null;
         }
-        String x = extract();
-        return x;
+        return extract();
     }
 
     @Override
@@ -84,7 +83,8 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
         ++count;
     }
 
-    protected final int increment(int i) {
+    protected int increment(int index) {
+        int i = index;
         return (++i == queue.length) ? 0 : i;
     }
 
@@ -94,15 +94,15 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
     }
 
     private String extract() {
-        final char[][] items = this.queue;
-        String x = new String(items[takeIndex]);
+        String x = new String(queue[takeIndex]);
         queue[takeIndex] = null;
         takeIndex = increment(takeIndex);
         --count;
         return x;
     }
 
-    protected void removeAt(int i) {
+    protected void removeAt(int index) {
+        int i = index;
         final char[][] items = this.queue;
         // if removing front item, just advance
         if (i == takeIndex) {

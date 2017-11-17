@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2016 MarkLogic Corporation
+ * Copyright (c) 2004-2017 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,20 @@
  */
 package com.marklogic.developer.corb;
 
+import com.marklogic.developer.TestHandler;
+import com.marklogic.developer.corb.HostKeyDecrypter.OSType;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,19 +39,24 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author Mads Hanse, MarkLogic Corporation
+ * @author Mads Hansen, MarkLogic Corporation
  */
 public class HostKeyDecrypterTest {
-    
+
+    private final TestHandler testLogger = new TestHandler();
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
     private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
     private PrintStream systemOut = System.out;
     private PrintStream systemErr = System.err;
-    private static final String USAGE = HostKeyDecrypter.USAGE + "\n";
-    
+    private static final String USAGE = HostKeyDecrypter.USAGE + '\n';
+    private static final Logger LOG = Logger.getLogger(HostKeyDecrypterTest.class.getName());
+    private static final Logger HOST_KEY_DECRYPTER_LOG = Logger.getLogger(HostKeyDecrypter.class.getName());
+    private static final String METHOD_GET_SN = "getSN";
+
     @Before
     public void setUp() {
         clearSystemProperties();
+        HOST_KEY_DECRYPTER_LOG.addHandler(testLogger);
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
     }
@@ -54,22 +68,23 @@ public class HostKeyDecrypterTest {
         System.setErr(systemErr);
     }
 
-    /**
-     * Test of init_decrypter method, of class HostKeyDecrypter.
-     */
-    //@Test travis-ci throws an IOException
-    public void testInit_decrypter() throws Exception {
+    @Test
+    public void testInitDecrypter() {
         HostKeyDecrypter instance = new HostKeyDecrypter();
         try {
             instance.init_decrypter();
-        } catch (IOException ex) {
-            //travis-ci throws an IOException
+            List<LogRecord> records = testLogger.getLogRecords();
+            int lastMessage = records.size() - 1;
+            assertTrue("Initialized HostKeyDecrypter".equals(records.get(lastMessage).getMessage()));
+        } catch (RuntimeException ex) {
+            //CircleCI throws and can't execute
+            LOG.log(Level.SEVERE, null, ex);
+        } catch (IOException | ClassNotFoundException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
     }
 
-    /**
-     * Test of xor method, of class HostKeyDecrypter.
-     */
     @Test
     public void testXor() {
         byte[] byteOne = {1, 0, 1, 0, 1};
@@ -79,51 +94,91 @@ public class HostKeyDecrypterTest {
         assertTrue(Arrays.equals(expResult, result));
     }
 
-    /**
-     * Test of getSHA256Hash method, of class HostKeyDecrypter.
-     */
     @Test
-    public void testGetSHA256Hash() throws Exception {
+    public void testGetSHA256Hash() {
         byte[] expected = {-75, -44, 4, 92, 63, 70, 111, -87, 31, -30, -52, 106, -66, 121, 35, 42, 26, 87, -51, -15, 4, -9, -94, 110, 113, 110, 10, 30, 39, -119, -33, 120};
         byte[] input = {'A', 'B', 'C'};
-        byte[] result = HostKeyDecrypter.getSHA256Hash(input);
-        System.out.println(Arrays.toString(result));
-        assertTrue(Arrays.equals(expected, result));
+        try {
+            byte[] result = HostKeyDecrypter.getSHA256Hash(input);
+            assertTrue(Arrays.equals(expected, result));
+        } catch (NoSuchAlgorithmException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @Test
+    public void testOTHERGetSN() {
+        byte[] expected = {45, 32, 67, 34, 67, 23, 21, 45, 7, 89, 3, 27, 39, 62, 15};
+        assertTrue(Arrays.equals(expected, HostKeyDecrypter.OSType.OTHER.getSN()));
     }
 
     @Test
     public void testGetOperatingSystemType() {
-        assertEquals(HostKeyDecrypter.OSType.Mac, HostKeyDecrypter.getOperatingSystemType("Darwin"));
-        assertEquals(HostKeyDecrypter.OSType.Windows, HostKeyDecrypter.getOperatingSystemType("Windows 95"));
-        assertEquals(HostKeyDecrypter.OSType.Windows, HostKeyDecrypter.getOperatingSystemType("windows xp"));
-        assertEquals(HostKeyDecrypter.OSType.Linux, HostKeyDecrypter.getOperatingSystemType("unix"));
-        assertEquals(HostKeyDecrypter.OSType.Linux, HostKeyDecrypter.getOperatingSystemType("Red Had Linux"));
-        assertEquals(HostKeyDecrypter.OSType.Linux, HostKeyDecrypter.getOperatingSystemType("AIX/OS2"));
-        assertEquals(HostKeyDecrypter.OSType.Other, HostKeyDecrypter.getOperatingSystemType("ReactOS"));
-        assertEquals(HostKeyDecrypter.OSType.Other, HostKeyDecrypter.getOperatingSystemType(null));
+        assertEquals(HostKeyDecrypter.OSType.MAC, HostKeyDecrypter.getOperatingSystemType("Darwin"));
+        assertEquals(HostKeyDecrypter.OSType.WINDOWS, HostKeyDecrypter.getOperatingSystemType("Windows 95"));
+        assertEquals(HostKeyDecrypter.OSType.WINDOWS, HostKeyDecrypter.getOperatingSystemType("windows xp"));
+        assertEquals(HostKeyDecrypter.OSType.LINUX, HostKeyDecrypter.getOperatingSystemType("unix"));
+        assertEquals(HostKeyDecrypter.OSType.LINUX, HostKeyDecrypter.getOperatingSystemType("Red Had Linux"));
+        assertEquals(HostKeyDecrypter.OSType.LINUX, HostKeyDecrypter.getOperatingSystemType("AIX/OS2"));
+        assertEquals(HostKeyDecrypter.OSType.OTHER, HostKeyDecrypter.getOperatingSystemType("ReactOS"));
+        assertEquals(HostKeyDecrypter.OSType.OTHER, HostKeyDecrypter.getOperatingSystemType(null));
     }
 
-    /**
-     * Test of main method, of class HostKeyDecrypter.
-     */
     @Test
-    public void testMain_usage_nullArgs() throws Exception {
+    public void testGetValueFollowingMarker() {
+        try {
+            Class<?> clazz = HostKeyDecrypter.OSType.class;
+            Method method = clazz.getDeclaredMethod(METHOD_GET_SN, String.class, String.class, OSType.class);
+            method.setAccessible(true);
+            method.invoke(clazz, "fileDoesNotExistXYZ", "Serial Number", OSType.MAC);
+            fail();
+        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+            Logger.getLogger(HostKeyDecrypterTest.class.getName()).log(Level.SEVERE, null, ex);
+            assertTrue(ex.getCause() instanceof RuntimeException);
+        }
+    }
+
+    @Test
+    public void testMainUsageNullArgs() {
         String[] args = null;
-        HostKeyDecrypter.main(args);
+        try {
+            HostKeyDecrypter.main(args);
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
         assertEquals(USAGE, outContent.toString());
     }
 
     @Test
-    public void testMain_usage_decryptWithoutValue() throws Exception {
+    public void testMainUsageEncryptWithoutValue() {
         String[] args = {"encrypt"};
-        HostKeyDecrypter.main(args);
+        try {
+            HostKeyDecrypter.main(args);
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
         assertEquals(USAGE, outContent.toString());
     }
 
     @Test
-    public void testMain_usage_unrecognizedMethod() throws Exception {
+    public void testMainUsageUnrecognizedMethod() {
         String[] args = {"foo"};
-        HostKeyDecrypter.main(args);
+        try {
+            HostKeyDecrypter.main(args);
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
+        assertEquals(USAGE, outContent.toString());
+    }
+
+    @Test
+    public void testMainNullArgs() {
+        String[] args = null;
+        try {
+            HostKeyDecrypter.main(args);
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
         assertEquals(USAGE, outContent.toString());
     }
 
@@ -136,13 +191,13 @@ public class HostKeyDecrypterTest {
     }
 
     /* Illegal key size thrown if JCE is not loaded
-    
+
     @Test
     public void testMain() throws Exception {
         String[] args = {"encrypt", "foo"};
         HostKeyDecrypter.main(args);
     }
-    
+
     @Test
     public void testMain_test() throws Exception {
         String[] args = {"test"};

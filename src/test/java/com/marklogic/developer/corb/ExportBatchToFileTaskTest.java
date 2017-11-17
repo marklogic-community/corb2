@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2016 MarkLogic Corporation
+  * * Copyright (c) 2004-2017 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -20,7 +20,10 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.xcc.ResultSequence;
 import java.io.File;
+import java.io.IOException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import static org.junit.Assert.*;
 import org.junit.Test;
 import static org.mockito.Mockito.mock;
@@ -34,12 +37,10 @@ public class ExportBatchToFileTaskTest {
     
     private static final String EMPTY = "";
     private static final String TXT_EXT = ".txt";
+    private static final Logger LOG = Logger.getLogger(ExportBatchToFileTaskTest.class.getName());
     
-    /**
-     * Test of getFileName method, of class ExportBatchToFileTask.
-     */
     @Test
-    public void testGetFileName_fromURISBatchRef() {
+    public void testGetFileNameFromURISBatchRef() {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, "foo/bar/baz");
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
@@ -49,7 +50,7 @@ public class ExportBatchToFileTaskTest {
     }
 
     @Test
-    public void testGetFileName_fromEXPORTFILENAME() {
+    public void testGetFileNameFromEXPORTFILENAME() {
         String filename = "foo/bar";
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_NAME, filename);
@@ -60,7 +61,7 @@ public class ExportBatchToFileTaskTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testGetFileName_withEmptyExportFileName() {
+    public void testGetFileNameWithEmptyExportFileName() {
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_NAME, EMPTY);
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
@@ -70,7 +71,7 @@ public class ExportBatchToFileTaskTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testGetFileName_withEmptyUrisBatchRef() {
+    public void testGetFileNameWithEmptyUrisBatchRef() {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, EMPTY);
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
@@ -79,11 +80,8 @@ public class ExportBatchToFileTaskTest {
         fail();
     }
 
-    /**
-     * Test of getPartFileName method, of class ExportBatchToFileTask.
-     */
     @Test(expected = NullPointerException.class)
-    public void testGetPartFileName_emptyName() {
+    public void testGetPartFileNameEmptyName() {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, EMPTY);
         props.setProperty(Options.EXPORT_FILE_PART_EXT, TXT_EXT);
@@ -95,7 +93,7 @@ public class ExportBatchToFileTaskTest {
     }
 
     @Test
-    public void testGetPartFileName_withExtension() {
+    public void testGetPartFileNameWithExtension() {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, "foo");
         props.setProperty(Options.EXPORT_FILE_PART_EXT, TXT_EXT);
@@ -105,32 +103,32 @@ public class ExportBatchToFileTaskTest {
         assertEquals("foo.txt", result);
     }
 
-    /**
-     * Test of writeToFile method, of class ExportBatchToFileTask.
-     */
     @Test
-    public void testWriteToFile_nullSeq() throws Exception {
+    public void testWriteToFileNullSeq() {
         ResultSequence seq = null;
-        Properties props = new Properties();
-        props.setProperty(Options.EXPORT_FILE_NAME, "testWriteToFileNullSeq.txt");
-        ExportBatchToFileTask instance = new ExportBatchToFileTask();
-        instance.properties = props;
-        instance.writeToFile(seq);
-        File file = new File(instance.exportDir, instance.getPartFileName());
+        File file = testWriteToFile(seq);
         assertFalse(file.exists());
     }
 
     @Test
-    public void testWriteToFile_notSeqHasNext() throws Exception {
+    public void testWriteToFileNotSeqHasNext()  {
         ResultSequence seq = mock(ResultSequence.class);
         when(seq.hasNext()).thenReturn(false);
+        File file = testWriteToFile(seq);
+        assertFalse(file.exists());
+    }
+    
+    public File testWriteToFile(ResultSequence resultSequence) {
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_NAME, "testWriteToFile.txt");
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
-        instance.writeToFile(seq);
-        File file = new File(instance.exportDir, instance.getPartFileName());
-        assertFalse(file.exists());
+        try {
+            instance.writeToFile(resultSequence);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+        return new File(instance.exportDir, instance.getPartFileName());
     }
-
 }

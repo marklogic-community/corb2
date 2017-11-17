@@ -4,13 +4,16 @@
 .classpath
 build/
 .gradle/
+.idea
 .project
 /.nb-gradle/
 /eclipse_bin/
 target/
 private/
+out/
 nb-configuration.xml
 /nbproject/
 /META-INF/
 /dependency-reduced-pom.xml
 /cov-int/
+src/test/resources/loader.zip
