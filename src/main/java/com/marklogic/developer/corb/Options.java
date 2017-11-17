@@ -402,7 +402,7 @@ public final class Options {
 
     /**
      * Name of the current Job.
-     * If {@value #JOB-NAME} is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.
+     * If {@value #JOB_NAME} is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.
      *
      * @since 2.4.0
      */
@@ -410,13 +410,13 @@ public final class Options {
     public static final String JOB_NAME = "JOB-NAME";
 
     /**
-     *Optional Port number to start a light weight HTTP Server which can be used to monitor ,change the number of threads, pause/resume the current corb job.
-     *Port number must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090
-     * The job server has a service http://<host>:<port>/service
+     * Optional Port number to start a light weight HTTP Server which can be used to monitor, change the number of threads, pause/resume the current CORB job.
+     * Port number must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090
+     * The job server has a service URL http://host:port/metrics
      * It supports the following params:
      * <ul><li>
      * paused=true|false will pause/resume the Corb job. </li>
-     * <li>threads=<number> will change the number of threads to <number>. </li>
+     * <li>threads=# will adjust the number of threads for the executing job. </li>
      * <li>json=true returns metrics in json format</li>
      * <li>xml=true returns in xml format</li>
      * <li>concise=true returns a concise format.</li>
