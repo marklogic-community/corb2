@@ -285,7 +285,7 @@ if (project.hasProperty("myBintrayUser")) {
             websiteUrl = project.websiteUrl
             issueTrackerUrl = project.issueTrackerUrl
             vcsUrl = project.vcsUrl
-            githubRepo = 'marklogic/corb2'
+            githubRepo = 'marklogic-community/corb2'
             githubReleaseNotesFile = 'README.md'
             version {
                 name = project.version
