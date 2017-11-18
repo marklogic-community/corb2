@@ -5,9 +5,11 @@ import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.net.InetAddress;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.logging.Logger;
@@ -463,11 +465,14 @@ public class JobStats extends BaseMonitor {
         return newTemplates(transformerFactory, "jobStatsToJson.xsl");
     }
     protected static Templates newTemplates(TransformerFactory transformerFactory, String stylesheetFilename) throws TransformerConfigurationException {
-        InputStream is = Manager.class.getResourceAsStream("/" + stylesheetFilename);
-        if (is == null) {
-            throw new TransformerConfigurationException("Could not find the template file " + stylesheetFilename + " in the classpath");
+        URL url = Manager.class.getResource( "/" + stylesheetFilename);
+        try {
+            StreamSource source = new StreamSource(url.openStream());
+            source.setSystemId(url.toURI().toString()); //required in order for XSLT to resolve relative paths and itself with document('')
+            return transformerFactory.newTemplates(source);
+        } catch (URISyntaxException | IOException ex) {
+            throw new TransformerConfigurationException("Could not find the template file " + stylesheetFilename + " in the classpath", ex);
         }
-        return transformerFactory.newTemplates(new StreamSource(is));
     }
 
     protected void addLongRunningUris(Node parent) {
