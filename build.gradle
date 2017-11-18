@@ -68,7 +68,7 @@ configurations {
 }
 
 dependencies {
-    implementation 'com.marklogic:marklogic-xcc:9.0.3'
+    compile 'com.marklogic:marklogic-xcc:9.0.3'
     //we bundle the externalsortinginjava classes with the corb distro as a fat jar
     compileOnly "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
     shadow "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
