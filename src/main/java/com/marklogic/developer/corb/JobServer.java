@@ -141,9 +141,9 @@ public class JobServer {
                 httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, response.length());
                 output.write(response.getBytes());
             } else {
-                httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
                 httpExchange.getResponseHeaders().set(HEADER_CONTENT_TYPE, getContentType(path));
-
+                httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
+                
                 final byte[] buffer = new byte[0x10000];
                 int count = 0;
                 while ((count = is.read(buffer)) >= 0) {
