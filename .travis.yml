@@ -43,6 +43,8 @@ addons:
             - master
             - development
 
+  srcclr: true
+
   coverity_scan:
     project:
       name: "marklogic/corb2"
