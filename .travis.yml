@@ -43,7 +43,7 @@ addons:
             - master
             - development
 
-  srcclr: true
+  #srcclr: true
 
   coverity_scan:
     project:
