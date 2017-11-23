@@ -38,7 +38,7 @@ after_success:
 
 addons:
   sonarcloud:
-    organization: "hansenmc-github"
+    organization: "default"
     branches:
             - master
             - development
