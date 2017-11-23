@@ -26,11 +26,11 @@ before_install:
 script:
   # disable integration and performance tests, since we don't have a MarkLogic instance to use
   - ./gradlew check jacocoTestReport -PskipIntegrationTest -PskipPerformanceTest
-  - sonar-scanner
 
 after_success:
   # codecov.io integration https://codecov.io/gh/marklogic/corb2/branch/development
   - bash <(curl -s https://codecov.io/bash)
+  - sonar-scanner
   # codacy https://www.codacy.com/app/mads-hansen/corb2/dashboard
   - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r build/reports/jacoco/test/jacocoTestReport.xml
   # coveralls.io
