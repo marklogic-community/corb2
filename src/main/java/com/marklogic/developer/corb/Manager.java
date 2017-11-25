@@ -156,6 +156,7 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    @Override
     public void close() {
         if (scheduledExecutor != null) {
             //This will shutdown the scheduled executors for the command file watcher and logging JobStats
