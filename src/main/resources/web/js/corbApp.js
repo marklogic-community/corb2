@@ -42,7 +42,7 @@ app.factory("MetricsUtilityService", function() {
             }
             return sequence;
         }
-    }
+    };
 });
 
 app.controller("dashboardCtrl", ["$scope", "$http", "$interval", "MetricsUtilityService",
