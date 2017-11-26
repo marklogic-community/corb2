@@ -1,42 +1,52 @@
 "use strict";
-
-function pad(n, z) {
-    z = z || 2;
-    return ("00" + n).slice(-z);
-}
-
-function isNumeric(value) {
-    return !isNaN(value - parseFloat(value));
-}
-
-function msToTime(s) {
-    if (!Number.isNaN(s) && s > 0) {
-        var ms = s % 1000;
-        s = (s - ms) / 1000;
-        var secs = s % 60;
-        s = (s - secs) / 60;
-        var mins = s % 60;
-        var hrs = (s - mins) / 60;
-
-        return pad(hrs) + ":" + pad(mins) + ":" + pad(secs) + "." + ms;
-    } else {
-        return "";
-    }
-}
-
-function commandActionParameter(job) {
-    var commandParam = "command=";
-    if (job.paused) {
-        commandParam += "resume";
-    } else {
-        commandParam += "pause";
-    }
-    return commandParam;
-}
-
 var app = angular.module("corbApp", []);
-app.controller("dashboardCtrl", ["$scope", "$http", "$interval",
-    function($scope, $http, $interval) {
+
+app.factory("MetricsUtilityService", function() {
+
+    function pad(n, z) {
+        z = z || 2;
+        return ("00" + n).slice(-z);
+    }
+
+    return {
+        isNumeric : function (value) {
+            return !isNaN(value - parseFloat(value));
+        },
+        msToTime : function (s) {
+            if (!Number.isNaN(s) && s > 0) {
+                var ms = s % 1000;
+                s = (s - ms) / 1000;
+                var secs = s % 60;
+                s = (s - secs) / 60;
+                var mins = s % 60;
+                var hrs = (s - mins) / 60;
+
+                return pad(hrs) + ":" + pad(mins) + ":" + pad(secs) + "." + ms;
+            } else {
+                return "";
+            }
+        },
+        commandActionParameter : function (job) {
+            var commandParam = "command=";
+            if (job.paused) {
+                commandParam += "resume";
+            } else {
+                commandParam += "pause";
+            }
+            return commandParam;
+        },
+        range : function(min, max) {
+            var sequence = [];
+            for (var i = min; i <= max; i++) {
+                sequence.push(i);
+            }
+            return sequence;
+        }
+    }
+});
+
+app.controller("dashboardCtrl", ["$scope", "$http", "$interval", "MetricsUtilityService",
+    function($scope, $http, $interval, MetricsUtilityService) {
 
         var metricsPath = "?format=json";
         var host = location.hostname || "localhost";
@@ -74,10 +84,8 @@ app.controller("dashboardCtrl", ["$scope", "$http", "$interval",
         $scope.availableServers = [];
         $scope.availableServerData = [];
         $scope.threadCounts = {};
-        $scope.allThreadCounts = [];
-        for (var i =1; i <= 64; i++) {
-            $scope.allThreadCounts.push(i);
-        }
+
+        $scope.allThreadCounts = MetricsUtilityService.range(1, 64);
         //seed the list with the current server
         $scope.external = [ {host: host, port: port} ];
         //onClick create a new entry in the array for the user to fill in values
@@ -90,7 +98,7 @@ app.controller("dashboardCtrl", ["$scope", "$http", "$interval",
         };
 
         $scope.pauseResumeButtonClick = function(job) {
-            $http.post(toUrl(job) + metricsPath + "&" + commandActionParameter(job)).then(loadData, handleError);
+            $http.post(toUrl(job) + metricsPath + "&" + MetricsUtilityService.commandActionParameter(job)).then(loadData, handleError);
         };
 
         $scope.updateThreadCount = function(job) {
@@ -128,7 +136,7 @@ app.controller("dashboardCtrl", ["$scope", "$http", "$interval",
                             hostData.push([externalHost, port]);
                         }
                         // otherwise just the specific port number
-                    } else if (isNumeric(portToken)) {
+                    } else if (MetricsUtilityService.isNumeric(portToken)) {
                         hostData.push([externalHost, portToken]);
                     }
                 }
@@ -143,8 +151,8 @@ app.controller("dashboardCtrl", ["$scope", "$http", "$interval",
         scheduleMetricsRefresh(host, port);
     }]);
 
-app.controller("jobCtrl", ["$scope", "$http", "$interval",
-    function($scope, $http, $interval) {
+app.controller("jobCtrl", ["$scope", "$http", "$interval", "MetricsUtilityService",
+    function($scope, $http, $interval, MetricsUtilityService) {
 
         var serviceUrl = location.protocol + "//" + location.host + location.pathname + "?format=json";
         var promise;
@@ -183,7 +191,7 @@ app.controller("jobCtrl", ["$scope", "$http", "$interval",
             $scope.failedPercent = (job.numberOfFailedTasks && job.numberOfFailedTasks > 0 ? ((job.numberOfFailedTasks/$scope.totalNumberOfTasks) * 100) : 0);
             $scope.failedPercent = Math.round($scope.failedPercent * 100) / 100;
             $scope.failedTotals = (job.numberOfFailedTasks ? job.numberOfFailedTasks : 0) + " out of " + $scope.totalNumberOfTasks + " failed.";
-            $scope.jobDuration = (job.totalRunTimeInMillis && job.totalRunTimeInMillis > 0 ) ? msToTime(job.totalRunTimeInMillis) : "Not Running";
+            $scope.jobDuration = (job.totalRunTimeInMillis && job.totalRunTimeInMillis > 0 ) ? MetricsUtilityService.msToTime(job.totalRunTimeInMillis) : "Not Running";
             $scope.averageTransactionTimeInMillis =  Math.round(job.averageTransactionTimeInMillis * 100) / 100;
             if (job.numberOfSucceededTasks+ job.numberOfFailedTasks >= $scope.totalNumberOfTasks) {
                 $scope.jobStatus = "completed";
@@ -215,7 +223,7 @@ app.controller("jobCtrl", ["$scope", "$http", "$interval",
         $scope.pauseResumeButtonClick = function(){
             $interval.cancel(promise);
             $scope.loading = true;
-            $http.post(serviceUrl + "&concise=true&" + commandActionParameter($scope.job)).then(handleCommandResponse, handleError);
+            $http.post(serviceUrl + "&concise=true&" + MetricsUtilityService.commandActionParameter($scope.job)).then(handleCommandResponse, handleError);
         };
 
         $scope.updateThreadCount = function(){
@@ -225,11 +233,7 @@ app.controller("jobCtrl", ["$scope", "$http", "$interval",
             $http.post(serviceUrl + "&concise=true&thread-count=" + $scope.threadCount).then(handleCommandResponse, handleError);
         };
 
-        $scope.updateThreadsButtonStyle = "btn-primary";
-        $scope.allThreadCounts = [];
-        for (var i = 1; i <= 64; i++) {
-            $scope.allThreadCounts.push(i);
-        }
+        $scope.allThreadCounts = MetricsUtilityService.range(1, 64);
 
         $http.get(serviceUrl).then(loadData, handleError);
         scheduleUpdates();
