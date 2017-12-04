@@ -74,6 +74,7 @@ public class TransformOptions {
     private int preBatchMinimumCount = 1;
     private int postBatchMinimumCount = 1;
     private boolean failOnError = true;
+    private boolean redactUris = false;
 
     // We could get rid of this now that we check status...
     private String modulesDatabase = "Modules";
@@ -579,4 +580,12 @@ public class TransformOptions {
 	public void setJobServerPortsToChoose(Set<Integer> jobServerPortToChoose) {
 		this.jobServerPortsToChoose = jobServerPortToChoose;
 	}
+
+	public void setShouldRedactUris(boolean redact) {
+	    redactUris = redact;
+    }
+
+    protected boolean shouldRedactUris() {
+        return redactUris;
+    }
 }

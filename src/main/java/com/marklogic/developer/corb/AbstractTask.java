@@ -198,7 +198,7 @@ public abstract class AbstractTask implements Task {
         } catch (RequestException exc) {
             return handleRequestException(exc);
         } catch (Exception exc) {
-            throw new CorbException(exc.getMessage() + AT_URI + asString(inputUris), exc);
+            throw  wrapProcessException(exc, inputUris);
         } finally {
             if (null != seq && !seq.isClosed()) {
                 seq.close();
@@ -366,12 +366,12 @@ public abstract class AbstractTask implements Task {
 
         if (requestException instanceof ServerConnectionException) {
             Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
-            throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
+            throw wrapProcessException(requestException, inputUris);
         } else if (shouldRetry(requestException)) {
             return handleRetry(requestException);
         } else if (failOnError) {
             Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
-            throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
+            throw wrapProcessException(requestException, inputUris);
         } else {
             String exceptionName = requestException.getClass().getSimpleName();
             String code = requestException instanceof QueryException ? ((QueryException)requestException).getCode() : null;
@@ -397,7 +397,7 @@ public abstract class AbstractTask implements Task {
 
             String errorCode = requestException instanceof QueryException ? ((QueryException)requestException).getCode() + ":" : "";
             LOG.log(WARNING,
-                "Encountered {0} from Marklogic Server. Retrying attempt {1} after {2} seconds..: {3}{4}{5}{6}",
+                "Encountered {0} from MarkLogic Server. Retrying attempt {1} after {2} seconds..: {3}{4}{5}{6}",
                 new Object[]{exceptionName, retryCount, retryInterval, errorCode, requestException.getMessage(), AT_URI, asString(inputUris)});
             try {
                 Thread.sleep(retryInterval * 1000L);
@@ -408,7 +408,7 @@ public abstract class AbstractTask implements Task {
             return invokeModule();
         } else if (failOnError) {
             Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
-            throw new CorbException(requestException.getMessage() + AT_URI + asString(inputUris), requestException);
+            throw wrapProcessException(requestException, inputUris);
         } else {
             LOG.log(WARNING, failOnErrorIsFalseMessage(exceptionName, inputUris), requestException);
             writeToErrorFile(inputUris, requestException.getMessage());
@@ -416,12 +416,16 @@ public abstract class AbstractTask implements Task {
         }
     }
 
+    protected CorbException wrapProcessException(Exception ex, String... inputUris) {
+        return new CorbException(ex.getMessage() + AT_URI + asString(inputUris), ex);
+    }
+
     private String failOnErrorIsFalseMessage(final String name, final String... inputUris) {
         return "failOnError is false. Encountered " + name + AT_URI + asString(inputUris);
     }
 
     protected String asString(String... uris) {
-        return uris == null ? "" : StringUtils.join(uris, ",");
+        return (uris == null | StringUtils.stringToBoolean(getProperty(Options.URIS_REDACTED)) ) ? "" : StringUtils.join(uris, ",");
     }
 
     protected abstract String processResult(ResultSequence seq) throws CorbException;

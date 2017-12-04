@@ -232,7 +232,7 @@ public class JobStats extends BaseMonitor {
                     LOG.log(WARNING, "Unable to log to server, no content source available");
                 }
             } catch (CorbException | RequestException ex) {
-                LOG.log(SEVERE, "logJobStatsToServer request failed", ex);
+                LOG.log(SEVERE, "logToServer request failed", ex);
             }
         }
     }
@@ -387,7 +387,7 @@ public class JobStats extends BaseMonitor {
 
         createAndAppendElement(element, NUMBER_OF_SUCCEEDED_TASKS, numberOfSucceededTasks);
         createAndAppendElement(element, NUMBER_OF_FAILED_TASKS, numberOfFailedTasks);
-        if (!concise) {
+        if (!concise && !options.shouldRedactUris()) {
             addLongRunningUris(element);
             addFailedUris(element);
         }
@@ -464,6 +464,7 @@ public class JobStats extends BaseMonitor {
     public static Templates newJobStatsToJsonTemplates(TransformerFactory transformerFactory) throws TransformerConfigurationException {
         return newTemplates(transformerFactory, "jobStatsToJson.xsl");
     }
+
     protected static Templates newTemplates(TransformerFactory transformerFactory, String stylesheetFilename) throws TransformerConfigurationException {
         URL url = Manager.class.getResource( "/" + stylesheetFilename);
         try {
@@ -523,6 +524,7 @@ public class JobStats extends BaseMonitor {
             parent.appendChild(failedUrisElement);
         }
     }
+
     /**
      * @param initTaskRunTime the initTaskRunTime to set
      */

@@ -1012,6 +1012,15 @@ public final class Options {
     public static final String URIS_MODULE = "URIS-MODULE";
 
     /**
+     * Optional boolean flag indicating whether URIs should be excluded from logging, console, and JobStats metrics.
+     * The default value is false.
+     * @since 2.4.1
+     */
+    @Usage(description = "Optional boolean flag indicating whether URIs should be excluded from logging, console, " +
+        "and JobStats metrics. The default value is false.")
+    public static final String URIS_REDACTED = "URIS-REDACTED";
+
+    /**
      * One or more replace patterns for URIs - Used by java to truncate the
      * length of URIs on the client side, typically to reduce java heap size in
      * very large batch jobs, as the CoRB java client holds all the URIS in

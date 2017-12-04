@@ -19,6 +19,8 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
+
+import com.marklogic.developer.TestHandler;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.ModuleInvoke;
@@ -31,12 +33,18 @@ import com.marklogic.xcc.types.XdmVariable;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+
+import org.junit.Before;
 import org.junit.Test;
+
+import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
@@ -54,6 +62,13 @@ public class QueryUrisLoaderTest {
     private String root = "/root";
     private static final String ADHOC_SUFFIX = "|ADHOC";
     private static final Logger LOG = Logger.getLogger(QueryUrisLoaderTest.class.getName());
+    private static final Logger QUERY_URIS_LOG = Logger.getLogger(QueryUrisLoader.class.getName());
+    private final TestHandler testLogger = new TestHandler();
+
+    @Before
+    public void setUp() {
+        QUERY_URIS_LOG.addHandler(testLogger);
+    }
 
     @Test(expected = NullPointerException.class)
     public void testOpenNullPropertiesAndNullOptions() throws CorbException {
@@ -640,6 +655,44 @@ public class QueryUrisLoaderTest {
         instance.setTotalCount(1);
         Queue<String> queue = instance.createAndPopulateQueue(resultSequence);
         assertFalse(queue.isEmpty());
+    }
+
+    @Test
+    public void testPopulateQueueWithValuesAndUriRedacted() {
+        ResultSequence resultSequence = mock(ResultSequence.class);
+        ResultItem resultItem = mock(ResultItem.class);
+        when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
+        when(resultSequence.next()).thenReturn(resultItem);
+        when(resultItem.asString()).thenReturn(foo);
+        QueryUrisLoader instance = new QueryUrisLoader();
+        instance.setTotalCount(1);
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setShouldRedactUris(true);
+        instance.setOptions(transformOptions);
+        Queue<String> queue = instance.createAndPopulateQueue(resultSequence);
+        assertFalse(queue.isEmpty());
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "Received first URI")));
+    }
+
+    @Test
+    public void testLogQueStatus() {
+        QueryUrisLoader loader = new QueryUrisLoader();
+        loader.logQueueStatus(2,"uri", 10, 4001);
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "queued 2/10 uri")));
+
+    }
+
+    @Test
+    public void testLogQueStatusWithUrisRedacted() {
+        QueryUrisLoader loader = new QueryUrisLoader();
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setShouldRedactUris(true);
+        loader.setOptions(transformOptions);
+        loader.logQueueStatus(2,"uri", 10, 4001);
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "queued 2/10 ")));
     }
 
     @Test

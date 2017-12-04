@@ -25,6 +25,8 @@ import static org.junit.Assert.*;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 
 import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
+import static org.mockito.Mockito.*;
+
 import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.Content;
@@ -51,13 +53,10 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import org.mockito.Mockito;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 import org.mockito.exceptions.base.MockitoException;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 /**
  * The class {@code ManagerTest} contains tests for the class
@@ -842,8 +841,8 @@ public class ManagerTest {
         manager.csp = csp;
         try {
             manager.close();
-            Mockito.verify(scheduledExecutor).shutdown();
-            Mockito.verify(csp).close();
+            verify(scheduledExecutor).shutdown();
+            verify(csp).close();
         } catch (IOException ex) {
             fail();
         }
@@ -1408,6 +1407,89 @@ public class ManagerTest {
         }
     }
 
+    @Test
+    public void testSubmitUriTasksWithUrisRedacted() {
+        UrisLoader urisLoader = mock(UrisLoader.class);
+        try {
+            Manager manager = getMockManagerWithEmptyResults();
+            CompletionService completionService = mock(CompletionService.class);
+            manager.completionService = completionService;
+            manager.pool = mock(PausableThreadPoolExecutor.class);
+            when(urisLoader.hasNext()).thenAnswer(new Answer() {
+                private int count = 0;
+                public Object answer(InvocationOnMock invocation) {
+                    if (count++ == 50000) {
+                        return false;
+                    }
+                    return true;
+                }
+            });
+            when(urisLoader.next()).thenAnswer(new Answer() {
+                private int count = 0;
+                public Object answer(InvocationOnMock invocation) {
+                    if (count++ == 50000) {
+                        return null;
+                    }
+                    return "uri";
+                }
+            });
+            Properties properties = ManagerTest.getDefaultProperties();
+            properties.setProperty(Options.URIS_REDACTED, Boolean.TRUE.toString());
+            properties.setProperty(Options.FAIL_ON_ERROR, Boolean.FALSE.toString());
+
+            manager.init(properties);
+
+            long processedCount = manager.submitUriTasks(urisLoader, mock(TaskFactory.class), 50000);
+            assertEquals(50000, processedCount);
+            List<LogRecord> records = testLogger.getLogRecords();
+            assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "received 50,000/50,000")));
+
+        } catch (Exception ex) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testSubmitUriTasksWithUrisNotRedacted() {
+        UrisLoader urisLoader = mock(UrisLoader.class);
+        try {
+            Manager manager = getMockManagerWithEmptyResults();
+            CompletionService completionService = mock(CompletionService.class);
+            manager.completionService = completionService;
+            manager.pool = mock(PausableThreadPoolExecutor.class);
+            when(urisLoader.hasNext()).thenAnswer(new Answer() {
+                private int count = 0;
+                public Object answer(InvocationOnMock invocation) {
+                    if (count++ == 50000) {
+                        return false;
+                    }
+                    return true;
+                }
+            });
+            when(urisLoader.next()).thenAnswer(new Answer() {
+                private int count = 0;
+                public Object answer(InvocationOnMock invocation) {
+                    if (count++ == 50000) {
+                        return null;
+                    }
+                    return "uri";
+                }
+            });
+            Properties properties = ManagerTest.getDefaultProperties();
+            properties.setProperty(Options.FAIL_ON_ERROR, Boolean.FALSE.toString());
+
+            manager.init(properties);
+
+            long processedCount = manager.submitUriTasks(urisLoader, mock(TaskFactory.class), 50000);
+            assertEquals(50000, processedCount);
+            List<LogRecord> records = testLogger.getLogRecords();
+            assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "received 50,000/50,000: uri")));
+
+        } catch (Exception ex) {
+            fail();
+        }
+    }
+
     public static String[] getDefaultArgs() {
         return new String[]{XCC_CONNECTION_URI,
             COLLECTION_NAME,
@@ -1529,7 +1611,7 @@ public class ManagerTest {
         manager.jobStats = jobStats;
 
         manager.pause();
-        Mockito.verify(pool).pause();
+        verify(pool).pause();
     }
 
     @Test
@@ -1542,7 +1624,7 @@ public class ManagerTest {
         manager.jobStats = jobStats;
 
         manager.pause();
-        Mockito.verify(pool, Mockito.never()).pause();
+        verify(pool, Mockito.never()).pause();
     }
 
     @Test
@@ -1556,7 +1638,7 @@ public class ManagerTest {
         manager.jobStats = jobStats;
 
         manager.resume();
-        Mockito.verify(pool).resume();
+        verify(pool).resume();
     }
 
     @Test
@@ -1570,7 +1652,7 @@ public class ManagerTest {
         manager.jobStats = jobStats;
 
         manager.resume();
-        Mockito.verify(pool, Mockito.never()).resume();
+        verify(pool, Mockito.never()).resume();
     }
 
     public static class MockEmptyFileUrisLoader extends FileUrisLoader {
