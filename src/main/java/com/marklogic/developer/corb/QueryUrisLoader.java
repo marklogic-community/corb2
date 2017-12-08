@@ -86,14 +86,14 @@ public class QueryUrisLoader extends AbstractUrisLoader {
                     if (isEmpty(adhocQuery)) {
                         throw new IllegalStateException("Unable to read inline module");
                     }
-                    LOG.log(INFO, "Invoking inline {0}", Options.URIS_MODULE);
+                    LOG.log(INFO, "Invoking inline {0}", URIS_MODULE);
                 } else {
                     String queryPath = urisModule.substring(0, urisModule.indexOf('|'));
                     adhocQuery = AbstractManager.getAdhocQuery(queryPath);
                     if (isEmpty(adhocQuery)) {
                         throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
                     }
-                    LOG.log(INFO, () -> MessageFormat.format("Invoking adhoc {0} {1}", Options.URIS_MODULE, queryPath));
+                    LOG.log(INFO, () -> MessageFormat.format("Invoking adhoc {0} {1}", URIS_MODULE, queryPath));
                 }
                 request = session.newAdhocQuery(adhocQuery);
                 if (isJavaScriptModule(urisModule)) {
@@ -102,7 +102,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             } else {
                 String root = options.getModuleRoot();
                 String modulePath = buildModulePath(root, urisModule);
-                LOG.log(INFO, () -> MessageFormat.format("Invoking {0} {1}", Options.URIS_MODULE, modulePath));
+                LOG.log(INFO, () -> MessageFormat.format("Invoking {0} {1}", URIS_MODULE, modulePath));
                 request = session.newModuleInvoke(modulePath);
             }
             // NOTE: collection will be treated as a CWSV
@@ -122,7 +122,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             queue = createAndPopulateQueue(resultSequence);
 
         } catch (RequestException exc) {
-            throw new CorbException("While invoking " + Options.URIS_MODULE, exc);
+            throw new CorbException("While invoking " + URIS_MODULE, exc);
         } finally {
             closeRequestAndSession();
         }
@@ -133,7 +133,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         try {
             setTotalCount(Integer.parseInt(nextResultItem.getItem().asString()));
         } catch (NumberFormatException exc) {
-            throw new CorbException(Options.URIS_MODULE + " " + options.getUrisModule() + " does not return total URI count");
+            throw new CorbException(URIS_MODULE + " " + options.getUrisModule() + " does not return total URI count");
         }
     }
 
@@ -237,7 +237,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
 
             if (uriIndex > totalCount) {
                 LOG.log(WARNING, MessageFormat.format("Expected {0}, got {1}", totalCount, uriIndex));
-                LOG.log(WARNING, MessageFormat.format("Check your {0}!", Options.URIS_MODULE));
+                LOG.log(WARNING, MessageFormat.format("Check your {0}!", URIS_MODULE));
             }
         }
         return queue;

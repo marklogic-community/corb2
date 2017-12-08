@@ -1004,7 +1004,7 @@ public class ManagerTest {
     public void testInsertModuleAndThrowException() throws CorbException {
         Session session = mock(Session.class);
         try {
-            Mockito.doThrow(RequestException.class).when(session).insertContent(any(Content.class));
+            doThrow(RequestException.class).when(session).insertContent(any(Content.class));
             Manager manager = new Manager();
             manager.options.setDoInstall(true);
             manager.insertModule(session, "src/test/resources/transform.xqy");
@@ -1624,7 +1624,7 @@ public class ManagerTest {
         manager.jobStats = jobStats;
 
         manager.pause();
-        verify(pool, Mockito.never()).pause();
+        verify(pool, never()).pause();
     }
 
     @Test
@@ -1652,7 +1652,7 @@ public class ManagerTest {
         manager.jobStats = jobStats;
 
         manager.resume();
-        verify(pool, Mockito.never()).resume();
+        verify(pool, never()).resume();
     }
 
     public static class MockEmptyFileUrisLoader extends FileUrisLoader {
