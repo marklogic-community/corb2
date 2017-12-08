@@ -143,6 +143,57 @@ public class JobStatsTest {
     }
 
     @Test
+    public void testToXMLRedactUris() {
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        List<JobStats> jobStatsList = new ArrayList<>();
+        Manager manager = mock(Manager.class);
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setShouldRedactUris(true);
+        when(manager.getOptions()).thenReturn(transformOptions);
+        JobStats jobStat = new JobStats(manager);
+        PausableThreadPoolExecutor threadPool = mock(PausableThreadPoolExecutor.class);
+        List<String> failed = new ArrayList<>();
+        failed.add("uri1");
+        when(threadPool.getFailedUris()).thenReturn(failed);
+
+        Map<String, Long> top = new HashMap<>();
+        top.put("uri", 10000L);
+        when(threadPool.getTopUris()).thenReturn(top);
+        jobStat.refreshThreadPoolExecutorStats(threadPool);
+        jobStatsList.add(jobStat);
+        Document doc = JobStats.toXML(documentBuilderFactory, jobStatsList, false);
+
+        assertEquals(0, doc.getDocumentElement().getElementsByTagNameNS(JobStats.CORB_NAMESPACE, "failedTransactions").getLength());
+        assertEquals(0, doc.getDocumentElement().getElementsByTagNameNS(JobStats.CORB_NAMESPACE, "slowTransactions").getLength());
+    }
+
+    @Test
+    public void testToXMLDoNotRedactUris() {
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        List<JobStats> jobStatsList = new ArrayList<>();
+        Manager manager = mock(Manager.class);
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setShouldRedactUris(false);
+        when(manager.getOptions()).thenReturn(transformOptions);
+        JobStats jobStat = new JobStats(manager);
+        PausableThreadPoolExecutor threadPool = mock(PausableThreadPoolExecutor.class);
+        List<String> failed = new ArrayList<>();
+        failed.add("uri1");
+        when(threadPool.getFailedUris()).thenReturn(failed);
+
+        Map<String, Long> top = new HashMap<>();
+        top.put("uri", 10000L);
+        when(threadPool.getTopUris()).thenReturn(top);
+
+        jobStat.refreshThreadPoolExecutorStats(threadPool);
+        jobStatsList.add(jobStat);
+        Document doc = JobStats.toXML(documentBuilderFactory, jobStatsList, false);
+
+        assertEquals(1, doc.getDocumentElement().getElementsByTagNameNS(JobStats.CORB_NAMESPACE, "failedTransactions").getLength());
+        assertEquals(1, doc.getDocumentElement().getElementsByTagNameNS(JobStats.CORB_NAMESPACE, "slowTransactions").getLength());
+    }
+
+    @Test
     public void testToXMLParserConfigurationException() {
         DocumentBuilderFactory documentBuilderFactory = mock(DocumentBuilderFactory.class);
         try {

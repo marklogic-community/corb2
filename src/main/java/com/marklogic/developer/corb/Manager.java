@@ -285,6 +285,7 @@ public class Manager extends AbstractManager implements Closeable {
             options.setNumTpsForETC(Integer.parseInt(numTpsForETC));
         }
 
+        options.setShouldRedactUris(StringUtils.stringToBoolean(getOption(Options.URIS_REDACTED)));
         options.setPrePostBatchAlwaysExecute(stringToBoolean(getOption(PRE_POST_BATCH_ALWAYS_EXECUTE)));
 
         String postBatchMinimumCount = getOption(POST_BATCH_MINIMUM_COUNT);
@@ -884,6 +885,7 @@ public class Manager extends AbstractManager implements Closeable {
         long urisCount = 0;
         String uri;
         List<String> uriBatch = new ArrayList<>(options.getBatchSize());
+        boolean redactUris = options.shouldRedactUris();
 
         while (urisLoader.hasNext()) {
             // check pool occasionally, for fast-fail
@@ -907,7 +909,7 @@ public class Manager extends AbstractManager implements Closeable {
             urisCount++;
 
             if (0 == urisCount % 50000) {
-                LOG.log(INFO, MessageFormat.format("received {0,number}/{1,number}: {2}", urisCount, expectedTotalCount, uri));
+                LOG.log(INFO, MessageFormat.format("received {0,number}/{1,number}{2}", urisCount, expectedTotalCount, redactUris ? "" : ": " + uri));
             }
 
             if (0 == urisCount % 25000) {

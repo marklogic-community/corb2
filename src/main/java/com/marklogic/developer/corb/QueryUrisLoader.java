@@ -86,14 +86,14 @@ public class QueryUrisLoader extends AbstractUrisLoader {
                     if (isEmpty(adhocQuery)) {
                         throw new IllegalStateException("Unable to read inline module");
                     }
-                    LOG.log(INFO, "invoking inline uris module");
+                    LOG.log(INFO, "Invoking inline {0}", Options.URIS_MODULE);
                 } else {
                     String queryPath = urisModule.substring(0, urisModule.indexOf('|'));
                     adhocQuery = AbstractManager.getAdhocQuery(queryPath);
                     if (isEmpty(adhocQuery)) {
                         throw new IllegalStateException("Unable to read adhoc query " + queryPath + " from classpath or filesystem");
                     }
-                    LOG.log(INFO, () -> MessageFormat.format("invoking adhoc uris module {0}", queryPath));
+                    LOG.log(INFO, () -> MessageFormat.format("Invoking adhoc {0} {1}", Options.URIS_MODULE, queryPath));
                 }
                 request = session.newAdhocQuery(adhocQuery);
                 if (isJavaScriptModule(urisModule)) {
@@ -102,7 +102,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             } else {
                 String root = options.getModuleRoot();
                 String modulePath = buildModulePath(root, urisModule);
-                LOG.log(INFO, () -> MessageFormat.format("invoking uris module {0}", modulePath));
+                LOG.log(INFO, () -> MessageFormat.format("Invoking {0} {1}", Options.URIS_MODULE, modulePath));
                 request = session.newModuleInvoke(modulePath);
             }
             // NOTE: collection will be treated as a CWSV
@@ -122,7 +122,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             queue = createAndPopulateQueue(resultSequence);
 
         } catch (RequestException exc) {
-            throw new CorbException("While invoking Uris Module", exc);
+            throw new CorbException("While invoking " + Options.URIS_MODULE, exc);
         } finally {
             closeRequestAndSession();
         }
@@ -133,7 +133,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         try {
             setTotalCount(Integer.parseInt(nextResultItem.getItem().asString()));
         } catch (NumberFormatException exc) {
-            throw new CorbException("Uris module " + options.getUrisModule() + " does not return total URI count");
+            throw new CorbException(Options.URIS_MODULE + " " + options.getUrisModule() + " does not return total URI count");
         }
     }
 
@@ -205,15 +205,17 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         long lastMessageMillis = System.currentTimeMillis();
         long totalCount = getTotalCount();
         long uriIndex = 0;
+        boolean redactUris = options.shouldRedactUris();
         String uri;
+        String uriToLog;
         while (resultSequence != null && resultSequence.hasNext()) {
             uri = resultSequence.next().asString();
             if (isBlank(uri)) {
                 continue;
             }
-
+            uriToLog = redactUris ? "" : ": " + uri;
             if (queue.isEmpty()) {
-                LOG.log(INFO, MessageFormat.format("received first uri: {0}", uri));
+                LOG.log(INFO, MessageFormat.format("Received first URI{0}", uriToLog));
             }
             //apply replacements (if any) - can be helpful in reducing in-memory footprint for ArrayQueue
             for (int j = 0; j < replacements.length - 1; j += 2) {
@@ -221,21 +223,21 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             }
 
             if (!queue.offer(uri)) { //put the uri into the queue
-                LOG.log(SEVERE, MessageFormat.format("Unabled to add uri {0} to queue. Received uris {1} which is more than expected {2}", uri, uriIndex + 1, totalCount));
+                LOG.log(SEVERE, MessageFormat.format("Unable to add URI {0} to queue. Received uris {1} which is more than expected {2}", uriToLog, uriIndex + 1, totalCount));
             } else if (uriIndex >= totalCount) {
-                LOG.log(WARNING, MessageFormat.format("Received uri {0} at index {1} which is more than expected {2}", uri, uriIndex + 1, totalCount));
+                LOG.log(WARNING, MessageFormat.format("Received URI{0} at index {1} which is more than expected {2}", uriToLog, uriIndex + 1, totalCount));
             }
 
             uriIndex++;  //increment before logging the status with received count
 
             if (0 == uriIndex % 25000) {
-                logQueueStatus(uriIndex, uri, totalCount, lastMessageMillis);
+                logQueueStatus(uriIndex, uriToLog, totalCount, lastMessageMillis);
                 lastMessageMillis = System.currentTimeMillis(); //save this for next iteration
             }
 
             if (uriIndex > totalCount) {
-                LOG.log(WARNING, MessageFormat.format("expected {0}, got {1}", totalCount, uriIndex));
-                LOG.warning("check your uri module!");
+                LOG.log(WARNING, MessageFormat.format("Expected {0}, got {1}", totalCount, uriIndex));
+                LOG.log(WARNING, MessageFormat.format("Check your {0}!", Options.URIS_MODULE));
             }
         }
         return queue;
@@ -314,7 +316,8 @@ public class QueryUrisLoader extends AbstractUrisLoader {
     }
 
     protected void logQueueStatus(long currentIndex, String uri, long totalCount, long lastMessageMillis) {
-        LOG.log(INFO, () -> MessageFormat.format("queued {0}/{1}: {2}", currentIndex, totalCount, uri));
+        String uriToLog = options.shouldRedactUris() ? "" : uri;
+        LOG.log(INFO, () -> MessageFormat.format("queued {0}/{1} {2}", currentIndex, totalCount, uriToLog));
 
         boolean slowReceive = System.currentTimeMillis() - lastMessageMillis > (1000 * 4);
         if (slowReceive) {

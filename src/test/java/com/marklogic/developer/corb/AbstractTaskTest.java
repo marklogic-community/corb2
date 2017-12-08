@@ -967,6 +967,36 @@ public class AbstractTaskTest {
         assertArrayEquals(new byte[]{}, result);
     }
 
+    @Test
+    public void testWrapProcessException() {
+        AbstractTask task = new AbstractTaskImpl();
+        Exception ex = new IllegalAccessException();
+        CorbException corbException = task.wrapProcessException(ex, "uri1", "uri2");
+        assertEquals(corbException.getCause().getClass(), IllegalAccessException.class);
+        assertTrue(corbException.getMessage().contains("uri1"));
+    }
+
+    @Test
+    public void testWrapProcessExceptionNullUri() {
+        AbstractTask task = new AbstractTaskImpl();
+        Exception ex = new IllegalAccessException();
+        CorbException corbException = task.wrapProcessException(ex, null);
+        assertEquals(corbException.getCause().getClass(), IllegalAccessException.class);
+        assertTrue(corbException.getMessage() != null);
+    }
+
+    @Test
+    public void testWrapProcessExceptionRedacted() {
+        AbstractTask task = new AbstractTaskImpl();
+        Properties properties = new Properties();
+        properties.setProperty(Options.URIS_REDACTED, Boolean.TRUE.toString());
+        task.setProperties(properties);
+        Exception ex = new IllegalAccessException();
+        CorbException corbException = task.wrapProcessException(ex, "uri1", "uri2");
+        assertEquals(corbException.getCause().getClass(), IllegalAccessException.class);
+        assertFalse(corbException.getMessage().contains("uri1"));
+    }
+
     private static class AbstractTaskImpl extends AbstractTask {
 
         @Override

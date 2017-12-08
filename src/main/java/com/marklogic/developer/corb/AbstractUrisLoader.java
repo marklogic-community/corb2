@@ -42,6 +42,10 @@ public abstract class AbstractUrisLoader implements UrisLoader {
     protected String[] replacements = new String[0];
     protected String batchRef;
 
+    public AbstractUrisLoader() {
+        options = new TransformOptions();
+    }
+
     @Override
     public void setOptions(TransformOptions options) {
         this.options = options;
