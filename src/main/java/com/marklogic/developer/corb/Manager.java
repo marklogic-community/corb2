@@ -498,7 +498,7 @@ public class Manager extends AbstractManager implements Closeable {
             cls.newInstance(); // sanity check
             return cls.asSubclass(Task.class);
         } else {
-            throw new IllegalArgumentException(type + " must be of type com.marklogic.developer.corb.Task");
+            throw new IllegalArgumentException(type + " must be of type " + Task.class.getName());
         }
     }
 
@@ -508,7 +508,7 @@ public class Manager extends AbstractManager implements Closeable {
             cls.newInstance(); // sanity check
             return cls.asSubclass(UrisLoader.class);
         } else {
-            throw new IllegalArgumentException("Uris Loader must be of type com.marklogic.developer.corb.UrisLoader");
+            throw new IllegalArgumentException("Uris Loader must be of type " + UrisLoader.class.getName());
         }
     }
 
