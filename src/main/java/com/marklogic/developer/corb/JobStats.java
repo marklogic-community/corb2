@@ -173,7 +173,7 @@ public class JobStats extends BaseMonitor {
                     currentThreadCount = 0L;
                     totalRunTimeInMillis = totalTime;
                     long totalTransformTime = currentTimeMillis - manager.getTransformStartMillis();
-                    averageTransactionTime = totalTransformTime / Double.valueOf(numberOfFailedTasks) + Double.valueOf(numberOfSucceededTasks);
+                    averageTransactionTime = getAverageTransactionTime(totalTransformTime, numberOfFailedTasks, numberOfSucceededTasks);
                     endTime = epochMillisAsFormattedDateString(manager.getEndMillis());
                     estimatedTimeOfCompletion = null;
                 } else { //still running, update the stats
@@ -186,6 +186,15 @@ public class JobStats extends BaseMonitor {
                     }
                 }
             }
+        }
+    }
+
+    protected double getAverageTransactionTime(long totalTransformTime, long numberOfFailedTasks, long numberOfSucceededTasks) {
+        long completedTasks = numberOfFailedTasks + numberOfSucceededTasks;
+        if (totalTransformTime > 0 && completedTasks > 0) {
+            return totalTransformTime / Double.valueOf(numberOfFailedTasks + numberOfSucceededTasks);
+        } else {
+            return 0d;
         }
     }
 

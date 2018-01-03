@@ -35,6 +35,46 @@ public class JobStatsTest {
     private static final String METRICS_DB = "metricsDB";
 
     @Test
+    public void testGetAverageTransactionTimeNoCompletedTasks() {
+        Manager manager = mock(Manager.class);
+        JobStats jobStats = new JobStats(manager);
+        long totalTime = 5000L;
+        long failedTasks = 0L;
+        long successfulTasks = 0L;
+        assertFalse(Double.isInfinite(jobStats.getAverageTransactionTime(totalTime, failedTasks, successfulTasks)));
+    }
+
+    @Test
+    public void testGetAverageTransactionNoValues() {
+        Manager manager = mock(Manager.class);
+        JobStats jobStats = new JobStats(manager);
+        long totalTime = 0L;
+        long failedTasks = 0L;
+        long successfulTasks = 0L;
+        assertFalse(Double.isInfinite(jobStats.getAverageTransactionTime(totalTime, failedTasks, successfulTasks)));
+    }
+
+    @Test
+    public void testGetAverageTransactionTimeNoFailed() {
+        Manager manager = mock(Manager.class);
+        JobStats jobStats = new JobStats(manager);
+        long totalTime = 50L;
+        long failedTasks = 0L;
+        long successfulTasks = 3000L;
+        assertFalse(Double.isInfinite(jobStats.getAverageTransactionTime(totalTime, failedTasks, successfulTasks)));
+    }
+
+    @Test
+    public void testGetAverageTransactionTimeNoSuccessful() {
+        Manager manager = mock(Manager.class);
+        JobStats jobStats = new JobStats(manager);
+        long totalTime = 50L;
+        long failedTasks = 300L;
+        long successfulTasks = 0L;
+        assertFalse(Double.isInfinite(jobStats.getAverageTransactionTime(totalTime, failedTasks, successfulTasks)));
+    }
+
+    @Test
     public void getHostName() throws Exception {
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setJobName("JobStatsTest");
