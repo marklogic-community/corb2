@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2017 MarkLogic Corporation
+ * Copyright (c) 2004-2018 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -206,6 +206,14 @@ public class ExportToFileTaskTest {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
+    }
+
+    @Test (expected = CorbException.class)
+    public void testProcessResultIOException() throws CorbException {
+        ResultSequence seq = mock(ResultSequence.class);
+        when(seq.hasNext()).thenThrow(IOException.class);
+        ExportToFileTask instance = new ExportToFileTask();
+        instance.processResult(seq);
     }
 
     @Test(expected = NullPointerException.class)

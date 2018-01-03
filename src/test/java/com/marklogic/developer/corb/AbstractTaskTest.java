@@ -1,5 +1,5 @@
 /*
- * * Copyright (c) 2004-2017 MarkLogic Corporation
+ * * Copyright (c) 2004-2018 MarkLogic Corporation
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -586,6 +586,28 @@ public class AbstractTaskTest {
         fail();
     }
 
+    @Test (expected = CorbException.class)
+    public void testHandleProcessException() throws CorbException {
+        Exception ex = mock(Exception.class);
+        AbstractTask task = new AbstractTaskImpl();
+        task.handleProcessException(ex);
+    }
+
+    @Test
+    public void testHandleProcessExceptionDoNotFailOnError() {
+        String[] uris = new String[]{"foo"};
+        Exception ex = mock(Exception.class);
+        AbstractTask task = new AbstractTaskImpl();
+        task.failOnError = false;
+        task.inputUris = uris;
+        try {
+            String[] result = task.handleProcessException(ex);
+            assertArrayEquals(uris, result);
+        } catch (CorbException exc) {
+            fail();
+        }
+    }
+
     @Test
     public void testShouldRetryNotRetryableQueryExceptionCSVwithSpaces() {
         Request req = mock(Request.class);
@@ -815,26 +837,26 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testAsString() {
+    public void testUrisAsString() {
         String[] uris = new String[]{FOO, BAR, BAZ};
         AbstractTask instance = new AbstractTaskImpl();
-        String result = instance.asString(uris);
+        String result = instance.urisAsString(uris);
         assertEquals("foo,bar,baz", result);
     }
 
     @Test
-    public void testAsStringEmptyArray() {
+    public void testUrisAsStringEmptyArray() {
         String[] uris = new String[]{};
         AbstractTask instance = new AbstractTaskImpl();
-        String result = instance.asString(uris);
+        String result = instance.urisAsString(uris);
         assertEquals("", result);
     }
 
     @Test
-    public void testAsStringNull() {
+    public void testUrisAsStringNull() {
         String[] uris = null;
         AbstractTask instance = new AbstractTaskImpl();
-        String result = instance.asString(uris);
+        String result = instance.urisAsString(uris);
         assertEquals("", result);
     }
 
@@ -947,7 +969,7 @@ public class AbstractTaskTest {
 
         boolean hasWarning = Level.WARNING.equals(records.get(0).getLevel());
         boolean shouldRetryOrFailOnErrorIsFalse = instance.shouldRetry(exception)
-                || ("failOnError is false. Encountered " + type + " at URI: " + instance.asString(uris)).equals(records.get(0).getMessage());
+                || ("failOnError is false. Encountered " + type + " at URI: " + instance.urisAsString(uris)).equals(records.get(0).getMessage());
 
         return hasWarning && shouldRetryOrFailOnErrorIsFalse;
     }
