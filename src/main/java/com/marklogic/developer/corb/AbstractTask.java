@@ -20,8 +20,11 @@ package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Manager.DEFAULT_BATCH_URI_DELIM;
 import static com.marklogic.developer.corb.Manager.URIS_BATCH_REF;
+import static com.marklogic.developer.corb.Options.URIS_REDACTED;
+import static com.marklogic.developer.corb.Options.BATCH_SIZE;
 import static com.marklogic.developer.corb.Options.BATCH_URI_DELIM;
 import static com.marklogic.developer.corb.Options.ERROR_FILE_NAME;
+import static com.marklogic.developer.corb.Options.LOADER_VARIABLE;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_LIMIT;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_INTERVAL;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_CODES;
@@ -226,7 +229,7 @@ public abstract class AbstractTask implements Task {
         }
 
         if (inputUris != null && inputUris.length > 0) {
-            if (REQUEST_VARIABLE_DOC.equalsIgnoreCase(properties.getProperty(Options.LOADER_VARIABLE))) {
+            if (REQUEST_VARIABLE_DOC.equalsIgnoreCase(properties.getProperty(LOADER_VARIABLE))) {
                 setDocRequestVariable(request, inputUris);
             } else {
                 setUriRequestVariable(request, inputUris);
@@ -255,7 +258,7 @@ public abstract class AbstractTask implements Task {
     }
 
     protected void setDocRequestVariable(Request request, String... inputUris) throws CorbException {
-        String batchSize = properties.getProperty(Options.BATCH_SIZE);
+        String batchSize = properties.getProperty(BATCH_SIZE);
         //XCC does not allow sequences for request parameters
         if (batchSize != null && Integer.parseInt(batchSize) > 1) {
             throw new CorbException("Cannot set BATCH-SIZE > 1 with REQUEST-VARIABLE-DOC. XCC does not allow sequences for request parameters.");
@@ -425,7 +428,7 @@ public abstract class AbstractTask implements Task {
     }
 
     protected String asString(String... uris) {
-        return (uris == null | StringUtils.stringToBoolean(getProperty(Options.URIS_REDACTED)) ) ? "" : StringUtils.join(uris, ",");
+        return (uris == null | StringUtils.stringToBoolean(getProperty(URIS_REDACTED)) ) ? "" : StringUtils.join(uris, ",");
     }
 
     protected abstract String processResult(ResultSequence seq) throws CorbException;

@@ -61,6 +61,7 @@ import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.stringToBoolean;
 import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentCreateOptions;
@@ -285,16 +286,16 @@ public class Manager extends AbstractManager implements Closeable {
             options.setNumTpsForETC(Integer.parseInt(numTpsForETC));
         }
 
-        options.setShouldRedactUris(StringUtils.stringToBoolean(getOption(Options.URIS_REDACTED)));
+        options.setShouldRedactUris(stringToBoolean(getOption(Options.URIS_REDACTED)));
         options.setPrePostBatchAlwaysExecute(stringToBoolean(getOption(PRE_POST_BATCH_ALWAYS_EXECUTE)));
 
         String postBatchMinimumCount = getOption(POST_BATCH_MINIMUM_COUNT);
-        if (StringUtils.isNotEmpty(postBatchMinimumCount)) {
+        if (isNotEmpty(postBatchMinimumCount)) {
             options.setPostBatchMinimumCount(Integer.parseInt(postBatchMinimumCount));
         }
 
         String preBatchMinimumCount = getOption(PRE_BATCH_MINIMUM_COUNT);
-        if (StringUtils.isNotEmpty(preBatchMinimumCount)) {
+        if (isNotEmpty(preBatchMinimumCount)) {
             options.setPreBatchMinimumCount(Integer.parseInt(preBatchMinimumCount));
         }
 
