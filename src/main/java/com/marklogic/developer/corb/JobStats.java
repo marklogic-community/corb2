@@ -191,8 +191,8 @@ public class JobStats extends BaseMonitor {
 
     protected double getAverageTransactionTime(long totalTransformTime, long numberOfFailedTasks, long numberOfSucceededTasks) {
         long completedTasks = numberOfFailedTasks + numberOfSucceededTasks;
-        if (totalTransformTime > 0 && completedTasks > 0) {
-            return totalTransformTime / Double.valueOf(numberOfFailedTasks + numberOfSucceededTasks);
+        if (completedTasks > 0) {
+            return totalTransformTime / Double.valueOf(completedTasks);
         } else {
             return 0d;
         }

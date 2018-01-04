@@ -38,40 +38,42 @@ public class JobStatsTest {
     public void testGetAverageTransactionTimeNoCompletedTasks() {
         Manager manager = mock(Manager.class);
         JobStats jobStats = new JobStats(manager);
-        long totalTime = 5000L;
-        long failedTasks = 0L;
-        long successfulTasks = 0L;
-        assertFalse(Double.isInfinite(jobStats.getAverageTransactionTime(totalTime, failedTasks, successfulTasks)));
+        Double average = jobStats.getAverageTransactionTime(5000L, 0L, 0L);
+        assertFalse(average.isInfinite());
+        assertEquals(0, average.intValue());
     }
 
     @Test
     public void testGetAverageTransactionNoValues() {
         Manager manager = mock(Manager.class);
         JobStats jobStats = new JobStats(manager);
-        long totalTime = 0L;
-        long failedTasks = 0L;
-        long successfulTasks = 0L;
-        assertFalse(Double.isInfinite(jobStats.getAverageTransactionTime(totalTime, failedTasks, successfulTasks)));
+        Double average = jobStats.getAverageTransactionTime(0L, 0L, 0L);
+        assertFalse(average.isInfinite());
+        assertEquals(0, average.doubleValue(), 0.00);
     }
 
     @Test
     public void testGetAverageTransactionTimeNoFailed() {
         Manager manager = mock(Manager.class);
         JobStats jobStats = new JobStats(manager);
-        long totalTime = 50L;
-        long failedTasks = 0L;
-        long successfulTasks = 3000L;
-        assertFalse(Double.isInfinite(jobStats.getAverageTransactionTime(totalTime, failedTasks, successfulTasks)));
+        assertFalse(Double.isInfinite(jobStats.getAverageTransactionTime(50L, 0L, 3000L)));
     }
 
     @Test
     public void testGetAverageTransactionTimeNoSuccessful() {
         Manager manager = mock(Manager.class);
         JobStats jobStats = new JobStats(manager);
-        long totalTime = 50L;
-        long failedTasks = 300L;
-        long successfulTasks = 0L;
-        assertFalse(Double.isInfinite(jobStats.getAverageTransactionTime(totalTime, failedTasks, successfulTasks)));
+        Double answer = jobStats.getAverageTransactionTime(50L, 300L, 0L);
+        assertFalse(answer.isInfinite());
+
+        Double averageOfOne = jobStats.getAverageTransactionTime(3L, 2L, 1L);
+        assertEquals(1d, averageOfOne.doubleValue(), 0.00);
+
+        Double averageMoreSuccess = jobStats.getAverageTransactionTime(3L, 0L, 3L);
+        Double averageMoreFailed = jobStats.getAverageTransactionTime(3L, 3L, 0L);
+        assertEquals(averageMoreSuccess, averageMoreFailed);
+        assertEquals(1d, averageMoreFailed.doubleValue(), 0.00);
+        assertEquals(averageOfOne, averageMoreSuccess);
     }
 
     @Test
