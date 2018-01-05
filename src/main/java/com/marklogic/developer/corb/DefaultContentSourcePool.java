@@ -409,14 +409,14 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 			}
 		}
 
-		protected void validRequest(Object[] args) {
+		protected void validRequest(Object... args) {
 			Request request = (Request)args[0];
 			if (!(request instanceof AdhocQuery || request instanceof ModuleInvoke)) {
 				throw new IllegalArgumentException("Only moduleInvoke or adhocQuery requests are supported by corb");
 			}
 		}
 
-		protected Object submitAsNewRequest(Object[] args) throws RequestException{
+		protected Object submitAsNewRequest(Object... args) throws RequestException{
 			Request request = (Request)args[0];
 			try {
 				retryProxy = csp.get().newSession();
@@ -440,7 +440,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 			}
 		}
 
-		protected Object insertAsNewRequest(Object[] args) throws RequestException{
+		protected Object insertAsNewRequest(Object... args) throws RequestException{
 			try {
 				retryProxy = csp.get().newSession();
 				setAttemptsToNewSession(retryProxy);

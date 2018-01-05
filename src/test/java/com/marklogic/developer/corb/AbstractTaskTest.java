@@ -1090,15 +1090,15 @@ public class AbstractTaskTest {
             return variable;
         }
 
-        public void setNewVariables(String string, ValueType vt, Object[] o) {
+        public void setNewVariables(String string, ValueType vt, Object... o) {
             throw new UnsupportedOperationException();
         }
 
-        public void setNewVariables(String string, String string2, ValueType vt, Object[] o) {
+        public void setNewVariables(String string, String string2, ValueType vt, Object... o) {
             throw new UnsupportedOperationException();
         }
 
-        public void setNewVariables(XName string, XdmValue[] xdmValue) {
+        public void setNewVariables(XName string, XdmValue... xdmValue) {
             throw new UnsupportedOperationException();
         }
 
@@ -1148,17 +1148,17 @@ public class AbstractTaskTest {
         }
 
         @Override
-        public void setNewVariables(String string, ValueType vt, Object[] o) {
+        public void setNewVariables(String string, ValueType vt, Object... o) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void setNewVariables(String string, String string2, ValueType vt, Object[] o) {
+        public void setNewVariables(String string, String string2, ValueType vt, Object... o) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void setNewVariables(XName string, XdmValue[] xdmValue) {
+        public void setNewVariables(XName string, XdmValue... xdmValue) {
             throw new UnsupportedOperationException();
         }
     }
