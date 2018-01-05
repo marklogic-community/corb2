@@ -38,9 +38,6 @@ public class StreamingXPathTest {
         xpathInstance = new StreamingXPath();
     }
 
-    public StreamingXPathTest() {
-    }
-
     private void testNormalizeAxes(String xpath, String expectedResult) {
         String pattern = xpathInstance.normalizeAxes(xpath);
         assertEquals(expectedResult, pattern);
@@ -65,7 +62,7 @@ public class StreamingXPathTest {
     public void testNormalizeAxesElementNameMatchPattern() {
         testNormalizeAxes("a:baz", "//a:baz");
     }
-    
+
     @Test
     public void testValidateAxis() {
         try {

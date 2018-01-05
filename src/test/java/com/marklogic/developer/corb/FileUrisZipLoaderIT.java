@@ -41,9 +41,6 @@ public class FileUrisZipLoaderIT {
     private static final Logger LOG = Logger.getLogger(FileUrisZipLoaderIT.class.getName());
     private File tempDir;
 
-    public FileUrisZipLoaderIT() {
-    }
-
     @Before
     public void setUp() throws IOException {
         tempDir = TestUtils.createTempDirectory();
@@ -63,14 +60,14 @@ public class FileUrisZipLoaderIT {
         Properties properties = getDefaultProperties();
         properties.setProperty(Options.EXPORT_FILE_NAME, exportFilename);
         Manager manager = new Manager();
-        
+
         try {
             manager.init(properties);
             manager.run();
 
             String exportFilePath = tempDir.getPath() + SLASH + exportFilename;
             FileUrisDirectoryLoaderIT.verifyLoaderReport(exportFilePath);
-            
+
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

@@ -43,9 +43,6 @@ public class FileUrisStreamingXMLLoaderTest {
     public static final int BUU_CHILD_ELEMENTS = 6;
     private static final Logger LOG = Logger.getLogger(FileUrisStreamingXMLLoaderTest.class.getName());
 
-    public FileUrisStreamingXMLLoaderTest() {
-    }
-
     @Test
     public void testOpenWithDefaultXPath() {
         testOpen(null, BUU_CHILD_ELEMENTS);

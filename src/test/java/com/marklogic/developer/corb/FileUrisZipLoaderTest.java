@@ -49,9 +49,6 @@ public class FileUrisZipLoaderTest {
     public static final Path TEST_ZIP_FILE_PATH = Paths.get(TEST_ZIP_FILE);
     public static final String PDF_COMMENT = "Portable Document Format Entry";
 
-    public FileUrisZipLoaderTest() {
-    }
-
     @Before
     public void setUp() {
         try {
