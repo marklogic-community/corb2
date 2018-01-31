@@ -242,7 +242,20 @@ public abstract class AbstractManager {
         sslConfig.setDecrypter(this.decrypter);
     }
 
-    protected void initContentSourcePool(String uriArg) throws CorbException{
+    protected void initContentSourcePool(String uriArg) throws CorbException {
+
+        List<String> connectionUriList = parseUris(uriArg);
+
+        this.csp = createContentSourcePool();
+        LOG.info("Using the content source manager " + this.csp.getClass().getName());
+        this.csp.init(properties, sslConfig, connectionUriList.toArray(new String[connectionUriList.size()]));
+
+        if (!this.csp.available()) {
+            throw new CorbException("No connections available. Please check connection parameters or initialization errors");
+        }
+    }
+
+    protected List<String> parseUris(String uriArg) throws CorbException {
         String uriAsStrings = getOption(uriArg, XCC_CONNECTION_URI);
         String username = getOption(XCC_USERNAME);
         String password = getOption(XCC_PASSWORD);
@@ -253,7 +266,7 @@ public abstract class AbstractManager {
 
         if (StringUtils.anyIsNull(uriAsStrings) && StringUtils.anyIsNull(username, password, hostnames, port)) {
             throw new CorbException(String.format("Either %1$s or %2$s, %3$s, %4$s, and %5$s must be specified",
-                    XCC_CONNECTION_URI, XCC_USERNAME, XCC_PASSWORD, XCC_HOSTNAME, XCC_PORT));
+                XCC_CONNECTION_URI, XCC_USERNAME, XCC_PASSWORD, XCC_HOSTNAME, XCC_PORT));
         }
 
         List<String> connectionUriList = new ArrayList<>();
@@ -283,14 +296,7 @@ public abstract class AbstractManager {
                 }
             }
         }
-
-        this.csp = createContentSourcePool();
-        LOG.info("Using the content source manager " + this.csp.getClass().getName());
-        this.csp.init(properties, sslConfig, connectionUriList.toArray(new String[connectionUriList.size()]));
-
-        if (!this.csp.available()) {
-            throw new CorbException("No connections available. Please check connection parameters or initialization errors");
-        }
+        return connectionUriList;
     }
 
     protected ContentSourcePool createContentSourcePool() throws CorbException {

@@ -20,16 +20,18 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.xcc.ResultSequence;
 
+import java.util.*;
+
 /**
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * @author Bhagat Bandlamudi, MarkLogic Corporation
- * 
+ *
  */
 public class Transform extends AbstractTask {
 
 	@Override
-	protected String processResult(ResultSequence seq) throws CorbException {
-		return TRUE;
-	}
+    protected String processResult(Iterator iterator) throws CorbException {
+	    return TRUE;
+    }
 
 }

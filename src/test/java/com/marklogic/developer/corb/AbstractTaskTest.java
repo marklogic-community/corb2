@@ -46,12 +46,7 @@ import com.marklogic.xcc.types.XdmValue;
 import com.marklogic.xcc.types.XdmVariable;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -1022,7 +1017,7 @@ public class AbstractTaskTest {
     private static class AbstractTaskImpl extends AbstractTask {
 
         @Override
-        public String processResult(ResultSequence seq) throws CorbException {
+        public String processResult(Iterator seq) throws CorbException {
             return "";
         }
 

@@ -24,12 +24,12 @@ import static com.marklogic.developer.corb.Options.URIS_BATCH_REF;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
-import com.marklogic.xcc.ResultSequence;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.*;
 
 public class ExportBatchToFileTask extends ExportToFileTask {
 
@@ -73,16 +73,23 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 		return fileName;
 	}
 
-	@Override
+    @Override
     protected File getExportFile() {
         return getExportFile(getPartFileName());
     }
 
-	@Override
-	protected void writeToFile(ResultSequence seq, File exportFile) throws IOException {
+    @Override
+	protected void writeToFile(Iterator results) throws IOException {
+		if (results == null || !results.hasNext()) {
+			return;
+		}
 		synchronized (SYNC_OBJ) {
-			try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(exportFile, true))){
-				write(seq, writer);
+			try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(getExportFile(), true))){
+				while (results.hasNext()) {
+					writer.write(getValueAsBytes(results.next()));
+					writer.write(NEWLINE);
+				}
+				writer.flush();
 			}
 		}
 	}

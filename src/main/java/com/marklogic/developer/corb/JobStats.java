@@ -40,14 +40,14 @@ import java.time.format.DateTimeFormatter;
 
 public class JobStats extends BaseMonitor {
 
-    private static final String NOT_APPLICABLE = "NA";
+    protected static final String NOT_APPLICABLE = "NA";
     private static final long TPS_ETC_MIN_REFRESH_INTERVAL = 10000L;
-    private static final String METRICS_COLLECTIONS_PARAM = "collections";
-    private static final String METRICS_DOCUMENT_STR_PARAM = "metricsDocumentStr";
-    private static final String METRICS_DB_NAME_PARAM = "dbName";
-    private static final String METRICS_URI_ROOT_PARAM = "uriRoot";
+    protected static final String METRICS_COLLECTIONS_PARAM = "collections";
+    protected static final String METRICS_DOCUMENT_STR_PARAM = "metricsDocumentStr";
+    protected static final String METRICS_DB_NAME_PARAM = "dbName";
+    protected static final String METRICS_URI_ROOT_PARAM = "uriRoot";
     protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\";\n";
-    private static final String XDMP_LOG_FORMAT = "xdmp:log('%1$s','%2$s')";
+    protected static final String XDMP_LOG_FORMAT = "xdmp:log('%1$s','%2$s')";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
     private static final String START_TIME = "startTime";
     private static final String URI = "uri";
@@ -552,10 +552,17 @@ public class JobStats extends BaseMonitor {
         this.urisLoadTime = urisLoadTime;
     }
 
+    public void setMetricsDocUri(String uri){
+        this.uri = uri;
+    }
     /**
      * @param postBatchRunTime the postBatchRunTime to set
      */
     public void setPostBatchRunTime(Long postBatchRunTime) {
         this.postBatchRunTime = postBatchRunTime;
+    }
+
+    public TransformOptions getOptions() {
+        return this.options;
     }
 }

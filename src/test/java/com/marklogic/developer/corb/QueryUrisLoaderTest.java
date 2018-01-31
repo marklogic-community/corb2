@@ -631,6 +631,15 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
+    public void testPopulateQueueWithNullResultIterator() {
+        ResultSequence resultSequence = null;
+
+        QueryUrisLoader instance = new QueryUrisLoader();
+        Queue<String> queue = instance.createAndPopulateQueue(new ResultItemIterator(resultSequence));
+        assertTrue(queue.isEmpty());
+    }
+
+    @Test
     public void testPopulateQueueWithBlankUrls() {
         ResultSequence resultSequence = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);

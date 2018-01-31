@@ -154,7 +154,7 @@ public class ExportBatchToFileTaskTest {
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.setProperties(props);
         try {
-            instance.writeToFile(resultSequence);
+            instance.writeToFile(new ResultItemIterator(resultSequence));
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

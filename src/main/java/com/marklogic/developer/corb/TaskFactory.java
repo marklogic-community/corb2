@@ -47,7 +47,7 @@ public class TaskFactory {
     private final Map<String, String> moduleToAdhocQueryMap = new HashMap<>();
     private final Map<String, String> moduleToPathMap = new HashMap<>();
     private static final String EXCEPTION_MSG_UNABLE_READ_ADHOC = "Unable to read adhoc query ";
-    private static final String EXCEPTION_MSG_NULL_CONTENT = "null content source";
+    protected static final String EXCEPTION_MSG_NULL_CONTENT = "null content source";
     /**
      * @param manager
      */
@@ -69,7 +69,7 @@ public class TaskFactory {
             throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT + " or input uri");
         }
         try {
-            Task task = options.getProcessTaskClass() == null ? new Transform() : options.getProcessTaskClass().newInstance();
+            Task task = options.getProcessTaskClass() == null ? newDefaultTransform() : options.getProcessTaskClass().newInstance();
             setupTask(task, PROCESS_MODULE, options.getProcessModule(), uris, failOnError);
             return task;
         } catch (Exception exc) {
@@ -86,7 +86,7 @@ public class TaskFactory {
             throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
-            Task task = options.getPreBatchTaskClass() == null ? new Transform() : options.getPreBatchTaskClass().newInstance();
+            Task task = options.getPreBatchTaskClass() == null ? newDefaultTransform() : options.getPreBatchTaskClass().newInstance();
             setupTask(task, PRE_BATCH_MODULE, options.getPreBatchModule());
             return task;
         } catch (Exception exc) {
@@ -103,7 +103,7 @@ public class TaskFactory {
             throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
-            Task task = options.getPostBatchTaskClass() == null ? new Transform() : options.getPostBatchTaskClass().newInstance();
+            Task task = options.getPostBatchTaskClass() == null ? newDefaultTransform() : options.getPostBatchTaskClass().newInstance();
             setupTask(task, POST_BATCH_MODULE, options.getPostBatchModule());
             return task;
         } catch (Exception exc) {
@@ -120,7 +120,7 @@ public class TaskFactory {
             throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
-            Task task = options.getInitTaskClass() == null ? new Transform() : options.getInitTaskClass().newInstance();
+            Task task = options.getInitTaskClass() == null ? newDefaultTransform() : options.getInitTaskClass().newInstance();
             setupTask(task, INIT_MODULE, options.getInitModule());
             return task;
         } catch (Exception exc) {
@@ -128,11 +128,15 @@ public class TaskFactory {
         }
     }
 
-    private void setupTask(Task task, String moduleType, String module, String... uris) {
+    protected Transform newDefaultTransform() {
+        return new Transform();
+    }
+
+    protected void setupTask(Task task, String moduleType, String module, String... uris) {
         setupTask(task, moduleType, module, uris, true);
     }
 
-    private void setupTask(Task task, String moduleType, String module, String[] uris, boolean failOnError) {
+    protected void setupTask(Task task, String moduleType, String module, String[] uris, boolean failOnError) {
         if (module != null) {
             if (isInlineOrAdhoc(module)) {
                 String adhocQuery;

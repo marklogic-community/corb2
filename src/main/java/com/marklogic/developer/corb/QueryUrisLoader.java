@@ -32,17 +32,19 @@ import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
+
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
 import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.types.*;
+
+import java.security.*;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Queue;
+import java.util.*;
+
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
@@ -53,7 +55,7 @@ import java.util.regex.Pattern;
 public class QueryUrisLoader extends AbstractUrisLoader {
 
     private static final int DEFAULT_MAX_OPTS_FROM_MODULE = 10;
-    private static final Pattern MODULE_CUSTOM_INPUT = Pattern.compile('('
+    protected static final Pattern MODULE_CUSTOM_INPUT = Pattern.compile('('
             + PRE_BATCH_MODULE + '|' + PROCESS_MODULE + '|' + XQUERY_MODULE + '|' + POST_BATCH_MODULE
             + ")\\.[A-Za-z0-9_-]+=.*");
     private Queue<String> queue;
@@ -129,23 +131,31 @@ public class QueryUrisLoader extends AbstractUrisLoader {
     }
 
     protected void preProcess(ResultSequence resultSequence) throws CorbException {
-        ResultItem nextResultItem = collectCustomInputs(resultSequence);
+        preProcess(new ResultItemIterator(resultSequence));
+    }
+
+    protected void preProcess(Iterator resultItemIterator) throws CorbException {
+        ResultItem nextResultItem = collectCustomInputs(resultItemIterator);
         try {
-            setTotalCount(Integer.parseInt(nextResultItem.getItem().asString()));
+            setTotalCount(Integer.parseInt(resultItemAsString(nextResultItem.getItem())));
         } catch (NumberFormatException exc) {
             throw new CorbException(URIS_MODULE + " " + options.getUrisModule() + " does not return total URI count");
         }
+    }
+
+    protected ResultItem collectCustomInputs(ResultSequence resultSequence) {
+        return collectCustomInputs(new ResultItemIterator(resultSequence));
     }
 
     /**
      * Collect any custom input options or batchRef value in the ResultSequence
      * that precede the count of URIs.
      *
-     * @param resultSequence
+     * @param resultIterator
      * @return the next ResultItem to retrieve from the ResultSequence
      */
-    protected ResultItem collectCustomInputs(ResultSequence resultSequence) {
-        ResultItem nextResultItem = resultSequence.next();
+    protected ResultItem collectCustomInputs(Iterator<ResultItem> resultIterator) {
+        ResultItem nextResultItem = resultIterator.next();
         int maxOpts = this.getMaxOptionsFromModule();
         for (int i = 0; i < maxOpts
                 && nextResultItem != null
@@ -158,7 +168,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             } else {
                 setBatchRef(value);
             }
-            nextResultItem = resultSequence.next();
+            nextResultItem = resultIterator.next();
         }
         return nextResultItem;
     }
@@ -197,19 +207,32 @@ public class QueryUrisLoader extends AbstractUrisLoader {
      * @return
      */
     protected Queue<String> createAndPopulateQueue(ResultSequence resultSequence) {
-        Queue<String> uriQueue = createQueue();
-        return populateQueue(uriQueue, resultSequence);
+        return createAndPopulateQueue(new ResultItemIterator(resultSequence));
     }
 
-    protected Queue<String> populateQueue(Queue<String> queue, ResultSequence resultSequence) {
+    protected Queue<String> createAndPopulateQueue(Iterator resultIterator) {
+        Queue<String> uriQueue = createQueue();
+        return populateQueue(uriQueue, resultIterator);
+    }
+
+    protected String resultItemAsString(Object resultItem) {
+        if (resultItem instanceof XdmItem) {
+            return ((XdmItem) resultItem).asString();
+        } else {
+            throw new InvalidParameterException("Results must be of type " + XdmItem.class.getName());
+        }
+    }
+
+    //Generic iterator, so that ResultItemIterator and EvalResultIterator can be used
+    protected Queue<String> populateQueue(Queue<String> queue, Iterator results) {
         long lastMessageMillis = System.currentTimeMillis();
         long totalCount = getTotalCount();
         long uriIndex = 0;
         boolean redactUris = options.shouldRedactUris();
         String uri;
         String uriToLog;
-        while (resultSequence != null && resultSequence.hasNext()) {
-            uri = resultSequence.next().asString();
+        while (results != null && results.hasNext()) {
+            uri = resultItemAsString(results.next());
             if (isBlank(uri)) {
                 continue;
             }

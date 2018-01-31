@@ -29,13 +29,17 @@ import static com.marklogic.developer.corb.Options.QUERY_RETRY_INTERVAL;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_CODES;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_MESSAGE;
 import static com.marklogic.developer.corb.TransformOptions.FAILED_URI_TOKEN;
-import com.marklogic.developer.corb.util.StringUtils;
+
+import com.marklogic.developer.corb.util.*;
+
 import static com.marklogic.developer.corb.util.StringUtils.commaSeparatedValuesToList;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
+import com.marklogic.client.eval.EvalResult;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
+import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.ValueFactory;
@@ -54,12 +58,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
+
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
@@ -443,7 +443,11 @@ public abstract class AbstractTask implements Task {
         return (uris == null | StringUtils.stringToBoolean(getProperty(Options.URIS_REDACTED)) ) ? "" : StringUtils.join(uris, ",");
     }
 
-    protected abstract String processResult(ResultSequence seq) throws CorbException;
+    protected String processResult(ResultSequence seq) throws CorbException {
+        return processResult(new ResultItemIterator(seq));
+    }
+
+    protected abstract String processResult(Iterator seq) throws CorbException;
 
     protected void cleanup() {
         // release resources
@@ -466,6 +470,21 @@ public abstract class AbstractTask implements Task {
         return trim(val);
     }
 
+    //TODO: refacor so that we don't need DMSDK dependencies in CORB
+    protected static byte[] getValueAsBytes(Object obj){
+        if (obj instanceof EvalResult) {
+            return getValueAsBytes((EvalResult) obj); //TODO: remove this, decorate EvalResult, to avoid DMSDK in CORB
+        } else if (obj instanceof ResultItem) {
+            return getValueAsBytes(((ResultItem) obj).getItem());
+        } else {
+            throw new IllegalArgumentException("Only EvalResult and ResultItem are currently supported. Received " + obj.getClass().getName());
+        }
+    }
+    //TODO: refacor so that we don't need DMSDK dependencies in CORB
+    protected static byte[] getValueAsBytes(EvalResult evalResult) {
+        return DataMovementUtils.asBytes(evalResult);
+    }
+
     protected static byte[] getValueAsBytes(XdmItem item) {
         if (item instanceof XdmBinary) {
             return ((XdmBinary) item).asBinaryData();
@@ -486,7 +505,7 @@ public abstract class AbstractTask implements Task {
         return queryRetryInterval < 0 ? DEFAULT_QUERY_RETRY_INTERVAL : queryRetryInterval;
     }
 
-    private String getBatchUriDelimiter() {
+    protected String getBatchUriDelimiter() {
         String delim = getProperty(BATCH_URI_DELIM);
         if (isEmpty(delim)) {
             delim = DEFAULT_BATCH_URI_DELIM;

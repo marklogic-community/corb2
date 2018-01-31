@@ -191,7 +191,7 @@ public class ManagerTest {
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
-        props.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
+        props.setProperty(Options.XCC_CONNECTION_URI, getConnectionUri());
         //no "COLLECTION-NAME" specified
         props.setProperty(Options.PROCESS_MODULE, "src/test/resources/mod-print-uri.sjs|ADHOC");
         try {
@@ -209,7 +209,7 @@ public class ManagerTest {
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
-        props.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
+        props.setProperty(Options.XCC_CONNECTION_URI, getConnectionUri());
         props.setProperty(Options.PROCESS_MODULE, "src/test/resources/mod-print-uri.sjs|ADHOC");
         props.setProperty(Options.URIS_FILE, "does/not/exist");
 
@@ -1159,7 +1159,7 @@ public class ManagerTest {
         Manager instance = new Manager();
         instance.options.setUrisModule("someFile2.xqy");
         try {
-            instance.initContentSourcePool(XCC_CONNECTION_URI);
+            instance.initContentSourcePool(getConnectionUri());
 
             instance.run();
         } catch (Exception ex) {
@@ -1175,7 +1175,7 @@ public class ManagerTest {
     public void testRunGetURILoaderWithURISMODULE() {
         try {
             Manager instance = getMockManagerWithEmptyResults();
-            instance.initContentSourcePool(XCC_CONNECTION_URI);
+            instance.initContentSourcePool(getConnectionUri());
             instance.collection = "URILoader_Modules";
             instance.options.setUrisModule("someFile3.xqy");
             long count = instance.run();
@@ -1651,6 +1651,10 @@ public class ManagerTest {
 
         manager.resume();
         verify(pool, never()).resume();
+    }
+
+    public String getConnectionUri() {
+        return XCC_CONNECTION_URI;
     }
 
     public static class MockEmptyFileUrisLoader extends FileUrisLoader {

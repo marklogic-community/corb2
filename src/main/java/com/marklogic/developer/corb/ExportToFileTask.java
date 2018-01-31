@@ -23,8 +23,11 @@ import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trimToEmpty;
 
 import com.marklogic.xcc.ResultSequence;
-
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Iterator;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
@@ -45,22 +48,21 @@ public class ExportToFileTask extends AbstractTask {
         return filename;
     }
 
-	protected void writeToFile(ResultSequence seq) throws IOException {
-		if (seq == null || !seq.hasNext()) {
+	protected void writeToFile(Iterator results) throws IOException {
+		if (results == null || !results.hasNext()) {
 			return;
 		}
 
         File exportFile = getExportFile();
-		exportFile.getParentFile().mkdirs();
-
-        writeToFile(seq, exportFile);
-	}
-
-	protected void writeToFile(ResultSequence seq, File exportFile) throws IOException {
-        try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(exportFile))) {
-            write(seq, writer);
+        exportFile.getParentFile().mkdirs();
+        try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(exportFile))) {
+            while (results.hasNext()) {
+                writer.write(getValueAsBytes(results.next()));
+                writer.write(NEWLINE);
+            }
+            writer.flush();
         }
-    }
+	}
 
     protected void writeToExportFile(String content) throws IOException {
         String trimmedContent = trimToEmpty(content);
@@ -72,14 +74,6 @@ public class ExportToFileTask extends AbstractTask {
                 writer.write(NEWLINE);
             }
         }
-    }
-
-    protected void write(ResultSequence seq, OutputStream writer) throws IOException {
-        while (seq.hasNext()) {
-            writer.write(getValueAsBytes(seq.next().getItem()));
-            writer.write(NEWLINE);
-        }
-        writer.flush();
     }
 
     /**
@@ -100,7 +94,7 @@ public class ExportToFileTask extends AbstractTask {
     }
 
 	@Override
-	protected String processResult(ResultSequence seq) throws CorbException {
+	protected String processResult(Iterator seq) throws CorbException {
 		try {
 			writeToFile(seq);
 			return TRUE;

@@ -185,7 +185,7 @@ public class ExportToFileTaskTest {
         try {
             instance.exportDir = tempFolder.newFolder().toString();
             instance.setInputURI(uri);
-            instance.writeToFile(resultSequence);
+            instance.writeToFile(new ResultItemIterator(resultSequence));
             file = new File(instance.exportDir, instance.getFileName());
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);

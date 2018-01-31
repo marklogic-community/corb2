@@ -2,14 +2,14 @@ package com.marklogic.developer.corb;
 
 import static org.junit.Assert.fail;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.marklogic.developer.corb.util.FileUtils;
+import org.junit.*;
 
 public class ManagerDemo {
 

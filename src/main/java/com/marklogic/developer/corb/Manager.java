@@ -115,10 +115,10 @@ public class Manager extends AbstractManager implements Closeable {
     private static final String TAB = "\t";
 
     private static final String RUNNING_JOB_MESSAGE = "RUNNING CORB JOB:";
-    private static final String START_RUNNING_JOB_MESSAGE = "STARTED " + RUNNING_JOB_MESSAGE;
+    protected static final String START_RUNNING_JOB_MESSAGE = "STARTED " + RUNNING_JOB_MESSAGE;
     private static final String PAUSING_JOB_MESSAGE = "PAUSING CORB JOB:";
     private static final String RESUMING_JOB_MESSAGE = "RESUMING CORB JOB:";
-    private static final String END_RUNNING_JOB_MESSAGE = "END " + RUNNING_JOB_MESSAGE;
+    protected static final String END_RUNNING_JOB_MESSAGE = "END " + RUNNING_JOB_MESSAGE;
 
     /**
      * @param args
@@ -560,7 +560,7 @@ public class Manager extends AbstractManager implements Closeable {
         }
         scheduleCommandFileWatcher();
         startJobServer();
-        jobStats = new JobStats(this);
+        jobStats = newJobStats();
         scheduleJobMetrics();
 
         startMillis = System.currentTimeMillis();
@@ -606,7 +606,11 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
-    private void startJobServer() throws IOException {
+    protected JobStats newJobStats(){
+        return new JobStats(this);
+    }
+
+    protected void startJobServer() throws IOException {
         if (!options.getJobServerPortsToChoose().isEmpty() && jobServer == null) {
             setJobServer(JobServer.create(options.getJobServerPortsToChoose(), this));
             jobServer.start();
@@ -671,7 +675,7 @@ public class Manager extends AbstractManager implements Closeable {
      * @throws CorbException
      *
      */
-    private void prepareModules() throws CorbException {
+    protected void prepareModules() throws CorbException {
         String[] resourceModules = new String[]{options.getInitModule(), options.getUrisModule(),
             options.getProcessModule(), options.getPreBatchModule(), options.getPostBatchModule()};
         String modulesDatabase = options.getModulesDatabase();
@@ -759,7 +763,7 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
-    private void runPreBatchTask(TaskFactory tf) throws Exception {
+    protected void runPreBatchTask(TaskFactory tf) throws Exception {
         Task preTask = tf.newPreBatchTask();
         if (preTask != null) {
             LOG.info("Running pre batch Task");
@@ -772,7 +776,7 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
-    private void runPostBatchTask(TaskFactory tf) throws Exception {
+    protected void runPostBatchTask(TaskFactory tf) throws Exception {
         Task postTask = tf.newPostBatchTask();
         if (postTask != null) {
             LOG.info("Running post batch Task");
@@ -788,7 +792,7 @@ public class Manager extends AbstractManager implements Closeable {
     private UrisLoader getUriLoader() throws InstantiationException, IllegalAccessException {
         UrisLoader loader;
         if (isNotBlank(options.getUrisModule())) {
-            loader = new QueryUrisLoader();
+            loader = newQueryUrisLoader();
         } else if (isNotBlank(options.getUrisFile())) {
             loader = new FileUrisLoader();
         } else if (options.getUrisLoaderClass() != null) {
@@ -804,7 +808,11 @@ public class Manager extends AbstractManager implements Closeable {
         return loader;
     }
 
-    private void runUrisLoader(UrisLoader urisLoader) throws CorbException {
+    protected UrisLoader newQueryUrisLoader() {
+        return new QueryUrisLoader();
+    }
+
+    protected void runUrisLoader(UrisLoader urisLoader) throws CorbException {
         long startTime = System.nanoTime();
         urisLoader.open();
         if (urisLoader.getBatchRef() != null) {
@@ -816,9 +824,13 @@ public class Manager extends AbstractManager implements Closeable {
         jobStats.setUrisLoadTime(TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS));
     }
 
+    protected TaskFactory newTaskFactory() {
+        return new TaskFactory(this);
+    }
+
     private long populateQueue() throws Exception {
         LOG.info("populating queue");
-        TaskFactory taskFactory = new TaskFactory(this);
+        TaskFactory taskFactory = newTaskFactory();
 
         long expectedTotalCount = -1;
         long urisCount = 0;
@@ -899,6 +911,9 @@ public class Manager extends AbstractManager implements Closeable {
             if (isBlank(uri)) {
                 continue;
             }
+
+            //TODO: add uris to batcher, set variable
+
             uriBatch.add(uri);
 
             if (uriBatch.size() >= options.getBatchSize() || urisCount >= expectedTotalCount || !urisLoader.hasNext()) {
