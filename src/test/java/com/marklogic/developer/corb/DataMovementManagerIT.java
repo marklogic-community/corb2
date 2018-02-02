@@ -31,6 +31,8 @@ public class DataMovementManagerIT extends ManagerIT {
         File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);
         commandFile.deleteOnExit();
         System.setProperty(Options.XCC_CONNECTION_URI, getConnectionUri());
+        System.setProperty(Options.URIS_MODULE, "src/test/resources/selectorLargeList.xqy|ADHOC");
+        System.setProperty(Options.URIS_MODULE + ".count", "8");
         System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         System.setProperty(Options.THREAD_COUNT, Integer.toString(1));
         System.setProperty(Options.PROCESS_MODULE, TRANSFORM_SLOW_MODULE);

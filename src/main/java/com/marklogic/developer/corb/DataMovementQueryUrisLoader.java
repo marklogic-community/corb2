@@ -33,7 +33,6 @@ public class DataMovementQueryUrisLoader extends QueryUrisLoader {
     private static final Logger LOG = Logger.getLogger(DataMovementQueryUrisLoader.class.getName());
     private DatabaseClient databaseClient;
     private EvalResultIterator resultIterator;
-    private Queue<String> queue;
 
     DataMovementQueryUrisLoader(DatabaseClient client) {
         this.databaseClient = client;
@@ -76,7 +75,7 @@ public class DataMovementQueryUrisLoader extends QueryUrisLoader {
 
             preProcess(resultIterator);
 
-            queue = createAndPopulateQueue(resultIterator);
+            setQueue(createAndPopulateQueue(resultIterator));
 
         } catch (Exception exc) {
             throw new CorbException("While invoking " + URIS_MODULE, exc);
@@ -111,12 +110,7 @@ public class DataMovementQueryUrisLoader extends QueryUrisLoader {
     }
 
     protected void preProcess(EvalResultIterator resultSequence) throws CorbException {
-        EvalResult nextResultItem = collectCustomInputs(resultSequence);
-        try {
-            setTotalCount(Integer.parseInt(nextResultItem.getString()));  //TODO .getNumber().intValue()
-        } catch (NumberFormatException exc) {
-            throw new CorbException(URIS_MODULE + " " + options.getUrisModule() + " does not return total URI count");
-        }
+        collectCustomInputs(resultSequence);
     }
 
     /**
@@ -126,19 +120,29 @@ public class DataMovementQueryUrisLoader extends QueryUrisLoader {
      * @param resultSequence
      * @return the next ResultItem to retrieve from the ResultSequence
      */
-    protected EvalResult collectCustomInputs(EvalResultIterator resultSequence) {
+    protected EvalResult collectCustomInputs(EvalResultIterator resultSequence) throws CorbException {
         EvalResult nextResultItem = resultSequence.next();
         int maxOpts = this.getMaxOptionsFromModule();
-        for (int i = 0; i < maxOpts
-            && nextResultItem != null
-            && getBatchRef() == null
-            && !(nextResultItem.getString().matches("\\d+")); i++) {
+        boolean numberFound = false;
+        for (int i = 0; i < maxOpts && !numberFound; i++) {
+
             String value = nextResultItem.getString();
-            if (MODULE_CUSTOM_INPUT.matcher(value).matches()) {
-                int idx = value.indexOf('=');
-                properties.put(value.substring(0, idx).replace(XQUERY_MODULE + '.', PROCESS_MODULE + '.'), value.substring(idx + 1));
+
+            if (value.matches("\\d+")) {
+                try {
+                    setTotalCount(Integer.parseInt(value));  //TODO .getNumber().intValue()
+                    numberFound = true;
+                    break;
+                } catch (NumberFormatException exc) {
+                    throw new CorbException(URIS_MODULE + " " + options.getUrisModule() + " does not return total URI count");
+                }
             } else {
-                setBatchRef(value);
+                if (MODULE_CUSTOM_INPUT.matcher(value).matches()) {
+                    int idx = value.indexOf('=');
+                    properties.put(value.substring(0, idx).replace(XQUERY_MODULE + '.', PROCESS_MODULE + '.'), value.substring(idx + 1));
+                } else {
+                    setBatchRef(value);
+                }
             }
             nextResultItem = resultSequence.next();
         }

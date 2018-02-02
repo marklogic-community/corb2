@@ -121,7 +121,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
 
             preProcess(resultSequence);
 
-            queue = createAndPopulateQueue(resultSequence);
+            setQueue(createAndPopulateQueue(resultSequence));
 
         } catch (RequestException exc) {
             throw new CorbException("While invoking " + URIS_MODULE, exc);
@@ -213,6 +213,10 @@ public class QueryUrisLoader extends AbstractUrisLoader {
     protected Queue<String> createAndPopulateQueue(Iterator resultIterator) {
         Queue<String> uriQueue = createQueue();
         return populateQueue(uriQueue, resultIterator);
+    }
+
+    protected void setQueue(Queue<String> queue) {
+        this.queue = queue;
     }
 
     protected String resultItemAsString(Object resultItem) {

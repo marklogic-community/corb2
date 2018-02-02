@@ -38,6 +38,40 @@ public class DataMovementManager extends Manager {
 
     private DatabaseClient databaseClient;
 
+    public static void main(String... args) {
+        try (Manager manager = new DataMovementManager()) {
+            try {
+                manager.init(args);
+            } catch (Exception exc) {
+                LOG.log(SEVERE, "Error initializing CORB " + exc.getMessage(), exc);
+                manager.usage();
+                LOG.log(INFO, () -> "init error - exiting with code " + EXIT_CODE_INIT_ERROR);
+                System.exit(EXIT_CODE_INIT_ERROR);
+            }
+            //now we can start corb.
+            try {
+                long count = manager.run();
+                if (manager.execError) {
+                    LOG.log(INFO, () -> "processing error - exiting with code " + EXIT_CODE_PROCESSING_ERROR);
+                    System.exit(EXIT_CODE_PROCESSING_ERROR);
+                } else if (manager.stopCommand) {
+                    LOG.log(INFO, () -> "stop command - exiting with code " + EXIT_CODE_STOP_COMMAND);
+                    System.exit(EXIT_CODE_STOP_COMMAND);
+                } else if (count == 0) {
+                    LOG.log(INFO, () -> "no uris found - exiting with code " + EXIT_CODE_NO_URIS);
+                    System.exit(EXIT_CODE_NO_URIS);
+                } else {
+                    LOG.log(INFO, () -> "success - exiting with code " + EXIT_CODE_SUCCESS);
+                    System.exit(EXIT_CODE_SUCCESS);
+                }
+            } catch (Exception exc) {
+                LOG.log(SEVERE, "Error while running CORB", exc);
+                LOG.log(INFO, () -> "unexpected error - exiting with code " + EXIT_CODE_PROCESSING_ERROR);
+                System.exit(EXIT_CODE_PROCESSING_ERROR);
+            }
+        }
+    }
+
     public DatabaseClient getDatabaseClient() {
         return databaseClient;
     }
@@ -55,6 +89,9 @@ public class DataMovementManager extends Manager {
         String password = null;
         String database = null;
         String xccConnectionUri = connectionUris.stream().findFirst().orElseThrow(NullPointerException::new);
+        if (xccConnectionUri.startsWith("xcc")){
+            xccConnectionUri = xccConnectionUri.replaceFirst("^xcc", "http");
+        }
         try {
             xccUrl = new URL(xccConnectionUri);
             userPass = xccConnectionUri.substring(xccConnectionUri.indexOf("://") + 3, xccConnectionUri.indexOf("@")).split(":");
