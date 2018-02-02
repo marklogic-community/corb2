@@ -18,6 +18,9 @@ plugins {
 ext {
     externalsortinginjavaVersion = '0.2.4'
 
+    // XCC URL for running corb task below
+    xccUrl = "xcc://${name}-admin:${name}-admin-password@localhost:8223"
+    httpUrl = "xcc://${name}-admin:${name}-admin-password@localhost:${mlRestPort}"
     // we don't need a REST server, only an XCC server
     //mlAppDeployer.getCommands().remove(mlAppDeployer.getCommand('DeployRestApiServersCommand'))
     mlAppConfig {
@@ -25,6 +28,30 @@ ext {
         customTokens.put('%%XDBC_PORT%%', '8223')
         createTriggersDatabase = false
     }
+}
+
+task corb(type: JavaExec) {
+    classpath=sourceSets.main.runtimeClasspath
+    main = "com.marklogic.developer.corb.Manager"
+    systemProperty "XCC-CONNECTION-URI", "${xccUrl}"
+    systemProperty "THREAD-COUNT", "10"
+    systemProperty "URIS-MODULE","src/test/resources/selectorLargeList.xqy|ADHOC"
+    systemProperty("URIS-MODULE.count", "100")
+    systemProperty "PROCESS-MODULE","src/test/resources/transformSlow.xqy|ADHOC"
+    systemProperty "PROCESS-TASK", "com.marklogic.developer.corb.ExportBatchToFileTask"
+    systemProperty "EXPORT-FILE-NAME", "corb.txt"
+}
+
+task corbDMSDK(type: JavaExec) {
+    classpath=sourceSets.main.runtimeClasspath
+    main = "com.marklogic.developer.corb.DataMovementManager"
+    systemProperty "XCC-CONNECTION-URI", httpUrl
+    systemProperty "THREAD-COUNT", "10"
+    systemProperty "URIS-MODULE","src/test/resources/selectorLargeList.xqy|ADHOC"
+    systemProperty("URIS-MODULE.count", "100")
+    systemProperty "PROCESS-MODULE","src/test/resources/transformSlow.xqy|ADHOC"
+    systemProperty "PROCESS-TASK", "com.marklogic.developer.corb.ExportBatchToFileTask"
+    systemProperty "EXPORT-FILE-NAME", "corbDMSDK.txt"
 }
 
 sourceCompatibility = '1.8'
