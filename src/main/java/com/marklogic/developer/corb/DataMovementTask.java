@@ -26,4 +26,8 @@ public class DataMovementTask extends DataMovementTransform {
         }
         return result;
     }
+
+    protected Task getTask() {
+        return task;
+    }
 }

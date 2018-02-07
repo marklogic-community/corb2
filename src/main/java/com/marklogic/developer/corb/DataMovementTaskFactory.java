@@ -36,13 +36,20 @@ public class DataMovementTaskFactory extends TaskFactory {
         if (null == options.getPreBatchTaskClass() && null == options.getPreBatchModule()) {
             return null;
         }
-        if (null != options.getPreBatchModule()) {
+        if (null != options.getPreBatchModule() && databaseClient == null) {
             throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
             Task task = options.getPreBatchTaskClass() == null ? newDefaultTransform() : options.getPreBatchTaskClass().newInstance();
             setupTask(task, PRE_BATCH_MODULE, options.getPreBatchModule());
             setDatabaseClientFor(task);
+
+
+            if (options.getProcessTaskClass() != null && task instanceof PreBatchUpdateFileTask) {
+                task = new DataMovementPreBatchUpdateFileTask(task);
+                setDatabaseClientFor(task);
+                setupTask(task, PRE_BATCH_MODULE, options.getPreBatchModule());
+            }
             return task;
         } catch (Exception exc) {
             throw new IllegalArgumentException(exc.getMessage(), exc);
@@ -55,13 +62,19 @@ public class DataMovementTaskFactory extends TaskFactory {
         if (null == options.getPostBatchTaskClass() && null == options.getPostBatchModule()) {
             return null;
         }
-        if (null != options.getPostBatchModule()) {
+        if (null != options.getPostBatchModule() && databaseClient == null) {
             throw new NullPointerException(EXCEPTION_MSG_NULL_CONTENT);
         }
         try {
             Task task = options.getPostBatchTaskClass() == null ? newDefaultTransform() : options.getPostBatchTaskClass().newInstance();
             setupTask(task, POST_BATCH_MODULE, options.getPostBatchModule());
             setDatabaseClientFor(task);
+
+            if (options.getPostBatchTaskClass() != null && task instanceof PostBatchUpdateFileTask) {
+                task = new DataMovementPostBatchUpdateFileTask(task);
+                setDatabaseClientFor(task);
+                setupTask(task, PROCESS_MODULE, options.getPostBatchModule());
+            }
             return task;
         } catch (Exception exc) {
             throw new IllegalArgumentException(exc.getMessage(), exc);

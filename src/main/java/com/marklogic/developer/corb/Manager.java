@@ -588,7 +588,7 @@ public class Manager extends AbstractManager implements Closeable {
             }
 
             if (shouldRunPostBatch(count)) {
-                TaskFactory tf = new TaskFactory(this);
+                TaskFactory tf = newTaskFactory();
                 runPostBatchTask(tf);
             }
 

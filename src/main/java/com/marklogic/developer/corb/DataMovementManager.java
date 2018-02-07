@@ -147,7 +147,7 @@ public class DataMovementManager extends Manager {
 
         initOptions(args);
         logRuntimeArgs();
-        initDatabaseClient(commandlineArgs);
+        initDatabaseClient(args);
 
         registerStatusInfo();
 
