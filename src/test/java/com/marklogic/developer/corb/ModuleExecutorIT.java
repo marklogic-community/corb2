@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2017 MarkLogic Corporation
+ * Copyright (c) 2004-2018 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ public class ModuleExecutorIT {
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
 	}
-    
+
     @Test
     public void testRunMain() {
         clearSystemProperties();
@@ -53,7 +53,7 @@ public class ModuleExecutorIT {
         File report = new File(exportFileName);
         report.deleteOnExit();
         exit.expectSystemExit();
-        ModuleExecutor.main(args);       
+        ModuleExecutor.main(args);
     }
 
     @Test
@@ -70,7 +70,7 @@ public class ModuleExecutorIT {
             executor.run();
             String reportPath = executor.getProperty(Options.EXPORT_FILE_NAME);
             File report = new File(reportPath);
-            
+
             boolean fileExists = report.exists();
             assertTrue(fileExists);
             String result = TestUtils.readFile(report);

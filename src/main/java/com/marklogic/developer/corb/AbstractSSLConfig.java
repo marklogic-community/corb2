@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2017 MarkLogic Corporation
+ * Copyright (c) 2004-2018 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,19 +35,19 @@ import java.util.Properties;
 public abstract class AbstractSSLConfig implements SSLConfig{
 	protected Properties properties;
 	protected Decrypter decrypter;
-	
+
     @Override
 	public void setProperties(Properties props){
 		this.properties = props;
 	}
-	
+
     @Override
 	public void setDecrypter(Decrypter decrypter) {
 		this.decrypter = decrypter;
 	}
-	
+
 	/**
-	 * Returns SecurityOptions with 
+	 * Returns SecurityOptions with
 	 * @return
 	 * @throws NoSuchAlgorithmException
 	 * @throws KeyManagementException
@@ -65,7 +65,7 @@ public abstract class AbstractSSLConfig implements SSLConfig{
 		}
 		return securityOptions;
 	}
-	
+
 	protected String getProperty(String key){
 		String val = System.getProperty(key);
 		if (properties != null && isBlank(val)) {

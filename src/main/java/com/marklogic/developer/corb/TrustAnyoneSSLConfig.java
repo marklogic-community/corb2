@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2017 MarkLogic Corporation
+ * Copyright (c) 2004-2018 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import javax.net.ssl.X509TrustManager;
  * Creates a TrustManager that <b>does not</b> validate certificate chains.
  * Useful for bypassing issues with self-signed certs, but should be used with
  * caution.
- * 
+ *
  * @since 2.2.0
  */
 public class TrustAnyoneSSLConfig extends AbstractSSLConfig {

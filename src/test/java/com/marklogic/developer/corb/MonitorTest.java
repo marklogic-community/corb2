@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2017 MarkLogic Corporation
+  * * Copyright (c) 2004-2018 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -80,7 +80,7 @@ public class MonitorTest {
         double result = Monitor.calculateTransactionsPerSecond(amountCompleted, previouslyCompleted, currentMillis, previousMillis);
         assertEquals(expResult, result, DOUBLE_DELTA);
     }
-    
+
     @Test
     public void testCalculateThreadsPerSecondFractional() {
         long amountCompleted = 10L;
@@ -122,7 +122,7 @@ public class MonitorTest {
         assertEquals("00:00:00", Monitor.getEstimatedTimeCompletion(100, 50, 60, false));
 
         assertEquals("2777:38:20", Monitor.getEstimatedTimeCompletion(100000d, 5d, 0.01d, false));
-        
+
         assertEquals("02:38:20 (paused)", Monitor.getEstimatedTimeCompletion(100, 5, 0.01, true));
     }
 

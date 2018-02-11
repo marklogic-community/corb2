@@ -1,5 +1,5 @@
 /*
- * * Copyright (c) 2004-2017 MarkLogic Corporation
+ * * Copyright (c) 2004-2018 MarkLogic Corporation
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -43,10 +43,10 @@ public class JasyptDecrypterTest {
     public static final String JASYPT_PASSWORD = "jasypt.password";
     public static final String ERROR_NO_PASSWORD = "Unable to initialize jasypt decrypter. Couldn't find jasypt.password";
     private static final String UNENCRYPTED_PASSWORD = "corbencrypt";
-    
+
     @Before
     public void setUp() {
-        clearSystemProperties();    
+        clearSystemProperties();
         LOG.addHandler(testLogger);
     }
 

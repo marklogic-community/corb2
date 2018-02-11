@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2017 MarkLogic Corporation
+ * Copyright (c) 2004-2018 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,7 +84,7 @@ public class ModuleExecutorTest {
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
 	}
-    
+
     @Before
     public void setUp() {
         clearSystemProperties();
@@ -650,14 +650,14 @@ public class ModuleExecutorTest {
 
     public static ModuleExecutor getMockModuleExecutorCustomProcessResults() throws RequestException, CorbException {
         MockModuleExecutorResults manager = spy(new MockModuleExecutorResults());
-        ContentSourcePool contentSourcePool = getMockContentSourceManager(); 
+        ContentSourcePool contentSourcePool = getMockContentSourceManager();
 		when(manager.createContentSourcePool()).thenReturn(contentSourcePool);
         return manager;
     }
 
     public static ModuleExecutor getMockModuleExecutorWithEmptyResults() throws RequestException, CorbException {
         ModuleExecutor manager = spy(new ModuleExecutor());
-        ContentSourcePool contentSourcePool = getMockContentSourceManager(); 
+        ContentSourcePool contentSourcePool = getMockContentSourceManager();
 		when(manager.createContentSourcePool()).thenReturn(contentSourcePool);
         return manager;
     }
@@ -675,7 +675,7 @@ public class ModuleExecutorTest {
         XdmItem batchRefItem = mock(XdmItem.class);
         XdmItem exampleValue = mock(XdmItem.class);
         XdmItem uriCount = mock(XdmItem.class);
-        
+
         when(contentSourcePool.get()).thenReturn(contentSource);
         when(contentSourcePool.available()).thenReturn(true);
         when(contentSource.newSession()).thenReturn(session);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2017 MarkLogic Corporation
+ * Copyright (c) 2004-2018 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,10 +49,10 @@ public abstract class AbstractDecrypter implements Decrypter {
         if (uri != null) {
             return decrypt(XCC_CONNECTION_URI, uri);
         } else {
-            return getXccUri(decrypt(XCC_USERNAME, username), 
-                    decrypt(XCC_PASSWORD, password), 
-                    decrypt(XCC_HOSTNAME, host), 
-                    decrypt(XCC_PORT, port), 
+            return getXccUri(decrypt(XCC_USERNAME, username),
+                    decrypt(XCC_PASSWORD, password),
+                    decrypt(XCC_HOSTNAME, host),
+                    decrypt(XCC_PORT, port),
                     dbname == null ?  null : decrypt(XCC_DBNAME, dbname));
         }
     }
