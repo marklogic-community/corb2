@@ -19,42 +19,85 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_URI_TO_PATH;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.trimToEmpty;
+
 import com.marklogic.xcc.ResultSequence;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+
+import java.io.*;
 
 /**
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  */
 public class ExportToFileTask extends AbstractTask {
-    
+
 	protected String getFileName() {
-		String filename = inputUris[0].charAt(0) == '/' ? inputUris[0].substring(1) : inputUris[0];
-		String uriInPath = getProperty(EXPORT_FILE_URI_TO_PATH);
-		int lastIdx = filename.lastIndexOf('/');
-		if ("false".equalsIgnoreCase(uriInPath) && lastIdx > 0 && filename.length() > (lastIdx+1)) {
-			filename = filename.substring(lastIdx+1);
-		}
-		return filename;
+		return getExportFileName();
 	}
+
+    protected String getExportFileName() {
+        String filename = inputUris[0].charAt(0) == '/' ? inputUris[0].substring(1) : inputUris[0];
+        String uriInPath = getProperty(EXPORT_FILE_URI_TO_PATH);
+        int lastIdx = filename.lastIndexOf('/');
+        if ("false".equalsIgnoreCase(uriInPath) && lastIdx > 0 && filename.length() > (lastIdx + 1)) {
+            filename = filename.substring(lastIdx + 1);
+        }
+        return filename;
+    }
 
 	protected void writeToFile(ResultSequence seq) throws IOException {
 		if (seq == null || !seq.hasNext()) {
 			return;
 		}
 
-        File f = new File(exportDir, getFileName());
-        f.getParentFile().mkdirs();
-        try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(f))) {
-            while (seq.hasNext()) {
-                writer.write(getValueAsBytes(seq.next().getItem()));
+        File exportFile = getExportFile();
+		exportFile.getParentFile().mkdirs();
+
+        writeToFile(seq, exportFile);
+	}
+
+	protected void writeToFile(ResultSequence seq, File exportFile) throws IOException {
+        try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(exportFile))) {
+            write(seq, writer);
+        }
+    }
+
+    protected void writeToExportFile(String content) throws IOException {
+        String trimmedContent = trimToEmpty(content);
+        if (isNotEmpty(trimmedContent)) {
+            File exportFile = getExportFile();
+            exportFile.getParentFile().mkdirs();
+            try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(exportFile, true))) {
+                writer.write(trimmedContent.getBytes());
                 writer.write(NEWLINE);
             }
-            writer.flush();
         }
-	}
+    }
+
+    protected void write(ResultSequence seq, OutputStream writer) throws IOException {
+        while (seq.hasNext()) {
+            writer.write(getValueAsBytes(seq.next().getItem()));
+            writer.write(NEWLINE);
+        }
+        writer.flush();
+    }
+
+    /**
+     * Return a File with file name from getFileName()
+     * @return
+     */
+    protected File getExportFile() {
+        return getExportFile(getFileName());
+    }
+
+    /**
+     * Return a File with file name specified, resolving to the exportDir, if configured.
+     * Otherwise, it will be the present working directory of the job.
+     * @return
+     */
+    protected File getExportFile(String fileName) {
+        return new File(exportDir, fileName);
+    }
 
 	@Override
 	protected String processResult(ResultSequence seq) throws CorbException {

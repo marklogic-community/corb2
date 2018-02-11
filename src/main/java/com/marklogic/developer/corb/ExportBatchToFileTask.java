@@ -37,21 +37,30 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 
 	@Override
 	protected String getFileName() {
-		String fileName = getProperty(EXPORT_FILE_NAME);
-		if (isEmpty(fileName)) {
-			String batchRef = trim(getProperty(Manager.URIS_BATCH_REF));
-			if (isNotEmpty(batchRef)) {
-				fileName = batchRef.substring(batchRef.lastIndexOf('/') + 1);
-			}
-		}
-		if (isEmpty(fileName)) {
-			throw new NullPointerException("Missing " + EXPORT_FILE_NAME + " or " + URIS_BATCH_REF + " property");
-		}
-		return fileName;
+		return getExportBatchFileName();
 	}
 
+	protected String getExportBatchFileName() {
+        String fileName = getProperty(EXPORT_FILE_NAME);
+        if (isEmpty(fileName)) {
+            String batchRef = trim(getProperty(Manager.URIS_BATCH_REF));
+            if (isNotEmpty(batchRef)) {
+                fileName = batchRef.substring(batchRef.lastIndexOf('/') + 1);
+            }
+        }
+        if (isEmpty(fileName)) {
+            throw new NullPointerException("Missing " + EXPORT_FILE_NAME + " or " + URIS_BATCH_REF + " property");
+        }
+        return fileName;
+    }
+
+    /**
+     * Append a filename extension, if {@value com.marklogic.developer.corb.Options#EXPORT_FILE_PART_EXT} has been specified
+     * and the fileName is not empty.
+     * @return fileName with EXPORT_FILE_PART_EXT suffix appended
+     */
 	protected String getPartFileName() {
-		String fileName = getFileName();
+        String fileName = getFileName();
 		if (isNotEmpty(fileName)) {
 			String partExt = getProperty(EXPORT_FILE_PART_EXT);
 			if (isNotEmpty(partExt)) {
@@ -65,18 +74,17 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 	}
 
 	@Override
-	protected void writeToFile(ResultSequence seq) throws IOException {
-		if (seq == null || !seq.hasNext()) {
-			return;
-		}
+    protected File getExportFile() {
+        return getExportFile(getPartFileName());
+    }
+
+	@Override
+	protected void writeToFile(ResultSequence seq, File exportFile) throws IOException {
 		synchronized (SYNC_OBJ) {
-			try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, getPartFileName()), true))){
-				while (seq.hasNext()) {
-					writer.write(getValueAsBytes(seq.next().getItem()));
-					writer.write(NEWLINE);
-				}
-				writer.flush();
+			try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(exportFile, true))){
+				write(seq, writer);
 			}
 		}
 	}
+
 }

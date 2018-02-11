@@ -30,9 +30,6 @@ import static com.marklogic.developer.corb.util.FileUtils.deleteFile;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
-import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
-import static com.marklogic.developer.corb.util.StringUtils.trimToEmpty;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -64,7 +61,11 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     private static final Logger LOG = Logger.getLogger(PostBatchUpdateFileTask.class.getName());
 
     protected void sortAndRemoveDuplicates() {
-        File origFile = new File(exportDir, getPartFileName());
+        File origFile = getExportFile();
+        sortAndRemoveDuplicates(origFile);
+    }
+
+    protected void sortAndRemoveDuplicates(File origFile) {
         if (!origFile.exists()) {
             return;
         }
@@ -83,7 +84,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
                 headerLineCount = 0;
             }
 
-            File sortedFile = new File(exportDir, getPartFileName() + getPartExt());
+            File sortedFile = getExportFile(getPartFileName() + getPartExt());
             File tempFileStore = origFile.getParentFile();
 
             Comparator<String> comparator = ExternalSort.defaultcomparator;
@@ -143,24 +144,17 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 
     protected void writeBottomContent() throws IOException {
         String bottomContent = getBottomContent();
-        bottomContent = trimToEmpty(bottomContent);
-        if (isNotEmpty(bottomContent)) {
-            try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, getPartFileName()), true))) {
-                writer.write(bottomContent.getBytes());
-                writer.write(NEWLINE);
-                writer.flush();
-            }
-        }
-    }
-
-    protected void moveFile(String srcFilename, String destFilename) {
-        File srcFile = new File(exportDir, srcFilename);
-        File destFile = new File(exportDir, destFilename);
-        FileUtils.moveFile(srcFile, destFile);
+        writeToExportFile(bottomContent);
     }
 
     protected void moveFile() {
         moveFile(getPartFileName(), getFileName());
+    }
+
+    protected void moveFile(String srcFilename, String destFilename) {
+        File srcFile =  getExportFile(srcFilename);
+        File destFile = getExportFile(destFilename);
+        FileUtils.moveFile(srcFile, destFile);
     }
 
     protected String getPartExt() {
@@ -180,8 +174,8 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             String partExt = getPartExt();
             String partZipFileName = outZipFileName + partExt;
 
-            File outFile = new File(exportDir, outFileName);
-            File zipFile = new File(exportDir, partZipFileName);
+            File outFile = getExportFile(outFileName);
+            File zipFile = getExportFile(partZipFileName);
 
             if (outFile.exists()) {
                 deleteFile(zipFile);

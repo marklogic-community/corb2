@@ -20,7 +20,6 @@ package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Manager.DEFAULT_BATCH_URI_DELIM;
 import static com.marklogic.developer.corb.Manager.URIS_BATCH_REF;
-import static com.marklogic.developer.corb.Options.URIS_REDACTED;
 import static com.marklogic.developer.corb.Options.BATCH_SIZE;
 import static com.marklogic.developer.corb.Options.BATCH_URI_DELIM;
 import static com.marklogic.developer.corb.Options.ERROR_FILE_NAME;
@@ -186,7 +185,7 @@ public abstract class AbstractTask implements Task {
 
             Request request = generateRequest(session);
             //This is how the long running uris can be populated
-            Thread.currentThread().setName(asString(inputUris));
+            Thread.currentThread().setName(urisAsString(inputUris));
 
             Thread.yield();// try to avoid thread starvation
             seq = session.submitRequest(request);
@@ -401,7 +400,7 @@ public abstract class AbstractTask implements Task {
             String errorCode = requestException instanceof QueryException ? ((QueryException)requestException).getCode() + ":" : "";
             LOG.log(WARNING,
                 "Encountered {0} from MarkLogic Server. Retrying attempt {1} after {2} seconds..: {3}{4}{5}{6}",
-                new Object[]{exceptionName, retryCount, retryInterval, errorCode, requestException.getMessage(), AT_URI, asString(inputUris)});
+                new Object[]{exceptionName, retryCount, retryInterval, errorCode, requestException.getMessage(), AT_URI, urisAsString(inputUris)});
             try {
                 Thread.sleep(retryInterval * 1000L);
             } catch (InterruptedException ex) {
@@ -409,26 +408,39 @@ public abstract class AbstractTask implements Task {
                 Thread.currentThread().interrupt();
             }
             return invokeModule();
-        } else if (failOnError) {
-            Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
-            throw wrapProcessException(requestException, inputUris);
         } else {
-            LOG.log(WARNING, failOnErrorIsFalseMessage(exceptionName, inputUris), requestException);
-            writeToErrorFile(inputUris, requestException.getMessage());
+            return handleProcessException(requestException);
+        }
+    }
+
+    protected String[] handleProcessException(Exception ex) throws CorbException {
+        String exceptionName = ex.getClass().getSimpleName();
+        if (failOnError) {
+            Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
+            throw wrapProcessException(ex, inputUris);
+        } else {
+            LOG.log(WARNING, failOnErrorIsFalseMessage(exceptionName, inputUris), ex);
+            writeToErrorFile(inputUris, ex.getMessage());
             return inputUris;
         }
     }
 
     protected CorbException wrapProcessException(Exception ex, String... inputUris) {
-        return new CorbException(ex.getMessage() + AT_URI + asString(inputUris), ex);
+        return new CorbException(ex.getMessage() + AT_URI + urisAsString(inputUris), ex);
     }
 
     private String failOnErrorIsFalseMessage(final String name, final String... inputUris) {
-        return "failOnError is false. Encountered " + name + AT_URI + asString(inputUris);
+        return "failOnError is false. Encountered " + name + AT_URI + urisAsString(inputUris);
     }
 
-    protected String asString(String... uris) {
-        return (uris == null | StringUtils.stringToBoolean(getProperty(URIS_REDACTED)) ) ? "" : StringUtils.join(uris, ",");
+    /**
+     * Produce a comma separated value from the URIs provided, or will return an empty string if either
+     * {@value com.marklogic.developer.corb.Options#URIS_REDACTED} is true or the URIs is null
+     * @param uris
+     * @return
+     */
+    protected String urisAsString(String... uris) {
+        return (uris == null | StringUtils.stringToBoolean(getProperty(Options.URIS_REDACTED)) ) ? "" : StringUtils.join(uris, ",");
     }
 
     protected abstract String processResult(ResultSequence seq) throws CorbException;

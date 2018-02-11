@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2017 MarkLogic Corporation
+ * Copyright (c) 2004-2018 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ public final class TestUtils {
     public static String readFile(File file) throws FileNotFoundException {
         String result;
         try ( // \A == The beginning of the input
-                Scanner scanner = new Scanner(file, "UTF-8")) {
+            Scanner scanner = new Scanner(file, "UTF-8")) {
             result = scanner.useDelimiter("\\A").next();
         }
         return result;
@@ -83,7 +83,7 @@ public final class TestUtils {
 
     public static void clearFile(File file) {
         try (PrintWriter pw = new PrintWriter(file)) {
-            //Instantiating new PRintWriter wipes the file
+            //Instantiating new PrintWriter wipes the file
         } catch (FileNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }

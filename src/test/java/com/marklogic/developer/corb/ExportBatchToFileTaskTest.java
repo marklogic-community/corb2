@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2017 MarkLogic Corporation
+  * * Copyright (c) 2004-2018 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@
  */
 package com.marklogic.developer.corb;
 
+import com.marklogic.developer.corb.util.FileUtils;
+import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import java.io.File;
 import java.io.IOException;
@@ -25,6 +27,8 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static org.junit.Assert.*;
+
+import com.marklogic.xcc.types.XdmItem;
 import org.junit.Test;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -34,11 +38,11 @@ import static org.mockito.Mockito.when;
  * @author Mads Hansen, MarkLogic Corporation
  */
 public class ExportBatchToFileTaskTest {
-    
+
     private static final String EMPTY = "";
     private static final String TXT_EXT = ".txt";
     private static final Logger LOG = Logger.getLogger(ExportBatchToFileTaskTest.class.getName());
-    
+
     @Test
     public void testGetFileNameFromURISBatchRef() {
         Properties props = new Properties();
@@ -117,18 +121,47 @@ public class ExportBatchToFileTaskTest {
         File file = testWriteToFile(seq);
         assertFalse(file.exists());
     }
-    
+
+    @Test
+    public void testWriteToFileWithMultipleItems()  {
+        ResultSequence seq = mock(ResultSequence.class);
+        ResultItem item = mock(ResultItem.class);
+        XdmItem xdmItem = mock(XdmItem.class);
+
+        when(seq.hasNext()).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(seq.next()).thenReturn(item);
+        when(item.getItem()).thenReturn(xdmItem);
+        when(xdmItem.asString()).thenReturn("foo").thenReturn("bar").thenReturn("baz");
+        File file = testWriteToFile(seq);
+        try {
+            assertEquals(3, FileUtils.getLineCount(file));
+            assertEquals("foo\nbar\nbaz\n", TestUtils.readFile(file));
+        } catch (IOException ex) {
+            fail();
+        }
+    }
+
     public File testWriteToFile(ResultSequence resultSequence) {
         Properties props = new Properties();
-        props.setProperty(Options.EXPORT_FILE_NAME, "testWriteToFile.txt");
+        try {
+            File batchFile = File.createTempFile("test", "txt");
+            props.setProperty(Options.EXPORT_FILE_NAME, batchFile.getAbsolutePath());
+            batchFile.delete();
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, "Unable to create temp file", ex);
+            fail();
+        }
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
-        instance.properties = props;
+        instance.setProperties(props);
         try {
             instance.writeToFile(resultSequence);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        return new File(instance.exportDir, instance.getPartFileName());
+        File exportFile = instance.getExportFile();
+        exportFile.deleteOnExit();
+        return exportFile;
     }
+
 }
