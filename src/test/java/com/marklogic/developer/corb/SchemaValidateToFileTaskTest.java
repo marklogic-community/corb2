@@ -22,14 +22,14 @@ import org.junit.Test;
 import org.xml.sax.SAXParseException;
 
 import javax.xml.stream.XMLStreamException;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -38,14 +38,23 @@ public class SchemaValidateToFileTaskTest {
     @Test
     public void testGetFileName() {
 
+        SchemaValidateToFileTask validate = new SchemaValidateToFileTask();
+        validate.inputUris = new String[]{"/tmp/foo.xml"};
+        String fileName = validate.getFileName();
+        assertEquals("tmp/foo.xml", fileName);
+    }
+
+    @Test
+    public void testGetFileNameWithoutUriToPath() {
+
         Properties properties = new Properties();
-        properties.setProperty(Options.EXPORT_FILE_NAME, "/tmp/bar.xml");
+        properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, "false");
 
         SchemaValidateToFileTask validate = new SchemaValidateToFileTask();
         validate.setProperties(properties);
         validate.inputUris = new String[]{"/tmp/foo.xml"};
         String fileName = validate.getFileName();
-        assertEquals("tmp/foo.xml", fileName);
+        assertEquals("foo.xml", fileName);
     }
 
     @Test

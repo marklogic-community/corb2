@@ -29,7 +29,12 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Writer;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -66,7 +71,9 @@ public class SchemaValidateBatchToFileTask extends ExportBatchToFileTask {
      * @param source
      * @param schemaFile
      * @param outputFile
-     * @throws CorbException
+     * @throws IOException
+     * @throws SAXException
+     * @throws XMLStreamException
      */
     protected void validateAndWriteReport(Source source, File schemaFile, File outputFile) throws IOException, SAXException, XMLStreamException {
         List<SAXParseException> exceptions = schemaValidate(source, schemaFile);

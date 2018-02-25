@@ -36,7 +36,17 @@ import javax.xml.transform.stax.StAXSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
-import java.io.*;
+
+import java.io.ByteArrayInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.File;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.io.Writer;
+
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -70,7 +80,7 @@ public final class XmlUtils {
         LSSerializer lsSerializer = domImplementation.createLSSerializer();
         lsSerializer.getDomConfig().setParameter("xml-declaration", false);
         LSOutput lsOutput =  domImplementation.createLSOutput();
-        lsOutput.setEncoding("UTF-8");
+        lsOutput.setEncoding(StandardCharsets.UTF_8.name());
 
         Writer stringWriter = new StringWriter();
         lsOutput.setCharacterStream(stringWriter);

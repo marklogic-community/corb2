@@ -19,17 +19,20 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
-import static com.marklogic.developer.corb.Monitor.getProgressMessage;
-import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
-import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
+import org.junit.Before;
+import org.junit.Test;
+
 import java.util.List;
 import java.util.concurrent.CompletionService;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.Before;
+
+import static com.marklogic.developer.corb.Monitor.getProgressMessage;
+import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 

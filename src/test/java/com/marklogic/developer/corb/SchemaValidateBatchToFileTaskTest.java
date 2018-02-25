@@ -28,12 +28,20 @@ import org.xml.sax.SAXParseException;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -60,8 +68,8 @@ public class SchemaValidateBatchToFileTaskTest {
     @Test
     public void processResultInvalid() {
         try {
-            String xmlFile = "src/test/resources/streamingXMLUrisLoader/EDI.ICF15T.D150217.T113100716.T";
-            String schemaFile = "src/test/resources/streamingXMLUrisLoader/NotBenefitEnrollment.xsd";
+            String xmlFile = "src/test/resources/xml-file.xml";
+            String schemaFile = "src/test/resources/streamingXMLUrisLoader/BenefitEnrollment.xsd";
             File outputFile = File.createTempFile("rpt", "xml");
             outputFile.deleteOnExit();
 
@@ -71,6 +79,23 @@ public class SchemaValidateBatchToFileTaskTest {
             assertNotNull(TestUtils.readFile(outputFile));
 
         } catch (IOException | CorbException ex) {
+            fail();
+        }
+    }
+
+    @Test (expected = CorbException.class)
+    public void processResultInputNotXml() throws CorbException {
+        try {
+            String xmlFile = "src/test/resources/test-file-1.txt";
+            String schemaFile = "src/test/resources/streamingXMLUrisLoader/BenefitEnrollment.xsd";
+            File outputFile = File.createTempFile("rpt", "xml");
+            outputFile.deleteOnExit();
+
+            SchemaValidateBatchToFileTask validateTask = createSchemaValidateTask(schemaFile, outputFile);
+            validateTask.processResult(singleFileSequence(xmlFile));
+
+            fail();
+        } catch (IOException ex) {
             fail();
         }
     }
