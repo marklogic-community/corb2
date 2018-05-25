@@ -34,7 +34,6 @@ Download the latest release directly from https://github.com/marklogic-community
 
 To get help with CORB
 
-* Subscribe to the [CORB mailing list](http://developer.marklogic.com/mailman/listinfo/corb2)
 * [Post a question to Stack Overflow](http://stackoverflow.com/questions/ask?tags=marklogic+corb) with the [<code>markogic</code>](https://stackoverflow.com/questions/tagged/marklogic) and [<code>corb</code>](https://stackoverflow.com/questions/tagged/corb) tags.  
 * Submit issues or feature requests at https://github.com/marklogic-community/corb2/issues
 
