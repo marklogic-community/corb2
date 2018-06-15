@@ -51,8 +51,6 @@ public class ExportToFileTask extends AbstractTask {
 		}
 
         File exportFile = getExportFile();
-		exportFile.getParentFile().mkdirs();
-
         writeToFile(seq, exportFile);
 	}
 
@@ -66,7 +64,6 @@ public class ExportToFileTask extends AbstractTask {
         String trimmedContent = trimToEmpty(content);
         if (isNotEmpty(trimmedContent)) {
             File exportFile = getExportFile();
-            exportFile.getParentFile().mkdirs();
             try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(exportFile, true))) {
                 writer.write(trimmedContent.getBytes());
                 writer.write(NEWLINE);
@@ -96,7 +93,9 @@ public class ExportToFileTask extends AbstractTask {
      * @return
      */
     protected File getExportFile(String fileName) {
-        return new File(exportDir, fileName);
+        File exportFile = new File(exportDir, fileName);
+        exportFile.getAbsoluteFile().getParentFile().mkdirs();
+        return exportFile;
     }
 
 	@Override

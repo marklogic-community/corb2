@@ -23,9 +23,12 @@ import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
 import static org.junit.Assert.*;
 
 import com.marklogic.xcc.types.XdmItem;
@@ -57,7 +60,7 @@ public class ExportBatchToFileTaskTest {
     public void testGetFileNameFromEXPORTFILENAME() {
         String filename = "foo/bar";
         Properties props = new Properties();
-        props.setProperty(Options.EXPORT_FILE_NAME, filename);
+        props.setProperty(EXPORT_FILE_NAME, filename);
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
         String result = instance.getFileName();
@@ -67,7 +70,7 @@ public class ExportBatchToFileTaskTest {
     @Test(expected = NullPointerException.class)
     public void testGetFileNameWithEmptyExportFileName() {
         Properties props = new Properties();
-        props.setProperty(Options.EXPORT_FILE_NAME, EMPTY);
+        props.setProperty(EXPORT_FILE_NAME, EMPTY);
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
         instance.getFileName();
@@ -140,12 +143,38 @@ public class ExportBatchToFileTaskTest {
             fail();
         }
     }
+    @Test
+    public void testWriteToFileWithFilenameAndNoExportFileDir() {
+        testWriteToFileWithNullExportFileDir("myFile.txt");
+    }
+
+    @Test
+    public void testWriteToFileWithRelativeFolderStructureAndNoExportFileDir() {
+        testWriteToFileWithNullExportFileDir("build/testWriteToFileWithRelativeFolderStructureAndNoExportFileDir/a/b/c/myFile.txt");
+        FileUtils.deleteQuietly(Paths.get("build/testWriteToFileWithRelativeFolderStructureAndNoExportFileDir"));
+    }
+
+    private void testWriteToFileWithNullExportFileDir(String exportFileName) {
+        File exportFile = new File(exportFileName);
+        ExportBatchToFileTask instance = new ExportBatchToFileTask();
+        instance.properties.setProperty(EXPORT_FILE_NAME, exportFileName);
+        try {
+            instance.writeToExportFile("test");
+            assertTrue(exportFile.exists());
+            assertEquals("test\n", TestUtils.readFile(exportFile));
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+            fail();
+        } finally {
+            exportFile.delete();
+        }
+    }
 
     public File testWriteToFile(ResultSequence resultSequence) {
         Properties props = new Properties();
         try {
             File batchFile = File.createTempFile("test", "txt");
-            props.setProperty(Options.EXPORT_FILE_NAME, batchFile.getAbsolutePath());
+            props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
             batchFile.delete();
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, "Unable to create temp file", ex);

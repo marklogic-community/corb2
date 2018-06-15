@@ -267,7 +267,7 @@ public class ModuleExecutor extends AbstractManager {
 
         File file = new File(fileDir, fileName);
         if (file.getParentFile() != null) {
-            file.getParentFile().mkdirs();
+            file.getAbsoluteFile().getParentFile().mkdirs();
         }
         try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(file))) {
             while (seq.hasNext()) {
