@@ -141,7 +141,7 @@ public class MonitorTest {
         assertEquals(point01, Monitor.formatTransactionsPerSecond(0.01));
         assertEquals(point01, Monitor.formatTransactionsPerSecond(0.014));
         assertEquals(Integer.toString(100), Monitor.formatTransactionsPerSecond(100.00));
-        assertEquals("1,000", Monitor.formatTransactionsPerSecond(1000));
+        assertEquals("1000", Monitor.formatTransactionsPerSecond(1000));
         assertEquals(Integer.toString(100), Monitor.formatTransactionsPerSecond(100.1234));
         assertEquals(Integer.toString(100), Monitor.formatTransactionsPerSecond(100.999));
     }

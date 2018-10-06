@@ -38,7 +38,8 @@ after_success:
 
 addons:
   sonarcloud:
-    organization: "default"
+    projectKey: "corb2"
+    organization: "marklogic-community"
     branches:
             - master
             - development
