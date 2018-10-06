@@ -139,6 +139,7 @@ public class BaseMonitor {
      */
     protected static String formatTransactionsPerSecond(Number n) {
         NumberFormat format = DecimalFormat.getInstance();
+        format.setGroupingUsed(false);
         format.setRoundingMode(RoundingMode.HALF_UP);
         format.setMinimumFractionDigits(0);
         format.setMaximumFractionDigits(2);
