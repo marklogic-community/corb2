@@ -137,13 +137,16 @@ public class BaseMonitor {
      * @param n
      * @return
      */
-    protected static String formatTransactionsPerSecond(Number n) {
+    protected static String formatTransactionsPerSecond(Number n, boolean groupingUsed) {
         NumberFormat format = DecimalFormat.getInstance();
-        format.setGroupingUsed(false);
+        format.setGroupingUsed(groupingUsed);
         format.setRoundingMode(RoundingMode.HALF_UP);
         format.setMinimumFractionDigits(0);
         format.setMaximumFractionDigits(2);
         return n.intValue() >= 1 ? format.format(n.intValue()) : format.format(n);
     }
 
+    protected static String formatTransactionsPerSecond(Number n) {
+        return formatTransactionsPerSecond(n, true);
+    }
 }

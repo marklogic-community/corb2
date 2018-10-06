@@ -407,8 +407,8 @@ public class JobStats extends BaseMonitor {
         createAndAppendElement(element, PAUSED, Boolean.toString(paused));
         createAndAppendElement(element, TOTAL_NUMBER_OF_TASKS, taskCount);
         createAndAppendElement(element, CURRENT_THREAD_COUNT, currentThreadCount);
-        createAndAppendElement(element, CURRENT_TPS, currentTps > 0 ? formatTransactionsPerSecond(currentTps) : "");
-        createAndAppendElement(element, AVERAGE_TPS, avgTps > 0 ? formatTransactionsPerSecond(avgTps) : "");
+        createAndAppendElement(element, CURRENT_TPS, currentTps > 0 ? formatTransactionsPerSecond(currentTps, false) : "");
+        createAndAppendElement(element, AVERAGE_TPS, avgTps > 0 ? formatTransactionsPerSecond(avgTps, false) : "");
         createAndAppendElement(element, AVERAGE_TRANSACTION_TIME, averageTransactionTime);
         createAndAppendElement(element, ESTIMATED_TIME_OF_COMPLETION, estimatedTimeOfCompletion);
 
