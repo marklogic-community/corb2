@@ -563,9 +563,9 @@ public final class Options {
 
     /**
      * Maximum number of Slow transaction to be logged in the metrics.
-     * The default value is 5.
+     * The default value is 0.
      */
-    @Usage(description = "Maximum number of slow transaction to be logged in the metrics. The default value is 5.")
+    @Usage(description = "Maximum number of slow transaction to be logged in the metrics. The default value is 0.")
     public static final String METRICS_NUM_SLOW_TRANSACTIONS = "METRICS-NUM-SLOW-TRANSACTIONS";
 
     /**

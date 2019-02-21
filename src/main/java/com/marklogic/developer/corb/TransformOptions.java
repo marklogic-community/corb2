@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2018 MarkLogic Corporation
+ * Copyright (c) 2004-2019 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,7 +86,7 @@ public class TransformOptions {
     private String metricsRoot = "/ServiceMetrics/";
     private String metricsModule = "save-metrics.xqy|ADHOC";
     private String metricsCollections = null;
-    private Integer numberOfLongRunningUris = 5;
+    private Integer numberOfLongRunningUris = 0;
     private Integer numberOfFailedUris = 0;
     private Integer metricsSyncFrequencyInMillis = -1;
 
