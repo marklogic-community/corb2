@@ -252,6 +252,12 @@ public abstract class AbstractManager {
         String protocol = getOption(XCC_PROTOCOL);
 
         if (StringUtils.anyIsNull(uriAsStrings) && StringUtils.anyIsNull(username, password, hostnames, port)) {
+            String[] connectionParameters = {XCC_CONNECTION_URI, XCC_USERNAME, XCC_PASSWORD, XCC_HOSTNAME, XCC_PORT};
+            for (String connectionParameter : connectionParameters) {
+               if (StringUtils.anyIsNull(getOption(connectionParameter))) {
+                   LOG.warning(MessageFormat.format("{0} is null", connectionParameter));
+               }
+            }
             throw new CorbException(String.format("Either %1$s or %2$s, %3$s, %4$s, and %5$s must be specified",
                     XCC_CONNECTION_URI, XCC_USERNAME, XCC_PASSWORD, XCC_HOSTNAME, XCC_PORT));
         }
