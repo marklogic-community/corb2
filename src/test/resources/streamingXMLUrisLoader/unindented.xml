@@ -1,0 +1,1 @@
+<doc><foo>foo1</foo><foo>foo2</foo><bar>bar1</bar><foo>foo3</foo><!--test--><bar>bar2</bar><bar>bar3<baz>baz1</baz></bar><?elementnames <foo>, <bar>, <baz> ?><foo>foo4</foo></doc>

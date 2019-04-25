@@ -78,6 +78,46 @@ public class FileUrisStreamingXMLLoaderTest {
         testOpen("/*/xyz:FileInformation", 1);
     }
 
+    @Test
+    public void testOpenUnindentedDefaultXPath() {
+        testOpen(getUnindentedFileUrisXMLLoader(), "/*/*", 7);
+    }
+
+    @Test
+    public void testOpenUnindentedSelectFoo() {
+        testOpen(getUnindentedFileUrisXMLLoader(), "/doc/foo", 4);
+        testOpen(getUnindentedFileUrisXMLLoader(), "/*/foo", 4);
+        testOpen(getUnindentedFileUrisXMLLoader(), "//foo", 4);
+    }
+
+    @Test (expected = CorbException.class)
+    public void testOpenUnindentedSelectFollowingSibling() throws CorbException {
+        FileUrisStreamingXMLLoader loader = getUnindentedFileUrisXMLLoader();
+        loader.properties.setProperty(Options.XML_NODE, "/doc/foo/following-sibling::foo");
+        try {
+            loader.open();
+            loader.getTotalCount();
+        } finally {
+            loader.close();
+        }
+    }
+
+    @Test
+    public void testOpenUnindentedSelectWithNamespacePrefix() {
+        testOpen(getUnindentedFileUrisXMLLoader(), "/doc/f:foo", 4);
+    }
+
+    @Test
+    public void testOpenUnindentedSelectBazElements() {
+        testOpen(getUnindentedFileUrisXMLLoader(), "/doc/bar/baz", 1);
+        testOpen(getUnindentedFileUrisXMLLoader(), "/doc/*/baz", 1);
+        testOpen(getUnindentedFileUrisXMLLoader(), "/*/bar/baz", 1);
+        testOpen(getUnindentedFileUrisXMLLoader(), "/*/*/baz", 1);
+        testOpen(getUnindentedFileUrisXMLLoader(), "/*//baz", 1);
+        testOpen(getUnindentedFileUrisXMLLoader(), "//bar/baz", 1);
+        testOpen(getUnindentedFileUrisXMLLoader(), "//*/baz", 1);
+    }
+
     @Test(expected = CorbException.class)
     public void testOpenWithSchemaInvalidContent() throws CorbException {
         FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
@@ -87,6 +127,11 @@ public class FileUrisStreamingXMLLoaderTest {
 
     public void testOpen(String XPath, int expectedItems) {
         FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
+        testOpen(loader, XPath, expectedItems);
+    }
+
+    public void testOpen(FileUrisStreamingXMLLoader loader, String XPath, int expectedItems) {
+
         if (XPath != null) {
             loader.properties.setProperty(Options.XML_NODE, XPath);
         }
@@ -214,6 +259,13 @@ public class FileUrisStreamingXMLLoaderTest {
         loader.properties = new Properties();
         loader.properties.setProperty(XML_FILE, BUU_DIR + BUU_FILENAME);
         loader.properties.setProperty(XML_SCHEMA, BUU_DIR + BUU_SCHEMA);
+        return loader;
+    }
+
+    public FileUrisStreamingXMLLoader getUnindentedFileUrisXMLLoader() {
+        FileUrisStreamingXMLLoader loader = new FileUrisStreamingXMLLoader();
+        loader.properties = new Properties();
+        loader.properties.setProperty(XML_FILE, BUU_DIR + "unindented.xml");
         return loader;
     }
 }

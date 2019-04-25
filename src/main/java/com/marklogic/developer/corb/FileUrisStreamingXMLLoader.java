@@ -166,13 +166,18 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
             Deque<String> context = new ArrayDeque<>();
             while (reader.hasNext()) {
                 // if there is a problem extracting an element, don't count it
-                if (reader.isStartElement() && extractElement(reader, context)) {
-                    extractedDocumentCount++;
+                if (reader.isStartElement()) {
+                    if (extractElement(reader, context)) {
+                        extractedDocumentCount++;
+                    } else {
+                        reader.next();
+                    }
+                } else {
+                    if (reader.isEndElement()) {
+                        context.removeLast();
+                    }
+                    reader.next();
                 }
-                if (reader.isEndElement()) {
-                    context.pop();
-                }
-                reader.next();
             }
             reader.close();
             directoryStream = Files.newDirectoryStream(tempDir);
@@ -220,7 +225,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         boolean elementWasExtracted = false;
 
         String localName = reader.getLocalName(); //currently, namespace-insensitive
-        context.add(localName);
+        context.addLast(localName);
         //construct a namespace-insensitive XPath for the context element
         String currentPath = SLASH + context.stream().collect(Collectors.joining(SLASH));
 
@@ -235,7 +240,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
             } catch (IOException | TransformerException ex) {
                 LOG.log(Level.SEVERE, EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
             } finally {
-                context.pop();
+                context.removeLast();
             }
         }
         return elementWasExtracted;

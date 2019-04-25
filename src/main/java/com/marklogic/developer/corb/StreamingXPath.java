@@ -40,7 +40,7 @@ public class StreamingXPath {
     public static final String SELF_AXIS = "self::";
 
     private Pattern regexPath;
-    private Pattern localNamePattern = Pattern.compile(".*?((?<=:)[^\\[]+).*?"); //group matches local name from an axis path
+    private Pattern localNamePattern = Pattern.compile(".*?((?<!::)(?<=:)[^\\[:]+).*?"); //group matches local name from an axis path
 
     public StreamingXPath() throws CorbException {
         String regex = parseXPathToRegex("/*/*");
