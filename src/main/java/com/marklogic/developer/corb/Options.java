@@ -1171,6 +1171,30 @@ public final class Options {
     public static final String XML_FILE = "XML-FILE";
 
     /**
+     * An XPath to address the node that contains metadata portion of the XML. This must be different from 
+     * the {@value #XML_NODE}. If the implementation supports, multiple comma separated paths can be specified.
+     * The metadata is set as an external variable with name XML_METADATA to {@value #PRE_BATCH_MODULE} 
+     * 
+     * @see #XML_FILE
+     * @Since 2.4.4
+     */
+    @Usage(description = "An XPath to address the node that contains metadata portion of the XML. This must be different from " 
+            + "the XML-NODE. If the implementation supports, multiple comma separated paths can be specified. " 
+            + "The metadata is set as an external variable with name XML_METADATA to PRE-BATCH-MODULE")
+    public static final String XML_METADATA = "XML-METADATA";
+    
+    /**
+     * If this option is set to 'true', {@value #XML_METADATA} is set as an external variable with 
+     * name XML_METADATA to {@value #PROCESS_MODULE} as well. The default value for this option is 'false'
+     * 
+     * @see #XML_METADATA
+     * @Since 2.4.4
+     */
+    @Usage(description = "If this option is set to 'true', XML-METADATA is set as an external variable with " 
+            + "name XML_METADATA to PROCESS-MODULE as well. The default value for this option is 'false'")
+    public static final String XML_METADATA_TO_PROCESS_MODULE = "XML-METADATA-TO-PROCESS-MODULE";
+    
+    /**
      * An XPath to address the nodes to be returned in an {@value #XML_FILE} by
      * the {@link com.marklogic.developer.corb.FileUrisXMLLoader}.
      * <p>
