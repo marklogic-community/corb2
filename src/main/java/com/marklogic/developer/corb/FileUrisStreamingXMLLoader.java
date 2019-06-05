@@ -18,15 +18,23 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
+import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.XML_FILE;
+import static com.marklogic.developer.corb.Options.XML_METADATA;
+import static com.marklogic.developer.corb.Options.XML_METADATA_TO_PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.XML_NODE;
 
 import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.developer.corb.util.IOUtils;
 import com.marklogic.developer.corb.util.StringUtils;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.stream.StreamResult;
+
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -52,6 +60,7 @@ import javax.xml.transform.stax.StAXSource;
 
 import com.marklogic.developer.corb.util.XmlUtils;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 /**
@@ -77,15 +86,19 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
     private Iterator<Path> files;
     private final FileAttribute<?>[] fileAttributes = new FileAttribute<?>[0];
     private StreamingXPath streamingXPath;
+    private StreamingXPath streamingMetaXPath;
+    private Node customMetadata;
     private TransformerFactory transformerFactory;
 
     @Override
     public void open() throws CorbException {
         String xmlFilename = getLoaderPath(XML_FILE);
         String xPath = getProperty(XML_NODE);
+        String metaXPath = getProperty(XML_METADATA);
         // default processing will split on child elements of the document element
         xPath = StringUtils.isBlank(xPath) ? "/*/*" : xPath;
         streamingXPath = new StreamingXPath(xPath);
+        streamingMetaXPath = isNotEmpty(metaXPath) ? new StreamingXPath(metaXPath): null;
         xmlFile = FileUtils.getFile(xmlFilename);
         schemaValidate(xmlFile);
         try {
@@ -99,6 +112,23 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
         }
         files = readToTempDir(xmlFile.toPath());
+        
+        if(customMetadata != null) {
+            try {
+                String metadataAsStr = XmlUtils.nodeToString(customMetadata);
+                if(shouldBase64Encode()) {
+                    metadataAsStr = IOUtils.toBase64(new ByteArrayInputStream(metadataAsStr.getBytes()));
+                }
+                properties.put(PRE_BATCH_MODULE+'.'+XML_METADATA, metadataAsStr);
+                
+                if(StringUtils.stringToBoolean(getProperty(XML_METADATA_TO_PROCESS_MODULE), false)) {
+                    properties.put(PROCESS_MODULE+'.'+XML_METADATA, metadataAsStr);
+                }
+            }catch(IOException ex) {
+                LOG.log(Level.SEVERE, MessageFormat.format("IOException occurred processing {0}", xmlFilename), ex);
+                throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_METADATA, ex);
+            }
+        }
     }
 
     @Override
@@ -238,6 +268,17 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
 
                 elementWasExtracted = true;
             } catch (IOException | TransformerException ex) {
+                LOG.log(Level.SEVERE, EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
+            } finally {
+                context.removeLast();
+            }
+        } else if (streamingMetaXPath != null && streamingMetaXPath.matches(currentPath)) {
+            try {
+                Transformer autobot = newTransformer();
+                DOMResult result = new DOMResult();
+                autobot.transform(new StAXSource(reader), result);
+                customMetadata = result.getNode();
+            } catch (TransformerException ex) {
                 LOG.log(Level.SEVERE, EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
             } finally {
                 context.removeLast();

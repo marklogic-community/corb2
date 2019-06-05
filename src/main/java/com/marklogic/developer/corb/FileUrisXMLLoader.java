@@ -66,6 +66,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
 
     private static final Logger LOG = Logger.getLogger(FileUrisXMLLoader.class.getName());
     protected static final String EXCEPTION_MSG_PROBLEM_READING_XML_FILE = "Problem while reading the XML file";
+    protected static final String EXCEPTION_MSG_PROBLEM_READING_XML_METADATA = "Problem while reading the XML metadata from file";
     protected String nextUri;
     protected Iterator<Node> nodeIterator;
     protected Document doc;
