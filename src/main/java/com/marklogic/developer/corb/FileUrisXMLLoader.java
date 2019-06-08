@@ -18,6 +18,10 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Options.METADATA;
+import static com.marklogic.developer.corb.Options.METADATA_TO_PROCESS_MODULE;
+import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
+import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.XML_FILE;
 import static com.marklogic.developer.corb.Options.XML_NODE;
 import com.marklogic.developer.corb.util.FileUtils;
@@ -31,10 +35,14 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
+
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -225,6 +233,34 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
             if (!validationErrors.isEmpty()) {
                 throw new CorbException("File is not schema valid", validationErrors.get(0) );
             }
+        }
+    }
+    
+    protected void setMetadataNodeToModule(Node metadataNode, File file) throws CorbException{
+        try { 
+            String content;
+            if (shouldUseEnvelope()) {
+                Map<String, String> metadataMap = (file != null) ? getMetadata(file): new HashMap<String,String>();
+                Document document;
+                if(shouldBase64Encode()) {
+                    content = XmlUtils.nodeToString(metadataNode);
+                    document = toLoaderDoc(metadataMap, new ByteArrayInputStream(content.getBytes()));
+                }else {
+                    document = toLoaderDoc(metadataMap, metadataNode, false);
+                }
+                content = XmlUtils.documentToString(document);
+            }else {
+                content = XmlUtils.nodeToString(metadataNode);
+            }
+            if(content != null) {
+                properties.put(PRE_BATCH_MODULE+'.'+METADATA, content);
+                if(StringUtils.stringToBoolean(getProperty(METADATA_TO_PROCESS_MODULE), false)) {                   
+                    properties.put(PROCESS_MODULE+'.'+METADATA, content);
+                }
+            }
+        }catch(IOException ex) {
+            LOG.log(Level.SEVERE, MessageFormat.format("IOException occurred processing {0}", (file != null ? file.getName():"")), ex);
+            throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_METADATA, ex);
         }
     }
 
