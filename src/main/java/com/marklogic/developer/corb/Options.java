@@ -506,7 +506,7 @@ public final class Options {
      * The variable name that needs to be defined in the server side query to use the metadata set by the {@value #URIS-LOADER}
      * 
      * @see #@see #XML_METADATA
-     * @since 2.4.4 
+     * @since 2.4.5 
      */
     @Usage(description = "The variable name that needs to be defined in the server side query to use the metadata set by the URIS-LOADER")
     public static final String METADATA = "METADATA";
@@ -516,7 +516,7 @@ public final class Options {
      * name {@value #METADATA} to {@value #PROCESS_MODULE} as well. The default value for this option is 'false'
      * 
      * @see #XML_METADATA
-     * @Since 2.4.4
+     * @Since 2.4.5
      */
     @Usage(description = "If this option is set to 'true', XML-METADATA is set as an external variable with " 
             + "name METADATA to PROCESS-MODULE as well. The default value for this option is 'false'")
@@ -1196,7 +1196,7 @@ public final class Options {
      * The metadata is set as an external variable with name XML_METADATA to {@value #PRE_BATCH_MODULE} 
      * 
      * @see #XML_FILE
-     * @Since 2.4.4
+     * @Since 2.4.5
      */
     @Usage(description = "An XPath to address the node that contains metadata portion of the XML. This must be different from " 
             + "the XML-NODE. If the implementation supports, multiple comma separated paths can be specified. " 

@@ -27,6 +27,9 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.marklogic.developer.corb.Options.METADATA;
+import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
+import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
@@ -37,10 +40,12 @@ import static org.mockito.Mockito.mock;
 public class FileUrisXMLLoaderTest {
 
     private static final Logger LOG = Logger.getLogger(FileUrisXMLLoaderTest.class.getName());
+    private static final String ANCHOR0 = "<h href=\"head0.html\">head0</h>";
     private static final String ANCHOR1 = "<a href=\"test1.html\">test1</a>";
     private static final String ANCHOR2 = "<a href=\"test2.html\">test2</a>";
     private static final String ANCHOR3 = "<a href=\"test3.html\">test3</a>";
     private static final String ANCHOR4 = "<a href=\"\"><!----></a>";
+    private static final String TEST0 = "head0";
     private static final String TEST1 = "test1";
     private static final String TEST2 = "test2";
     private static final String TEST3 = "test3";
@@ -129,6 +134,37 @@ public class FileUrisXMLLoaderTest {
             fail();
         }
     }
+    
+    @Test
+    public void testMetadataNotNull() {
+        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
+            instance.open();
+            assertNotNull(instance.customMetadata);
+        
+            String metadata = instance.properties.getProperty(PRE_BATCH_MODULE+'.'+METADATA);
+            assertNotNull(metadata);
+            assertTrue(ANCHOR0.equals(metadata));
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+    
+    @Test
+    public void testMetadataToProcessModule() {
+        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
+            instance.properties.setProperty(Options.METADATA_TO_PROCESS_MODULE, Boolean.toString(true));
+            instance.open();
+            assertNotNull(instance.customMetadata);
+                   
+            String metadata = instance.properties.getProperty(PROCESS_MODULE+'.'+METADATA);
+            assertNotNull(metadata);
+            assertTrue(ANCHOR0.equals(metadata));
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
 
     @Test(expected = CorbException.class)
     public void testOpenNotXMLFile() throws CorbException {
@@ -157,6 +193,11 @@ public class FileUrisXMLLoaderTest {
                             -> (p.contains(ANCHOR1) || p.contains(ANCHOR2) || p.contains(ANCHOR3) || p.contains(ANCHOR4))
                             && p.contains(FileUrisXMLLoader.LOADER_DOC))
                     .count());
+            
+            assertNotNull(instance.customMetadata);
+            String metadata = instance.properties.getProperty(PRE_BATCH_MODULE+'.'+METADATA);
+            assertNotNull(metadata);
+            assertTrue(metadata.contains(ANCHOR0) && metadata.contains(FileUrisXMLLoader.LOADER_DOC));
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -169,6 +210,7 @@ public class FileUrisXMLLoaderTest {
         try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
             instance.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(true));
             instance.properties.setProperty(Options.LOADER_BASE64_ENCODE, Boolean.toString(true));
+            instance.properties.setProperty(Options.METADATA_TO_PROCESS_MODULE, Boolean.toString(true));
 
             instance.open();
             assertNotNull(instance.nodeIterator);
@@ -184,7 +226,11 @@ public class FileUrisXMLLoaderTest {
                             -> !(p.contains(ANCHOR1) || p.contains(ANCHOR2) || p.contains(ANCHOR3) || p.contains(ANCHOR4))
                             && p.contains(FileUrisXMLLoader.LOADER_DOC))
                     .count());
-
+            
+            assertNotNull(instance.customMetadata);
+            String metadata = instance.properties.getProperty(PROCESS_MODULE+'.'+METADATA);
+            assertNotNull(metadata);
+            assertTrue(!metadata.contains(ANCHOR0) && metadata.contains(FileUrisXMLLoader.LOADER_DOC));
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -198,11 +244,12 @@ public class FileUrisXMLLoaderTest {
             instance.properties.remove(Options.XML_NODE);
             instance.open();
             assertNotNull(instance.nodeIterator);
-            nodes = new ArrayList<>(4);
+            nodes = new ArrayList<>(5);
             while (instance.hasNext()) {
                 nodes.add(instance.next());
             }
-            assertEquals(4, nodes.size());
+            assertEquals(5, nodes.size());
+            assertTrue(nodes.contains(ANCHOR0)); //header or metadata
             assertTrue(nodes.contains(ANCHOR1));
             assertTrue(nodes.contains(ANCHOR2));
             assertTrue(nodes.contains(ANCHOR3));
@@ -266,14 +313,16 @@ public class FileUrisXMLLoaderTest {
     @Test
     public void testSelectWithUnion() {
         List<String> nodes = testSelectNodes("//comment() | //@* | /*/*/text()");
-        assertEquals(7, nodes.size());
+        assertEquals(9, nodes.size());
         //comment()
         assertTrue(nodes.contains("http://test.com/test1.html"));
         //@*
+        assertTrue(nodes.contains(TEST0 + HTML_SUFFIX));
         assertTrue(nodes.contains(TEST1 + HTML_SUFFIX));
         assertTrue(nodes.contains(TEST2 + HTML_SUFFIX));
         assertTrue(nodes.contains(TEST3 + HTML_SUFFIX));
         //text()
+        assertTrue(nodes.contains(TEST0));
         assertTrue(nodes.contains(TEST1));
         assertTrue(nodes.contains(TEST2));
         assertTrue(nodes.contains(TEST3));
@@ -413,6 +462,7 @@ public class FileUrisXMLLoaderTest {
         props.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(false));
         props.setProperty(Options.XML_FILE, "src/test/resources/xml-file.xml");
         props.setProperty(Options.XML_NODE, "/root/a");
+        props.setProperty(Options.XML_METADATA, "/root/h");
         instance.properties = props;
         instance.options = options;
         return instance;
