@@ -22,7 +22,8 @@ import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.XML_FILE;
 import static com.marklogic.developer.corb.Options.XML_METADATA;
-import static com.marklogic.developer.corb.Options.XML_METADATA_TO_PROCESS_MODULE;
+import static com.marklogic.developer.corb.Options.METADATA;
+import static com.marklogic.developer.corb.Options.METADATA_TO_PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.XML_NODE;
 
 import com.marklogic.developer.corb.util.FileUtils;
@@ -114,15 +115,26 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         files = readToTempDir(xmlFile.toPath());
         
         if(customMetadata != null) {
-            try {
-                String metadataAsStr = XmlUtils.nodeToString(customMetadata);
-                if(shouldBase64Encode()) {
-                    metadataAsStr = IOUtils.toBase64(new ByteArrayInputStream(metadataAsStr.getBytes()));
+            try { 
+                String content;
+                if (shouldUseEnvelope()) {
+                    Map<String, String> metadata = getMetadata(xmlFile);
+                    Document document;
+                    if(shouldBase64Encode()) {
+                        content = XmlUtils.nodeToString(customMetadata);
+                        document = toLoaderDoc(metadata, new ByteArrayInputStream(content.getBytes()));
+                    }else {
+                        document = toLoaderDoc(metadata, customMetadata, false);
+                    }
+                    content = XmlUtils.documentToString(document);
+                }else {
+                    content = XmlUtils.nodeToString(customMetadata);
                 }
-                properties.put(PRE_BATCH_MODULE+'.'+XML_METADATA, metadataAsStr);
-                
-                if(StringUtils.stringToBoolean(getProperty(XML_METADATA_TO_PROCESS_MODULE), false)) {
-                    properties.put(PROCESS_MODULE+'.'+XML_METADATA, metadataAsStr);
+                if(content != null) {
+                    properties.put(PRE_BATCH_MODULE+'.'+METADATA, content);
+                    if(StringUtils.stringToBoolean(getProperty(METADATA_TO_PROCESS_MODULE), false)) {                   
+                        properties.put(PROCESS_MODULE+'.'+METADATA, content);
+                    }
                 }
             }catch(IOException ex) {
                 LOG.log(Level.SEVERE, MessageFormat.format("IOException occurred processing {0}", xmlFilename), ex);
@@ -277,7 +289,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
                 Transformer autobot = newTransformer();
                 DOMResult result = new DOMResult();
                 autobot.transform(new StAXSource(reader), result);
-                customMetadata = result.getNode();
+                customMetadata = result.getNode() != null ? result.getNode().getFirstChild(): null;              
             } catch (TransformerException ex) {
                 LOG.log(Level.SEVERE, EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
             } finally {
