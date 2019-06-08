@@ -18,6 +18,9 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Options.METADATA;
+import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
+import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.XML_FILE;
 import static com.marklogic.developer.corb.Options.XML_SCHEMA;
 import java.io.IOException;
@@ -41,6 +44,7 @@ public class FileUrisStreamingXMLLoaderTest {
     public static final String BUU_SCHEMA = "BenefitEnrollment.xsd";
     public static final String NOT_BUU_SCHEMA = "Not" + BUU_SCHEMA;
     public static final int BUU_CHILD_ELEMENTS = 6;
+    public static final int BUU_CHILD_XML_NODES = 5;
     private static final Logger LOG = Logger.getLogger(FileUrisStreamingXMLLoaderTest.class.getName());
 
     @Test
@@ -50,17 +54,17 @@ public class FileUrisStreamingXMLLoaderTest {
 
     @Test
     public void testOpenWithDescendantXpath() {
-        testOpen("//FileInformation", 1);
+        testOpen("//BenefitEnrollmentMaintenance", 5);
     }
 
     @Test
     public void testOpenSingleFileWithElementNameOnly() {
-        testOpen("FileInformation", 1);
+        testOpen("BenefitEnrollmentMaintenance", 5);
     }
 
     @Test
     public void testOpenWithElementWildcard() {
-        testOpen("/*/FileInformation", 1);
+        testOpen("/*/BenefitEnrollmentMaintenance", 5);
     }
 
     @Test
@@ -129,11 +133,23 @@ public class FileUrisStreamingXMLLoaderTest {
         FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
         testOpen(loader, XPath, expectedItems);
     }
-
+    
+    public void testOpen(String XPath, String metaXPath, int expectedItems) {
+        FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
+        testOpen(loader, XPath, null, expectedItems);
+    }
+    
     public void testOpen(FileUrisStreamingXMLLoader loader, String XPath, int expectedItems) {
+        testOpen(loader, XPath, null, expectedItems);
+    }
+
+    public void testOpen(FileUrisStreamingXMLLoader loader, String XPath, String metaXPath, int expectedItems) {
 
         if (XPath != null) {
             loader.properties.setProperty(Options.XML_NODE, XPath);
+        }
+        if (metaXPath != null) {
+            loader.properties.setProperty(Options.XML_METADATA, XPath);
         }
         try {
             loader.open();
@@ -188,6 +204,63 @@ public class FileUrisStreamingXMLLoaderTest {
             fail();
         }
     }
+    
+    @Test
+    public void testOpenWithoutEnvelopeWithMetadata() {
+        FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
+        loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(false));
+        loader.properties.setProperty(Options.XML_NODE, "/BenefitEnrollmentRequest/BenefitEnrollmentMaintenance");
+        loader.properties.setProperty(Options.XML_METADATA, "/BenefitEnrollmentRequest/FileInformation");
+        try {
+            loader.open();
+            assertEquals(BUU_CHILD_XML_NODES, loader.getTotalCount());
+            assertTrue(loader.hasNext());
+            for (int i = 0; i < BUU_CHILD_XML_NODES; i++) {
+                String content = loader.next();
+                assertNotNull(content);
+                assertFalse(content.contains(FileUrisStreamingXMLLoader.LOADER_DOC));
+            }
+            
+            assertNotNull(loader.customMetadata);
+            String metadata = loader.properties.getProperty(PRE_BATCH_MODULE+'.'+METADATA);
+            assertNotNull(metadata);
+            assertFalse(metadata.contains(FileUrisXMLLoader.LOADER_DOC));
+            assertTrue(metadata.contains("InterchangeReceiverID"));
+            loader.close();
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+    
+    @Test
+    public void testOpenWithEnvelopeWithMetadata() {
+        FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
+        loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(true));
+        loader.properties.setProperty(Options.XML_NODE, "/BenefitEnrollmentRequest/BenefitEnrollmentMaintenance");
+        loader.properties.setProperty(Options.XML_METADATA, "/BenefitEnrollmentRequest/FileInformation");
+        loader.properties.setProperty(Options.METADATA_TO_PROCESS_MODULE, Boolean.toString(true));
+        try {
+            loader.open();
+            assertEquals(BUU_CHILD_XML_NODES, loader.getTotalCount());
+            assertTrue(loader.hasNext());
+            for (int i = 0; i < BUU_CHILD_XML_NODES; i++) {
+                String content = loader.next();
+                assertNotNull(content);
+                assertTrue(content.contains(FileUrisStreamingXMLLoader.LOADER_DOC));
+            }
+            
+            assertNotNull(loader.customMetadata);
+            String metadata = loader.properties.getProperty(PROCESS_MODULE+'.'+METADATA);
+            assertNotNull(metadata);
+            assertTrue(metadata.contains(FileUrisXMLLoader.LOADER_DOC));
+            assertTrue(metadata.contains("InterchangeReceiverID"));
+            loader.close();
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
 
     @Test
     public void testOpenWithEnvelopeAndBase64Encoded() {
@@ -204,6 +277,36 @@ public class FileUrisStreamingXMLLoaderTest {
                 assertTrue(content.contains(FileUrisStreamingXMLLoader.LOADER_DOC));
                 assertTrue(content.contains(String.format("%s=\"true\"", FileUrisStreamingXMLLoader.BASE64_ENCODED)));
             }
+            loader.close();
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+    
+    @Test
+    public void testOpenWithEnvelopeAndBase64EncodedWithMetadata() {
+        FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
+        loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(true));
+        loader.properties.setProperty(Options.LOADER_BASE64_ENCODE, Boolean.toString(true));
+        loader.properties.setProperty(Options.XML_NODE, "/BenefitEnrollmentRequest/BenefitEnrollmentMaintenance");
+        loader.properties.setProperty(Options.XML_METADATA, "/BenefitEnrollmentRequest/FileInformation");
+        try {
+            loader.open();
+            assertEquals(BUU_CHILD_XML_NODES, loader.getTotalCount());
+            assertTrue(loader.hasNext());
+            for (int i = 0; i < BUU_CHILD_XML_NODES; i++) {
+                String content = loader.next();
+                assertNotNull(content);
+                assertTrue(content.contains(FileUrisStreamingXMLLoader.LOADER_DOC));
+                assertTrue(content.contains(String.format("%s=\"true\"", FileUrisStreamingXMLLoader.BASE64_ENCODED)));
+            }
+            
+            assertNotNull(loader.customMetadata);
+            String metadata = loader.properties.getProperty(PRE_BATCH_MODULE+'.'+METADATA);
+            assertNotNull(metadata);
+            assertTrue(metadata.contains(FileUrisXMLLoader.LOADER_DOC));
+            
             loader.close();
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);

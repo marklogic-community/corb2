@@ -1,5 +1,6 @@
 <root>
     <!--http://test.com/test1.html-->
+    <h href="head0.html">head0</h>
     <a href="test1.html">test1</a>
     <?PITarget http://test.com/test2.html?>
     <a href="test2.html">test2</a>

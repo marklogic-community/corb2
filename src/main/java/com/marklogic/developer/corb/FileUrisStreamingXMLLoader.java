@@ -84,7 +84,6 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
     private final FileAttribute<?>[] fileAttributes = new FileAttribute<?>[0];
     private StreamingXPath streamingXPath;
     private StreamingXPath streamingMetaXPath;
-    private Node customMetadata;
     private TransformerFactory transformerFactory;
 
     @Override

@@ -82,9 +82,9 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
     protected Iterator<Node> nodeIterator;
     protected Document doc;
     protected File xmlFile;
+    protected Node customMetadata;
     private Map<Integer, Node> nodeMap;
-    private Node customMetadata;
-
+    
     @Override
     public void open() throws CorbException {
         String fileName = getLoaderPath(XML_FILE);
