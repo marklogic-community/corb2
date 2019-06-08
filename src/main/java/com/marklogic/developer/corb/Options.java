@@ -501,7 +501,27 @@ public final class Options {
      */
     @Usage(description = "Default is 10. Max number of custom inputs from the URIS-MODULE to other modules.")
     public static final String MAX_OPTS_FROM_MODULE = "MAX_OPTS_FROM_MODULE";
-
+    
+    /**
+     * The variable name that needs to be defined in the server side query to use the metadata set by the {@value #URIS-LOADER}
+     * 
+     * @see #@see #XML_METADATA
+     * @since 2.4.4 
+     */
+    @Usage(description = "The variable name that needs to be defined in the server side query to use the metadata set by the URIS-LOADER")
+    public static final String METADATA = "METADATA";
+    
+    /**
+     * If this option is set to 'true', {@value #XML_METADATA} is set as an external variable with 
+     * name {@value #METADATA} to {@value #PROCESS_MODULE} as well. The default value for this option is 'false'
+     * 
+     * @see #XML_METADATA
+     * @Since 2.4.4
+     */
+    @Usage(description = "If this option is set to 'true', XML-METADATA is set as an external variable with " 
+            + "name METADATA to PROCESS-MODULE as well. The default value for this option is 'false'")
+    public static final String METADATA_TO_PROCESS_MODULE = "METADATA-TO-PROCESS-MODULE";
+    
     /**
      * Adds the metrics document to the specified collection.
      * If {@value #JOB_NAME} is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.
@@ -1183,16 +1203,6 @@ public final class Options {
             + "The metadata is set as an external variable with name XML_METADATA to PRE-BATCH-MODULE")
     public static final String XML_METADATA = "XML-METADATA";
     
-    /**
-     * If this option is set to 'true', {@value #XML_METADATA} is set as an external variable with 
-     * name XML_METADATA to {@value #PROCESS_MODULE} as well. The default value for this option is 'false'
-     * 
-     * @see #XML_METADATA
-     * @Since 2.4.4
-     */
-    @Usage(description = "If this option is set to 'true', XML-METADATA is set as an external variable with " 
-            + "name XML_METADATA to PROCESS-MODULE as well. The default value for this option is 'false'")
-    public static final String XML_METADATA_TO_PROCESS_MODULE = "XML-METADATA-TO-PROCESS-MODULE";
     
     /**
      * An XPath to address the nodes to be returned in an {@value #XML_FILE} by

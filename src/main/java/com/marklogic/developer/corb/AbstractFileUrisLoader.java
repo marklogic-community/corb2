@@ -50,7 +50,7 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
     public static final String LOADER_DOC = "corb-loader";
     public static final String CONTENT = "content";
     public static final String BASE64_ENCODED = "base64Encoded";
-    public static final String METADATA = "metadata";
+    public static final String LOADER_METADATA = "metadata";
     public static final String META_CONTENT_TYPE = "contentType";
     public static final String META_FILENAME = "filename";
     public static final String META_PATH = "path";
@@ -86,7 +86,7 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
             Document doc = docBuilder.newDocument();
             Element docElement = doc.createElement(LOADER_DOC);
 
-            Element metadataElement = doc.createElement(METADATA);
+            Element metadataElement = doc.createElement(LOADER_METADATA);
             docElement.appendChild(metadataElement);
 
             for (Map.Entry<String, String> entry : metadata.entrySet()) {
