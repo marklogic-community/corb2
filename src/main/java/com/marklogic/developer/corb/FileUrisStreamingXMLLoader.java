@@ -18,12 +18,8 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
-import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.XML_FILE;
 import static com.marklogic.developer.corb.Options.XML_METADATA;
-import static com.marklogic.developer.corb.Options.METADATA;
-import static com.marklogic.developer.corb.Options.METADATA_TO_PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.XML_NODE;
 
 import com.marklogic.developer.corb.util.FileUtils;
@@ -35,7 +31,6 @@ import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.stream.StreamResult;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -75,6 +70,7 @@ import org.xml.sax.SAXException;
  * the {@value Options#XML_SCHEMA}
  *
  * @author Mads Hansen, MarkLogic Corporation
+ * @author Bhagat Bandlamudi
  * @since 2.4.0
  */
 public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
@@ -261,7 +257,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
             } finally {
                 context.removeLast();
             }
-        } else if (streamingMetaXPath != null && streamingMetaXPath.matches(currentPath)) {
+        } else if (customMetadata == null && streamingMetaXPath != null && streamingMetaXPath.matches(currentPath)) {
             try {
                 Transformer autobot = newTransformer();
                 DOMResult result = new DOMResult();

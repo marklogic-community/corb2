@@ -23,10 +23,12 @@ import static com.marklogic.developer.corb.Options.METADATA_TO_PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.XML_FILE;
+import static com.marklogic.developer.corb.Options.XML_METADATA;
 import static com.marklogic.developer.corb.Options.XML_NODE;
 import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -68,6 +70,7 @@ import org.xml.sax.SAXParseException;
  * {@link com.marklogic.developer.corb.FileUrisStreamingXMLLoader}
  *
  * @author Praveen Venkata
+ * @author Bhagat Bandlamudi
  * @since 2.3.1
  */
 public class FileUrisXMLLoader extends AbstractFileUrisLoader {
@@ -80,6 +83,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
     protected Document doc;
     protected File xmlFile;
     private Map<Integer, Node> nodeMap;
+    private Node customMetadata;
 
     @Override
     public void open() throws CorbException {
@@ -95,10 +99,15 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
                 throw new CorbException("Problem loading data from XML file ", exc);
             }
         }
+        
+        if(customMetadata != null) {
+            setMetadataNodeToModule(customMetadata,xmlFile);
+        }
     }
 
     private Iterator<Node> readNodes(Path input) throws CorbException {
         String xpathRootNode = getProperty(XML_NODE);
+        String xpathMetadataNode = getProperty(XML_METADATA);
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         dbFactory.setNamespaceAware(true);
         try {
@@ -120,6 +129,15 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
                 XPathExpression expr = xpath.compile(xpathRootNode);
                 Object result = expr.evaluate(doc, XPathConstants.NODESET);
                 nodeList = (NodeList) result;
+                
+                if(isNotEmpty(xpathMetadataNode)) {
+                    XPathExpression metadataExpr = xpath.compile(xpathMetadataNode);
+                    Object metadataResult = metadataExpr.evaluate(doc, XPathConstants.NODESET);
+                    NodeList metadataNodeList = (NodeList) metadataResult;
+                    if(metadataNodeList.getLength() > 0) {
+                        customMetadata = metadataNodeList.item(0);
+                    }
+                }
             }
 
             nodeMap = new ConcurrentHashMap<>(nodeList.getLength());
