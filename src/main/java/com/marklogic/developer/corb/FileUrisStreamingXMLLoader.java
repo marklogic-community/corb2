@@ -112,37 +112,14 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
             LOG.log(Level.SEVERE, MessageFormat.format("IOException occurred processing {0}", xmlFilename), ex);
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
         }
+        //extract all the child nodes to a temp directory and load the metadata along with it. 
         files = readToTempDir(xmlFile.toPath());
         
         if(customMetadata != null) {
-            try { 
-                String content;
-                if (shouldUseEnvelope()) {
-                    Map<String, String> metadata = getMetadata(xmlFile);
-                    Document document;
-                    if(shouldBase64Encode()) {
-                        content = XmlUtils.nodeToString(customMetadata);
-                        document = toLoaderDoc(metadata, new ByteArrayInputStream(content.getBytes()));
-                    }else {
-                        document = toLoaderDoc(metadata, customMetadata, false);
-                    }
-                    content = XmlUtils.documentToString(document);
-                }else {
-                    content = XmlUtils.nodeToString(customMetadata);
-                }
-                if(content != null) {
-                    properties.put(PRE_BATCH_MODULE+'.'+METADATA, content);
-                    if(StringUtils.stringToBoolean(getProperty(METADATA_TO_PROCESS_MODULE), false)) {                   
-                        properties.put(PROCESS_MODULE+'.'+METADATA, content);
-                    }
-                }
-            }catch(IOException ex) {
-                LOG.log(Level.SEVERE, MessageFormat.format("IOException occurred processing {0}", xmlFilename), ex);
-                throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_METADATA, ex);
-            }
+            setMetadataNodeToModule(customMetadata,xmlFile);
         }
     }
-
+    
     @Override
     public boolean hasNext() throws CorbException {
         return files.hasNext();
