@@ -20,6 +20,7 @@ package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.METADATA;
 import static com.marklogic.developer.corb.Options.METADATA_TO_PROCESS_MODULE;
+import static com.marklogic.developer.corb.Options.POST_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.XML_FILE;
@@ -290,6 +291,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
     private void setMetadataProperties(String content) {
         if (content != null) {
             properties.put(PRE_BATCH_MODULE + '.' + METADATA, content);
+            properties.put(POST_BATCH_MODULE + '.' + METADATA, content);
             if (StringUtils.stringToBoolean(getProperty(METADATA_TO_PROCESS_MODULE), false)) {
                 properties.put(PROCESS_MODULE + '.' + METADATA, content);
             }

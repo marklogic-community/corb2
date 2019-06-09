@@ -28,14 +28,15 @@ import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.stream.StreamResult;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -106,6 +107,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
             LOG.log(Level.SEVERE, MessageFormat.format("IOException occurred processing {0}", xmlFilename), ex);
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
         }
+        LOG.log(Level.INFO, MessageFormat.format("Using the temp directory {0}", tempDir));
         //extract all the child nodes to a temp directory and load the metadata along with it. 
         files = readToTempDir(xmlFile.toPath());
 
@@ -179,11 +181,13 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
             while (reader.hasNext()) {
                 // if there is a problem extracting an element, don't count it
                 if (reader.isStartElement()) {
-                    if (extractElement(reader, context)) {
+                    int code = extractElement(reader, context);
+                    // code=2 is for metadata, we can ignore it. 
+                    if ( code == 1) { //xml_node
                         extractedDocumentCount++;
-                    } else {
+                    } else if(code == 0){ // no extraction
                         reader.next();
-                    }
+                    } 
                 } else {
                     if (reader.isEndElement()) {
                         context.removeLast();
@@ -233,8 +237,8 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
      * @param context
      * @return boolean indicating whether an element was successfully extracted
      */
-    protected boolean extractElement(XMLStreamReader reader, Deque<String> context) {
-        boolean elementWasExtracted = false;
+    protected int extractElement(XMLStreamReader reader, Deque<String> context) {
+        int extractionCode = 0;
 
         String localName = reader.getLocalName(); //currently, namespace-insensitive
         context.addLast(localName);
@@ -248,7 +252,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
                 Transformer autobot = newTransformer();
                 autobot.transform(new StAXSource(reader), new StreamResult(file.toFile()));
 
-                elementWasExtracted = true;
+                extractionCode = 1;
             } catch (IOException | TransformerException ex) {
                 LOG.log(Level.SEVERE, EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
             } finally {
@@ -256,17 +260,23 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
             }
         } else if (customMetadata == null && streamingMetaXPath != null && streamingMetaXPath.matches(currentPath)) {
             try {
+                StringWriter writer = new StringWriter();
                 Transformer autobot = newTransformer();
-                DOMResult result = new DOMResult();
-                autobot.transform(new StAXSource(reader), result);
-                customMetadata = result.getNode() != null ? result.getNode().getFirstChild(): null;              
-            } catch (TransformerException ex) {
+                autobot.transform(new StAXSource(reader), new StreamResult(writer));
+                String metaAsStr = writer.toString();
+                
+                DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+                Document originalDocument = docBuilder.parse(new ByteArrayInputStream(metaAsStr.getBytes()));
+                customMetadata = originalDocument.getDocumentElement();
+                
+                extractionCode = 2;
+            } catch (TransformerException | IOException | ParserConfigurationException | SAXException ex) {
                 LOG.log(Level.SEVERE, EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
             } finally {
                 context.removeLast();
             }
         }
-        return elementWasExtracted;
+        return extractionCode;
     }
 
     /**
