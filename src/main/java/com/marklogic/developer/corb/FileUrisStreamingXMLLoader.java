@@ -56,7 +56,6 @@ import javax.xml.transform.stax.StAXSource;
 
 import com.marklogic.developer.corb.util.XmlUtils;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 /**
@@ -109,10 +108,9 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         }
         //extract all the child nodes to a temp directory and load the metadata along with it. 
         files = readToTempDir(xmlFile.toPath());
-        
-        if(customMetadata != null) {
-            setMetadataNodeToModule(customMetadata,xmlFile);
-        }
+
+        setMetadataNodeToModule(customMetadata, xmlFile);
+
     }
     
     @Override
