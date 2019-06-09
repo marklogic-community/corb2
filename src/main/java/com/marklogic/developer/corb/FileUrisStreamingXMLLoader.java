@@ -221,7 +221,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         if (!StringUtils.isBlank(tempDirOption)) {
             File temporaryDirectory = new File(tempDirOption);
             if (!(temporaryDirectory.exists() && temporaryDirectory.isDirectory() && temporaryDirectory.canWrite())) {
-                throw new InvalidParameterException(this.getClass().getSimpleName() + " temporary directory must exist and be writable");
+                throw new InvalidParameterException(this.getClass().getSimpleName() + " temporary directory "+tempDirOption+" must exist and be writable");
             }
             dir = Files.createTempDirectory(temporaryDirectory.toPath(), prefix, fileAttributes);
         } else {
@@ -236,7 +236,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
      *
      * @param reader
      * @param context
-     * @return boolean indicating whether an element was successfully extracted
+     * @return int code indicating whether an element was successfully extracted
      */
     protected int extractElement(XMLStreamReader reader, Deque<String> context) {
         int extractionCode = 0;
