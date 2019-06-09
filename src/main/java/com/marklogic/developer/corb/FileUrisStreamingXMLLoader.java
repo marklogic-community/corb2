@@ -217,14 +217,15 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         if (StringUtils.isBlank(tempDirOption)) {
             tempDirOption = getProperty(Options.TEMP_DIR);
         }
+        String prefix = xmlFile != null ? xmlFile.getName() : "temp";
         if (!StringUtils.isBlank(tempDirOption)) {
             File temporaryDirectory = new File(tempDirOption);
             if (!(temporaryDirectory.exists() && temporaryDirectory.isDirectory() && temporaryDirectory.canWrite())) {
                 throw new InvalidParameterException(this.getClass().getSimpleName() + " temporary directory must exist and be writable");
             }
-            dir = temporaryDirectory.toPath();
+            dir = Files.createTempDirectory(temporaryDirectory.toPath(), prefix, fileAttributes);
         } else {
-            dir = Files.createTempDirectory(xmlFile.getName(), fileAttributes);
+            dir = Files.createTempDirectory(prefix, fileAttributes);
         }
         return dir;
     }
