@@ -339,7 +339,7 @@ public class FileUrisStreamingXMLLoaderTest {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        assertEquals(0, tempDir.compareTo(Paths.get(BUU_DIR)));
+        assertEquals(0, tempDir.getParent().compareTo(Paths.get(BUU_DIR)));
     }
 
     @Test(expected = InvalidParameterException.class)
