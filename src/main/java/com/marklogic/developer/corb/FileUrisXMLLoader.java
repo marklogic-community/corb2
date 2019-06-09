@@ -99,10 +99,8 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
                 throw new CorbException("Problem loading data from XML file ", exc);
             }
         }
-        
-        if(customMetadata != null) {
-            setMetadataNodeToModule(customMetadata,xmlFile);
-        }
+
+        setMetadataNodeToModule(customMetadata, xmlFile);
     }
 
     private Iterator<Node> readNodes(Path input) throws CorbException {
@@ -130,11 +128,11 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
                 Object result = expr.evaluate(doc, XPathConstants.NODESET);
                 nodeList = (NodeList) result;
                 
-                if(isNotEmpty(xpathMetadataNode)) {
+                if (isNotEmpty(xpathMetadataNode)) {
                     XPathExpression metadataExpr = xpath.compile(xpathMetadataNode);
                     Object metadataResult = metadataExpr.evaluate(doc, XPathConstants.NODESET);
                     NodeList metadataNodeList = (NodeList) metadataResult;
-                    if(metadataNodeList.getLength() > 0) {
+                    if (metadataNodeList.getLength() > 0) {
                         customMetadata = metadataNodeList.item(0);
                     }
                 }
@@ -160,18 +158,8 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
     private String readNextNode() throws CorbException {
         if (nodeIterator.hasNext()) {
             Node nextNode = nodeIterator.next();
-            short nextNodeType = nextNode.getNodeType();
-            String line;
+            String line = nodeToString(nextNode);
 
-            if (nextNodeType == Node.ELEMENT_NODE || nextNodeType == Node.DOCUMENT_NODE) {
-                //serialize the XML into a string
-                line = trim(XmlUtils.nodeToString(nextNode));
-            } else {
-                line = nextNode.getNodeValue();
-            }
-            if (isBlank(line)) {
-                line = readNextNode();
-            }
             if (shouldUseEnvelope()) { //TODO: determine if default should be true(breaking change)
                 Map<String, String> metadata;
                 try {
@@ -199,6 +187,21 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
             }
         }
         return null;
+    }
+
+    private String nodeToString(Node node) throws CorbException {
+        String line;
+        short nextNodeType = node.getNodeType();
+        if (nextNodeType == Node.ELEMENT_NODE || nextNodeType == Node.DOCUMENT_NODE) {
+            //serialize the XML into a string
+            line = trim(XmlUtils.nodeToString(node));
+        } else {
+            line = node.getNodeValue();
+        }
+        if (isBlank(line)) {
+            line = readNextNode();
+        }
+        return line;
     }
 
     @Override
@@ -254,31 +257,42 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
         }
     }
     
-    protected void setMetadataNodeToModule(Node metadataNode, File file) throws CorbException{
-        try { 
-            String content;
-            if (shouldUseEnvelope()) {
-                Map<String, String> metadataMap = (file != null) ? getMetadata(file): new HashMap<String,String>();
-                Document document;
-                if(shouldBase64Encode()) {
-                    content = XmlUtils.nodeToString(metadataNode);
-                    document = toLoaderDoc(metadataMap, new ByteArrayInputStream(content.getBytes()));
-                }else {
-                    document = toLoaderDoc(metadataMap, metadataNode, false);
-                }
-                content = XmlUtils.documentToString(document);
-            }else {
+    protected void setMetadataNodeToModule(Node metadataNode, File file) throws CorbException {
+        if (metadataNode != null) {
+            try {
+                String content = parseContent(metadataNode, file);
+                setMetadataProperties(content);
+            } catch (IOException ex) {
+                LOG.log(Level.SEVERE, MessageFormat.format("IOException occurred processing {0}", (file != null ? file.getName() : "")), ex);
+                throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_METADATA, ex);
+            }
+        }
+    }
+
+    private String parseContent(Node metadataNode, File file) throws IOException, CorbException {
+        String content;
+        if (shouldUseEnvelope()) {
+            Map<String, String> metadataMap = (file != null) ? getMetadata(file) : new HashMap<>();
+            Document document;
+            if (shouldBase64Encode()) {
                 content = XmlUtils.nodeToString(metadataNode);
+                document = toLoaderDoc(metadataMap, new ByteArrayInputStream(content.getBytes()));
+            } else {
+                document = toLoaderDoc(metadataMap, metadataNode, false);
             }
-            if(content != null) {
-                properties.put(PRE_BATCH_MODULE+'.'+METADATA, content);
-                if(StringUtils.stringToBoolean(getProperty(METADATA_TO_PROCESS_MODULE), false)) {                   
-                    properties.put(PROCESS_MODULE+'.'+METADATA, content);
-                }
+            content = XmlUtils.documentToString(document);
+        } else {
+            content = XmlUtils.nodeToString(metadataNode);
+        }
+        return content;
+    }
+
+    private void setMetadataProperties(String content) {
+        if (content != null) {
+            properties.put(PRE_BATCH_MODULE + '.' + METADATA, content);
+            if (StringUtils.stringToBoolean(getProperty(METADATA_TO_PROCESS_MODULE), false)) {
+                properties.put(PROCESS_MODULE + '.' + METADATA, content);
             }
-        }catch(IOException ex) {
-            LOG.log(Level.SEVERE, MessageFormat.format("IOException occurred processing {0}", (file != null ? file.getName():"")), ex);
-            throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_METADATA, ex);
         }
     }
 
