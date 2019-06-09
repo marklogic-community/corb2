@@ -508,7 +508,7 @@ public final class Options {
      * @see #@see #XML_METADATA
      * @since 2.4.5 
      */
-    @Usage(description = "The variable name that needs to be defined in the server side query to use the metadata set by the URIS-LOADER")
+    @Usage(description = "The external variable name that needs to be defined in the server side query to use the metadata set by the URIS-LOADER")
     public static final String METADATA = "METADATA";
     
     /**
@@ -1193,14 +1193,15 @@ public final class Options {
     /**
      * An XPath to address the node that contains metadata portion of the XML. This must be different from 
      * the {@value #XML_NODE}. If the implementation supports, multiple comma separated paths can be specified.
-     * The metadata is set as an external variable with name XML_METADATA to {@value #PRE_BATCH_MODULE} 
+     * The metadata is set as an external variable with name {@value #METADATA} to {@value #PRE_BATCH_MODULE} and
+     * {@value #PROCESS_MODULE} if enabled by {@value #METADATA_TO_PROCESS_MODULE}
      * 
      * @see #XML_FILE
      * @Since 2.4.5
      */
     @Usage(description = "An XPath to address the node that contains metadata portion of the XML. This must be different from " 
-            + "the XML-NODE. If the implementation supports, multiple comma separated paths can be specified. " 
-            + "The metadata is set as an external variable with name XML_METADATA to PRE-BATCH-MODULE")
+            + "the XML-NODE. The metadata is set as an external variable with name METADATA to PRE-BATCH-MODULE and "
+            + "PROCESS-MODULE if enabled by METADATA-TO-PROCESS-MODULE")
     public static final String XML_METADATA = "XML-METADATA";
     
     
