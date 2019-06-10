@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.METADATA;
+import static com.marklogic.developer.corb.Options.POST_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.XML_FILE;
@@ -251,7 +252,9 @@ public class FileUrisStreamingXMLLoaderTest {
             }
             
             assertNotNull(loader.customMetadata);
-            String metadata = loader.properties.getProperty(PROCESS_MODULE+'.'+METADATA);
+            String metadata = loader.properties.getProperty(POST_BATCH_MODULE+'.'+METADATA);
+            assertNotNull(metadata);
+            metadata = loader.properties.getProperty(PROCESS_MODULE+'.'+METADATA);
             assertNotNull(metadata);
             assertTrue(metadata.contains(FileUrisXMLLoader.LOADER_DOC));
             assertTrue(metadata.contains("InterchangeReceiverID"));
