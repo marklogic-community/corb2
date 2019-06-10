@@ -18,7 +18,10 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Options.POST_BATCH_MODULE;
+import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
 import static com.marklogic.developer.corb.Options.URIS_REPLACE_PATTERN;
+import static com.marklogic.developer.corb.Options.URIS_TOTAL_COUNT;
 
 import com.marklogic.developer.corb.util.StringUtils;
 
@@ -86,6 +89,11 @@ public abstract class AbstractUrisLoader implements UrisLoader {
 
     public void setTotalCount(long totalCount) {
         this.total = totalCount;
+        
+        if (properties != null && this.total > 0) {
+            properties.put(PRE_BATCH_MODULE + '.' + URIS_TOTAL_COUNT, String.valueOf(this.total));
+            properties.put(POST_BATCH_MODULE + '.' + URIS_TOTAL_COUNT, String.valueOf(this.total));
+        }
     }
 
     public String getProperty(String key) {

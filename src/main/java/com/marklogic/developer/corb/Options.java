@@ -975,6 +975,12 @@ public final class Options {
      */
     @Usage
     public static final String URIS_BATCH_REF = "URIS_BATCH_REF";
+    
+    /**
+    * Variable representing total count of uris
+    */
+   @Usage
+   public static final String URIS_TOTAL_COUNT = "URIS_TOTAL_COUNT";
 
     /**
      * If defined instead of {@value #URIS_MODULE}, URIs will be loaded from the
@@ -1194,14 +1200,14 @@ public final class Options {
      * An XPath to address the node that contains metadata portion of the XML. This must be different from 
      * the {@value #XML_NODE}. If the implementation supports, multiple comma separated paths can be specified.
      * The metadata is set as an external variable with name {@value #METADATA} to {@value #PRE_BATCH_MODULE} and
-     * {@value #PROCESS_MODULE} if enabled by {@value #METADATA_TO_PROCESS_MODULE}
+     * {@value #POST_BATCH_MODULE} and also {@value #PROCESS_MODULE} if enabled by {@value #METADATA_TO_PROCESS_MODULE}
      * 
      * @see #XML_FILE
      * @Since 2.4.5
      */
     @Usage(description = "An XPath to address the node that contains metadata portion of the XML. This must be different from " 
             + "the XML-NODE. The metadata is set as an external variable with name METADATA to PRE-BATCH-MODULE and "
-            + "PROCESS-MODULE if enabled by METADATA-TO-PROCESS-MODULE")
+            + "AND POST-BATCH-MODULE and also PROCESS-MODULE if enabled by METADATA-TO-PROCESS-MODULE")
     public static final String XML_METADATA = "XML-METADATA";
     
     
