@@ -162,6 +162,9 @@ As an example, a batch ref can be a link/id of a document that manages the statu
 
 ExportBatchToFileTask, PreBatchUpdateFileTask and PostBatchUpdateFileTask use **URIS\_BATCH\_REF** as the file name if **EXPORT-FILE-NAME** is not specified. This is useful for automated jobs where name of the output file name can be determined only by the **URIS-MODULE**.  
 
+#### URIS\_TOTAL\_COUNT
+Total count of uris is set as an external variable to **PRE-BATCH-MODULE** and **POST-BATCH-MODULE** (since 2.4.5)
+
 ### Custom Inputs to XQuery or JavaScript Modules
 Any property specified with prefix (with '.') **INIT-MODULE**, **URIS-MODULE**, **PRE-BATCH-MODULE**, **PROCESS-MODULE**, **POST-BATCH-MODULE** will be set as an external variable in the corresponding XQuery module (if that variable is defined as an external string variable in XQuery module). For JavaScript modules the variables need be defined as global variables.  
 

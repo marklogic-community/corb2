@@ -1,6 +1,6 @@
 xquery version "1.0-ml";
-declare namespace bem="http://bem.corb.developer.marklogic.com";
-declare namespace p = "http://persistence.corb.developer.marklogic.com"
+declare namespace bem = "http://bem.corb.developer.marklogic.com";
+declare namespace p = "http://persistence.corb.developer.marklogic.com";
 
 declare variable $METADATA as xs:string external;
 declare variable $URIS_BATCH_REF as xs:string external;
@@ -34,10 +34,10 @@ let $child-count :=
             cts:element-value-query(xs:QName("p:fileName"),$originalFilename),
             cts:element-value-query(xs:QName("p:parentTransactionFileHandlingObjectIdentifier"),$parentId)
         ))
-    )
+    ))
 return 
   (
     xdmp:log("Finished processing " || xdmp:estimate(collection($parentId)) || " files from: " || $originalFilename || " with parentId: " || $parentId),
     xdmp:collection-delete($BATCH_ID),
-    "POST-BATCH-MODULE,"||$URIS_TOTAL_COUNT||","||$child-count||($URIS_TOTAL_COUNT eq xs:String($child-count))
+    "POST-BATCH-MODULE,"||$URIS_TOTAL_COUNT||","||$child-count||","||($URIS_TOTAL_COUNT eq xs:string($child-count))
   ) 
