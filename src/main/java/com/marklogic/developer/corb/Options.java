@@ -977,7 +977,9 @@ public final class Options {
     public static final String URIS_BATCH_REF = "URIS_BATCH_REF";
     
     /**
-    * Variable representing total count of uris
+    * Variable representing total count of uris set to PRE-BATCH-MODULE and POST-BATCH-MODULE
+    * 
+    * @since 2.4.5
     */
    @Usage
    public static final String URIS_TOTAL_COUNT = "URIS_TOTAL_COUNT";
