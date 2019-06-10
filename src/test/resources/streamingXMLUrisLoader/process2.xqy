@@ -1,6 +1,6 @@
 xquery version "1.0-ml";
 declare namespace bem = "http://bem.corb.developer.marklogic.com";
-declare namespace p = "http://persistence.corb.developer.marklogic.com"
+declare namespace p = "http://persistence.corb.developer.marklogic.com";
 
 declare variable $URI as xs:string external;
 declare variable $URIS_BATCH_REF as xs:string external;

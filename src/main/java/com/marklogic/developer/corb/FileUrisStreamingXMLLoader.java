@@ -127,8 +127,8 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         try {
             if (shouldUseEnvelope()) {
                 File file = path.toFile();
-                Map<String, String> metadata = getMetadata(file);
-                metadata.put(META_SOURCE, xmlFile.getCanonicalPath());
+                Map<String, String> metadata = getMetadata(xmlFile);
+                metadata.put(META_SOURCE, file.getCanonicalPath());
                 Document document;
                 if (shouldBase64Encode()) {
                     try (InputStream inputStream = new FileInputStream(file)) {

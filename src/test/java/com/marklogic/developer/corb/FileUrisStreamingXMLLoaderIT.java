@@ -26,7 +26,10 @@ import static com.marklogic.developer.corb.FileUrisStreamingXMLLoaderTest.BUU_FI
 import static com.marklogic.developer.corb.FileUrisStreamingXMLLoaderTest.BUU_SCHEMA;
 import static com.marklogic.developer.corb.FileUrisStreamingXMLLoaderTest.NOT_BUU_SCHEMA;
 import com.marklogic.developer.corb.util.FileUtils;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -89,6 +92,23 @@ public class FileUrisStreamingXMLLoaderIT {
             fail();
         }
     }
+    
+    @Test
+    public void testStreamingXMLUrisLoaderWithXPath() {
+        try {
+            Properties props = getBUUPropertiesWithXPath();
+            props.put("LAST_LINE","NA");
+            
+            int result = testStreamingXMLUrisLoader(BUU_FILENAME, props);
+            assertEquals(7, result);
+            
+            String last = (String)props.get("LAST_LINE");
+            assertEquals("POST-BATCH-MODULE,5,5,true",last);
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
 
     @Test
     public void testStreamingXMLUrisLoaderWithLargeInput() {
@@ -117,6 +137,15 @@ public class FileUrisStreamingXMLLoaderIT {
             manager.run();
 
             lineCount = FileUtils.getLineCount(report);
+            
+            if(properties.containsKey("LAST_LINE")) {
+                BufferedReader input = new BufferedReader(new FileReader(report));
+                String last=null, line = null;
+                while ((line = input.readLine()) != null) {
+                    last = line;
+                }
+                properties.put("LAST_LINE", last != null ? last : "NULL");
+            }           
             clearFile(report);
 
         } catch (Exception ex) {
@@ -175,9 +204,36 @@ public class FileUrisStreamingXMLLoaderIT {
         properties.setProperty(Options.PRE_BATCH_MODULE, BUU_DIR + "preBatch.xqy|ADHOC");
         properties.setProperty(Options.PROCESS_TASK, ExportBatchToFileTask.class.getName());
         properties.setProperty(Options.PROCESS_MODULE, BUU_DIR + "process.xqy|ADHOC");
-        properties.setProperty(Options.POST_BATCH_MODULE, BUU_DIR + "postBatch.xqy|ADHOC");
+        properties.setProperty(Options.POST_BATCH_MODULE, BUU_DIR + "postBatch.xqy|ADHOC");               
         properties.setProperty(Options.THREAD_COUNT, Integer.toString(10));
         properties.setProperty(Options.LOADER_SET_URIS_BATCH_REF, Boolean.toString(true));
+        return properties;
+    }
+    
+    public Properties getBUUPropertiesWithXPath() {
+        Properties properties = new Properties();
+        properties.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
+        properties.setProperty(Options.EXPORT_FILE_DIR, exportFileDir);
+        properties.setProperty(Options.XML_FILE, BUU_DIR + BUU_FILENAME);
+        properties.setProperty(Options.XML_SCHEMA, BUU_DIR + BUU_SCHEMA);
+        properties.setProperty(Options.URIS_LOADER, STREAMING_XML_LOADER);
+        
+        properties.setProperty(Options.XML_NODE, "/BenefitEnrollmentRequest/BenefitEnrollmentMaintenance");
+        properties.setProperty(Options.XML_METADATA, "/BenefitEnrollmentRequest/FileInformation");
+        properties.setProperty(Options.PRE_BATCH_TASK, PreBatchUpdateFileTask.class.getName());
+        properties.setProperty(Options.PRE_BATCH_MODULE, BUU_DIR + "preBatch2.xqy|ADHOC");
+        properties.setProperty(Options.PROCESS_TASK, ExportBatchToFileTask.class.getName());
+        properties.setProperty(Options.PROCESS_MODULE, BUU_DIR + "process2.xqy|ADHOC");
+        properties.setProperty(Options.POST_BATCH_TASK, PostBatchUpdateFileTask.class.getName());
+        properties.setProperty(Options.POST_BATCH_MODULE, BUU_DIR + "postBatch2.xqy|ADHOC");
+        
+        properties.setProperty(Options.THREAD_COUNT, Integer.toString(10));
+        properties.setProperty(Options.LOADER_SET_URIS_BATCH_REF, Boolean.toString(true));
+        
+        String batchId = System.currentTimeMillis()+String.format("%06d", (int)(Math.random()*1000000));
+        properties.setProperty(Options.PRE_BATCH_MODULE+".BATCH_ID",batchId);
+        properties.setProperty(Options.PROCESS_MODULE+".BATCH_ID",batchId);
+        properties.setProperty(Options.POST_BATCH_MODULE+".BATCH_ID",batchId);
         return properties;
     }
 }
