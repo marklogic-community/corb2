@@ -53,7 +53,7 @@ public class FileUrisDirectoryLoader extends AbstractFileUrisLoader {
 
         try {
             if (shouldSetBatchRef()) {
-                batchRef = dir.toFile().getCanonicalPath();
+                batchRef = file.getCanonicalPath();
             }
             fileStream = Files.walk(dir);
             fileIterator = fileStream.filter(this::accept).iterator();

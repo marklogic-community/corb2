@@ -25,6 +25,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -113,7 +115,13 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
     protected Map<String, String> getMetadata(File file) throws IOException {
         Map<String, String> metadata = new HashMap<>();
         metadata.put(META_FILENAME, file.getName());
-        metadata.put(META_PATH, file.getCanonicalPath());
+        metadata.put(META_PATH, getMetaPath(file));
+
+        String loaderPath = getLoaderPath();
+        if (StringUtils.isNotBlank(loaderPath)) {
+            metadata.put(META_SOURCE, loaderPath);
+        }
+
         String lastModified = this.toISODateTime(file.lastModified());
         if (StringUtils.isNotBlank(lastModified)) {
             metadata.put(META_LAST_MODIFIED, lastModified);
@@ -123,6 +131,19 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
             metadata.put(META_CONTENT_TYPE, contentType);
         }
         return metadata;
+    }
+
+    protected String getMetaPath(File file) throws IOException {
+        String path = file.getCanonicalPath();
+        String loaderPath = getLoaderPath();
+
+        if (StringUtils.isNotBlank(loaderPath)) {
+            String loaderPathCanonicalPath = Paths.get(loaderPath).toFile().getCanonicalPath();
+            if (path.startsWith(loaderPathCanonicalPath)) {
+                path = path.substring(loaderPathCanonicalPath.length() + 1);
+            }
+        }
+        return path;
     }
 
     protected String toISODateTime(FileTime fileTime) {

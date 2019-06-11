@@ -18,6 +18,8 @@
  */
 package com.marklogic.developer.corb;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
@@ -77,6 +79,33 @@ public class FileUrisDirectoryLoaderTest {
     public void testCloseWhenNotOpen() {
         try (FileUrisDirectoryLoader loader = new FileUrisDirectoryLoader()) {
             loader.close();
+        }
+    }
+
+    @Test
+    public void testGetMetaFilename() {
+        Properties properties = new Properties();
+        File loaderDir = new File("/var/tmp");
+        try (FileUrisDirectoryLoader loader = new FileUrisDirectoryLoader()) {
+            properties.setProperty(Options.LOADER_PATH, loaderDir.getCanonicalPath());
+            loader.setProperties(properties);
+            File file = new File("/var/tmp/foo/bar.txt");
+            String path = loader.getMetaPath(file);
+            assertEquals("foo/bar.txt", path);
+            assertNotEquals(file.getCanonicalPath(), path);
+        } catch (IOException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testGetMetaFilenameWithoutLoaderPath() {
+        File file = new File("/var/tmp/foo/bar.txt");
+        try (FileUrisDirectoryLoader loader = new FileUrisDirectoryLoader()) {
+            String path = loader.getMetaPath(file);
+            assertEquals(file.getCanonicalPath(), path);
+        } catch (IOException ex) {
+            fail();
         }
     }
 
