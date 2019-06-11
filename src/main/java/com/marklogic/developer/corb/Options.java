@@ -504,9 +504,9 @@ public final class Options {
     public static final String MAX_OPTS_FROM_MODULE = "MAX-OPTS-FROM-MODULE";
     
     /**
-     * The variable name that needs to be defined in the server side query to use the metadata set by the {@value #URIS-LOADER}
+     * The variable name that needs to be defined in the server side query to use the metadata set by the {@value #URIS_LOADER}
      * 
-     * @see #@see #XML_METADATA
+     * @see #XML_METADATA
      * @since 2.4.5
      */
     @Usage(description = "The external variable name that needs to be defined in the server side query to use the metadata set by the URIS-LOADER")
@@ -517,7 +517,7 @@ public final class Options {
      * name {@value #METADATA} to {@value #PROCESS_MODULE} as well. The default value for this option is 'false'
      * 
      * @see #XML_METADATA
-     * @Since 2.4.5
+     * @since 2.4.5
      */
     @Usage(description = "If this option is set to 'true', XML-METADATA is set as an external variable with " 
             + "name METADATA to PROCESS-MODULE as well. The default value for this option is 'false'")
