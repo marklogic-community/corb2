@@ -498,15 +498,16 @@ public final class Options {
     /**
      * Default is 10. Max number of custom inputs from the {@value #URIS_MODULE}
      * to other modules.
+     * @since 2.4.5
      */
     @Usage(description = "Default is 10. Max number of custom inputs from the URIS-MODULE to other modules.")
-    public static final String MAX_OPTS_FROM_MODULE = "MAX_OPTS_FROM_MODULE";
+    public static final String MAX_OPTS_FROM_MODULE = "MAX-OPTS-FROM-MODULE";
     
     /**
      * The variable name that needs to be defined in the server side query to use the metadata set by the {@value #URIS-LOADER}
      * 
      * @see #@see #XML_METADATA
-     * @since 2.4.5 
+     * @since 2.4.5
      */
     @Usage(description = "The external variable name that needs to be defined in the server side query to use the metadata set by the URIS-LOADER")
     public static final String METADATA = "METADATA";
