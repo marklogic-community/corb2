@@ -1206,7 +1206,7 @@ public final class Options {
      * {@value #POST_BATCH_MODULE} and also {@value #PROCESS_MODULE} if enabled by {@value #METADATA_TO_PROCESS_MODULE}
      * 
      * @see #XML_FILE
-     * @Since 2.4.5
+     * @since 2.4.5
      */
     @Usage(description = "An XPath to address the node that contains metadata portion of the XML. This must be different from " 
             + "the XML-NODE. The metadata is set as an external variable with name METADATA to PRE-BATCH-MODULE and "
