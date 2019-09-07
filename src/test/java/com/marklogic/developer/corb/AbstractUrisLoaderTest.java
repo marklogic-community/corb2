@@ -76,6 +76,17 @@ public class AbstractUrisLoaderTest {
         long result = instance.getTotalCount();
         assertEquals(0, result);
     }
+    
+    @Test
+    public void testSetTotalCount() {
+        AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
+        instance.setProperties(new Properties());
+        assertEquals(0, instance.getTotalCount());
+        instance.setTotalCount(5);
+        assertEquals(5, instance.getTotalCount());
+        assertEquals(String.valueOf(5), instance.getProperty("PRE-BATCH-MODULE.URIS_TOTAL_COUNT"));
+        assertEquals(String.valueOf(5), instance.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
+    }
 
     @Test
     public void testGetProperty() {

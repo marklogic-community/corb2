@@ -184,6 +184,24 @@ public class FileUrisLoaderTest {
             assertEquals(8, instance.getTotalCount());
         }
     }
+    
+    @Test
+    public void testGetTotalCountAsModuleVariables() {
+        try (FileUrisLoader instance = new FileUrisLoader()) {
+            TransformOptions options = new TransformOptions();
+            options.setUrisFile(URIS_FILE);
+            instance.options = options;
+            instance.setProperties(new Properties());
+            try {
+                instance.open();
+            } catch (CorbException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                fail();
+            }
+            assertEquals(String.valueOf(8), instance.getProperty("PRE-BATCH-MODULE.URIS_TOTAL_COUNT"));
+            assertEquals(String.valueOf(8), instance.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
+        }
+    }
 
     @Test(expected = CorbException.class)
     public void testHasNextThrowException() throws CorbException {

@@ -361,6 +361,15 @@ public class FileUrisXMLLoaderTest {
             assertEquals(4, instance.getTotalCount());
         }
     }
+    
+    @Test
+    public void testGetTotalCountAsModuleVariables() throws CorbException {
+        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
+            instance.open();
+            assertEquals(String.valueOf(4), instance.getProperty("PRE-BATCH-MODULE.URIS_TOTAL_COUNT"));
+            assertEquals(String.valueOf(4), instance.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
+        }
+    }
 
     @Test(expected = NullPointerException.class)
     public void testHasNextThrowException() throws CorbException {

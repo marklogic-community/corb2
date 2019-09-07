@@ -172,6 +172,7 @@ public class FileUrisStreamingXMLLoaderTest {
         try {
             loader.open();
             assertEquals(BUU_CHILD_ELEMENTS, loader.getTotalCount());
+            assertEquals(String.valueOf(BUU_CHILD_ELEMENTS), loader.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
             assertTrue(loader.hasNext());
             for (int i = 0; i < BUU_CHILD_ELEMENTS; i++) {
                 String content = loader.next();
@@ -193,6 +194,7 @@ public class FileUrisStreamingXMLLoaderTest {
         try {
             loader.open();
             assertEquals(BUU_CHILD_ELEMENTS, loader.getTotalCount());
+            assertEquals(String.valueOf(BUU_CHILD_ELEMENTS), loader.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
             assertTrue(loader.hasNext());
             for (int i = 0; i < BUU_CHILD_ELEMENTS; i++) {
                 String content = loader.next();
@@ -215,6 +217,7 @@ public class FileUrisStreamingXMLLoaderTest {
         try {
             loader.open();
             assertEquals(BUU_CHILD_XML_NODES, loader.getTotalCount());
+            assertEquals(String.valueOf(BUU_CHILD_XML_NODES), loader.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
             assertTrue(loader.hasNext());
             for (int i = 0; i < BUU_CHILD_XML_NODES; i++) {
                 String content = loader.next();
@@ -244,6 +247,7 @@ public class FileUrisStreamingXMLLoaderTest {
         try {
             loader.open();
             assertEquals(BUU_CHILD_XML_NODES, loader.getTotalCount());
+            assertEquals(String.valueOf(BUU_CHILD_XML_NODES), loader.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
             assertTrue(loader.hasNext());
             for (int i = 0; i < BUU_CHILD_XML_NODES; i++) {
                 String content = loader.next();
@@ -297,6 +301,7 @@ public class FileUrisStreamingXMLLoaderTest {
         try {
             loader.open();
             assertEquals(BUU_CHILD_XML_NODES, loader.getTotalCount());
+            assertEquals(String.valueOf(BUU_CHILD_XML_NODES), loader.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
             assertTrue(loader.hasNext());
             for (int i = 0; i < BUU_CHILD_XML_NODES; i++) {
                 String content = loader.next();
