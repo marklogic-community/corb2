@@ -22,9 +22,9 @@ import org.xml.sax.SAXParseException;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Files;
 import java.util.List;
 
 /**
@@ -49,7 +49,7 @@ public class SchemaValidateToFileTask extends SchemaValidateBatchToFileTask {
     @Override
     protected void writeSchemaValidationReport(List<SAXParseException> exceptions, File outputFile) throws IOException, XMLStreamException {
         //Since these validation reports are per doc, the FileWriter will not append, and no need for synchnoized writes
-        try (Writer writer = new FileWriter(outputFile, false)) {
+        try (Writer writer = Files.newBufferedWriter(outputFile.toPath())) {
             writeSchemaValidationReport(exceptions, writer);
         }
     }

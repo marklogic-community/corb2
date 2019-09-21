@@ -35,10 +35,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.Comparator;
@@ -125,10 +124,10 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 
     protected void copyHeaderIntoFile(File inputFile, int headerLineCount, File outputFile) throws IOException {
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-            BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, false))) {
+        try (BufferedReader reader = Files.newBufferedReader(inputFile.toPath());
+             BufferedWriter writer = Files.newBufferedWriter(outputFile.toPath()) ) {
             String line;
-            int currentLine = 0;
+             int currentLine = 0;
             while ((line = reader.readLine()) != null && currentLine < headerLineCount) {
                 writer.write(line);
                 writer.newLine();
