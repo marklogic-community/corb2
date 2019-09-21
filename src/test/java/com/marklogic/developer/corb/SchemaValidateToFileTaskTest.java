@@ -77,7 +77,7 @@ public class SchemaValidateToFileTaskTest {
     public void testWriteSchemaValidationReportException() throws IOException, XMLStreamException {
         List<SAXParseException> exceptions = new ArrayList<>();
         File outputFile = mock(File.class);
-        when(outputFile.getPath()).thenThrow(IOException.class);
+        when(outputFile.toPath()).thenThrow(IOException.class);
         SchemaValidateToFileTask validate = new SchemaValidateToFileTask();
         validate.writeSchemaValidationReport(exceptions, outputFile);
     }
