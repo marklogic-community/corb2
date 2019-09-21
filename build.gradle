@@ -68,7 +68,7 @@ configurations {
 }
 
 dependencies {
-    compile 'com.marklogic:marklogic-xcc:9.0.9'
+    compile 'com.marklogic:marklogic-xcc:10.0.1'
     //we bundle the externalsortinginjava classes with the corb distro as a fat jar
     compileOnly "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
     shadow "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
@@ -80,9 +80,6 @@ dependencies {
 }
 
 test {
-    testLogging {
-        events TestLogEvent.STARTED,TestLogEvent.PASSED
-    }
     //we will run Integration and Performance tests in separate tasks
     exclude '**/*IT.class'
     exclude '**/*PT.class'
@@ -138,9 +135,6 @@ task integrationTest(type: Test, dependsOn: test) {
         //include all integration tests
         includeTestsMatching "*IT"
     }
-    testLogging {
-        events TestLogEvent.STARTED,TestLogEvent.PASSED
-    }
     //If you want to ensure that integration tests are run every time when you invoke
     //this task, uncomment the following line.
     //outputs.upToDateWhen { false }
@@ -165,9 +159,6 @@ task performanceTest(type: Test) {
         //include all performance tests
         includeTestsMatching "*PT"
     }
-    testLogging {
-        events TestLogEvent.STARTED,TestLogEvent.PASSED
-    }
 
     //If you want to ensure that performance tests are run every time when you invoke
     //this task, uncomment the following line.
@@ -190,8 +181,7 @@ tasks.withType(Test) {
     reports.html.destination = file("${reporting.baseDir}/${name}")
     testLogging {
         // set options for log level LIFECYCLE
-        events TestLogEvent.PASSED,
-               TestLogEvent.FAILED,
+        events TestLogEvent.FAILED,
                TestLogEvent.SKIPPED,
                TestLogEvent.STANDARD_OUT
         showExceptions true
@@ -201,8 +191,7 @@ tasks.withType(Test) {
 
         // set options for log level DEBUG and INFO
         debug {
-            events TestLogEvent.PASSED,
-                   TestLogEvent.FAILED,
+            events TestLogEvent.FAILED,
                    TestLogEvent.SKIPPED,
                    TestLogEvent.STANDARD_OUT,
                    TestLogEvent.STANDARD_ERROR
