@@ -78,7 +78,7 @@ Option | Description
 ### Additional options
 Option | Description
 ---|---
-**<a name="BATCH-SIZE"></a>BATCH-SIZE** | The number of URIs to be executed in single transform. Default is 1. If more than 1, **PROCESS-MODULE** will receive a delimited string as the `$URI` variable, which needs to be tokenized to get individual URIs. The default delimiter is `;`, which can be overridden with the option **BATCH-URI-DELIM** described below. <br/>**Sample code for transform:**<br/>`declare variable URI as xs:string exernal;`<br/>`let $all-uris := fn:tokenize($URI,";")`  
+**<a name="BATCH-SIZE"></a>BATCH-SIZE** | The number of URIs to be executed in single transform. Default is 1. If more than 1, **PROCESS-MODULE** will receive a delimited string as the `$URI` variable, which needs to be tokenized to get individual URIs. The default delimiter is `;`, which can be overridden with the option **BATCH-URI-DELIM** described below. <br/>**Sample code for transform:**<br/>`declare variable URI as xs:string external;`<br/>`let $all-uris := fn:tokenize($URI,";")`  
 **<a name="BATCH-URI-DELIM"></a>BATCH-URI-DELIM** | Use if the default delimiter `';'` cannot be used to join multiple URIS when **BATCH-SIZE** is greater than 1.
 **<a name="DECRYPTER"></a>DECRYPTER** | The class name of the options value dycrypter, which must implement `com.marklogic.developer.corb.Decrypter`. Encryptable options include **XCC-CONNECTION-URI**, **XCC-USERNAME**, **XCC-PASSWORD**, **XCC-HOSTNAME**, **XCC-PORT**, and **XCC-DBNAME**.
 **<a name="COLLECTION-NAME"></a>COLLECTION-NAME** | Value of this parameter will be passed into the URIS-MODULE via external or global variable with the name URIS.
