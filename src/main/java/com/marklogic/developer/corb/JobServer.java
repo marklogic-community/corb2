@@ -156,7 +156,7 @@ public class JobServer {
              OutputStream output = httpExchange.getResponseBody()) {
 
             if (webInputStream == null && webJarInputStream == null) {
-                String response = "Error 404 File not found.";
+                String response = "Error 404 File not found: " + path;
                 httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, response.length());
                 output.write(response.getBytes());
             } else {
