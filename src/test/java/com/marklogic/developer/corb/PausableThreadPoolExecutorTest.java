@@ -142,4 +142,29 @@ public class PausableThreadPoolExecutorTest {
         assertNotNull(executor.topUriList.getData().get("URI6"));
     }
 
+    @Test
+    public void testTopUriListSizeZero(){
+        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
+        RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
+        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+        executor.topUriList.setSize(0);
+        executor.topUriList.add("URI1", 6L);
+        executor.topUriList.add("URI1", 6L);
+        executor.topUriList.add("URI2", 5L);
+        assertTrue(executor.topUriList.getData().size()==0);
+    }
+
+    @Test
+    public void testTopUriListSizeOne(){
+        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
+        RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
+        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+        executor.topUriList.setSize(1);
+        executor.topUriList.add("URI1", 6L);
+        executor.topUriList.add("URI1", 6L);
+        executor.topUriList.add("URI2", 5L);
+        assertTrue(executor.topUriList.getData().size()==1);
+        assertNotNull(executor.topUriList.getData().get("URI1"));
+    }
+
 }
