@@ -46,7 +46,9 @@ public class JobServer {
     private static final Logger LOG = Logger.getLogger(JobServer.class.getName());
     private static final int DEFAULT_REQUEST_QUEUE_SIZE = 100;
     private static final String SEPARATOR = "*****************************************************************************************";
-    private static final String CLASSPATH_FOLDER_WITH_RESOURCES = "web";
+    private static final String WEB_FOLDER = "/web";
+    private static final String WEBJARS_FOLDER = "/META-INF/resources/webjars";
+
     public static final String HTTP_RESOURCE_PATH = "/";
     public static final String METRICS_PATH = "/metrics";
     public static final String MIME_XML = "application/xml";
@@ -149,12 +151,11 @@ public class JobServer {
 
     public static void handleStaticRequest(String path, HttpExchange httpExchange) {
 
-        String resourcePath = CLASSPATH_FOLDER_WITH_RESOURCES + path;
-
-        try (InputStream is = Manager.class.getResourceAsStream("/" + resourcePath);
+        try (InputStream webInputStream = Manager.class.getResourceAsStream(WEB_FOLDER + path);
+             InputStream webJarInputStream = Manager.class.getResourceAsStream(WEBJARS_FOLDER + path);
              OutputStream output = httpExchange.getResponseBody()) {
 
-            if (is == null) {
+            if (webInputStream == null && webJarInputStream == null) {
                 String response = "Error 404 File not found.";
                 httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, response.length());
                 output.write(response.getBytes());
@@ -164,7 +165,9 @@ public class JobServer {
 
                 final byte[] buffer = new byte[0x10000];
                 int count = 0;
-                while ((count = is.read(buffer)) >= 0) {
+
+                InputStream inputStream = webInputStream != null ? webInputStream : webJarInputStream;
+                while ((count = inputStream.read(buffer)) >= 0) {
                     output.write(buffer, 0, count);
                 }
             }
