@@ -323,10 +323,10 @@ QUERY-RETRY-ERROR-MESSAGE=ErrorMsg1,ErrorMsg2
 ```
 
 ### [Usage Examples](https://github.com/marklogic-community/corb2/wiki/Running-CoRB#usage-examples)
-Refer to the [wiki for examples]((https://github.com/marklogic-community/corb2/wiki/Running-CoRB#usage-examples)) of how to execute a CoRB job and various ways of configuring the job options.
+Refer to the [wiki for examples](https://github.com/marklogic-community/corb2/wiki/Running-CoRB#usage-examples) of how to execute a CoRB job and various ways of configuring the job options.
 
 ### [ModuleExecutor Tool](https://github.com/marklogic-community/corb2/wiki/ModuleExecutor-Tool)
 
 Sometimes, a two or more staged CoRB job with both a selector and transform isn't necessary to get the job done. Sometimes, only a single query needs to be executed and the output captured to file. 
-Maybe even to execute only a single query with no output captured?  
-In these cases, the ModuleExecutor Tool can be used to quickly and efficiently execute your XQuery or JavaScript files.
+Maybe even to execute only a single query with no output captured. 
+In these cases, the [ModuleExecutor Tool](https://github.com/marklogic-community/corb2/wiki/ModuleExecutor-Tool) can be used to quickly and efficiently execute your XQuery or JavaScript files.
