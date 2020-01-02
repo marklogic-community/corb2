@@ -1,5 +1,5 @@
 /*
- * * Copyright (c) 2004-2019 MarkLogic Corporation
+ * * Copyright (c) 2004-2020 MarkLogic Corporation
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -184,7 +184,7 @@ public class FileUrisLoaderTest {
             assertEquals(8, instance.getTotalCount());
         }
     }
-    
+
     @Test
     public void testGetTotalCountAsModuleVariables() {
         try (FileUrisLoader instance = new FileUrisLoader()) {

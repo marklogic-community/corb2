@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2019 MarkLogic Corporation
+  * * Copyright (c) 2004-2020 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -134,12 +134,12 @@ public class FileUrisStreamingXMLLoaderTest {
         FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
         testOpen(loader, XPath, expectedItems);
     }
-    
+
     public void testOpen(String XPath, String metaXPath, int expectedItems) {
         FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
         testOpen(loader, XPath, null, expectedItems);
     }
-    
+
     public void testOpen(FileUrisStreamingXMLLoader loader, String XPath, int expectedItems) {
         testOpen(loader, XPath, null, expectedItems);
     }
@@ -207,7 +207,7 @@ public class FileUrisStreamingXMLLoaderTest {
             fail();
         }
     }
-    
+
     @Test
     public void testOpenWithoutEnvelopeWithMetadata() {
         FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
@@ -224,7 +224,7 @@ public class FileUrisStreamingXMLLoaderTest {
                 assertNotNull(content);
                 assertFalse(content.contains(FileUrisStreamingXMLLoader.LOADER_DOC));
             }
-            
+
             assertNotNull(loader.customMetadata);
             String metadata = loader.properties.getProperty(PRE_BATCH_MODULE+'.'+METADATA);
             assertNotNull(metadata);
@@ -236,7 +236,7 @@ public class FileUrisStreamingXMLLoaderTest {
             fail();
         }
     }
-    
+
     @Test
     public void testOpenWithEnvelopeWithMetadata() {
         FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
@@ -254,7 +254,7 @@ public class FileUrisStreamingXMLLoaderTest {
                 assertNotNull(content);
                 assertTrue(content.contains(FileUrisStreamingXMLLoader.LOADER_DOC));
             }
-            
+
             assertNotNull(loader.customMetadata);
             String metadata = loader.properties.getProperty(POST_BATCH_MODULE+'.'+METADATA);
             assertNotNull(metadata);
@@ -290,7 +290,7 @@ public class FileUrisStreamingXMLLoaderTest {
             fail();
         }
     }
-    
+
     @Test
     public void testOpenWithEnvelopeAndBase64EncodedWithMetadata() {
         FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
@@ -309,12 +309,12 @@ public class FileUrisStreamingXMLLoaderTest {
                 assertTrue(content.contains(FileUrisStreamingXMLLoader.LOADER_DOC));
                 assertTrue(content.contains(String.format("%s=\"true\"", FileUrisStreamingXMLLoader.BASE64_ENCODED)));
             }
-            
+
             assertNotNull(loader.customMetadata);
             String metadata = loader.properties.getProperty(PRE_BATCH_MODULE+'.'+METADATA);
             assertNotNull(metadata);
             assertTrue(metadata.contains(FileUrisXMLLoader.LOADER_DOC));
-            
+
             loader.close();
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
