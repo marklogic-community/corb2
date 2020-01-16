@@ -327,7 +327,7 @@ public abstract class AbstractManager {
                     dbname = dbname.substring(1);
                 }
 
-                if(!isBlank(username) && !isBlank(password) && !isBlank(host) && !isBlank(port) && NumberUtils.toInt(port) > 0) {
+                if(!isBlank(protocol) && !isBlank(username) && !isBlank(password) && !isBlank(host) && !isBlank(port) && NumberUtils.toInt(port) > 0) {
                     username = this.decrypter.decrypt(XCC_USERNAME, username);
                     password = this.decrypter.decrypt(XCC_PASSWORD, password);
                     host = this.decrypter.decrypt(XCC_HOSTNAME, host);
