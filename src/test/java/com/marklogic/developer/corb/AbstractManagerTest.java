@@ -74,6 +74,9 @@ public class AbstractManagerTest {
     private static final String PASSWORD = "password";
     private static final String HOST = "localhost";
     private static final String PORT = "80";
+    
+    public static final String JASYPT_ALGORITHM = "jasypt.algorithm";
+    public static final String JASYPT_PASSWORD = "jasypt.password";
 
     private static final PrintStream ERROR = System.err;
 
@@ -399,6 +402,91 @@ public class AbstractManagerTest {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
+    }
+    
+    @Test
+    public void testTryToDecryptUriInPartsClearText() {
+        AbstractManager instance = new AbstractManagerImpl();
+        instance.properties.setProperty(Options.DECRYPTER, JasyptDecrypter.class.getName());
+        instance.properties.setProperty(Options.JASYPT_PROPERTIES_FILE, "src/test/resources/jasypt.properties");
+        try {
+            instance.initDecrypter();
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+        String origUri = "xcc://user:pass123@somehost:8000/FFE";
+        String expectedUri = "xcc://user:pass123@somehost:8000/FFE";
+        String newUri = instance.tryToDecryptUriInParts(origUri);
+        assertEquals(expectedUri,newUri);
+    }
+    
+    @Test
+    public void testTryToDecryptUriInPartsClearTextWithEncoding() {
+        AbstractManager instance = new AbstractManagerImpl();
+        instance.properties.setProperty(Options.DECRYPTER, JasyptDecrypter.class.getName());
+        instance.properties.setProperty(Options.JASYPT_PROPERTIES_FILE, "src/test/resources/jasypt.properties");
+        try {
+            instance.initDecrypter();
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+        String origUri = "xcc://user:pass#123@somehost:8000/FFE";
+        String expectedUri = "xcc://user:pass%23123@somehost:8000/FFE";
+        String newUri = instance.tryToDecryptUriInParts(origUri);
+        assertEquals(expectedUri,newUri);
+    }
+    
+    @Test
+    public void testTryToDecryptUriInPartsPasswordEncrypted() {
+        AbstractManager instance = new AbstractManagerImpl();
+        instance.properties.setProperty(Options.DECRYPTER, JasyptDecrypter.class.getName());
+        instance.properties.setProperty(Options.JASYPT_PROPERTIES_FILE, "src/test/resources/jasypt.properties");
+        try {
+            instance.initDecrypter();
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+        String origUri = "xcc://user:zSSKlCXLWCaZp/LrbX0k0juz6+D5sUbr@somehost:8000/FFE";
+        String expectedUri = "xcc://user:pass%23123@somehost:8000/FFE";
+        String newUri = instance.tryToDecryptUriInParts(origUri);
+        assertEquals(expectedUri,newUri);
+    }
+    
+    @Test
+    public void testTryToDecryptUriInPartsPasswordEnocoded() {
+        AbstractManager instance = new AbstractManagerImpl();
+        instance.properties.setProperty(Options.DECRYPTER, JasyptDecrypter.class.getName());
+        instance.properties.setProperty(Options.JASYPT_PROPERTIES_FILE, "src/test/resources/jasypt.properties");
+        try {
+            instance.initDecrypter();
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+        String origUri = "xcc://user:ENC(TThPQnCGGMjO7soUk/Kb8o1DQE7kUOVW)@somehost:8000/FFE";
+        String expectedUri = "xcc://user:pass%23123@somehost:8000/FFE";
+        String newUri = instance.tryToDecryptUriInParts(origUri);
+        assertEquals(expectedUri,newUri);
+    }
+    
+    @Test
+    public void testTryToDecryptUriInPartsMultiPartEncryption() {
+        AbstractManager instance = new AbstractManagerImpl();
+        instance.properties.setProperty(Options.DECRYPTER, JasyptDecrypter.class.getName());
+        instance.properties.setProperty(Options.JASYPT_PROPERTIES_FILE, "src/test/resources/jasypt.properties");
+        try {
+            instance.initDecrypter();
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+        String origUri = "xcc://ENC(v5b+VYiO4qpoZmVGkWieDg==):TThPQnCGGMjO7soUk/Kb8o1DQE7kUOVW@e+nz4XEN9SuuazGnbr6Ec5cyid1/l0qn:8000";
+        String expectedUri = "xcc://user:pass%23123@somehost:8000";
+        String newUri = instance.tryToDecryptUriInParts(origUri);
+        assertEquals(expectedUri,newUri);
     }
 
     @Test

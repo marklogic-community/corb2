@@ -30,6 +30,7 @@ import static com.marklogic.developer.corb.Options.XCC_USERNAME;
 import static com.marklogic.developer.corb.Options.XCC_PROTOCOL;
 import static com.marklogic.developer.corb.util.IOUtils.isDirectory;
 
+import com.marklogic.developer.corb.util.NumberUtils;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
@@ -58,8 +59,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.WARNING;
 import static java.util.logging.Level.SEVERE;
+
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
@@ -73,6 +79,7 @@ public abstract class AbstractManager {
     protected static final String VERSION_MSG = "version " + VERSION + " on " + System.getProperty("java.version") + " (" + System.getProperty("java.runtime.name") + ')';
     protected static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server';\n";
     protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\";\n";
+    protected static final String XCC_CONNECTION_URI_PATTERN = "(xccs?)://(.+?):(.+?)@(.+?):(\\d*)(/.*)?";
 
     protected Decrypter decrypter;
     protected SSLConfig sslConfig;
@@ -283,6 +290,8 @@ public abstract class AbstractManager {
             for (String connectionUri : StringUtils.commaSeparatedValuesToList(uriAsStrings)) {
                 if (this.decrypter != null) {
                     connectionUri = this.decrypter.decrypt(XCC_CONNECTION_URI, connectionUri);
+                    //see if individual parts of the connection string are encrypted separately
+                    connectionUri = tryToDecryptUriInParts(connectionUri);                  
                 }
                 if (connectionUri != null) {
                     connectionUriList.add(connectionUri);
@@ -297,6 +306,39 @@ public abstract class AbstractManager {
         if (!this.csp.available()) {
             throw new CorbException("No connections available. Please check connection parameters or initialization errors");
         }
+    }
+    
+    protected String tryToDecryptUriInParts(String connectionUri) {
+        LOG.info("Checking if any part of the connection string are encrypted");
+        String uriAfterDecrypt = connectionUri;
+        try {
+            Pattern pattern = Pattern.compile(XCC_CONNECTION_URI_PATTERN);
+            Matcher matcher = pattern.matcher(connectionUri);
+            matcher.find();
+            if(matcher.matches() && matcher.groupCount() >= 5) {
+                String protocol = matcher.group(1);
+                String username = matcher.group(2);
+                String password = matcher.group(3);
+                String host = matcher.group(4);
+                String port = matcher.group(5);
+                
+                String dbname = matcher.groupCount() > 5 ? matcher.group(6) : null;
+                if (dbname != null && dbname.startsWith("/")) {
+                    dbname = dbname.substring(1);
+                }
+
+                if(!isBlank(username) && !isBlank(password) && !isBlank(host) && !isBlank(port) && NumberUtils.toInt(port) > 0) {
+                    username = this.decrypter.decrypt(XCC_USERNAME, username);
+                    password = this.decrypter.decrypt(XCC_PASSWORD, password);
+                    host = this.decrypter.decrypt(XCC_HOSTNAME, host);
+                    dbname = !isBlank(dbname) ? this.decrypter.decrypt(XCC_DBNAME, dbname) : null;
+                    uriAfterDecrypt = StringUtils.getXccUri(protocol, username, password, host, port, dbname);                    
+                }                
+            }
+        } catch (IllegalStateException exc) {
+           LOG.log(WARNING,"Unable to parse connection uri "+ exc.getMessage());
+        }
+        return uriAfterDecrypt;
     }
 
     protected ContentSourcePool createContentSourcePool() throws CorbException {
