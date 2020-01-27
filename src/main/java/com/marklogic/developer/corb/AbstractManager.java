@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2019 MarkLogic Corporation
+ * Copyright (c) 2004-2020 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import static com.marklogic.developer.corb.Options.XCC_USERNAME;
 import static com.marklogic.developer.corb.Options.XCC_PROTOCOL;
 import static com.marklogic.developer.corb.util.IOUtils.isDirectory;
 
+import com.marklogic.developer.corb.util.NumberUtils;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
@@ -58,8 +59,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.WARNING;
 import static java.util.logging.Level.SEVERE;
+
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
@@ -73,6 +79,7 @@ public abstract class AbstractManager {
     protected static final String VERSION_MSG = "version " + VERSION + " on " + System.getProperty("java.version") + " (" + System.getProperty("java.runtime.name") + ')';
     protected static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server';\n";
     protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\";\n";
+    protected static final String XCC_CONNECTION_URI_PATTERN = "(xccs?)://(.+?):(.+?)@(.+?):(\\d*)(/.*)?";
 
     protected Decrypter decrypter;
     protected SSLConfig sslConfig;
@@ -161,7 +168,7 @@ public abstract class AbstractManager {
 
     public void initPropertiesFromOptionsFile() throws IOException {
         String propsFileName = System.getProperty(OPTIONS_FILE);
-        loadPropertiesFile(propsFileName, true, this.properties);
+        loadPropertiesFile(propsFileName, true, properties);
     }
 
     public void init(String... args) throws CorbException {
@@ -185,7 +192,7 @@ public abstract class AbstractManager {
                 throw new CorbException("Failed to initialized properties from options file", ex);
             }
         } else {
-            this.properties = props;
+            properties = props;
         }
         initDecrypter();
         initSSLConfig();
@@ -207,8 +214,8 @@ public abstract class AbstractManager {
             try {
                 Class<?> decrypterCls = Class.forName(decrypterClassName);
                 if (Decrypter.class.isAssignableFrom(decrypterCls)) {
-                    this.decrypter = (Decrypter) decrypterCls.newInstance();
-                    decrypter.init(this.properties);
+                    decrypter = (Decrypter) decrypterCls.newInstance();
+                    decrypter.init(properties);
                 } else {
                     throw new IllegalArgumentException(DECRYPTER + " must be of type com.marklogic.developer.corb.Decrypter");
                 }
@@ -216,7 +223,7 @@ public abstract class AbstractManager {
                 throw new CorbException(MessageFormat.format("Unable to instantiate {0} {1}", SSL_CONFIG_CLASS, decrypterClassName), ex);
             }
         } else {
-            this.decrypter = null;
+            decrypter = null;
         }
     }
 
@@ -226,7 +233,7 @@ public abstract class AbstractManager {
             try {
                 Class<?> decrypterCls = Class.forName(sslConfigClassName);
                 if (SSLConfig.class.isAssignableFrom(decrypterCls)) {
-                    this.sslConfig = (SSLConfig) decrypterCls.newInstance();
+                    sslConfig = (SSLConfig) decrypterCls.newInstance();
                     LOG.log(INFO, () -> MessageFormat.format("Using SSLConfig {0}",decrypterCls.getName()));
                 } else {
                     throw new IllegalArgumentException("SSL Options must be of type com.marklogic.developer.corb.SSLConfig");
@@ -236,10 +243,10 @@ public abstract class AbstractManager {
             }
         } else {
             LOG.log(INFO, () -> "Using TrustAnyoneSSSLConfig because no " + SSL_CONFIG_CLASS + " value specified.");
-            this.sslConfig = new TrustAnyoneSSLConfig();
+            sslConfig = new TrustAnyoneSSLConfig();
         }
-        sslConfig.setProperties(this.properties);
-        sslConfig.setDecrypter(this.decrypter);
+        sslConfig.setProperties(properties);
+        sslConfig.setDecrypter(decrypter);
     }
 
     protected void initContentSourcePool(String uriArg) throws CorbException{
@@ -264,25 +271,25 @@ public abstract class AbstractManager {
 
         List<String> connectionUriList = new ArrayList<>();
         if (uriAsStrings == null) {
-            if (this.decrypter != null) {
-                username = this.decrypter.decrypt(XCC_USERNAME, username);
-                password = this.decrypter.decrypt(XCC_PASSWORD, password);
-                port = this.decrypter.decrypt(XCC_PORT, port);
-                dbname = !isBlank(dbname) ? this.decrypter.decrypt(XCC_DBNAME, dbname) : null;
+            if (decrypter != null) {
+                username = decrypter.decrypt(XCC_USERNAME, username);
+                password = decrypter.decrypt(XCC_PASSWORD, password);
+                port = decrypter.decrypt(XCC_PORT, port);
+                dbname = isBlank(dbname) ? null : decrypter.decrypt(XCC_DBNAME, dbname);
             }
             for (String host: StringUtils.commaSeparatedValuesToList(hostnames)) {
-                if (this.decrypter != null) {
-                    host = this.decrypter.decrypt(XCC_HOSTNAME, host);
+                if (decrypter != null) {
+                    host = decrypter.decrypt(XCC_HOSTNAME, host);
                 }
                 String connectionUri = StringUtils.getXccUri(protocol, username, password, host, port, dbname);
-                if (connectionUri != null) {
-                    connectionUriList.add(connectionUri);
-                }
+                connectionUriList.add(connectionUri);
             }
         } else {
             for (String connectionUri : StringUtils.commaSeparatedValuesToList(uriAsStrings)) {
-                if (this.decrypter != null) {
-                    connectionUri = this.decrypter.decrypt(XCC_CONNECTION_URI, connectionUri);
+                if (decrypter != null) {
+                    connectionUri = decrypter.decrypt(XCC_CONNECTION_URI, connectionUri);
+                    //see if individual parts of the connection string are encrypted separately
+                    connectionUri = tryToDecryptUriInParts(connectionUri);
                 }
                 if (connectionUri != null) {
                     connectionUriList.add(connectionUri);
@@ -290,13 +297,46 @@ public abstract class AbstractManager {
             }
         }
 
-        this.csp = createContentSourcePool();
-        LOG.info("Using the content source manager " + this.csp.getClass().getName());
-        this.csp.init(properties, sslConfig, connectionUriList.toArray(new String[connectionUriList.size()]));
+        csp = createContentSourcePool();
+        LOG.info("Using the content source manager " + csp.getClass().getName());
+        csp.init(properties, sslConfig, connectionUriList.toArray(new String[connectionUriList.size()]));
 
-        if (!this.csp.available()) {
+        if (!csp.available()) {
             throw new CorbException("No connections available. Please check connection parameters or initialization errors");
         }
+    }
+
+    protected String tryToDecryptUriInParts(String connectionUri) {
+        LOG.info("Checking if any part of the connection string are encrypted");
+        String uriAfterDecrypt = connectionUri;
+        Pattern pattern = Pattern.compile(XCC_CONNECTION_URI_PATTERN);
+        try {
+            Matcher matcher = pattern.matcher(connectionUri);
+
+            if (matcher.matches() && matcher.groupCount() >= 5) {
+                String protocol = matcher.group(1);
+                String username = matcher.group(2);
+                String password = matcher.group(3);
+                String host = matcher.group(4);
+                String port = matcher.group(5);
+
+                String dbname = matcher.groupCount() > 5 ? matcher.group(6) : null;
+                if (dbname != null && dbname.startsWith("/")) {
+                    dbname = dbname.substring(1);
+                }
+
+                if (!isBlank(protocol) && !isBlank(username) && !isBlank(password) && !isBlank(host) && !isBlank(port) && NumberUtils.toInt(port) > 0) {
+                    username = decrypter.decrypt(XCC_USERNAME, username);
+                    password = decrypter.decrypt(XCC_PASSWORD, password);
+                    host = decrypter.decrypt(XCC_HOSTNAME, host);
+                    dbname = isBlank(dbname) ? null : decrypter.decrypt(XCC_DBNAME, dbname);
+                    uriAfterDecrypt = StringUtils.getXccUri(protocol, username, password, host, port, dbname);
+                }
+            }
+        } catch (IllegalStateException exc) {
+           LOG.log(WARNING,"Unable to parse connection URI "+ exc.getMessage());
+        }
+        return uriAfterDecrypt;
     }
 
     protected ContentSourcePool createContentSourcePool() throws CorbException {
@@ -324,7 +364,7 @@ public abstract class AbstractManager {
     }
 
     public ContentSourcePool getContentSourcePool() {
-        return this.csp;
+        return csp;
     }
 
     protected void initOptions(String... args) throws CorbException {
@@ -419,8 +459,8 @@ public abstract class AbstractManager {
             retVal = argVal.trim();
         } else if (isNotBlank(System.getProperty(propertyName))) {
             retVal = System.getProperty(propertyName).trim();
-        } else if (this.properties.containsKey(propertyName) && isNotBlank(this.properties.getProperty(propertyName))) {
-            retVal = this.properties.getProperty(propertyName).trim();
+        } else if (properties.containsKey(propertyName) && isNotBlank(properties.getProperty(propertyName))) {
+            retVal = properties.getProperty(propertyName).trim();
         }
         //doesn't capture defaults, only user provided.
         String[] secureWords = {"XCC", "PASSWORD", "SSL"};
@@ -432,7 +472,7 @@ public abstract class AbstractManager {
             }
         }
         if (retVal != null && !hasSecureWords) {
-            this.userProvidedOptions.put(propertyName, retVal);
+            userProvidedOptions.put(propertyName, retVal);
         }
         return retVal;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2019 MarkLogic Corporation
+ * Copyright (c) 2004-2020 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,13 +108,13 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
             throw new CorbException(EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);
         }
         LOG.log(Level.INFO, MessageFormat.format("Using the temp directory {0}", tempDir));
-        //extract all the child nodes to a temp directory and load the metadata along with it. 
+        //extract all the child nodes to a temp directory and load the metadata along with it.
         files = readToTempDir(xmlFile.toPath());
 
         setMetadataNodeToModule(customMetadata, xmlFile);
 
     }
-    
+
     @Override
     public boolean hasNext() throws CorbException {
         return files.hasNext();
@@ -182,12 +182,12 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
                 // if there is a problem extracting an element, don't count it
                 if (reader.isStartElement()) {
                     int code = extractElement(reader, context);
-                    // code=2 is for metadata, we can ignore it. 
+                    // code=2 is for metadata, we can ignore it.
                     if ( code == 1) { //xml_node
                         extractedDocumentCount++;
                     } else if(code == 0){ // no extraction
                         reader.next();
-                    } 
+                    }
                 } else {
                     if (reader.isEndElement()) {
                         context.removeLast();
@@ -265,11 +265,11 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
                 Transformer autobot = newTransformer();
                 autobot.transform(new StAXSource(reader), new StreamResult(writer));
                 String metaAsStr = writer.toString();
-                
+
                 DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
                 Document originalDocument = docBuilder.parse(new ByteArrayInputStream(metaAsStr.getBytes()));
                 customMetadata = originalDocument.getDocumentElement();
-                
+
                 extractionCode = 2;
             } catch (TransformerException | IOException | ParserConfigurationException | SAXException ex) {
                 LOG.log(Level.SEVERE, EXCEPTION_MSG_PROBLEM_READING_XML_FILE, ex);

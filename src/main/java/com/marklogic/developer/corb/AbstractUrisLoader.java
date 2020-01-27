@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2019 MarkLogic Corporation
+  * * Copyright (c) 2004-2020 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -89,7 +89,7 @@ public abstract class AbstractUrisLoader implements UrisLoader {
 
     public void setTotalCount(long totalCount) {
         this.total = totalCount;
-        
+
         if (properties != null && this.total > 0) {
             properties.put(PRE_BATCH_MODULE + '.' + URIS_TOTAL_COUNT, String.valueOf(this.total));
             properties.put(POST_BATCH_MODULE + '.' + URIS_TOTAL_COUNT, String.valueOf(this.total));

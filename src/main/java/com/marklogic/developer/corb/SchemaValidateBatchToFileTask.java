@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2019 MarkLogic Corporation
+ * Copyright (c) 2004-2020 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,10 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -81,7 +81,7 @@ public class SchemaValidateBatchToFileTask extends ExportBatchToFileTask {
     }
 
     protected void writeSchemaValidationReport(List<SAXParseException> exceptions, File outputFile) throws IOException, XMLStreamException {
-        try (Writer writer = new FileWriter(outputFile, true)) {
+        try (Writer writer = Files.newBufferedWriter(outputFile.toPath())) {
             writeSchemaValidationReport(exceptions, writer);
         }
     }

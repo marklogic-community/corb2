@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2019 MarkLogic Corporation
+  * * Copyright (c) 2004-2020 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -56,7 +56,8 @@ public class FileUrisDirectoryLoaderIT {
         try {
             testFileUrisDirectoryLoader(properties);
         } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, ex.getMessage(), ex);
+            ex.printStackTrace();
             fail();
         }
     }
@@ -70,6 +71,7 @@ public class FileUrisDirectoryLoaderIT {
         try {
             testFileUrisDirectoryLoader(properties);
         } catch (Exception ex) {
+            LOG.log(Level.SEVERE, ex.getMessage(), ex);
             fail();
         }
     }
@@ -94,7 +96,7 @@ public class FileUrisDirectoryLoaderIT {
         try {
             testFileUrisDirectoryLoader(properties);
         } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, ex.getMessage(), ex);
             fail();
         }
     }
@@ -130,7 +132,7 @@ public class FileUrisDirectoryLoaderIT {
         assertTrue(results.contains("simple document.docx,binary"));
         assertTrue(results.contains("simple document.html,element"));
         assertTrue(results.contains("simple document.pdf,binary"));
-        assertTrue(results.contains("logo-community-white.svg")); //document-filter now returning application/octet-stream for SVG
+        assertTrue(results.contains("logo-community-white.svg")); //document filter returning application/octet-stream in ML 10
         assertTrue(results.contains("markLogic.gif,binary"));
         assertTrue(results.contains("MarkLogic.png,binary"));
         assertTrue(results.contains("diagram-legal.jpg,binary"));

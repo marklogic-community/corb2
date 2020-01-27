@@ -1,5 +1,5 @@
 /*
- * * Copyright (c) 2004-2019 MarkLogic Corporation
+ * * Copyright (c) 2004-2020 MarkLogic Corporation
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -182,6 +182,24 @@ public class FileUrisLoaderTest {
                 fail();
             }
             assertEquals(8, instance.getTotalCount());
+        }
+    }
+
+    @Test
+    public void testGetTotalCountAsModuleVariables() {
+        try (FileUrisLoader instance = new FileUrisLoader()) {
+            TransformOptions options = new TransformOptions();
+            options.setUrisFile(URIS_FILE);
+            instance.options = options;
+            instance.setProperties(new Properties());
+            try {
+                instance.open();
+            } catch (CorbException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                fail();
+            }
+            assertEquals(String.valueOf(8), instance.getProperty("PRE-BATCH-MODULE.URIS_TOTAL_COUNT"));
+            assertEquals(String.valueOf(8), instance.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
         }
     }
 

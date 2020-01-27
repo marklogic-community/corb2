@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2019 MarkLogic Corporation
+  * * Copyright (c) 2004-2020 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ package com.marklogic.developer.corb;
 import com.marklogic.developer.TestHandler;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.security.InvalidParameterException;
 import java.text.MessageFormat;
 import java.util.List;
@@ -104,6 +106,34 @@ public class DiskQueueTest {
             assertTrue(TestUtils.containsLogRecord(records,
                     new LogRecord(Level.WARNING,
                             MessageFormat.format("{0} still had open file in finalize", DiskQueue.class.getSimpleName()))));
+        } catch (Throwable ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testDiskQueueUTF8() {
+
+        String val = "em‐dash";
+        try {
+
+            System.setProperty("file.encoding","cp1252");
+            Field charset = Charset.class.getDeclaredField("defaultCharset");
+            charset.setAccessible(true);
+            charset.set(null,null);
+
+            DiskQueue<String> instance = new DiskQueue<>(1);
+            instance.add(val);
+            instance.add(val);
+            //this one would have used the memoryqueue
+            String result = instance.remove();
+            assertEquals(val, result);
+            //this one would have used the diskqueue
+            result = instance.remove();
+            assertEquals(val, result);
+            instance.finalize();
+
         } catch (Throwable ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2019 MarkLogic Corporation
+ * Copyright (c) 2004-2020 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,7 +85,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
     protected File xmlFile;
     protected Node customMetadata;
     private Map<Integer, Node> nodeMap;
-    
+
     @Override
     public void open() throws CorbException {
         String fileName = getLoaderPath(XML_FILE);
@@ -128,7 +128,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
                 XPathExpression expr = xpath.compile(xpathRootNode);
                 Object result = expr.evaluate(doc, XPathConstants.NODESET);
                 nodeList = (NodeList) result;
-                
+
                 if (isNotEmpty(xpathMetadataNode)) {
                     XPathExpression metadataExpr = xpath.compile(xpathMetadataNode);
                     Object metadataResult = metadataExpr.evaluate(doc, XPathConstants.NODESET);
@@ -257,7 +257,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
             }
         }
     }
-    
+
     protected void setMetadataNodeToModule(Node metadataNode, File file) throws CorbException {
         if (metadataNode != null) {
             try {

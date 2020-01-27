@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2019 MarkLogic Corporation
+  * * Copyright (c) 2004-2020 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -118,14 +118,13 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
                         numFailedUris++;
                     }
                 } else {
-                    long endTime = System.nanoTime();
-                    long taskTime = endTime - startTime.get();
-                    long durationInMs = TimeUnit.MILLISECONDS.convert(taskTime, TimeUnit.NANOSECONDS);
-
-                    topUriList.add(result, durationInMs);
                     synchronized (lock) {
                         numSucceededUris++;
                     }
+                    long endTime = System.nanoTime();
+                    long taskTime = endTime - startTime.get();
+                    long durationInMs = TimeUnit.MILLISECONDS.convert(taskTime, TimeUnit.NANOSECONDS);
+                    topUriList.add(result, durationInMs);
                 }
             }
         } catch (Exception e) {
@@ -218,11 +217,13 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 
         void add(String uri, Long timeTaken) {
             UriObject newObj = new UriObject(uri, timeTaken);
-            if (list.size() < this.size || list.last().compareTo(newObj) < 1) {
+            if (list.size() < this.size || (!list.isEmpty() && list.last().compareTo(newObj) < 1)) {
                 synchronized (lock) {
                     if (list.size() >= this.size) {
                         for (int i = 0; i <= list.size() - this.size; i++) {
-                            list.remove(list.first());
+                            if (!list.isEmpty()) {
+                                list.remove(list.first());
+                            }
                         }
                     }
                     list.add(newObj);

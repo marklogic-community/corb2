@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2019 MarkLogic Corporation
+  * * Copyright (c) 2004-2020 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -140,6 +140,31 @@ public class PausableThreadPoolExecutorTest {
         assertTrue(executor.topUriList.getData().size()==2);
         assertNotNull(executor.topUriList.getData().get("URI1"));
         assertNotNull(executor.topUriList.getData().get("URI6"));
+    }
+
+    @Test
+    public void testTopUriListSizeZero(){
+        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
+        RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
+        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+        executor.topUriList.setSize(0);
+        executor.topUriList.add("URI1", 6L);
+        executor.topUriList.add("URI1", 6L);
+        executor.topUriList.add("URI2", 5L);
+        assertTrue(executor.topUriList.getData().size()==0);
+    }
+
+    @Test
+    public void testTopUriListSizeOne(){
+        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
+        RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
+        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+        executor.topUriList.setSize(1);
+        executor.topUriList.add("URI1", 6L);
+        executor.topUriList.add("URI1", 6L);
+        executor.topUriList.add("URI2", 5L);
+        assertTrue(executor.topUriList.getData().size()==1);
+        assertNotNull(executor.topUriList.getData().get("URI1"));
     }
 
 }

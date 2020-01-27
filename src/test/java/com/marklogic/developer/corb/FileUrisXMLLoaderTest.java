@@ -1,5 +1,5 @@
 /*
- * * Copyright (c) 2004-2019 MarkLogic Corporation
+ * * Copyright (c) 2004-2020 MarkLogic Corporation
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -134,13 +134,13 @@ public class FileUrisXMLLoaderTest {
             fail();
         }
     }
-    
+
     @Test
     public void testMetadataNotNull() {
         try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
             instance.open();
             assertNotNull(instance.customMetadata);
-        
+
             String metadata = instance.properties.getProperty(PRE_BATCH_MODULE+'.'+METADATA);
             assertNotNull(metadata);
             assertTrue(ANCHOR0.equals(metadata));
@@ -149,14 +149,14 @@ public class FileUrisXMLLoaderTest {
             fail();
         }
     }
-    
+
     @Test
     public void testMetadataToProcessModule() {
         try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
             instance.properties.setProperty(Options.METADATA_TO_PROCESS_MODULE, Boolean.toString(true));
             instance.open();
             assertNotNull(instance.customMetadata);
-                   
+
             String metadata = instance.properties.getProperty(PROCESS_MODULE+'.'+METADATA);
             assertNotNull(metadata);
             assertTrue(ANCHOR0.equals(metadata));
@@ -193,7 +193,7 @@ public class FileUrisXMLLoaderTest {
                             -> (p.contains(ANCHOR1) || p.contains(ANCHOR2) || p.contains(ANCHOR3) || p.contains(ANCHOR4))
                             && p.contains(FileUrisXMLLoader.LOADER_DOC))
                     .count());
-            
+
             assertNotNull(instance.customMetadata);
             String metadata = instance.properties.getProperty(PRE_BATCH_MODULE+'.'+METADATA);
             assertNotNull(metadata);
@@ -226,7 +226,7 @@ public class FileUrisXMLLoaderTest {
                             -> !(p.contains(ANCHOR1) || p.contains(ANCHOR2) || p.contains(ANCHOR3) || p.contains(ANCHOR4))
                             && p.contains(FileUrisXMLLoader.LOADER_DOC))
                     .count());
-            
+
             assertNotNull(instance.customMetadata);
             String metadata = instance.properties.getProperty(PROCESS_MODULE+'.'+METADATA);
             assertNotNull(metadata);
@@ -359,6 +359,15 @@ public class FileUrisXMLLoaderTest {
         try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
             instance.open();
             assertEquals(4, instance.getTotalCount());
+        }
+    }
+
+    @Test
+    public void testGetTotalCountAsModuleVariables() throws CorbException {
+        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
+            instance.open();
+            assertEquals(String.valueOf(4), instance.getProperty("PRE-BATCH-MODULE.URIS_TOTAL_COUNT"));
+            assertEquals(String.valueOf(4), instance.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
         }
     }
 
