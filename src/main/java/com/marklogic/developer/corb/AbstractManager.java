@@ -275,16 +275,14 @@ public abstract class AbstractManager {
                 username = decrypter.decrypt(XCC_USERNAME, username);
                 password = decrypter.decrypt(XCC_PASSWORD, password);
                 port = decrypter.decrypt(XCC_PORT, port);
-                dbname = !isBlank(dbname) ? decrypter.decrypt(XCC_DBNAME, dbname) : null;
+                dbname = isBlank(dbname) ? null : decrypter.decrypt(XCC_DBNAME, dbname);
             }
             for (String host: StringUtils.commaSeparatedValuesToList(hostnames)) {
                 if (decrypter != null) {
                     host = decrypter.decrypt(XCC_HOSTNAME, host);
                 }
                 String connectionUri = StringUtils.getXccUri(protocol, username, password, host, port, dbname);
-                if (connectionUri != null) {
-                    connectionUriList.add(connectionUri);
-                }
+                connectionUriList.add(connectionUri);
             }
         } else {
             for (String connectionUri : StringUtils.commaSeparatedValuesToList(uriAsStrings)) {
@@ -331,12 +329,12 @@ public abstract class AbstractManager {
                     username = decrypter.decrypt(XCC_USERNAME, username);
                     password = decrypter.decrypt(XCC_PASSWORD, password);
                     host = decrypter.decrypt(XCC_HOSTNAME, host);
-                    dbname = !isBlank(dbname) ? decrypter.decrypt(XCC_DBNAME, dbname) : null;
+                    dbname = isBlank(dbname) ? null : decrypter.decrypt(XCC_DBNAME, dbname);
                     uriAfterDecrypt = StringUtils.getXccUri(protocol, username, password, host, port, dbname);
                 }
             }
         } catch (IllegalStateException exc) {
-           LOG.log(WARNING,"Unable to parse connection uri "+ exc.getMessage());
+           LOG.log(WARNING,"Unable to parse connection URI "+ exc.getMessage());
         }
         return uriAfterDecrypt;
     }
