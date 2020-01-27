@@ -260,7 +260,7 @@ Encrypt the URI or password as below. It is assumed that the [jasypt](http://www
 **jasypt.properties file**  
 ```properties
 jasypt.algorithm=PBEWithMD5AndTripleDES #(If not specified, default is PBEWithMD5AndTripleDES)
-jasypt.password=passphrase  
+jasypt.password=passphrase
 ```
 
 #### com.marklogic.developer.corb.HostKeyDecrypter
@@ -297,7 +297,7 @@ Option | Description
 **<a name="SSL-CIPHER-SUITES"></a>SSL-CIPHER-SUITES** | A comma separated list of acceptable cipher suites used.
 
 ### Load Balancing and Failover with Multiple Hosts
-Corb 2.4+ supports load balancing and failover using `com.marklogic.developer.corb.ContentSourcePool`. This is automatically enabled when multiple comma separated values (supports encryption) are specified for for **XCC-CONNECTION-URI** or **XCC-HOSTNAME**.
+CoRB 2.4+ supports load balancing and failover using `com.marklogic.developer.corb.ContentSourcePool`. This is automatically enabled when multiple comma separated values (supports encryption) are specified for for **XCC-CONNECTION-URI** or **XCC-HOSTNAME**.
 
 ```properties
 XCC-CONNECTION-URI=xcc://hostname1:8000/dbname,xcc://hostname2:8000/dbname,..
@@ -313,9 +313,9 @@ The default implementation for `com.marklogic.developer.corb.ContentSourcePool` 
 * LOAD - Host with least number of active connections is allocated to caller.    
 
 ### Query and Connection Retries
-Corb automatically retries the requests a given URI when it encounters `com.marklogic.xcc.exceptions.ServerConnectionException` from MarkLogic. If necessary, the number of retry attempts can be configured using **XCC-CONNECTION-RETRY-LIMIT**. If multiple hosts are specified, we can optionally configure retries per each host using **XCC-CONNECTION-HOST-RETRY-LIMIT**. Corb waits at least **XCC-CONNECTION-RETRY-INTERVAL** seconds before a connection is retried on a failed host. 
+CoRB automatically retries the requests a given URI when it encounters `com.marklogic.xcc.exceptions.ServerConnectionException` from MarkLogic. If necessary, the number of retry attempts can be configured using **XCC-CONNECTION-RETRY-LIMIT**. If multiple hosts are specified, we can optionally configure retries per each host using **XCC-CONNECTION-HOST-RETRY-LIMIT**. CoRB waits at least **XCC-CONNECTION-RETRY-INTERVAL** seconds before a connection is retried on a failed host. 
 
-Corb also supports retries of requests failed due to query errors. This feature is only intended for sporadic query errors which are not specific to a particular URI. A good example may include occasional time out exceptions from MarkLogic when the ML is too busy and request time limit is low. We can configure which queries can be retried using **QUERY-RETRY-ERROR-CODES** or **QUERY-RETRY-ERROR-MESSAGE** (when error codes are not available). If necessary, the number of query retry attempts can be configured using **QUERY-RETRY-LIMIT**. Corb waits at least **QUERY-RETRY-INTERVAL** seconds before retrying a query.
+CoRB also supports retries of requests failed due to query errors. This feature is only intended for sporadic query errors which are not specific to a particular URI. A good example may include occasional time out exceptions from MarkLogic when the ML is too busy and request time limit is low. We can configure which queries can be retried using **QUERY-RETRY-ERROR-CODES** or **QUERY-RETRY-ERROR-MESSAGE** (when error codes are not available). If necessary, the number of query retry attempts can be configured using **QUERY-RETRY-LIMIT**. CoRB waits at least **QUERY-RETRY-INTERVAL** seconds before retrying a query.
 
 ```properties
 QUERY-RETRY-ERROR-CODES=XDMP-EXTIME,SVC-EXTIME
