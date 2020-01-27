@@ -74,7 +74,7 @@ public class AbstractManagerTest {
     private static final String PASSWORD = "password";
     private static final String HOST = "localhost";
     private static final String PORT = "80";
-    
+
     public static final String JASYPT_ALGORITHM = "jasypt.algorithm";
     public static final String JASYPT_PASSWORD = "jasypt.password";
 
@@ -221,11 +221,11 @@ public class AbstractManagerTest {
         Properties props = new Properties();
         props.setProperty("key1", "value1");
         props.setProperty("key2", "value2");
-        Manager instance;
+        Manager manager;
         try {
-            instance = getMockManagerWithEmptyResults();
-            instance.properties = props;
-            instance.logProperties();
+            manager = getMockManagerWithEmptyResults();
+            manager.properties = props;
+            manager.logProperties();
             List<LogRecord> records = testLogger.getLogRecords();
             assertEquals(props.size(), records.size());
         } catch (RequestException|CorbException ex) {
@@ -237,8 +237,8 @@ public class AbstractManagerTest {
     @Test
     public void testLogPropertiesNullProperties() {
         try {
-            Manager instance = getMockManagerWithEmptyResults();
-            instance.logProperties();
+            Manager manager = getMockManagerWithEmptyResults();
+            manager.logProperties();
             List<LogRecord> records = testLogger.getLogRecords();
             assertEquals(0, records.size());
         } catch (RequestException|CorbException ex) {
@@ -291,29 +291,29 @@ public class AbstractManagerTest {
 
     @Test
     public void testGetProperties() {
-        AbstractManager instance = new AbstractManagerImpl();
-        Properties result = instance.getProperties();
+        AbstractManager manager = new AbstractManagerImpl();
+        Properties result = manager.getProperties();
         assertNotNull(result);
     }
 
     @Test
     public void testGetOptions() {
-        AbstractManager instance = new AbstractManagerImpl();
-        TransformOptions result = instance.getOptions();
+        AbstractManager manager = new AbstractManagerImpl();
+        TransformOptions result = manager.getOptions();
         assertNotNull(result);
     }
 
     @Test
     public void testInitPropertiesFromOptionsFile() {
         System.setProperty(Options.OPTIONS_FILE, PROPERTIES_FILE_NAME);
-        AbstractManager instance = new AbstractManagerImpl();
+        AbstractManager manager = new AbstractManagerImpl();
         try {
-            instance.initPropertiesFromOptionsFile();
+            manager.initPropertiesFromOptionsFile();
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        Map properties = instance.getProperties();
+        Map properties = manager.getProperties();
         assertNotNull(properties);
         assertFalse(properties.isEmpty());
     }
@@ -322,9 +322,9 @@ public class AbstractManagerTest {
     public void testInitStringArr() {
         try {
             String[] args = null;
-            AbstractManager instance = new AbstractManagerImpl();
-            instance.init(args);
-            assertNull(instance.properties);
+            AbstractManager manager = new AbstractManagerImpl();
+            manager.init(args);
+            assertNull(manager.properties);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -335,9 +335,9 @@ public class AbstractManagerTest {
     public void testInitProperties() {
         try {
             Properties props = new Properties();
-            AbstractManager instance = new AbstractManagerImpl();
-            instance.init(props);
-            assertTrue(instance.properties.isEmpty());
+            AbstractManager manager = new AbstractManagerImpl();
+            manager.init(props);
+            assertTrue(manager.properties.isEmpty());
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -349,152 +349,184 @@ public class AbstractManagerTest {
         String[] args = null;
         Properties props = new Properties();
         props.setProperty(KEY, VALUE);
-        AbstractManager instance = new AbstractManagerImpl();
+        AbstractManager manager = new AbstractManagerImpl();
         try {
-            instance.init(args, props);
+            manager.init(args, props);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        Map properties = instance.getProperties();
+        Map properties = manager.getProperties();
         assertTrue(properties.containsKey(KEY));
     }
 
     @Test
     public void testInitDecrypterNoDecrypterConfigured() {
-        AbstractManager instance = new AbstractManagerImpl();
+        AbstractManager manager = new AbstractManagerImpl();
         try {
-            instance.initDecrypter();
+            manager.initDecrypter();
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        assertNull(instance.decrypter);
+        assertNull(manager.decrypter);
     }
 
     @Test (expected=CorbException.class)
     public void testInitDecrypterBadClassname() throws CorbException {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.DECRYPTER, "bogus");
-        instance.initDecrypter();
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.DECRYPTER, "bogus");
+        manager.initDecrypter();
     }
 
     @Test
     public void testInitDecrypterValidDecrypter() {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.DECRYPTER, JasyptDecrypter.class.getName());
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.DECRYPTER, JasyptDecrypter.class.getName());
         try {
-            instance.initDecrypter();
+            manager.initDecrypter();
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        assertTrue(instance.decrypter instanceof com.marklogic.developer.corb.JasyptDecrypter);
+        assertTrue(manager.decrypter instanceof com.marklogic.developer.corb.JasyptDecrypter);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInitDecrypterInvalidDecrypter() {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.DECRYPTER, String.class.getName());
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.DECRYPTER, String.class.getName());
         try {
-            instance.initDecrypter();
+            manager.initDecrypter();
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         fail();
     }
-    
+
     @Test
     public void testTryToDecryptUriInPartsClearText() {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.DECRYPTER, JasyptDecrypter.class.getName());
-        instance.properties.setProperty(Options.JASYPT_PROPERTIES_FILE, "src/test/resources/jasypt.properties");
+        String origUri = "xcc://user:pass123@somehost:8000/FFE";
         try {
-            instance.initDecrypter();
+            AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+            String newUri = manager.tryToDecryptUriInParts(origUri);
+            assertEquals(origUri, newUri);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        String origUri = "xcc://user:pass123@somehost:8000/FFE";
-        String expectedUri = "xcc://user:pass123@somehost:8000/FFE";
-        String newUri = instance.tryToDecryptUriInParts(origUri);
-        assertEquals(expectedUri,newUri);
     }
-    
+
     @Test
     public void testTryToDecryptUriInPartsClearTextWithEncoding() {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.DECRYPTER, JasyptDecrypter.class.getName());
-        instance.properties.setProperty(Options.JASYPT_PROPERTIES_FILE, "src/test/resources/jasypt.properties");
+        String origUri = "xcc://user:pass#123@somehost:8000/FFE";
         try {
-            instance.initDecrypter();
+            AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+            String newUri = manager.tryToDecryptUriInParts(origUri);
+            assertEquals("xcc://user:pass%23123@somehost:8000/FFE", newUri);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        String origUri = "xcc://user:pass#123@somehost:8000/FFE";
-        String expectedUri = "xcc://user:pass%23123@somehost:8000/FFE";
-        String newUri = instance.tryToDecryptUriInParts(origUri);
-        assertEquals(expectedUri,newUri);
     }
-    
+
     @Test
     public void testTryToDecryptUriInPartsPasswordEncrypted() {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.DECRYPTER, JasyptDecrypter.class.getName());
-        instance.properties.setProperty(Options.JASYPT_PROPERTIES_FILE, "src/test/resources/jasypt.properties");
+        String origUri = "xcc://user:zSSKlCXLWCaZp/LrbX0k0juz6+D5sUbr@somehost:8000/FFE";
         try {
-            instance.initDecrypter();
+            AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+            String newUri = manager.tryToDecryptUriInParts(origUri);
+            assertEquals("xcc://user:pass%23123@somehost:8000/FFE", newUri);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        String origUri = "xcc://user:zSSKlCXLWCaZp/LrbX0k0juz6+D5sUbr@somehost:8000/FFE";
-        String expectedUri = "xcc://user:pass%23123@somehost:8000/FFE";
-        String newUri = instance.tryToDecryptUriInParts(origUri);
-        assertEquals(expectedUri,newUri);
     }
-    
+
     @Test
     public void testTryToDecryptUriInPartsPasswordEnocoded() {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.DECRYPTER, JasyptDecrypter.class.getName());
-        instance.properties.setProperty(Options.JASYPT_PROPERTIES_FILE, "src/test/resources/jasypt.properties");
+        String origUri = "xcc://user:ENC(TThPQnCGGMjO7soUk/Kb8o1DQE7kUOVW)@somehost:8000/FFE";
         try {
-            instance.initDecrypter();
+            AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+            String newUri = manager.tryToDecryptUriInParts(origUri);
+            assertEquals("xcc://user:pass%23123@somehost:8000/FFE",newUri);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        String origUri = "xcc://user:ENC(TThPQnCGGMjO7soUk/Kb8o1DQE7kUOVW)@somehost:8000/FFE";
-        String expectedUri = "xcc://user:pass%23123@somehost:8000/FFE";
-        String newUri = instance.tryToDecryptUriInParts(origUri);
-        assertEquals(expectedUri,newUri);
     }
-    
+
     @Test
     public void testTryToDecryptUriInPartsMultiPartEncryption() {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.DECRYPTER, JasyptDecrypter.class.getName());
-        instance.properties.setProperty(Options.JASYPT_PROPERTIES_FILE, "src/test/resources/jasypt.properties");
+        String origUri = "xcc://ENC(v5b+VYiO4qpoZmVGkWieDg==):TThPQnCGGMjO7soUk/Kb8o1DQE7kUOVW@e+nz4XEN9SuuazGnbr6Ec5cyid1/l0qn:8000";
         try {
-            instance.initDecrypter();
+            AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+            String newUri = manager.tryToDecryptUriInParts(origUri);
+            assertEquals("xcc://user:pass%23123@somehost:8000", newUri);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        String origUri = "xcc://ENC(v5b+VYiO4qpoZmVGkWieDg==):TThPQnCGGMjO7soUk/Kb8o1DQE7kUOVW@e+nz4XEN9SuuazGnbr6Ec5cyid1/l0qn:8000";
-        String expectedUri = "xcc://user:pass%23123@somehost:8000";
-        String newUri = instance.tryToDecryptUriInParts(origUri);
-        assertEquals(expectedUri,newUri);
+    }
+
+    @Test
+    public void testTryToDecryptUriInPartsWithTrailingSlash() {
+        String origUri = "xcc://user:pass@localhost:8000/";
+        try {
+            AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+            String newUri = manager.tryToDecryptUriInParts(origUri);
+            assertEquals("xcc://user:pass@localhost:8000", newUri);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testTryToDecryptUriInPartsIncomplete() {
+        String origUri = "xccs:// : @ENC(,yY9wGdp6RxGPl7x/EZj5DGMMryhEw0T2):0";
+        try {
+            AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+            String newUri = manager.tryToDecryptUriInParts(origUri);
+            assertEquals("If the regex doesn't match, values won't be decoded", origUri, newUri);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testTryToDecryptUriInPartsWithTrailingSpace() {
+        String origUri = "xcc://user:pass@localhost:8000 ";
+        try {
+            AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+            String newUri = manager.tryToDecryptUriInParts(origUri);
+            assertEquals("Fails to match regex, bypassing some parsing", origUri, newUri);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test(expected = java.lang.NullPointerException.class)
+    public void testTryToDecryptUriInPartsNullURI() {
+        String origUri = null;
+        try {
+            AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+            String newUri = manager.tryToDecryptUriInParts(origUri);
+            assertNull(newUri);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test
     public void testInitOptionsWithXCCHTTPCompliantTrue() {
         String[] args = {};
-        AbstractManager instance = AbstractManagerImpl.instanceWithXccHttpCompliantValue(Boolean.toString(true));
+        AbstractManager manager = AbstractManagerImpl.instanceWithXccHttpCompliantValue(Boolean.toString(true));
         try {
-            instance.initOptions(args);
+            manager.initOptions(args);
             assertEquals(Boolean.toString(true), System.getProperty(PROPERTY_XCC_HTTPCOMPLIANT));
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -505,9 +537,9 @@ public class AbstractManagerTest {
     @Test
     public void testInitOptionsWithXCCHTTPCompliantFalse() {
         String[] args = {};
-        AbstractManager instance = AbstractManagerImpl.instanceWithXccHttpCompliantValue(Boolean.toString(false));
+        AbstractManager manager = AbstractManagerImpl.instanceWithXccHttpCompliantValue(Boolean.toString(false));
         try {
-            instance.initOptions(args);
+            manager.initOptions(args);
             assertEquals(Boolean.toString(false), System.getProperty(PROPERTY_XCC_HTTPCOMPLIANT));
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -518,9 +550,9 @@ public class AbstractManagerTest {
     @Test
     public void testInitOptionsWithXCCHTTPCompliantBlank() {
         String[] args = {};
-        AbstractManager instance = AbstractManagerImpl.instanceWithXccHttpCompliantValue(AbstractManager.SPACE);
+        AbstractManager manager = AbstractManagerImpl.instanceWithXccHttpCompliantValue(AbstractManager.SPACE);
         try {
-            instance.initOptions(args);
+            manager.initOptions(args);
             assertEquals(originalValue, System.getProperty(PROPERTY_XCC_HTTPCOMPLIANT));
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -530,36 +562,36 @@ public class AbstractManagerTest {
 
     @Test
     public void testInitSSLConfig() {
-        AbstractManager instance = new AbstractManagerImpl();
+        AbstractManager manager = new AbstractManagerImpl();
         try {
-            instance.initSSLConfig();
+            manager.initSSLConfig();
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        assertNotNull(instance.sslConfig);
+        assertNotNull(manager.sslConfig);
     }
 
     @Test
     public void testInitSSLConfigCustomClass() {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.SSL_CONFIG_CLASS, TwoWaySSLConfig.class.getName());
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.SSL_CONFIG_CLASS, TwoWaySSLConfig.class.getName());
         try {
-            instance.initSSLConfig();
+            manager.initSSLConfig();
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        assertNotNull(instance.sslConfig);
-        assertTrue(instance.sslConfig instanceof TwoWaySSLConfig);
+        assertNotNull(manager.sslConfig);
+        assertTrue(manager.sslConfig instanceof TwoWaySSLConfig);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInitSSLConfigInvalidConfigClass() {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.SSL_CONFIG_CLASS, String.class.getName());
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.SSL_CONFIG_CLASS, String.class.getName());
         try {
-            instance.initSSLConfig();
+            manager.initSSLConfig();
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
@@ -568,12 +600,12 @@ public class AbstractManagerTest {
 
     @Test(expected = CorbException.class)
     public void testInitSSLConfigBadClass() throws CorbException {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.SSL_CONFIG_CLASS, "not a valid class");
-        instance.initSSLConfig();
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.SSL_CONFIG_CLASS, "not a valid class");
+        manager.initSSLConfig();
     }
 
-    private void checkContentSource(AbstractManager instance, String user, String host, String port, String dbname) throws CorbException{
+    private void checkContentSource(AbstractManager instance, String user, String host, String port, String dbname) throws CorbException {
 		ContentSource contentSource = instance.getContentSourcePool().get();
 	    assertNotNull(contentSource);
 
@@ -584,81 +616,83 @@ public class AbstractManagerTest {
 
 	    String csToStr = contentSource.toString();
 	    if (user != null) {
-            assertTrue(csToStr.contains("user="+user));
+            assertTrue(csToStr.contains("user=" + user));
         }
 	    if (dbname != null) {
-            assertTrue(csToStr.contains("cb="+dbname));
+            assertTrue(csToStr.contains("cb=" + dbname));
+        } else {
+	        assertTrue(csToStr.contains("cb={none}"));
         }
 	}
 
 
     @Test
     public void testInitConnectionManager() throws CorbException {
-        AbstractManager instance = new AbstractManagerImpl();
+        AbstractManager manager = new AbstractManagerImpl();
         try {
-            instance.initContentSourcePool(XCC_CONNECTION_URI);
+            manager.initContentSourcePool(XCC_CONNECTION_URI);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        checkContentSource(instance,XCC_URI_USER,XCC_URI_HOST,XCC_URI_PORT,XCC_URI_DB);
+        checkContentSource(manager, XCC_URI_USER, XCC_URI_HOST, XCC_URI_PORT, XCC_URI_DB);
     }
 
     @Test
     public void testInitURIArgsTakePrecedenceOverProperties() throws CorbException {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
-        instance.properties.setProperty(Options.XCC_PASSWORD, PASSWORD);
-        instance.properties.setProperty(Options.XCC_HOSTNAME, HOST);
-        instance.properties.setProperty(Options.XCC_PORT, PORT);
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.XCC_USERNAME, USERNAME);
+        manager.properties.setProperty(Options.XCC_PASSWORD, PASSWORD);
+        manager.properties.setProperty(Options.XCC_HOSTNAME, HOST);
+        manager.properties.setProperty(Options.XCC_PORT, PORT);
         try {
-            instance.initContentSourcePool(XCC_CONNECTION_URI);
+            manager.initContentSourcePool(XCC_CONNECTION_URI);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        checkContentSource(instance,XCC_URI_USER,XCC_URI_HOST,XCC_URI_PORT,XCC_URI_DB);
+        checkContentSource(manager,XCC_URI_USER,XCC_URI_HOST,XCC_URI_PORT,XCC_URI_DB);
     }
 
     @Test
     public void testInitURIAsSystemPropertyOnly() throws CorbException {
-        AbstractManager instance = new AbstractManagerImpl();
+        AbstractManager manager = new AbstractManagerImpl();
         System.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
         try {
-            instance.initContentSourcePool(null);
+            manager.initContentSourcePool(null);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
         System.clearProperty(Options.XCC_CONNECTION_URI);
-        checkContentSource(instance,XCC_URI_USER,XCC_URI_HOST,XCC_URI_PORT,XCC_URI_DB);
+        checkContentSource(manager,XCC_URI_USER,XCC_URI_HOST,XCC_URI_PORT,XCC_URI_DB);
     }
 
     @Test(expected = CorbException.class)
     public void testInitURIInvalidXCCURI() throws CorbException {
         String uriArg = "www.marklogic.com";
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.initContentSourcePool(uriArg);
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.initContentSourcePool(uriArg);
         fail();
     }
 
     @Test(expected = CorbException.class)
     public void testInitURINullURI() throws CorbException {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.initContentSourcePool(null);
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.initContentSourcePool(null);
         fail();
     }
 
     @Test
     public void testInitURINullURIWithValues() {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
-        instance.properties.setProperty(Options.XCC_PASSWORD, PASSWORD);
-        instance.properties.setProperty(Options.XCC_HOSTNAME, HOST);
-        instance.properties.setProperty(Options.XCC_PORT, PORT);
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.XCC_USERNAME, USERNAME);
+        manager.properties.setProperty(Options.XCC_PASSWORD, PASSWORD);
+        manager.properties.setProperty(Options.XCC_HOSTNAME, HOST);
+        manager.properties.setProperty(Options.XCC_PORT, PORT);
         try {
-            instance.initContentSourcePool(null);
-            checkContentSource(instance,USERNAME,HOST,PORT,null);
+            manager.initContentSourcePool(null);
+            checkContentSource(manager,USERNAME,HOST,PORT,null);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -667,83 +701,121 @@ public class AbstractManagerTest {
 
     @Test
     public void testInitURINullURIWithUnencodedValues() throws CorbException {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
-        instance.properties.setProperty(Options.XCC_PASSWORD, "p@ssword:+!");
-        instance.properties.setProperty(Options.XCC_HOSTNAME, HOST);
-        instance.properties.setProperty(Options.XCC_PORT, PORT);
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.XCC_USERNAME, USERNAME);
+        manager.properties.setProperty(Options.XCC_PASSWORD, "p@ssword:+!");
+        manager.properties.setProperty(Options.XCC_HOSTNAME, HOST);
+        manager.properties.setProperty(Options.XCC_PORT, PORT);
         try {
-            instance.initContentSourcePool(null);
+            manager.initContentSourcePool(null);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        checkContentSource(instance,USERNAME,HOST,PORT,null);
+        checkContentSource(manager, USERNAME, HOST, PORT,null);
     }
 
     @Test
     public void testInitURINullURIWithUnencodedValues2() throws CorbException {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
-        instance.properties.setProperty(Options.XCC_PASSWORD, "p@ssword:+");
-        instance.properties.setProperty(Options.XCC_HOSTNAME, HOST);
-        instance.properties.setProperty(Options.XCC_PORT, PORT);
-        instance.properties.setProperty(Options.XCC_DBNAME, "documents database");
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.XCC_USERNAME, USERNAME);
+        manager.properties.setProperty(Options.XCC_PASSWORD, "p@ssword:+");
+        manager.properties.setProperty(Options.XCC_HOSTNAME, HOST);
+        manager.properties.setProperty(Options.XCC_PORT, PORT);
+        manager.properties.setProperty(Options.XCC_DBNAME, "documents database");
         try {
-            instance.initContentSourcePool(null);
+            manager.initContentSourcePool(null);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        checkContentSource(instance,USERNAME,HOST,PORT,"documents+database");
+        checkContentSource(manager, USERNAME, HOST, PORT,"documents+database");
     }
 
     @Test
     public void testInitURINullURIWithEncodedValues() throws CorbException {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
-        instance.properties.setProperty(Options.XCC_PASSWORD, "p%40assword%2B%3A");
-        instance.properties.setProperty(Options.XCC_HOSTNAME, HOST);
-        instance.properties.setProperty(Options.XCC_PORT, PORT);
-        instance.properties.setProperty(Options.XCC_DBNAME, "documents%20database");
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.XCC_USERNAME, USERNAME);
+        manager.properties.setProperty(Options.XCC_PASSWORD, "p%40assword%2B%3A");
+        manager.properties.setProperty(Options.XCC_HOSTNAME, HOST);
+        manager.properties.setProperty(Options.XCC_PORT, PORT);
+        manager.properties.setProperty(Options.XCC_DBNAME, "documents%20database");
         try {
-            instance.initContentSourcePool(null);
+            manager.initContentSourcePool(null);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        checkContentSource(instance,USERNAME,HOST,PORT,"documents database");
+        checkContentSource(manager, USERNAME, HOST, PORT,"documents database");
+    }
+
+    @Test
+    public void testInitURINullURIWithEncodedValuesNoDatabase() throws CorbException {
+        AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+        manager.properties.setProperty(Options.XCC_USERNAME, USERNAME);
+        manager.properties.setProperty(Options.XCC_PASSWORD, PASSWORD);
+        manager.properties.setProperty(Options.XCC_HOSTNAME, HOST);
+        manager.properties.setProperty(Options.XCC_PORT, PORT);
+        try {
+            manager.initContentSourcePool(null);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+        checkContentSource(manager, USERNAME, HOST, PORT,null);
+    }
+
+    @Test
+    public void testInitURIWithMultipleHosts() throws CorbException {
+        AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+        manager.properties.setProperty(Options.XCC_USERNAME, USERNAME);
+        manager.properties.setProperty(Options.XCC_PASSWORD, PASSWORD);
+        manager.properties.setProperty(Options.XCC_HOSTNAME, HOST + ",yY9wGdp6RxGPl7x/EZj5DGMMryhEw0T2, ENC(,yY9wGdp6RxGPl7x/EZj5DGMMryhEw0T2)");
+        manager.properties.setProperty(Options.XCC_PORT, PORT);
+        manager.properties.setProperty(Options.XCC_DBNAME, "documents%20database");
+        try {
+            manager.initContentSourcePool(null);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+        checkContentSource(manager, USERNAME, HOST, PORT,"documents database");
+
+        assertEquals(3, manager.csp.getAllContentSources().length);
+        for (ContentSource contentSource : manager.csp.getAllContentSources()) {
+            assertEquals("Verify that all hostname values are localhost", HOST, contentSource.getConnectionProvider().getHostName());
+        }
     }
 
     @Test(expected = CorbException.class)
     public void testInitURINullURIWithPassword() throws CorbException {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_PASSWORD, PASSWORD);
-        instance.initContentSourcePool(null);
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.XCC_PASSWORD, PASSWORD);
+        manager.initContentSourcePool(null);
         fail();
     }
 
     @Test(expected = CorbException.class)
     public void testInitURINullURIWithPort() throws CorbException {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_PORT, PORT);
-        instance.initContentSourcePool(null);
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.XCC_PORT, PORT);
+        manager.initContentSourcePool(null);
         fail();
     }
 
     @Test(expected = CorbException.class)
     public void testInitURINullURIWithHostname() throws CorbException {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_HOSTNAME, HOST);
-        instance.initContentSourcePool(null);
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.XCC_HOSTNAME, HOST);
+        manager.initContentSourcePool(null);
         fail();
     }
 
     @Test(expected = CorbException.class)
     public void testInitURINullURIWithUsername() throws CorbException {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.XCC_USERNAME, USERNAME);
-        instance.initContentSourcePool(null);
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.XCC_USERNAME, USERNAME);
+        manager.initContentSourcePool(null);
         fail();
     }
 
@@ -751,8 +823,8 @@ public class AbstractManagerTest {
     public void testGetOptionEmptyName() {
         String argVal = "";
         String propName = "";
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.getOption(argVal, propName);
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.getOption(argVal, propName);
         fail();
     }
 
@@ -760,24 +832,24 @@ public class AbstractManagerTest {
     public void testGetOption() {
         String key = "option";
         String val = VALUE;
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(key, val);
-        assertEquals(val, instance.getOption(key));
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(key, val);
+        assertEquals(val, manager.getOption(key));
     }
 
     @Test
     public void testGetOptionPaddedValue() {
         String key = "option2";
         String val = "value2  ";
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(key, val);
-        assertEquals(val.trim(), instance.getOption(key));
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(key, val);
+        assertEquals(val.trim(), manager.getOption(key));
     }
 
     @Test
     public void testGetContentSourceManager() {
-        AbstractManager instance = new AbstractManagerImpl();
-        ContentSourcePool result = instance.getContentSourcePool();
+        AbstractManager manager = new AbstractManagerImpl();
+        ContentSourcePool result = manager.getContentSourcePool();
         assertNull(result);
     }
 
@@ -785,8 +857,8 @@ public class AbstractManagerTest {
     public void testUsage() {
         ByteArrayOutputStream outContent = new ByteArrayOutputStream();
         System.setErr(new PrintStream(outContent));
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.usage();
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.usage();
 
         String usage = outContent.toString();
         assertNotNull(usage);
@@ -794,8 +866,8 @@ public class AbstractManagerTest {
 
     @Test
     public void testLogRuntimeArgs() {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.logRuntimeArgs();
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.logRuntimeArgs();
 
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.INFO, records.get(0).getLevel());
@@ -804,24 +876,24 @@ public class AbstractManagerTest {
 
     @Test(expected = CorbException.class)
     public void testCreateContentSourceManagerBadClassname() throws CorbException{
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.CONTENT_SOURCE_POOL, "does-not-exist");
-        instance.createContentSourcePool();
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.CONTENT_SOURCE_POOL, "does-not-exist");
+        manager.createContentSourcePool();
     }
 
     @Test(expected = CorbException.class)
     public void testCreateContentSourceManagerNotCSP() throws CorbException{
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.CONTENT_SOURCE_POOL, "com.marklogic.developer.corb.Manager");
-        instance.createContentSourcePool();
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.CONTENT_SOURCE_POOL, "com.marklogic.developer.corb.Manager");
+        manager.createContentSourcePool();
     }
 
     @Test
     public void testCreateContentSourceManager() {
-        AbstractManager instance = new AbstractManagerImpl();
-        instance.properties.setProperty(Options.CONTENT_SOURCE_POOL, TestContentSourcePool.class.getName());
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.CONTENT_SOURCE_POOL, TestContentSourcePool.class.getName());
         try {
-            ContentSourcePool csp = instance.createContentSourcePool();
+            ContentSourcePool csp = manager.createContentSourcePool();
             assertTrue(csp instanceof TestContentSourcePool);
         } catch (CorbException ex) {
             fail();
@@ -842,9 +914,17 @@ public class AbstractManagerTest {
 
             Properties properties = new Properties();
             properties.setProperty(Options.XCC_HTTPCOMPLIANT, xccHttpCompliantValue);
-            AbstractManager instance = new AbstractManagerImpl();
-            instance.properties = properties;
-            return instance;
+            AbstractManager manager = new AbstractManagerImpl();
+            manager.properties = properties;
+            return manager;
+        }
+
+        public static AbstractManager instanceWithJasypt() throws CorbException {
+            AbstractManager manager = new AbstractManagerImpl();
+            manager.properties.setProperty(Options.DECRYPTER, JasyptDecrypter.class.getName());
+            manager.properties.setProperty(Options.JASYPT_PROPERTIES_FILE, "src/test/resources/jasypt.properties");
+            manager.initDecrypter();
+            return manager;
         }
     }
 
