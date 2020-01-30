@@ -419,4 +419,10 @@ public class StringUtilsTest {
         assertEquals("a b", StringUtils.urlDecode("a+b"));
     }
 
+    @Test
+    public void testIsUrlEncoded(){
+        assertTrue(StringUtils.isUrlEncoded("this%20that"));
+        assertFalse(StringUtils.isUrlEncoded("this that"));
+        assertFalse(StringUtils.isUrlEncoded("my milk is 2%"));
+    }
 }

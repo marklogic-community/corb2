@@ -359,7 +359,11 @@ public final class StringUtils {
      * @return
      */
     public static boolean isUrlEncoded(String arg) {
-        return arg.length() != urlDecode(arg).length();
+        try {
+            return arg.length() != urlDecode(arg).length();
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
     }
 
     /**
