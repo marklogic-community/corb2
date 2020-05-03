@@ -18,6 +18,10 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
+import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
+import static com.marklogic.developer.corb.Options.PROCESS_TASK;
+import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
 import static com.marklogic.developer.corb.TestUtils.clearFile;
 import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
 import static com.marklogic.developer.corb.util.FileUtilsTest.getBytes;
@@ -393,6 +397,22 @@ public class ManagerIT {
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.SEVERE, records.get(0).getLevel());
         assertEquals(CORB_INIT_ERROR_MSG, records.get(0).getMessage());
+    }
+
+    @Test
+    public void testDefaultExportBatchToFileTaskWhenExportFileNameSpecified() {
+        String filename = "foo/bar";
+        Properties props = new Properties();
+        props.setProperty(XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
+        props.setProperty(PROCESS_MODULE, ManagerTest.PROCESS_MODULE);
+        props.setProperty(EXPORT_FILE_NAME, filename);
+        Manager manager = new Manager();
+        try {
+            manager.init(props);
+            assertEquals(ExportBatchToFileTask.class.getName(), manager.getOption(PROCESS_TASK));
+        } catch (CorbException ex){
+            fail();
+        }
     }
 
     @Test
