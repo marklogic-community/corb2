@@ -51,7 +51,6 @@ public final class TestUtils {
         Arrays.stream(optionsClass.getFields())
                 .map(field -> {
                     try {
-                        field.setAccessible(true);
                         //obtain the CoRB option name
                         return (String) field.get(optionsClass);
                     } catch (IllegalAccessException ex) {
