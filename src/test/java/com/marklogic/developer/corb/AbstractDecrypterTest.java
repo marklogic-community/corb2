@@ -66,49 +66,6 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testGetConnectionURI() {
-        String uri = "xcc://user:pass@localhost:8003/dbname";
-        String username = "";
-        String password = "";
-        String host = "";
-        String port = "";
-        String dbname = "";
-        AbstractDecrypter instance = new AbstractDecrypterImpl();
-
-        String result = instance.getConnectionURI(uri, username, password, host, port, dbname);
-        assertEquals(uri.toUpperCase(), result);
-    }
-
-    @Test
-    public void testGetConnectionURIConstructUrl() {
-        String uri = null;
-        String dbname = "db";
-        AbstractDecrypter instance = new AbstractDecrypterImpl();
-        String result = instance.getConnectionURI(uri, USER, PASS, LOCALHOST, PORT, dbname);
-        assertEquals("xcc://USER:PASS@LOCALHOST:8003/DB", result);
-    }
-
-    @Test
-    public void testGetConnectionURIConstructUrlDbIsNull() {
-        String uri = null;
-        String dbname = null;
-        AbstractDecrypter instance = new AbstractDecrypterImpl();
-
-        String result = instance.getConnectionURI(uri, USER, PASS, LOCALHOST, PORT, dbname);
-        assertEquals("xcc://USER:PASS@LOCALHOST:8003", result);
-    }
-
-    @Test
-    public void testGetConnectionURIConstructUrlDbIsBlank() {
-        String uri = null;
-        String dbname = "";
-        AbstractDecrypter instance = new AbstractDecrypterImpl();
-
-        String result = instance.getConnectionURI(uri, USER, PASS, LOCALHOST, PORT, dbname);
-        assertEquals("xcc://USER:PASS@LOCALHOST:8003", result);
-    }
-
-    @Test
     public void testDecryptNotEncrypted() {
         String property = "unencryptedProp";
         AbstractDecrypter instance = new AbstractDecrypterImpl();

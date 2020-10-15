@@ -304,18 +304,6 @@ public final class StringUtils {
         return code;
     }
 
-    /**
-     * Build an XCC URI from the values provided. Values will be URLEncoded, if it does not appear that they have already been URLEncoded.
-     * @param username
-     * @param password
-     * @param host
-     * @param port
-     * @param dbname
-     * @return
-     */
-    public static String getXccUri(String username, String password, String host, String port, String dbname) {
-        return getXccUri("xcc", username, password, host, port, dbname);
-    }
 
     /**
      * Build an XCC URI from the values provided. Values will be URLEncoded, if it does not appear that they have already been URLEncoded.
@@ -325,13 +313,29 @@ public final class StringUtils {
      * @param host
      * @param port
      * @param dbname
+     * @param urlEncode
      * @return
      */
-    public static String getXccUri(String protocol, String username, String password, String host, String port, String dbname) {
+    public static String getXccUri(String protocol, String username, String password, String host, String port, String dbname, String urlEncode) {
         if (isBlank(protocol)) {
             protocol = "xcc";
         }
-        return protocol + "://" + urlEncodeIfNecessary(username) + ':' + urlEncodeIfNecessary(password) + '@' + host + ':' + port + (isBlank(dbname) ? EMPTY : SLASH + urlEncodeIfNecessary(dbname));
+        if (isBlank(dbname)){
+            dbname = EMPTY;
+        }
+        //If URL-ENCODE
+        if (!"never".equalsIgnoreCase(urlEncode)) {
+            if ("always".equalsIgnoreCase(urlEncode)) {
+                username = urlEncode(username);
+                password = urlEncode(password);
+                dbname = urlEncode(dbname);
+            } else {
+                username = urlEncodeIfNecessary(username);
+                password = urlEncodeIfNecessary(password);
+                dbname = urlEncodeIfNecessary(dbname);
+            }
+        }
+        return protocol + "://" + username + ':' + password + '@' + host + ':' + port + (isBlank(dbname) ? EMPTY : SLASH + dbname);
     }
 
     /**

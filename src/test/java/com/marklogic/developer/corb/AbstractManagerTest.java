@@ -409,7 +409,7 @@ public class AbstractManagerTest {
         String origUri = "xcc://user:pass123@somehost:8000/FFE";
         try {
             AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
-            String newUri = manager.tryToDecryptUriInParts(origUri);
+            String newUri = manager.tryToDecryptUriInParts(origUri, "auto");
             assertEquals(origUri, newUri);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -422,7 +422,7 @@ public class AbstractManagerTest {
         String origUri = "xcc://user:pass#123@somehost:8000/FFE";
         try {
             AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
-            String newUri = manager.tryToDecryptUriInParts(origUri);
+            String newUri = manager.tryToDecryptUriInParts(origUri, "auto");
             assertEquals("xcc://user:pass%23123@somehost:8000/FFE", newUri);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -435,7 +435,7 @@ public class AbstractManagerTest {
         String origUri = "xcc://user:zSSKlCXLWCaZp/LrbX0k0juz6+D5sUbr@somehost:8000/FFE";
         try {
             AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
-            String newUri = manager.tryToDecryptUriInParts(origUri);
+            String newUri = manager.tryToDecryptUriInParts(origUri, "auto");
             assertEquals("xcc://user:pass%23123@somehost:8000/FFE", newUri);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -448,8 +448,16 @@ public class AbstractManagerTest {
         String origUri = "xcc://user:ENC(TThPQnCGGMjO7soUk/Kb8o1DQE7kUOVW)@somehost:8000/FFE";
         try {
             AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
-            String newUri = manager.tryToDecryptUriInParts(origUri);
-            assertEquals("xcc://user:pass%23123@somehost:8000/FFE",newUri);
+            String newUri = manager.tryToDecryptUriInParts(origUri, "auto");
+            assertEquals("Since # is in password, auto should encode", "xcc://user:pass%23123@somehost:8000/FFE", newUri);
+            newUri = manager.tryToDecryptUriInParts(origUri, "always");
+            assertEquals("Same with always, encode it", "xcc://user:pass%23123@somehost:8000/FFE", newUri);
+            newUri = manager.tryToDecryptUriInParts(origUri, "maybe");
+            assertEquals("If not always or never, then auto","xcc://user:pass%23123@somehost:8000/FFE", newUri);
+            newUri = manager.tryToDecryptUriInParts(origUri, "never");
+            assertEquals("never means do not URLEncode even if it needs it", "xcc://user:pass#123@somehost:8000/FFE", newUri);
+            newUri = manager.tryToDecryptUriInParts(origUri, "NEVER");
+            assertEquals("Even case insensitive match on NEVER means do not URLEncode", "xcc://user:pass#123@somehost:8000/FFE", newUri);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -461,7 +469,7 @@ public class AbstractManagerTest {
         String origUri = "xcc://ENC(v5b+VYiO4qpoZmVGkWieDg==):TThPQnCGGMjO7soUk/Kb8o1DQE7kUOVW@e+nz4XEN9SuuazGnbr6Ec5cyid1/l0qn:8000";
         try {
             AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
-            String newUri = manager.tryToDecryptUriInParts(origUri);
+            String newUri = manager.tryToDecryptUriInParts(origUri, "auto");
             assertEquals("xcc://user:pass%23123@somehost:8000", newUri);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -474,7 +482,7 @@ public class AbstractManagerTest {
         String origUri = "xcc://user:pass@localhost:8000/";
         try {
             AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
-            String newUri = manager.tryToDecryptUriInParts(origUri);
+            String newUri = manager.tryToDecryptUriInParts(origUri, "auto");
             assertEquals("xcc://user:pass@localhost:8000", newUri);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -487,7 +495,7 @@ public class AbstractManagerTest {
         String origUri = "xccs:// : @ENC(,yY9wGdp6RxGPl7x/EZj5DGMMryhEw0T2):0";
         try {
             AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
-            String newUri = manager.tryToDecryptUriInParts(origUri);
+            String newUri = manager.tryToDecryptUriInParts(origUri,"auto");
             assertEquals("If the regex doesn't match, values won't be decoded", origUri, newUri);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -500,7 +508,7 @@ public class AbstractManagerTest {
         String origUri = "xcc://user:pass@localhost:8000 ";
         try {
             AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
-            String newUri = manager.tryToDecryptUriInParts(origUri);
+            String newUri = manager.tryToDecryptUriInParts(origUri, "auto");
             assertEquals("Fails to match regex, bypassing some parsing", origUri, newUri);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -513,7 +521,7 @@ public class AbstractManagerTest {
         String origUri = null;
         try {
             AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
-            String newUri = manager.tryToDecryptUriInParts(origUri);
+            String newUri = manager.tryToDecryptUriInParts(origUri, "auto");
             assertNull(newUri);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);

@@ -51,6 +51,7 @@ import java.io.PrintStream;
 import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.lang.reflect.Field;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -166,6 +167,36 @@ public abstract class AbstractManager {
         return options;
     }
 
+    public void initProperties(Properties props) throws CorbException {
+        if (props == null || props.isEmpty()) {
+            try {
+                initPropertiesFromOptionsFile();
+            } catch (IOException ex) {
+                throw new CorbException("Failed to initialized properties from options file", ex);
+            }
+        } else {
+            properties = props;
+        }
+        /*
+         For each of the Options, if there are any System Properties specified and there is not already an entry in the properties, set it.
+         This helps ensure that SSL properties are available in SSL-CONFIG-CLASS, which do not have the getOption() method
+         */
+        try {
+            for (Field field : Options.class.getFields()) {
+                if (String.class.equals(field.getType())) {
+                    String optionKey = (String) field.get(null);
+                    String optionValue = getOption(optionKey);
+                    if (!properties.containsKey(optionKey) && optionValue != null) {
+                        LOG.log(INFO, "applying system property: {0} to properties", optionKey);
+                        properties.put(optionKey, optionValue);
+                    }
+                }
+            }
+        } catch (IllegalAccessException ex) {
+            LOG.log(WARNING, "Unable to access Options class fields with reflection");
+        }
+    }
+
     public void initPropertiesFromOptionsFile() throws IOException {
         String propsFileName = System.getProperty(OPTIONS_FILE);
         loadPropertiesFile(propsFileName, true, properties);
@@ -185,21 +216,12 @@ public abstract class AbstractManager {
         if (args == null) {
             args = new String[0];
         }
-        if (props == null || props.isEmpty()) {
-            try {
-                initPropertiesFromOptionsFile();
-            } catch (IOException ex) {
-                throw new CorbException("Failed to initialized properties from options file", ex);
-            }
-        } else {
-            properties = props;
-        }
+        logRuntimeArgs();
+        initProperties(props);
+        initOptions(args);
         initDecrypter();
         initSSLConfig();
         initContentSourcePool(args.length > 0 ? args[0] : null);
-
-        initOptions(args);
-        logRuntimeArgs();
         registerStatusInfo();
     }
 
@@ -234,7 +256,7 @@ public abstract class AbstractManager {
                 Class<?> decrypterCls = Class.forName(sslConfigClassName);
                 if (SSLConfig.class.isAssignableFrom(decrypterCls)) {
                     sslConfig = (SSLConfig) decrypterCls.newInstance();
-                    LOG.log(INFO, () -> MessageFormat.format("Using SSLConfig {0}",decrypterCls.getName()));
+                    LOG.log(INFO, () -> MessageFormat.format("Using SSLConfig {0}", decrypterCls.getName()));
                 } else {
                     throw new IllegalArgumentException("SSL Options must be of type com.marklogic.developer.corb.SSLConfig");
                 }
@@ -270,6 +292,7 @@ public abstract class AbstractManager {
         }
 
         List<String> connectionUriList = new ArrayList<>();
+        String urlEncode = getOption(Options.XCC_URL_ENCODE_COMPONENTS);
         if (uriAsStrings == null) {
             if (decrypter != null) {
                 username = decrypter.decrypt(XCC_USERNAME, username);
@@ -281,7 +304,7 @@ public abstract class AbstractManager {
                 if (decrypter != null) {
                     host = decrypter.decrypt(XCC_HOSTNAME, host);
                 }
-                String connectionUri = StringUtils.getXccUri(protocol, username, password, host, port, dbname);
+                String connectionUri = StringUtils.getXccUri(protocol, username, password, host, port, dbname, urlEncode);
                 connectionUriList.add(connectionUri);
             }
         } else {
@@ -289,7 +312,7 @@ public abstract class AbstractManager {
                 if (decrypter != null) {
                     connectionUri = decrypter.decrypt(XCC_CONNECTION_URI, connectionUri);
                     //see if individual parts of the connection string are encrypted separately
-                    connectionUri = tryToDecryptUriInParts(connectionUri);
+                    connectionUri = tryToDecryptUriInParts(connectionUri, urlEncode);
                 }
                 if (connectionUri != null) {
                     connectionUriList.add(connectionUri);
@@ -306,7 +329,7 @@ public abstract class AbstractManager {
         }
     }
 
-    protected String tryToDecryptUriInParts(String connectionUri) {
+    protected String tryToDecryptUriInParts(String connectionUri, String urlEncode) {
         LOG.info("Checking if any part of the connection string are encrypted");
         String uriAfterDecrypt = connectionUri;
         Pattern pattern = Pattern.compile(XCC_CONNECTION_URI_PATTERN);
@@ -330,7 +353,7 @@ public abstract class AbstractManager {
                     password = decrypter.decrypt(XCC_PASSWORD, password);
                     host = decrypter.decrypt(XCC_HOSTNAME, host);
                     dbname = isBlank(dbname) ? null : decrypter.decrypt(XCC_DBNAME, dbname);
-                    uriAfterDecrypt = StringUtils.getXccUri(protocol, username, password, host, port, dbname);
+                    uriAfterDecrypt = StringUtils.getXccUri(protocol, username, password, host, port, dbname, urlEncode);
                 }
             }
         } catch (IllegalStateException exc) {
@@ -514,7 +537,7 @@ public abstract class AbstractManager {
         List<String> arguments = runtimemxBean.getInputArguments();
         List<String> argsToLog = new ArrayList<>(arguments.size());
         for (String argument : arguments) {
-            if (!argument.startsWith("-DXCC")) {
+            if (!argument.startsWith("-DXCC") && !argument.toUpperCase().contains("PASSWORD")) {
                 argsToLog.add(argument);
             }
         }

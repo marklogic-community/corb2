@@ -133,7 +133,7 @@ public class Manager extends AbstractManager implements Closeable {
                 LOG.log(INFO, () -> "init error - exiting with code " + EXIT_CODE_INIT_ERROR);
                 System.exit(EXIT_CODE_INIT_ERROR);
             }
-            //now we can start corb.
+            //now we can start CoRB.
             try {
                 long count = manager.run();
                 if (manager.execError) {
@@ -150,7 +150,7 @@ public class Manager extends AbstractManager implements Closeable {
                     System.exit(EXIT_CODE_SUCCESS);
                 }
             } catch (Exception exc) {
-                LOG.log(SEVERE, "Error while running CORB", exc);
+                LOG.log(SEVERE, "Error while running CoRB", exc);
                 LOG.log(INFO, () -> "unexpected error - exiting with code " + EXIT_CODE_PROCESSING_ERROR);
                 System.exit(EXIT_CODE_PROCESSING_ERROR);
             }
@@ -345,7 +345,7 @@ public class Manager extends AbstractManager implements Closeable {
         }
 
         if (null == options.getProcessTaskClass() && null == options.getProcessModule()) {
-            throw new NullPointerException(PROCESS_TASK + " or " + PROCESS_MODULE + " must be specified");
+            throw new CorbException(PROCESS_TASK + " or " + PROCESS_MODULE + " must be specified");
         }
 
         if (options.getPostBatchTaskClass() == null) {

@@ -116,7 +116,7 @@ public class ModuleExecutor extends AbstractManager {
             options.setProcessModule(processModule);
         }
         if (null == options.getProcessModule()) {
-            throw new NullPointerException(PROCESS_MODULE + " must be specified");
+            throw new CorbException(PROCESS_MODULE + " must be specified");
         }
 
         if (modulesDatabase != null) {

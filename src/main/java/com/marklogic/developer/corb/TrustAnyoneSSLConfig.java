@@ -22,56 +22,34 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 /**
  * Creates a TrustManager that <b>does not</b> validate certificate chains.
- * Useful for bypassing issues with self-signed certs, but should be used with
- * caution.
+ * Useful for bypassing issues with self-signed certs, but should be used with caution.
  *
  * @since 2.2.0
  */
 public class TrustAnyoneSSLConfig extends AbstractSSLConfig {
 
+    private static final Logger LOG = Logger.getLogger(TrustAnyoneSSLConfig.class.getName());
+
     /**
-     * Returns an SSLContext, which <b>will not</b> perform any certificate chain
-     * validation. Use with caution!
+     * Returns an SSLContext, which <b>will not</b> perform any certificate chain validation. Use with caution!
      *
-     * @return an SSLv3 SSLContext with a TrustManager that <b>will not</b> validate
-     * certificate chains.
+     * @return an SSLContext with a TrustManager that <b>will not</b> validate certificate chains.
      * @throws NoSuchAlgorithmException
      * @throws KeyManagementException
      */
     @Override
     public SSLContext getSSLContext() throws NoSuchAlgorithmException, KeyManagementException {
-        SSLContext sslContext = SSLContext.getInstance("SSLv3");
+        SSLContext sslContext = getSSLContextInstance(getEnabledProtocols());
         TrustManager[] trust = new TrustManager[]{new TrustAnyoneManager()};
         sslContext.init(null, trust, null);
         return sslContext;
-    }
-
-    /**
-     * Returns the names of the SSL cipher suites which are currently enabled
-     * for use on this engine.
-     *
-     * @return an empty array
-     */
-    @Override
-    public String[] getEnabledCipherSuites() {
-        return new String[0];
-    }
-
-    /**
-     * Returns the names of the protocol versions currently enabled for use with
-     * this SSLEngine.
-     *
-     * @return an empty array
-     */
-    @Override
-    public String[] getEnabledProtocols() {
-        return new String[0];
     }
 
     private static class TrustAnyoneManager implements X509TrustManager {

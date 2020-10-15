@@ -304,13 +304,11 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testNewTrustAnyoneOptions1() {
+    public void testNewTrustAnyoneDefaultOptions() {
         try {
             SecurityOptions result = new TrustAnyoneSSLConfig().getSecurityOptions();
-
-            // add additional test code here
             assertNotNull(result);
-            assertNull(result.getEnabledProtocols());
+            assertNotNull(result.getEnabledProtocols());
             assertNull(result.getEnabledCipherSuites());
         } catch (NoSuchAlgorithmException | KeyManagementException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -555,16 +553,11 @@ public class ModuleExecutorTest {
         fail();
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testInitOptionsMissingPROCESSMODULE() {
+    @Test(expected = CorbException.class)
+    public void testInitOptionsMissingPROCESSMODULE() throws CorbException {
         String[] args = new String[]{};
         ModuleExecutor instance = new ModuleExecutor();
-        try {
-            instance.initOptions(args);
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        instance.initOptions(args);
         fail();
     }
 

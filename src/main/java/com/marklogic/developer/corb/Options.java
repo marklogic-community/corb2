@@ -24,8 +24,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Options that allow users to configure CoRB and control various aspects of
- * execution.
+ * Options that allow users to configure CoRB and control various aspects of execution.
  *
  * @author Mads Hansen, MarkLogic Corporation
  * @since 2.3.0
@@ -502,27 +501,27 @@ public final class Options {
      */
     @Usage(description = "Default is 10. Max number of custom inputs from the URIS-MODULE to other modules.")
     public static final String MAX_OPTS_FROM_MODULE = "MAX-OPTS-FROM-MODULE";
-    
+
     /**
      * The variable name that needs to be defined in the server side query to use the metadata set by the {@value #URIS_LOADER}
-     * 
+     *
      * @see #XML_METADATA
      * @since 2.4.5
      */
     @Usage(description = "The external variable name that needs to be defined in the server side query to use the metadata set by the URIS-LOADER")
     public static final String METADATA = "METADATA";
-    
+
     /**
-     * If this option is set to 'true', {@value #XML_METADATA} is set as an external variable with 
+     * If this option is set to 'true', {@value #XML_METADATA} is set as an external variable with
      * name {@value #METADATA} to {@value #PROCESS_MODULE} as well. The default value for this option is 'false'
-     * 
+     *
      * @see #XML_METADATA
      * @since 2.4.5
      */
-    @Usage(description = "If this option is set to 'true', XML-METADATA is set as an external variable with " 
+    @Usage(description = "If this option is set to 'true', XML-METADATA is set as an external variable with "
             + "name METADATA to PROCESS-MODULE as well. The default value for this option is 'false'")
     public static final String METADATA_TO_PROCESS_MODULE = "METADATA-TO-PROCESS-MODULE";
-    
+
     /**
      * Adds the metrics document to the specified collection.
      * If {@value #JOB_NAME} is specified then the metrics document is added to a collection with the Job Name, if not it defaults to the Job Run Location.
@@ -609,9 +608,12 @@ public final class Options {
     public static final String METRICS_SYNC_FREQUENCY = "METRICS-SYNC-FREQUENCY";
 
     /**
+     * A list of the MarkLogic logging levels.
      * @since 2.4.0
+     * @see <a href="https://docs.marklogic.com/guide/admin/logfiles#id_37841">https://docs.marklogic.com/guide/admin/logfiles</a>
      */
-    public static final String ML_LOG_LEVELS = "none|emergency|alert|critical|error|warning|notice|info|config|debug|fine|finer|finest";
+    @Usage(description = "A pipe separated list of MarkLogic logging levels.")
+    protected static final String ML_LOG_LEVELS = "none|emergency|alert|critical|error|warning|notice|info|config|debug|fine|finer|finest";
 
     /**
      * Uses the {@value #XCC_CONNECTION_URI} if not provided; use 0 for file
@@ -976,10 +978,10 @@ public final class Options {
      */
     @Usage
     public static final String URIS_BATCH_REF = "URIS_BATCH_REF";
-    
+
     /**
     * Variable representing total count of uris set to PRE-BATCH-MODULE and POST-BATCH-MODULE
-    * 
+    *
     * @since 2.4.5
     */
    @Usage
@@ -1085,6 +1087,13 @@ public final class Options {
     public static final String URIS_REPLACE_PATTERN = "URIS-REPLACE-PATTERN";
 
     /**
+     * Indicate whether or not the XCC connection string components should be URL encoded. Possible values are always, never, and auto. Default value is auto.
+     * @since 2.5.0
+     */
+    @Usage(description = "Indicate whether or not the XCC connection string components should be URL encoded. Possible values are always, never, and auto. Default value is auto.")
+    public static final String XCC_URL_ENCODE_COMPONENTS = "XCC-URL-ENCODE-COMPONENTS";
+
+    /**
      * Number attempts to connect to ML before giving up. Default is 3
      */
     @Usage(description = "Number attempts to connect to ML before giving up. "
@@ -1112,9 +1121,9 @@ public final class Options {
     public static final String XCC_CONNECTION_URI = "XCC-CONNECTION-URI";
 
     /**
-     * (Optional)
+     * (Optional) Name of the content database to execute against
      */
-    @Usage(description = "(Optional)")
+    @Usage(description = "(Optional) Name of the content database to execute against")
     public static final String XCC_DBNAME = "XCC-DBNAME";
 
     /**
@@ -1149,9 +1158,9 @@ public final class Options {
     public static final String XCC_PORT = "XCC-PORT";
 
     /**
-     * Optional if {@value #XCC_CONNECTION_URI} is not specified. Default is xcc.
+     * Optional if {@value #XCC_CONNECTION_URI} is not specified. The XCC scheme to use; either xcc or xccs. Default is xcc.
      */
-    @Usage(description = "Used if XCC-CONNECTION-URI is not specified. Default is xcc")
+    @Usage(description = "Used if XCC-CONNECTION-URI is not specified. The XCC scheme to use; either xcc or xccs. Default is xcc")
     public static final String XCC_PROTOCOL = "XCC-PROTOCOL";
 
     /**
@@ -1200,20 +1209,20 @@ public final class Options {
     public static final String XML_FILE = "XML-FILE";
 
     /**
-     * An XPath to address the node that contains metadata portion of the XML. This must be different from 
+     * An XPath to address the node that contains metadata portion of the XML. This must be different from
      * the {@value #XML_NODE}. If the implementation supports, multiple comma separated paths can be specified.
      * The metadata is set as an external variable with name {@value #METADATA} to {@value #PRE_BATCH_MODULE} and
      * {@value #POST_BATCH_MODULE} and also {@value #PROCESS_MODULE} if enabled by {@value #METADATA_TO_PROCESS_MODULE}
-     * 
+     *
      * @see #XML_FILE
      * @since 2.4.5
      */
-    @Usage(description = "An XPath to address the node that contains metadata portion of the XML. This must be different from " 
+    @Usage(description = "An XPath to address the node that contains metadata portion of the XML. This must be different from "
             + "the XML-NODE. The metadata is set as an external variable with name METADATA to PRE-BATCH-MODULE and "
             + "AND POST-BATCH-MODULE and also PROCESS-MODULE if enabled by METADATA-TO-PROCESS-MODULE")
     public static final String XML_METADATA = "XML-METADATA";
-    
-    
+
+
     /**
      * An XPath to address the nodes to be returned in an {@value #XML_FILE} by
      * the {@link com.marklogic.developer.corb.FileUrisXMLLoader}.

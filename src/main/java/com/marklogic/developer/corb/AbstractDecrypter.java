@@ -18,13 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
-import static com.marklogic.developer.corb.Options.XCC_DBNAME;
-import static com.marklogic.developer.corb.Options.XCC_HOSTNAME;
-import static com.marklogic.developer.corb.Options.XCC_PASSWORD;
-import static com.marklogic.developer.corb.Options.XCC_PORT;
-import static com.marklogic.developer.corb.Options.XCC_USERNAME;
-import static com.marklogic.developer.corb.util.StringUtils.getXccUri;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 import java.io.IOException;
@@ -42,19 +35,6 @@ public abstract class AbstractDecrypter implements Decrypter {
         this.properties = properties == null ? new Properties() : properties;
 
         init_decrypter();
-    }
-
-    @Override
-    public String getConnectionURI(String uri, String username, String password, String host, String port, String dbname) {
-        if (uri != null) {
-            return decrypt(XCC_CONNECTION_URI, uri);
-        } else {
-            return getXccUri(decrypt(XCC_USERNAME, username),
-                    decrypt(XCC_PASSWORD, password),
-                    decrypt(XCC_HOSTNAME, host),
-                    decrypt(XCC_PORT, port),
-                    dbname == null ?  null : decrypt(XCC_DBNAME, dbname));
-        }
     }
 
     @Override

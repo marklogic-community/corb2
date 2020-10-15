@@ -34,9 +34,12 @@ public class OptionsTest {
     @Test
     public void testUsage() {
         for (java.lang.reflect.Field field : Options.class.getDeclaredFields()) {
-            //Verify that all of the String constants
-            if (String.class.isInstance(field.getType())) {
+            //Verify that all of the String constants have usage annotations
+            if (String.class.equals(field.getType())) {
                 Usage usage = field.getAnnotation(Usage.class);
+                if (usage == null){
+                    System.out.println(field.getName());
+                }
                 assertNotNull(usage);
             }
         }
@@ -45,7 +48,7 @@ public class OptionsTest {
     @Test
     public void testStaticFields() {
         for (java.lang.reflect.Field field : Options.class.getDeclaredFields()) {
-            if (String.class.isInstance(field.getType())) {
+            if (String.class.equals(field.getType())) {
                 assertTrue(java.lang.reflect.Modifier.isStatic(field.getModifiers()));
             }
         }

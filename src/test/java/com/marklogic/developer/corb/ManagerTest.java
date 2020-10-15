@@ -204,6 +204,52 @@ public class ManagerTest {
         }
     }
 
+    @Test
+    public void testInitPropertiesEmptyProperties() {
+        clearSystemProperties();
+        Properties properties = new Properties();
+        Manager manager = new Manager();
+        try {
+            manager.initProperties(properties);
+            assertEquals(2, manager.properties.size());
+        } catch (CorbException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testInitPropertiesNullProperties() {
+        clearSystemProperties();
+        Properties properties = null;
+        Manager manager = new Manager();
+        try {
+            manager.initProperties(properties);
+            assertNotNull(manager.properties);
+        } catch (CorbException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testInitProperties() {
+        clearSystemProperties();
+        System.setProperty(Options.BATCH_SIZE, "3");
+        System.setProperty(Options.COMMAND, "pause");
+
+        Properties properties = new Properties();
+        properties.setProperty(Options.COMMAND, "resume");
+        Manager manager = new Manager();
+        try {
+            manager.initProperties(properties);
+            assertNotNull(manager.properties);
+            assertEquals("resume", manager.properties.getProperty(Options.COMMAND));
+            assertEquals("3", manager.properties.getProperty(Options.BATCH_SIZE));
+        } catch (CorbException ex) {
+            fail();
+        }
+    }
+
+
     @Test(expected = IllegalArgumentException.class)
     public void testInitUrisFileDoesNoteExist() {
         clearSystemProperties();
@@ -247,16 +293,11 @@ public class ManagerTest {
         fail();
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testInitOptions() {
-        try {
-            String[] args = {};
-            Manager instance = new Manager();
-            instance.initOptions(args);
-
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
+    @Test(expected = CorbException.class)
+    public void testInitOptions() throws CorbException {
+        String[] args = {};
+        Manager instance = new Manager();
+        instance.initOptions(args);
         fail();
     }
 

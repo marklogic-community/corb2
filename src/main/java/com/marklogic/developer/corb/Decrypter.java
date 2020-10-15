@@ -23,6 +23,5 @@ import java.util.Properties;
 
 public interface Decrypter {
 	void init(Properties properties) throws IOException, ClassNotFoundException;
-	String getConnectionURI(String uri, String username, String password, String host, String port, String dbname);
 	String decrypt(String property, String value);
 }

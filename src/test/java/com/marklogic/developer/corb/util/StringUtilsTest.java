@@ -232,6 +232,33 @@ public class StringUtilsTest {
     }
 
     @Test
+    public void testGetXccUri() {
+        String user = "user";
+        String host = "host";
+        String password = "pass+word";
+        String port = "8000";
+        String db = "db name ";
+        String uri = StringUtils.getXccUri("", user, password, host, port, db, "auto");
+        assertEquals("xcc://user:pass%2Bword@host:8000/db+name+", uri);
+        uri = StringUtils.getXccUri(null, user, password, host, port, db, "auto");
+        assertEquals("xcc://user:pass%2Bword@host:8000/db+name+", uri);
+        uri = StringUtils.getXccUri("", user, password, host, port, db, "always");
+        assertEquals("xcc://user:pass%2Bword@host:8000/db+name+", uri);
+        uri = StringUtils.getXccUri("", user, password, host, port, db, "maybe");
+        assertEquals("xcc://user:pass%2Bword@host:8000/db+name+", uri);
+        uri = StringUtils.getXccUri("", user, password, host, port, db, "never");
+        assertEquals("xcc://user:pass+word@host:8000/db name ", uri);
+        uri = StringUtils.getXccUri("xcc", user, password, host, port, db, "never");
+        assertEquals("xcc://user:pass+word@host:8000/db name ", uri);
+        uri = StringUtils.getXccUri("xccs", user, password, host, port, db, "never");
+        assertEquals("xccs://user:pass+word@host:8000/db name ", uri);
+        uri = StringUtils.getXccUri("xccs", user, password, host, port, "", "never");
+        assertEquals("xccs://user:pass+word@host:8000", uri);
+        uri = StringUtils.getXccUri("xccs", user, password, host, port, null, "never");
+        assertEquals("xccs://user:pass+word@host:8000", uri);
+    }
+
+    @Test
     public void testIsBlank() {
         assertTrue(StringUtils.isBlank(""));
         assertTrue(StringUtils.isBlank("  "));

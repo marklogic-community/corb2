@@ -123,9 +123,9 @@ Option | Description
 **<a name="MODULE-ROOT"></a>MODULE-ROOT** | Default is '/'.
 **<a name="MODULES-DATABASE"></a>MODULES-DATABASE** | Uses the **XCC-CONNECTION-URI** if not provided; use 0 for file system.
 **<a name="NUM-TPS-FOR-ETC"></a>NUM-TPS-FOR-ETC** | Default is 10. Number of recent transactions per second (tps) values used to calculate estimated completion time (ETC).
-**<a name="POST-BATCH-MINIMUM-COUNT"></a>POST-BATCH-MINIMUM-COUNT** | The minimum number of results that must be returned for the **POST-BATCH-MODULE** or **POST-BATCH-TASK** to be executed. Default is 1
+**<a name="POST-BATCH-MINIMUM-COUNT"></a>POST-BATCH-MINIMUM-COUNT** | The minimum number of results that must be returned for the **POST-BATCH-MODULE** or **POST-BATCH-TASK** to be executed. Default is 1.
 **<a name="PRE-POST-BATCH-ALWAYS-EXECUTE"></a>PRE-POST-BATCH-ALWAYS-EXECUTE** | Boolean value indicating whether the PRE_BATCH and POST_BATCH module or task should be executed without evaluating how many URIs were returned by the URI selector.
-**<a name="PRE-BATCH-MINIMUM-COUNT"></a>PRE-BATCH-MINIMUM-COUNT** | The minimum number of results that must be returned for the **PRE-BATCH-MODULE** or **PRE-BATCH-TASK** to be executed. Default is 1
+**<a name="PRE-BATCH-MINIMUM-COUNT"></a>PRE-BATCH-MINIMUM-COUNT** | The minimum number of results that must be returned for the **PRE-BATCH-MODULE** or **PRE-BATCH-TASK** to be executed. Default is 1.
 **<a name="QUERY-RETRY-LIMIT"></a>QUERY-RETRY-LIMIT** | Number of re-query attempts before giving up. Default is 2.
 **<a name="QUERY-RETRY-INTERVAL"></a>QUERY-RETRY-INTERVAL** | Time interval, in seconds, between re-query attempts. Default is 20 seconds.
 **<a name="QUERY-RETRY-ERROR-CODES"></a>QUERY-RETRY-ERROR-CODES** | A comma separated list of MarkLogic error codes for which a QueryException should be retried.
@@ -137,23 +137,20 @@ Option | Description
 **<a name="XCC-CONNECTION-RETRY-LIMIT"></a>XCC-CONNECTION-RETRY-LIMIT** | Number attempts to connect to ML before giving up. Default is 3
 **<a name="XCC-CONNECTION-RETRY-INTERVAL"></a>XCC-CONNECTION-RETRY-INTERVAL** | Time interval, in seconds, between retry attempts. Default is 60 seconds.
 **<a name="XCC-CONNECTION-HOST-RETRY-LIMIT"></a>XCC-CONNECTION-HOST-RETRY-LIMIT** | Number attempts to connect to ML before giving up on a host. If not specified, it defaults to **XCC-CONNECTION-RETRY-LIMIT**
+**<a name="XCC-DBNAME"></a>XCC-DBNAME** | (Optional) Name of the content database to execute against
+**<a name="XCC-HOSTNAME"></a>XCC-HOSTNAME** | Required if **XCC-CONNECTION-URI** is not specified. Multiple host can be specified with comma as a separator. 
 **<a name="XCC-HTTPCOMPLIANT"></a>XCC-HTTPCOMPLIANT** | Optional boolean flag to indicate whether to enable HTTP 1.1 compliance in XCC. If this option is set, the [`xcc.httpcompliant`](https://docs.marklogic.com/guide/xcc/concepts#id_28335) System property will be set.
+**<a name="XCC-PASSWORD"></a>XCC-PASSWORD** | Required if **XCC-CONNECTION-URI** is not specified.
+**<a name="XCC-PORT"></a>XCC-PORT** | Required if **XCC-CONNECTION-URI** is not specified.
+**<a name="XCC-PROTOCOL"></a>XCC-PROTOCOL** | (Optional) Used if XCC-CONNECTION-URI is not specified. The XCC scheme to use; either `xcc` or `xccs`. Default is `xcc`.
 **<a name="XCC-TIME-ZONE"></a>XCC-TIME-ZONE** | The ID for the TimeZone that should be set on XCC RequestOption. When a value is specified, it is parsed using [`TimeZone.getTimeZone()`](https://docs.oracle.com/javase/8/docs/api/java/util/TimeZone.html#getTimeZone-java.lang.String-) and set on XCC RequestOption for each Task. Invalid ID values will produce the GMT TimeZone. If not specified, XCC uses the JVM default TimeZone.
+**<a name="XCC-URL-ENCODE-COMPONENTS"></a>XCC-URL-ENCODE-COMPONENTS** | Indicate whether or not the XCC connection string components should be URL encoded. Possible values are `always`, `never`, and `auto`. Default value is `auto`.
+**<a name="XCC-USERNAME"></a>XCC-USERNAME** | Required if **XCC-CONNECTION-URI** is not specified.
 **<a name="XML-FILE"></a>XML-FILE** | In order to use this option a class `com.marklogic.developer.corb.FileUrisXMLLoader` has to be specified in the **URIS-LOADER** option. If defined instead of **URIS-MODULE**, XML nodes will be used as URIs from the file located on the client. The file path may be relative or absolute. Default processing will select all of the child elements of the document element (i.e. `/*/*`). The **XML-NODE** option can be specified with an XPath to address a different set of nodes.
 **<a name="XML-METADATA"></a>XML-METADATA** | An XPath to address the node that contains metadata portion of the XML. This must be different from the **XML-NODE**. The metadata is set as an external variable with name **METADATA** to **PRE-BATCH-MODULE** and **POST-BATCH-MODULE** and also **PROCESS-MODULE** if enabled by **METADATA-TO-PROCESS-MODULE**.
 **<a name="XML-NODE"></a>XML-NODE** | An XPath to address the nodes to be returned in an **XML-FILE** by the `com.marklogic.developer.corb.FileUrisXMLLoader`. For example, a file containing a list of nodes wrapped by a parent element can be used as a **XML-FILE** and the **PROCESS-MODULE** can unquote the URI string as node to do further processing with the node. If not specified, the default behavior is to select the child elements of the document element (i.e. `/*/*`)
 **<a name="XML-SCHEMA"></a>XML-SCHEMA** | Path to a W3C XML Schema to be used by `com.marklogic.developer.corb.FileUrisStreamingXMLLoader` or `com.marklogic.developer.corb.FileUrisXMLLoader` to validate an **XML-FILE**, and used by `com.marklogic.developer.corb.SchemaValidateBatchToFileTask` and `com.marklogic.corb.SchemaValidateToFileTask` post-process tasks to validate documents returned from a process module.
 **<a name="XML-TEMP-DIR"></a>XML-TEMP-DIR** | Temporary directory used by `com.marklogic.developer.corb.FileUrisStreamingXMLLoader` to store files extracted from the **XML-FILE**. If not specified, **TEMP-DIR** value will be used. If neither are specified, then the default Java temp directory will be used.
-
-### Alternate XCC connection configuration
-Option | Description
----|---
-**<a name="XCC-USERNAME"></a>XCC-USERNAME** | Required if **XCC-CONNECTION-URI** is not specified.
-**<a name="XCC-PASSWORD"></a>XCC-PASSWORD** | Required if **XCC-CONNECTION-URI** is not specified.
-**<a name="XCC-HOSTNAME"></a>XCC-HOSTNAME** | Required if **XCC-CONNECTION-URI** is not specified. Multiple host can be specified with comma as a separator. 
-**<a name="XCC-PORT"></a>XCC-PORT** | Required if **XCC-CONNECTION-URI** is not specified.
-**<a name="XCC-DBNAME"></a>XCC-DBNAME** | (Optional)
-**<a name="XCC-PROTOCOL"></a>XCC-PROTOCOL** | (Optional)
 
 #### [URIS\_BATCH\_REF](https://github.com/marklogic-community/corb2/wiki/URIS_BATCH_REF)
 If a module, including those specified by **PRE-BATCH-MODULE**, **PROCESS-MODULE** or **POST-BATCH-MODULE** have an external or global variable named **URIS\_BATCH\_REF**, the variable will be set to the first **non-numeric** item in the sequence or [ValueIterator](https://docs.marklogic.com/js/ValueIterator) returned by **URIS-MODULE**. This means that, when used, the **URIS-MODULE** must return a sequence or [ValueIterator](https://docs.marklogic.com/js/ValueIterator) with the special string value first, then the URI count, then the sequence of URIs to process.  
@@ -177,7 +174,7 @@ Alternatively, **URIS-MODULE** can pass custom inputs to **PRE-BATCH-MODULE**, *
 #### Custom Input From URIS-MODULE Example:
 ```xquery
 let $uris := cts:uris()
-return ("PROCESS-MODULE.foo=bar","POST-BATCH-MODULE.alpha=10",fn:count($uris),$uris)
+return ("PROCESS-MODULE.foo=bar", "POST-BATCH-MODULE.alpha=10", fn:count($uris), $uris)
 ```
 
 ### [Adhoc Modules](https://github.com/marklogic-community/corb2/wiki/Adhoc-Modules)
@@ -195,7 +192,7 @@ It is also possible to set a module option with inline code blocks, rather than 
 
 ##### Inline Adhoc Example:
 ```xquery
-URIS-MODULE=INLINE-XQUERY|xquery version '1.0-ml'; let $uris := cts:uris('', ('document'), cts:collection-query('foo')) return (count($uris), $uris)
+URIS-MODULE=INLINE-XQUERY|xquery version '1.0-ml'; let $uris := cts:uris('', 'document', cts:collection-query('foo')) return (count($uris), $uris)
 ```
 ### JavaScript Modules
 JavaScript modules are supported since Marklogic 8 and can be used in place of an XQuery module. However, if returning multiple values (ex: URIS-MODULE), values must be returned as a [ValueIterator](https://docs.marklogic.com/js/ValueIterator). MarkLogic JavaScript API has helper functions to convert Arrays into ValueIterator ([`xdmp.arrayValues()`](https://docs.marklogic.com/xdmp.arrayValues)) and inserting values into another ValueIterator ([`fn.insertBefore()`](https://docs.marklogic.com/fn.insertBefore)).
@@ -209,14 +206,15 @@ fn.insertBefore(uris,0,fn.count(uris));
 ```
 
 To return URIS\_BATCH\_REF, we can do the following:
-```xquery
-fn.insertBefore(fn.insertBefore(uris,0,fn.count(uris)),0,"batch-ref")
+```javascript
+fn.insertBefore(fn.insertBefore(uris, 0, fn.count(uris)), 0, "batch-ref")
 ```
 
 > Note: Do not use single quotes within (adhoc) JavaScript modules. If you must use a single quote, escape it with a quote (ex: ''text'')
 
 ### [Encryption](https://github.com/marklogic-community/corb2/wiki/Encryption)
-It is often required to protect the database connection string or password from unauthorized access. So, CoRB optionally supports encryption of the entire XCC URL or any parts of the XCC URL (if individually specified), such as **XCC-PASSWORD**.
+It is often required to protect the database connection string or password from unauthorized access. 
+So, CoRB optionally supports encryption of the entire XCC URL or any parts of the XCC URL (if individually specified), such as **XCC-PASSWORD**.
 
 Option | Description
 ---|---
@@ -293,8 +291,8 @@ Option | Description
 **<a name="SSL-KEYSTORE-PASSWORD"></a>SSL-KEYSTORE-PASSWORD** | (Encrytable) Password of the keystore file.
 **<a name="SSL-KEY-PASSWORD"></a>SSL-KEY-PASSWORD** | (Encryptable) Password of the private key.
 **<a name="SSL-KEYSTORE-TYPE"></a>SSL-KEYSTORE-TYPE** | Type of the keystore such as 'JKS' or 'PKCS12'.
-**<a name="SSL-ENABLED-PROTOCOLS"></a>SSL-ENABLED-PROTOCOLS** | (Optional) A comma separated list of acceptable SSL protocols.
-**<a name="SSL-CIPHER-SUITES"></a>SSL-CIPHER-SUITES** | A comma separated list of acceptable cipher suites used.
+**<a name="SSL-ENABLED-PROTOCOLS"></a>SSL-ENABLED-PROTOCOLS** | (Optional) A comma or colon separated list of acceptable SSL protocols, in priority order. Default is `TLSv1.2`.
+**<a name="SSL-CIPHER-SUITES"></a>SSL-CIPHER-SUITES** | A comma or colon separated list of acceptable cipher suites used.
 
 ### Load Balancing and Failover with Multiple Hosts
 CoRB 2.4+ supports load balancing and failover using `com.marklogic.developer.corb.ContentSourcePool`. This is automatically enabled when multiple comma separated values (supports encryption) are specified for for **XCC-CONNECTION-URI** or **XCC-HOSTNAME**.
