@@ -1,5 +1,5 @@
 [![Travis-ci gradle build status](https://travis-ci.org/marklogic-community/corb2.svg?branch=development)](https://travis-ci.org/marklogic-community/corb2)
-[![CircleCI maven build status](https://circleci.com/gh/marklogic-community/corb2/tree/development.svg?style=shield)](https://circleci.com/gh/marklogic-community/corb2/tree/development)
+[![CircleCI maven build status](https://circleci.com/gh/marklogic-community/corb2/tree/development.svg?style=shield)](https://app.circleci.com/pipelines/github/marklogic-community/corb2?branch=development)
 [![Codecov code coverage](https://codecov.io/gh/marklogic-community/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic-community/corb2/branch/development)
 [![SonarQube Quality](https://sonarcloud.io/api/project_badges/measure?project=corb2&metric=alert_status)](https://sonarcloud.io/dashboard?id=corb2)
 [![SonarQube Maintainability](https://sonarcloud.io/api/project_badges/measure?project=corb2&metric=sqale_rating)](https://sonarcloud.io/component_measures/domain/Maintainability?id=corb2)
@@ -202,7 +202,7 @@ JavaScript module must have an `.sjs` file extension when deployed to Modules da
 For example, a simple URIS-MODULE may look like this:
 ```javascript
 var uris = cts.uris();
-fn.insertBefore(uris,0,fn.count(uris));
+fn.insertBefore(uris, 0, fn.count(uris));
 ```
 
 To return URIS\_BATCH\_REF, we can do the following:
