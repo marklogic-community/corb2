@@ -151,7 +151,7 @@ public class PausableThreadPoolExecutorTest {
         executor.topUriList.add("URI1", 6L);
         executor.topUriList.add("URI1", 6L);
         executor.topUriList.add("URI2", 5L);
-        assertTrue(executor.topUriList.getData().size()==0);
+        assertTrue(executor.topUriList.getData().isEmpty());
     }
 
     @Test
