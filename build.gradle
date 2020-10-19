@@ -4,7 +4,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     id 'com.jfrog.bintray' version '1.8.5'
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'com.github.johnrengelman.shadow' version '6.0.0'
     id 'com.github.kt3k.coveralls' version '2.10.2'
     id 'com.marklogic.ml-gradle' version '4.1.0'
     id 'io.github.ddimtirov.codacy' version '0.1.0'
@@ -35,7 +35,7 @@ repositories {
         dirs 'src/test/resources/'
     }
     //required for codacyUpload task
-    maven { url "http://dl.bintray.com/typesafe/maven-releases" }
+    maven { url "https://dl.bintray.com/typesafe/maven-releases" }
 }
 
 sourceSets {
@@ -114,7 +114,7 @@ shadowJar {
         include(dependency('org.webjars:.*'))
     }
     //generate same name as the jar task would
-    archiveName = "${baseName}-${version}.${extension}"
+    archiveFileName = "${archiveBaseName}-${archiveVersion}.${archiveExtension}"
     manifest {
         attributes 'Application-Version': project.version
         attributes 'Build-date' : new Date()
@@ -160,8 +160,6 @@ task integrationTest(type: Test, dependsOn: test) {
     //this task, uncomment the following line.
     //outputs.upToDateWhen { false }
     jacoco {
-        //coverage report will include both unit and integration tests
-        append = true
         destinationFile = file("$buildDir/jacoco/test.exec")
     }
     //generate the Jacoco report
