@@ -85,6 +85,9 @@ Option | Description
 **<a name="COMMAND"></a>COMMAND** | Pause, resume, and stop the execution of CoRB. Possible commands include: PAUSE, RESUME, and STOP. If the **COMMAND-FILE** is modified and either there is no **COMMAND** or an invalid value is specified, then execution will RESUME.
 **<a name="COMMAND-FILE"></a>COMMAND-FILE** | A properties file used to configure **COMMAND** and **THREAD-COUNT** while CoRB is running. For instance, to temporarily pause execution, or to lower the number of threads in order to throttle execution.
 **<a name="COMMAND-FILE-POLL-INTERVAL"></a>COMMAND-FILE-POLL-INTERVAL** | Default is 1. The regular interval (seconds) in which the existence of the **COMMAND-FILE** is tested can be controlled by using this property.
+**<a name="COMPLETED_URIS_FILE"></a>COMPLETED_URIS_FILE** | Path to file to which completed uris will be written. This path can be a full system path or relative to current directory. If the base path (except for the file name) does not exist or does not have permissions to be written to, an error will be thrown. If COMPLETED-URIS-DIR is specified, the file along with the relative path will be written to this folder. 
+**<a name="COMPLETED-URIS-FILE-DELETE-ON-SUCCESS"></a>COMPLETED-URIS-FILE-DELETE-ON-SUCCESS** | Defaults to 'true'. If true, COMPLETED-URIS-FILE will be deleted if all the tasks are successfully finished. 
+**<a name="COMPLETED-URIS-DIR"></a>COMPLETED-URIS-DIR** | The optional folder to write COMPLETED-URIS-FILE. If specified, the folder must exist and current user should have permissions to write to it.
 **<a name="CONNECTION-POLICY"></a>CONNECTION-POLICY** | Algorithm for balancing load across multiple hosts used by `com.marklogic.developer.corb.DefaultContentSourcePool`. Options include **ROUND-ROBIN**, **RANDOM** and **LOAD**. Default option is **ROUND-ROBIN**. **LOAD** option returns the ContentSource or Connection with least number of active sessions.  
 **<a name="CONTENT-SOURCE-POOL"></a>CONTENT-SOURCE-POOL** | Class that implements `com.marklogic.developer.corb.ContentSourcePool` and used to manage ContentSource instances or connections. The default is `com.marklogic.developer.corb.DefaultContentSourcePool`.
 **<a name="DISK-QUEUE"></a>DISK-QUEUE** | Boolean value indicating whether the CoRB job should spill to disk when a maximum number of URIs have been loaded in memory, in order to control memory consumption and avoid Out of Memory exceptions for extremely large sets of URIs.
@@ -321,6 +324,15 @@ CoRB also supports retries of requests failed due to query errors. This feature 
 QUERY-RETRY-ERROR-CODES=XDMP-EXTIME,SVC-EXTIME
 QUERY-RETRY-ERROR-MESSAGE=ErrorMsg1,ErrorMsg2
 ```
+
+### Restartability
+CoRB 2.4.7+ provides partial support for restartability. Since this is not automatic, the job needs to be altered slightly into the following model/steps. 
+
+* Step 1: If there is a selector query, this single query needs to be run as a separate executor job using [ModuleExecutor Tool] and write all the uris to a separate file. 
+* Step 2: The original corb job now needs to use the URIS-FILE option with the file saved in Step-1. The job needs to specify the option COMPLETED-URIS-FILE to track/save all the completed uris to a different file. By default, unless COMPLETED-URIS-FILE-DELETE-ON-SUCCESS is set to false, this completed uris file will be deleted after successful completion of the job.
+* Step 3: If the job ends abruptly i.e. killed or stopped, a a simple OS specific command/script needs to diff and remove all the lines found in COMPLETED-URIS-FILE from URIS-FILE from Step-1 and then run Step-2
+
+Note: Future releases may provide a better implementation to filter completed tasks either in memory using hash sets (for smaller jobs) or on-disk with help of external os specific scripts (for larger jobs). 
 
 ### [Usage Examples](https://github.com/marklogic-community/corb2/wiki/Running-CoRB#usage-examples)
 Refer to the [wiki for examples](https://github.com/marklogic-community/corb2/wiki/Running-CoRB#usage-examples) of how to execute a CoRB job and various ways of configuring the job options.

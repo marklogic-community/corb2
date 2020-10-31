@@ -28,6 +28,11 @@ import java.util.concurrent.TimeUnit;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
@@ -43,6 +48,10 @@ public class Monitor extends BaseMonitor implements Runnable {
 
     protected PausableThreadPoolExecutor threadPoolExecutor;
     protected final CompletionService<String[]> cs;
+    
+    protected File completedUrisFile = null;
+    protected BufferedWriter completedUrisFileWriter = null;
+    
     /**
      * @param threadPoolExecutor
      * @param cs
@@ -52,6 +61,7 @@ public class Monitor extends BaseMonitor implements Runnable {
         super(manager);
         this.threadPoolExecutor = threadPoolExecutor;
         this.cs = cs;
+        this.initCompletedUrisFile();
     }
 
     /*
@@ -89,6 +99,7 @@ public class Monitor extends BaseMonitor implements Runnable {
                 // record result, or throw exception
                 String[] lastUris = future.get();
                 completed += lastUris.length;
+                this.addToCompletedUris(lastUris);
             }
 
             showProgress();
@@ -111,9 +122,16 @@ public class Monitor extends BaseMonitor implements Runnable {
                 LOG.log(WARNING, () -> MessageFormat.format("No active tasks found with {0,number} tasks remains to be completed", taskCount - completed));
             }
         }
+        this.closeCompletedUris();
         LOG.info("waiting for pool to terminate");
         threadPoolExecutor.awaitTermination(1, TimeUnit.SECONDS);
-        LOG.log(INFO, () -> MessageFormat.format("completed all tasks {0,number}/{1,number}", completed, taskCount));
+        
+        if (completed >= taskCount) {
+            LOG.log(INFO, () -> MessageFormat.format("completed all tasks {0,number}/{1,number}", completed, taskCount));
+            this.deleteCompletedUris();
+        }else {
+            LOG.log(WARNING, () -> MessageFormat.format("Exiting with pending tasks. Completed {0,number}/{1,number}", completed, taskCount));
+        }
     }
 
     private long showProgress() {
@@ -137,6 +155,67 @@ public class Monitor extends BaseMonitor implements Runnable {
     protected String getProgressMessage(long completed) {
         populateTps(completed);
         return getProgressMessage(completed, taskCount, avgTps, currentTps, estimatedTimeOfCompletion, threadPoolExecutor.getActiveCount(), threadPoolExecutor.getNumFailedUris());
+    }
+    
+    protected void initCompletedUrisFile() {
+        if(manager.getOptions() != null && manager.getOptions().getCompletedUrisFile() != null) {            
+            completedUrisFile = new File(manager.getOptions().getCompletedUrisDir(),manager.getOptions().getCompletedUrisFile());
+            if(!(completedUrisFile.getAbsoluteFile().getParentFile().canExecute() && completedUrisFile.getAbsoluteFile().getParentFile().canWrite())) {
+                LOG.log(SEVERE,"Unable to write completed uris to "+completedUrisFile.getAbsolutePath()+". Check permissions on the parent folder(s)");
+                completedUrisFile = null;
+            }else {
+                LOG.log(INFO,() -> MessageFormat.format("Writing completed uris to file {0}", completedUrisFile.getAbsolutePath()));
+            }
+        }else {
+            LOG.log(INFO,"Completed uris file is not generated. If job is terminated in the middle, it cannot be restarted from where it was stopped.");
+        }
+    }
+    
+    protected void addToCompletedUris(String[] uris) {
+        if( completedUrisFile != null) {
+            try {
+                if(completedUrisFileWriter == null) {
+                    completedUrisFileWriter = new BufferedWriter(new FileWriter(completedUrisFile));
+                }
+                
+                for(String uri : uris) {
+                    completedUrisFileWriter.write(uri);
+                    completedUrisFileWriter.newLine();
+                }
+                completedUrisFileWriter.flush();
+            }catch(IOException exc) {
+                LOG.log(WARNING, "Error writing uris to completed uris file", exc);
+            }
+        }
+    }
+    
+    protected void closeCompletedUris() {
+        if(completedUrisFileWriter != null) {
+            try {
+                completedUrisFileWriter.flush();
+                completedUrisFileWriter.close();
+                completedUrisFileWriter = null;
+            }catch(IOException exc) {
+                LOG.log(WARNING, "Error closing completed uris file", exc);
+            }
+        }
+    }
+    
+    protected void deleteCompletedUris() {
+        closeCompletedUris();
+        if(completedUrisFile != null) {
+            if(manager.getOptions() != null && manager.getOptions().getCompletedUrisFileDeleteOnSuccess()) {
+                LOG.log(INFO,() -> MessageFormat.format("Deleting completed uris to file {0} as all the tasks are completed.", completedUrisFile.getAbsolutePath()));
+                try {
+                    completedUrisFile.delete();
+                }catch(Exception exc) {
+                    LOG.log(WARNING, "Error deleting completed uris file", exc);
+                }
+            }else {
+                LOG.log(INFO,() -> MessageFormat.format("Completed uris to file {0} is not deleted as COMPLETED-URIS-FILE-DELETE-ON-SUCCESS is set to false.", completedUrisFile.getAbsolutePath()));
+            }
+            completedUrisFile = null;
+        }       
     }
 
     /**

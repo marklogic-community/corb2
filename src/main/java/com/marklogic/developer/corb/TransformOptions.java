@@ -96,6 +96,10 @@ public class TransformOptions {
 
     // Set on status check
     private String xdbcRoot = SLASH;
+    
+    private String completedUrisFile;
+    private boolean completedUrisFileDeleteOnSuccess=true;
+    private File completedUrisDir;
 
     public void setPrePostBatchAlwaysExecute(boolean shouldAlwaysExecute) {
         prePostBatchAlwaysExecute = shouldAlwaysExecute;
@@ -588,4 +592,29 @@ public class TransformOptions {
     protected boolean shouldRedactUris() {
         return redactUris;
     }
+    
+    protected void setCompletedUrisFile(String completedUrisFile) {
+        this.completedUrisFile = completedUrisFile;
+    }
+    
+    protected String getCompletedUrisFile() {
+        return this.completedUrisFile;
+    }
+    
+    protected void setCompletedUrisFileDeleteOnSuccess(boolean delete) {
+        this.completedUrisFileDeleteOnSuccess = delete;
+    }
+    
+    protected boolean getCompletedUrisFileDeleteOnSuccess() {
+        return this.completedUrisFileDeleteOnSuccess;
+    }
+    
+    public void setCompletedUrisDir(File directory) {
+        this.completedUrisDir = directory;
+    }
+
+    public File getCompletedUrisDir() {
+        return this.completedUrisDir;
+    }
+    
 }

@@ -21,6 +21,9 @@ package com.marklogic.developer.corb;
 import static com.marklogic.developer.corb.Options.BATCH_SIZE;
 import static com.marklogic.developer.corb.Options.COLLECTION_NAME;
 import static com.marklogic.developer.corb.Options.COMMAND_FILE;
+import static com.marklogic.developer.corb.Options.COMPLETED_URIS_FILE;
+import static com.marklogic.developer.corb.Options.COMPLETED_URIS_FILE_DELETE_ON_SUCCESS;
+import static com.marklogic.developer.corb.Options.COMPLETED_URIS_DIR;
 import static com.marklogic.developer.corb.Options.DISK_QUEUE;
 import static com.marklogic.developer.corb.Options.DISK_QUEUE_TEMP_DIR;
 import static com.marklogic.developer.corb.Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE;
@@ -236,7 +239,11 @@ public class Manager extends AbstractManager implements Closeable {
         if (isBlank(diskQueueTempDir) && isNotBlank(tempDir)) {
             diskQueueTempDir = tempDir;
         }
-        String numTpsForETC = getOption(NUM_TPS_FOR_ETC);
+        String numTpsForETC = getOption(NUM_TPS_FOR_ETC); 
+        
+        options.setCompletedUrisFile(getOption(COMPLETED_URIS_FILE));
+        String completedUrisDir = getOption(COMPLETED_URIS_DIR);
+        options.setCompletedUrisFileDeleteOnSuccess(stringToBoolean(getOption(COMPLETED_URIS_FILE_DELETE_ON_SUCCESS),true));
 
         //Check legacy properties keys, for backwards compatibility
         if (processModule == null) {
@@ -374,7 +381,16 @@ public class Manager extends AbstractManager implements Closeable {
                 throw new IllegalArgumentException("Cannot write to queue temp directory " + diskQueueTempDir);
             }
         }
-
+        
+        if (completedUrisDir != null) {
+            File dirFile = new File(completedUrisDir);
+            if (dirFile.exists() && dirFile.canWrite()) {
+                options.setCompletedUrisDir(dirFile);
+            } else {
+                throw new IllegalArgumentException("Cannot write to completed uris directory " + completedUrisDir);
+            }
+        }
+                
         String metricsLogLevel = getOption(Options.METRICS_LOG_LEVEL);
         if (metricsLogLevel != null) {
             if (metricsLogLevel.toLowerCase().matches(Options.ML_LOG_LEVELS)) {

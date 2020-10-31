@@ -111,6 +111,26 @@ public final class Options {
             + "the COMMAND-FILE is tested can be controlled by using this property. "
             + "Default is 1.")
     public static final String COMMAND_FILE_POLL_INTERVAL = "COMMAND-FILE-POLL-INTERVAL";
+         
+    /**
+     * Path to file to which completed uris will be written. This path can be a full system path or relative to current directory. If the base path (except for the file name)
+     * does not exist or does not have permissions to be written to, an error will be thrown. If COMPLETED-URIS-DIR is specified, the file along with the relative path will be written to this folder. 
+     *  
+     * @since 2.4.6
+     */
+    public static final String COMPLETED_URIS_FILE = "COMPLETED-URIS-FILE";
+    
+    /**
+     * Defaults to 'true'. If true, COMPLETED-URIS-FILE will be deleted if all the tasks are successfully finished. 
+     */
+    public static final String COMPLETED_URIS_FILE_DELETE_ON_SUCCESS = "COMPLETED-URIS-FILE-DELETE-ON-SUCCESS";
+    
+    /**
+     * The optional folder to write COMPLETED-URIS-FILE. If specified, the folder must exist and current user should have permissions to write to it. 
+     * 
+     * @since 2.4.6
+     */
+    public static final String COMPLETED_URIS_DIR = "COMPLETED-URIS-DIR";
 
     /**
      * Connection policy for allocating connections to tasks used by DefaultConnectionManager
@@ -130,9 +150,9 @@ public final class Options {
      *
      * @since 2.4.0
      */
-    @Usage(description = "Java class to manage marklogic connections. If none specified, DefaultConnectionPool is used.")
+    @Usage(description = "Java class to manage marklogic connections. If none specified, DefaultContentSourcePool is used.")
     public static final String CONTENT_SOURCE_POOL="CONTENT-SOURCE-POOL";
-
+    
     /**
      * The class name of the options value decrypter, which must implement
      * {@link com.marklogic.developer.corb.Decrypter}.
@@ -903,7 +923,7 @@ public final class Options {
     @Usage(description = "Number of re-query attempts before giving up. "
             + "Default is 2.")
     public static final String QUERY_RETRY_LIMIT = "QUERY-RETRY-LIMIT";
-
+    
     /**
      * A comma separated list of acceptable cipher suites used.
      */
