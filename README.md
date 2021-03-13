@@ -5,7 +5,7 @@
 [![SonarQube Maintainability](https://sonarcloud.io/api/project_badges/measure?project=corb2&metric=sqale_rating)](https://sonarcloud.io/component_measures/domain/Maintainability?id=corb2)
 [![Codacy Grade Badge](https://api.codacy.com/project/badge/Grade/c0195f063ae34c7ea17bb4c97ab7ff2c)](https://www.codacy.com/app/mads-hansen/corb2?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marklogic/corb2&amp;utm_campaign=Badge_Grade)
 
-[![Download the latest version](https://api.bintray.com/packages/marklogic/maven/marklogic-corb/images/download.svg)](https://bintray.com/marklogic/maven/marklogic-corb/_latestVersion)
+[![Maven Central - download the latest version](https://maven-badges.herokuapp.com/maven-central/com.marklogic/marklogic-corb/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.marklogic/marklogic-corb)
 [![Javadocs](https://www.javadoc.io/badge/com.marklogic/marklogic-corb.svg?color=blue)](https://www.javadoc.io/doc/com.marklogic/marklogic-corb)
 
 ### [What is CoRB?](https://github.com/marklogic-community/corb2/wiki#what-is-corb)
