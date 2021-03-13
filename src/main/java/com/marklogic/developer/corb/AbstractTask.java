@@ -228,7 +228,7 @@ public abstract class AbstractTask implements Task {
         }
 
         if (inputUris != null && inputUris.length > 0) {
-            if (REQUEST_VARIABLE_DOC.equalsIgnoreCase(properties.getProperty(LOADER_VARIABLE))) {
+            if (REQUEST_VARIABLE_DOC.equalsIgnoreCase(getProperty(LOADER_VARIABLE))) {
                 setDocRequestVariable(request, inputUris);
             } else {
                 setUriRequestVariable(request, inputUris);
@@ -236,7 +236,7 @@ public abstract class AbstractTask implements Task {
         }
 
         if (properties != null && properties.containsKey(URIS_BATCH_REF)) {
-            request.setNewStringVariable(URIS_BATCH_REF, properties.getProperty(URIS_BATCH_REF));
+            request.setNewStringVariable(URIS_BATCH_REF, getProperty(URIS_BATCH_REF));
         }
 
         //set custom inputs
@@ -459,11 +459,7 @@ public abstract class AbstractTask implements Task {
     }
 
     public String getProperty(String key) {
-        String val = System.getProperty(key);
-        if (val == null && properties != null) {
-            val = properties.getProperty(key);
-        }
-        return trim(val);
+        return Options.findOption(properties, key);
     }
 
     protected static byte[] getValueAsBytes(XdmItem item) {

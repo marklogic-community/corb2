@@ -391,9 +391,12 @@ public abstract class AbstractManager {
     }
 
     protected void initOptions(String... args) throws CorbException {
-        String xccHttpCompliant = getOption(Options.XCC_HTTPCOMPLIANT);
-        if (isNotBlank(xccHttpCompliant)) {
-            System.setProperty("xcc.httpcompliant", Boolean.toString(StringUtils.stringToBoolean(xccHttpCompliant)));
+        final String xccHttpCompliantPropertyName = "xcc.httpcompliant";
+        final String xccHttpCompliantOption = getOption(Options.XCC_HTTPCOMPLIANT);
+        if (isNotBlank(xccHttpCompliantOption)) {
+            System.setProperty(xccHttpCompliantPropertyName, Boolean.toString(StringUtils.stringToBoolean(xccHttpCompliantOption)));
+        } else { // if not explicitly set as a system property or option, enable HTTP compliance so that we play nice with load balancers out of the box
+            System.setProperty(xccHttpCompliantPropertyName, Boolean.toString(true));
         }
     }
 
@@ -477,13 +480,11 @@ public abstract class AbstractManager {
      * @return the trimmed property value
      */
     protected String getOption(String argVal, String propertyName) {
-        String retVal = null;
+        String retVal;
         if (isNotBlank(argVal)) {
             retVal = argVal.trim();
-        } else if (isNotBlank(System.getProperty(propertyName))) {
-            retVal = System.getProperty(propertyName).trim();
-        } else if (properties.containsKey(propertyName) && isNotBlank(properties.getProperty(propertyName))) {
-            retVal = properties.getProperty(propertyName).trim();
+        } else {
+            retVal = Options.findOption(properties, propertyName);
         }
         //doesn't capture defaults, only user provided.
         String[] secureWords = {"XCC", "PASSWORD", "SSL"};

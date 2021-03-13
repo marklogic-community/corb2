@@ -22,6 +22,10 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Arrays;
+import java.util.Properties;
+
+import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 
 /**
  * Options that allow users to configure CoRB and control various aspects of execution.
@@ -34,7 +38,7 @@ public final class Options {
     /**
      * The number of URIs to be executed in single transform.
      * <p>
-     * Default value is 1. If greater than 1, the {@value #PROCESS_MODULE} will
+     * Default is `1`. If greater than 1, the {@value #PROCESS_MODULE} will
      * receive a delimited string as the URI variable value, which needs to be
      * tokenized to get the individual URIs.
      * </p><p>
@@ -43,12 +47,12 @@ public final class Options {
      * </p>
      * Sample code for transform:
      * <pre>{@code
-     * declare variable URI as xs:string exernal;
+     * declare variable URI as xs:string external;
      * let $all-uris := fn:tokenize($URI,";")
      * }</pre>
      */
     @Usage(description = "The number of uris to be executed in single transform. "
-            + "Default value is 1. If greater than 1, the PROCESS-MODULE will "
+            + "Default is 1. If greater than 1, the PROCESS-MODULE will "
             + "receive a delimited string as the $URI variable value, which needs "
             + "to be tokenized to get individual URIs. The default delimiter is `;`, "
             + "which can be overridden with the option BATCH-URI-DELIM.")
@@ -56,10 +60,10 @@ public final class Options {
 
     /**
      * Use if the default delimiter "{@code ;}" cannot be used to join multiple
-     * URIS when {@value #BATCH_SIZE} is greater than 1.
+     * URIS when {@value #BATCH_SIZE} is greater than 1. Default is `;`.
      */
     @Usage(description = "Use if the default delimiter ';' cannot be used to join "
-            + "multiple URIS when BATCH-SIZE is greater than 1.")
+            + "multiple URIS when BATCH-SIZE is greater than 1. Default is ;")
     public static final String BATCH_URI_DELIM = "BATCH-URI-DELIM";
 
     /**
@@ -513,13 +517,13 @@ public final class Options {
 
     /**
      * If this option is set to 'true', {@value #XML_METADATA} is set as an external variable with
-     * name {@value #METADATA} to {@value #PROCESS_MODULE} as well. The default value for this option is 'false'
+     * name {@value #METADATA} to {@value #PROCESS_MODULE} as well. Default is 'false'
      *
      * @see #XML_METADATA
      * @since 2.4.5
      */
     @Usage(description = "If this option is set to 'true', XML-METADATA is set as an external variable with "
-            + "name METADATA to PROCESS-MODULE as well. The default value for this option is 'false'")
+            + "name METADATA to PROCESS-MODULE as well. Default is 'false'")
     public static final String METADATA_TO_PROCESS_MODULE = "METADATA-TO-PROCESS-MODULE";
 
     /**
@@ -546,13 +550,13 @@ public final class Options {
     /**
      * NONE,INFO,DEBUG,...
      * String value indicating the log level that the CoRB job should use to log metrics to ML Server Error log.
-     * Default value is NONE.
+     * Default is `none`.
      *
      * @since 2.4.0
      */
     @Usage(description = "LOG Level the CoRB job should log metrics to ML Server Error Log."
         + "Possible values are one of: " + Options.ML_LOG_LEVELS
-        + "Default value is none( which means metrics are not logged ).")
+        + "Default is none (which means metrics are not logged ).")
     public static final String METRICS_LOG_LEVEL = "METRICS-LOG-LEVEL";
 
     /**
@@ -574,28 +578,28 @@ public final class Options {
 
     /**
      * Maximum number of failed transaction to be logged in the metrics.
-     * The default value is 0.
+     * Default is `0`.
      *
      * @since 2.4.0
      */
-    @Usage(description = "Maximum number of failed transaction to be logged in the metrics. The default value is 0.")
+    @Usage(description = "Maximum number of failed transaction to be logged in the metrics. Default is 0.")
     public static final String METRICS_NUM_FAILED_TRANSACTIONS = "METRICS-NUM-FAILED-TRANSACTIONS";
 
     /**
      * Maximum number of Slow transaction to be logged in the metrics.
-     * The default value is 0.
+     * Default is `0`.
      */
-    @Usage(description = "Maximum number of slow transaction to be logged in the metrics. The default value is 0.")
+    @Usage(description = "Maximum number of slow transaction to be logged in the metrics. Default is 0.")
     public static final String METRICS_NUM_SLOW_TRANSACTIONS = "METRICS-NUM-SLOW-TRANSACTIONS";
 
     /**
      * Uses the value provided as the URI Root for saving the metrics document.
-     * Default value is "/ServiceMetrics/"
+     * Default is "/ServiceMetrics/"
      * If {@value #METRICS_DATABASE} is not specified then {@value #METRICS_ROOT} is ignored.
      *
      * @since 2.4.0
      */
-    @Usage(description = "Uses the value provided as the URI Root for saving the metrics document.")
+    @Usage(description = "Uses the value provided as the URI Root for saving the metrics document. Default is `/ServiceMetrics/`")
     public static final String METRICS_ROOT = "METRICS-ROOT";
 
     /**
@@ -612,7 +616,6 @@ public final class Options {
      * @since 2.4.0
      * @see <a href="https://docs.marklogic.com/guide/admin/logfiles#id_37841">https://docs.marklogic.com/guide/admin/logfiles</a>
      */
-    @Usage(description = "A pipe separated list of MarkLogic logging levels.")
     protected static final String ML_LOG_LEVELS = "none|emergency|alert|critical|error|warning|notice|info|config|debug|fine|finer|finest";
 
     /**
@@ -1044,11 +1047,11 @@ public final class Options {
 
     /**
      * Optional boolean flag indicating whether URIs should be excluded from logging, console, and JobStats metrics.
-     * The default value is false.
+     * Default is `false`.
      * @since 2.4.1
      */
     @Usage(description = "Optional boolean flag indicating whether URIs should be excluded from logging, console, " +
-        "and JobStats metrics. The default value is false.")
+        "and JobStats metrics. Default is false.")
     public static final String URIS_REDACTED = "URIS-REDACTED";
 
     /**
@@ -1087,10 +1090,10 @@ public final class Options {
     public static final String URIS_REPLACE_PATTERN = "URIS-REPLACE-PATTERN";
 
     /**
-     * Indicate whether or not the XCC connection string components should be URL encoded. Possible values are always, never, and auto. Default value is auto.
+     * Indicate whether or not the XCC connection string components should be URL encoded. Possible values are always, never, and auto. Default is `auto`.
      * @since 2.5.0
      */
-    @Usage(description = "Indicate whether or not the XCC connection string components should be URL encoded. Possible values are always, never, and auto. Default value is auto.")
+    @Usage(description = "Indicate whether or not the XCC connection string components should be URL encoded. Possible values are always, never, and auto. Default is auto.")
     public static final String XCC_URL_ENCODE_COMPONENTS = "XCC-URL-ENCODE-COMPONENTS";
 
     /**
@@ -1133,9 +1136,8 @@ public final class Options {
     public static final String XCC_HOSTNAME = "XCC-HOSTNAME";
 
     /**
-     * Optional boolean flag to indicate whether to enable HTTP 1.1 compliance
-     * in XCC. If this option is set, the "xcc.httpcompliant" System property
-     * will be set.
+     * Optional boolean flag to indicate whether to enable HTTP 1.1 compliance in XCC.
+     * If this option is set, the "xcc.httpcompliant" System property will be set. Default true
      *
      * @see <a href="https://docs.marklogic.com/guide/xcc/concepts#id_28335">XCC
      * Developer's Guide</a>
@@ -1278,12 +1280,36 @@ public final class Options {
      * @see #PROCESS_MODULE
      */
     @Deprecated
-    @Usage(description = "Use PROCESS_MODULE instead")
+    @Usage(description = "Use PROCESS-MODULE instead")
     public static final String XQUERY_MODULE = "XQUERY-MODULE";
 
     private Options() {
     }
 
+    /**
+     * Look for the property first in System properties, then in the properties object specified.
+     * Look for the propertyName as specified, then normalized to snake_case, and then kebab-case.
+     * This ensures that properties are found if specified with either case, and ensures that old jobs still work since
+     * renaming the MAX_OPTS_FROM_MODULE option to MAX-OPTS_FROM-MODULE.
+     * @param properties
+     * @param propertyName
+     * @return
+     * @since 2.5.1
+     */
+    protected static String findOption(final Properties properties, final String propertyName) {
+        if (isNotBlank(propertyName)) {
+            final String snakeCase = propertyName.replace("-", "_");
+            final String kebabCase = propertyName.replace("_", "-");
+            for (String key : Arrays.asList(propertyName, snakeCase, kebabCase)) {
+                if (isNotBlank(System.getProperty(key))) {
+                    return System.getProperty(key).trim();
+                } else if (properties.containsKey(key) && isNotBlank(properties.getProperty(key))) {
+                    return properties.getProperty(key).trim();
+                }
+            }
+        }
+        return null;
+    }
 }
 
 /**
