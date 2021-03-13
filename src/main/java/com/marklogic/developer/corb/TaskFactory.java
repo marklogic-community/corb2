@@ -172,7 +172,7 @@ public class TaskFactory {
         Properties managerProperties = manager.getProperties();
         task.setProperties(managerProperties);
 
-        String timeZoneId = managerProperties.getProperty(XCC_TIME_ZONE);
+        String timeZoneId = Options.findOption(managerProperties, XCC_TIME_ZONE);
         if (timeZoneId != null) {
             TimeZone timeZone = TimeZone.getTimeZone(timeZoneId);
             task.setTimeZone(timeZone);

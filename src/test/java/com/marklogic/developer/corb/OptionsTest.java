@@ -19,6 +19,10 @@
 package com.marklogic.developer.corb;
 
 import org.junit.Test;
+
+import java.lang.reflect.Modifier;
+import java.util.Properties;
+
 import static org.junit.Assert.*;
 
 /**
@@ -28,18 +32,14 @@ import static org.junit.Assert.*;
 public class OptionsTest {
 
     /**
-     * Ensure that each Option has a @Usage annotation, used to generate
-     * commandline usage message
+     * Ensure that each Option has a @Usage annotation, used to generate commandline usage message
      */
     @Test
     public void testUsage() {
         for (java.lang.reflect.Field field : Options.class.getDeclaredFields()) {
-            //Verify that all of the String constants have usage annotations
-            if (String.class.equals(field.getType())) {
+            //Verify that all of the public String constants have usage annotations
+            if (String.class.equals(field.getType()) && (field.getModifiers() & (Modifier.PROTECTED | Modifier.PRIVATE)) == 0) {
                 Usage usage = field.getAnnotation(Usage.class);
-                if (usage == null){
-                    System.out.println(field.getName());
-                }
                 assertNotNull(usage);
             }
         }
@@ -52,5 +52,26 @@ public class OptionsTest {
                 assertTrue(java.lang.reflect.Modifier.isStatic(field.getModifiers()));
             }
         }
+    }
+
+    @Test
+    public void testFindOption() {
+        String key = "foo";
+        String value = "value";
+        Properties properties = new Properties();
+        properties.setProperty(key, value);
+        assertEquals(value, Options.findOption(properties, "foo"));
+    }
+
+    @Test
+    public void testFindOptionMissing() {
+        Properties properties = new Properties();
+        assertNull(Options.findOption(properties, "foo"));
+    }
+
+    @Test
+    public void testFindOptionNullKey() {
+        Properties properties = new Properties();
+        assertNull(Options.findOption(properties, null));
     }
 }

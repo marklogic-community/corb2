@@ -80,7 +80,7 @@ public class AbstractManagerTest {
 
     private static final PrintStream ERROR = System.err;
 
-    private String originalValue;
+    private String originalHttpCompliantValue;
 
     @Before
     public void setUp() throws FileNotFoundException {
@@ -88,15 +88,15 @@ public class AbstractManagerTest {
         clearSystemProperties();
         String text = TestUtils.readFile(SELECTOR_FILE_PATH);
         selectorAsText = text.trim();
-        originalValue = System.getProperty(PROPERTY_XCC_HTTPCOMPLIANT);
+        originalHttpCompliantValue = System.getProperty(PROPERTY_XCC_HTTPCOMPLIANT);
     }
 
     @After
     public void tearDown() {
         clearSystemProperties();
         System.setErr(ERROR);
-        if (originalValue != null) {
-            System.setProperty(PROPERTY_XCC_HTTPCOMPLIANT, originalValue);
+        if (originalHttpCompliantValue != null) {
+            System.setProperty(PROPERTY_XCC_HTTPCOMPLIANT, originalHttpCompliantValue);
         } else {
             System.clearProperty(PROPERTY_XCC_HTTPCOMPLIANT);
         }
@@ -561,7 +561,11 @@ public class AbstractManagerTest {
         AbstractManager manager = AbstractManagerImpl.instanceWithXccHttpCompliantValue(AbstractManager.SPACE);
         try {
             manager.initOptions(args);
-            assertEquals(originalValue, System.getProperty(PROPERTY_XCC_HTTPCOMPLIANT));
+            if (originalHttpCompliantValue != null) {
+                assertEquals(originalHttpCompliantValue, System.getProperty(PROPERTY_XCC_HTTPCOMPLIANT));
+            } else {
+                assertEquals(Boolean.toString(true), System.getProperty(PROPERTY_XCC_HTTPCOMPLIANT));
+            }
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -827,13 +831,12 @@ public class AbstractManagerTest {
         fail();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testGetOptionEmptyName() {
         String argVal = "";
         String propName = "";
         AbstractManager manager = new AbstractManagerImpl();
-        manager.getOption(argVal, propName);
-        fail();
+        assertNull(manager.getOption(argVal, propName));
     }
 
     @Test
@@ -843,6 +846,61 @@ public class AbstractManagerTest {
         AbstractManager manager = new AbstractManagerImpl();
         manager.properties.setProperty(key, val);
         assertEquals(val, manager.getOption(key));
+    }
+
+    @Test
+    public void testGetOptionKebabWithSnake() {
+        String key = "MAX_OPTS_FROM_MODULE";
+        String val = VALUE;
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(key, val);
+        assertEquals("Ensure that Snake_Case property is retrieved when looking for kebab", val, manager.getOption(Options.MAX_OPTS_FROM_MODULE));
+    }
+
+    @Test
+    public void testGetOptionSnakeWithKebab() {
+        String key = "MAX_OPTS_FROM_MODULE";
+        String val = VALUE;
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.MAX_OPTS_FROM_MODULE, val);
+        assertEquals("Ensure that Kebab-Case property is retrieved when looking for snake", val, manager.getOption(key));
+    }
+
+    @Test
+    public void testGetOptionKebabWithBoth() {
+        String key = "MAX_OPTS_FROM_MODULE";
+        String val = VALUE;
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.MAX_OPTS_FROM_MODULE, val);
+        manager.properties.setProperty(key, "wrong");
+        assertEquals("Ensure that when both kebab and snake case properties set, and you ask for kebab, you get it", val, manager.getOption(Options.MAX_OPTS_FROM_MODULE));
+    }
+
+    @Test
+    public void testGetOptionSnakeWithBoth() {
+        String key = "MAX_OPTS_FROM_MODULE";
+        String val = VALUE;
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.MAX_OPTS_FROM_MODULE, "wrong");
+        manager.properties.setProperty(key, val);
+        assertEquals("Ensure that when both kebab and snake case properties set, and you ask for snake, you get it", val, manager.getOption(key));
+    }
+
+    @Test
+    public void testGetOptionMixedSnakeAndKebabProperty() {
+        String key = "MAX-OPTS_FROM-MODULE";
+        String val = VALUE;
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(key, val);
+        assertNull("Although keys are normalized to snake and kebab case, if a property was specified with a mix, it won't be found",  manager.getOption(Options.MAX_OPTS_FROM_MODULE));
+    }
+
+    @Test
+    public void testGetOptionMaxOptsFromModuleNotFound() {
+        String key = "MAX_OPTS_FROM_MODULE";
+        String val = VALUE;
+        AbstractManager manager = new AbstractManagerImpl();
+        assertNull("Not found", manager.getOption(key));
     }
 
     @Test
