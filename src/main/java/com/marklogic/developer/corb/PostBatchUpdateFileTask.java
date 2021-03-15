@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2020 MarkLogic Corporation
+ * Copyright (c) 2004-2021 MarkLogic Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -127,7 +127,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
         try (BufferedReader reader = Files.newBufferedReader(inputFile.toPath());
              BufferedWriter writer = Files.newBufferedWriter(outputFile.toPath()) ) {
             String line;
-             int currentLine = 0;
+            int currentLine = 0;
             while ((line = reader.readLine()) != null && currentLine < headerLineCount) {
                 writer.write(line);
                 writer.newLine();
