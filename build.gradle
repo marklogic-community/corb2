@@ -114,7 +114,8 @@ shadowJar {
         include(dependency('org.webjars:.*'))
     }
     //generate same name as the jar task would
-    archiveFileName = "${archiveBaseName}-${archiveVersion}.${archiveExtension}"
+    //archiveFileName = "${archiveBaseName}-${archiveVersion}.${archiveExtension}"
+    archiveFileName = "${baseName}-${version}.${extension}"
     manifest {
         attributes 'Application-Version': project.version
         attributes 'Build-date' : new Date()
