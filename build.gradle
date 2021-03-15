@@ -68,6 +68,17 @@ configurations {
 
     performanceTestCompile.extendsFrom testCompile
     performanceTestRuntime.extendsFrom testRuntime
+
+    // encountered issues publishing since upgrading to Gradle 6:
+    /* What went wrong:
+    Execution failed for task ':publishMainJavaPublicationToMavenLocal'.
+    > Failed to publish publication 'mainJava' to repository 'mavenLocal'
+       > Artifact marklogic-corb-2.5.1.jar wasn't produced by this build.
+     */
+    // Suggested workaround: https://docs.gradle.org/current/userguide/upgrading_version_6.html#publishing_spring_boot_applications
+    [apiElements, runtimeElements].each {
+        it.outgoing.artifacts.removeIf { it.buildDependencies.getDependencies(null).contains(jar) }
+    }
 }
 
 dependencies {
@@ -282,7 +293,7 @@ publishing {
 /*
  * In order to publish to bintray, you need an account. Once you have that account, set myBintrayUser and myBintrayKey
  * to your username and key. You can do that in the project gradle.properties file, but it's better to do so in your
- * ~/.gradle/gradle.properties file. Once you do that, you can run "gradle -i bintray" to publish it to bintray.
+ * ~/.gradle/gradle.properties file. Once you do that, you can run "gradle -i bintrayUpload" to publish it to bintray.
  */
 if (project.hasProperty("myBintrayUser")) {
     bintray {
