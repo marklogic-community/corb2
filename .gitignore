@@ -17,3 +17,5 @@ nb-configuration.xml
 /dependency-reduced-pom.xml
 /cov-int/
 src/test/resources/loader.zip
+examples/corb.bat
+examples/corb.sh
