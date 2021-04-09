@@ -1310,9 +1310,9 @@ public final class Options {
             final String snakeCase = propertyName.replace("-", "_");
             final String kebabCase = propertyName.replace("_", "-");
             for (String key : Arrays.asList(propertyName, snakeCase, kebabCase)) {
-                if (isNotBlank(System.getProperty(key))) {
+                if (System.getProperty(key) != null) {
                     return System.getProperty(key).trim();
-                } else if (properties.containsKey(key) && isNotBlank(properties.getProperty(key))) {
+                } else if (properties.containsKey(key) && properties.getProperty(key) != null) {
                     return properties.getProperty(key).trim();
                 }
             }
