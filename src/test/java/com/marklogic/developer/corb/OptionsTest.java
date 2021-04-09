@@ -64,6 +64,15 @@ public class OptionsTest {
     }
 
     @Test
+    public void testFindOptionWithEmptyStringValue() {
+        String key = "foo";
+        String value = "";
+        Properties properties = new Properties();
+        properties.setProperty(key, value);
+        assertEquals(value, Options.findOption(properties, "foo"));
+    }
+
+    @Test
     public void testFindOptionMissing() {
         Properties properties = new Properties();
         assertNull(Options.findOption(properties, "foo"));
