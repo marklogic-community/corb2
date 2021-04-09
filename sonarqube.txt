@@ -1,0 +1,4 @@
+./gradlew sonarqube \
+  -Dsonar.organization=marklogic-community \
+  -Dsonar.host.url=https://sonarcloud.io \
+  -Dsonar.login=4ef0fcac644f4710f4afdf7ccd5ab2b44443c765

@@ -251,7 +251,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
         String schemaFilename = getProperty(Options.XML_SCHEMA);
         if (StringUtils.isNotEmpty(schemaFilename)) {
             File schemaFile = FileUtils.getFile(schemaFilename);
-            List<SAXParseException> validationErrors = XmlUtils.schemaValidate(xmlFile, schemaFile);
+            List<SAXParseException> validationErrors = XmlUtils.schemaValidate(xmlFile, schemaFile, properties);
             if (!validationErrors.isEmpty()) {
                 throw new CorbException("File is not schema valid", validationErrors.get(0) );
             }
