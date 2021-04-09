@@ -20,6 +20,7 @@ package com.marklogic.developer.corb.util;
 
 import com.marklogic.developer.corb.CorbException;
 
+import com.marklogic.developer.corb.Options;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.ls.DOMImplementationLS;
@@ -49,6 +50,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -88,19 +90,23 @@ public final class XmlUtils {
         return stringWriter.toString();
     }
 
-    public static List<SAXParseException> schemaValidate(File xmlFile, File schemaFile) throws CorbException {
+    public static List<SAXParseException> schemaValidate(File xmlFile, File schemaFile, Properties options) throws CorbException {
         XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
         try (Reader fileReader = new FileReader(xmlFile)) {
             Source source = new StAXSource(xmlInputFactory.createXMLStreamReader(fileReader));
-            return schemaValidate(source, schemaFile);
+            return schemaValidate(source, schemaFile, options);
         } catch (IOException | SAXException | XMLStreamException ex) {
             LOG.log(Level.SEVERE, "Unable to schema validate XML file", ex);
             throw new CorbException(ex.getMessage(), ex);
         }
     }
 
-    public static List<SAXParseException> schemaValidate(Source source, File schemaFile) throws SAXException, IOException {
+    public static List<SAXParseException> schemaValidate(Source source, File schemaFile, Properties options) throws SAXException, IOException {
         SchemaFactory schemaFactory = SchemaFactory.newInstance(W3C_XML_SCHEMA_NS_URI);
+        boolean honourAllSchemaLocations = StringUtils.stringToBoolean(Options.findOption(options, Options.XML_SCHEMA_HONOUR_ALL_SCHEMALOCATIONS), true);
+        if (honourAllSchemaLocations){
+            schemaFactory.setFeature("http://apache.org/xml/features/honour-all-schemaLocations", true);
+        }
         Schema schema = schemaFactory.newSchema(schemaFile);
         Validator validator = schema.newValidator();
         final List<SAXParseException> exceptions = new LinkedList<>();

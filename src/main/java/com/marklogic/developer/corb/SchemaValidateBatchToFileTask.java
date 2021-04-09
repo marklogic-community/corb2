@@ -78,7 +78,7 @@ public class SchemaValidateBatchToFileTask extends ExportBatchToFileTask {
      * @throws XMLStreamException
      */
     protected void validateAndWriteReport(Source source, File schemaFile, File outputFile) throws IOException, SAXException, XMLStreamException {
-        List<SAXParseException> exceptions = schemaValidate(source, schemaFile);
+        List<SAXParseException> exceptions = schemaValidate(source, schemaFile, properties);
         writeSchemaValidationReport(exceptions, outputFile);
     }
 

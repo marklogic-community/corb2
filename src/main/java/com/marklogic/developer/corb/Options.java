@@ -1256,6 +1256,15 @@ public final class Options {
     public static final String XML_SCHEMA = "XML-SCHEMA";
 
     /**
+     * Boolean value ndicating whether to set the feature http://apache.org/xml/features/honour-all-schemaLocations. Default is true
+     * @see <a href="https://xerces.apache.org/xerces2-j/features.html#honour-all-schemaLocations">https://xerces.apache.org/xerces2-j/features.html#honour-all-schemaLocations</a>
+     * @since 2.5.2
+     */
+    @Usage(description = "Boolean value indicating whether to set the feature http://apache.org/xml/features/honour-all-schemaLocations. Default is true")
+    public static final String XML_SCHEMA_HONOUR_ALL_SCHEMALOCATIONS = "XML-SCHEMA-HONOUR-ALL-SCHEMALOCATIONS";
+
+
+    /**
      *
      * @since 2.4.0
      */
@@ -1296,7 +1305,7 @@ public final class Options {
      * @return
      * @since 2.5.1
      */
-    protected static String findOption(final Properties properties, final String propertyName) {
+    public static String findOption(final Properties properties, final String propertyName) {
         if (isNotBlank(propertyName)) {
             final String snakeCase = propertyName.replace("-", "_");
             final String kebabCase = propertyName.replace("_", "-");
