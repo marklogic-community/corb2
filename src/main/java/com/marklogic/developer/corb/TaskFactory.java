@@ -31,6 +31,8 @@ import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
+import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -173,7 +175,7 @@ public class TaskFactory {
         task.setProperties(managerProperties);
 
         String timeZoneId = Options.findOption(managerProperties, XCC_TIME_ZONE);
-        if (timeZoneId != null) {
+        if (isNotBlank(timeZoneId)) {
             TimeZone timeZone = TimeZone.getTimeZone(timeZoneId);
             task.setTimeZone(timeZone);
         }
