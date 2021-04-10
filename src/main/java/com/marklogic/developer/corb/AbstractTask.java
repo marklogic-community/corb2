@@ -32,8 +32,8 @@ import static com.marklogic.developer.corb.TransformOptions.FAILED_URI_TOKEN;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.commaSeparatedValuesToList;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
 import com.marklogic.xcc.ResultSequence;
@@ -220,7 +220,7 @@ public abstract class AbstractTask implements Task {
         }
 
         RequestOptions requestOptions = request.getOptions();
-        if (language != null) {
+        if (isNotBlank(language)) {
             requestOptions.setQueryLanguage(language);
         }
         if (timeZone != null) {
