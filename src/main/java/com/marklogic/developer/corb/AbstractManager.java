@@ -480,11 +480,14 @@ public abstract class AbstractManager {
      * @return the trimmed property value
      */
     protected String getOption(String argVal, String propertyName) {
-        String retVal;
+        String retVal = null;
         if (isNotBlank(argVal)) {
             retVal = argVal.trim();
         } else {
-            retVal = Options.findOption(properties, propertyName);
+            String property = Options.findOption(properties, propertyName);
+            if (isNotBlank(property)) {
+                retVal = property;
+            }
         }
         //doesn't capture defaults, only user provided.
         String[] secureWords = {"XCC", "PASSWORD", "SSL"};
