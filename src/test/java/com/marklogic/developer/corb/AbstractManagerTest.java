@@ -849,6 +849,15 @@ public class AbstractManagerTest {
     }
 
     @Test
+    public void testGetOptionWithEmptyString() {
+        String key = "option";
+        String val = "";
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(key, val);
+        assertNull(manager.getOption(key));
+    }
+
+    @Test
     public void testGetOptionKebabWithSnake() {
         String key = "MAX_OPTS_FROM_MODULE";
         String val = VALUE;
