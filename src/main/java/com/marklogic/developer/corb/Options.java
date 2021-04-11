@@ -1256,7 +1256,7 @@ public final class Options {
     public static final String XML_SCHEMA = "XML-SCHEMA";
 
     /**
-     * Boolean value ndicating whether to set the feature http://apache.org/xml/features/honour-all-schemaLocations. Default is true
+     * Boolean value indicating whether to set the feature http://apache.org/xml/features/honour-all-schemaLocations. Default is true
      * @see <a href="https://xerces.apache.org/xerces2-j/features.html#honour-all-schemaLocations">https://xerces.apache.org/xerces2-j/features.html#honour-all-schemaLocations</a>
      * @since 2.5.2
      */
