@@ -4,6 +4,7 @@
 [![SonarQube Quality](https://sonarcloud.io/api/project_badges/measure?project=corb2&metric=alert_status)](https://sonarcloud.io/dashboard?id=corb2)
 [![SonarQube Maintainability](https://sonarcloud.io/api/project_badges/measure?project=corb2&metric=sqale_rating)](https://sonarcloud.io/component_measures/domain/Maintainability?id=corb2)
 [![Codacy Grade Badge](https://api.codacy.com/project/badge/Grade/c0195f063ae34c7ea17bb4c97ab7ff2c)](https://www.codacy.com/app/mads-hansen/corb2?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marklogic/corb2&amp;utm_campaign=Badge_Grade)
+[![Snyk Known Vulnerabilities Badge](https://snyk.io/test/github/marklogic-community/corb2/badge.svg)](https://snyk.io/test/github/marklogic-community/corb2)
 
 [![Maven Central - download the latest version](https://maven-badges.herokuapp.com/maven-central/com.marklogic/marklogic-corb/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.marklogic/marklogic-corb)
 [![Javadocs](https://www.javadoc.io/badge/com.marklogic/marklogic-corb.svg?color=blue)](https://www.javadoc.io/doc/com.marklogic/marklogic-corb)
