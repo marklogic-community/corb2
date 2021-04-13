@@ -1,9 +1,10 @@
 [![Travis-ci gradle build status](https://travis-ci.org/marklogic-community/corb2.svg?branch=development)](https://travis-ci.org/marklogic-community/corb2)
 [![CircleCI maven build status](https://circleci.com/gh/marklogic-community/corb2/tree/development.svg?style=shield)](https://app.circleci.com/pipelines/github/marklogic-community/corb2?branch=development)
+
 [![Codecov code coverage](https://codecov.io/gh/marklogic-community/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic-community/corb2/branch/development)
 [![SonarQube Quality](https://sonarcloud.io/api/project_badges/measure?project=corb2&metric=alert_status)](https://sonarcloud.io/dashboard?id=corb2)
 [![SonarQube Maintainability](https://sonarcloud.io/api/project_badges/measure?project=corb2&metric=sqale_rating)](https://sonarcloud.io/component_measures/domain/Maintainability?id=corb2)
-[![Codacy Grade Badge](https://api.codacy.com/project/badge/Grade/c0195f063ae34c7ea17bb4c97ab7ff2c)](https://www.codacy.com/app/mads-hansen/corb2?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marklogic/corb2&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/cf8ddb3401b6492a949db0bf6affaefd)](https://www.codacy.com/gh/marklogic-community/corb2/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marklogic-community/corb2&amp;utm_campaign=Badge_Grade)
 [![Snyk Known Vulnerabilities Badge](https://snyk.io/test/github/marklogic-community/corb2/badge.svg)](https://snyk.io/test/github/marklogic-community/corb2)
 
 [![Maven Central - download the latest version](https://maven-badges.herokuapp.com/maven-central/com.marklogic/marklogic-corb/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.marklogic/marklogic-corb)
@@ -21,7 +22,6 @@ This document and the [wiki](https://github.com/marklogic-community/corb2/wiki) 
 For additional information, please refer to the [CoRB Wiki](https://github.com/marklogic-community/corb2/wiki).
 
 ### Downloads
-
 Download the latest release directly from https://github.com/marklogic-community/corb2/releases or resolve dependencies through [Maven Central](http://mvnrepository.com/artifact/com.marklogic/marklogic-corb) or [JCenter](https://bintray.com/marklogic/maven/marklogic-corb/view).
 
 - CoRB v2.4.0 (or later) requires Java 8 (or later) to run.
@@ -30,14 +30,10 @@ Download the latest release directly from https://github.com/marklogic-community
 
 > Note: marklogic-xcc 8 is backwards compatible to MarkLogic 5 and runs on Java 1.6 or later.
 
-
 ### Getting Help
-
 To get help with CoRB
-
-* [Post a question to Stack Overflow](http://stackoverflow.com/questions/ask?tags=marklogic+corb) with the [<code>markogic</code>](https://stackoverflow.com/questions/tagged/marklogic) and [<code>corb</code>](https://stackoverflow.com/questions/tagged/corb) tags.  
-* Submit issues or feature requests at https://github.com/marklogic-community/corb2/issues
-
+- [Post a question to Stack Overflow](http://stackoverflow.com/questions/ask?tags=marklogic+corb) with the [<code>markogic</code>](https://stackoverflow.com/questions/tagged/marklogic) and [<code>corb</code>](https://stackoverflow.com/questions/tagged/corb) tags.  
+- Submit issues or feature requests at https://github.com/marklogic-community/corb2/issues
 
 ### [Running CoRB](https://github.com/marklogic-community/corb2/wiki/Running-CoRB)
 The entry point is the main method in the `com.marklogic.developer.corb.Manager` class. CoRB requires the MarkLogic XCC JAR in the classpath,
@@ -53,7 +49,6 @@ CoRB needs options specified through one or more of the following mechanisms:
 If specified in more than one place, a command line parameter takes precedence over a Java system property, which take precedence over a property from the **OPTIONS-FILE** properties file.
 
 > Note: Any or all of the properties can be specified as Java system properties or key value pairs in properties file.
-
 
 > Note: CoRB exit codes `0` - successful, `0` - nothing to process (ref: EXIT-CODE-NO-URIS), `1` - initialization or connection error and `2` - execution error
 
@@ -109,13 +104,13 @@ Option | Description
 **<a name="LOADER-SET-URIS-BATCH-REF"></a>LOADER-SET-URIS-BATCH-REF** | Boolean option indicating whether a file loader should set the [URIS_BATCH_REF](https://github.com/marklogic-community/corb2#uris_batch_ref). Default is `false`.
 **<a name="LOADER-USE-ENVELOPE"></a>LOADER-USE-ENVELOPE** | Boolean value indicating whether FileUris loaders should use an XML envelope, in order to send file metadata in addition to the file content.
 **<a name="JOB-NAME"></a>JOB-NAME** | Name of the current Job.
-**<a name="JOB-SERVER-PORT"></a>JOB-SERVER-PORT** | Optional port number to start a lightweight HTTP server which can be used to monitor, change the number of threads, and pause/resume the CoRB job. Port number must be a valid port(s) or a valid range of ports.  <ul><li>Ex: 9080</li><li> Ex: 9080,9083,9087</li><li> Ex: 9080-9090</li><li> Ex: 9080-9083,9085-9090</li></ul>  The job server will bind to a port from the configured port number(s). By default, if the **JOB-SERVER-PORT** option is not specified, a job server is not started. <p> When a port is specified and available, the job server URL will be logged to the console with both the UI `http://<host>:<port>` and metrics URL `http://<host>:<port>/metrics`. (grep for string *com.marklogic.developer.corb.JobServer logUsage*)  <p>The metrics URL supports the following parameters:<ul><li>**COMMAND**=pause (or resume). </li><li>**CONCISE**=true limits the amound of data returned</li><li>**FORMAT**=json (or xml) returns job stats in the requested format</li><li>**THREAD-COUNT**=<#> will adjust the number of threads for the executing job</li></ul>  
+**<a name="JOB-SERVER-PORT"></a>JOB-SERVER-PORT** | Optional port number to start a lightweight HTTP server which can be used to monitor, change the number of threads, and pause/resume the CoRB job. Port number must be a valid port(s) or a valid range of ports.  <ul><li>Ex: 9080</li><li> Ex: 9080,9083,9087</li><li> Ex: 9080-9090</li><li> Ex: 9080-9083,9085-9090</li></ul>  The job server will bind to a port from the configured port number(s). By default, if the **JOB-SERVER-PORT** option is not specified, a job server is not started. <p> When a port is specified and available, the job server URL will be logged to the console with both the UI `http://<host>:<port>` and metrics URL `http://<host>:<port>/metrics`. (grep for string _com.marklogic.developer.corb.JobServer logUsage_)  <p>The metrics URL supports the following parameters:<ul><li>**COMMAND**=pause (or resume). </li><li>**CONCISE**=true limits the amound of data returned</li><li>**FORMAT**=json (or xml) returns job stats in the requested format</li><li>**THREAD-COUNT**=<#> will adjust the number of threads for the executing job</li></ul>  
 **<a name="MAX-OPTS-FROM-MODULE"></a>MAX-OPTS-FROM-MODULE** | Max number of custom inputs from the **URIS-MODULE** to other modules. Default is `10`.
 **<a name="METADATA"></a>METADATA** | The variable name that needs to be defined in the server side query to use the metadata set by the **URIS-LOADER**.
 **<a name="METADATA-TO-PROCESS-MODULE"></a>METADATA-TO-PROCESS-MODULE** | If this option is set to true, **XML-METADATA** is set as an external variable with name **METADATA** to **PROCESS-MODULE** as well. Default is `false`.
 **<a name="METRICS-COLLECTIONS"></a>METRICS-COLLECTIONS** | Adds the metrics document to the specified collection.|
 **<a name="METRICS-DATABASE"></a>METRICS-DATABASE** | Uses the value provided to save the metrics document to the specified Database. The XCC connection specified should have the following privilege `http://marklogic.com/xdmp/privileges/xdmp-invoke`|
-**<a name="METRICS-LOG-LEVEL"></a>METRICS-LOG-LEVEL**|String value indicating the log level that the CoRB job should use to log metrics to ML Server Error log. Possible values are *none, emergency, alert, critical, error, warning, notice, info, config, debug, fine, finer, finest*. Default is `none`, which means metrics are not logged.|
+**<a name="METRICS-LOG-LEVEL"></a>METRICS-LOG-LEVEL**|String value indicating the log level that the CoRB job should use to log metrics to ML Server Error log. Possible values are _none, emergency, alert, critical, error, warning, notice, info, config, debug, fine, finer, finest_. Default is `none`, which means metrics are not logged.|
 **<a name="METRICS-MODULE"></a>METRICS-MODULE** | XQuery or JavaScript to be executed at the end of the CoRB Job to save the metrics document to the database. There is an XQuery module ([save-metrics.xqy](src/main/resources/save-metrics.xqy)) and a JavaScript module ([saveMetrics.sjs](src/main/resources/saveMetrics.sjs)) provided. You can use these modules as a template to customize the the metrics document saved to the database. XQuery and JavaScript modules need to have '{@code .xqy}' and{@code .sjs} extensions respectively.|
 **<a name="METRICS-NUM-FAILED-TRANSACTIONS"></a>METRICS-NUM-FAILED-TRANSACTIONS** | Maximum number of failed transaction to be logged in the metrics. Default is `0`.
 **<a name="METRICS-NUM-SLOW-TRANSACTIONS"></a>METRICS-NUM-SLOW-TRANSACTIONS** | Maximum number of slow transaction to be logged in the metrics. Default is `0`.
@@ -168,12 +163,12 @@ Total count of uris is set as an external variable to **PRE-BATCH-MODULE** and *
 Any property specified with prefix (with '.') **INIT-MODULE**, **URIS-MODULE**, **PRE-BATCH-MODULE**, **PROCESS-MODULE**, **POST-BATCH-MODULE** will be set as an external variable in the corresponding XQuery module (if that variable is defined as an external string variable in XQuery module). For JavaScript modules the variables need be defined as global variables.  
 
 #### Custom Input Examples:
-* `URIS-MODULE.maxLimit=1000` Expects an external string variable  _maxLimit_ in URIS-MODULE XQuery or global variable for JavaScript.  
-* `PROCESS-MODULE.startDate=2015-01-01` Expects an external string variable _startDate_ in PROCESS-MODULE XQuery or global variable for JavaScript.  
+- `URIS-MODULE.maxLimit=1000` Expects an external string variable  _maxLimit_ in URIS-MODULE XQuery or global variable for JavaScript.  
+- `PROCESS-MODULE.startDate=2015-01-01` Expects an external string variable _startDate_ in PROCESS-MODULE XQuery or global variable for JavaScript.  
 
 Alternatively, **URIS-MODULE** can pass custom inputs to **PRE-BATCH-MODULE**, **PROCESS-MODULE**, **POST-BATCH-MODULE** by returning one or more of the property values in above format before the count the of URIs. If the **URIS-MODULE** needs **URIS\_BATCH\_REF** (above) as well, it needs to be just before the URIs count.  
 
-#### Custom Input From URIS-MODULE Example:
+#### Custom Input From URIS-MODULE Example
 ```xquery
 let $uris := cts:uris()
 return ("PROCESS-MODULE.foo=bar", "POST-BATCH-MODULE.alpha=10", fn:count($uris), $uris)
@@ -185,14 +180,14 @@ Appending `|ADHOC` to the name or path of a XQuery module (with .xqy extension) 
 **INIT-MODULE**, **URIS-MODULE**, **PROCESS-MODULE**, **PRE-BATCH-MODULE** and **POST-BATCH-MODULE** can be specified adhoc by adding the suffix `|ADHOC` for XQuery or JavaScript (with .sjs or .js extension) at the end. Adhoc XQuery or JavaScript remains local to the CoRB and is not deployed to MarkLogic. The XQuery or JavaScript module should be in its named file and that file should be available on the file system, including being on the java classpath for CoRB.
 
 ##### Adhoc Examples:
-* `PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC` adhoc-pre-batch.xqy must be on the classpath or in the current directory.
-* `PROCESS-MODULE=/path/to/file/adhoc-transform-module.xqy|ADHOC` XQuery module file with full path in the file system.  
-* `URIS-MODULE=adhoc-uris.sjs|ADHOC` Adhoc JavaScript module in the classpath or current directory.
+- `PRE-BATCH-MODULE=adhoc-pre-batch.xqy|ADHOC` adhoc-pre-batch.xqy must be on the classpath or in the current directory.
+- `PROCESS-MODULE=/path/to/file/adhoc-transform-module.xqy|ADHOC` XQuery module file with full path in the file system.  
+- `URIS-MODULE=adhoc-uris.sjs|ADHOC` Adhoc JavaScript module in the classpath or current directory.
 
 #### Inline Adhoc Modules
 It is also possible to set a module option with inline code blocks, rather than a file path. This can be done by prepending either `INLINE-XQUERY|` or `INLINE-JAVASCRIPT|` to the option value, followed by the XQuery or JavaScript code to execute. Inline code blocks are executed as "adhoc" modules and are not uploaded to the Modules database. The `|ADHOC` suffix is optional for inline code blocks.
 
-##### Inline Adhoc Example:
+##### Inline Adhoc Example
 ```xquery
 URIS-MODULE=INLINE-XQUERY|xquery version '1.0-ml'; let $uris := cts:uris('', 'document', cts:collection-query('foo')) return (count($uris), $uris)
 ```
@@ -231,24 +226,24 @@ PrivateKeyDecrypter automatically detects if the text is encrypted. Unencrypted 
 Generate keys and encrypt XCC URL or password using one of the options below.   
 
 #### Java Crypt
-* Use the PrivateKeyDecrypter class inside the CoRB JAR with the gen-keys option to generate a key.  
+- Use the PrivateKeyDecrypter class inside the CoRB JAR with the gen-keys option to generate a key.  
   `java -cp /path/to/lib/* com.marklogic.developer.corb.PrivateKeyDecrypter gen-keys /path/to/private.key /path/to/public.key RSA 1024`  
 > Note: if not specified, default algorithm: RSA, default key-length: 1024
-* Use the PrivateKeyDecrypter class inside the CoRB JAR with the encrypt option to encrypt the clear text such as an xcc URL or password.  
+- Use the PrivateKeyDecrypter class inside the CoRB JAR with the encrypt option to encrypt the clear text such as an xcc URL or password.  
   `java -cp /path/to/lib/* com.marklogic.developer.corb.PrivateKeyDecrypter encrypt /path/to/public.key clearText RSA`  
 > Note: if not specified, default algorithm: RSA
 
 #### RSA keys
-* `openssl genrsa -out private.pem 1024` Generate a private key in PEM format
-* `openssl pkcs8 -topk8 -nocrypt -in private.pem -out private.pkcs8.key` Create a PRIVATE-KEY-FILE in PKCS8 standard for java
-* `openssl rsa -in private.pem -pubout > public.key`  Extract public key
-* `echo "uri or password" | openssl rsautl -encrypt -pubin -inkey public.key | base64` Encrypt URI or password. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx)
+- `openssl genrsa -out private.pem 1024` Generate a private key in PEM format
+- `openssl pkcs8 -topk8 -nocrypt -in private.pem -out private.pkcs8.key` Create a PRIVATE-KEY-FILE in PKCS8 standard for java
+- `openssl rsa -in private.pem -pubout > public.key`  Extract public key
+- `echo "uri or password" | openssl rsautl -encrypt -pubin -inkey public.key | base64` Encrypt URI or password. Optionally, the encrypted text can be enclosed with "ENC" ex: ENC(xxxxxx)
 
 #### ssh-keygen  
-* `ssh-keygen` ex:key as id_rsa after selecting a passphrase
-* `openssl pkcs8 -topk8 -nocrypt -in id_rsa -out id_rsa.pkcs8.key` (asks for passphrase)
-* `openssl rsa -in id_rsa -pubout > public.key` (asks for passphrase)
-* `echo "password or uri" | openssl rsautl -encrypt -pubin -inkey public.key | base64`
+- `ssh-keygen` ex:key as id_rsa after selecting a passphrase
+- `openssl pkcs8 -topk8 -nocrypt -in id_rsa -out id_rsa.pkcs8.key` (asks for passphrase)
+- `openssl rsa -in id_rsa -pubout > public.key` (asks for passphrase)
+- `echo "password or uri" | openssl rsautl -encrypt -pubin -inkey public.key | base64`
 
 #### com.marklogic.developer.corb.JasyptDecrypter
 JasyptDecrypter automatically detects if the text is encrypted. Unencrypted text or clear text is returned as-is. Though, not required, encrypted text can be optionally enclosed with "ENC" ex: ENC(xxxxxx) to clearly indicate that it is encrypted.    
@@ -308,9 +303,9 @@ XCC-HOST-NAME=hostname1,hostname2,..
 ```
 
 The default implementation for `com.marklogic.developer.corb.ContentSourcePool` is `com.marklogic.developer.corb.DefaultContentSourcePool`. It uses below options for **CONNECTION-POLICY** for allocating connections to callers. 
-* ROUND-ROBIN - (Default) Connections are allocated using round-robin algorithm. 
-* RANDOM - Connections are randomly allocated.
-* LOAD - Host with least number of active connections is allocated to caller.    
+- ROUND-ROBIN - (Default) Connections are allocated using round-robin algorithm. 
+- RANDOM - Connections are randomly allocated.
+- LOAD - Host with least number of active connections is allocated to caller.    
 
 ### Query and Connection Retries
 CoRB automatically retries the requests a given URI when it encounters `com.marklogic.xcc.exceptions.ServerConnectionException` from MarkLogic. If necessary, the number of retry attempts can be configured using **XCC-CONNECTION-RETRY-LIMIT**. If multiple hosts are specified, we can optionally configure retries per each host using **XCC-CONNECTION-HOST-RETRY-LIMIT**. CoRB waits at least **XCC-CONNECTION-RETRY-INTERVAL** seconds before a connection is retried on a failed host. 
