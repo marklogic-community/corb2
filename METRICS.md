@@ -21,7 +21,7 @@
     * Total Number of failed tasks
     * Current and average transactions per second
     * Estimated time of completion
- * **Are connection strings or passwords logged to the error log?**
+* **Are connection strings or passwords logged to the error log?**
     * No. 
 * **How can I save the metrics as a Document to the database?**
     * METRICS-DATABASE property will be used to save the metrics document to the database.
@@ -39,11 +39,10 @@
         + This will save the metrics document as a **JSON**.
         + Ex:METRICS-MODULE=saveMetrics.sjs|ADHOC
 * **Can I add the metrics document to a Collection?**
-    + A comma seperated collection names can be assigned to METRICS-COLLECTIONS option and the document is saved to those collections.
-    + By default the metrics document is added to a Collection with the Job Name (or the Job run location if name is not provided).
-    
+    + A comma separated collection names can be assigned to METRICS-COLLECTIONS option, and the document is saved to those collections.
+    + By default, the metrics document is added to a Collection with the Job Name (or the Job run location if name is not provided).
 * **Can I change the URI to which the metrics document is saved?**
-    * By default the URI format is /METRICS-ROOT/CoRB2/JOB-NAME/YEAR/MONTH/DATE/HOUR/MINUTE/RANDOM-NUMBER.(json or xml)
+    * By default, the URI format is /METRICS-ROOT/CoRB2/JOB-NAME/YEAR/MONTH/DATE/HOUR/MINUTE/RANDOM-NUMBER.(json or xml)
     * METRICS-ROOT has a default value of /ServiceMetrics/
     * JOB-NAME defaults to the job run location
      
@@ -52,7 +51,7 @@
     + Eg:METRICS-MODULE=/export/home/dev/saveMetricsCustom.sjs|ADHOC
 * **How do I keep logging metrics document at regular intervals?**
     * You can use METRICS-SYNC-FREQUENCY option to specify the frequency at which the document should be saved to the database.
-    * Corb logs the metrics by creating a new document in the database with a new timestamp as shown below.
+    * CoRB logs the metrics by creating a new document in the database with a new timestamp as shown below.
     * Eg: 
          + /my-dir/CoRB2/job-name/2017/9/22/16/16/1446989213638048899.xml
          + /my-dir/CoRB2/job-name/2017/9/22/16/16/1446989213638048899.xml/10656720599806190856
