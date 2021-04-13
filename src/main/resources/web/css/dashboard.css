@@ -7,30 +7,30 @@ body {
   padding-top: 50px;
 }
 
-
 /*
  * Global add-ons
  */
-
 .sub-header {
   padding-bottom: 10px;
   border-bottom: 1px solid #eee;
 }
+
 /*
  * Main content
  */
-
 .main {
   padding: 20px;
 }
+
 @media (min-width: 768px) {
   .main {
     padding-right: 40px;
     padding-left: 40px;
   }
 }
+
 .main .page-header {
   margin-top: 0;
 }
 
-.top-buffer { margin-top:20px; }
+.top-buffer { margin-top: 20px; }
