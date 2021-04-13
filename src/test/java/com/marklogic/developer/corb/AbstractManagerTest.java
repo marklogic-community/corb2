@@ -907,7 +907,6 @@ public class AbstractManagerTest {
     @Test
     public void testGetOptionMaxOptsFromModuleNotFound() {
         String key = "MAX_OPTS_FROM_MODULE";
-        String val = VALUE;
         AbstractManager manager = new AbstractManagerImpl();
         assertNull("Not found", manager.getOption(key));
     }
