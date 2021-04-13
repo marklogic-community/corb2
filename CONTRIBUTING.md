@@ -3,10 +3,10 @@
 CoRB welcomes new contributors. This document will guide you
 through the process.
 
- - [Question or Problem?](#question)
- - [Issues and Bugs](#issue)
- - [Feature Requests](#feature)
- - [Submission Guidelines](#submit)
+- [Question or Problem?](#question)
+- [Issues and Bugs](#issue)
+- [Feature Requests](#feature)
+- [Submission Guidelines](#submit)
  
 ## <a name="question"></a> Got a Question or Problem?
 
@@ -34,14 +34,12 @@ If your issue appears to be a bug, and hasn't been reported, open a new issue.
 Help us to maximize the effort we can spend fixing issues and adding new 
 features, by not reporting duplicate issues. Providing the following 
 information will increase the chances of your issue being dealt with quickly:
-
-* **Overview of the Issue** - if an error is being thrown a stack trace helps
-* **Motivation for or Use Case** - explain why this is a bug for you
-* **CoRB Version** - which release are you using?
-* **Operating System** - Mac, windows? details help
-* **Java Version** - which version and whose build
-* **Suggest a Fix** - if you can't fix the bug yourself, perhaps you can point 
-  to what might be causing the problem (line of code or commit)
+- **Overview of the Issue** - if an error is being thrown a stack trace helps
+- **Motivation for or Use Case** - explain why this is a bug for you
+- **CoRB Version** - which release are you using?
+- **Operating System** - Mac, windows? details help
+- **Java Version** - which version and whose build
+- **Suggest a Fix** - if you can't fix the bug yourself, perhaps you can point to what might be causing the problem (line of code or commit)
 
 ### Submitting a Pull Request
 
@@ -63,7 +61,6 @@ at least one of the project maintainers before you start coding.
 
 Nothing is more frustrating than seeing your hard work go to waste because
 your vision does not align with that of a project maintainer.
-
 
 #### Create a branch for your changes
 
@@ -92,8 +89,7 @@ $ git config --global user.email "j.random.user@example.com"
 Writing good commit logs is important. A commit log should describe what 
 changed and why. Follow these guidelines when writing one:
 
-1. The first line should be 50 characters or less and contain a short
-   description of the change including the Issue number prefixed by a hash (#).
+1. The first line should be 50 characters or less and contain a short description of the change including the Issue number prefixed by a hash (#).
 2. Keep the second line blank.
 3. Wrap all other lines at 72 columns.
 
@@ -123,7 +119,6 @@ Use `git rebase` (not `git merge`) to sync your work from time to time.
 $ git fetch upstream
 $ git rebase upstream/master
 ```
-
 
 #### Test your code
 
@@ -157,26 +152,26 @@ That's it! Thank you for your contribution!
 After your pull request is merged, you can safely delete your branch and pull 
 the changes from the main (upstream) repository:
 
-* Delete the remote branch on GitHub either through the GitHub web UI or your 
+- Delete the remote branch on GitHub either through the GitHub web UI or your 
 local shell as follows:
 
     ```shell
     git push origin --delete my-feature-branch
     ```
 
-* Check out the master branch:
+- Check out the master branch:
 
     ```shell
     git checkout master -f
     ```
 
-* Delete the local branch:
+- Delete the local branch:
 
     ```shell
     git branch -D my-feature-branch
     ```
 
-* Update your master with the latest upstream version:
+- Update your master with the latest upstream version:
 
     ```shell
     git pull --ff upstream master
