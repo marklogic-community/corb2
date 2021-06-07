@@ -82,7 +82,7 @@ configurations {
 }
 
 dependencies {
-    compile 'com.marklogic:marklogic-xcc:10.0.6.2'
+    compile 'com.marklogic:marklogic-xcc:10.0.7'
     // JavaScript libraries are  bundled in a fat jar for the UI
     shadow  "org.webjars:angularjs:$angularVersion"
     compile "org.webjars:angularjs:$angularVersion"
