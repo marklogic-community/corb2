@@ -609,7 +609,7 @@ public class ManagerTest {
     @Test
     public void testInitOptionsEnsurePropertiesAreSet() {
         clearSystemProperties();
-        System.setProperty(Options.ERROR_FILE_NAME, EXPORT_FILE_DIR + "/out");
+        System.setProperty(Options.ERROR_FILE_NAME, "out");
         System.setProperty(Options.EXPORT_FILE_PART_EXT, "pt");
         String[] args = getDefaultArgs();
         Properties props = new Properties();
@@ -619,7 +619,7 @@ public class ManagerTest {
             assertEquals(1, instance.options.getBatchSize());
             assertEquals(EXPORT_FILE_DIR, instance.properties.getProperty("EXPORT-FILE-DIR"));
             assertEquals(EXPORT_FILE_NAME, instance.properties.getProperty("EXPORT-FILE-NAME"));
-            assertEquals(EXPORT_FILE_DIR + "/out", instance.properties.getProperty("ERROR-FILE-NAME"));
+            assertEquals("out", instance.properties.getProperty("ERROR-FILE-NAME"));
         } catch (CorbException | RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
