@@ -31,6 +31,8 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
@@ -96,5 +98,13 @@ public final class TestUtils {
         return logRecords.stream()
                 .anyMatch(record -> record.getLevel().equals(logRecord.getLevel())
                         && record.getMessage().equals(logRecord.getMessage()));
+    }
+
+    public static void assertEqualsNormalizeNewline(String expected, String actual) {
+        assertEquals(normalizeNewline(expected), normalizeNewline(actual));
+    }
+
+    public static String normalizeNewline(String input) {
+        return input.replaceAll("\\R", "\n");
     }
 }

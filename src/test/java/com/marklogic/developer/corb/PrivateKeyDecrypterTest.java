@@ -23,6 +23,7 @@ import static com.marklogic.developer.corb.Options.PRIVATE_KEY_FILE;
 import static com.marklogic.developer.corb.PrivateKeyDecrypter.ENCRYPT_USAGE;
 import static com.marklogic.developer.corb.PrivateKeyDecrypter.GEN_KEYS_USAGE;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import static com.marklogic.developer.corb.TestUtils.assertEqualsNormalizeNewline;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -272,7 +273,7 @@ public class PrivateKeyDecrypterTest {
         try {
             String[] args = {ACTION_GEN_KEYS};
             PrivateKeyDecrypter.main(args);
-            assertEquals(GEN_KEYS_USAGE + NEWLINE, errContent.toString());
+            assertEqualsNormalizeNewline(GEN_KEYS_USAGE + NEWLINE, errContent.toString());
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -356,7 +357,7 @@ public class PrivateKeyDecrypterTest {
         try {
             String[] args = {ACTION_ENCRYPT};
             PrivateKeyDecrypter.main(args);
-            assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
+            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString());
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -398,7 +399,7 @@ public class PrivateKeyDecrypterTest {
             String[] args = {ACTION_ENCRYPT, PRIVATE_KEY_PATH, "", ALGORITHM};
             setSystemProperties();
             PrivateKeyDecrypter.main(args);
-            assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
+            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString());
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -411,7 +412,7 @@ public class PrivateKeyDecrypterTest {
             String[] args = {ACTION_ENCRYPT, "", SECRET, ALGORITHM};
             setSystemProperties();
             PrivateKeyDecrypter.main(args);
-            assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
+            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString());
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -423,7 +424,7 @@ public class PrivateKeyDecrypterTest {
         try {
             String[] args = {"invalidUsage"};
             PrivateKeyDecrypter.main(args);
-            assertEquals(USAGE, outContent.toString());
+            assertEqualsNormalizeNewline(USAGE, outContent.toString());
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -435,7 +436,7 @@ public class PrivateKeyDecrypterTest {
         try {
             String[] args = null;
             PrivateKeyDecrypter.main(args);
-            assertEquals(USAGE, outContent.toString());
+            assertEqualsNormalizeNewline(USAGE, outContent.toString());
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -447,7 +448,7 @@ public class PrivateKeyDecrypterTest {
         try {
             String[] args = {};
             PrivateKeyDecrypter.main(args);
-            assertEquals(USAGE, outContent.toString());
+            assertEqualsNormalizeNewline(USAGE, outContent.toString());
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -459,7 +460,7 @@ public class PrivateKeyDecrypterTest {
         try {
             String[] args = {ACTION_ENCRYPT, "", "", ""};
             PrivateKeyDecrypter.main(args);
-            assertEquals(ENCRYPT_USAGE + NEWLINE, errContent.toString());
+            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString());
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

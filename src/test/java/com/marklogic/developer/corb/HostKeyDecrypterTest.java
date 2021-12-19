@@ -20,6 +20,8 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
 import com.marklogic.developer.corb.HostKeyDecrypter.OSType;
+
+import static com.marklogic.developer.corb.TestUtils.assertEqualsNormalizeNewline;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -146,7 +148,7 @@ public class HostKeyDecrypterTest {
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-        assertEquals(USAGE, outContent.toString());
+        assertEqualsNormalizeNewline(USAGE, outContent.toString());
     }
 
     @Test
@@ -157,7 +159,7 @@ public class HostKeyDecrypterTest {
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-        assertEquals(USAGE, outContent.toString());
+        assertEqualsNormalizeNewline(USAGE, outContent.toString());
     }
 
     @Test
@@ -168,7 +170,7 @@ public class HostKeyDecrypterTest {
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-        assertEquals(USAGE, outContent.toString());
+        assertEqualsNormalizeNewline(USAGE, outContent.toString());
     }
 
     @Test
@@ -179,7 +181,7 @@ public class HostKeyDecrypterTest {
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-        assertEquals(USAGE, outContent.toString());
+        assertEqualsNormalizeNewline(USAGE, outContent.toString());
     }
 
     @Test

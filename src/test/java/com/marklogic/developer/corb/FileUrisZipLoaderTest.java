@@ -35,6 +35,7 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import org.junit.After;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 import org.junit.Before;
 
@@ -106,9 +107,9 @@ public class FileUrisZipLoaderTest {
         String pdfFilename = "docs/simple document.pdf";
         FileUrisZipLoader loader = new FileUrisZipLoader();
         try (ZipFile zipFile = new ZipFile(TEST_ZIP_FILE)) {
-            Map<String, String> metadata = loader.getMetadata(zipFile.getEntry(pdfFilename));
-            assertTrue(metadata.get(FileUrisZipLoader.META_COMMENT).equals(PDF_COMMENT));
-            assertTrue(metadata.get(FileUrisZipLoader.META_FILENAME).equals(pdfFilename));
+            Map<String, String> metadata = loader.getMetadata(zipFile.getEntry(pdfFilename.replace("/", File.separator)));
+            assertTrue(PDF_COMMENT.equals(metadata.get(FileUrisZipLoader.META_COMMENT)));
+            assertEquals(pdfFilename.replace("/", File.separator), metadata.get(FileUrisZipLoader.META_FILENAME));
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

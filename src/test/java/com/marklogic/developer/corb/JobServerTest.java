@@ -44,7 +44,7 @@ public class JobServerTest {
 
     @Test
     public void testCreateAndGet() {
-        int port = 9999;
+        int port = 9995;
         String localhostUrl = "http://localhost:" + port;
         String GET = "GET";
         try {
@@ -99,7 +99,7 @@ public class JobServerTest {
 
     @Test
     public void testLogUsageWithoutManager() throws Exception {
-        JobServer server = JobServer.create(9998);
+        JobServer server = JobServer.create(9999);
         server.logUsage();
         server.stop(0);
         List<LogRecord> records = testLogger.getLogRecords();
@@ -120,7 +120,7 @@ public class JobServerTest {
     public void testAddManagerWithJobIDWillAddContext() throws Exception {
         Manager manager = new Manager();
         manager.jobId = "foo";
-        JobServer server = JobServer.create(Collections.singleton(9998), manager);
+        JobServer server = JobServer.create(Collections.singleton(9996), manager);
         server.addManager(manager);
         assertNotNull(manager.jobServer);
         assertEquals(server, manager.jobServer);

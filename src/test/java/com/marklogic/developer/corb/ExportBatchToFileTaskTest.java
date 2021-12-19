@@ -29,6 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
+import static com.marklogic.developer.corb.TestUtils.assertEqualsNormalizeNewline;
 import static org.junit.Assert.*;
 
 import com.marklogic.xcc.types.XdmItem;
@@ -138,7 +139,7 @@ public class ExportBatchToFileTaskTest {
         File file = testWriteToFile(seq);
         try {
             assertEquals(3, FileUtils.getLineCount(file));
-            assertEquals("foo\nbar\nbaz\n", TestUtils.readFile(file));
+            assertEqualsNormalizeNewline("foo\nbar\nbaz\n", TestUtils.readFile(file));
         } catch (IOException ex) {
             fail();
         }
@@ -161,7 +162,7 @@ public class ExportBatchToFileTaskTest {
         try {
             instance.writeToExportFile("test");
             assertTrue(exportFile.exists());
-            assertEquals("test\n", TestUtils.readFile(exportFile));
+            assertEqualsNormalizeNewline("test\n", TestUtils.readFile(exportFile));
         } catch (IOException ex) {
             System.out.println(ex.getMessage());
             fail();

@@ -21,9 +21,10 @@ package com.marklogic.developer.corb;
 import java.util.Properties;
 import org.junit.Before;
 import org.junit.Test;
+
+import static com.marklogic.developer.corb.TestUtils.*;
 import static org.junit.Assert.*;
-import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
-import static com.marklogic.developer.corb.TestUtils.createTempDirectory;
+
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.exceptions.RequestPermissionException;
 import java.io.File;
@@ -96,7 +97,7 @@ public class PostBatchUpdateFileTaskTest {
 
             File outputFile = new File(tempDir, instance.getPartFileName());
             String outputText = TestUtils.readFile(outputFile);
-            assertEquals(expextedResult, outputText);
+            assertEqualsNormalizeNewline(expextedResult, outputText);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -249,7 +250,7 @@ public class PostBatchUpdateFileTaskTest {
         props.setProperty(Options.EXPORT_FILE_SORT, "asc|uniq");
         try {
             String result = testRemoveDuplicatesAndSort(props);
-            List<String> tokens = Arrays.asList(result.split("\n"));
+            List<String> tokens = Arrays.asList(result.split("\\R"));
             assertEquals(4, tokens.size());
             for (String next : new String[]{"a", "b", "d", "z"}) {
                 assertTrue(tokens.contains(next));
@@ -266,7 +267,7 @@ public class PostBatchUpdateFileTaskTest {
         props.setProperty(Options.EXPORT_FILE_SORT, "ASCENDING|distinct");
         try {
             String result = testRemoveDuplicatesAndSort(props);
-            assertEquals(splitAndAppendNewline("a,b,d,z"), result);
+            assertEqualsNormalizeNewline(splitAndAppendNewline("a,b,d,z"), result);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -294,7 +295,7 @@ public class PostBatchUpdateFileTaskTest {
                 props.setProperty(Options.EXPORT_FILE_SORT, "ascending|distinct");
                 props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "END");
                 String result = testRemoveDuplicatesAndSort(file, props);
-                assertEquals(splitAndAppendNewline("BEGIN,letter,a,b,d,z,END"), result);
+                assertEqualsNormalizeNewline(splitAndAppendNewline("BEGIN,letter,a,b,d,z,END"), result);
             }
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -304,34 +305,34 @@ public class PostBatchUpdateFileTaskTest {
 
     @Test
     public void testCallRemoveDuplicatesAndSortCustomComparator() throws Exception {
-        assertTrue(testCustomComparator(null, "b,z...,d....,d....,a....."));
+        testCustomComparator(null, "b,z...,d....,d....,a.....");
     }
 
     @Test
     public void testCallRemoveDuplicatesAndSortCustomComparatorDistinct() throws Exception {
-        assertTrue(testCustomComparator(DISTINCT, "b,z...,d....,a....."));
+        testCustomComparator(DISTINCT, "b,z...,d....,a.....");
     }
 
     @Test
     public void testCallRemoveDuplicatesAndSortCustomComparatorBadClass() throws Exception {
-        assertTrue(testCustomComparator(DISTINCT, ZDDAB, "java.lang.String"));
+        testCustomComparator(DISTINCT, ZDDAB, "java.lang.String");
     }
 
     @Test
     public void testCallRemoveDuplicatesAndSortNoSortOrDedupDistinctOnly() throws Exception {
-        assertTrue(testCustomComparator(DISTINCT, ZDDAB, null));
+        testCustomComparator(DISTINCT, ZDDAB, null);
     }
 
     @Test
     public void testCallRemoveDuplicatesAndSortNoSortOrDedupBlankSort() throws Exception {
-        assertTrue(testCustomComparator(" ", ZDDAB, null));
+        testCustomComparator(" ", ZDDAB, null);
     }
 
-    public boolean testCustomComparator(String sortProperty, String expected) throws Exception {
-        return testCustomComparator(sortProperty, expected, "com.marklogic.developer.corb.PostBatchUpdateFileTaskTest$StringLengthComparator");
+    public void testCustomComparator(String sortProperty, String expected) throws Exception {
+        testCustomComparator(sortProperty, expected, "com.marklogic.developer.corb.PostBatchUpdateFileTaskTest$StringLengthComparator");
     }
 
-    public boolean testCustomComparator(String sortProperty, String expected, String comparator) throws Exception {
+    public void testCustomComparator(String sortProperty, String expected, String comparator) throws Exception {
 
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
@@ -353,7 +354,7 @@ public class PostBatchUpdateFileTaskTest {
             props.setProperty(Options.EXPORT_FILE_SORT, sortProperty);
         }
         String result = testRemoveDuplicatesAndSort(file, props);
-        return result.equals(splitAndAppendNewline(expected));
+        assertEqualsNormalizeNewline(splitAndAppendNewline(expected), result);
     }
 
     @Test
@@ -363,7 +364,7 @@ public class PostBatchUpdateFileTaskTest {
         String result;
         try {
             result = testRemoveDuplicatesAndSort(props);
-            assertEquals(splitAndAppendNewline("z,d,b,a"), result);
+            assertEqualsNormalizeNewline(splitAndAppendNewline("z,d,b,a"), result);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

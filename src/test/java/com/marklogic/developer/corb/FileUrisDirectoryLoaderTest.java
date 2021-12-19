@@ -91,7 +91,7 @@ public class FileUrisDirectoryLoaderTest {
             loader.setProperties(properties);
             File file = new File("/var/tmp/foo/bar.txt");
             String path = loader.getMetaPath(file);
-            assertEquals("foo/bar.txt", path);
+            assertEquals("foo/bar.txt", path.replace("\\", "/"));
             assertNotEquals(file.getCanonicalPath(), path);
         } catch (IOException ex) {
             fail();
