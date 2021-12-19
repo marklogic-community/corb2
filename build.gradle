@@ -4,7 +4,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     id 'com.jfrog.bintray' version '1.8.5'
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
+    id 'com.github.johnrengelman.shadow' version '7.1.1'
     id 'com.github.kt3k.coveralls' version '2.12.0'
     id 'com.marklogic.ml-gradle' version '4.3.2'
     id 'io.github.ddimtirov.codacy' version '0.1.0'
@@ -30,12 +30,10 @@ sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
 repositories {
-    jcenter()
+    mavenCentral()
     flatDir {
         dirs 'src/test/resources/'
     }
-    //required for codacyUpload task
-    maven { url "https://dl.bintray.com/typesafe/maven-releases" }
 }
 
 sourceSets {
@@ -63,11 +61,11 @@ sourceSets {
 
 configurations {
     shadow
-    integrationTestCompile.extendsFrom testCompile
-    integrationTestRuntime.extendsFrom testRuntime
+    integrationTestImplementation.extendsFrom testImplementation
+    integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
 
-    performanceTestCompile.extendsFrom testCompile
-    performanceTestRuntime.extendsFrom testRuntime
+    performanceTestImplementation.extendsFrom testImplementation
+    performanceTestRuntimeOnly.extendsFrom testRuntimeOnly
 
     // encountered issues publishing since upgrading to Gradle 6:
     /* What went wrong:
@@ -82,21 +80,21 @@ configurations {
 }
 
 dependencies {
-    compile 'com.marklogic:marklogic-xcc:10.0.8'
+    implementation 'com.marklogic:marklogic-xcc:10.0.8'
     // JavaScript libraries are  bundled in a fat jar for the UI
     shadow  "org.webjars:angularjs:$angularVersion"
-    compile "org.webjars:angularjs:$angularVersion"
+    implementation "org.webjars:angularjs:$angularVersion"
     shadow  "org.webjars:bootstrap:$bootstrapVersion"
-    compile "org.webjars:bootstrap:$bootstrapVersion"
+    implementation "org.webjars:bootstrap:$bootstrapVersion"
     shadow  "org.webjars:jquery:$jqueryVersion"
-    compile "org.webjars:jquery:$jqueryVersion"
+    implementation "org.webjars:jquery:$jqueryVersion"
     // externalsortinginjava classes with the corb distro in a fat jar
     shadow  "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
-    compile "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
-    testCompile group: 'junit', name: 'junit', version: '4.13.2'
-    testCompile 'org.jasypt:jasypt:1.9.3'
-    testCompile 'com.github.stefanbirkner:system-rules:1.19.0' //facilitates tests for methods that invoke System.exit
-    testCompile 'org.mockito:mockito-all:1.10.19'
+    implementation "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
+    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+    testImplementation 'org.jasypt:jasypt:1.9.3'
+    testImplementation 'com.github.stefanbirkner:system-rules:1.19.0' //facilitates tests for methods that invoke System.exit
+    testImplementation 'org.mockito:mockito-all:1.10.19'
 }
 
 test {
@@ -108,6 +106,7 @@ test {
 // perform token replacement in HTML for JavaScript library version paths
 processResources {
     with copySpec {
+        duplicatesStrategy = 'include'
         from ('src/main/resources/web') {
             include '*.html'
         }
@@ -119,7 +118,8 @@ processResources {
 //disabling, because we want to incorporate externalsortingjava in uber jar and use as the artifact
 jar.enabled = false
 shadowJar {
-    configurations = [project.configurations.compile, project.configurations.shadow]
+    project.configurations.implementation.canBeResolved = true
+    configurations = [project.configurations.implementation, project.configurations.shadow]
     dependencies {
         include(dependency("com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"))
         include(dependency('org.webjars:.*'))
