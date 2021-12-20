@@ -89,7 +89,6 @@ public class ManagerTest {
     public static final String POST_BATCH_XQUERY_MODULE_FOO = "post-bar";
     public static final String PRE_BATCH_XQUERY_MODULE_FOO = "pre-bar";
     public static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
-    public static final String SLOW_RECEIVE_MESSAGE = "Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC";
 
     private void clearSystemProperties() {
     		TestUtils.clearSystemProperties();
