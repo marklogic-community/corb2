@@ -321,7 +321,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
 
         boolean slowReceive = System.currentTimeMillis() - lastMessageMillis > (1000 * 4);
         if (slowReceive) {
-            LOG.log(WARNING, () -> "Slow receive! Consider increasing max heap size and using -XX:+UseConcMarkSweepGC");
+            LOG.log(WARNING, () -> "Slow receive! Consider increasing max heap size and using -XX:+UseG1GC, or using DISK-QUEUE option to limit memory demands.");
         }
 
         double megabytes = 1024d * 1024d;
