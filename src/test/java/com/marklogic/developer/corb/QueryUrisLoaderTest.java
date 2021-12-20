@@ -28,6 +28,7 @@ import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.types.ItemType;
 import com.marklogic.xcc.types.XdmItem;
 import com.marklogic.xcc.types.XdmVariable;
 import java.io.File;
@@ -432,7 +433,7 @@ public class QueryUrisLoaderTest {
     @Test
     public void testHasNextResultSequenceHasNext() {
         try {
-        		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
+        	ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
             ContentSource contentSource = mock(ContentSource.class);
             Session session = mock(Session.class);
             ModuleInvoke request = mock(ModuleInvoke.class);
@@ -464,6 +465,41 @@ public class QueryUrisLoaderTest {
         } catch (RequestException | CorbException ex) {
             Logger.getLogger(QueryUrisLoaderTest.class.getName()).log(Level.SEVERE, null, ex);
             fail();
+        }
+    }
+
+    @Test (expected = CorbException.class)
+    public void testReadTotalCountWithArrayAsFirstItem() throws CorbException {
+        ResultItem resultItem = mock(ResultItem.class);
+        XdmItem xdmItem = mock(XdmItem.class);
+        when(resultItem.getItem()).thenReturn(xdmItem);
+        when(xdmItem.getItemType()).thenReturn(ItemType.ARRAY_NODE);
+
+        try (QueryUrisLoader queryUrisLoader = new QueryUrisLoader()) {
+            queryUrisLoader.readTotalCount(resultItem);
+        }
+    }
+
+    @Test (expected = CorbException.class)
+    public void testReadTotalCountNullItem() throws CorbException {
+        ResultItem resultItem = mock(ResultItem.class);
+        when(resultItem.getItem()).thenReturn(null);
+
+        try (QueryUrisLoader queryUrisLoader = new QueryUrisLoader()) {
+            queryUrisLoader.readTotalCount(resultItem);
+        }
+    }
+
+    @Test
+    public void testReadTotalCount() throws CorbException {
+        ResultItem resultItem = mock(ResultItem.class);
+        XdmItem xdmItem = mock(XdmItem.class);
+        when(resultItem.getItem()).thenReturn(xdmItem);
+        when(xdmItem.getItemType()).thenReturn(ItemType.XS_DOUBLE);
+        when(xdmItem.asString()).thenReturn("2147483648");
+        try (QueryUrisLoader queryUrisLoader = new QueryUrisLoader()) {
+            queryUrisLoader.readTotalCount(resultItem);
+            assertEquals("Verify that a number larger than Integer.MAX_VALUE can be parsed",2147483648L, queryUrisLoader.getTotalCount());
         }
     }
 
