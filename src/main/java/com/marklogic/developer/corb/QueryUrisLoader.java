@@ -38,6 +38,9 @@ import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.types.ItemType;
+import com.marklogic.xcc.types.XdmItem;
+
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -128,11 +131,29 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         }
     }
 
+    /**
+     * Collect any custom inputs and then read the count of URIs to process
+     * @param resultSequence
+     * @throws CorbException
+     */
     protected void preProcess(ResultSequence resultSequence) throws CorbException {
         ResultItem nextResultItem = collectCustomInputs(resultSequence);
+        readTotalCount(nextResultItem);
+    }
+
+    /**
+     * Read the count of URIs from the Sequence
+     * @param resultItem
+     * @throws CorbException
+     */
+    protected void readTotalCount(ResultItem resultItem) throws CorbException {
         try {
-            setTotalCount(Integer.parseInt(nextResultItem.getItem().asString()));
-        } catch (NumberFormatException exc) {
+            XdmItem item = resultItem.getItem();
+            if (ItemType.ARRAY_NODE.equals(item.getItemType())) {
+                LOG.severe("First item is an Array. Use Sequence.from() to turn the Array into a Sequence.");
+            }
+            setTotalCount(Long.parseLong(item.asString()));
+        } catch (NullPointerException | NumberFormatException exc) {
             throw new CorbException(URIS_MODULE + " " + options.getUrisModule() + " does not return total URI count");
         }
     }
