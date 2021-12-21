@@ -190,6 +190,8 @@ public class Manager extends AbstractManager implements Closeable {
         if (isNotBlank(commandFile)) {
             Runnable commandFileWatcher = new CommandFileWatcher(FileUtils.getFile(commandFile), this);
             int pollInterval = NumberUtils.toInt(getOption(Options.COMMAND_FILE_POLL_INTERVAL), 1);
+            //execute immediately, in order to read command file before the job starts
+            scheduledExecutor.execute(commandFileWatcher);
             scheduledExecutor.scheduleWithFixedDelay(commandFileWatcher, pollInterval, pollInterval, TimeUnit.SECONDS);
         }
     }
@@ -581,7 +583,6 @@ public class Manager extends AbstractManager implements Closeable {
 
         try {
             long count = populateQueue();
-
             while (monitorThread.isAlive()) {
                 try {
                     monitorThread.join();
@@ -822,58 +823,56 @@ public class Manager extends AbstractManager implements Closeable {
     }
 
     private long populateQueue() throws Exception {
-        LOG.info("populating queue");
-        TaskFactory taskFactory = new TaskFactory(this);
-
         long expectedTotalCount = -1;
         long urisCount = 0;
-        try (UrisLoader urisLoader = getUriLoader()) {
+        if (!this.stopCommand) {
+            try (UrisLoader urisLoader = getUriLoader()) {
+                LOG.info("populating queue");
+                TaskFactory taskFactory = new TaskFactory(this);
+                // run init task
+                runInitTask(taskFactory);
+                // Invoke URIs Module, read text file, etc.
+                runUrisLoader(urisLoader);
 
-            // run init task
-            runInitTask(taskFactory);
-            // Invoke URIs Module, read text file, etc.
-            runUrisLoader(urisLoader);
+                expectedTotalCount = urisLoader.getTotalCount();
+                LOG.log(INFO, MessageFormat.format("expecting total {0,number}", expectedTotalCount));
 
-            expectedTotalCount = urisLoader.getTotalCount();
-            LOG.log(INFO, MessageFormat.format("expecting total {0,number}", expectedTotalCount));
+                if (shouldRunPreBatch(expectedTotalCount)) {
+                    // run pre-batch task, if present.
+                    runPreBatchTask(taskFactory);
+                }
 
-            if (shouldRunPreBatch(expectedTotalCount)) {
-                // run pre-batch task, if present.
-                runPreBatchTask(taskFactory);
-            }
+                if (expectedTotalCount <= 0) {
+                    LOG.info("nothing to process");
+                    stop();
+                    return 0;
+                }
 
-            if (expectedTotalCount <= 0) {
-                LOG.info("nothing to process");
+                // now start process tasks
+                monitor.setTaskCount(expectedTotalCount);
+                monitorThread.start();
+
+                transformStartMillis = System.currentTimeMillis();
+                urisCount = submitUriTasks(urisLoader, taskFactory, expectedTotalCount);
+
+                if (urisCount == expectedTotalCount) {
+                    LOG.log(INFO, MessageFormat.format("queue is populated with {0,number} tasks", urisCount));
+                } else {
+                    LOG.log(WARNING, MessageFormat.format("queue is expected to be populated with {0,number} tasks, but got {1,number} tasks.", expectedTotalCount, urisCount));
+                    monitor.setTaskCount(urisCount);
+                }
+
+                if (pool != null) {
+                    LOG.info("Invoking graceful shutdown of the thread pool and wait for remaining tasks in the queue to complete.");
+                    pool.shutdown();
+                } else {
+                    LOG.warning("Thread pool is set null - closed already?");
+                }
+            } catch (Exception exc) {
                 stop();
-                return 0;
+                throw exc;
             }
-
-            // now start process tasks
-            monitor.setTaskCount(expectedTotalCount);
-            monitorThread.start();
-
-            transformStartMillis = System.currentTimeMillis();
-            urisCount = submitUriTasks(urisLoader, taskFactory, expectedTotalCount);
-
-
-            if (urisCount == expectedTotalCount) {
-                LOG.log(INFO, MessageFormat.format("queue is populated with {0,number} tasks", urisCount));
-            } else {
-                LOG.log(WARNING, MessageFormat.format("queue is expected to be populated with {0,number} tasks, but got {1,number} tasks.", expectedTotalCount, urisCount));
-                monitor.setTaskCount(urisCount);
-            }
-
-            if (pool != null) {
-                LOG.info("Invoking graceful shutdown of the thread pool and wait for remaining tasks in the queue to complete.");
-                pool.shutdown();
-            } else {
-                LOG.warning("Thread pool is set null - closed already?");
-            }
-        } catch (Exception exc) {
-            stop();
-            throw exc;
         }
-
         return urisCount;
     }
 
@@ -998,9 +997,6 @@ public class Manager extends AbstractManager implements Closeable {
     public void stop() {
         LOG.info("cleaning up");
         if (null != pool) {
-            if (pool.isPaused()) {
-                pool.resume();
-            }
             LOG.info("Shutting down the thread pool");
             List<Runnable> remaining = pool.shutdownNow();
             if (!remaining.isEmpty()) {
