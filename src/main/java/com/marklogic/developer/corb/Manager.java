@@ -108,7 +108,8 @@ public class Manager extends AbstractManager implements Closeable {
 
     protected transient ScheduledExecutorService scheduledExecutor;
 
-    protected static int EXIT_CODE_NO_URIS = EXIT_CODE_SUCCESS;
+    protected int EXIT_CODE_NO_URIS = EXIT_CODE_SUCCESS;
+    protected int EXIT_CODE_IGNORED_ERRORS = EXIT_CODE_SUCCESS;
     protected static final int EXIT_CODE_STOP_COMMAND = 3;
 
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
@@ -143,8 +144,11 @@ public class Manager extends AbstractManager implements Closeable {
                     LOG.log(INFO, () -> "stop command - exiting with code " + EXIT_CODE_STOP_COMMAND);
                     System.exit(EXIT_CODE_STOP_COMMAND);
                 } else if (count == 0) {
-                    LOG.log(INFO, () -> "no uris found - exiting with code " + EXIT_CODE_NO_URIS);
-                    System.exit(EXIT_CODE_NO_URIS);
+                    LOG.log(INFO, () -> "no uris found - exiting with code " + manager.EXIT_CODE_NO_URIS);
+                    System.exit(manager.EXIT_CODE_NO_URIS);
+                } else if (manager.pool.getNumFailedUris() > 0) {
+                    LOG.log(INFO, () -> "completed with ignored errors - exiting with code " + manager.EXIT_CODE_IGNORED_ERRORS);
+                    System.exit(manager.EXIT_CODE_IGNORED_ERRORS);
                 } else {
                     LOG.log(INFO, () -> "success - exiting with code " + EXIT_CODE_SUCCESS);
                     System.exit(EXIT_CODE_SUCCESS);
@@ -181,7 +185,7 @@ public class Manager extends AbstractManager implements Closeable {
         collection = collectionName == null ? "" : collectionName;
 
         EXIT_CODE_NO_URIS = NumberUtils.toInt(getOption(Options.EXIT_CODE_NO_URIS));
-
+        EXIT_CODE_IGNORED_ERRORS = NumberUtils.toInt(getOption(Options.EXIT_CODE_IGNORED_ERRORS));
         scheduledExecutor = Executors.newScheduledThreadPool(2);
     }
 

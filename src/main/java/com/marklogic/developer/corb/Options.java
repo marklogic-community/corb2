@@ -224,6 +224,13 @@ public final class Options {
     public static final String ERROR_FILE_NAME = "ERROR-FILE-NAME";
 
     /**
+     * Default is 0. Returns this exit code when there were errors and FAIL-ON-ERROR=false.
+     * @since 2.5.3
+     */
+    @Usage(description = "Default is 0. Returns this exit code when there were errors and FAIL-ON-ERROR=false")
+    public static final String EXIT_CODE_IGNORED_ERRORS = "EXIT-CODE-IGNORED-ERRORS";
+
+    /**
      * Default is 0. Returns this exit code when there is nothing to process.
      */
     @Usage(description = "Default is 0. Returns this exit code when there is nothing to process.")

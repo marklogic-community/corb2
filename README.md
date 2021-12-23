@@ -87,6 +87,7 @@ Option | Description
 **<a name="DISK-QUEUE-MAX-IN-MEMORY-SIZE"></a>DISK-QUEUE-MAX-IN-MEMORY-SIZE** | The maximum number of URIs to hold in memory before spilling over to disk. Default is `1000`.
 **<a name="DISK-QUEUE-TEMP-DIR"></a>DISK-QUEUE-TEMP-DIR** | The directory where the URIs queue can write to disk when the maximum in-memory items has been exceeded. If not specified then **TEMP-DIR** value will be used. If neither are specified, then the default behavior is to use java.io.tmpdir.
 **<a name="ERROR-FILE-NAME"></a>ERROR-FILE-NAME** | Used when FAIL-ON-ERROR is false. If specified true, removes duplicates from the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to separate URI and error message.
+**<a name="EXIT-CODE-IGNORED-ERRORS"></a>EXIT-CODE-IGNORED-ERRORS** | Default is `0`. Returns this exit code when there were errors and **FAIL-ON-ERROR**=`false`.
 **<a name="EXIT-CODE-NO-URIS"></a>EXIT-CODE-NO-URIS** | Default is `0`. Returns this exit code when there is nothing to process.
 **<a name="XPORT_FILE_AS_ZIP"></a>EXPORT_FILE_AS_ZIP** | If true, PostBatchUpdateFileTask compresses the output file as a zip file.
 **<a name="EXPORT-FILE-BOTTOM-CONTENT"></a>EXPORT-FILE-BOTTOM-CONTENT** | Used by `com.marklogic.developer.corb.PostBatchUpdateFileTask` to append content to **EXPORT-FILE-NAME** after batch process is complete.
