@@ -116,7 +116,10 @@ processResources {
 }
 
 //disabling, because we want to incorporate externalsortingjava in uber jar and use as the artifact
-jar.enabled = false
+jar {
+    enabled = false
+    dependsOn(shadowJar { classifier = null })
+}
 shadowJar {
     project.configurations.implementation.canBeResolved = true
     configurations = [project.configurations.implementation, project.configurations.shadow]
@@ -140,8 +143,6 @@ shadowJar {
         attributes 'Implementation-Version' : project.version
     }
 }
-
-build.dependsOn(shadowJar)
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     description = "Create a JAR of source files; required for publishing"
