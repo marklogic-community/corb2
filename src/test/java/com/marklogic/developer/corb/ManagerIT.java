@@ -170,7 +170,7 @@ public class ManagerIT {
         String exportFileName = "testManagerUsingSysProps2.txt";
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(Options.URIS_MODULE, "src/test/resources/selector.xqy|ADHOC");
-        System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
+        System.setProperty(EXPORT_FILE_NAME, exportFileName);
         String[] args = null;
         File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName);
         report.deleteOnExit();
@@ -189,11 +189,11 @@ public class ManagerIT {
         clearSystemProperties();
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(Options.URIS_FILE, "src/test/resources/test-file-1.txt");
-        System.setProperty(Options.PROCESS_MODULE, "INLINE-XQUERY|declare variable $URI external; if ($URI = ('a')) then fn:error(xs:QName('error'), 'boom') else $URI");
+        System.setProperty(PROCESS_MODULE, "INLINE-XQUERY|declare variable $URI external; if ($URI = ('a')) then fn:error(xs:QName('error'), 'boom') else $URI");
         System.setProperty(Options.FAIL_ON_ERROR, "false");
         System.clearProperty(Options.PRE_BATCH_TASK);
         System.clearProperty(Options.POST_BATCH_TASK);
-        System.clearProperty(Options.PROCESS_TASK);
+        System.clearProperty(PROCESS_TASK);
         System.clearProperty(Options.EXPORT_FILE_DIR);
         System.clearProperty(Options.METRICS_LOG_LEVEL);
         String[] args = null;
@@ -208,7 +208,7 @@ public class ManagerIT {
         clearSystemProperties();
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(Options.URIS_FILE, "src/test/resources/test-file-1.txt");
-        System.setProperty(Options.PROCESS_MODULE, "INLINE-XQUERY|declare variable $URI external; if ($URI = ('a')) then fn:error(xs:QName('error'), 'boom') else $URI");
+        System.setProperty(PROCESS_MODULE, "INLINE-XQUERY|declare variable $URI external; if ($URI = ('a')) then fn:error(xs:QName('error'), 'boom') else $URI");
         System.setProperty(Options.FAIL_ON_ERROR, "false");
         System.setProperty(Options.EXIT_CODE_IGNORED_ERRORS, customErrorCode);
         System.clearProperty(Options.PRE_BATCH_TASK);
@@ -227,7 +227,7 @@ public class ManagerIT {
         clearSystemProperties();
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(Options.URIS_FILE, "src/test/resources/test-file-1.txt");
-        System.setProperty(Options.PROCESS_MODULE, "INLINE-XQUERY|declare variable $URI external; if ($URI = ('a')) then fn:error(xs:QName('error'), 'boom') else $URI");
+        System.setProperty(PROCESS_MODULE, "INLINE-XQUERY|declare variable $URI external; if ($URI = ('a')) then fn:error(xs:QName('error'), 'boom') else $URI");
         System.setProperty(Options.FAIL_ON_ERROR, "true");
         System.clearProperty(Options.PRE_BATCH_TASK);
         System.clearProperty(Options.POST_BATCH_TASK);
@@ -250,7 +250,7 @@ public class ManagerIT {
         properties.setProperty(Options.URIS_MODULE, LARGE_URIS_MODULE);
         properties.setProperty(Options.URIS_MODULE + ".count", String.valueOf(uriCount));
         properties.setProperty(Options.BATCH_SIZE, String.valueOf(1));
-        properties.setProperty(Options.EXPORT_FILE_NAME, exportFilename);
+        properties.setProperty(EXPORT_FILE_NAME, exportFilename);
         properties.setProperty(Options.DISK_QUEUE, "true");
         properties.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10));
         properties.setProperty(Options.DISK_QUEUE_TEMP_DIR, "/var/tmp");
@@ -280,7 +280,7 @@ public class ManagerIT {
         properties.setProperty(Options.URIS_MODULE, LARGE_URIS_MODULE);
         properties.setProperty(Options.URIS_MODULE + ".count", String.valueOf(uriCount));
         properties.setProperty(Options.BATCH_SIZE, String.valueOf(batchSize));
-        properties.setProperty(Options.EXPORT_FILE_NAME, exportFilename);
+        properties.setProperty(EXPORT_FILE_NAME, exportFilename);
         properties.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10));
 
         Manager manager = new Manager();
@@ -302,7 +302,7 @@ public class ManagerIT {
         String exportFileName = ManagerTest.EXPORT_FILE_DIR + SLASH + "testManagerUsingPropsFile.txt";
         clearSystemProperties();
         System.setProperty(Options.OPTIONS_FILE, "src/test/resources/helloWorld.properties");
-        System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
+        System.setProperty(EXPORT_FILE_NAME, exportFileName);
         String[] args = {};
         File report = new File(exportFileName);
         report.deleteOnExit();
@@ -321,7 +321,7 @@ public class ManagerIT {
         clearSystemProperties();
         String exportFileName = "testManagerUsingInputFile.txt";
         ManagerTest.setDefaultSystemProperties();
-        System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
+        System.setProperty(EXPORT_FILE_NAME, exportFileName);
         System.setProperty(Options.URIS_FILE, "src/test/resources/uriInputFile.txt");
         String[] args = {};
         String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
@@ -341,7 +341,7 @@ public class ManagerIT {
         clearSystemProperties();
         String exportFileName = "testManagersPreBatchTask.txt";
         ManagerTest.setDefaultSystemProperties();
-        System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
+        System.setProperty(EXPORT_FILE_NAME, exportFileName);
         System.setProperty(Options.PRE_BATCH_MODULE, "preBatchModule.xqy|ADHOC");
         System.setProperty(Options.PRE_BATCH_TASK, "com.marklogic.developer.corb.PreBatchUpdateFileTask");
         String[] args = {};
@@ -363,7 +363,7 @@ public class ManagerIT {
         clearSystemProperties();
         String exportFileName = "testManagersPostBatchTask.txt";
         ManagerTest.setDefaultSystemProperties();
-        System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
+        System.setProperty(EXPORT_FILE_NAME, exportFileName);
         System.setProperty(Options.POST_BATCH_MODULE, "postBatchModule.xqy|ADHOC");
         System.setProperty(Options.POST_BATCH_TASK, "com.marklogic.developer.corb.PostBatchUpdateFileTask");
         String[] args = {};
@@ -385,7 +385,7 @@ public class ManagerIT {
         clearSystemProperties();
         String exportFileName = "testManagersPostBatchTaskZip.txt";
         ManagerTest.setDefaultSystemProperties();
-        System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
+        System.setProperty(EXPORT_FILE_NAME, exportFileName);
         System.setProperty(Options.EXPORT_FILE_AS_ZIP, Boolean.toString(true));
         String[] args = {};
         //First, verify the output using run()
@@ -412,9 +412,9 @@ public class ManagerIT {
         clearSystemProperties();
         String exportFileName = "testManagerJavaScriptTransform.txt";
         ManagerTest.setDefaultSystemProperties();
-        System.setProperty(Options.PROCESS_MODULE, "src/test/resources/mod-print-uri.sjs|ADHOC");
+        System.setProperty(PROCESS_MODULE, "src/test/resources/mod-print-uri.sjs|ADHOC");
         System.setProperty("XQUERY-MODULE.foo", "bar1");
-        System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
+        System.setProperty(EXPORT_FILE_NAME, exportFileName);
         String[] args = {};
 
         String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
@@ -478,12 +478,12 @@ public class ManagerIT {
         exportFile.deleteOnExit();
         File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);
         commandFile.deleteOnExit();
-        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
+        System.setProperty(XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
         System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         System.setProperty(Options.THREAD_COUNT, Integer.toString(1));
-        System.setProperty(Options.PROCESS_MODULE, TRANSFORM_SLOW_MODULE);
-        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
-        System.setProperty(Options.EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
+        System.setProperty(PROCESS_MODULE, TRANSFORM_SLOW_MODULE);
+        System.setProperty(PROCESS_TASK, ManagerTest.PROCESS_TASK);
+        System.setProperty(EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
         System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
         System.setProperty(Options.COMMAND_FILE, commandFile.getAbsolutePath());
 
@@ -538,12 +538,12 @@ public class ManagerIT {
         exportFile.deleteOnExit();
         File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);
         commandFile.deleteOnExit();
-        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
+        System.setProperty(XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
         System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         System.setProperty(Options.THREAD_COUNT, Integer.toString(1));
-        System.setProperty(Options.PROCESS_MODULE, TRANSFORM_SLOW_MODULE);
-        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
-        System.setProperty(Options.EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
+        System.setProperty(PROCESS_MODULE, TRANSFORM_SLOW_MODULE);
+        System.setProperty(PROCESS_TASK, ManagerTest.PROCESS_TASK);
+        System.setProperty(EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
         System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
         System.setProperty(Options.COMMAND_FILE, commandFile.getAbsolutePath());
         Runnable pause = () -> {
@@ -595,12 +595,12 @@ public class ManagerIT {
         exportFile.deleteOnExit();
         File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);
         commandFile.deleteOnExit();
-        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
+        System.setProperty(XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
         System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         System.setProperty(Options.THREAD_COUNT, Integer.toString(1));
-        System.setProperty(Options.PROCESS_MODULE, TRANSFORM_SLOW_MODULE);
-        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
-        System.setProperty(Options.EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
+        System.setProperty(PROCESS_MODULE, TRANSFORM_SLOW_MODULE);
+        System.setProperty(PROCESS_TASK, ManagerTest.PROCESS_TASK);
+        System.setProperty(EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
         System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
         System.setProperty(Options.COMMAND_FILE, commandFile.getAbsolutePath());
         Runnable stop = () -> {
@@ -639,12 +639,12 @@ public class ManagerIT {
         exportFile.deleteOnExit();
         File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);
         commandFile.deleteOnExit();
-        System.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
+        System.setProperty(XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
         System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
         System.setProperty(Options.THREAD_COUNT, Integer.toString(3));
-        System.setProperty(Options.PROCESS_MODULE, TRANSFORM_SLOW_MODULE);
-        System.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
-        System.setProperty(Options.EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
+        System.setProperty(PROCESS_MODULE, TRANSFORM_SLOW_MODULE);
+        System.setProperty(PROCESS_TASK, ManagerTest.PROCESS_TASK);
+        System.setProperty(EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
         System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
         System.setProperty(Options.COMMAND_FILE, commandFile.getAbsolutePath());
 
