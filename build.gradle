@@ -3,7 +3,6 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    id 'com.jfrog.bintray' version '1.8.5'
     id 'com.github.johnrengelman.shadow' version '7.1.1'
     id 'com.github.kt3k.coveralls' version '2.12.0'
     id 'com.marklogic.ml-gradle' version '4.3.2'
@@ -14,6 +13,7 @@ plugins {
     id 'jacoco'
     id 'java'
     id 'maven-publish'
+    id 'signing'
 }
 
 ext {
@@ -144,7 +144,7 @@ shadowJar {
 build.dependsOn(shadowJar)
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-    description = "Create a JAR of source files; required by bintray for publishing"
+    description = "Create a JAR of source files; required for publishing"
     classifier 'sources'
     from sourceSets.main.allJava
 }
@@ -248,7 +248,7 @@ tasks.coveralls {
 
 publishing {
     publications {
-        mainJava(MavenPublication) {
+        mavenJava(MavenPublication) {
             from components.java
             artifact sourcesJar
             artifact javadocJar
@@ -288,33 +288,17 @@ publishing {
             }
         }
     }
-}
-
-/*
- * In order to publish to bintray, you need an account. Once you have that account, set myBintrayUser and myBintrayKey
- * to your username and key. You can do that in the project gradle.properties file, but it's better to do so in your
- * ~/.gradle/gradle.properties file. Once you do that, you can run "gradle -i bintrayUpload" to publish it to bintray.
- */
-if (project.hasProperty("myBintrayUser")) {
-    bintray {
-        user = myBintrayUser
-        key = myBintrayKey
-        publications = ['mainJava']
-        //dryRun = true
-        pkg {
-            repo = 'maven'
-            name = project.name
-            licenses = ['Apache-2.0']
-            userOrg = 'marklogic'
-            websiteUrl = project.websiteUrl
-            issueTrackerUrl = project.issueTrackerUrl
-            vcsUrl = project.vcsUrl
-            githubRepo = 'marklogic-community/corb2'
-            githubReleaseNotesFile = 'README.md'
-            version {
-                name = project.version
-                released = new Date()
+    repositories {
+        maven {
+            url ossURL
+            credentials {
+                username ossUsername
+                password ossPassword
             }
         }
     }
+}
+
+signing {
+    sign publishing.publications.mavenJava
 }
