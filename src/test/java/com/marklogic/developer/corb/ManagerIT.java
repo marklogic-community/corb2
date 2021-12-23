@@ -118,7 +118,7 @@ public class ManagerIT {
         try {
             File empty = File.createTempFile(this.getClass().getSimpleName(), "txt");
             empty.deleteOnExit();
-            exit.expectSystemExitWithStatus(Manager.EXIT_CODE_NO_URIS);
+            exit.expectSystemExitWithStatus(0);
             Manager.main(ManagerTest.XCC_CONNECTION_URI, "", "src/test/resources/transform.xqy|ADHOC", "1", "", "", "", "", "", "", "", "", "", "", "", empty.getAbsolutePath());
         } catch (IOException ex) {
             fail();
@@ -181,6 +181,62 @@ public class ManagerIT {
 
         //Then verify the exit code when invoking the main()
         exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
+        Manager.main(args);
+    }
+
+    @Test
+    public void testManagerFailOnErrorFalseDefaultExitCode() {
+        clearSystemProperties();
+        ManagerTest.setDefaultSystemProperties();
+        System.setProperty(Options.URIS_FILE, "src/test/resources/test-file-1.txt");
+        System.setProperty(Options.PROCESS_MODULE, "INLINE-XQUERY|declare variable $URI external; if ($URI = ('a')) then fn:error(xs:QName('error'), 'boom') else $URI");
+        System.setProperty(Options.FAIL_ON_ERROR, "false");
+        System.clearProperty(Options.PRE_BATCH_TASK);
+        System.clearProperty(Options.POST_BATCH_TASK);
+        System.clearProperty(Options.PROCESS_TASK);
+        System.clearProperty(Options.EXPORT_FILE_DIR);
+        System.clearProperty(Options.METRICS_LOG_LEVEL);
+        String[] args = null;
+        //Then verify the exit code when invoking the main()
+        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
+        Manager.main(args);
+    }
+
+    @Test
+    public void testManagerFailOnErrorFalseCustomExitCode() {
+        String customErrorCode = "99";
+        clearSystemProperties();
+        ManagerTest.setDefaultSystemProperties();
+        System.setProperty(Options.URIS_FILE, "src/test/resources/test-file-1.txt");
+        System.setProperty(Options.PROCESS_MODULE, "INLINE-XQUERY|declare variable $URI external; if ($URI = ('a')) then fn:error(xs:QName('error'), 'boom') else $URI");
+        System.setProperty(Options.FAIL_ON_ERROR, "false");
+        System.setProperty(Options.EXIT_CODE_IGNORED_ERRORS, customErrorCode);
+        System.clearProperty(Options.PRE_BATCH_TASK);
+        System.clearProperty(Options.POST_BATCH_TASK);
+        System.clearProperty(Options.PROCESS_TASK);
+        System.clearProperty(Options.EXPORT_FILE_DIR);
+        System.clearProperty(Options.METRICS_LOG_LEVEL);
+        String[] args = null;
+        //Then verify the exit code when invoking the main()
+        exit.expectSystemExitWithStatus(Integer.parseInt(customErrorCode));
+        Manager.main(args);
+    }
+
+    @Test
+    public void testManagerFailOnErrorTrueDefaultExitCode() {
+        clearSystemProperties();
+        ManagerTest.setDefaultSystemProperties();
+        System.setProperty(Options.URIS_FILE, "src/test/resources/test-file-1.txt");
+        System.setProperty(Options.PROCESS_MODULE, "INLINE-XQUERY|declare variable $URI external; if ($URI = ('a')) then fn:error(xs:QName('error'), 'boom') else $URI");
+        System.setProperty(Options.FAIL_ON_ERROR, "true");
+        System.clearProperty(Options.PRE_BATCH_TASK);
+        System.clearProperty(Options.POST_BATCH_TASK);
+        System.clearProperty(Options.PROCESS_TASK);
+        System.clearProperty(Options.EXPORT_FILE_DIR);
+        System.clearProperty(Options.METRICS_LOG_LEVEL);
+        String[] args = null;
+        //Then verify the exit code when invoking the main()
+        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_PROCESSING_ERROR);
         Manager.main(args);
     }
 
