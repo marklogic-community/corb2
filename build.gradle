@@ -12,6 +12,7 @@ plugins {
     id 'idea'
     id 'jacoco'
     id 'java'
+    id 'java-library'
     id 'maven-publish'
     id 'signing'
 }
@@ -80,7 +81,7 @@ configurations {
 }
 
 dependencies {
-    implementation 'com.marklogic:marklogic-xcc:10.0.8'
+    api 'com.marklogic:marklogic-xcc:10.0.8'
     // JavaScript libraries are  bundled in a fat jar for the UI
     shadow  "org.webjars:angularjs:$angularVersion"
     implementation "org.webjars:angularjs:$angularVersion"
