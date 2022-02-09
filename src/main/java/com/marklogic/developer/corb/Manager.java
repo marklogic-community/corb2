@@ -91,9 +91,9 @@ public class Manager extends AbstractManager implements Closeable {
     public static final String URIS_BATCH_REF = com.marklogic.developer.corb.Options.URIS_BATCH_REF;
     public static final String DEFAULT_BATCH_URI_DELIM = ";";
 
-    protected transient PausableThreadPoolExecutor pool;
-    protected transient Monitor monitor;
-    protected transient JobServer jobServer = null;
+    protected PausableThreadPoolExecutor pool;
+    protected Monitor monitor;
+    protected JobServer jobServer = null;
     protected String jobId = null;
     protected JobStats jobStats = null;
     protected long startMillis;
@@ -103,10 +103,9 @@ public class Manager extends AbstractManager implements Closeable {
 
     protected boolean stopCommand;
 
-    protected transient Thread monitorThread;
-    protected transient CompletionService<String[]> completionService;
-
-    protected transient ScheduledExecutorService scheduledExecutor;
+    protected Thread monitorThread;
+    protected CompletionService<String[]> completionService;
+    protected ScheduledExecutorService scheduledExecutor;
 
     protected int EXIT_CODE_NO_URIS = EXIT_CODE_SUCCESS;
     protected int EXIT_CODE_IGNORED_ERRORS = EXIT_CODE_SUCCESS;
@@ -137,6 +136,7 @@ public class Manager extends AbstractManager implements Closeable {
             //now we can start CoRB.
             try {
                 long count = manager.run();
+                manager.close();
                 if (manager.execError) {
                     LOG.log(INFO, () -> "processing error - exiting with code " + EXIT_CODE_PROCESSING_ERROR);
                     System.exit(EXIT_CODE_PROCESSING_ERROR);
@@ -637,7 +637,8 @@ public class Manager extends AbstractManager implements Closeable {
 
     private void stopJobServer() {
         if (jobServer != null) {
-            jobServer.stop(0);
+            // UI polls on interval of 5 seconds, so delay just a bit longer before shutting down
+            jobServer.stop(6000);
             jobServer = null;
         }
     }
