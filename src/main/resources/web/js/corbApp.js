@@ -1,5 +1,5 @@
 "use strict";
-var app = angular.module("corbApp", []);
+const app = angular.module("corbApp", []);
 
 app.factory("MetricsUtilityService", function() {
 
@@ -14,12 +14,12 @@ app.factory("MetricsUtilityService", function() {
         },
         msToTime : function (s) {
             if (!Number.isNaN(s) && s > 0) {
-                var ms = s % 1000;
+                const ms = s % 1000;
                 s = (s - ms) / 1000;
-                var secs = s % 60;
+                const secs = s % 60;
                 s = (s - secs) / 60;
-                var mins = s % 60;
-                var hrs = (s - mins) / 60;
+                const mins = s % 60;
+                const hrs = (s - mins) / 60;
 
                 return pad(hrs) + ":" + pad(mins) + ":" + pad(secs) + "." + ms;
             } else {
@@ -27,7 +27,7 @@ app.factory("MetricsUtilityService", function() {
             }
         },
         commandActionParameter : function (job) {
-            var commandParam = "command=";
+            let commandParam = "command=";
             if (job.paused) {
                 commandParam += "resume";
             } else {
@@ -36,8 +36,8 @@ app.factory("MetricsUtilityService", function() {
             return commandParam;
         },
         range : function(min, max) {
-            var sequence = [];
-            for (var i = min; i <= max; i++) {
+            const sequence = [];
+            for (let i = min; i <= max; i++) {
                 sequence.push(i);
             }
             return sequence;
@@ -48,20 +48,20 @@ app.factory("MetricsUtilityService", function() {
 app.controller("dashboardCtrl", ["$scope", "$http", "$interval", "MetricsUtilityService",
     function($scope, $http, $interval, MetricsUtilityService) {
 
-        var metricsPath = "?format=json";
-        var host = location.hostname || "localhost";
-        var port = location.port;
-        var promises = {};
+        const metricsPath = "?format=json";
+        const host = location.hostname || "localhost";
+        const port = location.port;
+        const promises = {};
 
-        var loadData = function(response) {
+        const loadData = function(response) {
             //ensure that this works with an array or single job object
-            var jobs = [].concat(response.data.jobs || response.data );
-            for (var jobIndex in jobs) {
-                var job = jobs[jobIndex].job;
-                var oldData = $scope.availableServers[job.id];
+            const jobs = [].concat(response.data.jobs || response.data );
+            for (const jobIndex in jobs) {
+                const job = jobs[jobIndex].job;
+                const oldData = $scope.availableServers[job.id];
                 $scope.availableServers[job.id] = job;
                 $scope.threadCounts[job.id] ? null : $scope.threadCounts[job.id] = job.currentThreadCount;
-                for (var i in $scope.availableServerData) {
+                for (const i in $scope.availableServerData) {
                     if (oldData === $scope.availableServerData[i]) {
                         $scope.availableServerData.splice(i, 1);
                     }
@@ -71,13 +71,13 @@ app.controller("dashboardCtrl", ["$scope", "$http", "$interval", "MetricsUtility
         };
 
         // If a job doesn't exist anymore, or the server cannot be reached - stop checking
-        var handleError = function (response){
+        const handleError = function (response){
             if (response.status === "404" || response.status === -1) {
                 $interval.cancel(promises[response.config.url]);
             }
         };
 
-        var toUrl = function(job) {
+        const toUrl = function(job) {
             return "http://" + job.host + ":" + job.port + "/" + job.id;
         };
 
@@ -109,8 +109,8 @@ app.controller("dashboardCtrl", ["$scope", "$http", "$interval", "MetricsUtility
             window.open(toUrl(job), "target=_blank");
         };
 
-        var scheduleMetricsRefresh = function(host, port) {
-            var metricsUrl = "http://" + host + ":" + port + metricsPath;
+        const scheduleMetricsRefresh = function(host, port) {
+            const metricsUrl = "http://" + host + ":" + port + metricsPath;
             $http.get(metricsUrl).then(loadData, handleError);
             promises[metricsUrl] = $interval(function() {
                 $http.get(metricsUrl).then(loadData, handleError);
@@ -118,21 +118,21 @@ app.controller("dashboardCtrl", ["$scope", "$http", "$interval", "MetricsUtility
         };
 
         $scope.parseExternalHostAndPorts = function($i) {
-            var hostData= [];
-            var externalHost = $scope.external[$i].host;
-            var externalPorts = $scope.external[$i].port;
+            const hostData= [];
+            let externalHost = $scope.external[$i].host;
+            const externalPorts = $scope.external[$i].port;
 
             if (externalHost && externalPorts) {
 
-                var matches = externalHost.match("^(https?\\:)?\\/?\\/?(([^:\\/?#]*)(?:\\:([0-9]+))?)([\\/]{0,1}[^?#]*)(\\?[^#]*|)(#.*|)$");
+                const matches = externalHost.match("^(https?\\:)?\\/?\\/?(([^:\\/?#]*)(?:\\:([0-9]+))?)([\\/]{0,1}[^?#]*)(\\?[^#]*|)(#.*|)$");
                 externalHost = matches[3];
-                var items = externalPorts.split(",");
-                for (var i = 0, len = items.length; i < len; i++) {
-                    var portToken = items[i];
+                const items = externalPorts.split(",");
+                for (let i = 0, len = items.length; i < len; i++) {
+                    const portToken = items[i];
                     // when there is a dash, process the range of values (inclusive)
                     if (portToken.includes("-")) {
-                        var range = portToken.split("-");
-                        for (var port = range[0]; port <= range[1]; port++) {
+                        const range = portToken.split("-");
+                        for (let port = range[0]; port <= range[1]; port++) {
                             hostData.push([externalHost, port]);
                         }
                         // otherwise just the specific port number
@@ -141,7 +141,7 @@ app.controller("dashboardCtrl", ["$scope", "$http", "$interval", "MetricsUtility
                     }
                 }
                 // See if there are any jobs running on other ports
-                for (var index in hostData) {
+                for (const index in hostData) {
                     scheduleMetricsRefresh(hostData[index][0], hostData[index][1]);
                 }
             }
@@ -154,23 +154,23 @@ app.controller("dashboardCtrl", ["$scope", "$http", "$interval", "MetricsUtility
 app.controller("jobCtrl", ["$scope", "$http", "$interval", "MetricsUtilityService",
     function($scope, $http, $interval, MetricsUtilityService) {
 
-        var serviceUrl = location.protocol + "//" + location.host + location.pathname + "?format=json";
-        var promise;
+        const serviceUrl = location.protocol + "//" + location.host + location.pathname + "?format=json";
+        let promise;
 
-        var handleError = function (error, status) {
+        const handleError = function (error, status) {
             if (status === "404" || status === -1) {
                 $interval.cancel(promise);
                 $scope.allDone = 100;
                 $scope.successPercent = 0;
                 $scope.failedPercent = 0;
             }
-            $scope.pauseButtonText = "Completed";
+            $scope.pauseButtonText = "completed";
             $scope.pauseButtonStyle = "disabled";
             $scope.updateThreadsButtonStyle = "disabled";
         };
 
-        var loadData = function(response) {
-            var job = response.data.job;
+        const loadData = function(response) {
+            const job = response.data.job;
             $scope.job = job;
             $scope.loading = false;
 
@@ -207,15 +207,15 @@ app.controller("jobCtrl", ["$scope", "$http", "$interval", "MetricsUtilityServic
             }
         };
 
-        var scheduleUpdates = function() {
+        const scheduleUpdates = function() {
             //Start polling for job stats updates
             promise = $interval(function() {
-                var concise = isNaN(+$scope.totalNumberOfTasks) && typeof $scope.job.totalNumberOfTasks === "undefined" ? "" : "&concise";
+                const concise = isNaN(+$scope.totalNumberOfTasks) && typeof $scope.job.totalNumberOfTasks === "undefined" ? "" : "&concise";
                 $http.get(serviceUrl + concise).then(loadData, handleError);
             }, 5000);
         };
 
-        var handleCommandResponse = function(response) {
+        const handleCommandResponse = function(response) {
             loadData(response);
             scheduleUpdates();
         };

@@ -35,6 +35,7 @@ import java.text.MessageFormat;
 
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -250,6 +251,11 @@ public class JobServer {
     }
 
     public void stop(int delayMillis) {
+        try {
+            TimeUnit.MILLISECONDS.sleep(delayMillis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         server.stop(delayMillis);
     }
 
