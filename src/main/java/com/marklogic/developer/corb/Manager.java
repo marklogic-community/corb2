@@ -637,8 +637,8 @@ public class Manager extends AbstractManager implements Closeable {
 
     private void stopJobServer() {
         if (jobServer != null) {
-            // UI polls on interval of 5 seconds, so delay just a bit longer before shutting down
-            jobServer.stop(6000);
+            // UI polls on interval of 2 seconds, so delay just a bit longer before shutting down
+            jobServer.stop(4000);
             jobServer = null;
         }
     }

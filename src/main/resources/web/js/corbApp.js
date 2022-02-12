@@ -114,7 +114,7 @@ app.controller("dashboardCtrl", ["$scope", "$http", "$interval", "MetricsUtility
             $http.get(metricsUrl).then(loadData, handleError);
             promises[metricsUrl] = $interval(function() {
                 $http.get(metricsUrl).then(loadData, handleError);
-            }, 5000);
+            }, 2000);
         };
 
         $scope.parseExternalHostAndPorts = function($i) {

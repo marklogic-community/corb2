@@ -62,6 +62,7 @@ public class JobServer {
     private final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     private TransformerFactory transformerFactory  = TransformerFactory.newInstance();
     private Templates jobStatsToJsonTemplates;
+    private boolean hasReceivedRequests = false;
 
     public static JobServer create(Integer port) throws IOException {
         return JobServer.create(Collections.singleton(port), null);
@@ -86,6 +87,7 @@ public class JobServer {
     }
 
     public void handleRequest(HttpExchange httpExchange) {
+        hasReceivedRequests = true;
         String path = httpExchange.getRequestURI().getPath();
         String querystring = httpExchange.getRequestURI().getQuery();
         Map<String,String> params = JobServicesHandler.querystringToMap(querystring);
@@ -251,12 +253,15 @@ public class JobServer {
     }
 
     public void stop(int delayMillis) {
-        try {
-            TimeUnit.MILLISECONDS.sleep(delayMillis);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        if (hasReceivedRequests) {
+            LOG.log(INFO, () -> MessageFormat.format("Stopping job server in {0,number,#}ms", delayMillis));
+            try {
+                TimeUnit.MILLISECONDS.sleep(delayMillis);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
-        server.stop(delayMillis);
+        server.stop(0);
     }
 
     public void bind(InetSocketAddress inetSocketAddress, int i) throws IOException {
