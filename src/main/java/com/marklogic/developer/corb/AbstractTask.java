@@ -53,6 +53,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -466,7 +467,7 @@ public abstract class AbstractTask implements Task {
         if (item instanceof XdmBinary) {
             return ((XdmBinary) item).asBinaryData();
         } else if (item != null) {
-            return item.asString().getBytes();
+            return item.asString().getBytes(StandardCharsets.UTF_8);
         } else {
             return EMPTY_BYTE_ARRAY.clone();
         }
