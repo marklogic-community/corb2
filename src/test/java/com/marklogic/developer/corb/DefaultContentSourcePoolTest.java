@@ -25,9 +25,12 @@ import static org.mockito.Mockito.*;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.stream.IntStream;
 
 import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentSource;
+import com.marklogic.xcc.spi.ConnectionProvider;
+import com.marklogic.xcc.types.XdmVariable;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -76,13 +79,17 @@ public class DefaultContentSourcePoolTest {
         }
 	}
 
-	@Test(expected = CorbException.class)
-	public void testInitInvalidContentSources() throws CorbException{
-		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, "xcc://foo:bar@localhost1:8000");
-            assertFalse(csp.available());
-            csp.get();
-        }
+	@Test
+	public void testInitInvalidContentSources() {
+        CorbException thrown = assertThrows(CorbException.class, () -> {
+                try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
+                    csp.init(null, null, "xcc://foo:bar@localhost1:8000");
+                    assertFalse(csp.available());
+                    csp.get();
+                }
+            }
+        );
+        assertEquals("ContentSource not available.", thrown.getMessage());
 	}
 
     @Test
@@ -102,21 +109,25 @@ public class DefaultContentSourcePoolTest {
         }
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testInitNullConnectionStrings() throws CorbException{
-        try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
-            csp.init(null, null, null);
-        }
+    @Test
+    public void testInitNullConnectionStrings() {
+        assertThrows(NullPointerException.class, () -> {
+            try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
+                csp.init(null, null, null);
+            }
+        });
     }
 
 	@Test
-	public void testInitTwoContentSources() throws CorbException {
+	public void testInitTwoContentSources() {
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.init(null, null, localhostXccUri, "xcc://foo:bar@192.168.0.1:8000/dbase");
             assertTrue(csp.available());
             assertEquals(2, csp.getAllContentSources().length);
             assertHostAndPort(csp.get(), localhost, 8000);
             assertHostAndPort(csp.get(), localIP1, 8000);
+        } catch (CorbException ex) {
+            fail();
         }
 	}
 
@@ -183,19 +194,22 @@ public class DefaultContentSourcePoolTest {
     @Test
     public void testError(){
         try (DefaultContentSourcePool csp = initRoundRobinPool()) {
+            assertEquals("we started with 3", 3, csp.getAllContentSources().length);
+            IntStream.rangeClosed(1, 3).forEach(x -> {
+                ContentSource cs = csp.nextContentSource();
+                assertEquals("initially there are no errors",0, csp.errorCount(cs));
+                csp.error(cs);
+            } );
+            IntStream.rangeClosed(1, 6).forEach(x -> csp.error(csp.nextContentSource()));
             ContentSource cs = csp.nextContentSource();
-            assertEquals(0, csp.errorCount(cs));
             csp.error(cs);
-            assertEquals(1, csp.errorCount(cs));
-            csp.success(cs);
-            assertEquals(0, csp.errorCount(cs));
+            assertEquals("after the third error ContentSource is removed", 2, csp.getAllContentSources().length);
+            cs = csp.nextContentSource();
             csp.error(cs);
+            assertEquals("and another", 1, csp.getAllContentSources().length);
+            cs = csp.nextContentSource();
             csp.error(cs);
-            assertEquals(2, csp.errorCount(cs));
-            csp.error(cs);
-            assertEquals(3, csp.errorCount(cs));
-            csp.error(cs);
-            assertEquals(0, csp.errorCount(cs));
+            assertEquals("now no more left", 0, csp.getAllContentSources().length);
         }
     }
 
@@ -250,8 +264,8 @@ public class DefaultContentSourcePoolTest {
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             assertEquals(3, csp.getAllContentSources().length);
-            ContentSource ecs = null;
-            assertHostAndPort((ecs = csp.get()), localIP1, 8001);
+            ContentSource ecs = csp.get();
+            assertHostAndPort(ecs, localIP1, 8001);
             assertHostAndPort(csp.get(), localIP2, 8002);
             assertHostAndPort(csp.get(), localIP3, 8003);
             csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs));
@@ -292,17 +306,17 @@ public class DefaultContentSourcePoolTest {
 	}
 
 	@Test
-	public void testRoundRobinPolicyWithReactivatedContentSource() throws CorbException, InterruptedException{
+	public void testRoundRobinPolicyWithReactivatedContentSource() throws CorbException {
 		System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
-            ContentSource ecs1 = null;
+            ContentSource ecs1;
             assertHostAndPort((ecs1 = csp.get()), localIP1, 8001);
             assertHostAndPort(csp.get(), localIP2, 8002);
             csp.error(DefaultContentSourcePool.getContentSourceFromProxy(ecs1));
             assertHostAndPort(csp.get(), localIP2, 8002);
             assertHostAndPort(csp.get(), localIP2, 8002);
-            csp.success(DefaultContentSourcePool.getContentSourceFromProxy(ecs1));
+            csp.success(csp.getAllContentSources()[0]);
             assertHostAndPort(csp.get(), localIP1, 8001);
         }
 	}
@@ -315,9 +329,9 @@ public class DefaultContentSourcePoolTest {
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.init(properties, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             assertEquals(3, csp.getAllContentSources().length);
-            ContentSource ecs1 = null;
-            ContentSource ecs2 = null;
-            ContentSource ecs3 = null;
+            ContentSource ecs1;
+            ContentSource ecs2;
+            ContentSource ecs3;
             assertHostAndPort((ecs1 = csp.get()), localIP1, 8001);
             assertHostAndPort((ecs2 = csp.get()), localIP2, 8002);
             assertHostAndPort((ecs3 = csp.get()), localIP3, 8003);
@@ -422,10 +436,21 @@ public class DefaultContentSourcePoolTest {
             assertEquals(3, csList.length);
             assertHostAndPort(csp.get(), localIP1, 8001);
             csp.hold(csList[0]);
-            csp.error(csList[1]);
+            csp.error(csp.getAllContentSources()[1]);
+            //first has an open connection, second has an error, so third is returned
+            assertHostAndPort( csp.get(), localIP3, 8003);
+            csp.success(csp.getAllContentSources()[1]);
+            //second had a success, so now second is returned next
+            assertHostAndPort( csp.get(), localIP2, 8002);
+            csp.error(csp.getAllContentSources()[1]);
+            //second had an error, so third is returned
             assertHostAndPort(csp.get(), localIP3, 8003);
-            csp.success(csList[1]);
-            assertHostAndPort(csp.get(), localIP2, 8002);
+            csp.release(csp.getAllContentSources()[0]);
+            //the request from the first is finally released, so now first is returned
+            assertHostAndPort(csp.get(), localIP1, 8001);
+            csp.error(csp.getAllContentSources()[0]);
+            //an error on the first, so now third returned
+            assertHostAndPort(csp.get(), localIP3, 8003);
         }
 	}
 
@@ -439,18 +464,18 @@ public class DefaultContentSourcePoolTest {
             ContentSource[] csList = csp.getAllContentSources();
             assertEquals(2, csList.length);
             assertHostAndPort(csp.get(), localIP1, 8001);
-            csp.error(csList[0]);
-            csp.error(csList[1]);
+            csp.error(csp.getAllContentSources()[0]);
+            csp.error(csp.getAllContentSources()[1]);
             assertHostAndPort(csp.get(), localIP1, 8001);
-            csp.error(csList[0]);
+            csp.error(csp.getAllContentSources()[0]);
             assertHostAndPort(csp.get(), localIP2, 8002);
-            csp.error(csList[1]);
+            csp.error(csp.getAllContentSources()[0]);
             csp.get();
         }
 	}
 
 	@Test
-	public void testSubmitWithMockRequest() throws RequestException, CorbException {
+	public void testSubmitWithMockRequest() {
 		ContentSource cs = mock(ContentSource.class);
 		Session session = mock(Session.class);
 		AdhocImpl request = mock(AdhocImpl.class);
@@ -462,7 +487,9 @@ public class DefaultContentSourcePoolTest {
             when(request.getSession()).thenReturn(session);
             when(session.submitRequest(request)).thenReturn(rs);
 
-            csp.get().newSession().submitRequest(request);
+            assertEquals(rs, csp.get().newSession().submitRequest(request));
+        } catch (RequestException | CorbException ex) {
+            fail();
         }
 	}
 
@@ -478,7 +505,10 @@ public class DefaultContentSourcePoolTest {
 
 		AdhocImpl request = mock(AdhocImpl.class);
 		ResultSequence result = mock(ResultSequence.class);
+        XdmVariable variable = mock(XdmVariable.class);
+        XdmVariable[] variables = { variable };
 
+        when(request.getVariables()).thenReturn(variables);
 		when(cs1.newSession()).thenReturn(session1);
 		when(cs1.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost,8001));
 
@@ -494,10 +524,13 @@ public class DefaultContentSourcePoolTest {
 		try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.init(null, null, "");
             csp.contentSourceList.add(cs1);
+            csp.connectionStringMap.put(cs1, "xcc://localhost:8000");
             csp.contentSourceList.add(cs2);
+            csp.connectionStringMap.put(cs2, "xcc://localhost:8000");
 
+            assertEquals("no entries in errorMap", 0, csp.errorCountsMap.size() );
             ResultSequence gotResult = csp.get().newSession().submitRequest(request);
-            assertTrue(csp.errorCountsMap.get(cs1) == 1);
+            assertEquals("now there is", 1, csp.errorCountsMap.size() );
             assertEquals(result, gotResult);
         }
 	}
@@ -529,7 +562,7 @@ public class DefaultContentSourcePoolTest {
             csp.contentSourceList.add(cs2);
 
             csp.get().newSession().insertContent(content);
-            assertTrue(csp.errorCountsMap.get(cs1) == 1);
+            assertEquals(1L, (long)csp.errorCountsMap.get(cs1));
         }
 	}
 
@@ -552,12 +585,34 @@ public class DefaultContentSourcePoolTest {
         try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
             csp.init(null, null, "");
             csp.contentSourceList.add(cs);
-            csp.error(cs);
-
+            csp.connectionStringMap.put(cs, "xcc://user:secret@localhost:8000");
             ResultSequence gotResult = csp.get().newSession().submitRequest(request);
-            assertEquals(result, gotResult);
+            assertEquals("mock result returned", result, gotResult);
+            csp.error(cs);
+            assertEquals("after an error, still one ContentSource",1, csp.contentSourceList.size());
+            assertFalse("but not the one we started with", csp.contentSourceList.contains(cs));
+            ContentSource contentSource = csp.get();
+            assertNotEquals("a fresh ContentSource was swapped", cs, contentSource);
+            ConnectionProvider provider = contentSource.getConnectionProvider();
+            assertEquals("localhost", provider.getHostName());
+            assertEquals(8000, provider.getPort());
         }
 	}
+
+    @Test
+    public void testErrorReturnsDifferentContentSource() {
+        try (DefaultContentSourcePool csp = new DefaultContentSourcePool()) {
+            csp.init(null, null, "xcc://user:secret@localhost:8000");
+            assertEquals(1, csp.contentSourceList.size());
+            ContentSource contentSource = csp.contentSourceList.get(0);
+            csp.error(contentSource);
+            assertEquals(1, csp.contentSourceList.size());
+            assertNotEquals(contentSource, csp.contentSourceList.get(0));
+            ConnectionProvider provider = csp.nextContentSource().getConnectionProvider();
+            assertEquals("localhost", provider.getHostName());
+            assertEquals(8000, provider.getPort());
+        }
+    }
 
 	@Test(expected = ServerConnectionException.class)
 	public void testSubmitWithMockRequestAndError() throws RequestException, CorbException {
