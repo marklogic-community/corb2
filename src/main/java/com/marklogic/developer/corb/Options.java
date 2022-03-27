@@ -137,6 +137,17 @@ public final class Options {
     public static final String CONTENT_SOURCE_POOL="CONTENT-SOURCE-POOL";
 
     /**
+     * Boolean value indicating whether to create a new ContentSource when connection errors are encountered.
+     * This can help transparently deal with proxies that have dynamic pools of IP addresses.
+     * Default is true.
+     *
+     * @since 2.5.4
+     */
+    @Usage(description = "Boolean value indicating whether to create a new ContentSource when connection errors are encountered. " +
+        "This can help transparently deal with proxies that have dynamic pools of IP addresses. Default is `true`")
+    public static final String CONTENT_SOURCE_RENEW = "CONTENT-SOURCE-RENEW";
+
+    /**
      * The class name of the options value decrypter, which must implement
      * {@link com.marklogic.developer.corb.Decrypter}.
      * <p>
