@@ -19,6 +19,8 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.CONNECTION_POLICY;
+import static com.marklogic.developer.corb.Options.CONTENT_SOURCE_RENEW;
+import static com.marklogic.developer.corb.util.StringUtils.stringToBoolean;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 
@@ -41,6 +43,8 @@ import com.marklogic.xcc.Request;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.ServerConnectionException;
+import com.marklogic.xcc.spi.ConnectionProvider;
+import com.marklogic.xcc.spi.SingleHostAddress;
 import com.marklogic.xcc.types.XdmVariable;
 import java.util.List;
 /**
@@ -67,6 +71,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
     protected boolean isLoadPolicy = false;
     protected boolean isRandomPolicy = false;
+    boolean replaceContentSourceOnError = stringToBoolean(getProperty(CONTENT_SOURCE_RENEW), true);
 
     private static final Logger LOG = Logger.getLogger(DefaultContentSourcePool.class.getName());
     private final Random random = new Random();
@@ -250,6 +255,8 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
             if (lastErrorTime == null || allocTime <= 0 || allocTime > lastErrorTime) {
 		        int count = errorCountsMap.getOrDefault(contentSource, 0) + 1;
                 errorCountsMap.put(contentSource, count);
+                errorTimeMap.put(contentSource, System.currentTimeMillis());
+
                 LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{asString(contentSource), count, hostRetryLimit});
 		        // if we haven't exhausted retries, replace this ContentSource with a fresh one (will re-bind and obtain IP, which can help with proxies with dynamic IP until XCC knows how to handle that better
                 if (count > hostRetryLimit) {
@@ -272,21 +279,55 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
      * @param contentSource the ContentSource to be replaced with a new instance
      */
     protected synchronized void renewContentSource(ContentSource contentSource) {
-        String xccConnectionString = connectionStringMap.get(contentSource);
-        ContentSource freshContentSource = super.createContentSource(xccConnectionString);
-        if (freshContentSource != null) {
-            //replace the contentSource at the same position
-            contentSourceList.set(contentSourceList.indexOf(contentSource), freshContentSource);
-            //then clear contentSource entries from the other tracking maps and create new entries with the contentSource values
-            connectionStringMap.put(freshContentSource, xccConnectionString);
-            connectionStringMap.remove(contentSource);
-            connectionCountsMap.put(freshContentSource, connectionCountsMap.getOrDefault(contentSource, 0));
-            connectionCountsMap.remove(contentSource);
-            errorCountsMap.put(freshContentSource, errorCountsMap.getOrDefault(contentSource, 1));
-            errorCountsMap.remove(contentSource);
-            errorTimeMap.put(freshContentSource, System.currentTimeMillis());
-            errorTimeMap.remove(contentSource);
+        if (replaceContentSourceOnError) {
+            String xccConnectionString = connectionStringMap.get(contentSource);
+            ContentSource freshContentSource = super.createContentSource(xccConnectionString);
+            if (haveDifferentIP(contentSource, freshContentSource)) {
+                replaceContentSource(contentSource, freshContentSource);
+            }
         }
+    }
+
+    protected boolean haveDifferentIP(ContentSource contentSourceA, ContentSource contentSourceB) {
+        boolean result = false;
+        if (contentSourceB != null) {
+            String currentIP = getIPAddress(contentSourceA);
+            String freshIP = getIPAddress(contentSourceB);
+            if (!currentIP.equals(freshIP)) {
+                LOG.log(INFO, () -> String.format("%s IP changed from: %s to: %s", contentSourceA.getConnectionProvider().getHostName(), currentIP, freshIP));
+                result = true;
+            }
+        }
+        return result;
+    }
+
+    protected String getIPAddress(ContentSource contentSource) {
+        String ip = null;
+        ConnectionProvider connectionProvider = contentSource.getConnectionProvider();
+        if (connectionProvider instanceof SingleHostAddress) {
+            SingleHostAddress currentProvider = (SingleHostAddress) connectionProvider;
+            ip = currentProvider.getAddress().getAddress().getHostAddress();
+        }
+        return ip;
+    }
+
+    /**
+     * Replace the current ContentSource with a new instance
+     * @param current
+     * @param freshContentSource
+     */
+    protected void replaceContentSource(ContentSource current, ContentSource freshContentSource) {
+        //replace the contentSource at the same position
+        contentSourceList.set(contentSourceList.indexOf(current), freshContentSource);
+        //then clear contentSource entries from the other tracking maps and create new entries with the contentSource values
+        connectionStringMap.put(freshContentSource, connectionStringMap.get(current));
+        connectionStringMap.remove(current);
+        connectionCountsMap.put(freshContentSource, connectionCountsMap.getOrDefault(current, 0));
+        connectionCountsMap.remove(current);
+        errorCountsMap.put(freshContentSource, errorCountsMap.getOrDefault(current, 1));
+        errorCountsMap.remove(current);
+        errorTimeMap.put(freshContentSource, errorTimeMap.get(current));
+        errorTimeMap.remove(current);
     }
 
     protected int errorCount(ContentSource contentSource) {
