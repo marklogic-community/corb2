@@ -18,9 +18,12 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.DefaultContentSourcePool.CONNECTION_POLICY_LOAD;
 import static com.marklogic.developer.corb.DefaultContentSourcePool.CONNECTION_POLICY_RANDOM;
 import static com.marklogic.developer.corb.DefaultContentSourcePool.CONNECTION_POLICY_ROUND_ROBIN;
 import static com.marklogic.developer.corb.Options.CONNECTION_POLICY;
+import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_INTERVAL;
+import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -98,7 +101,7 @@ public class DefaultContentSourcePoolTest {
     @Test
     public void testGetWillPauseWhenError() throws CorbException {
 	    Properties properties = new Properties();
-	    properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
+	    properties.setProperty(XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
         try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(properties, null, localhostXccUri);
 
@@ -148,7 +151,7 @@ public class DefaultContentSourcePoolTest {
 	@Test
     public void testInitConnectionPolicyRandom() {
 	    Properties properties = new Properties();
-	    properties.setProperty(Options.CONNECTION_POLICY, CONNECTION_POLICY_RANDOM);
+	    properties.setProperty(CONNECTION_POLICY, CONNECTION_POLICY_RANDOM);
         try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(properties, null, localhostXccUri, "xcc://foo:bar@localhost:8010", "xcc://foo:bar@localhost:8020");
             assertEquals(CONNECTION_POLICY_RANDOM, contentSourcePool.connectionPolicy);
@@ -162,11 +165,11 @@ public class DefaultContentSourcePoolTest {
     @Test
     public void testInitConnectionPolicyLoad() {
         Properties properties = new Properties();
-        properties.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_LOAD);
+        properties.setProperty(CONNECTION_POLICY, CONNECTION_POLICY_LOAD);
         try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(properties, null, localhostXccUri, "xcc://foo:bar@localhost:8010", "xcc://foo:bar@localhost:8020");
 
-            assertEquals(DefaultContentSourcePool.CONNECTION_POLICY_LOAD, contentSourcePool.connectionPolicy);
+            assertEquals(CONNECTION_POLICY_LOAD, contentSourcePool.connectionPolicy);
             assertTrue(contentSourcePool.isLoadPolicy());
             assertNotNull(contentSourcePool.nextContentSource());
             assertNotNull(contentSourcePool.nextContentSource());
@@ -244,7 +247,7 @@ public class DefaultContentSourcePoolTest {
 
     private DefaultContentSourcePool initRoundRobinPool() {
         Properties properties = new Properties();
-        properties.setProperty(Options.CONNECTION_POLICY, CONNECTION_POLICY_ROUND_ROBIN);
+        properties.setProperty(CONNECTION_POLICY, CONNECTION_POLICY_ROUND_ROBIN);
         DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool();
         contentSourcePool.init(properties, null, localhostXccUri, "xcc://foo:bar@localhost:8010", "xcc://foo:bar@localhost:8020");
         return contentSourcePool;
@@ -294,7 +297,7 @@ public class DefaultContentSourcePoolTest {
 
 	@Test
 	public void testRoundRobinPolicyWithUnexpiredContentSource() throws CorbException, InterruptedException{
-		System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
+		System.setProperty(XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             ContentSource contentSource = null;
@@ -310,7 +313,7 @@ public class DefaultContentSourcePoolTest {
 
 	@Test
 	public void testRoundRobinPolicyWithReactivatedContentSource() throws CorbException {
-		System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
+		System.setProperty(XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             ContentSource contentSource;
@@ -327,8 +330,8 @@ public class DefaultContentSourcePoolTest {
 	@Test
 	public void testRoundRobinPolicyWithAllErrors() throws CorbException{
 	    Properties properties = new Properties();
-        properties.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(1));
-        properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(0));
+        properties.setProperty(XCC_CONNECTION_RETRY_LIMIT, Integer.toString(1));
+        properties.setProperty(XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(0));
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(properties, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             assertEquals(3, contentSourcePool.getAllContentSources().length);
@@ -347,7 +350,7 @@ public class DefaultContentSourcePoolTest {
 
 	@Test
 	public void tryToTestRandomPolicy() throws CorbException{
-		System.setProperty(Options.CONNECTION_POLICY, CONNECTION_POLICY_RANDOM);
+		System.setProperty(CONNECTION_POLICY, CONNECTION_POLICY_RANDOM);
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             assertTrue(Arrays.asList(new String[]{localIP1, localIP2}).contains(normalizeHostName(contentSourcePool.get().getConnectionProvider().getHostName())));
@@ -357,7 +360,7 @@ public class DefaultContentSourcePoolTest {
 
 	@Test
 	public void testRandomPolicyWithOneError() throws CorbException{
-		System.setProperty(Options.CONNECTION_POLICY, CONNECTION_POLICY_RANDOM);
+		System.setProperty(CONNECTION_POLICY, CONNECTION_POLICY_RANDOM);
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             assertTrue(Arrays.asList(new String[]{localIP1, localIP2}).contains(normalizeHostName(contentSourcePool.get().getConnectionProvider().getHostName())));
@@ -369,7 +372,7 @@ public class DefaultContentSourcePoolTest {
 
 	@Test
 	public void testLoadPolicy() throws CorbException{
-		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_LOAD);
+		System.setProperty(CONNECTION_POLICY, CONNECTION_POLICY_LOAD);
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             ContentSource[] contentSourceList = contentSourcePool.getAllContentSources();
@@ -385,7 +388,7 @@ public class DefaultContentSourcePoolTest {
 
 	@Test
 	public void testLoadPolicy2() throws CorbException{
-		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_LOAD);
+		System.setProperty(CONNECTION_POLICY, CONNECTION_POLICY_LOAD);
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             ContentSource[] contentSourceList = contentSourcePool.getAllContentSources();
@@ -400,7 +403,7 @@ public class DefaultContentSourcePoolTest {
 
 	@Test
 	public void testLoadPolicyWithOneError() throws CorbException{
-		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_LOAD);
+		System.setProperty(CONNECTION_POLICY, CONNECTION_POLICY_LOAD);
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             ContentSource[] contentSourceList = contentSourcePool.getAllContentSources();
@@ -416,7 +419,7 @@ public class DefaultContentSourcePoolTest {
 
 	@Test
 	public void testLoadPolicyWithTwoErrors() throws CorbException{
-		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_LOAD);
+		System.setProperty(CONNECTION_POLICY, CONNECTION_POLICY_LOAD);
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             ContentSource[] contentSourceList = contentSourcePool.getAllContentSources();
@@ -432,7 +435,7 @@ public class DefaultContentSourcePoolTest {
 
 	@Test
 	public void testLoadPolicyWithReactivatedContentSource() throws CorbException{
-		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_LOAD);
+		System.setProperty(CONNECTION_POLICY, CONNECTION_POLICY_LOAD);
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002", "xcc://foo:bar@192.168.0.3:8003");
             ContentSource[] contentSourceList = contentSourcePool.getAllContentSources();
@@ -459,9 +462,9 @@ public class DefaultContentSourcePoolTest {
 
 	@Test(expected = CorbException.class)
 	public void testLoadPolicyWithAllErrors() throws CorbException{
-		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(1));
-	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(0));
-		System.setProperty(Options.CONNECTION_POLICY, DefaultContentSourcePool.CONNECTION_POLICY_LOAD);
+		System.setProperty(XCC_CONNECTION_RETRY_LIMIT, Integer.toString(1));
+	    System.setProperty(XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(0));
+		System.setProperty(CONNECTION_POLICY, CONNECTION_POLICY_LOAD);
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
             ContentSource[] contentSourceList = contentSourcePool.getAllContentSources();
@@ -498,8 +501,8 @@ public class DefaultContentSourcePoolTest {
 
 	@Test
 	public void testSubmitWithMockRequestWithFailOver() throws RequestException, CorbException {
-		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(1));
-	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
+		System.setProperty(XCC_CONNECTION_RETRY_LIMIT, Integer.toString(1));
+	    System.setProperty(XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
 		ContentSource contentSource1 = mock(ContentSource.class);
 		Session session1 = mock(SessionImpl.class);
 
@@ -540,8 +543,8 @@ public class DefaultContentSourcePoolTest {
 
 	@Test
 	public void testSubmitWithMockInsertWithFailOver() throws RequestException, CorbException {
-		System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(1));
-	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
+		System.setProperty(XCC_CONNECTION_RETRY_LIMIT, Integer.toString(1));
+	    System.setProperty(XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
 		ContentSource contentSource1 = mock(ContentSource.class);
 		Session session1 = mock(SessionImpl.class);
 
@@ -571,8 +574,8 @@ public class DefaultContentSourcePoolTest {
 
 	@Test
 	public void testSubmitWithMockRequestAndErrorAndWait() throws RequestException, CorbException {
-        System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(1));
-        System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
+        System.setProperty(XCC_CONNECTION_RETRY_LIMIT, Integer.toString(1));
+        System.setProperty(XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(SessionImpl.class);
         AdhocImpl request = mock(AdhocImpl.class);
@@ -595,7 +598,7 @@ public class DefaultContentSourcePoolTest {
 
 	@Test(expected = ServerConnectionException.class)
 	public void testSubmitWithMockRequestAndError() throws RequestException, CorbException {
-		System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
+		System.setProperty(XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(1));
 		ContentSource contentSource1 = mock(ContentSource.class);
 		Session session1 = mock(SessionImpl.class);
 		ContentSource contentSource2 = mock(ContentSource.class);
