@@ -99,7 +99,9 @@ public class Manager extends AbstractManager implements Closeable {
     protected long startMillis;
     protected long transformStartMillis;
     protected long endMillis;
+    protected long urisCount;
     protected boolean execError;
+    protected Integer exitCode;
 
     protected boolean stopCommand;
 
@@ -128,37 +130,52 @@ public class Manager extends AbstractManager implements Closeable {
             try {
                 manager.init(args);
             } catch (Exception exc) {
-                LOG.log(SEVERE, "Error initializing CORB " + exc.getMessage(), exc);
+                LOG.log(SEVERE, "Error initializing CoRB " + exc.getMessage(), exc);
                 manager.usage();
                 LOG.log(INFO, () -> "init error - exiting with code " + EXIT_CODE_INIT_ERROR);
                 System.exit(EXIT_CODE_INIT_ERROR);
             }
             //now we can start CoRB.
             try {
-                long count = manager.run();
+                manager.run();
                 manager.close();
-                if (manager.execError) {
-                    LOG.log(INFO, () -> "processing error - exiting with code " + EXIT_CODE_PROCESSING_ERROR);
-                    System.exit(EXIT_CODE_PROCESSING_ERROR);
-                } else if (manager.stopCommand) {
-                    LOG.log(INFO, () -> "stop command - exiting with code " + EXIT_CODE_STOP_COMMAND);
-                    System.exit(EXIT_CODE_STOP_COMMAND);
-                } else if (count == 0) {
-                    LOG.log(INFO, () -> "no uris found - exiting with code " + manager.EXIT_CODE_NO_URIS);
-                    System.exit(manager.EXIT_CODE_NO_URIS);
-                } else if (manager.pool.getNumFailedUris() > 0) {
-                    LOG.log(INFO, () -> "completed with ignored errors - exiting with code " + manager.EXIT_CODE_IGNORED_ERRORS);
-                    System.exit(manager.EXIT_CODE_IGNORED_ERRORS);
-                } else {
-                    LOG.log(INFO, () -> "success - exiting with code " + EXIT_CODE_SUCCESS);
-                    System.exit(EXIT_CODE_SUCCESS);
-                }
             } catch (Exception exc) {
                 LOG.log(SEVERE, "Error while running CoRB", exc);
-                LOG.log(INFO, () -> "unexpected error - exiting with code " + EXIT_CODE_PROCESSING_ERROR);
-                System.exit(EXIT_CODE_PROCESSING_ERROR);
+                manager.setExitCode(EXIT_CODE_PROCESSING_ERROR);
+            } finally {
+                System.exit(manager.getExitCode());
             }
         }
+    }
+
+    protected int determineExitCode() {
+        if (this.exitCode == null) {
+            if (execError) {
+                LOG.log(INFO, () -> "processing error - exiting with code " + EXIT_CODE_PROCESSING_ERROR);
+                setExitCode(EXIT_CODE_PROCESSING_ERROR);
+            } else if (stopCommand) {
+                LOG.log(INFO, () -> "stop command - exiting with code " + EXIT_CODE_STOP_COMMAND);
+                setExitCode(EXIT_CODE_STOP_COMMAND);
+            } else if (urisCount == 0) {
+                LOG.log(INFO, () -> "no uris found - exiting with code " + EXIT_CODE_NO_URIS);
+                setExitCode(EXIT_CODE_NO_URIS);
+            } else if (pool.getNumFailedUris() > 0) {
+                LOG.log(INFO, () -> "completed with ignored errors - exiting with code " + EXIT_CODE_IGNORED_ERRORS);
+                setExitCode(EXIT_CODE_IGNORED_ERRORS);
+            } else {
+                LOG.log(INFO, () -> "success - exiting with code " + EXIT_CODE_SUCCESS);
+                setExitCode(EXIT_CODE_SUCCESS);
+            }
+        }
+        return exitCode;
+    }
+
+    protected void setExitCode(int code) {
+        exitCode = code;
+    }
+
+    protected int getExitCode() {
+        return determineExitCode();
     }
 
     @Override
@@ -355,9 +372,7 @@ public class Manager extends AbstractManager implements Closeable {
         }
 
         if (options.getPostBatchTaskClass() == null) {
-            if (properties.containsKey(EXPORT_FILE_PART_EXT)) {
-                properties.remove(EXPORT_FILE_PART_EXT);
-            }
+            properties.remove(EXPORT_FILE_PART_EXT);
             if (System.getProperty(EXPORT_FILE_PART_EXT) != null) {
                 System.clearProperty(EXPORT_FILE_PART_EXT);
             }
@@ -575,18 +590,17 @@ public class Manager extends AbstractManager implements Closeable {
         scheduleJobMetrics();
 
         startMillis = System.currentTimeMillis();
-
         jobStats.logMetrics(START_RUNNING_JOB_MESSAGE, false, false);
-
         LOG.log(INFO, () -> MessageFormat.format("{0} starting: {1}", NAME, VERSION_MSG));
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
         LOG.log(INFO, () -> MessageFormat.format("maximum heap size = {0} MiB", maxMemory));
 
         execError = false; //reset execution error flag for a new run
+        exitCode = null;
         monitorThread = preparePool();
 
         try {
-            long count = populateQueue();
+            urisCount = populateQueue();
             while (monitorThread.isAlive()) {
                 try {
                     monitorThread.join();
@@ -596,23 +610,20 @@ public class Manager extends AbstractManager implements Closeable {
                     LOG.log(SEVERE, "interrupted while waiting for monitor", e);
                 }
             }
-
-            if (shouldRunPostBatch(count)) {
-                TaskFactory tf = new TaskFactory(this);
-                runPostBatchTask(tf);
+            if (shouldRunPostBatch(urisCount)) {
+                TaskFactory taskFactory = new TaskFactory(this);
+                runPostBatchTask(taskFactory);
             }
-
             endMillis = System.currentTimeMillis();
-
             jobStats.logMetrics(END_RUNNING_JOB_MESSAGE, false, true);
             LOG.info("all done");
-
-            return count;
-
+            return urisCount;
         } catch (Exception e) {
             LOG.log(SEVERE, e.getMessage());
             stop();
             throw e;
+        } finally {
+            determineExitCode();
         }
     }
 
@@ -829,7 +840,6 @@ public class Manager extends AbstractManager implements Closeable {
 
     private long populateQueue() throws Exception {
         long expectedTotalCount = -1;
-        long urisCount = 0;
         if (!this.stopCommand) {
             try (UrisLoader urisLoader = getUriLoader()) {
                 LOG.info("populating queue");
@@ -846,13 +856,11 @@ public class Manager extends AbstractManager implements Closeable {
                     // run pre-batch task, if present.
                     runPreBatchTask(taskFactory);
                 }
-
                 if (expectedTotalCount <= 0) {
                     LOG.info("nothing to process");
                     stop();
                     return 0;
                 }
-
                 // now start process tasks
                 monitor.setTaskCount(expectedTotalCount);
                 monitorThread.start();
@@ -892,7 +900,7 @@ public class Manager extends AbstractManager implements Closeable {
      * @throws CorbException
      */
     protected long submitUriTasks(UrisLoader urisLoader, TaskFactory taskFactory, long expectedTotalCount) throws CorbException {
-        long urisCount = 0;
+        urisCount = 0;
         String uri;
         List<String> uriBatch = new ArrayList<>(options.getBatchSize());
         boolean redactUris = options.shouldRedactUris();
@@ -903,13 +911,11 @@ public class Manager extends AbstractManager implements Closeable {
                 LOG.warning("Thread pool is set to null. Exiting out of the task submission loop prematurely.");
                 break;
             }
-
             uri = urisLoader.next();
             if (isBlank(uri)) {
                 continue;
             }
             uriBatch.add(uri);
-
             if (uriBatch.size() >= options.getBatchSize() || urisCount >= expectedTotalCount || !urisLoader.hasNext()) {
                 String[] uris = uriBatch.toArray(new String[uriBatch.size()]);
                 uriBatch.clear();
@@ -921,7 +927,6 @@ public class Manager extends AbstractManager implements Closeable {
             if (0 == urisCount % 50000) {
                 LOG.log(INFO, MessageFormat.format("received {0,number}/{1,number}{2}", urisCount, expectedTotalCount, redactUris ? "" : ": " + uri));
             }
-
             if (0 == urisCount % 25000) {
                 long totalMemory = Runtime.getRuntime().totalMemory(); //according to java doc this value may vary over time
                 logIfLowMemory(totalMemory);

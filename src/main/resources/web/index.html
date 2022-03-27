@@ -18,6 +18,7 @@
           <div class="panel panel-default">
             <div class="panel-heading">
               <h3>Job Status</h3>
+              <div ng-show="jobStatus" class="ng-hide">Job completed with exit code: {{exitCode}}</div>
             </div>
             <div class="row top-buffer">
               <div class="col-xs-8 col-sm-8">
@@ -33,11 +34,6 @@
                       aria-valuenow="{{failedPercent}}" aria-valuemin="0" aria-valuemax="100"
                       data-placement="bottom" data-toggle="tooltip" title="{{failedTotals}}">
                         Failed ({{failedPercent | number : 2}}%)
-                    </div>
-
-                    <div class="progress-bar progress-bar-info" role="progressbar" style="width:{{allDone}}%"
-                      aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
-                        Job Completed. Please check the logs.
                     </div>
                   </div>
               </div>

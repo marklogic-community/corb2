@@ -195,6 +195,7 @@ app.controller("jobCtrl", ["$scope", "$http", "$interval", "MetricsUtilityServic
             $scope.averageTransactionTimeInMillis =  Math.round(job.averageTransactionTimeInMillis * 100) / 100;
             if (job.numberOfSucceededTasks+ job.numberOfFailedTasks >= $scope.totalNumberOfTasks) {
                 $scope.jobStatus = "completed";
+                $scope.exitCode = job.exitCode;
                 $scope.pauseButtonText = $scope.jobStatus;
                 $scope.pauseButtonStyle = "disabled";
                 $scope.updateThreadsButtonStyle = "disabled";
