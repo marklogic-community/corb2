@@ -97,7 +97,7 @@ public class StreamingXPath {
             "sibling::",
             SELF_AXIS
         };
-        for (String unsupportedAxis : Arrays.asList(unsupportedAxes)) {
+        for (String unsupportedAxis : unsupportedAxes) {
             if (axis.contains(unsupportedAxis)) {
                 throw new CorbException("XPath axis " + axis + " is not supported and cannot be used with StreamingXPath");
             }
