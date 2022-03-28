@@ -185,7 +185,7 @@ public abstract class AbstractTask implements Task {
         try (Session session = newSession()) {
 
             Request request = generateRequest(session);
-            //This is how the long running uris can be populated
+            //This is how the long-running uris can be populated
             Thread.currentThread().setName(urisAsString(inputUris));
 
             Thread.yield();// try to avoid thread starvation
@@ -280,7 +280,7 @@ public abstract class AbstractTask implements Task {
         } catch (ParserConfigurationException ex) {
             throw new CorbException("Unable to parse loader document", ex);
         }
-        return docs.toArray(new XdmItem[docs.size()]);
+        return docs.toArray(new XdmItem[0]);
     }
 
     protected XdmItem toXdmItem(DocumentBuilder builder, String input) throws CorbException {
@@ -366,13 +366,9 @@ public abstract class AbstractTask implements Task {
     }
 
     protected String[] handleRequestException(RequestException requestException) throws CorbException {
-
-        if (requestException instanceof ServerConnectionException) {
-            Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
-            throw wrapProcessException(requestException, inputUris);
-        } else if (shouldRetry(requestException)) {
+        if (shouldRetry(requestException)) {
             return handleRetry(requestException);
-        } else if (failOnError) {
+        } else if (requestException instanceof ServerConnectionException || failOnError) {
             Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
             throw wrapProcessException(requestException, inputUris);
         } else {
@@ -381,7 +377,7 @@ public abstract class AbstractTask implements Task {
             String message = requestException.getMessage();
             String errorMessage = message;
             if (message != null && code != null) {
-                errorMessage = code + ":" + message;
+                errorMessage = code + ':' + message;
             } else if (code != null) {
                 errorMessage = code;
             }
@@ -398,7 +394,7 @@ public abstract class AbstractTask implements Task {
         if (retryCount < getQueryRetryLimit()) {
             retryCount++;
 
-            String errorCode = requestException instanceof QueryException ? ((QueryException)requestException).getCode() + ":" : "";
+            String errorCode = requestException instanceof QueryException ? ((QueryException)requestException).getCode() + ':' : "";
             LOG.log(WARNING,
                 "Encountered {0} from MarkLogic Server. Retrying attempt {1} after {2} seconds..: {3}{4}{5}{6}",
                 new Object[]{exceptionName, retryCount, retryInterval, errorCode, requestException.getMessage(), AT_URI, urisAsString(inputUris)});
@@ -441,7 +437,7 @@ public abstract class AbstractTask implements Task {
      * @return
      */
     protected String urisAsString(String... uris) {
-        return (uris == null | StringUtils.stringToBoolean(getProperty(Options.URIS_REDACTED)) ) ? "" : StringUtils.join(uris, ",");
+        return (uris == null || StringUtils.stringToBoolean(getProperty(Options.URIS_REDACTED)) ) ? "" : StringUtils.join(uris, ",");
     }
 
     protected abstract String processResult(ResultSequence seq) throws CorbException;
