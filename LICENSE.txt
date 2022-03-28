@@ -1,4 +1,4 @@
-Copyright © 2021 MarkLogic Corporation
+Copyright © 2022 MarkLogic Corporation
 
 This project and its code and functionality is not representative of MarkLogic Server and is not supported by MarkLogic.
 

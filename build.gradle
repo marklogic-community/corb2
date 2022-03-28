@@ -3,7 +3,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    id 'com.github.johnrengelman.shadow' version '7.1.1'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'com.github.kt3k.coveralls' version '2.12.0'
     id 'com.marklogic.ml-gradle' version '4.3.2'
     id 'io.github.ddimtirov.codacy' version '0.1.0'
@@ -12,6 +12,7 @@ plugins {
     id 'idea'
     id 'jacoco'
     id 'java'
+    id 'java-library'
     id 'maven-publish'
     id 'signing'
 }
@@ -80,7 +81,7 @@ configurations {
 }
 
 dependencies {
-    implementation 'com.marklogic:marklogic-xcc:10.0.8'
+    api 'com.marklogic:marklogic-xcc:10.0.9'
     // JavaScript libraries are  bundled in a fat jar for the UI
     shadow  "org.webjars:angularjs:$angularVersion"
     implementation "org.webjars:angularjs:$angularVersion"

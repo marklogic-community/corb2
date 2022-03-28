@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2021 MarkLogic Corporation
+  * * Copyright (c) 2004-2022 MarkLogic Corporation
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@
  */
 package com.marklogic.developer.corb;
 
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -97,7 +96,7 @@ public class StreamingXPath {
             "sibling::",
             SELF_AXIS
         };
-        for (String unsupportedAxis : Arrays.asList(unsupportedAxes)) {
+        for (String unsupportedAxis : unsupportedAxes) {
             if (axis.contains(unsupportedAxis)) {
                 throw new CorbException("XPath axis " + axis + " is not supported and cannot be used with StreamingXPath");
             }

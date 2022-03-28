@@ -1,5 +1,5 @@
 /*
- * * Copyright (c) 2004-2021 MarkLogic Corporation
+ * * Copyright (c) 2004-2022 MarkLogic Corporation
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -122,7 +122,7 @@ public class JobStats extends BaseMonitor {
     private Long currentThreadCount = 0L;
     private Long jobServerPort = -1L;
 
-    private ContentSourcePool csp;
+    private ContentSourcePool contentSourcePool;
     private TransformOptions options;
 
     protected final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -135,7 +135,7 @@ public class JobStats extends BaseMonitor {
     public JobStats(Manager manager) {
         super(manager);
         options = manager.getOptions();
-        csp = manager.getContentSourcePool();
+        contentSourcePool = manager.getContentSourcePool();
         host = getHost();
         jobRunLocation = System.getProperty("user.dir");
         userProvidedOptions = manager.getUserProvidedOptions();
@@ -250,9 +250,9 @@ public class JobStats extends BaseMonitor {
     }
 
     protected void logToServer(String message, String metrics) {
-        if (csp != null) {
+        if (contentSourcePool != null) {
             try {
-                ContentSource contentSource = csp.get();
+                ContentSource contentSource = contentSourcePool.get();
                 if (contentSource != null) {
                     logToServer(contentSource, message, metrics);
                 } else {
@@ -281,9 +281,9 @@ public class JobStats extends BaseMonitor {
 
     protected void executeModule(String metrics) {
         String metricsDatabase = options.getMetricsDatabase();
-        if (metricsDatabase != null && csp != null) {
+        if (metricsDatabase != null && contentSourcePool != null) {
             try {
-                ContentSource contentSource = csp.get();
+                ContentSource contentSource = contentSourcePool.get();
                 if (contentSource != null) {
                     executeModule(contentSource, metricsDatabase, metrics);
                 } else {
@@ -367,9 +367,7 @@ public class JobStats extends BaseMonitor {
     }
 
     public Document toXML(boolean concise) {
-
         refresh();
-
         Document doc = null;
         try {
             DocumentBuilder docBuilder = documentBuilderFactory.newDocumentBuilder();
@@ -414,6 +412,10 @@ public class JobStats extends BaseMonitor {
 
         createAndAppendElement(element, NUMBER_OF_SUCCEEDED_TASKS, numberOfSucceededTasks);
         createAndAppendElement(element, NUMBER_OF_FAILED_TASKS, numberOfFailedTasks);
+
+        if (manager.exitCode != null) {
+            createAndAppendElement(element, "exitCode", manager.getExitCode());
+        }
         if (!concise && !options.shouldRedactUris()) {
             addLongRunningUris(element);
             addFailedUris(element);
@@ -425,6 +427,12 @@ public class JobStats extends BaseMonitor {
         if (StringUtils.isNotEmpty(value)) {
             Element element = createElement(parent, localName, value);
             parent.appendChild(element);
+        }
+    }
+
+    protected void createAndAppendElement(Node parent, String localName, Integer value) {
+        if (value != null && value >= 0L) {
+            createAndAppendElement(parent, localName, value.toString());
         }
     }
 
@@ -469,10 +477,10 @@ public class JobStats extends BaseMonitor {
     }
 
     public static String toJSON(Templates jobStatsToJsonTemplates, Document doc) throws TransformerException {
-        StringWriter sw = new StringWriter();
+        StringWriter writer = new StringWriter();
         Transformer autobot = jobStatsToJsonTemplates.newTransformer();
-        autobot.transform(new DOMSource(doc), new StreamResult(sw));
-        return sw.toString();
+        autobot.transform(new DOMSource(doc), new StreamResult(writer));
+        return writer.toString();
     }
 
     public String toJSON(Document doc) {

@@ -1,5 +1,5 @@
 /*
- * * Copyright (c) 2004-2021 MarkLogic Corporation
+ * * Copyright (c) 2004-2022 MarkLogic Corporation
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import java.text.MessageFormat;
 
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -61,6 +62,7 @@ public class JobServer {
     private final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     private TransformerFactory transformerFactory  = TransformerFactory.newInstance();
     private Templates jobStatsToJsonTemplates;
+    private boolean hasReceivedRequests = false;
 
     public static JobServer create(Integer port) throws IOException {
         return JobServer.create(Collections.singleton(port), null);
@@ -85,6 +87,7 @@ public class JobServer {
     }
 
     public void handleRequest(HttpExchange httpExchange) {
+        hasReceivedRequests = true;
         String path = httpExchange.getRequestURI().getPath();
         String querystring = httpExchange.getRequestURI().getQuery();
         Map<String,String> params = JobServicesHandler.querystringToMap(querystring);
@@ -250,7 +253,15 @@ public class JobServer {
     }
 
     public void stop(int delayMillis) {
-        server.stop(delayMillis);
+        if (hasReceivedRequests) {
+            LOG.log(INFO, () -> MessageFormat.format("Stopping job server in {0,number,#}ms", delayMillis));
+            try {
+                TimeUnit.MILLISECONDS.sleep(delayMillis);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        server.stop(0);
     }
 
     public void bind(InetSocketAddress inetSocketAddress, int i) throws IOException {

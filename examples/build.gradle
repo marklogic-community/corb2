@@ -9,7 +9,6 @@
 buildscript {
     repositories {
         mavenLocal()
-        jcenter()
     }
     dependencies {
         //Needed for CorbTask to dynamically generate properties from CoRB Options class
@@ -23,7 +22,6 @@ plugins {id 'com.marklogic.ml-gradle' version "${mlGradleVersion}"}
 repositories {
     mavenLocal()
     mavenCentral()
-    jcenter()
 }
 configurations {
     // This configuration captures the dependencies for running corb (Content Reprocessing in Bulk).
