@@ -35,7 +35,7 @@ dependencies {
     corb "com.marklogic:marklogic-xcc:${xccVersion}"
     corb("com.marklogic:marklogic-corb:${corbVersion}") {
         attributes {
-            it.attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling, Bundling.SHADOWED))
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
         }
     }
     // optional
