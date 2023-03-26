@@ -404,6 +404,7 @@ public class PostBatchUpdateFileTaskTest {
             props.setProperty(Options.EXPORT_FILE_SORT, Boolean.toString(true));
             props.setProperty(Options.EXPORT_FILE_NAME, file.toString());
             props.setProperty(Options.EXPORT_FILE_PART_EXT, "pt");
+            props.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.properties = props;
             instance.call();
@@ -423,6 +424,7 @@ public class PostBatchUpdateFileTaskTest {
             props.setProperty(Options.EXPORT_FILE_SORT, Boolean.TRUE.toString());
             props.setProperty(Options.EXPORT_FILE_NAME, file.toString());
             props.setProperty(Options.EXPORT_FILE_PART_EXT, "");
+            props.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.properties = props;
             instance.call();
@@ -452,7 +454,7 @@ public class PostBatchUpdateFileTaskTest {
 
         props.setProperty(Options.EXPORT_FILE_AS_ZIP, Boolean.FALSE.toString());
         props.setProperty(Options.EXPORT_FILE_NAME, fileToSort.toString());
-
+        props.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
         instance.properties = props;
         instance.call();

@@ -22,6 +22,7 @@ import static com.marklogic.developer.corb.Options.EXPORT_FILE_URI_TO_PATH;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.trimToEmpty;
 
+import com.marklogic.developer.corb.util.StringUtils;
 import com.marklogic.xcc.ResultSequence;
 
 import java.io.*;
@@ -108,4 +109,12 @@ public class ExportToFileTask extends AbstractTask {
 		}
 	}
 
+    @Override
+    protected String[] invokeModule() throws CorbException {
+        if (StringUtils.isEmpty(adhocQuery) && StringUtils.isEmpty(moduleUri)
+            && StringUtils.stringToBoolean(getProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE), true)) {
+            throw new CorbException(Options.PROCESS_MODULE + " must be specified.");
+        }
+        return super.invokeModule();
+    }
 }
