@@ -6,6 +6,7 @@ build/
 .gradle/
 .idea
 .project
+.DS_Store
 /.nb-gradle/
 /eclipse_bin/
 target/

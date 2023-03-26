@@ -326,6 +326,16 @@ public final class Options {
     public static final String EXPORT_FILE_PART_EXT = "EXPORT-FILE-PART-EXT";
 
     /**
+     * Boolean value indicating whether or not to require a PROCESS-MODULE when an Export*ToFile {@value #PROCESS_TASK} is specified.
+     * This can help avoid confusion when the {@PROCESS_MODULE} was accidentally not configured and no files are generated.
+     * Default is true
+     *
+     * @since 2.5.5
+     */
+    @Usage(description = "Boolean value indicating whether or not to require a PROCESS-MODULE when an Export*ToFile PROCESS-TASK is specified. This can help avoid confusion when the PROCESS-MODULE was accidentally not configured and no files are generated. Default is true")
+    public static final String EXPORT_FILE_REQUIRE_PROCESS_MODULE = "EXPORT-FILE-REQUIRE-PROCESS-MODULE";
+
+    /**
      * If "{@code ascending}" or "{@code descending}", lines will be sorted. If
      * "{@code |distinct}" is specified after the sort direction, duplicate
      * lines from {@value #EXPORT_FILE_NAME} will be removed. i.e.
