@@ -1346,6 +1346,7 @@ public class ManagerTest {
         props.setProperty(Options.POST_BATCH_MINIMUM_COUNT, Integer.toString(0));
         props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "top content");
         props.setProperty(Options.PRE_BATCH_TASK, PRE_BATCH_TASK);
+        props.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE,"false");
         props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "bottom content");
         props.setProperty(Options.POST_BATCH_TASK, POST_BATCH_TASK);
         try {
