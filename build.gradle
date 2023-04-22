@@ -115,6 +115,7 @@ processResources {
         filter(ReplaceTokens, tokens: [ANGULAR_VERSION: angularVersion, BOOTSTRAP_VERSION: bootstrapVersion, JQUERY_VERSION: jqueryVersion])
     }
 }
+processTestResources.dependsOn processResources
 
 //disabling, because we want to incorporate externalsortingjava in uber jar and use as the artifact
 jar {
@@ -158,8 +159,8 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 
 jacocoTestReport {
     reports {
-        xml.enabled = true // coveralls plugin depends on xml format report
-        html.enabled = true
+        xml.required = true // coveralls plugin depends on xml format report
+        html.required = true
     }
 }
 
