@@ -259,18 +259,43 @@ public class ExportToFileTaskTest {
         assertNull(instance.exportDir);
     }
 
-    @Test
-    public void testCall() {
+    @Test (expected=CorbException.class)
+    public void testCall()throws CorbException {
         ExportToFileTask instance = new ExportToFileTask();
-        String[] result;
         try {
-            result = instance.call();
-            assertNotNull(result);
-            assertTrue(result.length == 0);
+            instance.call();
+        } catch (CorbException ex) {
+            throw ex;
         } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+        fail();
+    }
+
+    @Test (expected=CorbException.class)
+    public void testInvokeModule() throws CorbException {
+        ExportToFileTask exportToFileTask = new ExportToFileTask();
+        exportToFileTask.invokeModule();
+        fail();
+    }
+
+    @Test
+    public void testInvokeModuleNoModuleNotRequired()  {
+        ExportToFileTask exportToFileTask = new ExportToFileTask();
+        exportToFileTask.properties.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
+        try {
+            String[] result = exportToFileTask.invokeModule();
+            assertEquals(result.length, 0);
+        } catch (CorbException ex) {
             fail();
         }
     }
 
+    @Test (expected = CorbException.class)
+    public void testInvokeModuleNoModuleRequired() throws CorbException {
+        ExportToFileTask exportToFileTask = new ExportToFileTask();
+        exportToFileTask.properties.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "true");
+        exportToFileTask.invokeModule();
+        fail();
+    }
 }

@@ -122,7 +122,7 @@ public class PreBatchUpdateFileTaskTest {
                 Properties props = new Properties();
                 props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, content);
                 props.setProperty(Options.EXPORT_FILE_NAME, tempFile.getName());
-
+                props.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
                 PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
                 instance.properties = props;
                 instance.exportDir = tempDir.toString();
