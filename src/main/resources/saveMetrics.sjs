@@ -8,7 +8,7 @@ var collections;
 const insertDoc = function(metricsDocumentStr, collection, uriRoot){
   return function(){
     const json = JSON.parse(metricsDocumentStr);
-    const jobName = json["job"]["name"];
+    let jobName = json["job"]["name"];
     if (!jobName) { jobName = json["job"]["runLocation"]; }
     if (fn.startsWith(jobName, "/")) {
       jobName=fn.substring(jobName, 2);
