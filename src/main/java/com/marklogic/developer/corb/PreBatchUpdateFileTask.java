@@ -55,6 +55,11 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 		}
 	}
 
+    @Override
+    protected boolean shouldHaveProcessModule(){
+        return false;
+    }
+
 	@Override
 	public String[] call() throws Exception {
 		try {

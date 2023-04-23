@@ -109,9 +109,14 @@ public class ExportToFileTask extends AbstractTask {
 		}
 	}
 
+    protected boolean shouldHaveProcessModule(){
+        return true;
+    }
+
     @Override
     protected String[] invokeModule() throws CorbException {
-        if (StringUtils.isEmpty(adhocQuery) && StringUtils.isEmpty(moduleUri)
+        if (shouldHaveProcessModule() &&
+            StringUtils.isEmpty(adhocQuery) && StringUtils.isEmpty(moduleUri)
             && StringUtils.stringToBoolean(getProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE), true)) {
             throw new CorbException(Options.PROCESS_MODULE + " must be specified.");
         }
