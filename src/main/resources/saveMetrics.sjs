@@ -5,26 +5,26 @@ var metricsDocumentStr;
 var uriRoot;
 var collections;
 
-var insertDoc = function(metricsDocumentStr, collection, uriRoot){
+const insertDoc = function(metricsDocumentStr, collection, uriRoot){
   return function(){
-    var json = JSON.parse(metricsDocumentStr);
-    var jobName = json["job"]["name"];
+    const json = JSON.parse(metricsDocumentStr);
+    let jobName = json["job"]["name"];
     if (!jobName) { jobName = json["job"]["runLocation"]; }
     if (fn.startsWith(jobName, "/")) {
       jobName=fn.substring(jobName, 2);
     }
-    var coll = [];
+    const coll = [];
     if (collection != "NA") {
       coll.push( fn.tokenize(collection , ",").toArray());
     }
     coll.push(jobName);
-    var dateTime = fn.currentDateTime();
-    var uri_root = uriRoot;
+    const dateTime = fn.currentDateTime();
+    let uri_root = uriRoot;
     if (uriRoot == "NA") { uri_root = "/ServiceMetrics/"; }
     if (!fn.startsWith(uri_root, "/")) { uri_root = "/" + $uri_root; }
     if (fn.endsWith(uri_root, "/"))  { uri_root = uri_root + "/"; }
-    var orig_uri = json["job"]["metricsDocUri"];
-    var uri = orig_uri;
+    let orig_uri = json["job"]["metricsDocUri"];
+    let uri = orig_uri;
     if (!uri) {
       uri = uri_root + "CORB/" +
                     jobName + "/" +
@@ -43,6 +43,6 @@ var insertDoc = function(metricsDocumentStr, collection, uriRoot){
     return orig_uri;
   }
 };
-var database = xdmp.database(dbName);
+const database = xdmp.database(dbName);
 xdmp.invokeFunction(insertDoc(metricsDocumentStr, collections, uriRoot),
     {transactionMode:"update-auto-commit", database:database});
