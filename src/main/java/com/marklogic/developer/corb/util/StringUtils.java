@@ -72,6 +72,34 @@ public final class StringUtils {
     }
 
     /**
+     * Convert a byte array into a string of the hex encoded values
+     * @param bytes
+     * @return
+     */
+    public static String byteArrayToHexString(byte[] bytes) {
+        StringBuilder hexStringBuilder = new StringBuilder(bytes.length * 2);
+        for (byte b: bytes) {
+            hexStringBuilder.append(String.format("%02x", b));
+        }
+        return hexStringBuilder.toString();
+    }
+
+    /**
+     * Convert the hex string into an array of bytes
+     * @param hexString
+     * @return
+     */
+    public static byte[] hexStringToByteArray(String hexString) {
+        int len = hexString.length();
+        byte[] result = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            result[i / 2] = (byte) ((Character.digit(hexString.charAt(i), 16) << 4)
+                + Character.digit(hexString.charAt(i+1), 16));
+        }
+        return result;
+    }
+
+    /**
      * Joins items of the provided collection into a single String using the
      * delimiter specified.
      *

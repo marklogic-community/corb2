@@ -19,6 +19,9 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.corb.util.StringUtils;
+
+import static com.marklogic.developer.corb.util.StringUtils.byteArrayToHexString;
+import static com.marklogic.developer.corb.util.StringUtils.hexStringToByteArray;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 
@@ -50,7 +53,6 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 
 /**
  * Class that uses a private key associate with a particular host Key is
@@ -328,8 +330,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         // encrypting with private key and random for initialization vector
         cipher.init(Cipher.ENCRYPT_MODE, key, new SecureRandom());
         byte[] encryptedVal = cipher.doFinal(plaintext.getBytes());
-        // base64 encode before returning
-        return DatatypeConverter.printHexBinary(encryptedVal);
+        return byteArrayToHexString(encryptedVal);
     }
 
     /**
@@ -342,8 +343,8 @@ public class HostKeyDecrypter extends AbstractDecrypter {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeyException
      */
-    private static String decrypt(String encryptedText) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
-        byte[] encryptedTextBytes = DatatypeConverter.parseHexBinary(encryptedText);
+    protected static String decrypt(String encryptedText) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
+        byte[] encryptedTextBytes = hexStringToByteArray(encryptedText);
         SecretKeySpec secretSpec = new SecretKeySpec(privateKey, AES);
         Cipher cipher = Cipher.getInstance(AES);
         cipher.init(Cipher.DECRYPT_MODE, secretSpec, new SecureRandom());
