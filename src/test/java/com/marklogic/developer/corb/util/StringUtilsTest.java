@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb.util;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -452,4 +453,28 @@ public class StringUtilsTest {
         assertFalse(StringUtils.isUrlEncoded("this that"));
         assertFalse(StringUtils.isUrlEncoded("my milk is 2%"));
     }
+
+    @Test
+    public void testRoundTripByteArrayToHexStringAndHexStringToByteArray() {
+        String input = "hello world";
+        String hex = StringUtils.byteArrayToHexString(input.getBytes(StandardCharsets.UTF_8));
+        byte[] bytes = StringUtils.hexStringToByteArray(hex);
+        String output = new String(bytes, StandardCharsets.UTF_8);
+        assertTrue(input.equals(output));
+    }
+
+    @Test
+    public void testByteArrayToHexString() {
+        String input = "xyz";
+        String hex = StringUtils.byteArrayToHexString(input.getBytes(StandardCharsets.UTF_8));
+        assertTrue("78797a".equals(hex));
+    }
+
+    @Test
+    public void testHexStringToByteArray() {
+        byte[] bytes = StringUtils.hexStringToByteArray("70617373776F7264");
+        byte[] expected = "password".getBytes(StandardCharsets.UTF_8);
+        assertTrue(Arrays.equals(expected, bytes));
+    }
+
 }

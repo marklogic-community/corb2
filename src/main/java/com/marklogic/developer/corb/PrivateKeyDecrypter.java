@@ -42,12 +42,13 @@ import java.security.spec.X509EncodedKeySpec;
 import java.text.MessageFormat;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
+
+import java.util.Base64;
 import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.xml.bind.DatatypeConverter;
 
 public class PrivateKeyDecrypter extends AbstractDecrypter {
 
@@ -117,7 +118,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
                     // remove the begin and end key lines if present.
                     keyAsString = keyAsString.replaceAll("[-]+(BEGIN|END)[A-Z ]*KEY[-]+", "");
 
-                    privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(DatatypeConverter.parseBase64Binary(keyAsString)));
+                    privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(Base64.getDecoder().decode(keyAsString)));
                 }
                 LOG.log(INFO, "Initialized PrivateKeyDecrypter");
             } catch (Exception exc) {
@@ -151,7 +152,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
             try {
                 final Cipher cipher = Cipher.getInstance(algorithm);
                 cipher.init(Cipher.DECRYPT_MODE, privateKey);
-                dValue = new String(cipher.doFinal(DatatypeConverter.parseBase64Binary(value)));
+                dValue = new String(cipher.doFinal(Base64.getDecoder().decode(value)));
             } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException exc) {
                 LOG.log(INFO, MessageFormat.format("Cannot decrypt {0}. Ignore if clear text.", property), exc);
             }
@@ -221,7 +222,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
             X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(toByteArray(fis));
             Cipher cipher = Cipher.getInstance(algorithm);
             cipher.init(Cipher.ENCRYPT_MODE, KeyFactory.getInstance(algorithm).generatePublic(x509EncodedKeySpec));
-            String encryptedText = DatatypeConverter.printBase64Binary(cipher.doFinal(clearText.getBytes("UTF-8")));
+            String encryptedText = Base64.getEncoder().encodeToString(cipher.doFinal(clearText.getBytes("UTF-8")));
             System.out.println("Input: " + clearText + "\nOutput: " + encryptedText); // NOPMD
         }
     }
