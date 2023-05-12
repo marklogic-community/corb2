@@ -977,7 +977,6 @@ public class AbstractManagerTest {
     @Test
     public void testTwoWaySSLConfigAutoConfig() {
         AbstractManager manager = new AbstractManagerImpl();
-        Properties properties = new Properties();
         manager.properties.setProperty(Options.SSL_KEYSTORE, "publicKey.pem");
         manager.properties.setProperty(Options.SSL_KEYSTORE_PASSWORD, "password");
         try {
