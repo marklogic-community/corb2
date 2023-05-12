@@ -170,11 +170,15 @@ public class Manager extends AbstractManager implements Closeable {
         return exitCode;
     }
 
+    public boolean hasExecError() {
+        return execError;
+    }
+
     protected void setExitCode(int code) {
         exitCode = code;
     }
 
-    protected int getExitCode() {
+    public int getExitCode() {
         return determineExitCode();
     }
 
