@@ -974,6 +974,60 @@ public class AbstractManagerTest {
         }
     }
 
+    @Test
+    public void testTwoWaySSLConfigAutoConfig() {
+        AbstractManager manager = new AbstractManagerImpl();
+        Properties properties = new Properties();
+        manager.properties.setProperty(Options.SSL_KEYSTORE, "publicKey.pem");
+        manager.properties.setProperty(Options.SSL_KEYSTORE_PASSWORD, "password");
+        try {
+            manager.initSSLConfig();
+            assertEquals("Since both keystore and keystore password configured, and no explicit ",
+                TwoWaySSLConfig.class, manager.sslConfig.getClass());
+        } catch (CorbException ex){
+            fail();
+        }
+    }
+    @Test
+    public void testTwoWaySSLConfigAutoConfigWithSSLKEYPASSWORD() {
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.SSL_KEYSTORE, "publicKey.pem");
+        manager.properties.setProperty(Options.SSL_KEY_PASSWORD, "password");
+        try {
+            manager.initSSLConfig();
+            assertEquals("Since both keystore and keystore password configured, and no explicit ",
+                TwoWaySSLConfig.class, manager.sslConfig.getClass());
+        } catch (CorbException ex){
+            fail();
+        }
+    }
+    @Test
+    public void testTwoWaySSLConfigAutoConfigNotSet() {
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.SSL_KEYSTORE, "publicKey.pem");
+        try {
+            manager.initSSLConfig();
+            assertEquals("Since no password configured, TwoWaySSLConfig not auto-configured",
+                TrustAnyoneSSLConfig.class, manager.sslConfig.getClass());
+        } catch (CorbException ex){
+            fail();
+        }
+    }
+    @Test
+    public void testTwoWaySSLConfigAutoConfigNotOverridingExplicitConfig() {
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.SSL_KEYSTORE, "publicKey.pem");
+        manager.properties.setProperty(Options.SSL_KEYSTORE_PASSWORD, "password");
+        manager.properties.setProperty(Options.SSL_CONFIG_CLASS, TrustAnyoneSSLConfig.class.getCanonicalName());
+        try {
+            manager.initSSLConfig();
+            assertEquals("Since SSL-CONFIG-CLASS explicitly configured, don't auto-configure TwoWaySSLConfig",
+                TrustAnyoneSSLConfig.class, manager.sslConfig.getClass());
+        } catch (CorbException ex){
+            fail();
+        }
+    }
+
     public static class TestContentSourcePool extends DefaultContentSourcePool { }
 
     public static class AbstractManagerImpl extends AbstractManager {
