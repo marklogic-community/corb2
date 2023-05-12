@@ -21,6 +21,10 @@ package com.marklogic.developer.corb;
 import com.marklogic.developer.TestHandler;
 import java.io.File;
 import org.junit.*;
+
+import static com.marklogic.developer.corb.AbstractManager.EXIT_CODE_PROCESSING_ERROR;
+import static com.marklogic.developer.corb.AbstractManager.EXIT_CODE_SUCCESS;
+import static com.marklogic.developer.corb.Manager.EXIT_CODE_STOP_COMMAND;
 import static org.junit.Assert.*;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 
@@ -945,6 +949,7 @@ public class ManagerTest {
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.onChange(file);
             assertTrue(manager.stopCommand);
+            assertEquals(EXIT_CODE_STOP_COMMAND, manager.getExitCode());
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -1300,11 +1305,13 @@ public class ManagerTest {
     @Test
     public void testStopExecutionException() {
         ExecutionException e = new ExecutionException("test", new Error());
-        Manager instance = new Manager();
-        instance.stop(e);
+        Manager manager = new Manager();
+        manager.stop(e);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.SEVERE, records.get(0).getLevel());
         assertEquals("fatal error", records.get(0).getMessage());
+        assertTrue("When stopped from an exception, execError is true", manager.hasExecError());
+        assertEquals(EXIT_CODE_PROCESSING_ERROR, manager.getExitCode());
     }
 
     @Test
@@ -1376,12 +1383,13 @@ public class ManagerTest {
         props.setProperty(Options.PRE_BATCH_TASK, PRE_BATCH_TASK);
         props.setProperty(Options.POST_BATCH_TASK, POST_BATCH_TASK);
         try {
-            Manager instance = getMockManagerWithEmptyResults();
-            instance.init(args, props);
-            instance.run();
+            Manager manager = getMockManagerWithEmptyResults();
+            manager.init(args, props);
+            manager.run();
 
             File exportFile = new File(EXPORT_FILE_DIR, EXPORT_FILE_NAME);
             assertFalse(exportFile.exists());
+            assertEquals(EXIT_CODE_SUCCESS, manager.getExitCode());
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -1692,6 +1700,12 @@ public class ManagerTest {
 
         manager.resume();
         verify(pool, never()).resume();
+    }
+
+    @Test
+    public void testHasExecError() {
+        Manager manager = new Manager();
+        assertFalse(manager.hasExecError());
     }
 
     public static class MockEmptyFileUrisLoader extends FileUrisLoader {
