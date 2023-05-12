@@ -18,16 +18,7 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.Options.DECRYPTER;
-import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
-import static com.marklogic.developer.corb.Options.SSL_CONFIG_CLASS;
-import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
-import static com.marklogic.developer.corb.Options.XCC_DBNAME;
-import static com.marklogic.developer.corb.Options.XCC_HOSTNAME;
-import static com.marklogic.developer.corb.Options.XCC_PASSWORD;
-import static com.marklogic.developer.corb.Options.XCC_PORT;
-import static com.marklogic.developer.corb.Options.XCC_USERNAME;
-import static com.marklogic.developer.corb.Options.XCC_PROTOCOL;
+import static com.marklogic.developer.corb.Options.*;
 import static com.marklogic.developer.corb.util.IOUtils.isDirectory;
 
 import com.marklogic.developer.corb.util.NumberUtils;
@@ -251,6 +242,12 @@ public abstract class AbstractManager {
 
     protected void initSSLConfig() throws CorbException {
         String sslConfigClassName = getOption(SSL_CONFIG_CLASS);
+        //If the keystore options are set, but the sslConfigClassName wasn't configured, assume that they wanted the TwoWaySSLConfig class configured
+        if (getOption(SSL_KEYSTORE) != null &&
+            (getOption(SSL_KEYSTORE_PASSWORD) !=null || getOption(SSL_KEY_PASSWORD) !=null) &&
+            sslConfigClassName == null) {
+            sslConfigClassName = TwoWaySSLConfig.class.getCanonicalName();
+        }
         if (sslConfigClassName != null) {
             try {
                 Class<?> decrypterCls = Class.forName(sslConfigClassName);
