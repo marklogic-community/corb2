@@ -1,9 +1,5 @@
-[![Travis-ci gradle build status](https://travis-ci.org/marklogic-community/corb2.svg?branch=development)](https://travis-ci.org/marklogic-community/corb2)
-[![CircleCI maven build status](https://circleci.com/gh/marklogic-community/corb2/tree/development.svg?style=shield)](https://app.circleci.com/pipelines/github/marklogic-community/corb2?branch=development)
-
 [![Codecov code coverage](https://codecov.io/gh/marklogic-community/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic-community/corb2/branch/development)
 [![SonarQube Quality](https://sonarcloud.io/api/project_badges/measure?project=corb2&metric=alert_status)](https://sonarcloud.io/dashboard?id=corb2)
-[![SonarQube Maintainability](https://sonarcloud.io/api/project_badges/measure?project=corb2&metric=sqale_rating)](https://sonarcloud.io/component_measures/domain/Maintainability?id=corb2)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/cf8ddb3401b6492a949db0bf6affaefd)](https://www.codacy.com/gh/marklogic-community/corb2/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marklogic-community/corb2&amp;utm_campaign=Badge_Grade)
 [![Snyk Known Vulnerabilities Badge](https://snyk.io/test/github/marklogic-community/corb2/badge.svg)](https://snyk.io/test/github/marklogic-community/corb2)
 
