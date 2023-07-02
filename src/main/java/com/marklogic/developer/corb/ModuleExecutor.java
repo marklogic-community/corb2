@@ -19,17 +19,11 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.AbstractTask.TRUE;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_DIR;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
-import static com.marklogic.developer.corb.Options.MODULES_DATABASE;
-import static com.marklogic.developer.corb.Options.MODULE_ROOT;
-import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
-import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
-import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
-import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
 
 import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.developer.corb.util.StringUtils;
+
+import static com.marklogic.developer.corb.Options.*;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
@@ -44,6 +38,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -270,12 +265,21 @@ public class ModuleExecutor extends AbstractManager {
             file.getAbsoluteFile().getParentFile().mkdirs();
         }
         try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(file))) {
+            conditionallyWritePropertyValue(writer, EXPORT_FILE_TOP_CONTENT);
             while (seq.hasNext()) {
                 writer.write(AbstractTask.getValueAsBytes(seq.next().getItem()));
                 writer.write(NEWLINE);
             }
+            conditionallyWritePropertyValue(writer, EXPORT_FILE_BOTTOM_CONTENT);
             writer.flush();
         }
     }
 
+    private void conditionallyWritePropertyValue(BufferedOutputStream writer, String property) throws IOException {
+        String content = getProperty(property);
+        if (StringUtils.isNotEmpty(content)) {
+            writer.write(content.getBytes(StandardCharsets.UTF_8));
+            writer.write(NEWLINE);
+        }
+    }
 }
