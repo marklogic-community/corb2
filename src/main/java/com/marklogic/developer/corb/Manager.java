@@ -159,7 +159,7 @@ public class Manager extends AbstractManager implements Closeable {
             } else if (urisCount == 0) {
                 LOG.log(INFO, () -> "no uris found - exiting with code " + EXIT_CODE_NO_URIS);
                 setExitCode(EXIT_CODE_NO_URIS);
-            } else if (pool.getNumFailedUris() > 0) {
+            } else if (pool != null && pool.getNumFailedUris() > 0) {
                 LOG.log(INFO, () -> "completed with ignored errors - exiting with code " + EXIT_CODE_IGNORED_ERRORS);
                 setExitCode(EXIT_CODE_IGNORED_ERRORS);
             } else {
