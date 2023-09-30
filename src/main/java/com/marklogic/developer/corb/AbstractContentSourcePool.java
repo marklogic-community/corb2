@@ -21,7 +21,10 @@ package com.marklogic.developer.corb;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_INTERVAL;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_RETRY_LIMIT;
 import static com.marklogic.developer.corb.Options.XCC_CONNECTION_HOST_RETRY_LIMIT;
+import static com.marklogic.developer.corb.Options.CONTENT_SOURCE_RENEW;
+import static com.marklogic.developer.corb.Options.CONTENT_SOURCE_RENEW_INTERVAL;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
+import static com.marklogic.developer.corb.util.StringUtils.stringToBoolean;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
@@ -46,6 +49,7 @@ import com.marklogic.xcc.exceptions.XccConfigException;
 public abstract class AbstractContentSourcePool implements ContentSourcePool {
     protected static final int DEFAULT_CONNECTION_RETRY_INTERVAL = 60;
     protected static final int DEFAULT_CONNECTION_RETRY_LIMIT = 3;
+    protected static final int DEFAULT_CONTENT_SOURCE_RENEW_INTERVAL = 60;
 
     protected Properties properties;
     protected SSLConfig sslConfig;
@@ -77,11 +81,19 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
         return this.sslConfig != null ? this.sslConfig.getSecurityOptions() : null;
     }
 
+    protected boolean shouldRenewContentSource() {
+        return stringToBoolean(getProperty(CONTENT_SOURCE_RENEW), true);
+    }
+
     protected int getConnectRetryLimit() {
         int connectRetryLimit = getIntProperty(XCC_CONNECTION_RETRY_LIMIT);
         return connectRetryLimit < 0 ? DEFAULT_CONNECTION_RETRY_LIMIT : connectRetryLimit;
     }
 
+    protected int getRenewContentSourceInterval() {
+        int interval = getIntProperty(CONTENT_SOURCE_RENEW_INTERVAL);
+        return interval < 0 ? DEFAULT_CONTENT_SOURCE_RENEW_INTERVAL : interval;
+    }
     protected int getConnectRetryInterval() {
         int connectRetryInterval = getIntProperty(XCC_CONNECTION_RETRY_INTERVAL);
         return connectRetryInterval < 0 ? DEFAULT_CONNECTION_RETRY_INTERVAL : connectRetryInterval;

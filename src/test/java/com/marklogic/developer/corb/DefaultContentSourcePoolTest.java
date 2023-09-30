@@ -233,15 +233,15 @@ public class DefaultContentSourcePoolTest {
     public void testHoldAndRelease() {
         try (DefaultContentSourcePool contentSourcePool = initRoundRobinPool()) {
             ContentSource contentSource = contentSourcePool.nextContentSource();
-            assertNull(contentSourcePool.connectionCountsMap.get(contentSource));
+            assertNull(contentSourcePool.connectionCountForContentSource.get(contentSource));
             contentSourcePool.hold(contentSource);
-            assertEquals(1, contentSourcePool.connectionCountsMap.get(contentSource).intValue());
+            assertEquals(1, contentSourcePool.connectionCountForContentSource.get(contentSource).intValue());
             contentSourcePool.hold(contentSource);
-            assertEquals(2, contentSourcePool.connectionCountsMap.get(contentSource).intValue());
+            assertEquals(2, contentSourcePool.connectionCountForContentSource.get(contentSource).intValue());
             contentSourcePool.release(contentSource);
-            assertEquals(1, contentSourcePool.connectionCountsMap.get(contentSource).intValue());
+            assertEquals(1, contentSourcePool.connectionCountForContentSource.get(contentSource).intValue());
             contentSourcePool.release(contentSource);
-            assertEquals(0, contentSourcePool.connectionCountsMap.get(contentSource).intValue());
+            assertEquals(0, contentSourcePool.connectionCountForContentSource.get(contentSource).intValue());
         }
     }
 
@@ -487,7 +487,7 @@ public class DefaultContentSourcePoolTest {
 		AdhocImpl request = mock(AdhocImpl.class);
 		ResultSequence rs = mock(ResultSequence.class);
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
-            contentSourcePool.contentSourceList.add(contentSource);
+            contentSourcePool.contentSources.add(contentSource);
             when(contentSource.newSession()).thenReturn(session);
             when(session.newAdhocQuery(any())).thenReturn(request);
             when(request.getSession()).thenReturn(session);
@@ -529,14 +529,14 @@ public class DefaultContentSourcePoolTest {
 
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, "");
-            contentSourcePool.contentSourceList.add(contentSource1);
-            contentSourcePool.connectionStringMap.put(contentSource1, "xcc://localhost:8000");
-            contentSourcePool.contentSourceList.add(contentSource2);
-            contentSourcePool.connectionStringMap.put(contentSource2, "xcc://localhost:8000");
+            contentSourcePool.contentSources.add(contentSource1);
+            contentSourcePool.connectionStringForContentSource.put(contentSource1, "xcc://localhost:8000");
+            contentSourcePool.contentSources.add(contentSource2);
+            contentSourcePool.connectionStringForContentSource.put(contentSource2, "xcc://localhost:8000");
 
-            assertEquals("no entries in errorMap", 0, contentSourcePool.errorCountsMap.size() );
+            assertEquals("no entries in errorMap", 0, contentSourcePool.errorCountForContentSource.size() );
             ResultSequence gotResult = contentSourcePool.get().newSession().submitRequest(request);
-            assertEquals("now there is", 1, contentSourcePool.errorCountsMap.size() );
+            assertEquals("now there is", 1, contentSourcePool.errorCountForContentSource.size() );
             assertEquals(result, gotResult);
         }
 	}
@@ -564,11 +564,11 @@ public class DefaultContentSourcePoolTest {
 
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, "");
-            contentSourcePool.contentSourceList.add(contentSource1);
-            contentSourcePool.contentSourceList.add(contentSource2);
+            contentSourcePool.contentSources.add(contentSource1);
+            contentSourcePool.contentSources.add(contentSource2);
 
             contentSourcePool.get().newSession().insertContent(content);
-            assertEquals(1L, (long)contentSourcePool.errorCountsMap.get(contentSource1));
+            assertEquals(1L, (long)contentSourcePool.errorCountForContentSource.get(contentSource1));
         }
 	}
 
@@ -586,13 +586,13 @@ public class DefaultContentSourcePoolTest {
         when(session.submitRequest(any())).thenReturn(result);
         try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, "");
-            contentSourcePool.contentSourceList.add(contentSource);
-            contentSourcePool.connectionStringMap.put(contentSource, "xcc://user:secret@localhost:8000");
+            contentSourcePool.contentSources.add(contentSource);
+            contentSourcePool.connectionStringForContentSource.put(contentSource, "xcc://user:secret@localhost:8000");
             ResultSequence gotResult = contentSourcePool.get().newSession().submitRequest(request);
             assertEquals("mock result returned", result, gotResult);
             contentSourcePool.error(contentSource);
-            assertEquals("after an error, still one ContentSource",1, contentSourcePool.contentSourceList.size());
-            assertTrue("and is the same contentsource, because IP is same", contentSourcePool.contentSourceList.contains(contentSource));
+            assertEquals("after an error, still one ContentSource",1, contentSourcePool.contentSources.size());
+            assertTrue("and is the same contentsource, because IP is same", contentSourcePool.contentSources.contains(contentSource));
         }
 	}
 
@@ -614,8 +614,8 @@ public class DefaultContentSourcePoolTest {
 		when(session2.submitRequest(any())).thenThrow(mock(ServerConnectionException.class));
 
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
-            contentSourcePool.contentSourceList.add(contentSource1);
-            contentSourcePool.contentSourceList.add(contentSource2);
+            contentSourcePool.contentSources.add(contentSource1);
+            contentSourcePool.contentSources.add(contentSource2);
 
             contentSourcePool.get().newSession().submitRequest(request);
         }
@@ -663,16 +663,16 @@ public class DefaultContentSourcePoolTest {
             ContentSource contentSource = contentSourcePool.get();
             long time = System.currentTimeMillis();
             ContentSource freshContentSource = mock(ContentSource.class);
-            contentSourcePool.errorTimeMap.put(contentSource, time);
-            contentSourcePool.connectionCountsMap.put(contentSource, 5);
-            contentSourcePool.errorCountsMap.put(contentSource, 3);
+            contentSourcePool.errorTimeForContentSource.put(contentSource, time);
+            contentSourcePool.connectionCountForContentSource.put(contentSource, 5L);
+            contentSourcePool.errorCountForContentSource.put(contentSource, 3L);
             contentSourcePool.replaceContentSource(contentSource, freshContentSource);
-            assertEquals(1, contentSourcePool.contentSourceList.size());
-            assertEquals(freshContentSource, contentSourcePool.contentSourceList.get(0));
-            assertEquals(3L, (long)contentSourcePool.errorCountsMap.get(freshContentSource));
-            assertEquals("xcc://foo:bar@1.1.1.1:8000", contentSourcePool.connectionStringMap.get(freshContentSource));
-            assertEquals(5L, (long)contentSourcePool.connectionCountsMap.get(freshContentSource));
-            assertEquals(time, (long)contentSourcePool.errorTimeMap.get(freshContentSource));
+            assertEquals(1, contentSourcePool.contentSources.size());
+            assertEquals(freshContentSource, contentSourcePool.contentSources.get(0));
+            assertEquals(3L, (long)contentSourcePool.errorCountForContentSource.get(freshContentSource));
+            assertEquals("xcc://foo:bar@1.1.1.1:8000", contentSourcePool.connectionStringForContentSource.get(freshContentSource));
+            assertEquals(5L, (long)contentSourcePool.connectionCountForContentSource.get(freshContentSource));
+            assertEquals(time, (long)contentSourcePool.errorTimeForContentSource.get(freshContentSource));
 
         } catch (CorbException ex) {
             fail();
