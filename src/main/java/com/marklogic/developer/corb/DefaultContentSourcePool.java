@@ -19,7 +19,6 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.CONNECTION_POLICY;
-import static com.marklogic.developer.corb.Options.CONTENT_SOURCE_RENEW;
 import static com.marklogic.developer.corb.util.StringUtils.stringToBoolean;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
@@ -57,11 +56,12 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
     protected String connectionPolicy = CONNECTION_POLICY_ROUND_ROBIN;
 
-    protected List<ContentSource> contentSourceList = new ArrayList<>();
-    protected Map<ContentSource, Integer> errorCountsMap = new HashMap<>();
-    protected Map<ContentSource, Integer> connectionCountsMap = new HashMap<>();
-    protected Map<ContentSource, Long> errorTimeMap = new HashMap<>();
-    protected Map<ContentSource, String> connectionStringMap = new HashMap<>();
+    protected List<ContentSource> contentSources = new ArrayList<>();
+    protected Map<ContentSource, Long> errorCountForContentSource = new HashMap<>();
+    protected Map<ContentSource, Long> connectionCountForContentSource = new HashMap<>();
+    protected Map<ContentSource, Long> errorTimeForContentSource = new HashMap<>();
+    protected Map<ContentSource, Long> renewalTimeForContentSource = new HashMap<>();
+    protected Map<ContentSource, String> connectionStringForContentSource = new HashMap<>();
 
     protected int retryInterval = 0;
     protected int hostRetryLimit = 0;
@@ -71,8 +71,8 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
     protected boolean isLoadPolicy = false;
     protected boolean isRandomPolicy = false;
-    boolean replaceContentSourceOnError = stringToBoolean(getProperty(CONTENT_SOURCE_RENEW), true);
-
+    protected boolean shouldRenewContentSource;
+    protected int renewContentSourceInterval;
     private static final Logger LOG = Logger.getLogger(DefaultContentSourcePool.class.getName());
     private final Random random = new Random();
 
@@ -86,7 +86,8 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         if (connectionStrings == null || connectionStrings.length == 0) {
             throw new NullPointerException("XCC connection strings cannot be null or empty");
         }
-
+        shouldRenewContentSource = shouldRenewContentSource();
+        renewContentSourceInterval = getRenewContentSourceInterval();
         retryInterval = getConnectRetryInterval();
         retryLimit = getConnectRetryLimit();
         hostRetryLimit = getConnectHostRetryLimit();
@@ -101,7 +102,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
             initContentSource(connectionString);
         }
 
-        //for better performance avoid to many string equals later for every get and submit
+        //for better performance avoid too many string equals later for every get and submit
         isRandomPolicy = CONNECTION_POLICY_RANDOM.equals(connectionPolicy);
         isLoadPolicy = CONNECTION_POLICY_LOAD.equals(connectionPolicy);
     }
@@ -109,10 +110,16 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     protected void initContentSource(String connectionString) {
         ContentSource contentSource = super.createContentSource(connectionString);
         if (contentSource != null) {
-            contentSourceList.add(contentSource);
-            connectionStringMap.put(contentSource, connectionString);
+            addContentSource(contentSource, connectionString);
             LOG.log(INFO, "Initialized ContentSource {0}", new Object[]{asString(contentSource)});
         }
+    }
+
+    protected void addContentSource(ContentSource contentSource, String connectionString) {
+        LOG.log(INFO, "Adding new ContentSource");
+        contentSources.add(contentSource);
+        connectionStringForContentSource.put(contentSource, connectionString);
+        renewalTimeForContentSource.put(contentSource, System.currentTimeMillis());
     }
 
     /**
@@ -128,8 +135,8 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         //if the nextContentSource() returns the connection with existing errors, then it means it could not find
         //any clean connections, so we need to wait.
         //even if errored, but wait expired, then no need to wait.
-        Integer failedCount = errorCountsMap.get(contentSource);
-        if (failedCount != null && failedCount > 0 && errorTimeMap.containsKey(contentSource)) {
+        Long failedCount = errorCountForContentSource.get(contentSource);
+        if (failedCount != null && failedCount > 0 && errorTimeForContentSource.containsKey(contentSource)) {
             LOG.log(WARNING, "Connection failed for ContentSource {0}. Waiting for {1} seconds before retry attempt {2}",
                     new Object[]{asString(contentSource), retryInterval, failedCount + 1});
             try {
@@ -156,11 +163,11 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
             contentSource = availableList.get(this.random.nextInt(availableList.size()));
         } else if (isLoadPolicy) {
             for (ContentSource next: availableList) {
-                Integer count = connectionCountsMap.get(next);
-                if (count == null || count == 0) {
+                long connectionCount = connectionCountForContentSource.getOrDefault(next, 0L);
+                if (connectionCount == 0) {
                     contentSource = next;
                     break;
-                } else if (contentSource == null || count < connectionCountsMap.get(contentSource)) {
+                } else if (contentSource == null || connectionCount < connectionCountForContentSource.get(contentSource)) {
                     contentSource = next;
                 }
             }
@@ -171,27 +178,35 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
             }
             contentSource = availableList.get(roundRobinIndex);
         }
+        /*
+        Periodically check to see if the ContentSource will resolve different/additional IP addresses and add them to the pool.
+        This can help spread the load across a pool of multiple IP addresses returned from DNS and dynamically adjust to any changes.
+         */
+        if (renewContentSourceInterval > 0 &&
+            (System.currentTimeMillis() - renewalTimeForContentSource.getOrDefault(contentSource, System.currentTimeMillis())) >= (renewContentSourceInterval * 1000L)) {
+            renewAndAddContentSource(contentSource);
+        }
 
         return contentSource;
     }
 
     protected synchronized List<ContentSource> getAvailableContentSources() {
         //check if any errored connections are eligible for retries without further wait
-        if (!errorTimeMap.isEmpty()) {
+        if (!errorTimeForContentSource.isEmpty()) {
             long current = System.currentTimeMillis();
-            errorTimeMap.entrySet().removeIf(next -> (current - next.getValue()) >= (retryInterval * 1000L));
+            errorTimeForContentSource.entrySet().removeIf(next -> (current - next.getValue()) >= (retryInterval * 1000L));
         }
-        if (!errorTimeMap.isEmpty()) {
-            List<ContentSource> availableList = new ArrayList<>(contentSourceList.size());
-            for (ContentSource contentSource: contentSourceList) {
-                if (!errorTimeMap.containsKey(contentSource)) {
+        if (!errorTimeForContentSource.isEmpty()) {
+            List<ContentSource> availableList = new ArrayList<>(contentSources.size());
+            for (ContentSource contentSource: contentSources) {
+                if (!errorTimeForContentSource.containsKey(contentSource)) {
                     availableList.add(contentSource);
                 }
             }
             //if nothing available, then return the whole list as we have to wait anyway
-            return !availableList.isEmpty() ? availableList : contentSourceList;
+            return !availableList.isEmpty() ? availableList : contentSources;
         } else {
-            return contentSourceList;
+            return contentSources;
         }
     }
 
@@ -202,20 +217,21 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
     @Override
     public boolean available() {
-        return !contentSourceList.isEmpty();
+        return !contentSources.isEmpty();
     }
 
     @Override
     public ContentSource[] getAllContentSources() {
-        return contentSourceList.toArray(new ContentSource[0]);
+        return contentSources.toArray(new ContentSource[0]);
     }
 
     @Override
     public void close() {
-        connectionCountsMap.clear();
-        errorCountsMap.clear();
-        errorTimeMap.clear();
-		contentSourceList.clear();
+        renewalTimeForContentSource.clear();
+        connectionCountForContentSource.clear();
+        errorCountForContentSource.clear();
+        errorTimeForContentSource.clear();
+		contentSources.clear();
     }
 
     protected boolean isRandomPolicy() {
@@ -227,22 +243,22 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     }
 
     protected synchronized void hold(ContentSource contentSource) {
-        if (contentSourceList.contains(contentSource)) {
-	        Integer count = connectionCountsMap.getOrDefault(contentSource, 0) + 1;
-	        connectionCountsMap.put(contentSource, count);
+        if (contentSources.contains(contentSource)) {
+	        long count = connectionCountForContentSource.getOrDefault(contentSource, 0L) + 1;
+	        connectionCountForContentSource.put(contentSource, count);
         }
     }
 
     protected synchronized void release(ContentSource contentSource) {
-        Integer count = connectionCountsMap.getOrDefault(contentSource, 0);
+        long count = connectionCountForContentSource.getOrDefault(contentSource, 0L);
         if (count > 0) {
-            connectionCountsMap.put(contentSource, count - 1);
+            connectionCountForContentSource.put(contentSource, count - 1);
         }
     }
 
     protected synchronized void success(ContentSource contentSource) {
-		errorCountsMap.remove(contentSource);
-		errorTimeMap.remove(contentSource);
+		errorCountForContentSource.remove(contentSource);
+		errorTimeForContentSource.remove(contentSource);
 	}
 
     protected void error(ContentSource contentSource) {
@@ -250,38 +266,56 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     }
 
     protected synchronized void error(ContentSource contentSource, long allocTime) {
-        if (contentSourceList.contains(contentSource)) {
-            Long lastErrorTime = errorTimeMap.get(contentSource);
+        if (contentSources.contains(contentSource)) {
+            Long lastErrorTime = errorTimeForContentSource.get(contentSource);
             if (lastErrorTime == null || allocTime <= 0 || allocTime > lastErrorTime) {
-		        int count = errorCountsMap.getOrDefault(contentSource, 0) + 1;
-                errorCountsMap.put(contentSource, count);
-                errorTimeMap.put(contentSource, System.currentTimeMillis());
+		        long errorCount = errorCountForContentSource.getOrDefault(contentSource, 0L) + 1;
+                errorCountForContentSource.put(contentSource, errorCount);
+                errorTimeForContentSource.put(contentSource, System.currentTimeMillis());
 
-                LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{asString(contentSource), count, hostRetryLimit});
+                LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{asString(contentSource), errorCount, hostRetryLimit});
 		        // if we haven't exhausted retries, replace this ContentSource with a fresh one (will re-bind and obtain IP, which can help with proxies with dynamic IP until XCC knows how to handle that better
-                if (count > hostRetryLimit) {
+                if (errorCount > hostRetryLimit) {
                     removeInternal(contentSource);
                 } else {
                     /* Due to issues with how ContentSource statically resolves the IP address of the host when constructed,
                     * dynamic pools of IP addresses for a given FQDN may not be used, and if a host is removed from a pool
                     * then persistent errors would be encountered.
                     */
-                    renewContentSource(contentSource);
+                    renewAndReplaceContentSource(contentSource);
                 }
             } else {
                 LOG.log(WARNING, "Connection error for ContentSource {0} is not counted towards the limit as it was allocated before last error.", new Object[]{asString(contentSource)});
             }
         }
 	}
+    protected synchronized ContentSource renewContentSource(ContentSource contentSource) {
+        String xccConnectionString = connectionStringForContentSource.get(contentSource);
+        renewalTimeForContentSource.put(contentSource, System.currentTimeMillis());
+        return super.createContentSource(xccConnectionString);
+    }
 
     /**
-     * Replace the specified ContentSource with a newly constructed one
+     * Add a new ContentSource if it resolves a different IP address
+     * @param contentSource
+     */
+    protected synchronized void renewAndAddContentSource(ContentSource contentSource) {
+        if (shouldRenewContentSource) {
+            ContentSource freshContentSource = renewContentSource(contentSource);
+            if (haveDifferentIP(contentSource, freshContentSource)) {
+                String xccConnectionString = connectionStringForContentSource.get(contentSource);
+                addContentSource(freshContentSource, xccConnectionString);
+            }
+        }
+    }
+
+    /**
+     * Replace the specified ContentSource with a newly constructed one if the IP address is different
      * @param contentSource the ContentSource to be replaced with a new instance
      */
-    protected synchronized void renewContentSource(ContentSource contentSource) {
-        if (replaceContentSourceOnError) {
-            String xccConnectionString = connectionStringMap.get(contentSource);
-            ContentSource freshContentSource = super.createContentSource(xccConnectionString);
+    protected synchronized void renewAndReplaceContentSource(ContentSource contentSource) {
+        if (shouldRenewContentSource) {
+            ContentSource freshContentSource = renewContentSource(contentSource);
             if (haveDifferentIP(contentSource, freshContentSource)) {
                 replaceContentSource(contentSource, freshContentSource);
             }
@@ -317,33 +351,36 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
      * @param freshContentSource
      */
     protected void replaceContentSource(ContentSource current, ContentSource freshContentSource) {
-        //replace the contentSource at the same position
-        contentSourceList.set(contentSourceList.indexOf(current), freshContentSource);
-        //then clear contentSource entries from the other tracking maps and create new entries with the contentSource values
-        connectionStringMap.put(freshContentSource, connectionStringMap.get(current));
-        connectionStringMap.remove(current);
-        connectionCountsMap.put(freshContentSource, connectionCountsMap.getOrDefault(current, 0));
-        connectionCountsMap.remove(current);
-        errorCountsMap.put(freshContentSource, errorCountsMap.getOrDefault(current, 1));
-        errorCountsMap.remove(current);
-        errorTimeMap.put(freshContentSource, errorTimeMap.get(current));
-        errorTimeMap.remove(current);
+        //replace the ContentSource at the same position
+        contentSources.set(contentSources.indexOf(current), freshContentSource);
+        //create new entries with the current ContentSource values
+        connectionStringForContentSource.put(freshContentSource, connectionStringForContentSource.get(current));
+        connectionCountForContentSource.put(freshContentSource, connectionCountForContentSource.getOrDefault(current, 0L));
+        errorCountForContentSource.put(freshContentSource, errorCountForContentSource.getOrDefault(current, 1L));
+        errorTimeForContentSource.put(freshContentSource, errorTimeForContentSource.get(current));
+        //then clear the current ContentSource entries from the other tracking maps
+        removeContentSourceFromStatusTrackers(current);
     }
 
-    protected int errorCount(ContentSource contentSource) {
-        return errorCountsMap.getOrDefault(contentSource, 0);
+    protected long errorCount(ContentSource contentSource) {
+        return errorCountForContentSource.getOrDefault(contentSource, 0L);
     }
 
     //this is not a proxy
     protected synchronized void removeInternal(ContentSource contentSource) {
-        if (contentSourceList.contains(contentSource)) {
+        if (contentSources.contains(contentSource)) {
 	        LOG.log(WARNING, "Removing the ContentSource {0} from the content source pool.", new Object[]{asString(contentSource)});
-	        contentSourceList.remove(contentSource);
-	        connectionCountsMap.remove(contentSource);
-	        errorCountsMap.remove(contentSource);
-	        errorTimeMap.remove(contentSource);
-            connectionStringMap.remove(contentSource);
+	        contentSources.remove(contentSource);
+            removeContentSourceFromStatusTrackers(contentSource);
         }
+    }
+
+    private synchronized void removeContentSourceFromStatusTrackers(ContentSource contentSource) {
+        renewalTimeForContentSource.remove(contentSource);
+        connectionCountForContentSource.remove(contentSource);
+        errorCountForContentSource.remove(contentSource);
+        errorTimeForContentSource.remove(contentSource);
+        connectionStringForContentSource.remove(contentSource);
     }
 
     //TODO: handle redaction if necessary?
@@ -480,7 +517,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
             }
             if (exc instanceof InvocationTargetException) {
                 if (exc.getCause() instanceof ServerConnectionException) {
-                    contentSourcePool.error(contentSource, allocTime); //we should do this before the recursion.. not finally.
+                    contentSourcePool.error(contentSource, allocTime); //we should do this before the recursion. not finally.
 
                     String name = exc.getCause().getClass().getSimpleName();
                     if (isSubmitRequest(method) && attempts <= contentSourcePool.retryLimit) {
