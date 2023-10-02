@@ -116,7 +116,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     }
 
     protected void addContentSource(ContentSource contentSource, String connectionString) {
-        LOG.log(INFO, "Adding new ContentSource");
+        LOG.log(INFO, "Adding new ContentSource for {0}", connectionString);
         contentSources.add(contentSource);
         connectionStringForContentSource.put(contentSource, connectionString);
         renewalTimeForContentSource.put(contentSource, System.currentTimeMillis());
@@ -211,8 +211,13 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
     }
 
     @Override
-    public void remove(ContentSource contentSource) {
-    		removeInternal(getContentSourceFromProxy(contentSource));
+    public synchronized void remove(ContentSource proxiedContentSource) {
+        ContentSource contentSource = getContentSourceFromProxy(proxiedContentSource);
+        if (contentSources.contains(contentSource)) {
+            LOG.log(WARNING, "Removing the ContentSource {0} from the content source pool.", new Object[]{asString(contentSource)});
+            contentSources.remove(contentSource);
+            removeContentSourceFromStatusTrackers(contentSource);
+        }
     }
 
     @Override
@@ -227,11 +232,12 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
     @Override
     public void close() {
-        renewalTimeForContentSource.clear();
+        contentSources.clear();
         connectionCountForContentSource.clear();
+        connectionStringForContentSource.clear();
         errorCountForContentSource.clear();
         errorTimeForContentSource.clear();
-		contentSources.clear();
+        renewalTimeForContentSource.clear();
     }
 
     protected boolean isRandomPolicy() {
@@ -276,7 +282,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
                 LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{asString(contentSource), errorCount, hostRetryLimit});
 		        // if we haven't exhausted retries, replace this ContentSource with a fresh one (will re-bind and obtain IP, which can help with proxies with dynamic IP until XCC knows how to handle that better
                 if (errorCount > hostRetryLimit) {
-                    removeInternal(contentSource);
+                    remove(contentSource);
                 } else {
                     /* Due to issues with how ContentSource statically resolves the IP address of the host when constructed,
                     * dynamic pools of IP addresses for a given FQDN may not be used, and if a host is removed from a pool
@@ -366,21 +372,12 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         return errorCountForContentSource.getOrDefault(contentSource, 0L);
     }
 
-    //this is not a proxy
-    protected synchronized void removeInternal(ContentSource contentSource) {
-        if (contentSources.contains(contentSource)) {
-	        LOG.log(WARNING, "Removing the ContentSource {0} from the content source pool.", new Object[]{asString(contentSource)});
-	        contentSources.remove(contentSource);
-            removeContentSourceFromStatusTrackers(contentSource);
-        }
-    }
-
     private synchronized void removeContentSourceFromStatusTrackers(ContentSource contentSource) {
-        renewalTimeForContentSource.remove(contentSource);
         connectionCountForContentSource.remove(contentSource);
+        connectionStringForContentSource.remove(contentSource);
         errorCountForContentSource.remove(contentSource);
         errorTimeForContentSource.remove(contentSource);
-        connectionStringForContentSource.remove(contentSource);
+        renewalTimeForContentSource.remove(contentSource);
     }
 
     //TODO: handle redaction if necessary?
