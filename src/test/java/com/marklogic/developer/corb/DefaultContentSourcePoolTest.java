@@ -29,6 +29,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.io.FileNotFoundException;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
@@ -198,6 +199,35 @@ public class DefaultContentSourcePoolTest {
     }
 
     @Test
+    public void testClose() {
+        try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
+            contentSourcePool.init(null, null, localhostXccUri);
+            assertTrue(contentSourcePool.connectionCountForContentSource.isEmpty());
+            assertFalse(contentSourcePool.connectionStringForContentSource.isEmpty());
+            assertTrue(contentSourcePool.errorTimeForContentSource.isEmpty());
+            assertTrue(contentSourcePool.errorCountForContentSource.isEmpty());
+            assertFalse(contentSourcePool.renewalTimeForContentSource.isEmpty());
+            contentSourcePool.close();
+            assertTrue(contentSourcePool.connectionCountForContentSource.isEmpty());
+            assertTrue(contentSourcePool.connectionStringForContentSource.isEmpty());
+            assertTrue(contentSourcePool.errorTimeForContentSource.isEmpty());
+            assertTrue(contentSourcePool.errorCountForContentSource.isEmpty());
+            assertTrue(contentSourcePool.renewalTimeForContentSource.isEmpty());
+        }
+    }
+
+    @Test
+    public void getSessionFromProxy(){
+        try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
+            contentSourcePool.init(null, null, localhostXccUri);
+            Session session = contentSourcePool.get().newSession();
+            assertTrue(Proxy.isProxyClass(session.getClass()));
+            assertEquals(session, DefaultContentSourcePool.getSessionFromProxy(session));
+        } catch ( CorbException ex) {
+            fail();
+        }
+    }
+    @Test
     public void testError(){
         try (DefaultContentSourcePool contentSourcePool = initRoundRobinPool()) {
             assertEquals("we started with 3", 3, contentSourcePool.getAllContentSources().length);
@@ -220,12 +250,23 @@ public class DefaultContentSourcePoolTest {
     }
 
     @Test
-    public void testGetAvailableContentSources(){
+    public void testGetAvailableContentSources() {
         try (DefaultContentSourcePool contentSourcePool = initRoundRobinPool()) {
             ContentSource contentSource = contentSourcePool.nextContentSource();
             assertEquals(3, contentSourcePool.getAvailableContentSources().size());
             contentSourcePool.error(contentSource);
             assertEquals(2, contentSourcePool.getAvailableContentSources().size());
+        }
+    }
+
+    @Test
+    public void testRenewAndAddContentSource() {
+        try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
+            contentSourcePool.init(null, null, localhostXccUri);
+            assertEquals(1, contentSourcePool.getAvailableContentSources().size());
+            ContentSource contentSource = contentSourcePool.nextContentSource();
+            contentSourcePool.renewAndAddContentSource(contentSource);
+            assertEquals("IP hasn't changed for localhost, so no new ContentSource",1, contentSourcePool.getAvailableContentSources().size());
         }
     }
 

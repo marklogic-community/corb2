@@ -151,7 +151,7 @@ public final class Options {
      * The regular interval (seconds) in which to resolve ContentSource IP address and add to the pool.
      * This can help when a DNS entry may return multiple IP addresses and help spread traffic among multiple endpoints.
      * Default is 60
-     * @since 2.5.4
+     * @since 2.5.5
      */
     @Usage(description = "The regular interval (seconds) in which to resolve ContentSource IP address and add to the pool. " +
         "This can help when a DNS entry may return multiple IP addresses and help spread traffic among multiple endpoints. Default is 60")
