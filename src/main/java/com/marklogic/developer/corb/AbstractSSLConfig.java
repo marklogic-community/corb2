@@ -81,7 +81,7 @@ public abstract class AbstractSSLConfig implements SSLConfig {
             protocols = protocolList.toArray(new String[protocolList.size()]);
         }
         if (protocols.length == 0) {
-            LOG.log(Level.INFO, "No protocol configured, using default: {0}", DEFAULT_PROTOCOL);
+            LOG.log(Level.FINE, "No protocol configured, using default: {0}", DEFAULT_PROTOCOL);
             protocols = new String[] {DEFAULT_PROTOCOL};
         }
         return protocols;
@@ -103,7 +103,7 @@ public abstract class AbstractSSLConfig implements SSLConfig {
         String head = protocols[0];
         try {
             SSLContext sslContext = SSLContext.getInstance(head);
-            LOG.log(Level.INFO, "Using protocol: {0}", head);
+            LOG.log(Level.FINE, "Using protocol: {0}", head);
             return sslContext;
         } catch (NoSuchAlgorithmException ex) {
             LOG.log(Level.WARNING, "No such algorithm: {0}", protocols[0]);
