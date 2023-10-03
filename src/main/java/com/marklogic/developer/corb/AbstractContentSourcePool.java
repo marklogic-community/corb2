@@ -149,7 +149,8 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
 
     protected ContentSource createContentSource(URI connectionUri) {
         ContentSource contentSource = null;
-        boolean ssl = connectionUri.getScheme() != null && "xccs".equals(connectionUri.getScheme());
+        String scheme = connectionUri.getScheme();
+        boolean ssl = "xccs".equals(scheme);
         String hostname = connectionUri.getHost();
         String port = String.valueOf(connectionUri.getPort());
         String path = connectionUri.getPath();
