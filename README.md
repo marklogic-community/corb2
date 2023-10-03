@@ -1,9 +1,6 @@
-[![Codecov code coverage](https://codecov.io/gh/marklogic-community/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic-community/corb2/branch/development)
-[![SonarQube Quality](https://sonarcloud.io/api/project_badges/measure?project=corb2&metric=alert_status)](https://sonarcloud.io/dashboard?id=corb2)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/cf8ddb3401b6492a949db0bf6affaefd)](https://www.codacy.com/gh/marklogic-community/corb2/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marklogic-community/corb2&amp;utm_campaign=Badge_Grade)
-[![Snyk Known Vulnerabilities Badge](https://snyk.io/test/github/marklogic-community/corb2/badge.svg)](https://snyk.io/test/github/marklogic-community/corb2)
-
 [![Maven Central - download the latest version](https://maven-badges.herokuapp.com/maven-central/com.marklogic/marklogic-corb/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.marklogic/marklogic-corb)
+[![Codecov code coverage](https://codecov.io/gh/marklogic-community/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic-community/corb2/branch/development)
+[![Snyk Known Vulnerabilities Badge](https://snyk.io/test/github/marklogic-community/corb2/badge.svg)](https://snyk.io/test/github/marklogic-community/corb2)
 [![Javadocs](https://www.javadoc.io/badge/com.marklogic/marklogic-corb.svg?color=blue)](https://www.javadoc.io/doc/com.marklogic/marklogic-corb)
 
 ### [What is CoRB?](https://github.com/marklogic-community/corb2/wiki#what-is-corb)
@@ -15,16 +12,16 @@ CoRB operations can include generating a report across all documents, manipulati
 ### User Guide
 This document and the [wiki](https://github.com/marklogic-community/corb2/wiki) provide a comprehensive overview of CoRB and the options available to customize the execution of a CoRB job, as well as the [ModuleExecutor Tool](#moduleexecutor-tool), which can be used to execute a single (XQuery or JavaScript) module in MarkLogic.
 
-For additional information, please refer to the [CoRB Wiki](https://github.com/marklogic-community/corb2/wiki).
+For additional information, refer to the [CoRB Wiki](https://github.com/marklogic-community/corb2/wiki).
 
 ### Downloads
-Download the latest release directly from https://github.com/marklogic-community/corb2/releases or resolve dependencies through [Maven Central](http://mvnrepository.com/artifact/com.marklogic/marklogic-corb) or [JCenter](https://bintray.com/marklogic/maven/marklogic-corb/view).
+Download the latest release directly from https://github.com/marklogic-community/corb2/releases or resolve dependencies through [Maven Central](http://mvnrepository.com/artifact/com.marklogic/marklogic-corb).
 
-- CoRB v2.4.0 (or later) requires Java 8 (or later) to run.
+### Compatability 
+- [CoRB v2.4.0](https://github.com/marklogic-community/corb2/releases/tag/2.4.0) (or later) requires Java 8 (or later) to run.
 - [CoRB v2.3.2](https://github.com/marklogic-community/corb2/releases/tag/2.3.2) is the last release compatable with Java 7 and 6.
 - [CoRB v2.2.0](https://github.com/marklogic-community/corb2/releases/tag/2.2.0) (or later) requires [marklogic-xcc 8.0.* (or later)](https://developer.marklogic.com/products/xcc) to run.
-
-> Note: marklogic-xcc 8 is backwards compatible to MarkLogic 5 and runs on Java 1.6 or later.
+  > Note: marklogic-xcc 8 is backwards compatible to MarkLogic 5 and runs on Java 1.6 or later.
 
 ### Getting Help
 To get help with CoRB
@@ -85,8 +82,8 @@ Option | Description
 **<a name="DISK-QUEUE-MAX-IN-MEMORY-SIZE"></a>DISK-QUEUE-MAX-IN-MEMORY-SIZE** | The maximum number of URIs to hold in memory before spilling over to disk. Default is `1000`.
 **<a name="DISK-QUEUE-TEMP-DIR"></a>DISK-QUEUE-TEMP-DIR** | The directory where the URIs queue can write to disk when the maximum in-memory items has been exceeded. If not specified then **TEMP-DIR** value will be used. If neither are specified, then the default behavior is to use java.io.tmpdir.
 **<a name="ERROR-FILE-NAME"></a>ERROR-FILE-NAME** | Used when FAIL-ON-ERROR is false. If specified true, removes duplicates from the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to separate URI and error message.
-**<a name="EXIT-CODE-IGNORED-ERRORS"></a>EXIT-CODE-IGNORED-ERRORS** | Default is `0`. Returns this exit code when there were errors and **FAIL-ON-ERROR**=`false`.
-**<a name="EXIT-CODE-NO-URIS"></a>EXIT-CODE-NO-URIS** | Default is `0`. Returns this exit code when there is nothing to process.
+**<a name="EXIT-CODE-IGNORED-ERRORS"></a>EXIT-CODE-IGNORED-ERRORS** | Returns this exit code when there were errors and **FAIL-ON-ERROR**=`false`. Default is `0`.
+**<a name="EXIT-CODE-NO-URIS"></a>EXIT-CODE-NO-URIS** | Returns this exit code when there is nothing to process. Default is `0`. 
 **<a name="XPORT_FILE_AS_ZIP"></a>EXPORT_FILE_AS_ZIP** | If true, PostBatchUpdateFileTask compresses the output file as a zip file.
 **<a name="EXPORT-FILE-BOTTOM-CONTENT"></a>EXPORT-FILE-BOTTOM-CONTENT** | Used by `com.marklogic.developer.corb.PostBatchUpdateFileTask` to append content to **EXPORT-FILE-NAME** after batch process is complete.
 **<a name="EXPORT-FILE-DIR"></a>EXPORT-FILE-DIR** | Export directory parameter is used by `com.marklogic.developer.corb.ExportBatchToFileTask` or similar custom task implementations. <br/>Optional: Alternatively, **EXPORT-FILE-NAME** can be specified with a full path.
@@ -98,14 +95,14 @@ Option | Description
 **<a name="EXPORT-FILE-TOP-CONTENT"></a>EXPORT-FILE-TOP-CONTENT** | Used by `com.marklogic.developer.corb.PreBatchUpdateFileTask` to insert content at the top of **EXPORT-FILE-NAME** before batch process starts. If it includes the string `@URIS_BATCH_REF`, it is replaced by the batch reference returned by **URIS-MODULE**.
 **<a name="EXPORT-FILE-URI-TO-PATH"></a>EXPORT-FILE-URI-TO-PATH** | Boolean value indicating whether to convert doc URI to a filepath. Default is `true`
 **<a name="FAIL-ON-ERROR"></a>FAIL-ON-ERROR** | Boolean value indicating whether the CoRB job should fail and exit if a process module throws an error. Default is `true`. This option will not handle repeated connection failures.
-**<a name="INSTALL"></a>INSTALL** | Whether to install the Modules in the Modules database. Specify 'true' or '1' for installation. Default is `false`.
+**<a name="INSTALL"></a>INSTALL** | Whether to install the Modules in the Modules database. Specify `true` or `1` for installation. Default is `false`.
 **<a name="LOADER-BASE64-ENCODE"></a>LOADER-BASE64-ENCODE** | Boolean option specifying whether the content loaded by FileUrisStreamingXMLLoader or FileUrisXMLLoader (with the option `LOADER-USE-ENVELOPE=true`) should be base64 encoded, or appended as the child of the `/corb-loader/content` element. Default is `false`.
 **<a name="LOADER-PATH"></a>LOADER-PATH** | The path to the resource (file or folder) that will be the input source for a loader class that extends AbstractFileUrisLoader, such as FileUrisDirectoryLoader, FileUrisLoader, FileUrisStreamingXmlLoader, FileUrisXmlLoader, and FileUrisZipLoader
 **<a name="LOADER-SET-URIS-BATCH-REF"></a>LOADER-SET-URIS-BATCH-REF** | Boolean option indicating whether a file loader should set the [URIS_BATCH_REF](https://github.com/marklogic-community/corb2#uris_batch_ref). Default is `false`.
 **<a name="LOADER-USE-ENVELOPE"></a>LOADER-USE-ENVELOPE** | Boolean value indicating whether FileUris loaders should use an XML envelope, in order to send file metadata in addition to the file content.
 **<a name="JOB-NAME"></a>JOB-NAME** | Name of the current Job.
 **<a name="JOB-SERVER-PORT"></a>JOB-SERVER-PORT** | Optional port number to start a lightweight HTTP server which can be used to monitor, change the number of threads, and pause/resume the CoRB job. Port number must be a valid port(s) or a valid range of ports.  <ul><li>Ex: 9080</li><li> Ex: 9080,9083,9087</li><li> Ex: 9080-9090</li><li> Ex: 9080-9083,9085-9090</li></ul>  The job server will bind to a port from the configured port number(s). By default, if the **JOB-SERVER-PORT** option is not specified, a job server is not started. <p> When a port is specified and available, the job server URL will be logged to the console with both the UI `http://<host>:<port>` and metrics URL `http://<host>:<port>/metrics`. (grep for string _com.marklogic.developer.corb.JobServer logUsage_)  <p>The metrics URL supports the following parameters:<ul><li>**COMMAND**=pause (or resume). </li><li>**CONCISE**=true limits the amound of data returned</li><li>**FORMAT**=json (or xml) returns job stats in the requested format</li><li>**THREAD-COUNT**=<#> will adjust the number of threads for the executing job</li></ul>  
-**<a name="MAX-OPTS-FROM-MODULE"></a>MAX-OPTS-FROM-MODULE** | Max number of custom inputs from the **URIS-MODULE** to other modules. Default is `10`.
+**<a name="MAX-OPTS-FROM-MODULE"></a>MAX-OPTS-FROM-MODULE** | Maximum number of custom inputs from the **URIS-MODULE** to other modules. Default is `10`.
 **<a name="METADATA"></a>METADATA** | The variable name that needs to be defined in the server side query to use the metadata set by the **URIS-LOADER**.
 **<a name="METADATA-TO-PROCESS-MODULE"></a>METADATA-TO-PROCESS-MODULE** | If this option is set to true, **XML-METADATA** is set as an external variable with name **METADATA** to **PROCESS-MODULE** as well. Default is `false`.
 **<a name="METRICS-COLLECTIONS"></a>METRICS-COLLECTIONS** | Adds the metrics document to the specified collection.|
@@ -303,9 +300,9 @@ XCC-HOST-NAME=hostname1,hostname2,..
 ```
 
 The default implementation for `com.marklogic.developer.corb.ContentSourcePool` is `com.marklogic.developer.corb.DefaultContentSourcePool`. It uses below options for **CONNECTION-POLICY** for allocating connections to callers. 
-- ROUND-ROBIN - (Default) Connections are allocated using round-robin algorithm. 
-- RANDOM - Connections are randomly allocated.
-- LOAD - Host with least number of active connections is allocated to caller.    
+- **ROUND-ROBIN** - (Default) Connections are allocated using round-robin algorithm. 
+- **RANDOM** - Connections are randomly allocated.
+- **LOAD** - Host with least number of active connections is allocated to caller.    
 
 ### Query and Connection Retries
 CoRB automatically retries the requests a given URI when it encounters `com.marklogic.xcc.exceptions.ServerConnectionException` from MarkLogic. If necessary, the number of retry attempts can be configured using **XCC-CONNECTION-RETRY-LIMIT**. If multiple hosts are specified, we can optionally configure retries per each host using **XCC-CONNECTION-HOST-RETRY-LIMIT**. CoRB waits at least **XCC-CONNECTION-RETRY-INTERVAL** seconds before a connection is retried on a failed host. 
