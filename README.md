@@ -18,9 +18,9 @@ For additional information, refer to the [CoRB Wiki](https://github.com/marklogi
 Download the latest release directly from https://github.com/marklogic-community/corb2/releases or resolve dependencies through [Maven Central](http://mvnrepository.com/artifact/com.marklogic/marklogic-corb).
 
 ### Compatability 
-- [CoRB v2.4.0](https://github.com/marklogic-community/corb2/releases/tag/2.4.0) (or later) requires Java 8 (or later) to run.
-- [CoRB v2.3.2](https://github.com/marklogic-community/corb2/releases/tag/2.3.2) is the last release compatable with Java 7 and 6.
-- [CoRB v2.2.0](https://github.com/marklogic-community/corb2/releases/tag/2.2.0) (or later) requires [marklogic-xcc 8.0.* (or later)](https://developer.marklogic.com/products/xcc) to run.
+-  [CoRB v2.4.0](https://github.com/marklogic-community/corb2/releases/tag/2.4.0) (or later) requires Java 8 (or later) to run.
+-  [CoRB v2.3.2](https://github.com/marklogic-community/corb2/releases/tag/2.3.2) is the last release compatable with Java 7 and 6.
+-  [CoRB v2.2.0](https://github.com/marklogic-community/corb2/releases/tag/2.2.0) (or later) requires [marklogic-xcc 8.0.* (or later)](https://developer.marklogic.com/products/xcc) to run.
   > Note: marklogic-xcc 8 is backwards compatible to MarkLogic 5 and runs on Java 1.6 or later.
 
 ### Getting Help
@@ -300,9 +300,9 @@ XCC-HOST-NAME=hostname1,hostname2,..
 ```
 
 The default implementation for `com.marklogic.developer.corb.ContentSourcePool` is `com.marklogic.developer.corb.DefaultContentSourcePool`. It uses below options for **CONNECTION-POLICY** for allocating connections to callers. 
-- **ROUND-ROBIN** - (Default) Connections are allocated using round-robin algorithm. 
-- **RANDOM** - Connections are randomly allocated.
-- **LOAD** - Host with least number of active connections is allocated to caller.    
+-  **ROUND-ROBIN** - (Default) Connections are allocated using round-robin algorithm. 
+-  **RANDOM** - Connections are randomly allocated.
+-  **LOAD** - Host with least number of active connections is allocated to caller.    
 
 ### Query and Connection Retries
 CoRB automatically retries the requests a given URI when it encounters `com.marklogic.xcc.exceptions.ServerConnectionException` from MarkLogic. If necessary, the number of retry attempts can be configured using **XCC-CONNECTION-RETRY-LIMIT**. If multiple hosts are specified, we can optionally configure retries per each host using **XCC-CONNECTION-HOST-RETRY-LIMIT**. CoRB waits at least **XCC-CONNECTION-RETRY-INTERVAL** seconds before a connection is retried on a failed host. 
