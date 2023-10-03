@@ -309,7 +309,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
             String xccConnectionString = connectionStringForContentSource.get(contentSource);
             renewalTimeForContentSource.put(contentSource, System.currentTimeMillis());
             ContentSource freshContentSource = super.createContentSource(xccConnectionString);
-            if (!ipAddressByHostAndPort.getOrDefault(asString(freshContentSource), Collections.emptySet())
+            if (freshContentSource != null && !ipAddressByHostAndPort.getOrDefault(asString(freshContentSource), Collections.emptySet())
                     .contains(getIPAddress(freshContentSource)) &&
                 haveDifferentIP(contentSource, freshContentSource)) {
                 addContentSource(freshContentSource, xccConnectionString);
