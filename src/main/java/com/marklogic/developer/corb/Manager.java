@@ -290,7 +290,7 @@ public class Manager extends AbstractManager implements Closeable {
         if (modulesDatabase != null) {
             options.setModulesDatabase(modulesDatabase);
         }
-        if (install != null && ("true".equalsIgnoreCase(install) || "1".equals(install))) {
+        if ("true".equalsIgnoreCase(install) || "1".equals(install)) {
             options.setDoInstall(true);
         }
         if (urisFile != null) {
@@ -303,7 +303,7 @@ public class Manager extends AbstractManager implements Closeable {
         if (batchSize != null) {
             options.setBatchSize(Integer.parseInt(batchSize));
         }
-        if (failOnError != null && "false".equalsIgnoreCase(failOnError)) {
+        if ("false".equalsIgnoreCase(failOnError)) {
             options.setFailOnError(false);
         }
         if (diskQueueMaxInMemorySize != null) {
