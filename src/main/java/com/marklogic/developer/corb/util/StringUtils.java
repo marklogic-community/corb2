@@ -431,8 +431,8 @@ public final class StringUtils {
                 if (aSplitByComma.contains("-")) {
                     String[] splitByDash = aSplitByComma.split("\\s*-\\s*");
                     if (splitByDash.length == 2) {
-                        Integer start = Integer.parseInt(splitByDash[0]);
-                        Integer end = Integer.parseInt(splitByDash[1]);
+                        int start = Integer.parseInt(splitByDash[0]);
+                        int end = Integer.parseInt(splitByDash[1]);
                         if (start > end) {
                             int tmp = start;
                             start = end;
