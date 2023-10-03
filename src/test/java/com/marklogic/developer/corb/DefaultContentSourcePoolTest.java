@@ -112,7 +112,7 @@ public class DefaultContentSourcePoolTest {
             contentSourcePool.get();
             long after = System.currentTimeMillis();
 
-            assertTrue(contentSourcePool.getConnectRetryInterval() * 1000 <= after - before);
+            assertTrue(contentSourcePool.getConnectRetryInterval() * 1000L <= after - before);
         }
     }
 
@@ -185,16 +185,21 @@ public class DefaultContentSourcePoolTest {
            assertEquals(CONNECTION_POLICY_ROUND_ROBIN, contentSourcePool.connectionPolicy);
            assertEquals(3, contentSourcePool.getAvailableContentSources().size());
            ContentSource firstContentSource = contentSourcePool.nextContentSource();
+           String ipAndPort = contentSourcePool.asString(firstContentSource);
+           assertEquals(1, contentSourcePool.ipAddressByHostAndPort.get(ipAndPort).size());
            assertNotNull(firstContentSource);
            assertNotNull(contentSourcePool.nextContentSource());
            assertNotNull(contentSourcePool.nextContentSource());
            assertEquals(firstContentSource, contentSourcePool.nextContentSource());
            contentSourcePool.remove(firstContentSource);
+           assertEquals(0, contentSourcePool.ipAddressByHostAndPort.get(ipAndPort).size());
            assertEquals(2, contentSourcePool.getAvailableContentSources().size());
+
            contentSourcePool.remove(contentSourcePool.nextContentSource());
            contentSourcePool.remove(contentSourcePool.nextContentSource());
            contentSourcePool.remove(contentSourcePool.nextContentSource());
            assertNull(contentSourcePool.nextContentSource());
+
        }
     }
 
@@ -206,12 +211,14 @@ public class DefaultContentSourcePoolTest {
             assertFalse(contentSourcePool.connectionStringForContentSource.isEmpty());
             assertTrue(contentSourcePool.errorTimeForContentSource.isEmpty());
             assertTrue(contentSourcePool.errorCountForContentSource.isEmpty());
+            assertFalse(contentSourcePool.ipAddressByHostAndPort.isEmpty());
             assertFalse(contentSourcePool.renewalTimeForContentSource.isEmpty());
             contentSourcePool.close();
             assertTrue(contentSourcePool.connectionCountForContentSource.isEmpty());
             assertTrue(contentSourcePool.connectionStringForContentSource.isEmpty());
             assertTrue(contentSourcePool.errorTimeForContentSource.isEmpty());
             assertTrue(contentSourcePool.errorCountForContentSource.isEmpty());
+            assertTrue(contentSourcePool.ipAddressByHostAndPort.isEmpty());
             assertTrue(contentSourcePool.renewalTimeForContentSource.isEmpty());
         }
     }
@@ -260,13 +267,14 @@ public class DefaultContentSourcePoolTest {
     }
 
     @Test
-    public void testRenewAndAddContentSource() {
+    public void testRenewContentSource() {
         try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, localhostXccUri);
             assertEquals(1, contentSourcePool.getAvailableContentSources().size());
             ContentSource contentSource = contentSourcePool.nextContentSource();
-            contentSourcePool.renewAndAddContentSource(contentSource);
+            contentSourcePool.renewContentSource(contentSource);
             assertEquals("IP hasn't changed for localhost, so no new ContentSource",1, contentSourcePool.getAvailableContentSources().size());
+            assertEquals("No new IP added to list of IP for hostAndPort", 1, contentSourcePool.ipAddressByHostAndPort.get(contentSourcePool.asString(contentSource)).size());
         }
     }
 
@@ -697,28 +705,7 @@ public class DefaultContentSourcePoolTest {
         }
     }
 
-    @Test
-    public void testReplaceContentSource() {
-        try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
-            contentSourcePool.init(null, null, "xcc://foo:bar@1.1.1.1:8000");
-            ContentSource contentSource = contentSourcePool.get();
-            long time = System.currentTimeMillis();
-            ContentSource freshContentSource = mock(ContentSource.class);
-            contentSourcePool.errorTimeForContentSource.put(contentSource, time);
-            contentSourcePool.connectionCountForContentSource.put(contentSource, 5L);
-            contentSourcePool.errorCountForContentSource.put(contentSource, 3L);
-            contentSourcePool.replaceContentSource(contentSource, freshContentSource);
-            assertEquals(1, contentSourcePool.contentSources.size());
-            assertEquals(freshContentSource, contentSourcePool.contentSources.get(0));
-            assertEquals(3L, (long)contentSourcePool.errorCountForContentSource.get(freshContentSource));
-            assertEquals("xcc://foo:bar@1.1.1.1:8000", contentSourcePool.connectionStringForContentSource.get(freshContentSource));
-            assertEquals(5L, (long)contentSourcePool.connectionCountForContentSource.get(freshContentSource));
-            assertEquals(time, (long)contentSourcePool.errorTimeForContentSource.get(freshContentSource));
 
-        } catch (CorbException ex) {
-            fail();
-        }
-    }
 
     @Test
     public void testHaveDifferentIP() {
@@ -756,7 +743,7 @@ public class DefaultContentSourcePoolTest {
             contentSourcePool.init(null, null, "xcc://user:pass@localhost:8000");
             ContentSource contentSource = contentSourcePool.get();
             assertEquals("if null, prints the word", "null", contentSourcePool.asString(null));
-            assertEquals("otherwise, is just the contentsource.toString()", contentSource.toString(), contentSourcePool.asString(contentSource));
+            assertEquals("otherwise, is hostname:port", "localhost:8000", contentSourcePool.asString(contentSource));
         } catch (CorbException ex){
             fail();
         }
