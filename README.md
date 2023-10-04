@@ -1,7 +1,6 @@
 [![Maven Central - download the latest version](https://maven-badges.herokuapp.com/maven-central/com.marklogic/marklogic-corb/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.marklogic/marklogic-corb)
 [![Codecov code coverage](https://codecov.io/gh/marklogic-community/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic-community/corb2/branch/development)
 [![Snyk Known Vulnerabilities Badge](https://snyk.io/test/github/marklogic-community/corb2/badge.svg)](https://snyk.io/test/github/marklogic-community/corb2)
-[![Javadocs](https://www.javadoc.io/badge/com.marklogic/marklogic-corb.svg?color=blue)](https://www.javadoc.io/doc/com.marklogic/marklogic-corb)
 
 ### [What is CoRB?](https://github.com/marklogic-community/corb2/wiki#what-is-corb)
 CoRB is a Java tool designed for bulk content-reprocessing of documents stored in [MarkLogic](http://www.marklogic.com/). 
@@ -195,7 +194,7 @@ JavaScript module must have an `.sjs` file extension when deployed to Modules da
 
 For example, a simple URIS-MODULE may look like this:
 ```javascript
-var uris = cts.uris();
+let uris = cts.uris();
 fn.insertBefore(uris, 0, fn.count(uris));
 ```
 
