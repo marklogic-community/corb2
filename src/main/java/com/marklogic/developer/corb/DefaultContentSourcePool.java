@@ -289,14 +289,10 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
                 errorTimeForContentSource.put(contentSource, System.currentTimeMillis());
 
                 LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{asString(contentSource), errorCount, hostRetryLimit});
-		        // if we haven't exhausted retries, replace this ContentSource with a fresh one (will re-bind and obtain IP, which can help with proxies with dynamic IP until XCC knows how to handle that better
                 if (errorCount > hostRetryLimit) {
                     remove(contentSource);
                 }
-                /* Due to issues with how ContentSource statically resolves the IP address of the host when constructed,
-                * dynamic pools of IP addresses for a given FQDN may not be used, and if a host is removed from a pool
-                * then persistent errors would be encountered.
-                */
+                //re-bind and obtain IP, adding new ones to the ContentSource pool, which can help with proxies and load balancers with dynamic IP
                 renewContentSource(contentSource);
 
             } else {
