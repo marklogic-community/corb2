@@ -61,7 +61,10 @@ sourceSets {
 }
 
 configurations {
-    shadow
+    shadow {
+        extendsFrom api //will ensure that XCC is listed as a dependency
+    }
+
     integrationTestImplementation.extendsFrom testImplementation
     integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
 
@@ -83,14 +86,10 @@ configurations {
 dependencies {
     api 'com.marklogic:marklogic-xcc:11.0.3'
     // JavaScript libraries are  bundled in a fat jar for the UI
-    shadow  "org.webjars:angularjs:$angularVersion"
     implementation "org.webjars:angularjs:$angularVersion"
-    shadow  "org.webjars:bootstrap:$bootstrapVersion"
     implementation "org.webjars:bootstrap:$bootstrapVersion"
-    shadow  "org.webjars:jquery:$jqueryVersion"
     implementation "org.webjars:jquery:$jqueryVersion"
     // externalsortinginjava classes with the corb distro in a fat jar
-    shadow  "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
     implementation "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     testImplementation 'org.jasypt:jasypt:1.9.3'
@@ -117,14 +116,15 @@ processResources {
 }
 processTestResources.dependsOn processResources
 
-//disabling, because we want to incorporate externalsortingjava in uber jar and use as the artifact
+//disabling, because we want to incorporate externalsortingjava and UI resources in uber jar and use as the artifact
 jar {
     enabled = false
     dependsOn(shadowJar { classifier = null })
 }
 shadowJar {
-    project.configurations.implementation.canBeResolved = true
-    configurations = [project.configurations.implementation, project.configurations.shadow]
+
+    //project.configurations.implementation.canBeResolved = true
+    configurations = [project.configurations.shadow]
     dependencies {
         include(dependency("com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"))
         include(dependency('org.webjars:.*'))
@@ -255,6 +255,12 @@ tasks.withType(Test) {
 
 tasks.coveralls {
     dependsOn 'check'
+}
+
+// Having both runtimeElements and shadowRuntimeElements variants makes it harder to resolve CoRB as a dependency and is confusing.
+// We just want the fat jar listed and seen as the only option.
+components.java.withVariantsFromConfiguration(configurations.getByName("runtimeElements")) {
+    skip()
 }
 
 publishing {
