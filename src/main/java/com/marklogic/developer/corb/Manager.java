@@ -127,7 +127,7 @@ public class Manager extends AbstractManager implements Closeable {
      */
     public static void main(String... args) {
         try (Manager manager = new Manager()) {
-            if (Arrays.stream(args).anyMatch(arg -> arg.equalsIgnoreCase("-?") || arg.equalsIgnoreCase("-h") || arg.equalsIgnoreCase("--help") || arg.equalsIgnoreCase("--usage"))) {
+            if (args != null && Arrays.stream(args).anyMatch(arg -> "-?".equalsIgnoreCase(arg) || "-h".equalsIgnoreCase(arg) || "--help".equalsIgnoreCase(arg) || "--usage".equalsIgnoreCase(arg))) {
                 manager.usage();
             } else {
                 try {
