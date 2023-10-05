@@ -174,6 +174,16 @@ public class ManagerTest {
         assertEquals(1, records.size());
     }
 
+    @Test
+    public void testHelp() {
+        clearSystemProperties();
+        String[] args =  new String[]{"--help"};
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(outContent));
+        Manager.main(args);
+        assertTrue(outContent.toString().contains("CoRB version"));
+    }
+
     @Test(expected = CorbException.class)
     public void testInitNullArgsProperties() throws CorbException {
         clearSystemProperties();
