@@ -503,7 +503,7 @@ public abstract class AbstractManager {
 
     protected void usage() {
         PrintStream err = System.err;
-        err.println("CoRB2 " + VERSION_MSG + " requires options to be specified through one or more of the following mechanisms:\n"
+        err.println("CoRB " + VERSION_MSG + " requires options to be specified through one or more of the following mechanisms:\n"
                 + "1.) command-line parameters\n"
                 + "2.) Java system properties ex: -DXCC-CONNECTION-URI=xcc://user:password@localhost:8202\n"
                 + "3.) As properties file in the class path specified using -DOPTIONS-FILE=myjob.properties. "

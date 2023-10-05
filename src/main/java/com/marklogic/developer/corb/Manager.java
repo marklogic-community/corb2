@@ -127,23 +127,27 @@ public class Manager extends AbstractManager implements Closeable {
      */
     public static void main(String... args) {
         try (Manager manager = new Manager()) {
-            try {
-                manager.init(args);
-            } catch (Exception exc) {
-                LOG.log(SEVERE, "Error initializing CoRB " + exc.getMessage(), exc);
+            if (Arrays.stream(args).anyMatch(arg -> arg.equalsIgnoreCase("-?") || arg.equalsIgnoreCase("-h") || arg.equalsIgnoreCase("--help") || arg.equalsIgnoreCase("--usage"))) {
                 manager.usage();
-                LOG.log(INFO, () -> "init error - exiting with code " + EXIT_CODE_INIT_ERROR);
-                System.exit(EXIT_CODE_INIT_ERROR);
-            }
-            //now we can start CoRB.
-            try {
-                manager.run();
-                manager.close();
-            } catch (Exception exc) {
-                LOG.log(SEVERE, "Error while running CoRB", exc);
-                manager.setExitCode(EXIT_CODE_PROCESSING_ERROR);
-            } finally {
-                System.exit(manager.getExitCode());
+            } else {
+                try {
+                    manager.init(args);
+                } catch (Exception exc) {
+                    manager.usage();
+                    LOG.log(SEVERE, "Error initializing CoRB " + exc.getMessage(), exc);
+                    LOG.log(INFO, () -> "init error - exiting with code " + EXIT_CODE_INIT_ERROR);
+                    System.exit(EXIT_CODE_INIT_ERROR);
+                }
+                //now we can start CoRB.
+                try {
+                    manager.run();
+                    manager.close();
+                } catch (Exception exc) {
+                    LOG.log(SEVERE, "Error while running CoRB", exc);
+                    manager.setExitCode(EXIT_CODE_PROCESSING_ERROR);
+                } finally {
+                    System.exit(manager.getExitCode());
+                }
             }
         }
     }
