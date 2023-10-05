@@ -31,13 +31,8 @@ configurations {
 }
 
 dependencies {
-    // required to run CoRB2
-    corb "com.marklogic:marklogic-xcc:${xccVersion}"
-    corb("com.marklogic:marklogic-corb:${corbVersion}") {
-        attributes {
-            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
-        }
-    }
+    // required to run CoRB
+    corb("com.marklogic:marklogic-corb:${corbVersion}")
     // optional
     corb 'org.jasypt:jasypt:1.9.2' // necessary to leverage JasyptDecrypter
 }
@@ -72,7 +67,7 @@ ext {
  *     gradle corb -DURIS-MODULE="src/main/ml-modules/ext/corb2-project/uris.xqy|ADHOC" -DPROCESS-MODULE="src/main/ml-modules/ext/corb2-project/corb/transform.xqy|ADHOC"
  */
 task corb(type: com.marklogic.gradle.task.CorbTask) {
-    /* Either uncomment and set the xccConnectionUri below and set an appropriate XCC connection string,
+    /* Either uncomment and set the xccConnectionUri below and set an appropriate connection string,
      * or specify on the commandline as a project property: -PcorbXccConnectionUri=xcc://user:pass@host:port/content-database
      * or specify as a System property: -DXCC-CONNECTION-URI=xcc://user:pass@host:port/content-database
      * or instead of setting the XCC-CONNECTION-URI, set the individual XCC options
