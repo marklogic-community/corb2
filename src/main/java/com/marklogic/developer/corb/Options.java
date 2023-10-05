@@ -337,7 +337,7 @@ public final class Options {
 
     /**
      * Boolean value indicating whether or not to require a PROCESS-MODULE when an Export*ToFile {@value #PROCESS_TASK} is specified.
-     * This can help avoid confusion when the {@PROCESS_MODULE} was accidentally not configured and no files are generated.
+     * This can help avoid confusion when the {@value #PROCESS_MODULE} was accidentally not configured and no files are generated.
      * Default is true
      *
      * @since 2.5.5
