@@ -153,7 +153,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
                 final Cipher cipher = Cipher.getInstance(algorithm);
                 cipher.init(Cipher.DECRYPT_MODE, privateKey);
                 dValue = new String(cipher.doFinal(Base64.getDecoder().decode(value)));
-            } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException exc) {
+            } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalArgumentException | IllegalBlockSizeException | BadPaddingException exc) {
                 LOG.log(INFO, MessageFormat.format("Cannot decrypt {0}. Ignore if clear text.", property), exc);
             }
         }
