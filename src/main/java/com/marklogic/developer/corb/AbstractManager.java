@@ -44,12 +44,9 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Properties;
+
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 import static java.util.logging.Level.SEVERE;
@@ -156,6 +153,18 @@ public abstract class AbstractManager {
 
     public TransformOptions getOptions() {
         return options;
+    }
+
+    public static boolean hasUsage(String... args) {
+        return args != null &&
+            Arrays.stream(args).anyMatch(arg ->
+                "-h".equalsIgnoreCase(arg) ||
+                "--help".equalsIgnoreCase(arg) ||
+                "--usage".equalsIgnoreCase(arg));
+    }
+
+    public static String getHelpFlagMessage() {
+        return "For a full list of options and usage information, use commandline switch -h or --help or --usage";
     }
 
     public void initProperties(Properties props) throws CorbException {
@@ -511,7 +520,7 @@ public abstract class AbstractManager {
                 + "If specified in more than one place, a command line parameter takes precedence over "
                 + "a Java system property, which take precedence over a property "
                 + "from the OPTIONS-FILE properties file.\n\n"
-                + "CoRB2 Options:\n"); // NOPMD
+                + "CoRB Options:\n"); // NOPMD
 
         for (java.lang.reflect.Field field : Options.class.getDeclaredFields()) {
             Usage usage = field.getAnnotation(Usage.class);

@@ -127,14 +127,14 @@ public class Manager extends AbstractManager implements Closeable {
      */
     public static void main(String... args) {
         try (Manager manager = new Manager()) {
-            if (args != null && Arrays.stream(args).anyMatch(arg -> "-?".equalsIgnoreCase(arg) || "-h".equalsIgnoreCase(arg) || "--help".equalsIgnoreCase(arg) || "--usage".equalsIgnoreCase(arg))) {
+            if (hasUsage(args)) {
                 manager.usage();
             } else {
                 try {
                     manager.init(args);
                 } catch (Exception exc) {
-                    manager.usage();
                     LOG.log(SEVERE, "Error initializing CoRB " + exc.getMessage(), exc);
+                    LOG.log(INFO, getHelpFlagMessage());
                     LOG.log(INFO, () -> "init error - exiting with code " + EXIT_CODE_INIT_ERROR);
                     System.exit(EXIT_CODE_INIT_ERROR);
                 }
@@ -552,16 +552,16 @@ public class Manager extends AbstractManager implements Closeable {
         super.usage();
 
         List<String> args = new ArrayList<>(7);
-        String xccConnectionUri = "xcc://user:password@host:port/[ database ]";
+        String xccConnectionUri = "xcc://user:password@host:port/[database]";
         String threadCount = "10";
         String optionsFile = "myjob.properties";
         PrintStream err = System.err; // NOPMD
 
         err.println("usage 1:"); // NOPMD
         err.println(TAB + NAME + ' ' + xccConnectionUri + " input-selector module-name.xqy"
-                + " [ thread-count [ uris-module [ module-root" + " [ modules-database [ install [ process-task"
-                + " [ pre-batch-module [ pre-batch-task" + " [ post-batch-module  [ post-batch-task"
-                + " [ export-file-dir [ export-file-name" + " [ uris-file ] ] ] ] ] ] ] ] ] ] ] ] ]"); // NOPMD
+                + " [THREAD-COUNT] [URIS-MODULE] [MODULE-ROOT] [MODULES-DATABASE] [INSTALL] [PROCESS-TASK]"
+                + " [PRE-BATCH-MODULE] [PRE-BATCH-TASK] [POST-BATCH-MODULE] [POST-BATCH-TASK]"
+                + " [EXPORT-FILE-DIR] [EXPORT-FILE-NAME] [URIS-FILE]"); // NOPMD
 
         err.println("\nusage 2:");
         args.add(buildSystemPropertyArg(XCC_CONNECTION_URI, xccConnectionUri));
