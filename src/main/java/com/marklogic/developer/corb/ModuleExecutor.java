@@ -74,23 +74,27 @@ public class ModuleExecutor extends AbstractManager {
      */
     public static void main(String... args) {
         ModuleExecutor moduleExecutor = new ModuleExecutor();
-        try {
-            moduleExecutor.init(args);
-        } catch (Exception exc) {
-            LOG.log(SEVERE, "Error initializing ModuleExecutor", exc);
+        if (hasUsage(args)) {
             moduleExecutor.usage();
-            LOG.log(INFO, () -> "init error - exiting with code " + EXIT_CODE_INIT_ERROR);
-            System.exit(EXIT_CODE_INIT_ERROR);
-        }
+        } else {
+            try {
+                moduleExecutor.init(args);
+            } catch (Exception exc) {
+                LOG.log(SEVERE, "Error initializing ModuleExecutor", exc);
+                LOG.log(INFO, getHelpFlagMessage());
+                LOG.log(INFO, () -> "init error - exiting with code " + EXIT_CODE_INIT_ERROR);
+                System.exit(EXIT_CODE_INIT_ERROR);
+            }
 
-        try {
-            moduleExecutor.run();
-            LOG.log(INFO, () -> "success - exiting with code " + EXIT_CODE_SUCCESS);
-            System.exit(EXIT_CODE_SUCCESS);
-        } catch (Exception exc) {
-            LOG.log(SEVERE, "Error while running CORB", exc);
-            LOG.log(INFO, () -> "processing error - exiting with code " + EXIT_CODE_PROCESSING_ERROR);
-            System.exit(EXIT_CODE_PROCESSING_ERROR);
+            try {
+                moduleExecutor.run();
+                LOG.log(INFO, () -> "success - exiting with code " + EXIT_CODE_SUCCESS);
+                System.exit(EXIT_CODE_SUCCESS);
+            } catch (Exception exc) {
+                LOG.log(SEVERE, "Error while running CORB", exc);
+                LOG.log(INFO, () -> "processing error - exiting with code " + EXIT_CODE_PROCESSING_ERROR);
+                System.exit(EXIT_CODE_PROCESSING_ERROR);
+            }
         }
     }
 
