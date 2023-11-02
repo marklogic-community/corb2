@@ -87,10 +87,14 @@ dependencies {
     api 'com.marklogic:marklogic-xcc:11.1.0'
     // JavaScript libraries are  bundled in a fat jar for the UI
     implementation "org.webjars:angularjs:$angularVersion"
+    shadow "org.webjars:angularjs:$angularVersion"
     implementation "org.webjars:bootstrap:$bootstrapVersion"
+    shadow "org.webjars:bootstrap:$bootstrapVersion"
     implementation "org.webjars:jquery:$jqueryVersion"
+    shadow "org.webjars:jquery:$jqueryVersion"
     // externalsortinginjava classes with the corb distro in a fat jar
     implementation "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
+    shadow "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     testImplementation 'org.jasypt:jasypt:1.9.3'
     testImplementation 'com.github.stefanbirkner:system-rules:1.19.0' //facilitates tests for methods that invoke System.exit
