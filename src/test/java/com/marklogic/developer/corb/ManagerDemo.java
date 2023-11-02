@@ -59,7 +59,7 @@ public class ManagerDemo {
         properties.setProperty(Options.METRICS_COLLECTIONS, "managerDemo");
 
         Manager manager = new Manager();
-
+        new File(exportFilename).deleteOnExit();
         try {
             manager.init(properties);
 

@@ -250,6 +250,37 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
+    public void testDoDecryptValueWithDashes() {
+        try {
+            String value = "unencrypted-value-with-dashes";
+            PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
+            instance.init(null);
+            instance.properties.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_PATH);
+            instance.init_decrypter();
+            String result = instance.doDecrypt("key", value);
+            assertEquals(value, result);
+        } catch (IOException | ClassNotFoundException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testDoDecryptValueForLocalhost() {
+        try {
+            String value = "localhost";
+            PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
+            instance.init(null);
+            instance.properties.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_PATH);
+            instance.init_decrypter();
+            String result = instance.doDecrypt("key", value);
+            assertEquals(value, result);
+        } catch (IOException | ClassNotFoundException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+    @Test
     public void testDoDecryptUnencryptedValue() {
         try {
             String value = SECRET;
