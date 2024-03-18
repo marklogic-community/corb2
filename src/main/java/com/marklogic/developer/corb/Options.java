@@ -685,6 +685,13 @@ public final class Options {
     public static final String OPTIONS_FILE = "OPTIONS-FILE";
 
     /**
+     * Specifies the character encoding of the OPTIONS-FILE. Otherwise, the system default will be used.
+     * @since 2.5.7
+     */
+    @Usage(description = "Specifies the character encoding of the OPTIONS-FILE. Otherwise, the system default will be used.")
+    public static final String OPTIONS_FILE_ENCODING = "OPTIONS-FILE-ENCODING";
+
+    /**
      * The minimum number of results that must be returned for the POST-BATCH-MODULE
      *  or POST-BATCH-TASK to be executed.
      * Default is 1

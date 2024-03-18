@@ -33,16 +33,13 @@ import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.types.XdmItem;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.io.StringWriter;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.Map.Entry;
@@ -97,24 +94,45 @@ public abstract class AbstractManager {
     protected static Properties loadPropertiesFile(String filename, boolean exceptionIfNotFound, Properties props) throws IOException {
         String name = trim(filename);
         if (isNotBlank(name)) {
-            try (InputStream is = Manager.class.getResourceAsStream('/' + name)) {
-                if (is != null) {
-                    LOG.log(INFO, () -> MessageFormat.format("Loading {0} from classpath", name));
-                    props.load(is);
-                } else {
-                    File f = new File(filename);
-                    if (f.exists() && !f.isDirectory()) {
-                        LOG.log(INFO, () -> MessageFormat.format("Loading {0} from filesystem", name));
-                        try (FileInputStream fis = new FileInputStream(f)) {
-                            props.load(fis);
-                        }
-                    } else if (exceptionIfNotFound) {
-                        throw new IllegalStateException("Unable to load properties file " + name);
+            Charset charset = Charset.defaultCharset(); //Charset.forName("ASCII");//
+            loadPropertiesFile(filename, charset, exceptionIfNotFound, props);
+        }
+        return props;
+    }
+
+    private static void loadPropertiesFile(String name, Charset encoding, boolean exceptionIfNotFound, @NotNull Properties properties) throws IOException {
+        try (InputStream inputStream = Manager.class.getResourceAsStream('/' + name)) {
+            if (inputStream != null) {
+                LOG.log(INFO, () -> MessageFormat.format("Loading {0} from classpath", name));
+                loadPropertiesFile(inputStream, encoding, name, exceptionIfNotFound, properties);
+            } else {
+                File f = new File(name);
+                if (f.exists() && !f.isDirectory()) {
+                    LOG.log(INFO, "Loading {0} from filesystem", name);
+                    try (FileInputStream fileInputStream = new FileInputStream(f)) {
+                        loadPropertiesFile(fileInputStream, encoding, name, exceptionIfNotFound, properties);
                     }
+                } else if (exceptionIfNotFound) {
+                    throw new IllegalStateException("Unable to load properties file " + name);
                 }
             }
         }
-        return props;
+    }
+
+    private static void loadPropertiesFile(InputStream inputStream, Charset encoding, String name, boolean exceptionIfNotFound, @NotNull Properties properties) throws IOException {
+        try (InputStreamReader inputStreamReader = new InputStreamReader(inputStream, encoding) ) {
+            properties.load(inputStreamReader);
+            //If the OPTIONS-FILE-ENCODING specified which encoding to read it as, and it's different from what was already used,
+            // then re-load it using the specified character encoding
+            String optionsFileEncoding = properties.getProperty(OPTIONS_FILE_ENCODING);
+            if (optionsFileEncoding != null ) {
+                Charset optionsCharset = Charset.forName(optionsFileEncoding);
+                if (!encoding.equals(optionsCharset)) {
+                    LOG.log(INFO, "Reloading properties as {0} encoded", optionsCharset);
+                    loadPropertiesFile(name, optionsCharset, exceptionIfNotFound, properties);
+                }
+            }
+        }
     }
 
     public static String getAdhocQuery(String module) {

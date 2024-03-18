@@ -20,13 +20,14 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
 import static com.marklogic.developer.corb.ManagerTest.getMockManagerWithEmptyResults;
+
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.exceptions.RequestException;
+
+import static com.marklogic.developer.corb.Options.OPTIONS_FILE_ENCODING;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
+
+import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -109,6 +110,21 @@ public class AbstractManagerTest {
             assertNotNull(result);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testLoadPropertiesFileEncoding() {
+        Properties properties = new Properties();
+        properties.setProperty(OPTIONS_FILE_ENCODING, "ascii");
+        try {
+            Properties result = AbstractManager.loadPropertiesFile(PROPERTIES_FILE_PATH, true, properties);
+            assertNotEquals("Verify that UTF8 value gets mangled when read as ascii","コンニチハ", result.getProperty("URIS-MODULE.greeting"));
+            properties.setProperty(OPTIONS_FILE_ENCODING, "utf8");
+            result = AbstractManager.loadPropertiesFile(PROPERTIES_FILE_PATH, true, properties);
+            assertEquals("Value is read correctly when read as UTF8 encoded","コンニチハ", result.getProperty("URIS-MODULE.greeting"));
+        } catch(IOException ex) {
             fail();
         }
     }
