@@ -23,8 +23,14 @@ import static com.marklogic.developer.corb.util.IOUtils.isDirectory;
 
 import com.marklogic.developer.corb.util.NumberUtils;
 import com.marklogic.developer.corb.util.StringUtils;
+
+import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
+import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
+import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
+
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
@@ -51,11 +57,6 @@ import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
-import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 
 public abstract class AbstractManager {
 
@@ -87,33 +88,37 @@ public abstract class AbstractManager {
     }
 
     public static Properties loadPropertiesFile(String filename, boolean excIfNotFound) throws IOException {
-        Properties props = new Properties();
-        return loadPropertiesFile(filename, excIfNotFound, props);
+        Properties properties = new Properties();
+        return loadPropertiesFile(filename, excIfNotFound, properties);
     }
 
-    protected static Properties loadPropertiesFile(String filename, boolean exceptionIfNotFound, Properties props) throws IOException {
+    protected static Properties loadPropertiesFile(String filename, boolean exceptionIfNotFound, Properties properties) throws IOException {
         String name = trim(filename);
         if (isNotBlank(name)) {
-            Charset charset = Charset.defaultCharset(); //Charset.forName("ASCII");//
-            loadPropertiesFile(filename, charset, exceptionIfNotFound, props);
+            Charset charset = Charset.defaultCharset();
+            String encoding = System.getProperty(OPTIONS_FILE_ENCODING);
+            if (encoding != null) {
+                charset = Charset.forName(encoding);
+            }
+            loadPropertiesFile(name, charset, exceptionIfNotFound, properties);
         }
-        return props;
+        return properties;
     }
 
-    private static void loadPropertiesFile(String name, Charset encoding, boolean exceptionIfNotFound, @NotNull Properties properties) throws IOException {
-        try (InputStream inputStream = Manager.class.getResourceAsStream('/' + name)) {
+    private static void loadPropertiesFile(String propertiesFilename, Charset encoding, boolean exceptionIfNotFound, @NotNull Properties properties) throws IOException {
+        try (InputStream inputStream = Manager.class.getResourceAsStream('/' + propertiesFilename)) {
             if (inputStream != null) {
-                LOG.log(INFO, () -> MessageFormat.format("Loading {0} from classpath", name));
-                loadPropertiesFile(inputStream, encoding, name, exceptionIfNotFound, properties);
+                LOG.log(INFO, () -> MessageFormat.format("Loading {0} from classpath", propertiesFilename));
+                loadPropertiesFile(inputStream, encoding, propertiesFilename, exceptionIfNotFound, properties);
             } else {
-                File f = new File(name);
+                File f = new File(propertiesFilename);
                 if (f.exists() && !f.isDirectory()) {
-                    LOG.log(INFO, "Loading {0} from filesystem", name);
+                    LOG.log(INFO, "Loading {0} from filesystem", propertiesFilename);
                     try (FileInputStream fileInputStream = new FileInputStream(f)) {
-                        loadPropertiesFile(fileInputStream, encoding, name, exceptionIfNotFound, properties);
+                        loadPropertiesFile(fileInputStream, encoding, propertiesFilename, exceptionIfNotFound, properties);
                     }
                 } else if (exceptionIfNotFound) {
-                    throw new IllegalStateException("Unable to load properties file " + name);
+                    throw new IllegalStateException("Unable to load properties file " + propertiesFilename);
                 }
             }
         }
@@ -217,7 +222,7 @@ public abstract class AbstractManager {
 
     public void initPropertiesFromOptionsFile() throws IOException {
         String propsFileName = System.getProperty(OPTIONS_FILE);
-        loadPropertiesFile(propsFileName, true, properties);
+        loadPropertiesFile(propsFileName,true, properties);
     }
 
     public void init(String... args) throws CorbException {

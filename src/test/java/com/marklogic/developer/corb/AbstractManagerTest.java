@@ -130,6 +130,22 @@ public class AbstractManagerTest {
     }
 
     @Test
+    public void testLoadPropertiesFileEncodingSystemProperty() {
+        Properties properties = new Properties();
+        System.setProperty(OPTIONS_FILE_ENCODING, "ascii");
+        try {
+            Properties result = AbstractManager.loadPropertiesFile(PROPERTIES_FILE_PATH, true, properties);
+            assertNotEquals("Verify that UTF8 value gets mangled when read as ascii","コンニチハ", result.getProperty("URIS-MODULE.greeting"));
+            System.setProperty(OPTIONS_FILE_ENCODING, "utf8");
+            result = AbstractManager.loadPropertiesFile(PROPERTIES_FILE_PATH, true, properties);
+            assertEquals("Value is read correctly when read as UTF8 encoded","コンニチハ", result.getProperty("URIS-MODULE.greeting"));
+        } catch(IOException ex) {
+            fail();
+        }
+        System.clearProperty(OPTIONS_FILE_ENCODING);
+    }
+
+    @Test
     public void testLoadPropertiesFileStringBoolean() {
         try {
             Properties result = AbstractManager.loadPropertiesFile(INVALID_FILE_PATH, false);
