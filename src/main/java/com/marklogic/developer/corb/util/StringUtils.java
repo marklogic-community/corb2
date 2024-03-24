@@ -345,11 +345,32 @@ public final class StringUtils {
      * @return
      */
     public static String getXccUri(String protocol, String username, String password, String host, String port, String dbname, String urlEncode) {
+        return getXccUri(protocol, username, password, host, port, dbname, null, null, urlEncode);
+    }
+
+    /**
+     * Build an XCC URI from the values provided. Values will be URLEncoded, if it does not appear that they have already been URLEncoded.
+     * @param protocol
+     * @param username
+     * @param password
+     * @param host
+     * @param port
+     * @param dbname
+     * @param urlEncode
+     * @return
+     */
+    public static String getXccUri(String protocol, String username, String password, String host, String port, String dbname, String basePath, String apiKey, String urlEncode) {
         if (isBlank(protocol)) {
             protocol = "xcc";
         }
-        if (isBlank(dbname)){
+        if (isBlank(dbname)) {
             dbname = EMPTY;
+        }
+        if (isBlank(basePath)) {
+            basePath = EMPTY;
+        }
+        if (isBlank(apiKey)) {
+            apiKey = EMPTY;
         }
         //If URL-ENCODE
         if (!"never".equalsIgnoreCase(urlEncode)) {
@@ -357,13 +378,25 @@ public final class StringUtils {
                 username = urlEncode(username);
                 password = urlEncode(password);
                 dbname = urlEncode(dbname);
+                basePath = urlEncode(basePath);
+                apiKey = urlEncode(apiKey);
             } else {
                 username = urlEncodeIfNecessary(username);
                 password = urlEncodeIfNecessary(password);
                 dbname = urlEncodeIfNecessary(dbname);
+                basePath = urlEncodeIfNecessary(basePath);
+                apiKey = urlEncodeIfNecessary(apiKey);
             }
         }
-        return protocol + "://" + username + ':' + password + '@' + host + ':' + port + (isBlank(dbname) ? EMPTY : SLASH + dbname);
+        String query = EMPTY;
+        if (!isBlank(basePath)){
+            query += "basePath="+basePath;
+        }
+        if (!isBlank(apiKey)){
+            query += isBlank(query) ? EMPTY : "&";
+            query += "apiKey=" + apiKey;
+        }
+        return protocol + "://" + username + ':' + password + '@' + host + ':' + port + (isBlank(dbname) ? EMPTY : SLASH + dbname) + (isBlank(query) ? EMPTY : "?" + query);
     }
 
     /**

@@ -1169,6 +1169,18 @@ public final class Options {
     public static final String XCC_CONNECTION_URI = "XCC-CONNECTION-URI";
 
     /**
+     *
+     * @since=2.5.7
+     */
+    public static final String XCC_API_KEY = "XCC-API-KEY";
+
+    /**
+     *
+     * @since=2.5.7
+     */
+    public static final String XCC_BASE_PATH = "XCC-BASE-PATH";
+
+    /**
      * (Optional) Name of the content database to execute against
      */
     @Usage(description = "(Optional) Name of the content database to execute against")

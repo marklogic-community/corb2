@@ -309,6 +309,11 @@ public abstract class AbstractManager {
         String dbname = getOption(XCC_DBNAME);
         String protocol = getOption(XCC_PROTOCOL);
 
+//TODO: are new querystring parameters case-sensitive? XCC code has all lowercase, but examples show camelCase...
+        String apiKey = getOption(XCC_API_KEY);
+        String basePath = getOption(XCC_BASE_PATH);
+
+
         if (StringUtils.anyIsNull(uriAsStrings) && StringUtils.anyIsNull(username, password, hostnames, port)) {
             String[] connectionParameters = {XCC_CONNECTION_URI, XCC_USERNAME, XCC_PASSWORD, XCC_HOSTNAME, XCC_PORT};
             for (String connectionParameter : connectionParameters) {
@@ -328,12 +333,14 @@ public abstract class AbstractManager {
                 password = decrypter.decrypt(XCC_PASSWORD, password);
                 port = decrypter.decrypt(XCC_PORT, port);
                 dbname = isBlank(dbname) ? null : decrypter.decrypt(XCC_DBNAME, dbname);
+                apiKey = isBlank(apiKey) ? null : decrypter.decrypt(XCC_API_KEY, apiKey);
             }
             for (String host: StringUtils.commaSeparatedValuesToList(hostnames)) {
                 if (decrypter != null) {
                     host = decrypter.decrypt(XCC_HOSTNAME, host);
                 }
-                String connectionUri = StringUtils.getXccUri(protocol, username, password, host, port, dbname, urlEncode);
+                //TODO: collect any of the new params and send as map?
+                String connectionUri = StringUtils.getXccUri(protocol, username, password, host, port, dbname, basePath, apiKey, urlEncode);
                 connectionUriList.add(connectionUri);
             }
         } else {
