@@ -25,6 +25,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.marklogic.developer.corb.Options.*;
+
 
 /**
  * @author mike.blakeley@marklogic.com
@@ -332,7 +334,6 @@ public final class StringUtils {
         return code;
     }
 
-
     /**
      * Build an XCC URI from the values provided. Values will be URLEncoded, if it does not appear that they have already been URLEncoded.
      * @param protocol
@@ -344,59 +345,81 @@ public final class StringUtils {
      * @param urlEncode
      * @return
      */
+    @Deprecated
     public static String getXccUri(String protocol, String username, String password, String host, String port, String dbname, String urlEncode) {
-        return getXccUri(protocol, username, password, host, port, dbname, null, null, urlEncode);
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put(XCC_PROTOCOL, protocol);
+        parameters.put(XCC_USERNAME, username);
+        parameters.put(XCC_PASSWORD, password);
+        parameters.put(XCC_HOSTNAME, host);
+        parameters.put(XCC_PORT, port);
+        parameters.put(XCC_DBNAME, dbname);
+        return getXccUri(parameters, urlEncode);
     }
 
     /**
-     * Build an XCC URI from the values provided. Values will be URLEncoded, if it does not appear that they have already been URLEncoded.
-     * @param protocol
-     * @param username
-     * @param password
-     * @param host
-     * @param port
-     * @param dbname
-     * @param urlEncode
+     * Build an XCC URI from the values provided. Values will be URLEncoded if it does not appear that they have already been URLEncoded. Prevent urlEncode by specifying "never" and always encode when specifying "always".
      * @return
      */
-    public static String getXccUri(String protocol, String username, String password, String host, String port, String dbname, String basePath, String apiKey, String urlEncode) {
+    public static String getXccUri(Map<String, String> xccConnectionParameters, String urlEncode) {
+        String protocol = xccConnectionParameters.getOrDefault(XCC_PROTOCOL, "xcc");
+        String host = xccConnectionParameters.getOrDefault(XCC_HOSTNAME, EMPTY);
+        String port = xccConnectionParameters.getOrDefault(XCC_PORT, EMPTY);
+        String dbname = xccConnectionParameters.getOrDefault(XCC_DBNAME, EMPTY);
+        String basePath = xccConnectionParameters.getOrDefault(XCC_BASE_PATH, EMPTY);
+        String apiKey = xccConnectionParameters.getOrDefault(XCC_API_KEY, EMPTY);
+        String username = xccConnectionParameters.getOrDefault(XCC_USERNAME, EMPTY);
+        String password = xccConnectionParameters.getOrDefault(XCC_PASSWORD, EMPTY);
+        String tokenDuration = xccConnectionParameters.getOrDefault(XCC_TOKEN_DURATION, EMPTY);
+        String grantType = xccConnectionParameters.getOrDefault(XCC_GRANT_TYPE, EMPTY);
+        String tokenEndpoint = xccConnectionParameters.getOrDefault(XCC_TOKEN_ENDPOINT, EMPTY);
+        String oauthToken = xccConnectionParameters.getOrDefault(XCC_OAUTH_TOKEN, EMPTY);
         if (isBlank(protocol)) {
             protocol = "xcc";
         }
-        if (isBlank(dbname)) {
-            dbname = EMPTY;
-        }
-        if (isBlank(basePath)) {
-            basePath = EMPTY;
-        }
-        if (isBlank(apiKey)) {
-            apiKey = EMPTY;
-        }
+        dbname = isBlank(dbname) ? EMPTY : dbname;
+
         //If URL-ENCODE
         if (!"never".equalsIgnoreCase(urlEncode)) {
             if ("always".equalsIgnoreCase(urlEncode)) {
                 username = urlEncode(username);
                 password = urlEncode(password);
                 dbname = urlEncode(dbname);
-                basePath = urlEncode(basePath);
                 apiKey = urlEncode(apiKey);
+                basePath = urlEncode(basePath);
+                oauthToken = urlEncode(oauthToken);
+                tokenEndpoint = urlEncode(tokenEndpoint);
             } else {
                 username = urlEncodeIfNecessary(username);
                 password = urlEncodeIfNecessary(password);
                 dbname = urlEncodeIfNecessary(dbname);
-                basePath = urlEncodeIfNecessary(basePath);
                 apiKey = urlEncodeIfNecessary(apiKey);
+                basePath = urlEncodeIfNecessary(basePath);
+                oauthToken = urlEncodeIfNecessary(oauthToken);
+                tokenEndpoint = urlEncodeIfNecessary(tokenEndpoint);
             }
         }
         String query = EMPTY;
-        if (!isBlank(basePath)){
-            query += "basePath="+basePath;
+        query = appendParameter(query, "apikey", apiKey);
+        query = appendParameter(query, "basepath", basePath);
+        query = appendParameter(query, "granttype", grantType);
+        query = appendParameter(query, "oauthtoken", oauthToken);
+        query = appendParameter(query, "tokenduration", tokenDuration);
+        query = appendParameter(query, "tokenendpoint", tokenEndpoint);
+
+        String auth = EMPTY;
+        if (isNotBlank(username) && isNotBlank(password)) {
+            auth = username + ':' + password + '@';
         }
-        if (!isBlank(apiKey)){
-            query += isBlank(query) ? EMPTY : "&";
-            query += "apiKey=" + apiKey;
+        return protocol + "://" + auth + host + ':' + port + (isBlank(dbname) ? EMPTY : SLASH + dbname) + (isBlank(query) ? EMPTY : "?" + query);
+    }
+
+    private static String appendParameter(String query, String parameterName, String value) {
+        if (isNotBlank(value)) {
+            query += isBlank(query) ? EMPTY : '&';
+            query += parameterName + "=" + value;
         }
-        return protocol + "://" + username + ':' + password + '@' + host + ':' + port + (isBlank(dbname) ? EMPTY : SLASH + dbname) + (isBlank(query) ? EMPTY : "?" + query);
+        return query;
     }
 
     /**
