@@ -1163,9 +1163,9 @@ public final class Options {
     public static final String XCC_URL_ENCODE_COMPONENTS = "XCC-URL-ENCODE-COMPONENTS";
 
     /**
-     * Number attempts to connect to ML before giving up. Default is 3
+     * Number of attempts to connect to ML before giving up. Default is 3
      */
-    @Usage(description = "Number attempts to connect to ML before giving up. "
+    @Usage(description = "Number of attempts to connect to ML before giving up. "
             + "Default is 3")
     public static final String XCC_CONNECTION_RETRY_LIMIT = "XCC-CONNECTION-RETRY-LIMIT";
 
@@ -1190,7 +1190,49 @@ public final class Options {
     public static final String XCC_CONNECTION_URI = "XCC-CONNECTION-URI";
 
     /**
-     * (optional) Name of the content database to execute against
+     * The unique key assigned to a MarkLogic Cloud user.
+     * @since=2.6.0
+     */
+    @Usage(description = "The unique key assigned to a MarkLogic Cloud user.")
+    public static final String XCC_API_KEY = "XCC-API-KEY";
+
+    /**
+     * The base path configured on MarkLogic Cloud which maps to a service hosted by MarkLogic Cloud through which operations run.
+     * @since=2.6.0
+     */
+    @Usage(description = "The base path configured on MarkLogic Cloud which maps to a service hosted by MarkLogic Cloud through which operations run.")
+    public static final String XCC_BASE_PATH = "XCC-BASE-PATH";
+
+    /**
+     * MarkLogic Cloud grant type.
+     * @since=2.6.0
+     */
+    @Usage(description = "MarkLogic Cloud grant type.")
+    public static final String XCC_GRANT_TYPE = "XCC-GRANT-TYPE";
+
+    /**
+     * OAuth JWT access token.
+     * @since=2.6.0
+     */
+    @Usage(description = "OAuth JWT access token.")
+    public static final String XCC_OAUTH_TOKEN = "XCC-OAUTH-TOKEN";
+
+    /**
+     * MarkLogic Cloud token duration.
+     * @since=2.6.0
+     */
+    @Usage(description = "MarkLogic Cloud token duration.")
+    public static final String XCC_TOKEN_DURATION = "XCC-TOKEN-DURATION";
+
+    /**
+     * MarkLogic Cloud token endpoint.
+     * @since=2.6.0
+     */
+    @Usage(description = "MarkLogic Cloud token endpoint.")
+    public static final String XCC_TOKEN_ENDPOINT = "XCC-TOKEN-ENDPOINT";
+
+    /**
+     * (Optional) Name of the content database to execute against
      */
     @Usage(description = "(optional) Name of the content database to execute against")
     public static final String XCC_DBNAME = "XCC-DBNAME";

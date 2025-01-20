@@ -20,13 +20,12 @@ package com.marklogic.developer.corb.util;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.Test;
+
+import static com.marklogic.developer.corb.Options.*;
 import static org.junit.Assert.*;
 
 /**
@@ -234,6 +233,41 @@ public class StringUtilsTest {
 
     @Test
     public void testGetXccUri() {
+        HashMap<String, String> uriParams = new HashMap<>();
+        uriParams.put(XCC_USERNAME, "user");
+        uriParams.put(XCC_PASSWORD, "pass+word");
+        uriParams.put(XCC_HOSTNAME, "host");
+        uriParams.put(XCC_PORT, "8000");
+        uriParams.put(XCC_DBNAME, "db name ");
+        uriParams.put(XCC_PROTOCOL, "");
+        String uri = StringUtils.getXccUri(uriParams ,"auto");
+        assertEquals("xcc://user:pass%2Bword@host:8000/db+name+", uri);
+        uri = StringUtils.getXccUri(uriParams, "always");
+        assertEquals("xcc://user:pass%2Bword@host:8000/db+name+", uri);
+        uri = StringUtils.getXccUri(uriParams, "maybe");
+        assertEquals("xcc://user:pass%2Bword@host:8000/db+name+", uri);
+        uri = StringUtils.getXccUri(uriParams, "never");
+        assertEquals("xcc://user:pass+word@host:8000/db name ", uri);
+
+        uriParams.put(XCC_PROTOCOL, null);
+        uri = StringUtils.getXccUri(uriParams, "auto");
+        assertEquals("xcc://user:pass%2Bword@host:8000/db+name+", uri);
+
+        uriParams.put(XCC_PROTOCOL, "xcc");
+        uri = StringUtils.getXccUri(uriParams, "never");
+        assertEquals("xcc://user:pass+word@host:8000/db name ", uri);
+        uriParams.put(XCC_PROTOCOL, "xccs");
+        uri = StringUtils.getXccUri(uriParams, "never");
+        assertEquals("xccs://user:pass+word@host:8000/db name ", uri);
+        uriParams.put(XCC_DBNAME, "");
+        uri = StringUtils.getXccUri(uriParams, "never");
+        assertEquals("xccs://user:pass+word@host:8000", uri);
+        uriParams.put(XCC_DBNAME, null);
+        uri = StringUtils.getXccUri(uriParams, "never");
+        assertEquals("xccs://user:pass+word@host:8000", uri);
+    }
+    @Test
+    public void testGetXccUriDeprecated() {
         String user = "user";
         String host = "host";
         String password = "pass+word";
@@ -258,7 +292,6 @@ public class StringUtilsTest {
         uri = StringUtils.getXccUri("xccs", user, password, host, port, null, "never");
         assertEquals("xccs://user:pass+word@host:8000", uri);
     }
-
     @Test
     public void testIsBlank() {
         assertTrue(StringUtils.isBlank(""));
@@ -349,6 +382,7 @@ public class StringUtilsTest {
         assertTrue(StringUtils.isInlineModule(INLINE_XQUERY_PREFIX + code));
         assertTrue(StringUtils.isInlineModule(INLINE_JAVASCRIPT_PREFIX + code + ADHOC_SUFFIX));
         assertTrue(StringUtils.isInlineModule(INLINE_XQUERY_PREFIX + code + ADHOC_SUFFIX));
+
     }
 
     @Test
@@ -376,6 +410,15 @@ public class StringUtilsTest {
     @Test
     public void testInlineModuleLanguageNull() {
         String result = StringUtils.inlineModuleLanguage(null);
+        assertEquals("", result);
+    }
+
+    @Test
+    public void testInlineModuleLanguageNotSupportedLang() {
+        String inline = "INLINE-PYTHON|1+1";
+        String result = StringUtils.inlineModuleLanguage(inline);
+        assertEquals("", result);
+        result = StringUtils.getInlineModuleCode("INLINE-PYTHON|1+1");
         assertEquals("", result);
     }
 
@@ -408,6 +451,12 @@ public class StringUtilsTest {
         Set<Integer> result = StringUtils.parsePortRanges("80");
         assertEquals(1, result.size());
         assertEquals(80, result.toArray()[0]);
+    }
+
+    @Test
+    public void testParsePortRangesIncompleteRange() {
+        Set<Integer> result = StringUtils.parsePortRanges("80-");
+        assertEquals(0, result.size());
     }
 
     @Test
