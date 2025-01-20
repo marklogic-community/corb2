@@ -18,10 +18,7 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
-import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
-import static com.marklogic.developer.corb.Options.PROCESS_TASK;
-import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
+import static com.marklogic.developer.corb.Options.*;
 import static com.marklogic.developer.corb.TestUtils.clearFile;
 import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
 import static com.marklogic.developer.corb.util.FileUtilsTest.getBytes;
@@ -97,8 +94,7 @@ public class ManagerIT {
 
     public boolean testManager(String[] args, File report) {
         boolean passed = false;
-        Manager manager = new Manager();
-        try {
+        try (Manager manager = new Manager()) {
             //First, verify the output using run()
             manager.init(args);
             manager.run();
@@ -129,13 +125,12 @@ public class ManagerIT {
     public void testInitOptionsSetNumTPSForETC() {
         Properties properties = ManagerTest.getDefaultProperties();
         properties.setProperty(Options.NUM_TPS_FOR_ETC, Integer.toString(500));
-        Manager manager = new Manager();
-        try {
+        try (Manager manager = new Manager()) {
             manager.init(properties);
+            assertEquals(500, manager.options.getNumTpsForETC());
         } catch (CorbException ex) {
             fail();
         }
-        assertEquals(500, manager.options.getNumTpsForETC());
     }
 
     @Test
@@ -146,7 +141,6 @@ public class ManagerIT {
 
     @Test
     public void testManagerUsingProgArgs() {
-
         clearSystemProperties();
         String exportFileName = "testManagerUsingProgArgs.txt";
         String exportFileDir = ManagerTest.EXPORT_FILE_DIR;
@@ -255,8 +249,7 @@ public class ManagerIT {
         properties.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10));
         properties.setProperty(Options.DISK_QUEUE_TEMP_DIR, "/var/tmp");
 
-        Manager manager = new Manager();
-        try {
+        try (Manager manager = new Manager()) {
             manager.init(properties);
             manager.run();
             File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFilename);
@@ -283,8 +276,7 @@ public class ManagerIT {
         properties.setProperty(EXPORT_FILE_NAME, exportFilename);
         properties.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10));
 
-        Manager manager = new Manager();
-        try {
+        try (Manager manager = new Manager() ) {
             manager.init(properties);
             manager.run();
             File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFilename);
@@ -389,8 +381,7 @@ public class ManagerIT {
         System.setProperty(Options.EXPORT_FILE_AS_ZIP, Boolean.toString(true));
         String[] args = {};
         //First, verify the output using run()
-        Manager manager = new Manager();
-        try {
+        try (Manager manager = new Manager()) {
             manager.init();
             manager.run();
 
@@ -462,8 +453,7 @@ public class ManagerIT {
         props.setProperty(XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
         props.setProperty(PROCESS_MODULE, ManagerTest.PROCESS_MODULE);
         props.setProperty(EXPORT_FILE_NAME, filename);
-        Manager manager = new Manager();
-        try {
+        try (Manager manager = new Manager()) {
             manager.init(props);
             assertEquals(ExportBatchToFileTask.class.getName(), manager.getOption(PROCESS_TASK));
         } catch (CorbException ex){
@@ -516,8 +506,7 @@ public class ManagerIT {
         service.schedule(pause, 1, TimeUnit.SECONDS);
         service.schedule(resume, 5, TimeUnit.SECONDS);
 
-        Manager instance = new Manager();
-        try {
+        try (Manager instance = new Manager()) {
             instance.init();
             instance.run();
             int lineCount = FileUtils.getLineCount(exportFile);
@@ -573,8 +562,7 @@ public class ManagerIT {
         service.schedule(pause, 1, TimeUnit.SECONDS);
         service.schedule(resume, 4, TimeUnit.SECONDS);
 
-        Manager instance = new Manager();
-        try {
+        try (Manager instance = new Manager()) {
             instance.init();
             instance.run();
             int lineCount = FileUtils.getLineCount(exportFile);
@@ -663,8 +651,7 @@ public class ManagerIT {
             }
         };
 
-        Manager instance = new Manager();
-        try {
+        try (Manager instance = new Manager()) {
             instance.init();
 
             ScheduledExecutorService service = Executors.newScheduledThreadPool(1);

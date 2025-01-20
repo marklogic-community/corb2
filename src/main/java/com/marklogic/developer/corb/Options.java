@@ -525,13 +525,13 @@ public final class Options {
     @Usage(description = "Specify which external variable to set when invoking the loader process module. Choices are URI or DOC. Default is URI.")
     public static final String LOADER_VARIABLE = "LOADER-VARIABLE";
     /**
-     * (Optional) Property file for the
+     * (optional) Property file for the
      * {@link com.marklogic.developer.corb.JasyptDecrypter}.
      * <p>
      * If not specified, it uses default jasypt.proeprties file, which should be
      * accessible in the classpath or file system.
      */
-    @Usage(description = "(Optional) Property file for the JasyptDecrypter. "
+    @Usage(description = "(optional) Property file for the JasyptDecrypter. "
             + "If not specified, it uses default jasypt.proeprties file, "
             + "which should be accessible in the classpath or file system.")
     public static final String JASYPT_PROPERTIES_FILE = "JASYPT-PROPERTIES-FILE";
@@ -839,7 +839,7 @@ public final class Options {
     public static final String PRE_POST_BATCH_ALWAYS_EXECUTE = "PRE-POST-BATCH-ALWAYS-EXECUTE";
 
     /**
-     * (Optional)
+     * (optional)
      * <ul>
      * <li>Default algorithm for PrivateKeyDecrypter is RSA.</li>
      * <li>Default algorithm for JasyptDecrypter is PBEWithMD5AndTripleDES</li>
@@ -849,7 +849,7 @@ public final class Options {
      * @see #DECRYPTER
      * @see #JASYPT_PROPERTIES_FILE
      */
-    @Usage(description = "(Optional)"
+    @Usage(description = "(optional)"
             + "Default algorithm for PrivateKeyDecrypter is RSA."
             + "Default algorithm for JasyptDecrypter is PBEWithMD5AndTripleDES")
     public static final String PRIVATE_KEY_ALGORITHM = "PRIVATE-KEY-ALGORITHM";
@@ -955,9 +955,9 @@ public final class Options {
     public static final String QUERY_RETRY_LIMIT = "QUERY-RETRY-LIMIT";
 
     /**
-     * A comma separated list of acceptable cipher suites used.
+     * (optional) A comma separated list of acceptable cipher suites used.
      */
-    @Usage(description = "A comma separated list of acceptable cipher suites used.")
+    @Usage(description = "(optional) A comma separated list of acceptable cipher suites used.")
     public static final String SSL_CIPHER_SUITES = "SSL-CIPHER-SUITES";
 
     /**
@@ -973,41 +973,62 @@ public final class Options {
     public static final String SSL_CONFIG_CLASS = "SSL-CONFIG-CLASS";
 
     /**
-     * (Optional) A comma separated list of acceptable SSL protocols
+     * (optional) A comma separated list of acceptable SSL protocols
      */
-    @Usage(description = "(Optional) A comma separated list of acceptable SSL protocols")
+    @Usage(description = "(optional) A comma separated list of acceptable SSL protocols")
     public static final String SSL_ENABLED_PROTOCOLS = "SSL-ENABLED-PROTOCOLS";
 
     /**
      * Location of the keystore certificate.
      */
-    @Usage(description = "Location of the keystore certificate.")
+    @Usage(description = "Location of the keystore file.")
     public static final String SSL_KEYSTORE = "SSL-KEYSTORE";
 
     /**
-     * (Encryptable) Password of the private key.
+     * (encryptable) Password of the private key.
      */
-    @Usage(description = "(Encryptable) Password of the private key.")
+    @Usage(description = "(encryptable) Password of the private key.")
     public static final String SSL_KEY_PASSWORD = "SSL-KEY-PASSWORD";
 
     /**
-     * (Encrytable) Password of the keystore file.
+     * (encryptable) Password of the keystore file.
      */
-    @Usage(description = "(Encrytable) Password of the keystore file.")
+    @Usage(description = "(encryptable) Password of the keystore file.")
     public static final String SSL_KEYSTORE_PASSWORD = "SSL-KEYSTORE-PASSWORD";
 
     /**
-     * Type of the keystore such as 'JKS' or 'PKCS12'.
+     * (optional) Type of the keystore, such as 'JKS' or 'PKCS12'.
      */
-    @Usage(description = "Type of the keystore such as 'JKS' or 'PKCS12'.")
+    @Usage(description = "Type of the keystore, such as 'JKS' or 'PKCS12'.")
     public static final String SSL_KEYSTORE_TYPE = "SSL-KEYSTORE-TYPE";
 
     /**
-     * (Optional) A properties file that can be used to load a common SSL
+     * (optional) A properties file that can be used to load a common SSL
      * configuration.
      */
-    @Usage(description = "(Optional) A properties file that can be used to load a common SSL configuration.")
+    @Usage(description = "(optional) A properties file that can be used to load a common SSL configuration.")
     public static final String SSL_PROPERTIES_FILE = "SSL-PROPERTIES-FILE";
+
+    /**
+     * (optional) Location of a custom truststore file.
+     * @since 2.5.7
+     */
+    @Usage(description = "(optional) Location of a custom truststore file.")
+    public static final String SSL_TRUSTSTORE = "SSL-TRUSTSTORE";
+
+    /**
+     * (encryptable) Password of the truststore file.
+     * @since 2.5.7
+     */
+    @Usage(description = "(encryptable) Password of the truststore file.")
+    public static final String SSL_TRUSTSTORE_PASSWORD = "SSL-TRUSTSTORE-PASSWORD";
+
+    /**
+     * (optional) Type of the truststore, such as 'JKS' or 'PKCS12'
+     * @since 2.5.7
+     */
+    @Usage(description = "(optional) Type of the truststore, such as 'JKS' or 'PKCS12'")
+    public static final String SSL_TRUSTSTORE_TYPE = "SSL-TRUSTSTORE-TYPE";
 
     /**
      * Path to a directory that can be used for temporary storage while processing records.
@@ -1169,9 +1190,9 @@ public final class Options {
     public static final String XCC_CONNECTION_URI = "XCC-CONNECTION-URI";
 
     /**
-     * (Optional) Name of the content database to execute against
+     * (optional) Name of the content database to execute against
      */
-    @Usage(description = "(Optional) Name of the content database to execute against")
+    @Usage(description = "(optional) Name of the content database to execute against")
     public static final String XCC_DBNAME = "XCC-DBNAME";
 
     /**
