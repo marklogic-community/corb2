@@ -5,7 +5,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'com.github.kt3k.coveralls' version '2.12.2'
-    id 'com.marklogic.ml-gradle' version '4.7.0'
+    id 'com.marklogic.ml-gradle' version '4.8.0'
     id 'io.github.ddimtirov.codacy' version '0.1.0'
     id 'org.sonarqube' version '4.0.0.2929'
     id 'eclipse'
@@ -84,7 +84,7 @@ configurations {
 }
 
 dependencies {
-    api 'com.marklogic:marklogic-xcc:11.2.0'
+    api 'com.marklogic:marklogic-xcc:11.3.1'
     // JavaScript libraries are  bundled in a fat jar for the UI
     implementation "org.webjars:angularjs:$angularVersion"
     implementation 'org.jetbrains:annotations:24.1.0'
