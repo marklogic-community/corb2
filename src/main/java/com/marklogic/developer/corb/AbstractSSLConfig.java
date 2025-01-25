@@ -18,17 +18,26 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.Options.SSL_CIPHER_SUITES;
-import static com.marklogic.developer.corb.Options.SSL_ENABLED_PROTOCOLS;
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
+import static com.marklogic.developer.corb.Options.*;
+import static com.marklogic.developer.corb.util.StringUtils.*;
 
 import com.marklogic.developer.corb.util.StringUtils;
 import com.marklogic.xcc.SecurityOptions;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -87,6 +96,49 @@ public abstract class AbstractSSLConfig implements SSLConfig {
         return protocols;
     }
 
+    /**
+     * Load a custom keystore file as trust store if path and password are configured, or return null in order use the default JRE truststore
+     * @return
+     * @throws NoSuchAlgorithmException
+     */
+    public TrustManager[] getTrustManagers() throws NoSuchAlgorithmException {
+        TrustManager[] trustManagers = null;
+        String trustStoreFile = getProperty(SSL_TRUSTSTORE);
+
+        if (StringUtils.isNotBlank(trustStoreFile)) {
+            try (FileInputStream customTrust = new FileInputStream(trustStoreFile)) {
+
+                String keystoreType = getProperty(SSL_TRUSTSTORE_TYPE);
+                if (StringUtils.isBlank(keystoreType)) {
+                    keystoreType = KeyStore.getDefaultType();
+                }
+
+                String trustStorePassword = getProperty(SSL_TRUSTSTORE_PASSWORD);
+                if (decrypter != null && trustStorePassword != null) {
+                    trustStorePassword = decrypter.decrypt(SSL_TRUSTSTORE_PASSWORD, trustStorePassword);
+                }
+                char[] trustStorePasswordChars = trustStorePassword != null ? trustStorePassword.toCharArray() : null;
+
+                KeyStore trustStore = KeyStore.getInstance(keystoreType);
+                trustStore.load(customTrust, trustStorePasswordChars);
+
+                TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                trustManagerFactory.init(trustStore);
+
+                for (TrustManager manager : trustManagerFactory.getTrustManagers()) {
+                    if (manager instanceof X509TrustManager) {
+                        trustManagers = new TrustManager[]{ manager };
+                        break;
+                    }
+                }
+            } catch (CertificateException | IOException | KeyStoreException e) {
+                LOG.log(Level.SEVERE, "Unable to load custom truststore: " + trustStoreFile, e);
+                throw new IllegalStateException("Unable to create TrustManager from truststore: " + trustStoreFile, e);
+            }
+        }
+        return trustManagers;
+    }
+
     private String[] getPropertyAndSplitToArray(String propertyName) {
         if (properties != null) {
             String values = properties.getProperty(propertyName);
@@ -135,6 +187,33 @@ public abstract class AbstractSSLConfig implements SSLConfig {
 		}
 		return securityOptions;
 	}
+
+    /**
+     * loads SSL-PROPERTIES-FILE and adds it's properties
+     */
+    protected void loadPropertiesFile() {
+        String securityFileName = getProperty(SSL_PROPERTIES_FILE);
+        if (isNotBlank(securityFileName)) {
+            File f = new File(securityFileName);
+            if (f.exists() && !f.isDirectory()) {
+                LOG.log(Level.INFO, () -> MessageFormat.format("Loading SSL configuration file {0} from filesystem", securityFileName));
+
+                try (InputStream is = new FileInputStream(f)) {
+                    if (properties == null) {
+                        properties = new Properties();
+                    }
+                    properties.load(is);
+                } catch (IOException e) {
+                    LOG.log(Level.SEVERE, () -> MessageFormat.format("Error loading ssl properties file {0}", SSL_PROPERTIES_FILE));
+                    throw new RuntimeException(e);
+                }
+            } else {
+                throw new IllegalStateException("Unable to load " + securityFileName);
+            }
+        } else {
+            LOG.log(Level.INFO, () -> MessageFormat.format("Property {0} not present", SSL_PROPERTIES_FILE));
+        }
+    }
 
 	protected String getProperty(String key){
 		String val = System.getProperty(key);

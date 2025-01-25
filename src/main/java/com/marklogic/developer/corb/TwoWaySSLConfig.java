@@ -21,16 +21,10 @@ package com.marklogic.developer.corb;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
-import java.text.MessageFormat;
-import java.util.Properties;
-import java.util.logging.Level;
+
+import java.io.*;
+import java.security.*;
+import java.security.cert.CertificateException;
 import java.util.logging.Logger;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -105,77 +99,52 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
         }
     }
 
-    /**
-     * loads properties file and adds it to properties
-     */
-    protected void loadPropertiesFile() {
-        String securityFileName = getProperty(SSL_PROPERTIES_FILE);
-        if (isNotBlank(securityFileName)) {
-            File f = new File(securityFileName);
-            if (f.exists() && !f.isDirectory()) {
-                LOG.log(Level.INFO, () -> MessageFormat.format("Loading SSL configuration file {0} from filesystem", securityFileName));
-
-                try (InputStream is = new FileInputStream(f)) {
-                    if (properties == null) {
-                        properties = new Properties();
-                    }
-                    properties.load(is);
-                } catch (IOException e) {
-                    LOG.log(Level.SEVERE, () -> MessageFormat.format("Error loading ssl properties file {0}", SSL_PROPERTIES_FILE));
-                    throw new RuntimeException(e);
-                }
-            } else {
-                throw new IllegalStateException("Unable to load " + securityFileName);
-            }
-        } else {
-            LOG.log(Level.INFO, () -> MessageFormat.format("Property {0} not present", SSL_PROPERTIES_FILE));
-        }
-    }
-
     @Override
     public SSLContext getSSLContext() throws NoSuchAlgorithmException, KeyManagementException {
 
         loadPropertiesFile();
-
-        String sslkeyStore = getRequiredProperty(SSL_KEYSTORE);
-        String sslkeyStorePassword = getRequiredProperty(SSL_KEYSTORE_PASSWORD);
-        String sslkeyPassword = getProperty(SSL_KEY_PASSWORD);
-        if (isBlank(sslkeyPassword)) {
-            sslkeyPassword = sslkeyStorePassword;
-        }
-        String sslkeyStoreType = getRequiredProperty(SSL_KEYSTORE_TYPE);
-        // decrypting password values
-        if (decrypter != null) {
-            if (sslkeyStorePassword != null) {
-                sslkeyStorePassword = decrypter.decrypt(SSL_KEYSTORE_PASSWORD, sslkeyStorePassword);
-            }
-            if (sslkeyPassword != null) {
-                sslkeyPassword = decrypter.decrypt(SSL_KEY_PASSWORD, sslkeyPassword);
-            }
-        } else {
-            LOG.info("Decrypter is not initialized");
-        }
         try {
-            // adding default trust store
-            TrustManager[] trust = null;
+            KeyManager[] keyManagers = getKeyManagers();
+            TrustManager[] trustManagers = getTrustManagers();
 
-            // adding custom key store
-            KeyStore clientKeyStore = KeyStore.getInstance(sslkeyStoreType);
-            char[] sslkeyStorePasswordChars = sslkeyStorePassword != null ? sslkeyStorePassword.toCharArray() : null;
-
-            try (InputStream keystoreInputStream = new FileInputStream(sslkeyStore)) {
-                clientKeyStore.load(keystoreInputStream, sslkeyStorePasswordChars);
-            }
-            char[] sslkeyPasswordChars = sslkeyPassword != null ? sslkeyPassword.toCharArray() : null;
-            // using SunX509 format
-            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            keyManagerFactory.init(clientKeyStore, sslkeyPasswordChars);
-            KeyManager[] key = keyManagerFactory.getKeyManagers();
             SSLContext sslContext = getSSLContextInstance(getEnabledProtocols());
-            sslContext.init(key, trust, null);
+            sslContext.init(keyManagers, trustManagers, null);
             return sslContext;
         } catch (Exception e) {
             throw new IllegalStateException("Unable to create SSLContext in TwoWaySSLOptions", e);
         }
+    }
+
+    private KeyManager[] getKeyManagers() throws KeyStoreException, NoSuchAlgorithmException, IOException, UnrecoverableKeyException, CertificateException {
+        String sslKeyStore = getRequiredProperty(SSL_KEYSTORE);
+        String sslKeyStorePassword = getRequiredProperty(SSL_KEYSTORE_PASSWORD);
+        String sslKeyPassword = getProperty(SSL_KEY_PASSWORD);
+        if (isBlank(sslKeyPassword)) {
+            sslKeyPassword = sslKeyStorePassword;
+        }
+        String sslKeyStoreType = getRequiredProperty(SSL_KEYSTORE_TYPE);
+        // decrypting password values
+        if (decrypter != null) {
+            if (sslKeyStorePassword != null) {
+                sslKeyStorePassword = decrypter.decrypt(SSL_KEYSTORE_PASSWORD, sslKeyStorePassword);
+            }
+            if (sslKeyPassword != null) {
+                sslKeyPassword = decrypter.decrypt(SSL_KEY_PASSWORD, sslKeyPassword);
+            }
+        } else {
+            LOG.info("Decrypter is not initialized");
+        }
+        // adding custom key store
+        KeyStore clientKeyStore = KeyStore.getInstance(sslKeyStoreType);
+        try (InputStream keystoreInputStream = new FileInputStream(sslKeyStore)) {
+            char[] sslKeystorePasswordChars = sslKeyStorePassword != null ? sslKeyStorePassword.toCharArray() : null;
+            clientKeyStore.load(keystoreInputStream, sslKeystorePasswordChars);
+        }
+
+        char[] sslKeyPasswordChars = sslKeyPassword != null ? sslKeyPassword.toCharArray() : null;
+        // using SunX509 format
+        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        keyManagerFactory.init(clientKeyStore, sslKeyPasswordChars);
+        return keyManagerFactory.getKeyManagers();
     }
 }

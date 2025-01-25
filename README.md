@@ -139,7 +139,7 @@ Option | Description
 **<a name="XCC-OAUTH-TOKEN"></a>XCC-OAUTH-TOKEN** | OAuth JWT access token.
 **<a name="XCC-PASSWORD"></a>XCC-PASSWORD** | Required if **XCC-CONNECTION-URI** is not specified.
 **<a name="XCC-PORT"></a>XCC-PORT** | Required if **XCC-CONNECTION-URI** is not specified.
-**<a name="XCC-PROTOCOL"></a>XCC-PROTOCOL** | (Optional) Used if XCC-CONNECTION-URI is not specified. The XCC scheme to use; either `xcc` or `xccs`. Default is `xcc`.
+**<a name="XCC-PROTOCOL"></a>XCC-PROTOCOL** | (optional) Used if XCC-CONNECTION-URI is not specified. The XCC scheme to use; either `xcc` or `xccs`. Default is `xcc`.
 **<a name="XCC-TIME-ZONE"></a>XCC-TIME-ZONE** | The ID for the TimeZone that should be set on XCC RequestOption. When a value is specified, it is parsed using [`TimeZone.getTimeZone()`](https://docs.oracle.com/javase/8/docs/api/java/util/TimeZone.html#getTimeZone-java.lang.String-) and set on XCC RequestOption for each Task. Invalid ID values will produce the GMT TimeZone. If not specified, XCC uses the JVM default TimeZone.
 **<a name="XCC-TOKEN-DURATION"></a>XCC-TOKEN-DURATION** | MarkLogic Cloud token duration.
 **<a name="XCC-TOKEN-ENDPOINT"></a>XCC-TOKEN-ENDPOINT** | MarkLogic Cloud token endpoint.
@@ -220,8 +220,8 @@ Option | Description
 ---|---
 **<a name="DECRYPTER"></a>DECRYPTER** | Must implement `com.marklogic.developer.corb.Decrypter`. Encryptable options include **XCC-CONNECTION-URI**, **XCC-USERNAME**, **XCC-PASSWORD**, **XCC-HOSTNAME**, **XCC-PORT**, and **XCC-DBNAME** <ul><li>`com.marklogic.developer.corb.PrivateKeyDecrypter` (Included) Requires private key file</li><li>`com.marklogic.developer.corb.JasyptDecrypter` (Included) Requires jasypt-*.jar in classpath</li><li>`com.marklogic.developer.corb.HostKeyDecrypter` (Included) Requires Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files</li></ul>
 **<a name="PRIVATE-KEY-FILE"></a>PRIVATE-KEY-FILE**  | Required property for PrivateKeyDecrypter. This file should be accessible in the classpath or on the file system
-**<a name="PRIVATE-KEY-ALGORITHM"></a>PRIVATE-KEY-ALGORITHM** | (Optional) <ul><li>Default algorithm for PrivateKeyDecrypter is RSA.</li><li>Default algorithm for JasyptDecrypter is PBEWithMD5AndTripleDES</li><ul>
-**<a name="JASYPT-PROPERTIES-FILE"></a>JASYPT-PROPERTIES-FILE** | (Optional) Property file for the JasyptDecrypter. If not specified, it uses default `jasypt.proeprties` file, which should be accessible in the classpath or file system.
+**<a name="PRIVATE-KEY-ALGORITHM"></a>PRIVATE-KEY-ALGORITHM** | (optional) <ul><li>Default algorithm for PrivateKeyDecrypter is RSA.</li><li>Default algorithm for JasyptDecrypter is PBEWithMD5AndTripleDES</li><ul>
+**<a name="JASYPT-PROPERTIES-FILE"></a>JASYPT-PROPERTIES-FILE** | (optional) Property file for the JasyptDecrypter. If not specified, it uses default `jasypt.proeprties` file, which should be accessible in the classpath or file system.
 
 #### com.marklogic.developer.corb.PrivateKeyDecrypter
 PrivateKeyDecrypter automatically detects if the text is encrypted. Unencrypted text or clear text is returned as-is. Although not required, encrypted text can be optionally enclosed with "ENC" ex: ENC(xxxxxx) to clearly indicate that it is encrypted.  
@@ -272,27 +272,43 @@ To test if server is properly configured to use the HostKeyDecrypter:
 `java -cp /path/to/lib/* com.marklogic.developer.corb.HostKeyDecrypter test`  
 
 ### SSL Support
-CoRB provides support for SSL over XCC. As a prerequisite to enabling CoRB SSL support, the XDBC server must be configured to use SSL. It is necessary to specify **XCC-CONNECTION-URI** property with a protocol of 'xccs'. To configure a particular type of SSL configuration use the following property:
+CoRB provides support for SSL/TLS over XCCS. As a prerequisite to enabling CoRB SSL support, the XDBC server must be configured to use SSL. It is necessary to specify **XCC-CONNECTION-URI** property with a protocol of 'xccs'. To configure a particular type of SSL configuration use the following property:
 
 Option | Description
 ---|---
-**<a name="SSL-CONFIG-CLASS"></a>SSL-CONFIG-CLASS** | Must implement `com.marklogic.developer.corb.SSLConfig` <ul><li>`com.marklogic.developer.corb.TrustAnyoneSSLConfig` (Included)</li><li>`com.marklogic.developer.corb.TwoWaySSLConfig` (Included) supports 2-way SSL</li></ul>
+**<a name="SSL-CONFIG-CLASS"></a>SSL-CONFIG-CLASS** | Must implement `com.marklogic.developer.corb.SSLConfig`<ul><li>`com.marklogic.developer.corb.TrustAnyoneSSLConfig` (default)</li><li>`com.marklogic.developer.corb.OneWaySSLConfig`</li><li>`com.marklogic.developer.corb.TwoWaySSLConfig`</li></ul>
 
 #### com.marklogic.developer.corb.TrustAnyoneSSLConfig
-TrustAnyoneSSLConfig is the default implementation of the SSLContext. It will accept any certificate presented by the MarkLogic server.
+**TrustAnyoneSSLConfig** is the default implementation of the SSLContext. It will accept any certificate presented by the MarkLogic server.
 
-#### com.marklogic.developer.corb.TwoWaySSLConfig
-TwoWaySSLConfig is more complete and configurable implementation of the SSLContext. It supports SSL with mutual authentication. It is configurable via the following properties:
+#### com.marklogic.developer.corb.OneWaySSLConfig
+**OneWaySSLConfig** uses the default Java truststore for the SSLContext, but can be configured to use a custom TrustStore and (encryptable) password, instead of using the default cacerts.
 
 Option | Description
 ---|---
-**<a name="SSL-PROPERTIES-FILE"></a>SSL-PROPERTIES-FILE** | (Optional) A properties file that can be used to load a common SSL configuration.
-**<a name="SSL-KEYSTORE"></a>SSL-KEYSTORE** | Location of the keystore certificate.
-**<a name="SSL-KEYSTORE-PASSWORD"></a>SSL-KEYSTORE-PASSWORD** | (Encrytable) Password of the keystore file.
-**<a name="SSL-KEY-PASSWORD"></a>SSL-KEY-PASSWORD** | (Encryptable) Password of the private key.
-**<a name="SSL-KEYSTORE-TYPE"></a>SSL-KEYSTORE-TYPE** | Type of the keystore such as 'JKS' or 'PKCS12'.
-**<a name="SSL-ENABLED-PROTOCOLS"></a>SSL-ENABLED-PROTOCOLS** | (Optional) A comma or colon separated list of acceptable SSL protocols, in priority order. Default is `TLSv1.2`.
-**<a name="SSL-CIPHER-SUITES"></a>SSL-CIPHER-SUITES** | A comma or colon separated list of acceptable cipher suites used.
+**<a name="SSL-CIPHER-SUITES"></a>SSL-CIPHER-SUITES** | (optional) A comma or colon separated list of acceptable cipher suites used.
+**<a name="SSL-ENABLED-PROTOCOLS"></a>SSL-ENABLED-PROTOCOLS** | (optional) A comma or colon separated list of acceptable SSL protocols, in priority order. Default is `TLSv1.2`.
+**<a name="SSL-PROPERTIES-FILE"></a>SSL-PROPERTIES-FILE** | (optional) A properties file that can be used to load a common SSL configuration.
+**<a name="SSL-TRUSTSTORE"></a>SSL-TRUSTSTORE** | Location of the truststore file.
+**<a name="SSL-TRUSTSTORE-PASSWORD"></a>SSL-TRUSTSTORE-PASSWORD** | (encryptable) Password of the truststore file.
+**<a name="SSL-TRUSTSTORE-TYPE"></a>SSL-TRUSTSTORE-TYPE** | (optional) Type of the keystore, such as 'JKS' or 'PKCS12'.
+
+
+#### com.marklogic.developer.corb.TwoWaySSLConfig
+**TwoWaySSLConfig** is more complete and configurable implementation of the SSLContext. It supports SSL with mutual authentication. It is configurable via the following properties:
+
+Option | Description
+---|---
+**<a name="SSL-CIPHER-SUITES"></a>SSL-CIPHER-SUITES** | (optional) A comma or colon separated list of acceptable cipher suites used.
+**<a name="SSL-ENABLED-PROTOCOLS"></a>SSL-ENABLED-PROTOCOLS** | (optional) A comma or colon separated list of acceptable SSL protocols, in priority order. Default is `TLSv1.2`.
+**<a name="SSL-KEYSTORE"></a>SSL-KEYSTORE** | Location of the keystore file.
+**<a name="SSL-KEYSTORE-PASSWORD"></a>SSL-KEYSTORE-PASSWORD** | (encryptable) Password of the keystore file.
+**<a name="SSL-KEYSTORE-TYPE"></a>SSL-KEYSTORE-TYPE** | (optional) Type of the keystore, such as 'JKS' or 'PKCS12'.
+**<a name="SSL-KEY-PASSWORD"></a>SSL-KEY-PASSWORD** | (encryptable) Password of the private key.
+**<a name="SSL-PROPERTIES-FILE"></a>SSL-PROPERTIES-FILE** | (optional) A properties file that can be used to load a common SSL configuration.
+**<a name="SSL-TRUSTSTORE"></a>SSL-TRUSTSTORE** | Location of the truststore file.
+**<a name="SSL-TRUSTSTORE-PASSWORD"></a>SSL-TRUSTSTORE-PASSWORD** | (encryptable) Password of the truststore file.
+**<a name="SSL-TRUSTSTORE-TYPE"></a>SSL-TRUSTSTORE-TYPE** | (optional) Type of the keystore, such as 'JKS' or 'PKCS12'.
 
 ### Load Balancing and Failover with Multiple Hosts
 CoRB 2.4+ supports load balancing and failover using `com.marklogic.developer.corb.ContentSourcePool`. This is automatically enabled when multiple comma separated values (supports encryption) are specified for for **XCC-CONNECTION-URI** or **XCC-HOSTNAME**.
