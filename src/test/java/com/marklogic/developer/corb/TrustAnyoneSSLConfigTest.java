@@ -77,7 +77,6 @@ public class TrustAnyoneSSLConfigTest {
 
     @Test
     public void testGetEnabledProtocolsUsingJdkTlsClientProtocols() {
-        String originalTlsClientProtocols = System.getProperty("jdk.tls.client.protocols");
         System.setProperty("jdk.tls.client.protocols", "foo");
         TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
         String[] result = instance.getEnabledProtocols();

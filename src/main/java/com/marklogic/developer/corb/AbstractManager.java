@@ -23,42 +23,31 @@ import static com.marklogic.developer.corb.util.IOUtils.isDirectory;
 
 import com.marklogic.developer.corb.util.NumberUtils;
 import com.marklogic.developer.corb.util.StringUtils;
-import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
-import com.marklogic.xcc.AdhocQuery;
-import com.marklogic.xcc.ContentSource;
-import com.marklogic.xcc.Request;
-import com.marklogic.xcc.ResultItem;
-import com.marklogic.xcc.ResultSequence;
-import com.marklogic.xcc.Session;
+
+import com.marklogic.xcc.*;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.types.XdmItem;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.io.StringWriter;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.Map.Entry;
 
+import static com.marklogic.developer.corb.util.StringUtils.*;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 import static java.util.logging.Level.SEVERE;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.marklogic.developer.corb.util.StringUtils.buildModulePath;
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
-import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 
 public abstract class AbstractManager {
 
@@ -68,7 +57,7 @@ public abstract class AbstractManager {
     protected static final String VERSION_MSG = "version " + VERSION + " on " + System.getProperty("java.version") + " (" + System.getProperty("java.runtime.name") + ')';
     protected static final String DECLARE_NAMESPACE_MLSS_XDMP_STATUS_SERVER = "declare namespace mlss = 'http://marklogic.com/xdmp/status/server';\n";
     protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\";\n";
-    protected static final String XCC_CONNECTION_URI_PATTERN = "(xccs?)://(.+?):(.+?)@(.+?):(\\d*)(/.*)?";
+    protected static final String XCC_CONNECTION_URI_PATTERN = "(xccs?)://((.+?):(.+?)@)?(.+?):(\\d*)(/.*)?(\\?(.+))?";
 
     protected Decrypter decrypter;
     protected SSLConfig sslConfig;
@@ -90,31 +79,56 @@ public abstract class AbstractManager {
     }
 
     public static Properties loadPropertiesFile(String filename, boolean excIfNotFound) throws IOException {
-        Properties props = new Properties();
-        return loadPropertiesFile(filename, excIfNotFound, props);
+        Properties properties = new Properties();
+        return loadPropertiesFile(filename, excIfNotFound, properties);
     }
 
-    protected static Properties loadPropertiesFile(String filename, boolean exceptionIfNotFound, Properties props) throws IOException {
+    protected static Properties loadPropertiesFile(String filename, boolean exceptionIfNotFound, Properties properties) throws IOException {
         String name = trim(filename);
         if (isNotBlank(name)) {
-            try (InputStream is = Manager.class.getResourceAsStream('/' + name)) {
-                if (is != null) {
-                    LOG.log(INFO, () -> MessageFormat.format("Loading {0} from classpath", name));
-                    props.load(is);
-                } else {
-                    File f = new File(filename);
-                    if (f.exists() && !f.isDirectory()) {
-                        LOG.log(INFO, () -> MessageFormat.format("Loading {0} from filesystem", name));
-                        try (FileInputStream fis = new FileInputStream(f)) {
-                            props.load(fis);
-                        }
-                    } else if (exceptionIfNotFound) {
-                        throw new IllegalStateException("Unable to load properties file " + name);
+            Charset charset = Charset.defaultCharset();
+            String encoding = System.getProperty(OPTIONS_FILE_ENCODING);
+            if (encoding != null) {
+                charset = Charset.forName(encoding);
+            }
+            loadPropertiesFile(name, charset, exceptionIfNotFound, properties);
+        }
+        return properties;
+    }
+
+    private static void loadPropertiesFile(String propertiesFilename, Charset encoding, boolean exceptionIfNotFound, @NotNull Properties properties) throws IOException {
+        try (InputStream inputStream = Manager.class.getResourceAsStream('/' + propertiesFilename)) {
+            if (inputStream != null) {
+                LOG.log(INFO, () -> MessageFormat.format("Loading {0} from classpath", propertiesFilename));
+                loadPropertiesFile(inputStream, encoding, propertiesFilename, exceptionIfNotFound, properties);
+            } else {
+                File f = new File(propertiesFilename);
+                if (f.exists() && !f.isDirectory()) {
+                    LOG.log(INFO, "Loading {0} from filesystem", propertiesFilename);
+                    try (FileInputStream fileInputStream = new FileInputStream(f)) {
+                        loadPropertiesFile(fileInputStream, encoding, propertiesFilename, exceptionIfNotFound, properties);
                     }
+                } else if (exceptionIfNotFound) {
+                    throw new IllegalStateException("Unable to load properties file " + propertiesFilename);
                 }
             }
         }
-        return props;
+    }
+
+    private static void loadPropertiesFile(InputStream inputStream, Charset encoding, String name, boolean exceptionIfNotFound, @NotNull Properties properties) throws IOException {
+        try (InputStreamReader inputStreamReader = new InputStreamReader(inputStream, encoding) ) {
+            properties.load(inputStreamReader);
+            //If the OPTIONS-FILE-ENCODING specified which encoding to read it as, and it's different from what was already used,
+            // then re-load it using the specified character encoding
+            String optionsFileEncoding = properties.getProperty(OPTIONS_FILE_ENCODING);
+            if (optionsFileEncoding != null ) {
+                Charset optionsCharset = Charset.forName(optionsFileEncoding);
+                if (!encoding.equals(optionsCharset)) {
+                    LOG.log(INFO, "Reloading properties as {0} encoded", optionsCharset);
+                    loadPropertiesFile(name, optionsCharset, exceptionIfNotFound, properties);
+                }
+            }
+        }
     }
 
     public static String getAdhocQuery(String module) {
@@ -199,7 +213,7 @@ public abstract class AbstractManager {
 
     public void initPropertiesFromOptionsFile() throws IOException {
         String propsFileName = System.getProperty(OPTIONS_FILE);
-        loadPropertiesFile(propsFileName, true, properties);
+        loadPropertiesFile(propsFileName,true, properties);
     }
 
     public void init(String... args) throws CorbException {
@@ -279,38 +293,66 @@ public abstract class AbstractManager {
 
     protected void initContentSourcePool(String uriArg) throws CorbException{
         String uriAsStrings = getOption(uriArg, XCC_CONNECTION_URI);
-        String username = getOption(XCC_USERNAME);
-        String password = getOption(XCC_PASSWORD);
+        String protocol = getOption(XCC_PROTOCOL);
         String hostnames = getOption(XCC_HOSTNAME);
         String port = getOption(XCC_PORT);
         String dbname = getOption(XCC_DBNAME);
-        String protocol = getOption(XCC_PROTOCOL);
+        //DIGEST or BASIC
+        String username = getOption(XCC_USERNAME);
+        String password = getOption(XCC_PASSWORD);
+        //MarkLogic Cloud
+        String apiKey = getOption(XCC_API_KEY);
+        String basePath = getOption(XCC_BASE_PATH);
+        String grantType = getOption(XCC_GRANT_TYPE);
+        String tokenDuration = getOption(XCC_TOKEN_DURATION);
+        String tokenEndpoint = getOption(XCC_TOKEN_ENDPOINT);
+        //OAuth
+        String oauthToken = getOption(XCC_OAUTH_TOKEN);
 
-        if (StringUtils.anyIsNull(uriAsStrings) && StringUtils.anyIsNull(username, password, hostnames, port)) {
-            String[] connectionParameters = {XCC_CONNECTION_URI, XCC_USERNAME, XCC_PASSWORD, XCC_HOSTNAME, XCC_PORT};
-            for (String connectionParameter : connectionParameters) {
-               if (StringUtils.anyIsNull(getOption(connectionParameter))) {
-                   LOG.warning(MessageFormat.format("{0} is null", connectionParameter));
-               }
+        if (StringUtils.anyIsNull(uriAsStrings)) {
+            if (StringUtils.anyIsNull(hostnames, port)) {
+                throw new CorbException(String.format("Either %1$s or %2$s and %3$s must be specified",
+                    XCC_CONNECTION_URI, XCC_HOSTNAME, XCC_PORT));
             }
-            throw new CorbException(String.format("Either %1$s or %2$s, %3$s, %4$s, and %5$s must be specified",
-                    XCC_CONNECTION_URI, XCC_USERNAME, XCC_PASSWORD, XCC_HOSTNAME, XCC_PORT));
+            if (StringUtils.anyIsNull(username, password) && StringUtils.anyIsNull(basePath, apiKey) && StringUtils.anyIsNull(oauthToken)) {
+                LOG.warning(String.format("Either %1$s and %2$s or %3$s and %4$s or %5$s must be specified",
+                    XCC_USERNAME, XCC_PASSWORD, XCC_BASE_PATH, XCC_API_KEY, XCC_OAUTH_TOKEN));
+            }
         }
-
         List<String> connectionUriList = new ArrayList<>();
         String urlEncode = getOption(Options.XCC_URL_ENCODE_COMPONENTS);
         if (uriAsStrings == null) {
             if (decrypter != null) {
-                username = decrypter.decrypt(XCC_USERNAME, username);
-                password = decrypter.decrypt(XCC_PASSWORD, password);
-                port = decrypter.decrypt(XCC_PORT, port);
-                dbname = isBlank(dbname) ? null : decrypter.decrypt(XCC_DBNAME, dbname);
+                apiKey = decryptIfNotBlank(XCC_API_KEY, apiKey);
+                basePath = decryptIfNotBlank(XCC_BASE_PATH, basePath);
+                dbname = decryptIfNotBlank(XCC_DBNAME, dbname);
+                grantType = decryptIfNotBlank(XCC_GRANT_TYPE, grantType);
+                oauthToken = decryptIfNotBlank(XCC_OAUTH_TOKEN, oauthToken);
+                password = decryptIfNotBlank(XCC_PASSWORD, password);
+                port = decryptIfNotBlank(XCC_PORT, port);
+                tokenDuration = decryptIfNotBlank(XCC_TOKEN_DURATION, tokenDuration);
+                tokenEndpoint = decryptIfNotBlank(XCC_TOKEN_ENDPOINT, tokenEndpoint);
+                username = decryptIfNotBlank(XCC_USERNAME, username);
             }
+            Map<String, String> xccConnectionParameters = new HashMap<>();
+            putIfNotBlank(xccConnectionParameters, XCC_API_KEY, apiKey);
+            putIfNotBlank(xccConnectionParameters, XCC_BASE_PATH, basePath);
+            putIfNotBlank(xccConnectionParameters, XCC_DBNAME, dbname);
+            putIfNotBlank(xccConnectionParameters, XCC_GRANT_TYPE, grantType);
+            putIfNotBlank(xccConnectionParameters, XCC_OAUTH_TOKEN, oauthToken);
+            putIfNotBlank(xccConnectionParameters, XCC_PASSWORD, password);
+            putIfNotBlank(xccConnectionParameters, XCC_PROTOCOL, protocol);
+            putIfNotBlank(xccConnectionParameters, XCC_PORT, port);
+            putIfNotBlank(xccConnectionParameters, XCC_TOKEN_DURATION, tokenDuration);
+            putIfNotBlank(xccConnectionParameters, XCC_TOKEN_ENDPOINT, tokenEndpoint);
+            putIfNotBlank(xccConnectionParameters, XCC_USERNAME, username);
+
             for (String host: StringUtils.commaSeparatedValuesToList(hostnames)) {
                 if (decrypter != null) {
                     host = decrypter.decrypt(XCC_HOSTNAME, host);
                 }
-                String connectionUri = StringUtils.getXccUri(protocol, username, password, host, port, dbname, urlEncode);
+                xccConnectionParameters.put(XCC_HOSTNAME, host);
+                String connectionUri = StringUtils.getXccUri(xccConnectionParameters, urlEncode);
                 connectionUriList.add(connectionUri);
             }
         } else {
@@ -335,6 +377,18 @@ public abstract class AbstractManager {
         }
     }
 
+    private String decryptIfNotBlank(String key, String value) {
+        if (isNotBlank(value)) {
+            value = decrypter.decrypt(key, value);
+        }
+        return value;
+    }
+    private void putIfNotBlank(Map<String, String> map, String key, String value) {
+      if (isNotBlank(value)) {
+          map.put(key, value);
+      }
+    }
+
     protected String tryToDecryptUriInParts(String connectionUri, String urlEncode) {
         LOG.info("Checking if any part of the connection string are encrypted");
         String uriAfterDecrypt = connectionUri;
@@ -342,24 +396,82 @@ public abstract class AbstractManager {
         try {
             Matcher matcher = pattern.matcher(connectionUri);
 
-            if (matcher.matches() && matcher.groupCount() >= 5) {
+            if (matcher.matches() && matcher.groupCount() >= 6) {
                 String protocol = matcher.group(1);
-                String username = matcher.group(2);
-                String password = matcher.group(3);
-                String host = matcher.group(4);
-                String port = matcher.group(5);
-
-                String dbname = matcher.groupCount() > 5 ? matcher.group(6) : null;
+                String username = matcher.group(3);
+                String password = matcher.group(4);
+                String host = matcher.group(5);
+                String port = matcher.group(6);
+                String dbname = matcher.groupCount() > 6 ? matcher.group(7) : null;
                 if (dbname != null && dbname.startsWith("/")) {
                     dbname = dbname.substring(1);
                 }
+                String query = matcher.groupCount() > 8 ? matcher.group(9) : EMPTY;
 
-                if (!isBlank(protocol) && !isBlank(username) && !isBlank(password) && !isBlank(host) && !isBlank(port) && NumberUtils.toInt(port) > 0) {
-                    username = decrypter.decrypt(XCC_USERNAME, username);
-                    password = decrypter.decrypt(XCC_PASSWORD, password);
+                if (isNotBlank(protocol) && isNotBlank(host) && isNotBlank(port) && NumberUtils.toInt(port) > 0) {
+                    Map<String, String> urlComponents = new HashMap<>();
+                    urlComponents.put(XCC_PROTOCOL, protocol);
                     host = decrypter.decrypt(XCC_HOSTNAME, host);
-                    dbname = isBlank(dbname) ? null : decrypter.decrypt(XCC_DBNAME, dbname);
-                    uriAfterDecrypt = StringUtils.getXccUri(protocol, username, password, host, port, dbname, urlEncode);
+                    urlComponents.put(XCC_HOSTNAME, host);
+                    urlComponents.put(XCC_PORT, port);
+                    dbname = isBlank(dbname) ? EMPTY : decrypter.decrypt(XCC_DBNAME, dbname);
+                    urlComponents.put(XCC_DBNAME, dbname);
+                    if (isNotBlank(username)) {
+                        username = decrypter.decrypt(XCC_USERNAME, username);
+                        urlComponents.put(XCC_USERNAME, username);
+                    }
+                    if (isNotBlank(password)) {
+                        password = decrypter.decrypt(XCC_PASSWORD, password);
+                        urlComponents.put(XCC_PASSWORD, password);
+                    }
+                    // Parse querystring parameters
+                    if (query != null) {
+                        String[] pairs = query.split("&");
+                        for (String pair : pairs) {
+                            int i = pair.indexOf("=");
+                            if (i > 0) {
+                                try {
+                                    String paramName = URLDecoder.decode(pair.substring(0, i), "UTF-8").toLowerCase();
+                                    String key;
+                                    switch (paramName) {
+                                        case "apikey":
+                                            key = XCC_API_KEY;
+                                            break;
+                                        case "basepath":
+                                            key = XCC_BASE_PATH;
+                                            break;
+                                        case "granttype":
+                                            key = XCC_GRANT_TYPE;
+                                            break;
+                                        case "oauthtoken":
+                                            key = XCC_OAUTH_TOKEN;
+                                            break;
+                                        case "tokenduration":
+                                            key = XCC_TOKEN_DURATION;
+                                            break;
+                                        case "tokenendpoint":
+                                            key = XCC_TOKEN_ENDPOINT;
+                                            break;
+                                        default:
+                                            key = null;
+                                    }
+                                    //we found a querystring parameter that maps to an XCC option
+                                    if (key != null) {
+                                        String value = pair.substring(i + 1);
+                                        if (isNotBlank(value)) {
+                                            value = URLDecoder.decode(value, "UTF-8");
+                                            value = decrypter.decrypt(key, value);
+                                            urlComponents.put(key, value);
+                                        }
+                                    }
+                                } catch (UnsupportedEncodingException e) {
+                                    LOG.log(Level.SEVERE, "Unsupported encoding in XCC URI for " + pair, e);
+                                    throw new IllegalStateException(e);
+                                }
+                            }
+                        }
+                    }
+                    uriAfterDecrypt = StringUtils.getXccUri(urlComponents, urlEncode);
                 }
             }
         } catch (IllegalStateException exc) {

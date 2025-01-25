@@ -18,12 +18,8 @@
  */
 package com.marklogic.developer.corb;
 
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.logging.Logger;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
@@ -33,23 +29,15 @@ import javax.net.ssl.X509TrustManager;
  *
  * @since 2.2.0
  */
-public class TrustAnyoneSSLConfig extends AbstractSSLConfig {
-
-    private static final Logger LOG = Logger.getLogger(TrustAnyoneSSLConfig.class.getName());
+public class TrustAnyoneSSLConfig extends OneWaySSLConfig {
 
     /**
-     * Returns an SSLContext, which <b>will not</b> perform any certificate chain validation. Use with caution!
-     *
-     * @return an SSLContext with a TrustManager that <b>will not</b> validate certificate chains.
-     * @throws NoSuchAlgorithmException
-     * @throws KeyManagementException
+     * Returns a custom TrustManager that will not perform any validation and will trust anyone.  Use with caution!
+     * @return
      */
     @Override
-    public SSLContext getSSLContext() throws NoSuchAlgorithmException, KeyManagementException {
-        SSLContext sslContext = getSSLContextInstance(getEnabledProtocols());
-        TrustManager[] trust = new TrustManager[]{new TrustAnyoneManager()};
-        sslContext.init(null, trust, null);
-        return sslContext;
+    public TrustManager[] getTrustManagers() {
+        return new TrustManager[]{new TrustAnyoneManager()};
     }
 
     private static class TrustAnyoneManager implements X509TrustManager {

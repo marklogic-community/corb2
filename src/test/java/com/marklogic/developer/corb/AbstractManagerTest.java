@@ -20,19 +20,23 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
 import static com.marklogic.developer.corb.ManagerTest.getMockManagerWithEmptyResults;
+
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.exceptions.RequestException;
+
+import static com.marklogic.developer.corb.Options.OPTIONS_FILE_ENCODING;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
+
+import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+
+import com.marklogic.xcc.impl.Credentials;
+import com.marklogic.xcc.spi.ConnectionProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -111,6 +115,37 @@ public class AbstractManagerTest {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
+    }
+
+    @Test
+    public void testLoadPropertiesFileEncoding() {
+        Properties properties = new Properties();
+        properties.setProperty(OPTIONS_FILE_ENCODING, "ascii");
+        try {
+            Properties result = AbstractManager.loadPropertiesFile(PROPERTIES_FILE_PATH, true, properties);
+            assertNotEquals("Verify that UTF8 value gets mangled when read as ascii","コンニチハ", result.getProperty("URIS-MODULE.greeting"));
+            properties.setProperty(OPTIONS_FILE_ENCODING, "utf8");
+            result = AbstractManager.loadPropertiesFile(PROPERTIES_FILE_PATH, true, properties);
+            assertEquals("Value is read correctly when read as UTF8 encoded","コンニチハ", result.getProperty("URIS-MODULE.greeting"));
+        } catch(IOException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testLoadPropertiesFileEncodingSystemProperty() {
+        Properties properties = new Properties();
+        System.setProperty(OPTIONS_FILE_ENCODING, "ascii");
+        try {
+            Properties result = AbstractManager.loadPropertiesFile(PROPERTIES_FILE_PATH, true, properties);
+            assertNotEquals("Verify that UTF8 value gets mangled when read as ascii","コンニチハ", result.getProperty("URIS-MODULE.greeting"));
+            System.setProperty(OPTIONS_FILE_ENCODING, "utf8");
+            result = AbstractManager.loadPropertiesFile(PROPERTIES_FILE_PATH, true, properties);
+            assertEquals("Value is read correctly when read as UTF8 encoded","コンニチハ", result.getProperty("URIS-MODULE.greeting"));
+        } catch(IOException ex) {
+            fail();
+        }
+        System.clearProperty(OPTIONS_FILE_ENCODING);
     }
 
     @Test
@@ -491,6 +526,81 @@ public class AbstractManagerTest {
     }
 
     @Test
+    public void testTryToDecryptUriInPartsWithQuerystringParamNoValue() {
+        String origUri = "xcc://user:pass@localhost:8000?apikey";
+        try {
+            AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+            String newUri = manager.tryToDecryptUriInParts(origUri, "auto");
+            assertEquals("xcc://user:pass@localhost:8000", newUri);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+    @Test
+    public void testTryToDecryptUriInPartsWithUnsupportedQuerystringParams() {
+        String origUri = "xcc://user:pass@localhost:8000?foo=bar";
+        try {
+            AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+            String newUri = manager.tryToDecryptUriInParts(origUri, "auto");
+            assertEquals("xcc://user:pass@localhost:8000", newUri);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+    @Test
+    public void testTryToDecryptUriInPartsWithMarkLogicCloud() {
+        String origUri = "xcc://user:pass@localhost:8000?basepath=/testpath&apikey=test123";
+        try {
+            AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+            String newUri = manager.tryToDecryptUriInParts(origUri, "never");
+            assertEquals("xcc://user:pass@localhost:8000?apikey=test123&basepath=/testpath", newUri);
+            newUri = manager.tryToDecryptUriInParts(origUri, "auto");
+            assertEquals("xcc://user:pass@localhost:8000?apikey=test123&basepath=%2Ftestpath", newUri);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+    @Test
+    public void testTryToDecryptUriInPartsWithMarkLogicCloudAllParams() {
+        String origUri = "xcc://user:pass@localhost:8000?basepath=/testpath&apikey=test123&tokenduration=60&tokenendpoint=/token&grantType=apikey";
+        try {
+            AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+            String newUri = manager.tryToDecryptUriInParts(origUri, "never");
+            assertEquals("xcc://user:pass@localhost:8000?apikey=test123&basepath=/testpath&granttype=apikey&tokenduration=60&tokenendpoint=/token", newUri);
+            newUri = manager.tryToDecryptUriInParts(origUri, "auto");
+            assertEquals("xcc://user:pass@localhost:8000?apikey=test123&basepath=%2Ftestpath&granttype=apikey&tokenduration=60&tokenendpoint=%2Ftoken", newUri);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    public void testTryToDecryptUriInPartsWithOauth() {
+        String origUri = "xcc://user:pass@localhost:8000?oauthtoken=test%20123";
+        try {
+            AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+            String newUri = manager.tryToDecryptUriInParts(origUri, "auto");
+            assertEquals("xcc://user:pass@localhost:8000?oauthtoken=test+123", newUri);
+
+            origUri = "xcc://user:pass@localhost:8000?oauthtoken=test+123";
+            newUri = manager.tryToDecryptUriInParts(origUri, "auto");
+            assertEquals("xcc://user:pass@localhost:8000?oauthtoken=test+123", newUri);
+
+
+            origUri = "xcc://user:pass@localhost:8000?oauthtoken=test 123";
+            newUri = manager.tryToDecryptUriInParts(origUri, "auto");
+            assertEquals("xcc://user:pass@localhost:8000?oauthtoken=test+123", newUri);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
     public void testTryToDecryptUriInPartsIncomplete() {
         String origUri = "xccs:// : @ENC(,yY9wGdp6RxGPl7x/EZj5DGMMryhEw0T2):0";
         try {
@@ -502,7 +612,30 @@ public class AbstractManagerTest {
             fail();
         }
     }
-
+    @Test
+    public void testTryToDecryptUriInPartsNoSchemeOrAuth() {
+        String origUri = "localhost:8000";
+        try {
+            AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+            String newUri = manager.tryToDecryptUriInParts(origUri,"auto");
+            assertEquals("If the regex doesn't match, values won't be decoded", origUri, newUri);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+    @Test
+    public void testTryToDecryptUriInPartsNoOauthValue() {
+        String origUri = "xcc://localhost:8000?oauthtoken=";
+        try {
+            AbstractManager manager = AbstractManagerImpl.instanceWithJasypt();
+            String newUri = manager.tryToDecryptUriInParts(origUri,"auto");
+            assertEquals("If the regex doesn't match, values won't be decoded", "xcc://localhost:8000", newUri);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
     @Test
     public void testTryToDecryptUriInPartsWithTrailingSpace() {
         String origUri = "xcc://user:pass@localhost:8000 ";
@@ -665,7 +798,113 @@ public class AbstractManagerTest {
         }
         checkContentSource(manager,XCC_URI_USER,XCC_URI_HOST,XCC_URI_PORT,XCC_URI_DB);
     }
+    @Test
+    public void testInitNoAuth() throws CorbException {
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.XCC_HOSTNAME, HOST);
+        manager.properties.setProperty(Options.XCC_PORT, PORT);
+        manager.properties.setProperty(Options.XCC_DBNAME, XCC_URI_DB);
+        try {
+            manager.initContentSourcePool(null);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+        checkContentSource(manager, "{none}", XCC_URI_HOST, PORT, XCC_URI_DB);
+    }
+    @Test
+    public void testInitKitchenSink() throws CorbException {
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.XCC_PROTOCOL, "xccs");
+        manager.properties.setProperty(Options.XCC_USERNAME, "admin-user");
+        manager.properties.setProperty(Options.XCC_PASSWORD, "secret");
+        manager.properties.setProperty(Options.XCC_HOSTNAME, HOST);
+        manager.properties.setProperty(Options.XCC_PORT, PORT);
+        manager.properties.setProperty(Options.XCC_DBNAME, XCC_URI_DB);
+        manager.properties.setProperty(Options.XCC_API_KEY, "myCustomKey");
+        manager.properties.setProperty(Options.XCC_BASE_PATH, "base");
+        manager.properties.setProperty(Options.XCC_GRANT_TYPE, "customGrantType");
+        manager.properties.setProperty(Options.XCC_OAUTH_TOKEN, "oauth");
+        manager.properties.setProperty(Options.XCC_TOKEN_DURATION, "61");
+        manager.properties.setProperty(Options.XCC_TOKEN_ENDPOINT, "/token");
+        try {
+            manager.initContentSourcePool(null);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+        ContentSource contentSource = manager.getContentSourcePool().get();
+        assertNotNull(contentSource);
+        String contentSourceStr = contentSource.toString();
+        ConnectionProvider provider = contentSource.getConnectionProvider();
 
+        assertTrue(contentSourceStr.contains("SSLconn"));
+        assertEquals(HOST, provider.getHostName());
+        assertEquals(Integer.parseInt(PORT), provider.getPort());
+        assertTrue(contentSourceStr.contains("cb=" + XCC_URI_DB));
+        // when presenting username/password, MarkLogic Cloud, and OAuth credentials - no username/password, MarkLogic Cloud auth takes precendence
+        assertTrue(contentSourceStr.contains("user={none}"));
+        Credentials.MLCloudAuthConfig cloudAuth = contentSource.getUserCredentials().getMLCloudAuthConfig();
+        assertEquals("myCustomKey", new String(cloudAuth.getApiKey()));
+        assertEquals("customGrantType", cloudAuth.getGrantType());
+        assertEquals(61, cloudAuth.getTokenDuration());
+    }
+    @Test
+    public void testInitURIOauth() throws CorbException {
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.XCC_HOSTNAME, HOST);
+        manager.properties.setProperty(Options.XCC_PORT, PORT);
+        manager.properties.setProperty(Options.XCC_OAUTH_TOKEN, "oauth");
+        manager.properties.setProperty(Options.XCC_BASE_PATH, "oauthBase");
+        //contentBase, basePath
+        try {
+            manager.initContentSourcePool(null);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+        ContentSource contentSource = manager.getContentSourcePool().get();
+        assertNotNull(contentSource);
+        String contentSourceStr = contentSource.toString();
+        ConnectionProvider provider = contentSource.getConnectionProvider();
+        assertTrue(contentSourceStr.contains("user={none}"));
+        assertEquals("Bearer oauth", contentSource.getUserCredentials().toOAuth());
+    }
+    @Test
+    public void testInitURIWithOauth() throws CorbException {
+        AbstractManager manager = new AbstractManagerImpl();
+        try {
+            manager.initContentSourcePool("xcc://localhost:8000?oauthtoken=foobar");
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+        ContentSource contentSource = manager.getContentSourcePool().get();
+        assertNotNull(contentSource);
+        String contentSourceStr = contentSource.toString();
+        ConnectionProvider provider = contentSource.getConnectionProvider();
+        assertTrue(contentSourceStr.contains("user={none}"));
+        assertEquals("Bearer foobar", contentSource.getUserCredentials().toOAuth());
+    }
+    @Test
+    public void testInitURIWithMarkLogicCloudAuth() throws CorbException {
+        AbstractManager manager = new AbstractManagerImpl();
+        try {
+            manager.initContentSourcePool("xcc://localhost:8000?basepath=base&apikey=foobar&tokenendpoint=endpoint&tokenduration=5");
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+        ContentSource contentSource = manager.getContentSourcePool().get();
+        assertNotNull(contentSource);
+        String contentSourceStr = contentSource.toString();
+        ConnectionProvider provider = contentSource.getConnectionProvider();
+        assertTrue(contentSourceStr.contains("user={none}"));
+        assertEquals("foobar", new String(contentSource.getUserCredentials().getMLCloudAuthConfig().getApiKey()));
+        assertEquals("endpoint", new String(contentSource.getUserCredentials().getMLCloudAuthConfig().getTokenEndpoint()));
+        assertEquals("endpoint", contentSource.getUserCredentials().getMLCloudAuthConfig().getTokenEndpoint());
+        assertEquals(5, contentSource.getUserCredentials().getMLCloudAuthConfig().getTokenDuration());
+    }
     @Test
     public void testInitURIAsSystemPropertyOnly() throws CorbException {
         AbstractManager manager = new AbstractManagerImpl();
@@ -936,6 +1175,15 @@ public class AbstractManagerTest {
 
         String usage = outContent.toString();
         assertNotNull(usage);
+    }
+
+    @Test
+    public void testHasUsage() {
+        assertTrue(Manager.hasUsage("-h"));
+        assertTrue(Manager.hasUsage("--help"));
+        assertTrue(Manager.hasUsage("--usage"));
+        assertFalse(Manager.hasUsage("--nousage"));
+        assertTrue(Manager.hasUsage("-foo", "--usage", "--bar"));
     }
 
     @Test
