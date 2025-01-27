@@ -87,7 +87,7 @@ dependencies {
     api 'com.marklogic:marklogic-xcc:11.3.1'
     // JavaScript libraries are  bundled in a fat jar for the UI
     implementation "org.webjars:angularjs:$angularVersion"
-    implementation 'org.jetbrains:annotations:24.1.0'
+    implementation 'org.jetbrains:annotations:26.0.2'
     shadow "org.webjars:angularjs:$angularVersion"
     implementation "org.webjars:bootstrap:$bootstrapVersion"
     shadow "org.webjars:bootstrap:$bootstrapVersion"
