@@ -462,21 +462,6 @@ public class ManagerIT {
     }
 
     @Test
-    public void testDefaultExportBatchToFileTaskWhenBlankExportFileNameSpecified() {
-        String filename = "";
-        Properties props = new Properties();
-        props.setProperty(XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
-        props.setProperty(PROCESS_MODULE, ManagerTest.PROCESS_MODULE);
-        props.setProperty(EXPORT_FILE_NAME, filename);
-        try (Manager manager = new Manager()) {
-            manager.init(props);
-            assertNotEquals(ExportBatchToFileTask.class.getName(), manager.getOption(PROCESS_TASK));
-        } catch (CorbException ex){
-            fail();
-        }
-    }
-
-    @Test
     public void testCommandFilePause() {
         clearSystemProperties();
         File exportFile = new File(ManagerTest.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_NAME);

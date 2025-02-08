@@ -336,7 +336,7 @@ public class Manager extends AbstractManager implements Closeable {
         if (!properties.containsKey(EXPORT_FILE_NAME) && exportFileName != null) {
             properties.put(EXPORT_FILE_NAME, exportFileName);
         }
-        if (properties.containsKey(EXPORT_FILE_NAME) && isNotBlank(properties.getProperty(EXPORT_FILE_NAME)) && processTask == null) {
+        if (properties.containsKey(EXPORT_FILE_NAME) && processTask == null) {
             LOG.info("configuring ExportBatchToFileTask since EXPORT-FILE-NAME was set and without PROCESS-TASK");
             processTask = ExportBatchToFileTask.class.getName();
             properties.put(PROCESS_TASK, processTask);
