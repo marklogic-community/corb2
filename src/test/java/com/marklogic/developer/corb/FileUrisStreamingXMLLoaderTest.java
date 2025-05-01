@@ -97,13 +97,10 @@ public class FileUrisStreamingXMLLoaderTest {
 
     @Test (expected = CorbException.class)
     public void testOpenUnindentedSelectFollowingSibling() throws CorbException {
-        FileUrisStreamingXMLLoader loader = getUnindentedFileUrisXMLLoader();
-        loader.properties.setProperty(Options.XML_NODE, "/doc/foo/following-sibling::foo");
-        try {
+        try (FileUrisStreamingXMLLoader loader = getUnindentedFileUrisXMLLoader()) {
+            loader.properties.setProperty(Options.XML_NODE, "/doc/foo/following-sibling::foo");
             loader.open();
             loader.getTotalCount();
-        } finally {
-            loader.close();
         }
     }
 
@@ -168,8 +165,7 @@ public class FileUrisStreamingXMLLoaderTest {
 
     @Test
     public void testOpenDefault() {
-        FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
-        try {
+        try (FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader()) {
             loader.open();
             assertEquals(BUU_CHILD_ELEMENTS, loader.getTotalCount());
             assertEquals(String.valueOf(BUU_CHILD_ELEMENTS), loader.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
@@ -180,7 +176,6 @@ public class FileUrisStreamingXMLLoaderTest {
                 assertTrue(content.contains(FileUrisStreamingXMLLoader.LOADER_DOC));
                 assertTrue(content.contains(String.format("%s=\"false\"", FileUrisStreamingXMLLoader.BASE64_ENCODED)));
             }
-            loader.close();
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -189,9 +184,8 @@ public class FileUrisStreamingXMLLoaderTest {
 
     @Test
     public void testOpenWithoutEnvelope() {
-        FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
-        loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(false));
-        try {
+        try (FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();) {
+            loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(false));
             loader.open();
             assertEquals(BUU_CHILD_ELEMENTS, loader.getTotalCount());
             assertEquals(String.valueOf(BUU_CHILD_ELEMENTS), loader.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
@@ -201,7 +195,6 @@ public class FileUrisStreamingXMLLoaderTest {
                 assertNotNull(content);
                 assertFalse(content.contains(FileUrisStreamingXMLLoader.LOADER_DOC));
             }
-            loader.close();
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -210,11 +203,10 @@ public class FileUrisStreamingXMLLoaderTest {
 
     @Test
     public void testOpenWithoutEnvelopeWithMetadata() {
-        FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
-        loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(false));
-        loader.properties.setProperty(Options.XML_NODE, "/BenefitEnrollmentRequest/BenefitEnrollmentMaintenance");
-        loader.properties.setProperty(Options.XML_METADATA, "/BenefitEnrollmentRequest/FileInformation");
-        try {
+        try (FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader()) {
+            loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(false));
+            loader.properties.setProperty(Options.XML_NODE, "/BenefitEnrollmentRequest/BenefitEnrollmentMaintenance");
+            loader.properties.setProperty(Options.XML_METADATA, "/BenefitEnrollmentRequest/FileInformation");
             loader.open();
             assertEquals(BUU_CHILD_XML_NODES, loader.getTotalCount());
             assertEquals(String.valueOf(BUU_CHILD_XML_NODES), loader.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
@@ -230,7 +222,6 @@ public class FileUrisStreamingXMLLoaderTest {
             assertNotNull(metadata);
             assertFalse(metadata.contains(FileUrisXMLLoader.LOADER_DOC));
             assertTrue(metadata.contains("InterchangeReceiverID"));
-            loader.close();
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -239,12 +230,11 @@ public class FileUrisStreamingXMLLoaderTest {
 
     @Test
     public void testOpenWithEnvelopeWithMetadata() {
-        FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
-        loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(true));
-        loader.properties.setProperty(Options.XML_NODE, "/BenefitEnrollmentRequest/BenefitEnrollmentMaintenance");
-        loader.properties.setProperty(Options.XML_METADATA, "/BenefitEnrollmentRequest/FileInformation");
-        loader.properties.setProperty(Options.METADATA_TO_PROCESS_MODULE, Boolean.toString(true));
-        try {
+        try (FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader()) {
+            loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(true));
+            loader.properties.setProperty(Options.XML_NODE, "/BenefitEnrollmentRequest/BenefitEnrollmentMaintenance");
+            loader.properties.setProperty(Options.XML_METADATA, "/BenefitEnrollmentRequest/FileInformation");
+            loader.properties.setProperty(Options.METADATA_TO_PROCESS_MODULE, Boolean.toString(true));
             loader.open();
             assertEquals(BUU_CHILD_XML_NODES, loader.getTotalCount());
             assertEquals(String.valueOf(BUU_CHILD_XML_NODES), loader.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
@@ -262,7 +252,6 @@ public class FileUrisStreamingXMLLoaderTest {
             assertNotNull(metadata);
             assertTrue(metadata.contains(FileUrisXMLLoader.LOADER_DOC));
             assertTrue(metadata.contains("InterchangeReceiverID"));
-            loader.close();
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -271,10 +260,9 @@ public class FileUrisStreamingXMLLoaderTest {
 
     @Test
     public void testOpenWithEnvelopeAndBase64Encoded() {
-        FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
-        loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(true));
-        loader.properties.setProperty(Options.LOADER_BASE64_ENCODE, Boolean.toString(true));
-        try {
+        try (FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader()) {
+            loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(true));
+            loader.properties.setProperty(Options.LOADER_BASE64_ENCODE, Boolean.toString(true));
             loader.open();
             assertEquals(BUU_CHILD_ELEMENTS, loader.getTotalCount());
             assertTrue(loader.hasNext());
@@ -284,7 +272,6 @@ public class FileUrisStreamingXMLLoaderTest {
                 assertTrue(content.contains(FileUrisStreamingXMLLoader.LOADER_DOC));
                 assertTrue(content.contains(String.format("%s=\"true\"", FileUrisStreamingXMLLoader.BASE64_ENCODED)));
             }
-            loader.close();
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -293,12 +280,11 @@ public class FileUrisStreamingXMLLoaderTest {
 
     @Test
     public void testOpenWithEnvelopeAndBase64EncodedWithMetadata() {
-        FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
-        loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(true));
-        loader.properties.setProperty(Options.LOADER_BASE64_ENCODE, Boolean.toString(true));
-        loader.properties.setProperty(Options.XML_NODE, "/BenefitEnrollmentRequest/BenefitEnrollmentMaintenance");
-        loader.properties.setProperty(Options.XML_METADATA, "/BenefitEnrollmentRequest/FileInformation");
-        try {
+        try (FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader()) {
+            loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(true));
+            loader.properties.setProperty(Options.LOADER_BASE64_ENCODE, Boolean.toString(true));
+            loader.properties.setProperty(Options.XML_NODE, "/BenefitEnrollmentRequest/BenefitEnrollmentMaintenance");
+            loader.properties.setProperty(Options.XML_METADATA, "/BenefitEnrollmentRequest/FileInformation");
             loader.open();
             assertEquals(BUU_CHILD_XML_NODES, loader.getTotalCount());
             assertEquals(String.valueOf(BUU_CHILD_XML_NODES), loader.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
@@ -314,8 +300,6 @@ public class FileUrisStreamingXMLLoaderTest {
             String metadata = loader.properties.getProperty(PRE_BATCH_MODULE+'.'+METADATA);
             assertNotNull(metadata);
             assertTrue(metadata.contains(FileUrisXMLLoader.LOADER_DOC));
-
-            loader.close();
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -336,12 +320,11 @@ public class FileUrisStreamingXMLLoaderTest {
 
     @Test
     public void testGetTempDir() {
-        FileUrisStreamingXMLLoader loader = new FileUrisStreamingXMLLoader();
         Properties properties = new Properties();
         properties.setProperty(Options.TEMP_DIR, BUU_DIR);
-        loader.properties = properties;
         Path tempDir = null;
-        try {
+        try (FileUrisStreamingXMLLoader loader = new FileUrisStreamingXMLLoader()) {
+            loader.properties = properties;
             tempDir = loader.getTempDir();
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -352,11 +335,10 @@ public class FileUrisStreamingXMLLoaderTest {
 
     @Test(expected = InvalidParameterException.class)
     public void testGetTempDirWhenFileSpecified() {
-        FileUrisStreamingXMLLoader loader = new FileUrisStreamingXMLLoader();
         Properties properties = new Properties();
         properties.setProperty(Options.TEMP_DIR, BUU_DIR + BUU_SCHEMA);
-        loader.properties = properties;
-        try {
+        try (FileUrisStreamingXMLLoader loader = new FileUrisStreamingXMLLoader()) {
+            loader.properties = properties;
             loader.getTempDir();
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);

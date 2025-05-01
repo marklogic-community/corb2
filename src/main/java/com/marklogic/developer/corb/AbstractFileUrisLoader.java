@@ -60,6 +60,10 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
 
     protected final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 
+    public AbstractFileUrisLoader() {
+        docFactory.setNamespaceAware(true);
+    }
+
     protected Document toLoaderDoc(File file) throws CorbException {
         try (InputStream inputStream = new FileInputStream(file)) {
             Map<String, String> metadata = getMetadata(file);
