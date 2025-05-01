@@ -6,20 +6,20 @@ declare variable $URIS_BATCH_REF as xs:string external;
 
 let $corb-loader := xdmp:unquote($URI)/corb-loader
 let $loader-content := $corb-loader/content
-let $doc := 
-    if ($loader-content/@base64Encoded[. eq "true"]) then 
+let $doc :=
+    if ($loader-content/@base64Encoded[. eq "true"]) then
         xdmp:unquote(xdmp:base64-decode($loader-content))
-    else 
-        $loader-content/node()
+    else
+        $loader-content/bem:*
 
 let $metadata := $corb-loader/metadata
-let $originalFilename := fn:tokenize($metadata/filename, "\\|/")[last()] 
+let $originalFilename := fn:tokenize($metadata/filename, "\\|/")[last()]
 
 let $parentId := xdmp:get-server-field("com.marklogic.developer.corb.StreamingXMLUrisLoader." || $URIS_BATCH_REF || ".parentId")
 
 let $id := fn:string(xdmp:random(10000000000))
 
-let $content := 
+let $content :=
     if ( $doc[//bem:FileInformation] ) then
         <transactionFileHandling xmlns="http://persistence.ffe.corb.developer.marklogic.com" xmlns:base="http://base.persistence.base.corb.developer.marklogic.com" xmlns:p="http://persistence.base.corb.developer.marklogic.com">
             <base:objectIdentifier>{ $parentId }</base:objectIdentifier>
@@ -67,13 +67,12 @@ let $content :=
         </stagingTransactionMessage>
 
 let $documentElementName := $content/local-name()
-let $dir :=  concat(upper-case(substring($documentElementName,1,1)), substring($documentElementName,2))
+let $dir :=  concat(upper-case(substring($documentElementName, 1, 1)), substring($documentElementName, 2))
 let $uri := "/streamingXMLUrisLoader/" || $dir || "/" || $id || ".xml"
-let $collections := ($parentId)
+let $collections := $parentId
 
-return
-    (
-    xdmp:log("running process.xqy for " || $URIS_BATCH_REF || " " || $uri),
-    xdmp:document-insert($uri, $content, (), $collections), 
-    $uri 
-    )
+return (
+  xdmp:log("running process.xqy for " || $URIS_BATCH_REF || " " || $uri),
+  xdmp:document-insert($uri, $content, (), $collections),
+  if ($doc) then $uri else ()
+)

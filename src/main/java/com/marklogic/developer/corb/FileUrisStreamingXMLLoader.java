@@ -112,7 +112,6 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         files = readToTempDir(xmlFile.toPath());
 
         setMetadataNodeToModule(customMetadata, xmlFile);
-
     }
 
     @Override
