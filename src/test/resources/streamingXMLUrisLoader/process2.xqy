@@ -8,14 +8,14 @@ declare variable $BATCH_ID as xs:string external;
 
 let $corb-loader := xdmp:unquote($URI)/corb-loader
 let $loader-content := $corb-loader/content
-let $doc := 
-    if ($loader-content/@base64Encoded[. eq "true"]) then 
+let $doc :=
+    if ($loader-content/@base64Encoded[. eq "true"]) then
         xdmp:unquote(xdmp:base64-decode($loader-content))
-    else 
-        $loader-content/node()
+    else
+        $loader-content/bem:*
 
 let $metadata := $corb-loader/metadata
-let $originalFilename := fn:tokenize($metadata/filename, "\\|/")[last()] 
+let $originalFilename := fn:tokenize($metadata/filename, "\\|/")[last()]
 
 let $random := xdmp:random(1000)
 let $prandom := if($random lt 10) then "00"||$random else if ($random lt 100) then "0"||$random else xs:string($random)
@@ -30,7 +30,7 @@ let $parent-uri :=
     )
 let $parentId := fn:tokenize(fn:tokenize($parent-uri,"/")[fn:last()],"\.")[1]
 
-let $content := 
+let $content :=
     <stagingTransactionMessage xmlns="http://persistence.corb.developer.marklogic.com" xmlns:base="http://base.corb.developer.marklogic.com">
       <base:objectIdentifier>{ $id }</base:objectIdentifier>
       <base:lastModified>{ fn:current-dateTime() }</base:lastModified>
@@ -41,11 +41,11 @@ let $content :=
       <parentTransactionFileHandlingObjectIdentifier>{ $parentId }</parentTransactionFileHandlingObjectIdentifier>
     </stagingTransactionMessage>
 
-let $collections := ($BATCH_ID)      
+let $collections := ($BATCH_ID)
 let $uri := "/streamingXMLUrisLoader/StagingTransactionMessage/" || $id || ".xml"
 
 return (
-    xdmp:log("running process.xqy for " || $URIS_BATCH_REF || " " || $uri),
-    xdmp:document-insert($uri, $content, (), $collections), 
-    $uri 
+  xdmp:log("running process.xqy for " || $URIS_BATCH_REF || " " || $uri),
+  xdmp:document-insert($uri, $content, (), $collections),
+  if ($doc) then $uri else ()
 )

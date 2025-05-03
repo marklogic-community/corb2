@@ -96,14 +96,14 @@ public class FileUrisStreamingXMLLoaderIT {
     @Test
     public void testStreamingXMLUrisLoaderWithXPath() {
         try {
-            Properties props = getBUUPropertiesWithXPath();
-            props.put("LAST_LINE","NA");
+            Properties properties = getBUUPropertiesWithXPath();
+            properties.put("LAST_LINE", "NA");
 
-            int result = testStreamingXMLUrisLoader(BUU_FILENAME, props);
+            int result = testStreamingXMLUrisLoader(BUU_FILENAME, properties);
             assertEquals(7, result);
 
-            String last = (String)props.get("LAST_LINE");
-            assertEquals("POST-BATCH-MODULE,5,5,true",last);
+            String last = properties.getProperty("LAST_LINE");
+            assertEquals("POST-BATCH-MODULE,5,5,true", last);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -131,14 +131,13 @@ public class FileUrisStreamingXMLLoaderIT {
         report.deleteOnExit();
         properties.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
 
-        Manager manager = new Manager();
-        try {
+        try (Manager manager = new Manager()) {
             manager.init(properties);
             manager.run();
 
             lineCount = FileUtils.getLineCount(report);
 
-            if(properties.containsKey("LAST_LINE")) {
+            if (properties.containsKey("LAST_LINE")) {
                 BufferedReader input = new BufferedReader(new FileReader(report));
                 String last=null, line = null;
                 while ((line = input.readLine()) != null) {
@@ -168,26 +167,24 @@ public class FileUrisStreamingXMLLoaderIT {
         properties.setProperty(Options.PROCESS_MODULE, BUU_DIR + "processMultiply.xqy|ADHOC");
         properties.setProperty(Options.PROCESS_MODULE + ".COPIES", Integer.toString(copies));
         properties.setProperty(Options.EXPORT_FILE_TOP_CONTENT,
-                "<bem:BenefitEnrollmentRequest xmlns:bem=\"http://bem.corb.developer.marklogic.com\">"
-                + "<bem:FileInformation>\n"
-                + "		<bem:InterchangeSenderID>PHANTOM</bem:InterchangeSenderID>\n"
-                + "		<bem:InterchangeReceiverID>CMSFFM</bem:InterchangeReceiverID>\n"
-                + "		<bem:GroupSenderID>11512NC0060024</bem:GroupSenderID>\n"
-                + "		<bem:GroupReceiverID>NC0</bem:GroupReceiverID>\n"
-                + "		<bem:GroupControlNumber>20140909</bem:GroupControlNumber>\n"
-                + "		<bem:GroupTimeStamp>2014-10-15T00:00:00</bem:GroupTimeStamp>\n"
-                + "		<bem:VersionNumber>22</bem:VersionNumber>\n"
-                + "	</bem:FileInformation>");
-        properties.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "</bem:BenefitEnrollmentRequest>");
+                "<BenefitEnrollmentRequest xmlns=\"http://bem.corb.developer.marklogic.com\">"
+                + "<FileInformation>\n"
+                + "		<InterchangeSenderID>PHANTOM</InterchangeSenderID>\n"
+                + "		<InterchangeReceiverID>CMSFFM</InterchangeReceiverID>\n"
+                + "		<GroupSenderID>11512NC0060024</GroupSenderID>\n"
+                + "		<GroupReceiverID>NC0</GroupReceiverID>\n"
+                + "		<GroupControlNumber>20140909</GroupControlNumber>\n"
+                + "		<GroupTimeStamp>2014-10-15T00:00:00</GroupTimeStamp>\n"
+                + "		<VersionNumber>22</VersionNumber>\n"
+                + "	</FileInformation>");
+        properties.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "</BenefitEnrollmentRequest>");
         properties.setProperty(Options.EXPORT_FILE_DIR, BUU_DIR);
         properties.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
         properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(false));
 
-        try {
-            Manager manager = new Manager();
+        try (Manager manager = new Manager()) {
             manager.init(properties);
             manager.run();
-
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -231,9 +228,9 @@ public class FileUrisStreamingXMLLoaderIT {
         properties.setProperty(Options.LOADER_SET_URIS_BATCH_REF, Boolean.toString(true));
 
         String batchId = System.currentTimeMillis()+String.format("%06d", (int)(Math.random()*1000000));
-        properties.setProperty(Options.PRE_BATCH_MODULE+".BATCH_ID",batchId);
-        properties.setProperty(Options.PROCESS_MODULE+".BATCH_ID",batchId);
-        properties.setProperty(Options.POST_BATCH_MODULE+".BATCH_ID",batchId);
+        properties.setProperty(Options.PRE_BATCH_MODULE+".BATCH_ID", batchId);
+        properties.setProperty(Options.PROCESS_MODULE+".BATCH_ID", batchId);
+        properties.setProperty(Options.POST_BATCH_MODULE+".BATCH_ID", batchId);
         return properties;
     }
 }

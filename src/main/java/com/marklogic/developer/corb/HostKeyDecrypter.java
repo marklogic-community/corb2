@@ -353,7 +353,6 @@ public class HostKeyDecrypter extends AbstractDecrypter {
             decryptedTextBytes = cipher.doFinal(encryptedTextBytes);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "decryption failed", e);
-            e.printStackTrace(); //NOPMD
         }
         return new String(decryptedTextBytes);
     }
