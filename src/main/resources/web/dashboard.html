@@ -1,113 +1,209 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
+<head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Job Dashboard</title>
-    <link href="/bootstrap/@BOOTSTRAP_VERSION@/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/css/dashboard.css" rel="stylesheet">
-  </head>
-  <body ng-app="corbApp" ng-controller="dashboardCtrl">
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-lg-12">
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h3>Job Dashboard</h3>
-            </div>
-            <div class="panel panel-default">
-              <div class="panel-heading">
-                <h4 class="panel-title">
-                  <a data-toggle="collapse" href="#monitorHosts" ng-click="isCollapsed = !isCollapsed">
-                      <span ng-class="{'glyphicon glyphicon-triangle-bottom': isCollapsed, 'glyphicon glyphicon-triangle-top': !isCollapsed }"></span>
-                      Monitor Hosts
-                  </a>
-                </h4>
-              </div>
-              <div id="monitorHosts" class="panel-collapse collapse">
-                <form name="externalForm" class="form-inline" novalidate>
-                    <div ng-repeat="e in external">
-                        <ng-form name="portForm">
-                            <div class="input-group">
-                                <span class="input-group-addon">Host: </span>
-                                <input class="form-control" ng-readonly="$first" ng-model="e.host" ng-change="parseExternalHostAndPorts($index)" ng-model-options="'{ debounce: 5000 }'" ng-required="true" required/>
-                            </div>
-
-                            <div class="input-group">
-                                <span class="input-group-addon">Port Range: </span>
-                                <input class="form-control" name="port" ng-readonly="$first" ng-model="e.port" ng-change="parseExternalHostAndPorts($index)" ng-model-options='{ debounce: 2000 }' ng-pattern="/^(\d+[-,\s]?)*$/" ng-required="true" required/>
-
-                                <span class="alert alert-danger" ng-show="portForm.port.$touched && portForm.port.$invalid">Invalid format. Specify port ranges with dashes, or a list of ports with commas. i.e. 8005-8010,9001,9002</span>
-                            </div>
-
-                            <button ng-if="$first === false" ng-click="removeExternal($index)">
-                                <span class="glyphicon glyphicon-minus"></span> REMOVE
-                            </button>
-                        </ng-form>
-                    </div>
-                    <button ng-click="addExternal()">
-                        <span class="glyphicon glyphicon-plus"></span> ADD
-                    </button>
-                </form>
-              </div>
-            </div>
-            <div class="table-responsive">
-              <table class="table table-striped table-bordered table-hover">
-                <thead>
-                  <tr>
-                    <th> Start Time </th>
-                    <th> Avg TPS </th>
-                    <th> Curr TPS </th>
-                    <th> Host/Port </th>
-                    <th> Threads</th>
-                    <th> Succeeded Tasks </th>
-                    <th> Failed Tasks </th>
-                    <th> Job Location </th>
-                    <th> Total #Tasks </th>
-                    <th> Total Run Time  </th>
-                    <th> Pause / Resume   </th>
-                    <th> Threads   </th>
-                    <th> Details   </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr ng-repeat="i in availableServerData | orderBy : ['startTime', 'port', 'id']">
-                    <td>{{::i.startTime}}</td>
-                    <td>{{i.averageTransactionsPerSecond | number:2}}</td>
-                    <td>{{i.currentTransactionsPerSecond | number:2}}</td>
-                    <td><a ng-click="openJob(i)" target="_blank">{{::i.host}}/{{::i.port}}</a></td>
-                    <td>{{i.currentThreadCount | number:0}}</td>
-                    <td>{{i.numberOfSucceededTasks | number:0}}</td>
-                    <td>{{i.numberOfFailedTasks | number:0}}</td>
-                    <td>{{::i.runLocation}}</td>
-                    <td>{{::i.totalNumberOfTasks | number:0}}</td>
-                    <td>{{msToTime(i.totalRunTimeInMillis)}}</td>
-                    <td>
-                        <button class="btn {{i.paused ? 'btn-info' : 'btn-success'}}" ng-click="pauseResumeButtonClick(i)">
-                            <md-icon ng-hide="i.loading" class="glyphicon {{i.paused ? 'glyphicon-play' : 'glyphicon-pause'}}"></md-icon>
-                            <md-icon ng-if="i.loading" class="glyphicon glyphicon-refresh"></md-icon>
-                          <!--  {{ i.paused ? "resume" : "pause" }} -->
-                        </button>
-                    </td>
-                    <td>
-                        <input type="number" ng-model="threadCounts[i.id]" ng-change="updateThreadCount(i)" />
-                    </td>
-                    <td><a ng-click="openJob(i)" target="_blank" class="glyphicon glyphicon-fullscreen"></a></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <script src="/jquery/@JQUERY_VERSION@/jquery.slim.min.js"></script>
-    <script src="/angularjs/@ANGULAR_VERSION@/angular.min.js"></script>
-    <script src="/bootstrap/@BOOTSTRAP_VERSION@/js/bootstrap.min.js"></script>
+    <script defer src="/alpinejs/@ALPINE_VERSION@/dist/cdn.js"></script>
     <script src="/js/corbApp.js"></script>
-  </body>
+    <link href="/css/dashboard.css" rel="stylesheet">
+    <script>
+        function dashboard() {
+            return {
+                monitorHosts: [],
+                promises: {},
+                jobs: [],
+                promise: null,
+                parseExternalHostAndPorts(metricsHost) {
+                    const hostData= [];
+                    let externalHost = metricsHost.host;
+                    const externalPorts = metricsHost.ports;
+                    if (externalHost && externalPorts) {
+                        const matches = externalHost.match("^(https?\\:)?\\/?\\/?(([^:\\/?#]*)(?:\\:([0-9]+))?)([\\/]{0,1}[^?#]*)(\\?[^#]*|)(#.*|)$");
+                        externalHost = matches[3];
+                        const items = externalPorts.split(",");
+                        for (let i = 0, len = items.length; i < len; i++) {
+                            const portToken = items[i];
+                            // when there is a dash, process the range of values (inclusive)
+                            if (portToken.includes("-")) {
+                                const range = portToken.split("-");
+                                for (let port = range[0]; port <= range[1]; port++) {
+                                    hostData.push([externalHost, port]);
+                                }
+                                // otherwise just the specific port number
+                            } else if (Number.isInteger(parseInt(portToken))) {
+                                hostData.push([externalHost, portToken]);
+                            }
+                        }
+                    }
+                    return hostData
+                },
+                addMonitor(monitorHost) {
+                   if (monitorHost.host && monitorHost.ports) {
+                        for (const hostData of this.parseExternalHostAndPorts(monitorHost)) {
+                            this.scheduleMetricsRefresh(hostData[0], hostData[1])
+                        }
+                        this.monitorHosts.push(JSON.parse(JSON.stringify(monitorHost)));
+                        monitorHost.host='';
+                        monitorHost.ports='';
+                    }
+                },
+                removeMonitor(hostIndex) {
+                    for (const hostData of this.parseExternalHostAndPorts(this.monitorHosts[hostIndex])){
+                        const metricsUrl = "http://" + hostData[0] + ":" + hostData[1] + metricsPath;
+                        const promise = this.promises[metricsUrl];
+                        if (promise) {
+                            clearInterval(promise);
+                        }
+                    }
+                    this.monitorHosts.splice(hostIndex, 1);
+                },
+                withinRange(n) { return Number.isFinite(n) && n >= 1 && n <= 65535; },
+                isPortRangeValid(s) {
+                    if (!s) return false;
+                    return s.split(',').every(token => {
+                        token = token.trim();
+                        const rangeMatch = token.match(/^(\d{1,5})-(\d{1,5})$/);
+                        const singleMatch = token.match(/^\d{1,5}$/);
+                        if (rangeMatch) {
+                            const a = +rangeMatch[1], b = +rangeMatch[2];
+                            return this.withinRange(a) && this.withinRange(b) && a <= b;
+                        }
+                        if (singleMatch) {
+                            const n = +singleMatch[0];
+                            return this.withinRange(n);
+                        }
+                        return false;
+                    });
+                },
+                async metricsRefresh(metricsUrl) {
+                    await fetch(metricsUrl, {
+                        method: "GET",
+                        headers: { "Accept": "application/json" }
+                    }).then(async response => {
+                        if (!response.ok) {
+                            return handleError(response)
+                        }
+                        await response.json().then(data => { this.loadData(data) });
+                    }).catch(error => { clearInterval(this.promises[metricsUrl]); })
+                },
+                scheduleMetricsRefresh(host, port) {
+                    const metricsUrl = "http://" + host + ":" + port + metricsPath;
+                    this.metricsRefresh(metricsUrl)
+                    this.promises[metricsUrl] = setInterval(() => {
+                        this.metricsRefresh(metricsUrl)
+                    }, 2000);
+                },
+                loadData(response) {
+                    //ensure that this works with an array or single job object
+                    const responseJobs = [].concat(response.jobs || response);
+                    responseJobs.forEach((obj, index) => {
+                        const responseJob = obj.job
+                        const existingJobIndex = this.jobs.findIndex(job => job.id === responseJob.id)
+                        if (existingJobIndex !== -1) {
+                            this.jobs.splice(existingJobIndex, 1, responseJob);
+                        } else {
+                            this.jobs.push(responseJob)
+                        }
+                    })
+                },
+                msToTime,
+                toUrl,
+                updateThreadCount,
+                commandActionParameter,
+                togglePause,
+                openJob(job) { window.open(toUrl(job), "target=_blank"); }
+            };
+        }
+    </script>
+</head>
+<body>
+<main x-data="dashboard()" x-init="$nextTick(() => { addMonitor({'host': host, 'ports': port}) })">
+    <h1>Job Dashboard</h1>
+    <div class="section">
+        <table>
+            <thead>
+            <tr>
+                <th>Start Time</th>
+                <th>Host:Port</th>
+                <th>Job Location</th>
+                <th>Failed Tasks</th>
+                <th>Succeeded Tasks</th>
+                <th>Total #Tasks</th>
+                <th>Progress</th>
+                <th>Avg TPS</th>
+                <th>Curr TPS</th>
+                <th>ETC</th>
+                <th>Total Run Time</th>
+                <th>Pause / Resume</th>
+                <th>Threads</th>
+                <th>Details</th>
+            </tr>
+            </thead>
+            <tbody>
+            <template x-for="i in jobs" :key="i.id">
+                <tr x-data="{ get isRunning() { return i.numberOfSucceededTasks + i.numberOfFailedTasks < i.totalNumberOfTasks || i.currentThreadCount !== 0 } }">
+                    <td x-text="i.startTime"></td>
+                    <td>
+                        <a :href="`//${i.host}:${i.port}`" target="_blank" x-text="`${i.host}:${i.port}`"></a>
+                    </td>
+                    <td x-text="i.runLocation"></td>
+                    <td x-text="i.numberOfFailedTasks ?? 0"></td>
+                    <td x-text="i.numberOfSucceededTasks ?? 0"></td>
+                    <td x-text="i.totalNumberOfTasks ?? 0"></td>
+                    <td>
+                        <progress :max="i.totalNumberOfTasks" :value="i.numberOfSucceededTasks + i.numberOfFailedTasks" :title="i.numberOfSucceededTasks + i.numberOfFailedTasks"></progress>
+                    </td>
+                    <td x-text="(i.averageTransactionsPerSecond ?? 0).toFixed(2)"></td>
+                    <td x-text="(i.currentTransactionsPerSecond ?? 0).toFixed(2)"></td>
+                    <td x-text="isRunning ? i.estimatedTimeOfCompletion : 'Done'"></td>
+                    <td x-text="msToTime(i.totalRunTimeInMillis)"></td>
+                    <td>
+                        <button x-show="isRunning" class="btn secondary" @click="togglePause(i)" x-text="i.paused ? 'Resume' : 'Pause'" ></button>
+                    </td>
+                    <td>
+                        <input x-show="isRunning" class="input" type="number" min="1" :value="i.currentThreadCount" @input="updateThreadCount(i, $event.target.value)" />
+                    </td>
+                    <td><button class="btn secondary" @click="openJob(i)">Details</button></td>
+                </tr>
+            </template>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3 id="monitorHosts">Monitor Hosts</h3>
+        <div class="outer-grid">
+            <div class="row" style="margin-bottom:0.75rem;">
+                <ul>
+                    <template x-for="(mh, i) in monitorHosts" :key="i" >
+                    <li>
+                        <label>Host:</label><span x-text="mh.host"></span>
+                        <label>Port Range:</label><span x-text="mh.ports"></span>
+                        <button class="btn red" @click="removeMonitor(i)">REMOVE</button>
+                    </li>
+                    </template>
+                </ul>
+            </div>
+
+            <div class="row" style="margin-bottom:0.75rem;" x-data="{ monitor: { host: '', ports: ''} }">
+                <label>Host:</label>
+                <input class="input" type="text" placeholder="hostname or IP" x-model="monitor.host" />
+
+                <label>Port Range:</label>
+                <div>
+                    <input class="input" type="text" placeholder="8005-8010,9001,9002" x-model="monitor.ports" />
+                    <div x-show="monitor.ports && !isPortRangeValid(monitor.ports)" class="hint" style="margin-top:0.25rem;">
+                        Invalid format. Specify port ranges with dashes, or a list of ports with commas. i.e. 8005-8010,9001,9002
+                    </div>
+                </div>
+                <div style="grid-column: span 2; display:flex; gap:0.5rem;">
+                    <button class="btn" @click="addMonitor(monitor)">ADD</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
 </html>

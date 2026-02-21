@@ -84,15 +84,11 @@ configurations {
 }
 
 dependencies {
-    api 'com.marklogic:marklogic-xcc:12.0.0'
+    api 'com.marklogic:marklogic-xcc:12.0.1'
     // JavaScript libraries are  bundled in a fat jar for the UI
-    implementation "org.webjars:angularjs:$angularVersion"
     implementation 'org.jetbrains:annotations:26.0.2'
-    shadow "org.webjars:angularjs:$angularVersion"
-    implementation "org.webjars:bootstrap:$bootstrapVersion"
-    shadow "org.webjars:bootstrap:$bootstrapVersion"
-    implementation "org.webjars:jquery:$jqueryVersion"
-    shadow "org.webjars:jquery:$jqueryVersion"
+    shadow "org.webjars.npm:alpinejs:$alpineVersion"
+    implementation "org.webjars.npm:alpinejs:$alpineVersion"
     // externalsortinginjava classes with the corb distro in a fat jar
     implementation "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
     shadow "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
@@ -116,7 +112,7 @@ processResources {
             include '*.html'
         }
         into ('web')
-        filter(ReplaceTokens, tokens: [ANGULAR_VERSION: angularVersion, BOOTSTRAP_VERSION: bootstrapVersion, JQUERY_VERSION: jqueryVersion])
+        filter(ReplaceTokens, tokens: [ALPINE_VERSION: alpineVersion])
     }
 }
 processTestResources.dependsOn processResources
@@ -127,15 +123,13 @@ jar {
     dependsOn(shadowJar { classifier = null })
 }
 shadowJar {
-
     //project.configurations.implementation.canBeResolved = true
     configurations = [project.configurations.shadow]
     dependencies {
         include(dependency("com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"))
-        include(dependency('org.webjars:.*'))
+        include(dependency("org.webjars.npm:alpinejs:$alpineVersion"))
     }
     //generate same name as the jar task would
-    //archiveFileName = "${archiveBaseName}-${archiveVersion}.${archiveExtension}"
     archiveFileName = "${baseName}-${version}.${extension}"
     manifest {
         attributes 'Application-Version': project.version
