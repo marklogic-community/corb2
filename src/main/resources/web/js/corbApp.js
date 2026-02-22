@@ -144,7 +144,7 @@ export function jobStatus({ pollingMs = 3000 } = {}) {
         },
 
         destroy() {
-            for (const [, id] of this.timers) { clearInterval(id) };
+            for (const [, id] of this.timers) { clearInterval(id); }
             this.timers.clear();
         },
 
@@ -183,7 +183,7 @@ export function jobStatus({ pollingMs = 3000 } = {}) {
 
         loadData(response) {
             const responseJobs = [].concat(response.jobs ?? response);
-            responseJobs.forEach(obj => {
+            responseJobs.forEach((obj) => {
                 const j = obj?.job ?? obj;
                 if (j) { this.job = Object.assign(this.job, j); }
             });
@@ -272,7 +272,7 @@ export function dashboard({ pollingMs = 2000 } = {}) {
 
         isPortRangeValid(s) {
             if (!s) { return false; }
-            return s.split(",").every(token => {
+            return s.split(",").every((token) => {
                 token = token.trim();
                 const rangeMatch = token.match(/^(\d{1,5})-(\d{1,5})$/);
                 const singleMatch = token.match(/^\d{1,5}$/);
@@ -310,7 +310,7 @@ export function dashboard({ pollingMs = 2000 } = {}) {
                 const t = token.trim();
                 if (/^\d{1,5}-\d{1,5}$/.test(t)) {
                     const [a, b] = t.split("-").map(Number);
-                    for (let p = a; p <= b; p++) { out.push([h, p]) };
+                    for (let p = a; p <= b; p++) { out.push([h, p]); }
                 } else {
                     out.push([h, Number(t)]);
                 }
@@ -368,7 +368,7 @@ export function dashboard({ pollingMs = 2000 } = {}) {
             responseJobs.forEach((obj) => {
                 const j = obj?.job ?? obj;
                 if (!j?.id) { return; }
-                const idx = this.jobs.findIndex(x => x.id === j.id);
+                const idx = this.jobs.findIndex((x) => x.id === j.id);
                 if (idx !== -1) {
                     this.jobs.splice(idx, 1, j);
                 } else {
@@ -383,7 +383,7 @@ export function dashboard({ pollingMs = 2000 } = {}) {
         isPending(id) { return this.pendingJobs.has(id); },
 
         async togglePause(job) {
-            if (this.isPending(job.id)) { return };
+            if (this.isPending(job.id)) { return; }
             this.pendingJobs.add(job.id);
             const params = { command: job.paused ? "resume" : "pause" };
             const { signal, done } = withTimeout(8000);
