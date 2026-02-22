@@ -5,121 +5,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Job Dashboard</title>
-    <script defer src="/alpinejs/@ALPINE_VERSION@/dist/cdn.js"></script>
-    <script src="/js/corbApp.js"></script>
     <link href="/css/dashboard.css" rel="stylesheet">
-    <script>
-        function dashboard() {
-            return {
-                monitorHosts: [],
-                promises: {},
-                jobs: [],
-                promise: null,
-                parseExternalHostAndPorts(metricsHost) {
-                    const hostData= [];
-                    let externalHost = metricsHost.host;
-                    const externalPorts = metricsHost.ports;
-                    if (externalHost && externalPorts) {
-                        const matches = externalHost.match("^(https?\\:)?\\/?\\/?(([^:\\/?#]*)(?:\\:([0-9]+))?)([\\/]{0,1}[^?#]*)(\\?[^#]*|)(#.*|)$");
-                        externalHost = matches[3];
-                        const items = externalPorts.split(",");
-                        for (let i = 0, len = items.length; i < len; i++) {
-                            const portToken = items[i];
-                            // when there is a dash, process the range of values (inclusive)
-                            if (portToken.includes("-")) {
-                                const range = portToken.split("-");
-                                for (let port = range[0]; port <= range[1]; port++) {
-                                    hostData.push([externalHost, port]);
-                                }
-                                // otherwise just the specific port number
-                            } else if (Number.isInteger(parseInt(portToken))) {
-                                hostData.push([externalHost, portToken]);
-                            }
-                        }
-                    }
-                    return hostData
-                },
-                addMonitor(monitorHost) {
-                   if (monitorHost.host && monitorHost.ports) {
-                        for (const hostData of this.parseExternalHostAndPorts(monitorHost)) {
-                            this.scheduleMetricsRefresh(hostData[0], hostData[1]);
-                        }
-                        this.monitorHosts.push(JSON.parse(JSON.stringify(monitorHost)));
-                        monitorHost.host='';
-                        monitorHost.ports='';
-                    }
-                },
-                removeMonitor(hostIndex) {
-                    for (const hostData of this.parseExternalHostAndPorts(this.monitorHosts[hostIndex])){
-                        const metricsUrl = "http://" + hostData[0] + ":" + hostData[1] + metricsPath;
-                        const promise = this.promises[metricsUrl];
-                        if (promise) {
-                            clearInterval(promise);
-                        }
-                    }
-                    this.monitorHosts.splice(hostIndex, 1);
-                },
-                withinRange(n) { return Number.isFinite(n) && n >= 1 && n <= 65535; },
-                isPortRangeValid(s) {
-                    if (!s) return false;
-                    return s.split(',').every((token) => {
-                        token = token.trim();
-                        const rangeMatch = token.match(/^(\d{1,5})-(\d{1,5})$/);
-                        const singleMatch = token.match(/^\d{1,5}$/);
-                        if (rangeMatch) {
-                            const a = +rangeMatch[1], b = +rangeMatch[2];
-                            return this.withinRange(a) && this.withinRange(b) && a <= b;
-                        }
-                        if (singleMatch) {
-                            const n = +singleMatch[0];
-                            return this.withinRange(n);
-                        }
-                        return false;
-                    });
-                },
-                async metricsRefresh(metricsUrl) {
-                    await fetch(metricsUrl, {
-                        method: "GET",
-                        headers: { "Accept": "application/json" }
-                    }).then(async (response) => {
-                        if (!response.ok) {
-                            return handleError(response);
-                        }
-                        await response.json().then((data) => { this.loadData(data); });
-                    }).catch((error) => { clearInterval(this.promises[metricsUrl]); })
-                },
-                scheduleMetricsRefresh(host, port) {
-                    const metricsUrl = "http://" + host + ":" + port + metricsPath;
-                    this.metricsRefresh(metricsUrl)
-                    this.promises[metricsUrl] = setInterval(() => {
-                        this.metricsRefresh(metricsUrl);
-                    }, 2000);
-                },
-                loadData(response) {
-                    //ensure that this works with an array or single job object
-                    const responseJobs = [].concat(response.jobs || response);
-                    responseJobs.forEach((obj, index) => {
-                        const responseJob = obj.job;
-                        const existingJobIndex = this.jobs.findIndex((job) => job.id === responseJob.id);
-                        if (existingJobIndex !== -1) {
-                            this.jobs.splice(existingJobIndex, 1, responseJob);
-                        } else {
-                            this.jobs.push(responseJob);
-                        }
-                    })
-                },
-                msToTime,
-                toUrl,
-                updateThreadCount,
-                commandActionParameter,
-                togglePause,
-                openJob(job) { window.open(toUrl(job), "target=_blank"); }
-            };
-        }
+    <script type="module">
+        import { dashboard } from '/js/corbApp.js';
+        window.dashboard = dashboard; // expose for x-data
     </script>
+    <script defer src="/alpinejs/@ALPINE_VERSION@/dist/cdn.js"></script>
 </head>
 <body>
-<main x-data="dashboard()" x-init="$nextTick(() => { addMonitor({'host': host, 'ports': port}) })">
+<main x-data="dashboard()">
     <h1>Job Dashboard</h1>
     <div class="section">
         <table>
@@ -143,7 +37,7 @@
             </thead>
             <tbody>
             <template x-for="i in jobs" :key="i.id">
-                <tr x-data="{ get isRunning() { return i.numberOfSucceededTasks + i.numberOfFailedTasks < i.totalNumberOfTasks || i.currentThreadCount !== 0 } }">
+                <tr>
                     <td x-text="i.startTime"></td>
                     <td>
                         <a :href="`//${i.host}:${i.port}`" target="_blank" x-text="`${i.host}:${i.port}`"></a>
@@ -159,11 +53,21 @@
                     <td x-text="(i.currentTransactionsPerSecond ?? 0).toFixed(2)"></td>
                     <td x-text="isRunning ? i.estimatedTimeOfCompletion : 'Done'"></td>
                     <td x-text="msToTime(i.totalRunTimeInMillis)"></td>
+
                     <td>
-                        <button x-show="isRunning" class="btn secondary" @click="togglePause(i)" x-text="i.paused ? 'Resume' : 'Pause'" ></button>
+                        <div style="display:flex; align-items:center; gap:.5rem;">
+                            <button x-show="isRunning(i)"
+                                    class="btn secondary"
+                                    :disabled="isPending(i.id)"
+                                    @click="togglePause(i)"
+                                    x-text="i.paused ? 'Resume' : 'Pause'">
+                            </button>
+                            <!-- lightweight spinner / pending dot -->
+                            <span x-show="isPending(i.id)" class="spinner" aria-label="Pending"></span>
+                        </div>
                     </td>
                     <td>
-                        <input x-show="isRunning" class="input" type="number" min="1" :value="i.currentThreadCount" @input="updateThreadCount(i, $event.target.value)" />
+                        <input x-show="isRunning(i)" class="input" type="number" min="1" :value="i.currentThreadCount" @input="updateThreadCount(i, $event.target.value)" />
                     </td>
                     <td><button class="btn secondary" @click="openJob(i)">Details</button></td>
                 </tr>
@@ -179,8 +83,8 @@
                 <ul>
                     <template x-for="(mh, i) in monitorHosts" :key="i" >
                     <li>
-                        <label>Host:</label><span x-text="mh.host"></span>
-                        <label>Port Range:</label><span x-text="mh.ports"></span>
+                        <label>Host:</label><span x-text="mh.host"></span><br/>
+                        <label>Port Range:</label><span x-text="mh.ports"></span><br/>
                         <button class="btn red" @click="removeMonitor(i)">REMOVE</button>
                     </li>
                     </template>
@@ -204,6 +108,14 @@
             </div>
         </div>
     </div>
+
+    <!-- Toasts -->
+    <div aria-live="polite" class="toast-wrap">
+        <template x-for="t in toasts" :key="t.id">
+            <div class="toast" :class="t.type" x-text="t.message" @click="removeToast(t.id)"></div>
+        </template>
+    </div>
+
 </main>
 </body>
 </html>

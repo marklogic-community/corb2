@@ -5,70 +5,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Job Status</title>
-    <script defer src="/alpinejs/@ALPINE_VERSION@/dist/cdn.js"></script>
-    <script src="/js/corbApp.js"></script>
     <link href="/css/dashboard.css" rel="stylesheet">
-    <script>
-        function jobStatus() {
-            return {
-                serviceUrl: location.protocol + "//" + location.host + location.pathname + "?format=json",
-                job: { currentThreadCount: 0 },
-                promises: {},
-                get totalNumberOfTasks() { return this.job.totalNumberOfTasks ?? 0; },
-                get exitCode() { return this.job.exitCode ?? 0; },
-                get successPercent() {
-                    const ok = this.job.numberOfSucceededTasks ?? 0;
-                    const total = this.totalNumberOfTasks || (ok + (this.job.numberOfFailedTasks ?? 0));
-                    return total ? ((ok / total) * 100).toFixed(2) : '0.00';
-                },
-                get failedPercent() {
-                    const fail = this.job.numberOfFailedTasks ?? 0;
-                    const total = this.totalNumberOfTasks || ((this.job.numberOfSucceededTasks ?? 0) + fail);
-                    return total ? ((fail / total) * 100).toFixed(2) : '0.00';
-                },
-                get jobDuration() { return msToTime(this.job.totalRunTimeInMillis); },
-                async scheduleJobStats() {
-                    this.getJobStats()
-                    //Start polling for job stats updates
-                    this.promises[this.jobStatsUrl] = setInterval(() => {
-                        this.getJobStats();
-                    }, 3000);
-                },
-                get jobStatsUrl() {
-                    const concise = isNaN(this.job.totalNumberOfTasks) && typeof this.job.totalNumberOfTasks === "undefined" ? "" : "&concise";
-                    return this.serviceUrl + concise;
-                },
-                async getJobStats() {
-                    await fetch(this.jobStatsUrl, {
-                        method: "GET",
-                        headers: {
-                            "Accept": "application/json"
-                        }
-                    }).then(async (response) => {
-                            if (!response.ok) {
-                                return handleError(response);
-                            }
-                            await response.json().then((response) => this.loadData(response));
-                        })
-                },
-                loadData(response) {
-                    //ensure that this works with an array or single job object
-                    const responseJobs = [].concat(response.jobs || response);
-                    responseJobs.forEach((obj, index) => {
-                        this.job = Object.assign(this.job, obj.job);
-                    })
-                },
-                msToTime,
-                toUrl,
-                updateThreadCount,
-                commandActionParameter,
-                togglePause
-            };
-        }
+    <script type="module">
+        import { jobStatus } from '/js/corbApp.js';
+        window.jobStatus = jobStatus; //expose for x-data
     </script>
+    <script defer src="/alpinejs/@ALPINE_VERSION@/dist/cdn.js"></script>
 </head>
 <body>
-<main x-data="jobStatus()" x-init="$nextTick(() => { scheduleJobStats() })">
+<main x-data="jobStatus()">
     <h1>Job Status</h1>
 
     <div class="section">
@@ -82,8 +27,14 @@
         <h4 x-show="Number.isInteger(job.exitCode)">Job completed with exit code: <span x-text="job.exitCode"></span></h4>
     </div>
 
-    <div class="section" x-show="isRunning" x-data="{ get isRunning() { return job.numberOfSucceededTasks + job.numberOfFailedTasks < job.totalNumberOfTasks || job.currentThreadCount !== 0 } }">
-        <button class="btn secondary" @click="togglePause(job)" x-text="job.paused ? 'Resume' : 'Pause'"></button>
+    <div class="section" x-show="isRunning(job)">
+        <button class="btn secondary"
+                :disabled="pending"
+                @click="togglePause(job)"
+                x-text="job.paused ? 'Resume' : 'Pause'">
+        </button>
+        <!-- lightweight spinner / pending dot -->
+        <span x-show="pending" class="spinner" aria-label="Pending"></span>
         <span style="margin-left:0.5rem;">Threads: </span>
         <input class="input" type="number" min="1" :value="job.currentThreadCount" @input="updateThreadCount(job, $event.target.value)" />
     </div>
@@ -141,6 +92,14 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Toasts -->
+    <div aria-live="polite" class="toast-wrap">
+        <template x-for="t in toasts" :key="t.id">
+            <div class="toast" :class="t.type" x-text="t.message" @click="removeToast(t.id)"></div>
+        </template>
+    </div>
+
 </main>
 </body>
 </html>
