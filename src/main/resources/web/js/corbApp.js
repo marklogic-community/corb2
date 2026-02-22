@@ -191,12 +191,12 @@ export function jobStatus({ pollingMs = 3000 } = {}) {
 
         stopTimer(key) {
             const id = this.timers.get(key);
-            if (id) clearInterval(id);
+            if (id) { clearInterval(id); }
             this.timers.delete(key);
         },
 
         async togglePause(job) {
-            if (this.pending) return;
+            if (this.pending) { return; }
             this.pending = true;
             const params = { command: job.paused ? "resume" : "pause" };
             const { signal, done } = withTimeout(8000);
@@ -216,7 +216,7 @@ export function jobStatus({ pollingMs = 3000 } = {}) {
         _threadTimer: null,
         updateThreadCount(job, threads) {
             const n = Number(threads);
-            if (!Number.isFinite(n) || n < 1) return;
+            if (!Number.isFinite(n) || n < 1) { return; }
             this.job.currentThreadCount = n; // optimistic
             if (this._threadTimer) { clearTimeout(this._threadTimer); }
             this._threadTimer = setTimeout(() => this.commitThreadCount(job, n), 300);
@@ -264,7 +264,7 @@ export function dashboard({ pollingMs = 2000 } = {}) {
         },
 
         destroy() {
-            for (const [, id] of this.timers) clearInterval(id);
+            for (const [, id] of this.timers) { clearInterval(id); }
             this.timers.clear();
         },
 
@@ -329,7 +329,7 @@ export function dashboard({ pollingMs = 2000 } = {}) {
 
         removeMonitor(i) {
             const parsed = this.parseExternalHostAndPorts(this.monitorHosts[i] || {});
-            for (const [h, p] of parsed) this.stopTimer(metricsUrl(h, p, { concise: true }).toString());
+            for (const [h, p] of parsed) { this.stopTimer(metricsUrl(h, p, { concise: true }).toString()); }
             this.monitorHosts.splice(i, 1);
         },
 
@@ -367,10 +367,13 @@ export function dashboard({ pollingMs = 2000 } = {}) {
             const responseJobs = [].concat(response.jobs ?? response);
             responseJobs.forEach((obj) => {
                 const j = obj?.job ?? obj;
-                if (!j?.id) return;
+                if (!j?.id) { return; }
                 const idx = this.jobs.findIndex(x => x.id === j.id);
-                if (idx !== -1) this.jobs.splice(idx, 1, j);
-                else this.jobs.push(j);
+                if (idx !== -1) {
+                    this.jobs.splice(idx, 1, j);
+                } else {
+                    this.jobs.push(j);
+                }
             });
         },
 
@@ -400,10 +403,10 @@ export function dashboard({ pollingMs = 2000 } = {}) {
         _threadTimers: new Map(),
         updateThreadCount(job, threads) {
             const n = Number(threads);
-            if (!Number.isFinite(n) || n < 1) { return };
+            if (!Number.isFinite(n) || n < 1) { return; }
             job.currentThreadCount = n; // optimistic
             const existing = this._threadTimers.get(job.id);
-            if (existing) clearTimeout(existing);
+            if (existing) { clearTimeout(existing); }
             const to = setTimeout(() => this.commitThreadCount(job, n), 300);
             this._threadTimers.set(job.id, to);
         },
