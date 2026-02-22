@@ -31,12 +31,12 @@
                     this.getJobStats()
                     //Start polling for job stats updates
                     this.promises[this.jobStatsUrl] = setInterval(() => {
-                        this.getJobStats()
+                        this.getJobStats();
                     }, 3000);
                 },
                 get jobStatsUrl() {
                     const concise = isNaN(this.job.totalNumberOfTasks) && typeof this.job.totalNumberOfTasks === "undefined" ? "" : "&concise";
-                    return this.serviceUrl + concise
+                    return this.serviceUrl + concise;
                 },
                 async getJobStats() {
                     await fetch(this.jobStatsUrl, {
@@ -44,15 +44,14 @@
                         headers: {
                             "Accept": "application/json"
                         }
-                    }).then(async response => {
+                    }).then(async (response) => {
                             if (!response.ok) {
                                 return handleError(response);
                             }
-                            await response.json().then(response => this.loadData(response));
+                            await response.json().then((response) => this.loadData(response));
                         })
                 },
                 loadData(response) {
-                    //console.log("Loading..." + JSON.stringify(response))
                     //ensure that this works with an array or single job object
                     const responseJobs = [].concat(response.jobs || response);
                     responseJobs.forEach((obj, index) => {

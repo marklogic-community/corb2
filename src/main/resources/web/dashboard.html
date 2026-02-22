@@ -42,7 +42,7 @@
                 addMonitor(monitorHost) {
                    if (monitorHost.host && monitorHost.ports) {
                         for (const hostData of this.parseExternalHostAndPorts(monitorHost)) {
-                            this.scheduleMetricsRefresh(hostData[0], hostData[1])
+                            this.scheduleMetricsRefresh(hostData[0], hostData[1]);
                         }
                         this.monitorHosts.push(JSON.parse(JSON.stringify(monitorHost)));
                         monitorHost.host='';
@@ -62,7 +62,7 @@
                 withinRange(n) { return Number.isFinite(n) && n >= 1 && n <= 65535; },
                 isPortRangeValid(s) {
                     if (!s) return false;
-                    return s.split(',').every(token => {
+                    return s.split(',').every((token) => {
                         token = token.trim();
                         const rangeMatch = token.match(/^(\d{1,5})-(\d{1,5})$/);
                         const singleMatch = token.match(/^\d{1,5}$/);
@@ -81,30 +81,30 @@
                     await fetch(metricsUrl, {
                         method: "GET",
                         headers: { "Accept": "application/json" }
-                    }).then(async response => {
+                    }).then(async (response) => {
                         if (!response.ok) {
-                            return handleError(response)
+                            return handleError(response);
                         }
-                        await response.json().then(data => { this.loadData(data) });
-                    }).catch(error => { clearInterval(this.promises[metricsUrl]); })
+                        await response.json().then((data) => { this.loadData(data); });
+                    }).catch((error) => { clearInterval(this.promises[metricsUrl]); })
                 },
                 scheduleMetricsRefresh(host, port) {
                     const metricsUrl = "http://" + host + ":" + port + metricsPath;
                     this.metricsRefresh(metricsUrl)
                     this.promises[metricsUrl] = setInterval(() => {
-                        this.metricsRefresh(metricsUrl)
+                        this.metricsRefresh(metricsUrl);
                     }, 2000);
                 },
                 loadData(response) {
                     //ensure that this works with an array or single job object
                     const responseJobs = [].concat(response.jobs || response);
                     responseJobs.forEach((obj, index) => {
-                        const responseJob = obj.job
-                        const existingJobIndex = this.jobs.findIndex(job => job.id === responseJob.id)
+                        const responseJob = obj.job;
+                        const existingJobIndex = this.jobs.findIndex((job) => job.id === responseJob.id);
                         if (existingJobIndex !== -1) {
                             this.jobs.splice(existingJobIndex, 1, responseJob);
                         } else {
-                            this.jobs.push(responseJob)
+                            this.jobs.push(responseJob);
                         }
                     })
                 },
