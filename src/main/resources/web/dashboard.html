@@ -1,113 +1,121 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
+<head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Job Dashboard</title>
-    <link href="/bootstrap/@BOOTSTRAP_VERSION@/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/dashboard.css" rel="stylesheet">
-  </head>
-  <body ng-app="corbApp" ng-controller="dashboardCtrl">
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-lg-12">
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h3>Job Dashboard</h3>
-            </div>
-            <div class="panel panel-default">
-              <div class="panel-heading">
-                <h4 class="panel-title">
-                  <a data-toggle="collapse" href="#monitorHosts" ng-click="isCollapsed = !isCollapsed">
-                      <span ng-class="{'glyphicon glyphicon-triangle-bottom': isCollapsed, 'glyphicon glyphicon-triangle-top': !isCollapsed }"></span>
-                      Monitor Hosts
-                  </a>
-                </h4>
-              </div>
-              <div id="monitorHosts" class="panel-collapse collapse">
-                <form name="externalForm" class="form-inline" novalidate>
-                    <div ng-repeat="e in external">
-                        <ng-form name="portForm">
-                            <div class="input-group">
-                                <span class="input-group-addon">Host: </span>
-                                <input class="form-control" ng-readonly="$first" ng-model="e.host" ng-change="parseExternalHostAndPorts($index)" ng-model-options="'{ debounce: 5000 }'" ng-required="true" required/>
-                            </div>
+    <script type="module">
+        import { dashboard } from '/js/corbApp.js';
+        window.dashboard = dashboard; // expose for x-data
+    </script>
+    <script defer src="/alpinejs/@ALPINE_VERSION@/dist/cdn.js"></script>
+</head>
+<body>
+<main x-data="dashboard()">
+    <h1>Job Dashboard</h1>
+    <div class="section">
+        <table>
+            <thead>
+            <tr>
+                <th>Start Time</th>
+                <th>Host:Port</th>
+                <th>Job Location</th>
+                <th>Failed Tasks</th>
+                <th>Succeeded Tasks</th>
+                <th>Total #Tasks</th>
+                <th>Progress</th>
+                <th>Avg TPS</th>
+                <th>Curr TPS</th>
+                <th>ETC</th>
+                <th>Total Run Time</th>
+                <th>Pause / Resume</th>
+                <th>Threads</th>
+                <th>Details</th>
+            </tr>
+            </thead>
+            <tbody>
+            <template x-for="i in jobs" :key="i.id">
+                <tr>
+                    <td x-text="i.startTime"></td>
+                    <td>
+                        <a :href="`//${i.host}:${i.port}`" target="_blank" x-text="`${i.host}:${i.port}`"></a>
+                    </td>
+                    <td x-text="i.runLocation"></td>
+                    <td x-text="i.numberOfFailedTasks ?? 0"></td>
+                    <td x-text="i.numberOfSucceededTasks ?? 0"></td>
+                    <td x-text="i.totalNumberOfTasks ?? 0"></td>
+                    <td>
+                        <progress :max="i.totalNumberOfTasks" :value="i.numberOfSucceededTasks + i.numberOfFailedTasks" :title="i.numberOfSucceededTasks + i.numberOfFailedTasks"></progress>
+                    </td>
+                    <td x-text="(i.averageTransactionsPerSecond ?? 0).toFixed(2)"></td>
+                    <td x-text="(i.currentTransactionsPerSecond ?? 0).toFixed(2)"></td>
+                    <td x-text="isRunning ? i.estimatedTimeOfCompletion : 'Done'"></td>
+                    <td x-text="msToTime(i.totalRunTimeInMillis)"></td>
 
-                            <div class="input-group">
-                                <span class="input-group-addon">Port Range: </span>
-                                <input class="form-control" name="port" ng-readonly="$first" ng-model="e.port" ng-change="parseExternalHostAndPorts($index)" ng-model-options='{ debounce: 2000 }' ng-pattern="/^(\d+[-,\s]?)*$/" ng-required="true" required/>
-
-                                <span class="alert alert-danger" ng-show="portForm.port.$touched && portForm.port.$invalid">Invalid format. Specify port ranges with dashes, or a list of ports with commas. i.e. 8005-8010,9001,9002</span>
-                            </div>
-
-                            <button ng-if="$first === false" ng-click="removeExternal($index)">
-                                <span class="glyphicon glyphicon-minus"></span> REMOVE
+                    <td>
+                        <div style="display:flex; align-items:center; gap:.5rem;">
+                            <button x-show="isRunning(i)"
+                                    class="btn secondary"
+                                    :disabled="isPending(i.id)"
+                                    @click="togglePause(i)"
+                                    x-text="i.paused ? 'Resume' : 'Pause'">
                             </button>
-                        </ng-form>
-                    </div>
-                    <button ng-click="addExternal()">
-                        <span class="glyphicon glyphicon-plus"></span> ADD
-                    </button>
-                </form>
-              </div>
-            </div>
-            <div class="table-responsive">
-              <table class="table table-striped table-bordered table-hover">
-                <thead>
-                  <tr>
-                    <th> Start Time </th>
-                    <th> Avg TPS </th>
-                    <th> Curr TPS </th>
-                    <th> Host/Port </th>
-                    <th> Threads</th>
-                    <th> Succeeded Tasks </th>
-                    <th> Failed Tasks </th>
-                    <th> Job Location </th>
-                    <th> Total #Tasks </th>
-                    <th> Total Run Time  </th>
-                    <th> Pause / Resume   </th>
-                    <th> Threads   </th>
-                    <th> Details   </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr ng-repeat="i in availableServerData | orderBy : ['startTime', 'port', 'id']">
-                    <td>{{::i.startTime}}</td>
-                    <td>{{i.averageTransactionsPerSecond | number:2}}</td>
-                    <td>{{i.currentTransactionsPerSecond | number:2}}</td>
-                    <td><a ng-click="openJob(i)" target="_blank">{{::i.host}}/{{::i.port}}</a></td>
-                    <td>{{i.currentThreadCount | number:0}}</td>
-                    <td>{{i.numberOfSucceededTasks | number:0}}</td>
-                    <td>{{i.numberOfFailedTasks | number:0}}</td>
-                    <td>{{::i.runLocation}}</td>
-                    <td>{{::i.totalNumberOfTasks | number:0}}</td>
-                    <td>{{msToTime(i.totalRunTimeInMillis)}}</td>
-                    <td>
-                        <button class="btn {{i.paused ? 'btn-info' : 'btn-success'}}" ng-click="pauseResumeButtonClick(i)">
-                            <md-icon ng-hide="i.loading" class="glyphicon {{i.paused ? 'glyphicon-play' : 'glyphicon-pause'}}"></md-icon>
-                            <md-icon ng-if="i.loading" class="glyphicon glyphicon-refresh"></md-icon>
-                          <!--  {{ i.paused ? "resume" : "pause" }} -->
-                        </button>
+                            <!-- lightweight spinner / pending dot -->
+                            <span x-show="isPending(i.id)" class="spinner" aria-label="Pending"></span>
+                        </div>
                     </td>
                     <td>
-                        <input type="number" ng-model="threadCounts[i.id]" ng-change="updateThreadCount(i)" />
+                        <input x-show="isRunning(i)" class="input" type="number" min="1" :value="i.currentThreadCount" @input="updateThreadCount(i, $event.target.value)" />
                     </td>
-                    <td><a ng-click="openJob(i)" target="_blank" class="glyphicon glyphicon-fullscreen"></a></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
+                    <td><button class="btn secondary" @click="openJob(i)">Details</button></td>
+                </tr>
+            </template>
+            </tbody>
+        </table>
     </div>
-    <script src="/jquery/@JQUERY_VERSION@/jquery.slim.min.js"></script>
-    <script src="/angularjs/@ANGULAR_VERSION@/angular.min.js"></script>
-    <script src="/bootstrap/@BOOTSTRAP_VERSION@/js/bootstrap.min.js"></script>
-    <script src="/js/corbApp.js"></script>
-  </body>
+
+    <div class="section">
+        <h3 id="monitorHosts">Monitor Hosts</h3>
+        <div class="outer-grid">
+            <div class="row" style="margin-bottom:0.75rem;">
+                <ul>
+                    <template x-for="(mh, i) in monitorHosts" :key="i" >
+                    <li>
+                        <label>Host:</label><span x-text="mh.host"></span><br/>
+                        <label>Port Range:</label><span x-text="mh.ports"></span><br/>
+                        <button class="btn red" @click="removeMonitor(i)">REMOVE</button>
+                    </li>
+                    </template>
+                </ul>
+            </div>
+
+            <div class="row" style="margin-bottom:0.75rem;" x-data="{ monitor: { host: '', ports: ''} }">
+                <label>Host:</label>
+                <input class="input" type="text" placeholder="hostname or IP" x-model="monitor.host" />
+
+                <label>Port Range:</label>
+                <div>
+                    <input class="input" type="text" placeholder="8005-8010,9001,9002" x-model="monitor.ports" />
+                    <div x-show="monitor.ports && !isPortRangeValid(monitor.ports)" class="hint" style="margin-top:0.25rem;">
+                        Invalid format. Specify port ranges with dashes, or a list of ports with commas. i.e. 8005-8010,9001,9002
+                    </div>
+                </div>
+                <div style="grid-column: span 2; display:flex; gap:0.5rem;">
+                    <button class="btn" @click="addMonitor(monitor)">ADD</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toasts -->
+    <div aria-live="polite" class="toast-wrap">
+        <template x-for="t in toasts" :key="t.id">
+            <div class="toast" :class="t.type" x-text="t.message" @click="removeToast(t.id)"></div>
+        </template>
+    </div>
+
+</main>
+</body>
 </html>

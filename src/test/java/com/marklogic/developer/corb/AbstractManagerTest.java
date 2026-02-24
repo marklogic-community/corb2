@@ -844,7 +844,7 @@ public class AbstractManagerTest {
         assertTrue(contentSourceStr.contains("cb=" + XCC_URI_DB));
         // when presenting username/password, MarkLogic Cloud, and OAuth credentials - no username/password, MarkLogic Cloud auth takes precendence
         assertTrue(contentSourceStr.contains("user={none}"));
-        Credentials.MLCloudAuthConfig cloudAuth = contentSource.getUserCredentials().getMLCloudAuthConfig();
+        Credentials.PDCloudAuthConfig cloudAuth = contentSource.getUserCredentials().getPDCloudAuthConfig();
         assertEquals("myCustomKey", new String(cloudAuth.getApiKey()));
         assertEquals("customGrantType", cloudAuth.getGrantType());
         assertEquals(61, cloudAuth.getTokenDuration());
@@ -900,10 +900,10 @@ public class AbstractManagerTest {
         String contentSourceStr = contentSource.toString();
         ConnectionProvider provider = contentSource.getConnectionProvider();
         assertTrue(contentSourceStr.contains("user={none}"));
-        assertEquals("foobar", new String(contentSource.getUserCredentials().getMLCloudAuthConfig().getApiKey()));
-        assertEquals("endpoint", new String(contentSource.getUserCredentials().getMLCloudAuthConfig().getTokenEndpoint()));
-        assertEquals("endpoint", contentSource.getUserCredentials().getMLCloudAuthConfig().getTokenEndpoint());
-        assertEquals(5, contentSource.getUserCredentials().getMLCloudAuthConfig().getTokenDuration());
+        assertEquals("foobar", new String(contentSource.getUserCredentials().getPDCloudAuthConfig().getApiKey()));
+        assertEquals("endpoint", new String(contentSource.getUserCredentials().getPDCloudAuthConfig().getTokenEndpoint()));
+        assertEquals("endpoint", contentSource.getUserCredentials().getPDCloudAuthConfig().getTokenEndpoint());
+        assertEquals(5, contentSource.getUserCredentials().getPDCloudAuthConfig().getTokenDuration());
     }
     @Test
     public void testInitURIAsSystemPropertyOnly() throws CorbException {
