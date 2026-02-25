@@ -61,6 +61,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -441,7 +442,7 @@ public class AbstractTaskTest {
     public void testGenerateRequestModuleInvokeWithoutModuleUri() {
         AdhocQuery request = new AdhocQueryImpl();
         Session session = mock(Session.class);
-        when(session.newAdhocQuery(anyString())).thenReturn(request);
+        when(session.newAdhocQuery(nullable(String.class))).thenReturn(request);
 
         AbstractTask task = new AbstractTaskImpl();
         try {

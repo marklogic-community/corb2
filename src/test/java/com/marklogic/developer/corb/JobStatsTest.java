@@ -32,11 +32,9 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import com.marklogic.xcc.ContentSource;
-import com.marklogic.xcc.Request;
-import com.marklogic.xcc.ResultSequence;
-import com.marklogic.xcc.Session;
+import com.marklogic.xcc.*;
 import com.marklogic.xcc.exceptions.RequestException;
+import com.marklogic.xcc.impl.SessionImpl;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -44,7 +42,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class JobStatsTest {
@@ -303,9 +301,10 @@ public class JobStatsTest {
         Manager manager = mock(Manager.class);
         ContentSourcePool csp = mock(ContentSourcePool.class);
         try {
-            when(csp.get()).thenThrow(RequestException.class);
+            when(csp.get()).thenReturn(null);
             when(manager.getContentSourcePool()).thenReturn(csp);
             when(manager.getOptions()).thenReturn(mock(TransformOptions.class));
+
             JobStats jobStats = new JobStats(manager);
             jobStats.logToServer(FOO, BAR);
             verify(contentSource, never()).newSession();
@@ -368,9 +367,15 @@ public class JobStatsTest {
 
         Manager manager = mock(Manager.class);
         TransformOptions transformOptions = new TransformOptions();
+        Request request = mock(Request.class);
+        SessionImpl session = mock(SessionImpl.class);
         transformOptions.setLogMetricsToServerLog("info");
         when(manager.getOptions()).thenReturn(transformOptions);
-        when(contentSource.newSession()).thenThrow(RequestException.class);
+        when(session.getServerVersion()).thenReturn("MarkLogic TEST.0");
+        when(session.newAdhocQuery(anyString())).thenReturn(mock(AdhocQuery.class));
+        when(request.getSession()).thenReturn(session);
+        when(contentSource.newSession()).thenReturn(session);
+        when(session.submitRequest(any())).thenThrow(new RequestException("Boom!", request));
         JobStats jobStats = new JobStats(manager);
 
         jobStats.logToServer(contentSource, null, BAR);

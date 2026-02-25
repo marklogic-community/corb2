@@ -208,10 +208,10 @@ public class ExportToFileTaskTest {
         }
     }
 
-    @Test (expected = CorbException.class)
+    @Test (expected = RuntimeException.class)
     public void testProcessResultIOException() throws CorbException {
         ResultSequence seq = mock(ResultSequence.class);
-        when(seq.hasNext()).thenThrow(IOException.class);
+        when(seq.hasNext()).thenThrow(new RuntimeException("boom!", new IOException()));
         ExportToFileTask instance = new ExportToFileTask();
         instance.processResult(seq);
     }

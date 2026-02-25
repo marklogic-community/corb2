@@ -685,10 +685,10 @@ public class DefaultContentSourcePoolTest {
     @Test
     public void testGetIPAddressWithIPFromConnectionstring() {
         try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
-            contentSourcePool.init(null, null, "xcc://foo:bar@1.1.1.1:8000");
+            contentSourcePool.init(null, null, "xcc://foo:bar@127.0.0.1:8000");
             ContentSource contentSource = contentSourcePool.get();
             String ip = contentSourcePool.getIPAddress(contentSource);
-            assertEquals("1.1.1.1", ip);
+            assertEquals("127.0.0.1", ip);
         } catch (CorbException ex) {
             fail();
         }
