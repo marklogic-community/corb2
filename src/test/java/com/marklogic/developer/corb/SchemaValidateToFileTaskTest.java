@@ -73,11 +73,11 @@ public class SchemaValidateToFileTaskTest {
         assertEquals("foo.xml", exportFile.getName());
     }
 
-    @Test (expected = IOException.class)
+    @Test (expected = RuntimeException.class)
     public void testWriteSchemaValidationReportException() throws IOException, XMLStreamException {
         List<SAXParseException> exceptions = new ArrayList<>();
         File outputFile = mock(File.class);
-        when(outputFile.toPath()).thenThrow(IOException.class);
+        when(outputFile.toPath()).thenThrow(new RuntimeException("Wrapped exception", new IOException("File not found")));
         SchemaValidateToFileTask validate = new SchemaValidateToFileTask();
         validate.writeSchemaValidationReport(exceptions, outputFile);
     }
