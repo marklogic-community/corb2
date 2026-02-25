@@ -95,7 +95,7 @@ dependencies {
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     testImplementation 'org.jasypt:jasypt:1.9.3'
     testImplementation 'com.github.stefanbirkner:system-rules:1.19.0' //facilitates tests for methods that invoke System.exit
-    testImplementation 'org.mockito:mockito-all:1.10.19'
+    testImplementation 'org.mockito:mockito-core:1.10.19'
 }
 
 test {
@@ -130,7 +130,7 @@ shadowJar {
         include(dependency("org.webjars.npm:alpinejs:$alpineVersion"))
     }
     //generate same name as the jar task would
-    archiveFileName = "${baseName}-${version}.${extension}"
+    archiveFileName.set("${baseName}-${version}.${extension}")
     manifest {
         attributes 'Application-Version': project.version
         attributes 'Build-date' : new Date()
@@ -153,25 +153,28 @@ sonarqube {
     }
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
+tasks.register('sourcesJar', Jar) {
+    dependsOn classes
     description = "Create a JAR of source files; required for publishing"
     classifier 'sources'
     from sourceSets.main.allJava
 }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
+tasks.register('javadocJar', Jar) {
+    dependsOn javadoc
     classifier = 'javadoc'
     from 'build/docs/javadoc'
 }
 
 jacocoTestReport {
     reports {
-        xml.required = true // coveralls plugin depends on xml format report
-        html.required = true
+        xml.required.set(true) // coveralls plugin depends on xml format report
+        html.required.set(true)
     }
 }
 
-task integrationTest(type: Test, dependsOn: test) {
+tasks.register('integrationTest', Test) {
+    dependsOn test
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
     filter {
@@ -188,12 +191,12 @@ task integrationTest(type: Test, dependsOn: test) {
     finalizedBy { tasks.integrationTestReport }
 }
 
-task integrationTestReport(type: JacocoReport) {
+tasks.register('integrationTestReport', JacocoReport) {
     sourceSets sourceSets.main
     executionData integrationTest
 }
 
-task performanceTest(type: Test) {
+tasks.register('performanceTest', Test) {
     testClassesDirs = sourceSets.performanceTest.output.classesDirs
     classpath = sourceSets.performanceTest.runtimeClasspath
     filter {
@@ -211,20 +214,20 @@ check.dependsOn jacocoTestReport
 check.dependsOn integrationTest
 //Ensure that our unit tests are run before our integration tests
 integrationTest.mustRunAfter test
-integrationTest.onlyIf { !project.hasProperty('skipIntegrationTest') }
+integrationTest.enabled = !project.hasProperty('skipIntegrationTest')
 //Ensure that the check task fails the build if there are failing performance tests.
 //check.dependsOn performanceTest
 //Ensure that our unit tests are run before our performance tests
 performanceTest.mustRunAfter integrationTest
 performanceTest.onlyIf { !project.hasProperty('skipPerformanceTest') }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
     reports.html.destination = file("${reporting.baseDir}/${name}")
     testLogging {
         // set options for log level LIFECYCLE
         events TestLogEvent.FAILED,
-               TestLogEvent.SKIPPED,
-               TestLogEvent.STANDARD_OUT
+            TestLogEvent.SKIPPED,
+            TestLogEvent.STANDARD_OUT
         showExceptions true
         exceptionFormat TestExceptionFormat.SHORT
         showCauses true
@@ -233,9 +236,9 @@ tasks.withType(Test) {
         // set options for log level DEBUG and INFO
         debug {
             events TestLogEvent.FAILED,
-                   TestLogEvent.SKIPPED,
-                   TestLogEvent.STANDARD_OUT,
-                   TestLogEvent.STANDARD_ERROR
+                TestLogEvent.SKIPPED,
+                TestLogEvent.STANDARD_OUT,
+                TestLogEvent.STANDARD_ERROR
             exceptionFormat TestExceptionFormat.FULL
         }
         info.events = debug.events
