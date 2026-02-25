@@ -56,19 +56,42 @@ import java.util.logging.Logger;
 
 import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 /**
+ * Utility class for XML operations.
+ * Provides methods for XML document manipulation, serialization, validation,
+ * and conversion. This class handles DOM operations, schema validation,
+ * and XML-to-string conversions.
+ *
  * @since 2.4.0
  */
 public final class XmlUtils {
 
     private static final Logger LOG = Logger.getLogger(XmlUtils.class.getName());
 
+    /**
+     * Private constructor to prevent instantiation of utility class.
+     */
     private XmlUtils() {
     }
 
+    /**
+     * Converts an XML Document to its string representation.
+     * The output does not include an XML declaration.
+     *
+     * @param doc the XML document to convert
+     * @return the string representation of the document
+     */
     public static String documentToString(Document doc)    {
         return nodeToString(doc, doc);
     }
 
+    /**
+     * Converts an XML Node to its string representation.
+     * If the node is a Document, delegates to {@link #documentToString(Document)}.
+     * Otherwise, uses the node's owner document for serialization.
+     *
+     * @param node the XML node to convert
+     * @return the string representation of the node
+     */
     public static String nodeToString(Node node) {
         if (node instanceof Document) {
             return documentToString((Document) node);
@@ -77,6 +100,15 @@ public final class XmlUtils {
         }
     }
 
+    /**
+     * Converts an XML Node to its string representation using a specified Document.
+     * Uses DOM Level 3 Load and Save (LS) API for serialization.
+     * The output is UTF-8 encoded and does not include an XML declaration.
+     *
+     * @param doc the document used for DOM implementation and serialization settings
+     * @param node the XML node to convert
+     * @return the string representation of the node
+     */
     public static String nodeToString(Document doc, Node node) {
         DOMImplementationLS domImplementation = (DOMImplementationLS) doc.getImplementation();
         LSSerializer lsSerializer = domImplementation.createLSSerializer();
@@ -90,6 +122,16 @@ public final class XmlUtils {
         return stringWriter.toString();
     }
 
+    /**
+     * Validates an XML file against an XML Schema Definition (XSD) file.
+     * Uses StAX for parsing and collects all validation errors.
+     *
+     * @param xmlFile the XML file to validate
+     * @param schemaFile the XSD schema file to validate against
+     * @param options configuration properties for validation behavior
+     * @return a list of SAXParseException objects representing validation errors (empty if valid)
+     * @throws CorbException if an I/O or parsing error occurs during validation
+     */
     public static List<SAXParseException> schemaValidate(File xmlFile, File schemaFile, Properties options) throws CorbException {
         XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
         try (Reader fileReader = new FileReader(xmlFile)) {
@@ -101,6 +143,18 @@ public final class XmlUtils {
         }
     }
 
+    /**
+     * Validates an XML source against an XML Schema Definition (XSD) file.
+     * Collects all validation errors (warnings, errors, and fatal errors) using a custom error handler.
+     * Optionally honors all schema locations based on configuration.
+     *
+     * @param source the XML source to validate
+     * @param schemaFile the XSD schema file to validate against
+     * @param options configuration properties including XML_SCHEMA_HONOUR_ALL_SCHEMALOCATIONS
+     * @return a list of SAXParseException objects representing validation errors (empty if valid)
+     * @throws SAXException if a schema parsing error occurs
+     * @throws IOException if an I/O error occurs during validation
+     */
     public static List<SAXParseException> schemaValidate(Source source, File schemaFile, Properties options) throws SAXException, IOException {
         SchemaFactory schemaFactory = SchemaFactory.newInstance(W3C_XML_SCHEMA_NS_URI);
         boolean honourAllSchemaLocations = StringUtils.stringToBoolean(Options.findOption(options, Options.XML_SCHEMA_HONOUR_ALL_SCHEMALOCATIONS), true);
@@ -131,6 +185,13 @@ public final class XmlUtils {
         return exceptions;
     }
 
+    /**
+     * Converts an XML Node to an InputStream.
+     * The node is first serialized to a string, then converted to bytes using the default charset.
+     *
+     * @param node the XML node to convert
+     * @return an InputStream containing the serialized node data
+     */
     public static InputStream toInputStream(Node node) {
         return new ByteArrayInputStream(nodeToString(node.getOwnerDocument(), node).getBytes());
     }

@@ -24,19 +24,47 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
+ * A memory-optimized, fixed-capacity, circular queue implementation for String elements.
+ * This queue uses a backing array of char arrays instead of String objects to reduce
+ * memory overhead. Strings are converted to char arrays when inserted and reconstructed
+ * from char arrays when retrieved.
+ *
+ * <p>Key characteristics:</p>
+ * <ul>
+ *   <li>Fixed capacity - specified at construction time</li>
+ *   <li>Circular/ring buffer implementation using head and tail indices</li>
+ *   <li>Memory optimized - char primitives use less memory than String objects</li>
+ *   <li>Non-blocking - returns false when full, null when empty</li>
+ *   <li>Does not permit null elements</li>
+ *   <li>Serializable</li>
+ * </ul>
+ *
+ * <p>This implementation is particularly useful for large queues of URI strings
+ * where memory efficiency is important.</p>
  *
  * @author Mads Hansen, MarkLogic Corporation
- * @param <E>
+ * @param <E> the type parameter (note: implementation is specialized for String)
  */
 public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable {
 
+    /** Serialization version identifier */
     private static final long serialVersionUID = -1;
-    // char primitives use less memory than strings, and arrays use less memory than lists or queues
+    /** Circular buffer storing elements as char arrays for memory efficiency */
     private final char[][] queue;
+    /** The number of elements currently in the queue */
     private int count = 0;
+    /** Index of the next element to be dequeued (head of queue) */
     private int takeIndex;
+    /** Index where the next element will be enqueued (tail of queue) */
     private int putIndex;
 
+    /**
+     * Creates an ArrayQueue with the specified capacity.
+     * The queue is implemented as a fixed-size circular buffer.
+     *
+     * @param capacity the maximum number of elements the queue can hold
+     * @throws IllegalArgumentException if capacity is negative
+     */
     ArrayQueue(int capacity) {
         super();
         if (capacity < 0) {
@@ -46,16 +74,33 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
         queue = new char[capacity][];
     }
 
+    /**
+     * Returns the number of elements currently in the queue.
+     *
+     * @return the number of elements in the queue
+     */
     @Override
     public int size() {
         return count;
     }
 
+    /**
+     * Retrieves, but does not remove, the head of this queue.
+     * Returns null if the queue is empty.
+     *
+     * @return the head of the queue, or null if empty
+     */
     @Override
     public String peek() {
         return (count == 0) ? null : new String(queue[takeIndex]);
     }
 
+    /**
+     * Retrieves and removes the head of this queue.
+     * Returns null if the queue is empty.
+     *
+     * @return the head of the queue, or null if empty
+     */
     @Override
     public String poll() {
         if (count == 0) {
@@ -64,6 +109,14 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
         return extract();
     }
 
+    /**
+     * Inserts the specified element into this queue if possible.
+     * This implementation returns false if the queue is at capacity.
+     *
+     * @param element the element to add
+     * @return true if the element was added, false if the queue is full
+     * @throws NullPointerException if the specified element is null
+     */
     @Override
     public boolean offer(String element) {
         if (element == null) {
@@ -77,22 +130,50 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
         }
     }
 
+    /**
+     * Inserts an element at the current put position.
+     * Converts the String to a char array for memory efficiency.
+     * Advances the put index in a circular manner.
+     *
+     * @param x the String to insert
+     */
     private void insert(String x) {
         queue[putIndex] = x.toCharArray();
         putIndex = increment(putIndex);
         ++count;
     }
 
+    /**
+     * Increments the given index in a circular fashion.
+     * Wraps around to 0 when reaching the end of the queue array.
+     *
+     * @param index the index to increment
+     * @return the next index, wrapping to 0 if at the end
+     */
     protected int increment(int index) {
         int i = index;
         return (++i == queue.length) ? 0 : i;
     }
 
+    /**
+     * Returns an iterator over the elements in this queue.
+     * The iterator does not guarantee any particular order beyond
+     * traversing from the current take position.
+     *
+     * @return an iterator over the elements in this queue
+     */
     @Override
     public Iterator<String> iterator() {
         return new Itr();
     }
 
+    /**
+     * Extracts and removes the element at the current take position.
+     * Converts the char array back to a String.
+     * Advances the take index in a circular manner and decrements the count.
+     *
+     * @return the extracted String element
+     */
     private String extract() {
         String x = new String(queue[takeIndex]);
         queue[takeIndex] = null;
@@ -101,6 +182,14 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
         return x;
     }
 
+    /**
+     * Removes the element at the specified index.
+     * If removing the front element, simply advances the take index.
+     * Otherwise, slides all subsequent elements forward to fill the gap.
+     * This maintains the circular buffer structure.
+     *
+     * @param index the index of the element to remove
+     */
     protected void removeAt(int index) {
         int i = index;
         final char[][] items = this.queue;
@@ -125,12 +214,20 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
         --count;
     }
 
+    /**
+     * Iterator implementation for traversing the ArrayQueue.
+     * Supports element removal during iteration.
+     */
     private class Itr implements Iterator<String> {
 
         private int nextIndex;
         private String nextItem;
         private int lastReturnedIndex;
 
+        /**
+         * Constructs an iterator starting at the current take position.
+         * Sets nextIndex to -1 if the queue is empty.
+         */
         Itr() {
             lastReturnedIndex = -1;
             if (count == 0) {
@@ -141,14 +238,20 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
             }
         }
 
+        /**
+         * Returns true if the iteration has more elements.
+         *
+         * @return true if there are more elements to iterate
+         */
         @Override
         public boolean hasNext() {
             return nextIndex >= 0;
         }
 
         /**
-         * Checks whether nextIndex is valid; if so setting nextItem. Stops
-         * iterator when either hits putIndex or sees null item.
+         * Validates and updates the next index and item.
+         * Stops iteration when reaching the put position or encountering a null element.
+         * This method is called after advancing nextIndex to check if it's still valid.
          */
         private void checkNext() {
             if (nextIndex == putIndex) {
@@ -164,6 +267,12 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
             }
         }
 
+        /**
+         * Returns the next element in the iteration.
+         *
+         * @return the next String element
+         * @throws NoSuchElementException if the iteration has no more elements
+         */
         @Override
         public String next() {
 
@@ -177,6 +286,13 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
             return x;
         }
 
+        /**
+         * Removes the last element returned by this iterator from the queue.
+         * This method can be called only once per call to {@link #next()}.
+         * Adjusts the iterator position to account for the removed element.
+         *
+         * @throws IllegalStateException if next has not been called, or remove has already been called after the last call to next
+         */
         @Override
         public void remove() {
             int i = lastReturnedIndex;

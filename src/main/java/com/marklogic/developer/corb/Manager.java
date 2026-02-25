@@ -80,50 +80,227 @@ import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 
 /**
+ * Core orchestrator for CoRB (Content Reprocessing in Bulk) job execution.
+ * <p>
+ * The Manager class is responsible for:
+ * </p>
+ * <ul>
+ * <li>Initializing and configuring CoRB jobs from command-line arguments or properties files</li>
+ * <li>Loading URIs to process via modules, files, or custom loaders</li>
+ * <li>Managing a thread pool for parallel task execution</li>
+ * <li>Coordinating initialization, pre-batch, process, and post-batch tasks</li>
+ * <li>Monitoring job progress and collecting statistics</li>
+ * <li>Running an embedded HTTP job server for real-time monitoring</li>
+ * <li>Supporting job control operations (pause, resume, stop)</li>
+ * </ul>
+ * <p>
+ * The Manager supports multiple invocation patterns:
+ * </p>
+ * <ul>
+ * <li>Command-line with positional arguments</li>
+ * <li>Command-line with system properties (-DPROPERTY=value)</li>
+ * <li>Properties file via OPTIONS-FILE property</li>
+ * <li>Programmatic via public API</li>
+ * </ul>
+ *
  * @author Michael Blakeley, MarkLogic Corporation
  * @author Colleen Whitney, MarkLogic Corporation
  * @author Bhagat Bandlamudi, MarkLogic Corporation
+ * @see AbstractManager
+ * @see Task
+ * @see UrisLoader
+ * @see JobServer
  */
 public class Manager extends AbstractManager implements Closeable {
 
+    /**
+     * The fully qualified class name of the Manager.
+     * Used for identification in logging and usage messages.
+     */
     protected static final String NAME = Manager.class.getName();
 
+    /**
+     * Property key for the batch reference identifier from the URIs loader.
+     * This value is set by the UrisLoader and made available to batch and process modules.
+     */
     public static final String URIS_BATCH_REF = com.marklogic.developer.corb.Options.URIS_BATCH_REF;
+
+    /**
+     * Default delimiter used to separate multiple URIs in a batch.
+     * Set to semicolon (";") by default.
+     */
     public static final String DEFAULT_BATCH_URI_DELIM = ";";
 
+    /**
+     * The pausable thread pool executor that manages parallel task execution.
+     * Handles process task execution with support for pause, resume, and dynamic resizing.
+     * Initialized in {@link #preparePool()} and shut down in {@link #stop()}.
+     */
     protected PausableThreadPoolExecutor pool;
+
+    /**
+     * The monitor that tracks task completion and progress.
+     * Runs in a separate thread ({@link #monitorThread}) and polls the completion service
+     * to track finished tasks and report progress.
+     */
     protected Monitor monitor;
+
+    /**
+     * The embedded HTTP server providing real-time job monitoring and control.
+     * Started via {@link #startJobServer()} if configured with {@link Options#JOB_SERVER_PORT}.
+     * Provides REST endpoints for job status, metrics, and control operations.
+     */
     protected JobServer jobServer = null;
+
+    /**
+     * Unique identifier for this job execution.
+     * Generated as a UUID in {@link #run()} if not already set.
+     * Used for job tracking and metrics correlation.
+     */
     protected String jobId = null;
+
+    /**
+     * Statistics collector for the current job execution.
+     * Tracks timing, counts, throughput, and error information.
+     * Initialized in {@link #run()} and updated throughout job execution.
+     */
     protected JobStats jobStats = null;
+
+    /**
+     * The timestamp (in milliseconds since epoch) when the job started.
+     * Set at the beginning of {@link #run()} before any tasks execute.
+     */
     protected long startMillis;
+
+    /**
+     * The timestamp (in milliseconds since epoch) when process task execution began.
+     * Set after URIs are loaded and the queue is populated, marking the start
+     * of actual document transformation work.
+     */
     protected long transformStartMillis;
+
+    /**
+     * The timestamp (in milliseconds since epoch) when the job completed.
+     * Set after all process tasks finish and before post-batch task execution.
+     */
     protected long endMillis;
+
+    /**
+     * The total number of URIs actually loaded and submitted for processing.
+     * May differ from the expected count if blank URIs are filtered or
+     * if the UrisLoader returns fewer items than anticipated.
+     */
     protected long urisCount;
+
+    /**
+     * Flag indicating whether a fatal execution error occurred during the job.
+     * Set to {@code true} in {@link #stop(ExecutionException)} when an unrecoverable
+     * error is encountered. Affects the final exit code.
+     */
     protected boolean execError;
+
+    /**
+     * The exit code for the job execution.
+     * Determined by {@link #determineExitCode()} based on job outcome.
+     * Remains {@code null} until the job completes or fails.
+     */
     protected Integer exitCode;
 
+    /**
+     * Flag indicating whether a STOP command was issued via the command file.
+     * Set to {@code true} when processing a STOP command from {@link CommandFileWatcher}.
+     * Causes the job to terminate gracefully and affects the exit code.
+     */
     protected boolean stopCommand;
 
+    /**
+     * The thread running the {@link Monitor} instance.
+     * Started in {@link #preparePool()} and runs until all tasks complete.
+     * Interrupted in {@link #stop()} to halt monitoring.
+     */
     protected Thread monitorThread;
+
+    /**
+     * The completion service wrapping the thread pool executor.
+     * Allows retrieval of completed tasks in order of completion rather than submission.
+     * Used by the {@link Monitor} to track progress and collect results.
+     */
     protected CompletionService<String[]> completionService;
+
+    /**
+     * Scheduled executor service for running periodic tasks.
+     * Manages the {@link CommandFileWatcher} and periodic job metrics logging.
+     * Initialized with a pool size of 2 threads in {@link #init(String[], Properties)}.
+     */
     protected ScheduledExecutorService scheduledExecutor;
 
+    /**
+     * Exit code to return when no URIs are found to process.
+     * Defaults to {@link #EXIT_CODE_SUCCESS} but can be overridden via
+     * {@link Options#EXIT_CODE_NO_URIS} property.
+     */
     protected int EXIT_CODE_NO_URIS = EXIT_CODE_SUCCESS;
+
+    /**
+     * Exit code to return when the job completes with ignored errors.
+     * Defaults to {@link #EXIT_CODE_SUCCESS} but can be overridden via
+     * {@link Options#EXIT_CODE_IGNORED_ERRORS} property.
+     * Used when {@link Options#FAIL_ON_ERROR} is false and errors occurred.
+     */
     protected int EXIT_CODE_IGNORED_ERRORS = EXIT_CODE_SUCCESS;
+
+    /**
+     * Exit code returned when the job is stopped via a STOP command.
+     * Set to 3 to distinguish from normal completion and error conditions.
+     */
     protected static final int EXIT_CODE_STOP_COMMAND = 3;
 
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
+
+    /**
+     * Tab character constant used in usage message formatting.
+     * Provides consistent indentation in command-line help output.
+     */
     private static final String TAB = "\t";
 
+    /**
+     * Base message prefix for job status log messages during normal execution.
+     * Used in combination with other message constants for different job states.
+     */
     private static final String RUNNING_JOB_MESSAGE = "RUNNING CORB JOB:";
+
+    /**
+     * Log message prefix for job start events.
+     * Logged when the job begins execution in {@link #run()}.
+     */
     private static final String START_RUNNING_JOB_MESSAGE = "STARTED " + RUNNING_JOB_MESSAGE;
+
+    /**
+     * Log message prefix for job pause events.
+     * Logged when the job is paused via {@link #pause()}.
+     */
     private static final String PAUSING_JOB_MESSAGE = "PAUSING CORB JOB:";
+
+    /**
+     * Log message prefix for job resume events.
+     * Logged when the job resumes from paused state via {@link #resume()}.
+     */
     private static final String RESUMING_JOB_MESSAGE = "RESUMING CORB JOB:";
+
+    /**
+     * Log message prefix for job completion events.
+     * Logged when the job finishes execution in {@link #run()}.
+     */
     private static final String END_RUNNING_JOB_MESSAGE = "END " + RUNNING_JOB_MESSAGE;
 
     /**
-     * @param args
+     * Main entry point for running CoRB from the command line.
+     * <p>
+     * Initializes the Manager, processes arguments, runs the job, and exits
+     * with an appropriate exit code.
+     * </p>
+     *
+     * @param args command-line arguments
      */
     public static void main(String... args) {
         try (Manager manager = new Manager()) {
@@ -152,6 +329,11 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Determines the appropriate exit code based on job execution results.
+     *
+     * @return the exit code for the job
+     */
     protected int determineExitCode() {
         if (this.exitCode == null) {
             if (execError) {
@@ -174,18 +356,39 @@ public class Manager extends AbstractManager implements Closeable {
         return exitCode;
     }
 
+    /**
+     * Checks whether a fatal execution error occurred during the job.
+     *
+     * @return true if an execution error occurred, false otherwise
+     */
     public boolean hasExecError() {
         return execError;
     }
 
+    /**
+     * Sets the exit code for the job.
+     *
+     * @param code the exit code value
+     */
     protected void setExitCode(int code) {
         exitCode = code;
     }
 
+    /**
+     * Gets the exit code for the job, determining it if not yet set.
+     *
+     * @return the exit code
+     */
     public int getExitCode() {
         return determineExitCode();
     }
 
+    /**
+     * Closes all resources used by the Manager.
+     * <p>
+     * Shuts down scheduled executors, content source pool, and job server.
+     * </p>
+     */
     @Override
     public void close() {
         if (scheduledExecutor != null) {
@@ -196,6 +399,13 @@ public class Manager extends AbstractManager implements Closeable {
         stopJobServer();
     }
 
+    /**
+     * Initializes the Manager with command-line arguments and properties.
+     *
+     * @param commandlineArgs command-line arguments
+     * @param props additional properties
+     * @throws CorbException if initialization fails
+     */
     @Override
     public void init(String[] commandlineArgs, Properties props) throws CorbException {
         super.init(commandlineArgs, props);
@@ -214,6 +424,13 @@ public class Manager extends AbstractManager implements Closeable {
         scheduledExecutor = Executors.newScheduledThreadPool(2);
     }
 
+    /**
+     * Schedules a file watcher to monitor the command file for control commands.
+     * <p>
+     * The watcher polls the command file at regular intervals and processes
+     * pause, resume, stop commands, and thread count changes.
+     * </p>
+     */
     protected void scheduleCommandFileWatcher() {
         String commandFile = getOption(COMMAND_FILE);
         if (isNotBlank(commandFile)) {
@@ -480,6 +697,13 @@ public class Manager extends AbstractManager implements Closeable {
         normalizeLegacyProperties();
     }
 
+    /**
+     * Normalizes legacy property names to their current equivalents.
+     * <p>
+     * Ensures backward compatibility by mapping old property names like
+     * XQUERY-MODULE to PROCESS-MODULE.
+     * </p>
+     */
     protected void normalizeLegacyProperties() {
         //fix map keys for backward compatibility
         if (properties != null) {
@@ -492,6 +716,12 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Returns a new Properties object with legacy property names normalized.
+     *
+     * @param properties the properties to normalize
+     * @return normalized properties
+     */
     private Properties getNormalizedProperties(Properties properties) {
         Properties normalizedProperties = new Properties();
         if (properties == null) {
@@ -527,6 +757,17 @@ public class Manager extends AbstractManager implements Closeable {
         return normalizedProperties;
     }
 
+    /**
+     * Loads and validates a Task class by name.
+     *
+     * @param type the task type (for error messages)
+     * @param className the fully qualified class name
+     * @return the Task class
+     * @throws ClassNotFoundException if the class cannot be found
+     * @throws InstantiationException if the class cannot be instantiated
+     * @throws IllegalAccessException if the class constructor is not accessible
+     * @throws IllegalArgumentException if the class is not a Task subclass
+     */
     protected Class<? extends Task> getTaskCls(String type, String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         Class<?> cls = Class.forName(className);
         if (Task.class.isAssignableFrom(cls)) {
@@ -537,6 +778,16 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Loads and validates a UrisLoader class by name.
+     *
+     * @param className the fully qualified class name
+     * @return the UrisLoader class
+     * @throws ClassNotFoundException if the class cannot be found
+     * @throws InstantiationException if the class cannot be instantiated
+     * @throws IllegalAccessException if the class constructor is not accessible
+     * @throws IllegalArgumentException if the class is not a UrisLoader subclass
+     */
     protected Class<? extends UrisLoader> getUrisLoaderCls(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         Class<?> cls = Class.forName(className);
         if (UrisLoader.class.isAssignableFrom(cls)) {
@@ -547,6 +798,9 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Prints usage information for the Manager to standard error.
+     */
     @Override
     protected void usage() {
         super.usage();
@@ -588,6 +842,24 @@ public class Manager extends AbstractManager implements Closeable {
         err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
     }
 
+    /**
+     * Executes the CoRB job.
+     * <p>
+     * This method:
+     * </p>
+     * <ol>
+     * <li>Starts the job server and command file watcher</li>
+     * <li>Initializes statistics collection</li>
+     * <li>Runs init and pre-batch tasks</li>
+     * <li>Loads URIs and populates the work queue</li>
+     * <li>Monitors task completion</li>
+     * <li>Runs post-batch task</li>
+     * <li>Logs final metrics</li>
+     * </ol>
+     *
+     * @return the number of URIs processed
+     * @throws Exception if an error occurs during job execution
+     */
     public long run() throws Exception {
         if (jobId == null) {
             jobId = UUID.randomUUID().toString();
@@ -635,6 +907,11 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Starts the HTTP job server if configured.
+     *
+     * @throws IOException if the server cannot be started
+     */
     private void startJobServer() throws IOException {
         if (!options.getJobServerPortsToChoose().isEmpty() && jobServer == null) {
             setJobServer(JobServer.create(options.getJobServerPortsToChoose(), this));
@@ -642,10 +919,20 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Returns the HTTP job server instance.
+     *
+     * @return the JobServer, or null if not running
+     */
     public JobServer getJobServer() {
         return jobServer;
     }
 
+    /**
+     * Sets the HTTP job server and updates related configuration.
+     *
+     * @param jobServer the JobServer instance
+     */
     protected void setJobServer(JobServer jobServer) {
         this.jobServer = jobServer;
         options.setJobServerPort(jobServer.getAddress().getPort());
@@ -654,6 +941,9 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Stops the HTTP job server with a brief delay.
+     */
     private void stopJobServer() {
         if (jobServer != null) {
             // UI polls on interval of 2 seconds, so delay just a bit longer before shutting down
@@ -662,6 +952,9 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Schedules periodic logging of job metrics if configured.
+     */
     protected void scheduleJobMetrics() {
         Integer interval = options.getMetricsSyncFrequencyInMillis();
         if (interval != null && interval > 0) {
@@ -674,16 +967,30 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Determines whether the post-batch task should be executed.
+     *
+     * @param count the number of URIs processed
+     * @return true if post-batch should run, false otherwise
+     */
     protected boolean shouldRunPostBatch(long count) {
         return !execError && (options.shouldPrePostBatchAlwaysExecute() || count >= options.getPostBatchMinimumCount());
     }
 
+    /**
+     * Determines whether the pre-batch task should be executed.
+     *
+     * @param count the expected number of URIs to process
+     * @return true if pre-batch should run, false otherwise
+     */
     protected boolean shouldRunPreBatch(long count) {
         return options.shouldPrePostBatchAlwaysExecute() || count >= options.getPreBatchMinimumCount();
     }
 
     /**
-     * @return
+     * Initializes the thread pool and monitor for task execution.
+     *
+     * @return the monitor thread
      */
     private Thread preparePool() {
         RejectedExecutionHandler policy = new CallerBlocksPolicy();
@@ -698,8 +1005,9 @@ public class Manager extends AbstractManager implements Closeable {
     }
 
     /**
-     * @throws CorbException
+     * Prepares and optionally installs XQuery/JavaScript modules to the modules database.
      *
+     * @throws CorbException if module preparation fails
      */
     private void prepareModules() throws CorbException {
         String[] resourceModules = new String[]{options.getInitModule(), options.getUrisModule(),
@@ -715,6 +1023,13 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Installs a module to the modules database if the install flag is set.
+     *
+     * @param session the XCC session
+     * @param resourceModule the module path/name
+     * @throws CorbException if module installation fails
+     */
     protected void insertModule(Session session, String resourceModule) throws CorbException {
         if (resourceModule == null || isInlineOrAdhoc(resourceModule)) {
             return;
@@ -776,6 +1091,12 @@ public class Manager extends AbstractManager implements Closeable {
         LOG.log(INFO, () -> MessageFormat.format("Configured URIs queue temp dir: {0}", options.getDiskQueueTempDir()));
     }
 
+    /**
+     * Executes the initialization task if configured.
+     *
+     * @param tf the TaskFactory for creating tasks
+     * @throws Exception if the init task fails
+     */
     private void runInitTask(TaskFactory tf) throws Exception {
         Task initTask = tf.newInitTask();
         if (initTask != null) {
@@ -789,6 +1110,12 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Executes the pre-batch task if configured.
+     *
+     * @param tf the TaskFactory for creating tasks
+     * @throws Exception if the pre-batch task fails
+     */
     private void runPreBatchTask(TaskFactory tf) throws Exception {
         Task preTask = tf.newPreBatchTask();
         if (preTask != null) {
@@ -802,6 +1129,12 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Executes the post-batch task if configured.
+     *
+     * @param tf the TaskFactory for creating tasks
+     * @throws Exception if the post-batch task fails
+     */
     private void runPostBatchTask(TaskFactory tf) throws Exception {
         Task postTask = tf.newPostBatchTask();
         if (postTask != null) {
@@ -815,6 +1148,14 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Creates and configures the appropriate UrisLoader based on configuration.
+     *
+     * @return the configured UrisLoader
+     * @throws InstantiationException if the loader cannot be instantiated
+     * @throws IllegalAccessException if the loader constructor is not accessible
+     * @throws IllegalArgumentException if no URI source is configured
+     */
     private UrisLoader getUriLoader() throws InstantiationException, IllegalAccessException {
         UrisLoader loader;
         if (isNotBlank(options.getUrisModule())) {
@@ -834,6 +1175,12 @@ public class Manager extends AbstractManager implements Closeable {
         return loader;
     }
 
+    /**
+     * Opens the UrisLoader and records URI loading time.
+     *
+     * @param urisLoader the UrisLoader to run
+     * @throws CorbException if the loader fails
+     */
     private void runUrisLoader(UrisLoader urisLoader) throws CorbException {
         long startTime = System.nanoTime();
         urisLoader.open();
@@ -846,6 +1193,16 @@ public class Manager extends AbstractManager implements Closeable {
         jobStats.setUrisLoadTime(TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS));
     }
 
+    /**
+     * Populates the work queue with URIs to process.
+     * <p>
+     * This method runs the init task, loads URIs, runs the pre-batch task,
+     * and submits process tasks to the completion service.
+     * </p>
+     *
+     * @return the number of URIs loaded
+     * @throws Exception if an error occurs during queue population
+     */
     private long populateQueue() throws Exception {
         long expectedTotalCount = -1;
         if (!this.stopCommand) {
@@ -898,14 +1255,16 @@ public class Manager extends AbstractManager implements Closeable {
     }
 
     /**
-     * Submit batches of the URIs to be processed. Filter out blank entries and
-     * return the total number of URIs.
+     * Submits batches of URIs as process tasks to the thread pool.
+     * <p>
+     * Filters out blank entries and returns the actual number of URIs submitted.
+     * </p>
      *
-     * @param urisLoader
-     * @param taskFactory
-     * @param expectedTotalCount
-     * @return
-     * @throws CorbException
+     * @param urisLoader the loader providing URIs
+     * @param taskFactory factory for creating process tasks
+     * @param expectedTotalCount the expected number of URIs
+     * @return the actual number of URIs submitted
+     * @throws CorbException if task submission fails
      */
     protected long submitUriTasks(UrisLoader urisLoader, TaskFactory taskFactory, long expectedTotalCount) throws CorbException {
         urisCount = 0;
@@ -943,6 +1302,11 @@ public class Manager extends AbstractManager implements Closeable {
         return urisCount;
     }
 
+    /**
+     * Logs a warning if available memory is low (less than 20% of total).
+     *
+     * @param totalMemory the total available memory in bytes
+     */
     protected void logIfLowMemory(long totalMemory) {
         long freeMemory = Runtime.getRuntime().freeMemory();
         if (freeMemory < totalMemory * 0.2d) { //less than 20% of total memory
@@ -952,6 +1316,11 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Dynamically adjusts the thread pool size.
+     *
+     * @param threadCount the new thread count (must be positive)
+     */
     public void setThreadCount(int threadCount) {
         if (threadCount > 0) {
             if (threadCount != options.getThreadCount()) {
@@ -963,6 +1332,15 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Sets the core and maximum pool size of the thread pool.
+     * <p>
+     * Adjusts the sizes in the correct order to avoid IllegalArgumentException.
+     * </p>
+     *
+     * @param threadPool the thread pool to resize
+     * @param threadCount the target thread count
+     */
     protected void setPoolSize(ThreadPoolExecutor threadPool, int threadCount) {
         if (threadPool != null) {
             int currentMaxPoolSize = threadPool.getMaximumPoolSize();
@@ -984,7 +1362,7 @@ public class Manager extends AbstractManager implements Closeable {
     }
 
     /**
-     * Pause execution of pool tasks
+     * Pauses execution of pool tasks.
      */
     public void pause() {
         if (pool != null && pool.isRunning()) {
@@ -994,12 +1372,17 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Checks whether the thread pool is currently paused.
+     *
+     * @return true if paused, false otherwise
+     */
     public boolean isPaused() {
         return pool != null && pool.isPaused();
     }
 
     /**
-     * Resume pool execution (if paused).
+     * Resumes pool execution if currently paused.
      */
     public void resume() {
         if (isPaused()) {
@@ -1010,7 +1393,10 @@ public class Manager extends AbstractManager implements Closeable {
     }
 
     /**
-     * Stop the thread pool
+     * Stops the thread pool and monitor immediately.
+     * <p>
+     * Shuts down the pool and interrupts any pending tasks.
+     * </p>
      */
     public void stop() {
         LOG.info("cleaning up");
@@ -1032,10 +1418,9 @@ public class Manager extends AbstractManager implements Closeable {
     }
 
     /**
-     * Log a fatal error for the provided exception and then stop the thread
-     * pool
+     * Logs a fatal error and stops the thread pool.
      *
-     * @param e
+     * @param e the execution exception that caused the fatal error
      */
     public void stop(ExecutionException e) {
         execError = true;
@@ -1045,50 +1430,92 @@ public class Manager extends AbstractManager implements Closeable {
     }
 
     /**
-     * @return the startMillis
+     * Gets the job start time.
+     *
+     * @return the start time in milliseconds since epoch
      */
     public long getStartMillis() {
         return startMillis;
     }
 
     /**
-     * @return the transformStartMillis
+     * Gets the time when process tasks began.
+     *
+     * @return the transform start time in milliseconds since epoch
      */
     public long getTransformStartMillis() {
         return transformStartMillis;
     }
 
     /**
-     * @return the endMillis
+     * Gets the job end time.
+     *
+     * @return the end time in milliseconds since epoch
      */
     public long getEndMillis() {
         return endMillis;
     }
 
+    /**
+     * Gets the unique job identifier.
+     *
+     * @return the job ID
+     */
     public String getJobId() {
         return jobId;
     }
 
+    /**
+     * Gets the Monitor tracking task completion.
+     *
+     * @return the Monitor instance
+     */
     public Monitor getMonitor() {
         return monitor;
     }
 
+    /**
+     * Gets the job statistics collector.
+     *
+     * @return the JobStats instance
+     */
     public JobStats getJobStats() {
         return jobStats;
     }
 
+    /**
+     * File watcher that monitors a command file for job control commands.
+     * <p>
+     * Polls the command file at regular intervals and processes commands such as:
+     * </p>
+     * <ul>
+     * <li>PAUSE - Pause job execution</li>
+     * <li>RESUME - Resume job execution</li>
+     * <li>STOP - Stop the job</li>
+     * <li>THREAD-COUNT - Adjust thread count</li>
+     * </ul>
+     */
     public static class CommandFileWatcher implements Runnable {
 
         private long timeStamp;
         private final File file;
         private final Manager manager;
 
+        /**
+         * Constructs a CommandFileWatcher for the specified file and manager.
+         *
+         * @param file the command file to watch
+         * @param manager the Manager to control
+         */
         public CommandFileWatcher(File file, Manager manager) {
             this.file = file;
             timeStamp = -1;
             this.manager = manager;
         }
 
+        /**
+         * Checks if the command file has been modified and processes it if changed.
+         */
         @Override
         public void run() {
             if (file.exists()) {
@@ -1100,6 +1527,11 @@ public class Manager extends AbstractManager implements Closeable {
             }
         }
 
+        /**
+         * Processes the command file when it changes.
+         *
+         * @param file the command file
+         */
         public void onChange(File file) {
 
             try (InputStream in = new FileInputStream(file)) {
@@ -1130,12 +1562,27 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Rejected execution handler that blocks the caller when the queue is full.
+     * <p>
+     * Instead of rejecting tasks, this policy blocks the calling thread until
+     * space becomes available in the queue. This provides back-pressure to prevent
+     * out-of-memory errors when submitting tasks faster than they can be processed.
+     * </p>
+     */
     public static class CallerBlocksPolicy implements RejectedExecutionHandler {
 
         private BlockingQueue<Runnable> queue;
 
         private boolean warning;
 
+        /**
+         * Handles rejected task execution by blocking until queue space is available.
+         *
+         * @param r the rejected runnable task
+         * @param executor the executor that rejected the task
+         * @throws RejectedExecutionException if interrupted while waiting
+         */
         @Override
         public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
             if (null == queue) {
