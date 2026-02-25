@@ -291,7 +291,7 @@ public class BaseMonitor {
 
     /**
      * Formats a number as transactions per second.
-     * Returns an integer format for values >= 1, or up to 2 decimal places for values &lt; 1.
+     * Returns an integer format for values &gt;= 1, or up to 2 decimal places for values &lt; 1.
      * Uses HALF_UP rounding mode.
      *
      * @param n the number to format
