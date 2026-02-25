@@ -1,10 +1,10 @@
 # CoRB Metrics FAQ
 
-* **How can I log the job metrics to the Marklogic error log?**
+* **How can I log the job metrics to the MarkLogic error log?**
     * Logging can be enabled by setting METRICS-LOG-LEVEL property in options.
         + i.e. **METRICS-LOG-LEVEL=info**
         + Startup message is logged when CoRB job starts up and detailed metrics are logged when the job has finished.
-* **How can I set the log level when logging metrics to the Marklogic error log?**
+* **How can I set the log level when logging metrics to the MarkLogic error log?**
     * METRICS-LOG-LEVEL property has the following possible values:
       +  *none,emergency,alert,critical,error,warning,notice,info,config,debug,fine,finer,finest.*
       + Default value is none ( which means the metrics will not be logged to the error log).
