@@ -31,22 +31,78 @@ import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 
 /**
+ * Monitors task completion and progress for CoRB jobs.
+ * <p>
+ * The Monitor runs in a dedicated thread and is responsible for:
+ * </p>
+ * <ul>
+ * <li>Tracking completion of tasks submitted to the thread pool</li>
+ * <li>Calculating and displaying progress metrics (TPS, ETC, completion count)</li>
+ * <li>Detecting and logging low memory conditions</li>
+ * <li>Notifying when jobs are paused</li>
+ * <li>Coordinating shutdown when all tasks complete</li>
+ * </ul>
+ * <p>
+ * Progress updates are logged at regular intervals (defined by
+ * {@link TransformOptions#PROGRESS_INTERVAL_MS}). The Monitor uses a
+ * {@link CompletionService} to poll for completed tasks without blocking.
+ * </p>
+ * <p>
+ * The Monitor continues running until either:
+ * </p>
+ * <ul>
+ * <li>All tasks have completed successfully</li>
+ * <li>A fatal error occurs (propagated to the Manager)</li>
+ * <li>The Monitor is interrupted or shutdown</li>
+ * </ul>
+ *
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * @author Bhagat Bandlamudi, MarkLogic Corporation
- *
+ * @see BaseMonitor
+ * @see Manager
+ * @see PausableThreadPoolExecutor
  */
 public class Monitor extends BaseMonitor implements Runnable {
 
+    /**
+     * Logger instance for the Monitor class.
+     * Used to log progress updates, warnings, errors, and completion status during task monitoring.
+     */
     protected static final Logger LOG = Logger.getLogger(Monitor.class.getName());
+
+    /**
+     * Flag indicating whether the monitor should shutdown immediately.
+     * When set to {@code true}, the monitoring loop exits on the next iteration.
+     * Set via {@link #shutdownNow()} to terminate monitoring before all tasks complete.
+     */
     protected boolean shutdownNow;
+
+    /**
+     * The number of tasks that have completed successfully.
+     * Incremented each time a task is retrieved from the completion service.
+     * Used to track progress and determine when all tasks have finished.
+     */
     protected long completed = 0L;
 
+    /**
+     * The pausable thread pool executor being monitored.
+     * Provides access to thread pool statistics such as active thread count,
+     * completed task count, and pause/resume state. Also tracks failed URI count.
+     */
     protected PausableThreadPoolExecutor threadPoolExecutor;
+
+    /**
+     * The completion service for retrieving completed tasks.
+     * Polled at regular intervals to detect task completion without blocking.
+     * Returns {@link Future} objects representing completed tasks.
+     */
     protected final CompletionService<String[]> cs;
     /**
-     * @param threadPoolExecutor
-     * @param cs
-     * @param manager
+     * Constructs a Monitor for the specified thread pool and completion service.
+     *
+     * @param threadPoolExecutor the thread pool executor to monitor
+     * @param cs the completion service for retrieving completed tasks
+     * @param manager the Manager coordinating the job
      */
     public Monitor(PausableThreadPoolExecutor threadPoolExecutor, CompletionService<String[]> cs, Manager manager) {
         super(manager);
@@ -54,10 +110,17 @@ public class Monitor extends BaseMonitor implements Runnable {
         this.cs = cs;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see java.lang.Runnable#run()
+    /**
+     * Main monitoring loop that tracks task completion and displays progress.
+     * <p>
+     * This method runs in a dedicated thread and continuously polls the completion
+     * service for finished tasks. It updates progress metrics, logs status messages,
+     * and detects completion or error conditions.
+     * </p>
+     * <p>
+     * If a fatal execution error occurs, it notifies the Manager to stop the job.
+     * The loop terminates when all tasks complete or the monitor is shutdown.
+     * </p>
      */
     @Override
     public void run() {
@@ -76,6 +139,26 @@ public class Monitor extends BaseMonitor implements Runnable {
         }
     }
 
+    /**
+     * Monitors task results by polling the completion service.
+     * <p>
+     * This method:
+     * <ol>
+     * <li>Polls the completion service for completed tasks</li>
+     * <li>Updates the completion count</li>
+     * <li>Displays progress at regular intervals</li>
+     * <li>Detects when all tasks have completed</li>
+     * <li>Waits for thread pool termination</li>
+     * </ol>
+     * </p>
+     * <p>
+     * The method includes special handling for edge cases where the completion
+     * count and thread pool statistics may temporarily diverge.
+     * </p>
+     *
+     * @throws InterruptedException if the monitor thread is interrupted
+     * @throws ExecutionException if a task execution fails
+     */
     private void monitorResults() throws InterruptedException, ExecutionException {
         // fast-fail as soon as we see any exceptions
         LOG.log(INFO, () -> MessageFormat.format("monitoring {0} tasks", taskCount));
@@ -116,6 +199,27 @@ public class Monitor extends BaseMonitor implements Runnable {
         LOG.log(INFO, () -> MessageFormat.format("completed all tasks {0,number}/{1,number}", completed, taskCount));
     }
 
+    /**
+     * Displays progress information at regular intervals.
+     * <p>
+     * Progress updates include:
+     * <ul>
+     * <li>Number of completed tasks</li>
+     * <li>Current and average TPS (transactions per second)</li>
+     * <li>Estimated time of completion</li>
+     * <li>Active thread count</li>
+     * <li>Failed task count</li>
+     * <li>Pause status</li>
+     * <li>Low memory warnings</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Progress is only displayed if the configured interval has elapsed since
+     * the last update.
+     * </p>
+     *
+     * @return the timestamp of the last progress update
+     */
     private long showProgress() {
         long current = System.currentTimeMillis();
         if (current - lastProgress > TransformOptions.PROGRESS_INTERVAL_MS) {
@@ -134,32 +238,58 @@ public class Monitor extends BaseMonitor implements Runnable {
         return lastProgress;
     }
 
+    /**
+     * Generates a formatted progress message with current job statistics.
+     *
+     * @param completed the number of completed tasks
+     * @return formatted progress message string
+     */
     protected String getProgressMessage(long completed) {
         populateTps(completed);
         return getProgressMessage(completed, taskCount, avgTps, currentTps, estimatedTimeOfCompletion, threadPoolExecutor.getActiveCount(), threadPoolExecutor.getNumFailedUris());
     }
 
     /**
-     * @param count
+     * Sets the total number of tasks to monitor.
+     *
+     * @param count the total task count
      */
     public void setTaskCount(long count) {
         taskCount = count;
     }
 
+    /**
+     * Gets the total number of tasks to monitor.
+     *
+     * @return the total task count
+     */
     public long getTaskCount() {
         return taskCount;
     }
 
+    /**
+     * Gets the number of tasks that have completed.
+     *
+     * @return the completed task count
+     */
     public long getCompletedCount() {
         return this.completed;
     }
 
+    /**
+     * Gets the thread pool executor being monitored.
+     *
+     * @return the thread pool executor
+     */
     public PausableThreadPoolExecutor getThreadPoolExecutor() {
         return threadPoolExecutor;
     }
 
-     /**
-     *
+    /**
+     * Signals the monitor to shutdown immediately.
+     * <p>
+     * This causes the monitoring loop to exit on the next iteration.
+     * </p>
      */
     public void shutdownNow() {
         shutdownNow = true;

@@ -55,22 +55,53 @@ import java.util.logging.Logger;
  * This class can be used to execute either an XQuery or JavaScript module in
  * MarkLogic.
  *
- * @author matthew.heckel MarkLogic Corportation
- *
+ * @author matthew.heckel MarkLogic Corporation
+ * @see AbstractManager
+ * @see Manager
  */
 public class ModuleExecutor extends AbstractManager {
 
+    /**
+     * The simple class name of ModuleExecutor.
+     * Used for identification in logging and usage messages.
+     */
     protected static final String NAME = ModuleExecutor.class.getSimpleName();
+
+    /**
+     * System property key for the platform-specific line separator.
+     * Used to retrieve the appropriate line ending character(s) for the current platform.
+     */
     protected static final String PROPERTY_LINE_SEPARATOR = "line.separator";
+
+    /**
+     * Platform-specific newline character sequence as a byte array.
+     * Retrieved from the {@value #PROPERTY_LINE_SEPARATOR} system property.
+     * Defaults to "\n" if the system property is not available.
+     * Used when writing result sequences to export files.
+     */
     private static final byte[] NEWLINE
             = System.getProperty(PROPERTY_LINE_SEPARATOR) != null ? System.getProperty(PROPERTY_LINE_SEPARATOR).getBytes() : "\n".getBytes();
+
+    /**
+     * Logger instance for the ModuleExecutor class.
+     * Used to log execution progress, configuration details, errors, and completion status.
+     */
     protected static final Logger LOG = Logger.getLogger(ModuleExecutor.class.getName());
+
+    /**
+     * Tab character constant used in usage message formatting.
+     * Provides consistent indentation in command-line help output.
+     */
     private static final String TAB = "\t";
 
     /**
-     * Execute an XQuery or JavaScript module in MarkLogic
+     * Main entry point for executing a module from the command line.
+     * <p>
+     * Initializes the ModuleExecutor, runs the module, and exits with an
+     * appropriate exit code based on the result.
+     * </p>
      *
-     * @param args
+     * @param args command-line arguments
      */
     public static void main(String... args) {
         ModuleExecutor moduleExecutor = new ModuleExecutor();
@@ -99,9 +130,21 @@ public class ModuleExecutor extends AbstractManager {
     }
 
     /**
+     * Initializes configuration options from command-line arguments.
+     * <p>
+     * Processes positional arguments and validates required options:
+     * </p>
+     * <ol>
+     * <li>XCC connection URI (inherited from AbstractManager)</li>
+     * <li>Process module (required)</li>
+     * <li>Module root (optional)</li>
+     * <li>Modules database (optional)</li>
+     * <li>Export file directory (optional)</li>
+     * <li>Export file name (optional)</li>
+     * </ol>
      *
-     * @param args
-     * @throws com.marklogic.developer.corb.CorbException
+     * @param args command-line arguments
+     * @throws CorbException if required options are missing or invalid
      */
     @Override
     protected void initOptions(String... args) throws CorbException {
@@ -149,6 +192,13 @@ public class ModuleExecutor extends AbstractManager {
         FileUtils.deleteFileQuietly(exportFileDir, exportFileName);
     }
 
+    /**
+     * Prints usage information for ModuleExecutor to standard error.
+     * <p>
+     * Displays multiple usage patterns including positional arguments,
+     * system properties, and properties files.
+     * </p>
+     */
     @Override
     protected void usage() {
         super.usage();
@@ -185,6 +235,9 @@ public class ModuleExecutor extends AbstractManager {
         err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
     }
 
+    /**
+     * Logs the configured options for this execution.
+     */
     @Override
     protected void logOptions() {
         LOG.log(INFO, () -> MessageFormat.format("Configured modules db: {0}", options.getModulesDatabase()));
@@ -192,6 +245,27 @@ public class ModuleExecutor extends AbstractManager {
         LOG.log(INFO, () -> MessageFormat.format("Configured process module: {0}", options.getProcessModule()));
     }
 
+    /**
+     * Executes the configured module in MarkLogic.
+     * <p>
+     * The execution process:
+     * </p>
+     * <ol>
+     * <li>Creates an XCC session</li>
+     * <li>Prepares a request for the module</li>
+     * <li>Binds custom input variables (properties prefixed with PROCESS-MODULE.)</li>
+     * <li>Submits the request to MarkLogic</li>
+     * <li>Processes and optionally saves the results</li>
+     * </ol>
+     * <p>
+     * Custom input variables can be passed to the module by setting properties
+     * with the prefix {@code PROCESS-MODULE.}. For example, setting
+     * {@code PROCESS-MODULE.myVar=value} will create a variable named {@code myVar}
+     * in the module with the value {@code "value"}.
+     * </p>
+     *
+     * @throws Exception if module execution fails
+     */
     public void run() throws Exception {
         LOG.log(INFO, () -> MessageFormat.format("{0} starting: {1}", NAME, VERSION_MSG));
         long maxMemory = Runtime.getRuntime().maxMemory() / (1024 * 1024);
@@ -241,6 +315,15 @@ public class ModuleExecutor extends AbstractManager {
         }
     }
 
+    /**
+     * Retrieves a property value, checking system properties first, then the properties file.
+     * <p>
+     * System properties take precedence over properties file values.
+     * </p>
+     *
+     * @param key the property key
+     * @return the property value, or null if not found
+     */
     public String getProperty(String key) {
         String val = System.getProperty(key);
         if (isBlank(val) && properties != null) {
@@ -249,6 +332,16 @@ public class ModuleExecutor extends AbstractManager {
         return trim(val);
     }
 
+    /**
+     * Processes the result sequence from module execution.
+     * <p>
+     * If an export file name is configured, writes the results to that file.
+     * </p>
+     *
+     * @param seq the result sequence from module execution
+     * @return "true" if results were processed successfully
+     * @throws CorbException if an error occurs while processing results
+     */
     protected String processResult(ResultSequence seq) throws CorbException {
         try {
             writeToFile(seq);
@@ -258,6 +351,20 @@ public class ModuleExecutor extends AbstractManager {
         }
     }
 
+    /**
+     * Writes the result sequence to the configured export file.
+     * <p>
+     * Each item in the sequence is written as a separate line. If no export
+     * file is configured or the result sequence is empty, this method does nothing.
+     * </p>
+     * <p>
+     * The export file directory is created if it doesn't exist. Each result item
+     * is followed by a platform-specific newline character.
+     * </p>
+     *
+     * @param seq the result sequence to write
+     * @throws IOException if an error occurs while writing to the file
+     */
     protected void writeToFile(ResultSequence seq) throws IOException {
         if (seq == null || !seq.hasNext()) {
             return;

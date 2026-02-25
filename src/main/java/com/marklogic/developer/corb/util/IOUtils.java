@@ -33,9 +33,24 @@ import java.util.logging.Logger;
  */
 public final class IOUtils {
 
+    /**
+     * Logger instance for this class.
+     */
     private static final Logger LOG = Logger.getLogger(IOUtils.class.getName());
+
+    /**
+     * Default buffer size used for I/O operations.
+     * <p>
+     * Set to 32 KB (32,768 bytes), which provides a good balance between memory usage
+     * and I/O performance for most file operations. This size is commonly used in
+     * buffered I/O operations to reduce the number of system calls.
+     * </p>
+     */
     public static final int BUFFER_SIZE = 32 * 1024;
 
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
     private IOUtils() {
     }
 
@@ -43,13 +58,20 @@ public final class IOUtils {
      * Tests whether the {@code InputStream} is a directory. A Directory will be
      * a ByteArrayInputStream and a File will be a BufferedInputStream.
      *
-     * @param is
-     * @return {@code true} if the InputStream class is ByteArrayInputStream
+     * @param is The InputStream to test
+     * @return {@code true} if the InputStream class is ByteArrayInputStream, {@code false} otherwise
      */
     public static boolean isDirectory(InputStream is) {
         return is instanceof ByteArrayInputStream;
     }
 
+    /**
+     * Reads all bytes from an InputStream and returns them as a byte array.
+     *
+     * @param is The InputStream to read from
+     * @return A byte array containing all bytes read from the InputStream
+     * @throws IOException If an I/O error occurs while reading from the stream
+     */
     public static byte[] toByteArray(InputStream is) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         int nRead;
@@ -61,6 +83,13 @@ public final class IOUtils {
         return buffer.toByteArray();
     }
 
+    /**
+     * Reads all bytes from an InputStream and encodes them as a Base64 string.
+     *
+     * @param is The InputStream to read and encode
+     * @return A Base64-encoded string representation of the InputStream contents
+     * @throws IOException If an I/O error occurs while reading from the stream
+     */
     public static String toBase64(InputStream is) throws IOException {
         byte[] bytes = toByteArray(is);
         return Base64.getEncoder().encodeToString(bytes);
@@ -68,8 +97,9 @@ public final class IOUtils {
 
     /**
      * Null-safe close operation of a {@code Closeable} object.
+     * Silently ignores any IOException that occurs during closing and logs a warning.
      *
-     * @param obj Closable object to be closed.
+     * @param obj Closeable object to be closed, may be null
      */
     public static void closeQuietly(Closeable obj) {
         if (obj != null) {

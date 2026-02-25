@@ -28,10 +28,52 @@ import java.util.Properties;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 
 /**
- * Options that allow users to configure CoRB and control various aspects of execution.
+ * Central repository of all configuration options for CoRB (Content Reprocessing in Bulk).
+ * <p>
+ * This class defines constants for all supported CoRB configuration options. Options can be
+ * specified in multiple ways, with the following precedence (highest to lowest):
+ * </p>
+ * <ol>
+ * <li>System properties (-DOPTION-NAME=value)</li>
+ * <li>Properties file specified via {@link #OPTIONS_FILE}</li>
+ * <li>Command-line arguments (positional)</li>
+ * <li>Default values (where applicable)</li>
+ * </ol>
+ * <p>
+ * Options are organized into several categories:
+ * </p>
+ * <ul>
+ * <li><b>Connection Options:</b> XCC connection configuration ({@link #XCC_CONNECTION_URI}, {@link #XCC_USERNAME}, etc.)</li>
+ * <li><b>Module Options:</b> XQuery/JavaScript modules to execute ({@link #URIS_MODULE}, {@link #PROCESS_MODULE}, etc.)</li>
+ * <li><b>Task Options:</b> Java classes for custom processing ({@link #PROCESS_TASK}, {@link #PRE_BATCH_TASK}, etc.)</li>
+ * <li><b>URI Loading Options:</b> How URIs are loaded ({@link #URIS_FILE}, {@link #URIS_LOADER}, etc.)</li>
+ * <li><b>Execution Options:</b> Thread count, batch size, error handling ({@link #THREAD_COUNT}, {@link #BATCH_SIZE}, {@link #FAIL_ON_ERROR})</li>
+ * <li><b>Export Options:</b> File export configuration ({@link #EXPORT_FILE_NAME}, {@link #EXPORT_FILE_DIR}, etc.)</li>
+ * <li><b>SSL Options:</b> SSL/TLS configuration ({@link #SSL_CONFIG_CLASS}, {@link #SSL_KEYSTORE}, etc.)</li>
+ * <li><b>Metrics Options:</b> Job monitoring and statistics ({@link #METRICS_DATABASE}, {@link #JOB_SERVER_PORT}, etc.)</li>
+ * <li><b>Security Options:</b> Encryption and decryption ({@link #DECRYPTER}, {@link #PRIVATE_KEY_FILE}, etc.)</li>
+ * </ul>
+ * <p>
+ * Property names support flexible formatting:
+ * </p>
+ * <ul>
+ * <li>Kebab-case: {@code PROCESS-MODULE}</li>
+ * <li>Snake_case: {@code PROCESS_MODULE}</li>
+ * <li>Mixed: {@code PROCESS_MODULE} or {@code PROCESS-MODULE}</li>
+ * </ul>
+ * <p>
+ * All formats are normalized when searching for properties via {@link #findOption(Properties, String)}.
+ * </p>
+ * <p>
+ * Each option constant is annotated with {@link Usage} to provide descriptions and examples.
+ * These annotations are used to generate documentation and usage information.
+ * </p>
  *
  * @author Mads Hansen, MarkLogic Corporation
  * @since 2.3.0
+ * @see AbstractManager
+ * @see Manager
+ * @see TransformOptions
  */
 public final class Options {
 
@@ -1382,6 +1424,15 @@ public final class Options {
         "If not specified, then the default Java java.tmp.dir will be used.")
     public static final String XML_TEMP_DIR = "XML-TEMP-DIR";
 
+    /**
+     * In order to use this option a class com.marklogic.developer.corb.FileUrisZipLoader
+     * has to be specified in the URIS-LOADER option. If defined instead of
+     * URIS-MODULE, each file will be base64 encoded and set as the
+     * content of corb-loader XML files and sent as a serialized string in the URI parameter of
+     * the process module.
+     * The zip file path may be relative or absolute. Default processing will
+     * select all of the files in the zip file.
+     */
     @Usage(description = "In order to use this option a class com.marklogic.developer.corb.FileUrisZipLoader "
             + "has to be specified in the URIS-LOADER option. If defined instead of "
             + "URIS-MODULE, each file will be base64 encoded and set as the "
@@ -1400,17 +1451,38 @@ public final class Options {
     @Usage(description = "Use PROCESS-MODULE instead")
     public static final String XQUERY_MODULE = "XQUERY-MODULE";
 
+    /**
+     * Private constructor to prevent instantiation of this constants class.
+     */
     private Options() {
     }
 
     /**
-     * Look for the property first in System properties, then in the properties object specified.
-     * Look for the propertyName as specified, then normalized to snake_case, and then kebab-case.
-     * This ensures that properties are found if specified with either case, and ensures that old jobs still work since
-     * renaming the MAX_OPTS_FROM_MODULE option to MAX-OPTS_FROM-MODULE.
-     * @param properties
-     * @param propertyName
-     * @return
+     * Finds a property value by searching in System properties first, then in the provided Properties object.
+     * <p>
+     * The method searches for property names in the following order:
+     * </p>
+     * <ol>
+     * <li>Exact match for the property name as specified</li>
+     * <li>Snake_case version (hyphens replaced with underscores)</li>
+     * <li>Kebab-case version (underscores replaced with hyphens)</li>
+     * </ol>
+     * <p>
+     * This flexible matching ensures that properties can be specified in multiple formats
+     * and maintains backward compatibility. For example, all of these would match:
+     * </p>
+     * <ul>
+     * <li>{@code MAX-OPTS-FROM-MODULE}</li>
+     * <li>{@code MAX_OPTS_FROM_MODULE}</li>
+     * <li>{@code MAX-OPTS_FROM_MODULE} (mixed)</li>
+     * </ul>
+     * <p>
+     * System properties always take precedence over properties file values.
+     * </p>
+     *
+     * @param properties the Properties object to search (after System properties)
+     * @param propertyName the property name to search for
+     * @return the property value (trimmed), or null if not found
      * @since 2.5.1
      */
     public static String findOption(final Properties properties, final String propertyName) {
@@ -1430,14 +1502,47 @@ public final class Options {
 }
 
 /**
- * Annotation used to document attributes of the CoRB Options.
+ * Annotation used to document CoRB configuration options.
+ * <p>
+ * This annotation is applied to the static fields in {@link Options} to provide
+ * human-readable descriptions and usage examples. The annotation data is used to:
+ * <ul>
+ * <li>Generate user documentation</li>
+ * <li>Provide usage/help messages</li>
+ * <li>Document option purpose and accepted values</li>
+ * </ul>
+ * </p>
+ * <p>
+ * The {@link #description()} element should provide:
+ * <ul>
+ * <li>A clear explanation of what the option does</li>
+ * <li>Accepted values or format</li>
+ * <li>Default values (if applicable)</li>
+ * <li>Examples of usage (when helpful)</li>
+ * <li>Related options</li>
+ * </ul>
+ * </p>
+ * <p>
+ * Options without a description (empty string) are typically:
+ * <ul>
+ * <li>Deprecated options</li>
+ * <li>Internal options not meant for user configuration</li>
+ * <li>Self-explanatory constant values</li>
+ * </ul>
+ * </p>
  *
  * @author Mads Hansen, MarkLogic Corporation
+ * @since 2.3.0
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @interface Usage {
 
+    /**
+     * Description of the configuration option, including purpose, format, and examples.
+     *
+     * @return the description string, or empty string for internal/deprecated options
+     */
     String description() default "";
 
 }

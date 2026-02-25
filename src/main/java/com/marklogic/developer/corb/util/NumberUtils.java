@@ -19,11 +19,16 @@
 package com.marklogic.developer.corb.util;
 
 /**
+ * Utility class for number conversion operations.
+ * Provides safe conversion methods that handle null values and parsing failures gracefully.
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
 public final class NumberUtils {
 
+    /**
+     * Private constructor to prevent instantiation of utility class.
+     */
     private NumberUtils() {
     }
 
@@ -33,8 +38,8 @@ public final class NumberUtils {
      *
      * <p>If the string is {@code null}, <code>zero</code> is returned.</p>
      *
-     * @param val
-     * @return the int represented by the string,or {@code zero} if the
+     * @param val the string to convert, may be null
+     * @return the int represented by the string, or {@code zero} if the
      * conversion fails
      */
     public static int toInt(String val) {
@@ -48,9 +53,9 @@ public final class NumberUtils {
      * <p>If the string is {@code null}, the default value is returned.</p>
      *
      * @param val the string to convert, may be null
-     * @param defaultValue the default value
+     * @param defaultValue the default value to return if conversion fails
      * @return the int represented by the string, or the default if conversion
-     * fails
+     * fails or the input is null
      */
     public static int toInt(String val, int defaultValue) {
         if (val == null) {
