@@ -165,7 +165,7 @@ public class SchemaValidateToFileTask extends SchemaValidateBatchToFileTask {
      */
     @Override
     protected void writeSchemaValidationReport(List<SAXParseException> exceptions, File outputFile) throws IOException, XMLStreamException {
-        //Since these validation reports are per doc, the FileWriter will not append, and no need for synchnoized writes
+        //Since these validation reports are per doc, the FileWriter will not append, and no need for synchronized writes
         try (Writer writer = Files.newBufferedWriter(outputFile.toPath())) {
             writeSchemaValidationReport(exceptions, writer);
         }
