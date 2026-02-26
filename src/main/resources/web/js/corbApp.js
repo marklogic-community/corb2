@@ -233,7 +233,7 @@ export function jobStatus({ pollingMs = 3000 } = {}) {
                 this.error = e.message;
                 this.pushToast(`Thread update failed (${e.status === -1 ? jobBaseUrl(job) + " unavailable" : e.status})`);
                 // Optional: re-fetch to reconcile optimistic update
-                this.refresh();
+                await this.refresh();
             } finally {
                 done();
             }
@@ -422,7 +422,7 @@ export function dashboard({ pollingMs = 2000 } = {}) {
                 this.error = e.message;
                 this.pushToast(`Thread update failed (${e.status === -1 ? jobBaseUrl(job) + " unavailable" : e.status})`);
                 const url = metricsUrl(job.host, job.port, { concise: true });
-                this.metricsRefresh(url);
+                await this.metricsRefresh(url);
             } finally {
                 done();
             }
