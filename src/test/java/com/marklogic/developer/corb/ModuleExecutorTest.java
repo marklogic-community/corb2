@@ -438,7 +438,7 @@ public class ModuleExecutorTest {
             clearSystemProperties();
             System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
             ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
-            Map props = executor.getProperties();
+            Map<Object, Object> props = executor.getProperties();
 
             assertNotNull(props);
             assertFalse(props.isEmpty());

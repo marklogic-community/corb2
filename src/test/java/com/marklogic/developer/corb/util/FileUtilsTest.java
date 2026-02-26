@@ -39,7 +39,7 @@ import static org.mockito.Mockito.when;
  */
 public class FileUtilsTest {
 
-    private final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
+    private static final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
     private static final String TEXT_FILE_EXT = "txt";
 
     @Test

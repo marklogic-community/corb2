@@ -348,7 +348,7 @@ public class AbstractManagerTest {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        Map properties = manager.getProperties();
+        Map<Object, Object> properties = manager.getProperties();
         assertNotNull(properties);
         assertFalse(properties.isEmpty());
     }
@@ -391,7 +391,7 @@ public class AbstractManagerTest {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        Map properties = manager.getProperties();
+        Map<Object, Object> properties = manager.getProperties();
         assertTrue(properties.containsKey(KEY));
     }
 
@@ -901,7 +901,7 @@ public class AbstractManagerTest {
         ConnectionProvider provider = contentSource.getConnectionProvider();
         assertTrue(contentSourceStr.contains("user={none}"));
         assertEquals("foobar", new String(contentSource.getUserCredentials().getPDCloudAuthConfig().getApiKey()));
-        assertEquals("endpoint", new String(contentSource.getUserCredentials().getPDCloudAuthConfig().getTokenEndpoint()));
+        assertEquals("endpoint", contentSource.getUserCredentials().getPDCloudAuthConfig().getTokenEndpoint());
         assertEquals("endpoint", contentSource.getUserCredentials().getPDCloudAuthConfig().getTokenEndpoint());
         assertEquals(5, contentSource.getUserCredentials().getPDCloudAuthConfig().getTokenDuration());
     }

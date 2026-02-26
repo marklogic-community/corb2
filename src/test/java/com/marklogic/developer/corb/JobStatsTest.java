@@ -64,7 +64,7 @@ public class JobStatsTest {
         JobStats jobStats = new JobStats(manager);
         Double average = jobStats.getAverageTransactionTime(0L, 0L, 0L);
         assertFalse(average.isInfinite());
-        assertEquals(0, average.doubleValue(), 0.00);
+        assertEquals(0, average, 0.00);
     }
 
     @Test
@@ -82,12 +82,12 @@ public class JobStatsTest {
         assertFalse(answer.isInfinite());
 
         Double averageOfOne = jobStats.getAverageTransactionTime(3L, 2L, 1L);
-        assertEquals(1d, averageOfOne.doubleValue(), 0.00);
+        assertEquals(1d, averageOfOne, 0.00);
 
         Double averageMoreSuccess = jobStats.getAverageTransactionTime(3L, 0L, 3L);
         Double averageMoreFailed = jobStats.getAverageTransactionTime(3L, 3L, 0L);
         assertEquals(averageMoreSuccess, averageMoreFailed);
-        assertEquals(1d, averageMoreFailed.doubleValue(), 0.00);
+        assertEquals(1d, averageMoreFailed, 0.00);
         assertEquals(averageOfOne, averageMoreSuccess);
     }
 

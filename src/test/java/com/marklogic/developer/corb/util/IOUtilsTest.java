@@ -42,7 +42,7 @@ import static org.junit.Assert.*;
 public class IOUtilsTest {
 
     private static final Logger LOG = Logger.getLogger(IOUtilsTest.class.getName());
-    private final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
+    private static final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
     private final String exampleContent;
     private static final String NULL_OUTPUTSTREAM_MSG = "null OutputStream";
 
