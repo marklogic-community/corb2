@@ -379,6 +379,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
      * </p>
      * <p>
      * The loading process:
+     * </p>
      * <ol>
      *   <li>First attempts to add the cached element (if any) to the memory queue</li>
      *   <li>Reads elements from disk one at a time until the memory queue is full or
@@ -387,7 +388,6 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
      *       next element for the subsequent load operation</li>
      *   <li>Closes and deletes the backing store file when all elements have been loaded</li>
      * </ol>
-     * </p>
      * <p>
      * Empty lines from the disk file are skipped during the load process.
      * </p>

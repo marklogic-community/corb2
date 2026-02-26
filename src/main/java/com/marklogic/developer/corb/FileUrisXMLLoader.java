@@ -232,6 +232,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
      * Parses the XML file, extracts nodes using XPath, and optionally extracts metadata.
      * <p>
      * This method performs the core DOM parsing and node extraction:
+     * </p>
      * <ol>
      *   <li>Creates a namespace-aware {@link DocumentBuilder}</li>
      *   <li>Parses the XML file into a DOM {@link Document}</li>
@@ -256,7 +257,6 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
      *   <li>Stores all extracted nodes in {@link #nodeMap} indexed by position</li>
      *   <li>Sets the total count for progress tracking</li>
      * </ol>
-     * </p>
      *
      * @param input the path to the XML file to parse
      * @return an iterator over the extracted DOM nodes
@@ -318,6 +318,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
      * Reads and serializes the next node from the iterator, optionally wrapping it in a loader envelope.
      * <p>
      * This method:
+     * </p>
      * <ol>
      *   <li>Checks if more nodes are available</li>
      *   <li>Retrieves the next node from the iterator</li>
@@ -332,7 +333,6 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
      *   </li>
      *   <li>If envelope mode is disabled, returns the node as a plain XML string</li>
      * </ol>
-     * </p>
      *
      * @return the next node as an XML string, optionally wrapped in a loader envelope;
      *         or {@code null} if no more nodes are available
@@ -376,13 +376,13 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
      * Converts a DOM node to its string representation.
      * <p>
      * This method handles different node types:
+     * </p>
      * <ul>
      *   <li>For {@link Node#ELEMENT_NODE} or {@link Node#DOCUMENT_NODE}: serializes the
      *       entire node and its children to an XML string</li>
      *   <li>For other node types (text, attribute, etc.): returns the node's text value</li>
      *   <li>If the result is blank, recursively reads the next node</li>
      * </ul>
-     * </p>
      *
      * @param node the DOM node to convert to a string
      * @return the string representation of the node, trimmed of whitespace
@@ -575,6 +575,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
      * Parses a metadata node into a string representation, optionally wrapped in a loader envelope.
      * <p>
      * This method:
+     * </p>
      * <ol>
      *   <li>If envelope mode is enabled:
      *       <ul>
@@ -586,7 +587,6 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
      *   </li>
      *   <li>If envelope mode is disabled, serializes the node directly to XML string</li>
      * </ol>
-     * </p>
      *
      * @param metadataNode the DOM node containing metadata
      * @param file the source XML file used for generating metadata; may be null
@@ -616,13 +616,13 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
      * Sets the metadata content in properties for access by batch and process modules.
      * <p>
      * The metadata is stored with the following keys:
+     * </p>
      * <ul>
      *   <li>{@code PRE_BATCH_MODULE.METADATA} - Available to the pre-batch module</li>
      *   <li>{@code POST_BATCH_MODULE.METADATA} - Available to the post-batch module</li>
      *   <li>{@code PROCESS_MODULE.METADATA} - Available to the process module only if
      *       {@value Options#METADATA_TO_PROCESS_MODULE} is {@code true}</li>
      * </ul>
-     * </p>
      *
      * @param content the serialized metadata content; may be null
      */

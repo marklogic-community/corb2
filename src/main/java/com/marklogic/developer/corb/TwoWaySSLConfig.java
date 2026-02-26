@@ -183,6 +183,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
      * Creates and initializes KeyManagers for client certificate authentication.
      * <p>
      * This method:
+     * </p>
      * <ol>
      *   <li>Retrieves keystore configuration properties (path, password, type)</li>
      *   <li>Retrieves or defaults the private key password</li>
@@ -191,7 +192,6 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
      *   <li>Initializes a KeyManagerFactory with the keystore</li>
      *   <li>Returns the configured KeyManagers</li>
      * </ol>
-     * </p>
      * <p>
      * If the key password is not specified, it defaults to the keystore password.
      * </p>

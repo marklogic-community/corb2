@@ -135,11 +135,11 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 	 * Counts the header lines and stores the count in properties.
 	 * <p>
 	 * This method:
+     * </p>
 	 * <ol>
 	 * <li>Counts the number of lines in the export file (after writing top content and PRE-BATCH-MODULE output)</li>
 	 * <li>Stores the count as {@link Options#EXPORT_FILE_HEADER_LINE_COUNT} in the properties</li>
 	 * </ol>
-	 * </p>
 	 * <p>
 	 * The header line count is used by {@link PostBatchUpdateFileTask} during sorting
 	 * operations to preserve header lines and prevent them from being sorted with data lines.
