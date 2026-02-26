@@ -19,7 +19,6 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 import java.io.*;

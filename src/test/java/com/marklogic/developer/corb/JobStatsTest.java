@@ -42,7 +42,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class JobStatsTest {
