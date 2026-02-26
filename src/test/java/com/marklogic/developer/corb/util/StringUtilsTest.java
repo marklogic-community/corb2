@@ -233,7 +233,7 @@ public class StringUtilsTest {
 
     @Test
     public void testGetXccUri() {
-        HashMap<String, String> uriParams = new HashMap<>();
+        Map<String, String> uriParams = new HashMap<>();
         uriParams.put(XCC_USERNAME, "user");
         uriParams.put(XCC_PASSWORD, "pass+word");
         uriParams.put(XCC_HOSTNAME, "host");
