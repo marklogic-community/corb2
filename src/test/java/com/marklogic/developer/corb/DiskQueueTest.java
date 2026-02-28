@@ -109,7 +109,7 @@ class DiskQueueTest {
 
     @Test
     void testDiskQueueUTF8() {
-
+        String originalFileEncoding = System.getProperty("file.encoding");
         String val = "em‐dash";
         try {
 
@@ -130,8 +130,10 @@ class DiskQueueTest {
             instance.finalize();
 
         } catch (Throwable ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, ex.getMessage(), ex);
             fail();
+        } finally {
+            System.setProperty("file.encoding", originalFileEncoding);
         }
     }
 
