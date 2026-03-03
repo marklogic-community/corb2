@@ -34,7 +34,6 @@ import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
