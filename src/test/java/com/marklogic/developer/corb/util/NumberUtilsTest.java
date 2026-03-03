@@ -50,4 +50,28 @@ public class NumberUtilsTest {
         int result = NumberUtils.toInt("seven", -1);
         assertEquals(-1, result);
     }
+
+    @Test
+    public void testParseSize() {
+        assertEquals(100L, NumberUtils.parseSize("100"));
+        assertEquals(2048L, NumberUtils.parseSize("2 kb"));
+        assertEquals(2048L, NumberUtils.parseSize("2KB"));
+        assertEquals(2048L, NumberUtils.parseSize("2KiB"));
+        assertEquals(1048576L, NumberUtils.parseSize("1M"));
+        assertEquals(1048576L, NumberUtils.parseSize("1MB"));
+        assertEquals(1048576L, NumberUtils.parseSize("1MiB"));
+        assertEquals(1073741824L, NumberUtils.parseSize("1G"));
+        assertEquals(1536, NumberUtils.parseSize("1.5kb"));
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void testParseSizeInvalidUnit() {
+        NumberUtils.parseSize("5x");
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void testParseSizeInvalidValue() {
+        NumberUtils.parseSize("M");
+    }
+
 }

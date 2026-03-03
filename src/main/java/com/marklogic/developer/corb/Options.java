@@ -439,6 +439,61 @@ public final class Options {
     public static final String EXPORT_FILE_URI_TO_PATH = "EXPORT-FILE-URI-TO-PATH";
 
     /**
+     * Maximum number of lines to write to a single export file before splitting
+     * to a new file. When this threshold is exceeded, a new file will be created
+     * with a numeric suffix (e.g., myfile.txt, myfile1.txt, myfile2.txt).
+     * If not specified, no line-based splitting will occur.
+     * This option is mutually exclusive with {@value #EXPORT_FILE_SPLIT_MAX_SIZE}.
+     * If both are specified, line count takes precedence.
+     *
+     * @since 2.6.0
+     */
+    @Usage(description = "Maximum number of lines to write to a single export file before splitting " +
+            "to a new file. When this threshold is exceeded, a new file will be created " +
+            "with a numeric suffix (e.g., myfile.txt, myfile1.txt, myfile2.txt). " +
+            "If not specified, no line-based splitting will occur.")
+    public static final String EXPORT_FILE_SPLIT_MAX_LINES = "EXPORT-FILE-SPLIT-MAX-LINES";
+
+    /**
+     * Maximum file size for a single export file before splitting to a new file.
+     * When this threshold is exceeded, a new file will be created with a numeric
+     * suffix (e.g., myfile.txt, myfile1.txt, myfile2.txt).
+     * <p>
+     * The size value can be specified as:
+     * </p>
+     * <ul>
+     * <li>A plain number (interpreted as bytes): {@code 1048576}</li>
+     * <li>With size units (case-insensitive):
+     *   <ul>
+     *   <li>{@code B} - Bytes: {@code 1024B}</li>
+     *   <li>{@code K}, {@code KB}, {@code KiB} - Kilobytes: {@code 10KB}</li>
+     *   <li>{@code M}, {@code MB}, {@code MiB} - Megabytes: {@code 100MB}</li>
+     *   <li>{@code G}, {@code GB}, {@code GiB} - Gigabytes: {@code 5GB}</li>
+     *   <li>{@code T}, {@code TB}, {@code TiB} - Terabytes: {@code 1TB}</li>
+     *   </ul>
+     * </li>
+     * </ul>
+     * <p>
+     * If not specified, no size-based splitting will occur.
+     * This option is mutually exclusive with {@value #EXPORT_FILE_SPLIT_MAX_LINES}.
+     * If both are specified, line count takes precedence.
+     * </p>
+     * <p>
+     * Examples: {@code 1048576}, {@code 1MB}, {@code 100 KB}, {@code 5.5 GB}
+     * </p>
+     *
+     * @since 2.6.0
+     * @see com.marklogic.developer.corb.util.NumberUtils#parseSize(String)
+     */
+    @Usage(description = "Maximum file size for a single export file before splitting " +
+            "to a new file. When this threshold is exceeded, a new file will be created " +
+            "with a numeric suffix (e.g., myfile.txt, myfile1.txt, myfile2.txt). " +
+            "Value can be specified as a number in bytes or with size units (B, KB, MB, GB, TB). " +
+            "Examples: 1048576, 1MB, 100 KB, 5.5 GB. " +
+            "If not specified, no size-based splitting will occur.")
+    public static final String EXPORT_FILE_SPLIT_MAX_SIZE = "EXPORT-FILE-SPLIT-MAX-SIZE";
+
+    /**
      * Boolean value indicating whether the CoRB job should fail and exit if a
      * process module throws an error.
      * <p>

@@ -18,6 +18,10 @@
  */
 package com.marklogic.developer.corb.util;
 
+import java.math.BigDecimal;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Utility class for number conversion operations.
  * Provides safe conversion methods that handle null values and parsing failures gracefully.
@@ -65,6 +69,88 @@ public final class NumberUtils {
             return Integer.parseInt(val);
         } catch (final NumberFormatException nfe) {
             return defaultValue;
+        }
+    }
+
+    /**
+     * <p>Parses a size string and converts it to the equivalent number of bytes.</p>
+     *
+     * <p>The size string should consist of a numeric value followed by an optional unit.
+     * Whitespace between the number and unit is allowed. The parsing is case-insensitive.</p>
+     *
+     * <p>Supported units (using binary/base-2 multipliers):</p>
+     * <ul>
+     *   <li>B - Bytes (multiplier: 1)</li>
+     *   <li>K, KB, KiB - Kilobytes (multiplier: 1,024)</li>
+     *   <li>M, MB, MiB - Megabytes (multiplier: 1,048,576)</li>
+     *   <li>G, GB, GiB - Gigabytes (multiplier: 1,073,741,824)</li>
+     *   <li>T, TB, TiB - Terabytes (multiplier: 1,099,511,627,776)</li>
+     * </ul>
+     *
+     * <p>If no unit is specified, the value is assumed to be in bytes.</p>
+     *
+     * <p>Examples:</p>
+     * <ul>
+     *   <li>{@code "1024"} returns 1024</li>
+     *   <li>{@code "10 KB"} returns 10240</li>
+     *   <li>{@code "2.5 MB"} returns 2621440</li>
+     *   <li>{@code "5GB"} returns 5368709120</li>
+     * </ul>
+     *
+     * @param size the size string to parse, must not be null
+     * @return the size in bytes as a {@code long}
+     * @throws NumberFormatException if the size string cannot be parsed, contains an invalid
+     *         numeric value, or uses an unsupported unit
+     */
+    public static long parseSize(String size) throws NumberFormatException {
+        // Use a regex to capture the number part and the unit part (case-insensitive)
+        Pattern pattern = Pattern.compile("([\\d.]+)\\s*([a-zA-Z]+)", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(size.trim());
+
+        if (matcher.find()) {
+            String numberPart = matcher.group(1);
+            String unitPart = matcher.group(2).toUpperCase();
+
+            BigDecimal bytes = new BigDecimal(numberPart);
+            long multiplier;
+
+            switch (unitPart) {
+                case "B":
+                    multiplier = 1L;
+                    break;
+                case "K":
+                case "KB":
+                case "KIB": // KiB is 1024, KB can be 1000 or 1024. Using 1024 (binary) here.
+                    multiplier = 1024L;
+                    break;
+                case "M":
+                case "MB":
+                case "MIB":
+                    multiplier = 1024L * 1024L;
+                    break;
+                case "G":
+                case "GB":
+                case "GIB":
+                    multiplier = 1024L * 1024L * 1024L;
+                    break;
+                case "T":
+                case "TB":
+                case "TIB":
+                    multiplier = 1024L * 1024L * 1024L * 1024L;
+                    break;
+                default:
+                    throw new NumberFormatException("Unknown size unit: " + unitPart);
+            }
+
+            // Use BigDecimal for precise multiplication, then convert to a long (bytes)
+            return bytes.multiply(BigDecimal.valueOf(multiplier)).longValue();
+        } else {
+            // Handle cases with no unit, assuming bytes
+            try {
+                return Long.parseLong(size.trim());
+            } catch (NumberFormatException e) {
+                throw new NumberFormatException("Cannot parse size: " + size);
+            }
         }
     }
 }

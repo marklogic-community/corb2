@@ -18,6 +18,7 @@
  */
 package com.marklogic.developer.corb;
 
+import java.nio.file.Files;
 import java.util.Properties;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,7 +85,7 @@ public class PostBatchUpdateFileTaskTest {
     @Test
     public void testWriteBottomContent() {
         try {
-            String expextedResult = BOTTOM_CONTENT.concat("\n");
+            String expectedResult = BOTTOM_CONTENT.concat("\n");
             String filename = "export.csv";
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.properties = new Properties();
@@ -92,12 +93,16 @@ public class PostBatchUpdateFileTaskTest {
             instance.properties.setProperty(Options.EXPORT_FILE_NAME, filename);
             File tempDir = createTempDirectory();
             instance.exportDir = tempDir.toString();
+            File outputFile = new File(tempDir, instance.getPartFileName());
 
             instance.writeBottomContent();
+            assertFalse("Don't append content if output file doesn't exist", outputFile.exists());
 
-            File outputFile = new File(tempDir, instance.getPartFileName());
+            Files.createFile(outputFile.toPath());
+            instance.writeBottomContent();
+
             String outputText = TestUtils.readFile(outputFile);
-            assertEqualsNormalizeNewline(expextedResult, outputText);
+            assertEqualsNormalizeNewline(expectedResult, outputText);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -288,15 +293,14 @@ public class PostBatchUpdateFileTaskTest {
                 writer.append(A);
                 writer.append(B);
                 writer.flush();
-
-                Properties props = new Properties();
-                props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, header);
-                props.setProperty(Options.EXPORT_FILE_HEADER_LINE_COUNT, "2");
-                props.setProperty(Options.EXPORT_FILE_SORT, "ascending|distinct");
-                props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "END");
-                String result = testRemoveDuplicatesAndSort(file, props);
-                assertEqualsNormalizeNewline(splitAndAppendNewline("BEGIN,letter,a,b,d,z,END"), result);
             }
+            Properties props = new Properties();
+            props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, header);
+            props.setProperty(Options.EXPORT_FILE_HEADER_LINE_COUNT, "2");
+            props.setProperty(Options.EXPORT_FILE_SORT, "ascending|distinct");
+            props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "END");
+            String result = testRemoveDuplicatesAndSort(file, props);
+            assertEqualsNormalizeNewline(splitAndAppendNewline("BEGIN,letter,a,b,d,z,END"), result);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

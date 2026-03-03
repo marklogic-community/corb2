@@ -70,12 +70,11 @@ public class ModuleExecutorIT {
             executor.run();
             String reportPath = executor.getProperty(Options.EXPORT_FILE_NAME);
             File report = new File(reportPath);
-
+            report.deleteOnExit();
             boolean fileExists = report.exists();
             assertTrue(fileExists);
             String result = TestUtils.readFile(report);
             assertEquals("/d/e/f\n", result);
-            report.delete();
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

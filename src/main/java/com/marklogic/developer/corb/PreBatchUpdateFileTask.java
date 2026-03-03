@@ -75,31 +75,31 @@ import java.io.*;
  */
 public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 
-	/**
-	 * Retrieves and processes the top/header content to write to the export file.
-	 * <p>
-	 * This method:
+    /**
+     * Retrieves and processes the top/header content to write to the export file.
+     * <p>
+     * This method:
      * </p>
-	 * <ol>
-	 * <li>Gets the top content template from {@link Options#EXPORT_FILE_TOP_CONTENT}</li>
-	 * <li>Gets the batch reference from {@link Manager#URIS_BATCH_REF}</li>
-	 * <li>Replaces any {@code @URIS_BATCH_REF} placeholder with the actual batch reference</li>
-	 * </ol>
-	 * <p>
-	 * This allows for dynamic headers that include information about the current batch,
-	 * such as a timestamp, query identifier, or other context returned by the URIS-MODULE.
-	 * </p>
-	 *
-	 * @return the processed top content string, or null if not configured
-	 */
-	protected String getTopContent() {
-		String topContent = getProperty(EXPORT_FILE_TOP_CONTENT);
-		String batchRef = getProperty(Manager.URIS_BATCH_REF);
-		if (topContent != null && batchRef != null) {
-			topContent = topContent.replace('@' + Manager.URIS_BATCH_REF, batchRef);
-		}
-		return topContent;
-	}
+     * <ol>
+     * <li>Gets the top content template from {@link Options#EXPORT_FILE_TOP_CONTENT}</li>
+     * <li>Gets the batch reference from {@link Manager#URIS_BATCH_REF}</li>
+     * <li>Replaces any {@code @URIS_BATCH_REF} placeholder with the actual batch reference</li>
+     * </ol>
+     * <p>
+     * This allows for dynamic headers that include information about the current batch,
+     * such as a timestamp, query identifier, or other context returned by the URIS-MODULE.
+     * </p>
+     *
+     * @return the processed top content string, or null if not configured
+     */
+    protected String getTopContent() {
+        String topContent = getProperty(EXPORT_FILE_TOP_CONTENT);
+        String batchRef = getProperty(Manager.URIS_BATCH_REF);
+        if (topContent != null && batchRef != null) {
+            topContent = topContent.replace('@' + Manager.URIS_BATCH_REF, batchRef);
+        }
+        return topContent;
+    }
 
 	/**
 	 * Deletes the export file if it exists.
