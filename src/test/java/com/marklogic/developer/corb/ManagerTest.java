@@ -1547,6 +1547,101 @@ public class ManagerTest {
         }
     }
 
+    @Test
+    public void testAutoConfigurePreBatchTask() {
+        Properties properties = ManagerTest.getDefaultProperties();
+        properties.remove(Options.PRE_BATCH_TASK);
+        properties.remove(Options.POST_BATCH_TASK);
+        properties.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "top");
+        System.getProperties().putAll(properties);
+        try (Manager manager = new Manager()) {
+            manager.init();
+            assertNull("No post-batch auto-configured", manager.options.getPostBatchTaskClass());
+            assertEquals("Top Content configured", "top", manager.getProperties().getProperty(Options.EXPORT_FILE_TOP_CONTENT));
+            assertEquals("Auto-magically configured", PreBatchUpdateFileTask.class, manager.options.getPreBatchTaskClass());
+        } catch (CorbException ex) {
+            fail();
+        } finally {
+            clearSystemProperties();
+        }
+    }
+
+    @Test
+    public void testAutoConfigurePostBatchTaskBecauseOfSplitLines() {
+        Properties properties = ManagerTest.getDefaultProperties();
+        properties.remove(Options.PRE_BATCH_TASK);
+        properties.remove(Options.POST_BATCH_TASK);
+        properties.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "5");
+        System.getProperties().putAll(properties);
+        try (Manager manager = new Manager()) {
+            manager.init();
+            assertNull("No pre-batch auto-configured", manager.options.getPreBatchTaskClass());
+            assertEquals("Max split lines configured", "5", manager.getProperties().getProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES));
+            assertEquals("Auto-magically configured", PostBatchUpdateFileTask.class, manager.options.getPostBatchTaskClass());
+        } catch (CorbException ex) {
+            fail();
+        } finally {
+            clearSystemProperties();
+        }
+    }
+
+    @Test
+    public void testAutoConfigurePostBatchTaskBecauseOfSplitSize() {
+        Properties properties = ManagerTest.getDefaultProperties();
+        properties.remove(Options.PRE_BATCH_TASK);
+        properties.remove(Options.POST_BATCH_TASK);
+        properties.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "1kb");
+        System.getProperties().putAll(properties);
+        try (Manager manager = new Manager()) {
+            manager.init();
+            assertNull("No pre-batch auto-configured", manager.options.getPreBatchTaskClass());
+            assertEquals("Max split size configured", "1kb", manager.getProperties().getProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE));
+            assertEquals("Auto-magically configured", PostBatchUpdateFileTask.class, manager.options.getPostBatchTaskClass());
+        } catch (CorbException ex) {
+            fail();
+        } finally {
+            clearSystemProperties();
+        }
+    }
+
+    @Test
+    public void testAutoConfigurePostBatchTaskBecauseOfCompression() {
+        Properties properties = ManagerTest.getDefaultProperties();
+        properties.remove(Options.PRE_BATCH_TASK);
+        properties.remove(Options.POST_BATCH_TASK);
+        properties.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
+        System.getProperties().putAll(properties);
+        try (Manager manager = new Manager()) {
+            manager.init();
+            assertNull("No pre-batch auto-configured", manager.options.getPreBatchTaskClass());
+            assertEquals("Max split size configured", "true", manager.getProperties().getProperty(Options.EXPORT_FILE_AS_ZIP));
+            assertEquals("Auto-magically configured", PostBatchUpdateFileTask.class, manager.options.getPostBatchTaskClass());
+        } catch (CorbException ex) {
+            fail();
+        } finally {
+            clearSystemProperties();
+        }
+    }
+
+    @Test
+    public void testAutoConfigurePostBatchTaskBecauseOfBottomContent() {
+        Properties properties = ManagerTest.getDefaultProperties();
+        properties.remove(Options.PRE_BATCH_TASK);
+        properties.remove(Options.POST_BATCH_TASK);
+        properties.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "footer");
+        System.getProperties().putAll(properties);
+        try (Manager manager = new Manager()) {
+            manager.init();
+            assertNull("No pre-batch auto-configured", manager.options.getPreBatchTaskClass());
+            assertEquals("Bottom Content configured", "footer", manager.getProperties().getProperty(Options.EXPORT_FILE_BOTTOM_CONTENT));
+            assertEquals("Auto-magically configured", PostBatchUpdateFileTask.class, manager.options.getPostBatchTaskClass());
+        } catch (CorbException ex) {
+            fail();
+        } finally {
+            clearSystemProperties();
+        }
+    }
+
     public static String[] getDefaultArgs() {
         return new String[]{XCC_CONNECTION_URI,
             COLLECTION_NAME,
@@ -1581,7 +1676,6 @@ public class ManagerTest {
         properties.setProperty(Options.POST_BATCH_MODULE, ManagerTest.POST_BATCH_MODULE);
         properties.setProperty(Options.POST_BATCH_TASK, ManagerTest.POST_BATCH_TASK);
         properties.setProperty(Options.METRICS_LOG_LEVEL, ManagerTest.LOG_LEVEL_INFO);
-
 
         if (ManagerTest.EXPORT_FILE_DIR != null) {
         	properties.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
