@@ -20,9 +20,15 @@ package com.marklogic.developer.corb;
 
 import java.nio.file.Files;
 import java.util.Properties;
+
+import com.marklogic.developer.corb.util.FileUtils;
+import com.marklogic.xcc.ResultItem;
+import com.marklogic.xcc.ResultSequence;
+import com.marklogic.xcc.types.XdmItem;
 import org.junit.Before;
 import org.junit.Test;
 
+import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
 import static com.marklogic.developer.corb.TestUtils.*;
 import static org.junit.Assert.*;
 
@@ -37,7 +43,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipFile;
+
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  *
@@ -91,16 +100,13 @@ public class PostBatchUpdateFileTaskTest {
             instance.properties = new Properties();
             instance.properties.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, BOTTOM_CONTENT);
             instance.properties.setProperty(Options.EXPORT_FILE_NAME, filename);
+            instance.properties.setProperty(Options.EXPORT_FILE_PART_EXT, ".temp");
             File tempDir = createTempDirectory();
             instance.exportDir = tempDir.toString();
-            File outputFile = new File(tempDir, instance.getPartFileName());
 
             instance.writeBottomContent();
-            assertFalse("Don't append content if output file doesn't exist", outputFile.exists());
 
-            Files.createFile(outputFile.toPath());
-            instance.writeBottomContent();
-
+            File outputFile = new File(tempDir, "export.csv.temp");
             String outputText = TestUtils.readFile(outputFile);
             assertEqualsNormalizeNewline(expectedResult, outputText);
         } catch (IOException ex) {
@@ -481,6 +487,61 @@ public class PostBatchUpdateFileTaskTest {
         }
         fail();
     }
+    @Test
+    public void testGetMaxLines() {
+        PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+        Properties props = new Properties();
+
+        // Test with valid value
+        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "100");
+        instance.setProperties(props);
+        assertEquals(100, instance.getMaxLines());
+
+        // Test with no value
+        props.clear();
+        instance.setProperties(props);
+        assertEquals(-1, instance.getMaxLines());
+
+        // Test with invalid value
+        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "not-a-number");
+        instance.setProperties(props);
+        assertEquals(-1, instance.getMaxLines());
+    }
+    @Test
+    public void testInsertIndexIntoFileName() {
+        PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+
+        // Test with extension
+        assertEquals("001_output.txt", instance.insertIndexIntoFileName("output.txt", 1));
+        assertEquals("002_output.csv", instance.insertIndexIntoFileName("output.csv", 2));
+
+        // Test without extension
+        assertEquals("001_output", instance.insertIndexIntoFileName("output", 1));
+
+        // Test with multiple dots
+        assertEquals("001_my.output.txt", instance.insertIndexIntoFileName("my.output.txt", 1));
+    }
+
+    @Test
+    public void testGetMaxSize() {
+        PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+        Properties props = new Properties();
+
+        // Test with valid value
+        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "1024");
+        instance.setProperties(props);
+        assertEquals(1024, instance.getMaxSize());
+
+        // Test with no value
+        props.clear();
+        instance.setProperties(props);
+        assertEquals(-1, instance.getMaxSize());
+
+        // Test with invalid value
+        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "invalid");
+        instance.setProperties(props);
+        assertEquals(-1, instance.getMaxSize());
+    }
 
     @Test
     public void testHasRetryableMessage() {
@@ -493,6 +554,138 @@ public class PostBatchUpdateFileTaskTest {
 
         exception = new RequestPermissionException("Authentication failure for user 'user-name'", req, AbstractTaskTest.USER_NAME, false);
         assertTrue(instance.hasRetryableMessage(exception));
+    }
+
+    @Test
+    public void testWriteBottomContentWithSplitByLinesAndZip() {
+        Properties props = new Properties();
+        File tempDir = null;
+        try {
+            tempDir = Files.createTempDirectory("corb-test").toFile();
+            File batchFile = new File(tempDir, "test-split.txt");
+            props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
+            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "2");
+            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
+            props.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
+            PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+            instance.setProperties(props);
+
+            // Create a mock ResultSequence with 5 items
+            ResultSequence seq = mock(ResultSequence.class);
+            ResultItem item = mock(ResultItem.class);
+            XdmItem xdmItem = mock(XdmItem.class);
+
+            //Need one extra hasNext() because it's tested first in writeToFile(seq)
+            when(seq.hasNext()).thenReturn(true, true, true, true, true, true,  false);
+            when(seq.next()).thenReturn(item);
+            when(item.getItem()).thenReturn(xdmItem);
+            when(xdmItem.asString()).thenReturn("line1", "line2", "line3", "line4", "line5");
+            instance.writeToFile(seq, instance.getExportFile());
+
+            instance.writeBottomContent();
+            // Verify that split files were created
+            File file1 = new File(tempDir, "001_test-split.txt.tmp");
+            File file2 = new File(tempDir, "002_test-split.txt.tmp");
+            File file3 = new File(tempDir, "003_test-split.txt.tmp");
+
+            assertTrue("First file should exist", file1.exists());
+            assertTrue("Second file should exist", file2.exists());
+            assertTrue("Third file should exist", file3.exists());
+
+            // Verify line counts
+            assertEquals("First file should have 2 lines", 2, FileUtils.getLineCount(file1));
+            assertEquals("Second file should have 2 lines", 2, FileUtils.getLineCount(file2));
+            assertEquals("Third file should have 1 line", 1, FileUtils.getLineCount(file3));
+
+            //Now that the files are written, rename temp filenames to final
+            instance.moveFile();
+            // Verify that split files were created
+            file1 = new File(tempDir, "001_test-split.txt");
+            file2 = new File(tempDir, "002_test-split.txt");
+            file3 = new File(tempDir, "003_test-split.txt");
+
+            assertTrue("First file should exist", file1.exists());
+            assertTrue("Second file should exist", file2.exists());
+            assertTrue("Third file should exist", file3.exists());
+
+            // Verify line counts
+            assertEquals("First file should have 2 lines", 2, FileUtils.getLineCount(file1));
+            assertEquals("Second file should have 2 lines", 2, FileUtils.getLineCount(file2));
+            assertEquals("Third file should have 1 line", 1, FileUtils.getLineCount(file3));
+
+            instance.compressFile();
+            File outputFile = new File(tempDir, "test-split.txt.zip");
+            assertTrue("files have been zipped", outputFile.exists());
+            try (ZipFile zipFile = new ZipFile(outputFile)) {
+                assertEquals("there are 3 entries in the zip", 3, zipFile.size());
+            }
+            assertFalse("First file should not exist", file1.exists());
+            assertFalse("Second file should not exist", file2.exists());
+            assertFalse("Third file should not exist", file3.exists());
+
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, "Test failed", ex);
+            fail("Exception occurred: " + ex.getMessage());
+        } finally {
+            if (tempDir != null) {
+                FileUtils.deleteQuietly(tempDir.toPath());
+            }
+        }
+    }
+
+    @Test
+    public void testWriteBottomContentForBatchAndZip() {
+        Properties props = new Properties();
+        File tempDir = null;
+        try {
+            tempDir = Files.createTempDirectory("corb-test").toFile();
+            File batchFile = new File(tempDir, "test-bottom.txt");
+            props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
+            props.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
+            props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "FOOTER");
+            PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+            instance.setProperties(props);
+
+            // Create a mock ResultSequence with 5 items
+            ResultSequence seq = mock(ResultSequence.class);
+            ResultItem item = mock(ResultItem.class);
+            XdmItem xdmItem = mock(XdmItem.class);
+
+            //Need one extra hasNext() because it's tested first in writeToFile(seq)
+            when(seq.hasNext()).thenReturn(true, true, true, true, true, true,  false);
+            when(seq.next()).thenReturn(item);
+            when(item.getItem()).thenReturn(xdmItem);
+            when(xdmItem.asString()).thenReturn("line1", "line2", "line3", "line4", "line5");
+            instance.writeToFile(seq, instance.getExportFile());
+
+            instance.writeBottomContent();
+            // Verify that split files were created
+            File outputFile = new File(tempDir, "test-bottom.txt");
+
+            assertTrue("Output file should exist, and no partExt", outputFile.exists());
+
+            // Verify line counts
+            assertEquals("Output file should have 6 lines", 6, FileUtils.getLineCount(outputFile));
+
+            instance.moveFile();
+            //move is no-op because no partExt
+            assertTrue("Output file still exists", outputFile.exists());
+
+            instance.compressFile();
+            File outputZipFile = new File(tempDir, "test-bottom.txt.zip");
+            assertTrue("files have been zipped", outputZipFile.exists());
+            try (ZipFile zipFile = new ZipFile(outputZipFile)) {
+                assertEquals("there is 1 entry in the zip", 1, zipFile.size());
+            }
+
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, "Test failed", ex);
+            fail("Exception occurred: " + ex.getMessage());
+        } finally {
+            if (tempDir != null) {
+                FileUtils.deleteQuietly(tempDir.toPath());
+            }
+        }
     }
 
     private File createSampleFile() throws IOException {

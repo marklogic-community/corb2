@@ -26,6 +26,7 @@ import com.marklogic.developer.corb.util.StringUtils;
 import com.marklogic.xcc.ResultSequence;
 
 import java.io.*;
+import java.nio.file.Files;
 
 /**
  * A task implementation for exporting query results from MarkLogic to files on the local file system.
@@ -124,29 +125,6 @@ public class ExportToFileTask extends AbstractTask {
     }
 
 	/**
-	 * Writes a result sequence to the default export file.
-	 * <p>
-	 * This method serves as a convenience wrapper that:
-     * </p>
-	 * <ol>
-	 *   <li>Checks if the result sequence is null or empty (returns early if so)</li>
-	 *   <li>Obtains the export file using {@link #getExportFile()}</li>
-	 *   <li>Delegates to {@link #writeToFile(ResultSequence, File)} to perform the actual write</li>
-	 * </ol>
-	 *
-	 * @param seq the {@link ResultSequence} to write; may be null or empty
-	 * @throws IOException if an I/O error occurs during writing
-	 */
-	protected void writeToFile(ResultSequence seq) throws IOException {
-		if (seq == null || !seq.hasNext()) {
-			return;
-		}
-
-        File exportFile = getExportFile();
-        writeToFile(seq, exportFile);
-	}
-
-	/**
 	 * Writes a result sequence to the specified export file.
 	 * <p>
 	 * This method creates a buffered output stream for the file and writes the entire
@@ -154,41 +132,29 @@ public class ExportToFileTask extends AbstractTask {
 	 * The stream is automatically closed after writing (using try-with-resources).
 	 * </p>
 	 *
-	 * @param seq the {@link ResultSequence} to write; should not be null
+	 * @param seq the {@link ResultSequence} to write; may be null or empty
 	 * @param exportFile the {@link File} to write to; parent directories will be created if needed
 	 * @throws IOException if an I/O error occurs during writing
 	 */
 	protected void writeToFile(ResultSequence seq, File exportFile) throws IOException {
-        try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(exportFile))) {
+        if (seq == null || !seq.hasNext()) {
+            return;
+        }
+        try (OutputStream writer = new BufferedOutputStream(Files.newOutputStream(exportFile.toPath()))) {
             write(seq, writer);
         }
     }
 
     /**
-     * Appends string content to the default export file.
-     * <p>
-     * This method provides a convenient way to append text content to the export file:
-     * </p>
-     * <ul>
-     *   <li>Trims whitespace from the content</li>
-     *   <li>Skips writing if the trimmed content is empty</li>
-     *   <li>Opens the file in append mode to preserve existing content</li>
-     *   <li>Adds a newline character after the content</li>
-     *   <li>Uses buffered writing for efficiency</li>
-     * </ul>
-     * <p>
-     * <b>Note:</b> This method is not synchronized. If multiple threads write to the same file,
-     * external synchronization or a subclass like {@link ExportBatchToFileTask} should be used.
-     * </p>
-     *
-     * @param content the string content to append; null or empty content is skipped
-     * @throws IOException if an I/O error occurs during writing
+     * Helper method to append content to a specific file
+     * @param content the content to write
+     * @param file the file to append content
+     * @throws IOException if an I/O error occurs
      */
-    protected void writeToExportFile(String content) throws IOException {
+    protected void appendToFile(String content, File file) throws IOException {
         String trimmedContent = trimToEmpty(content);
         if (isNotEmpty(trimmedContent)) {
-            File exportFile = getExportFile();
-            try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(exportFile, true))) {
+            try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(file, true))) {
                 writer.write(trimmedContent.getBytes());
                 writer.write(NEWLINE);
             }
@@ -261,7 +227,7 @@ public class ExportToFileTask extends AbstractTask {
 	 * Processes the result sequence from the module execution by writing it to the export file.
 	 * <p>
 	 * This method overrides {@link AbstractTask#processResult(ResultSequence)} to provide
-	 * file export functionality. It delegates to {@link #writeToFile(ResultSequence)} to perform
+	 * file export functionality. It delegates to {@link #writeToFile(ResultSequence, File)} to perform
 	 * the actual file writing.
 	 * </p>
 	 *
@@ -271,8 +237,11 @@ public class ExportToFileTask extends AbstractTask {
 	 */
 	@Override
 	protected String processResult(ResultSequence seq) throws CorbException {
+        if (seq == null || !seq.hasNext()) {
+            return TRUE;
+        }
 		try {
-			writeToFile(seq);
+			writeToFile(seq, getExportFile());
 			return TRUE;
 		} catch (IOException exc) {
 			throw new CorbException(exc.getMessage(), exc);

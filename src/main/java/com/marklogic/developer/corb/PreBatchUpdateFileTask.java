@@ -119,16 +119,29 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 	/**
 	 * Writes the top/header content to the export file.
 	 * <p>
-	 * The content is retrieved via {@link #getTopContent()} and written
-	 * using {@link #writeToExportFile(String)}. If no top content is configured,
-	 * this method does nothing.
+	 * The content is retrieved via {@link #getTopContent()} and written to the
+	 * export file using {@code appendToFile(String, File)}. The top content is
+	 * processed to replace any placeholders (such as {@code @URIS_BATCH_REF})
+	 * with actual values before writing.
+	 * </p>
+	 * <p>
+	 * If the top content is null or empty (i.e., {@link Options#EXPORT_FILE_TOP_CONTENT}
+	 * is not configured), this method completes without modifying the file.
+	 * </p>
+	 * <p>
+	 * This method is typically called during the pre-batch initialization phase
+	 * before any data processing begins, ensuring that headers are present at the
+	 * beginning of the export file.
 	 * </p>
 	 *
-	 * @throws IOException if an I/O error occurs while writing
+	 * @throws IOException if an I/O error occurs while writing to the export file
+	 * @see #getTopContent()
+	 * @see Options#EXPORT_FILE_TOP_CONTENT
 	 */
 	protected void writeTopContent() throws IOException {
 		String topContent = getTopContent();
-		writeToExportFile(topContent);
+        File exportFile = getExportFile();
+        appendToFile(topContent, exportFile);
 	}
 
 	/**
