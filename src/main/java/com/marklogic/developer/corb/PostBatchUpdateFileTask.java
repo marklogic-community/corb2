@@ -661,7 +661,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
      * @return the filename with the index inserted
      */
     protected String insertIndexIntoFileName(String fileName, int index) {
-        String regex = "(?<path>.*\\\\|/)*(?<filename>.+?)$";
+        String regex = "(?<path>.*[\\\\/])*(?<filename>.+?)$";
         String replacement = "${path}" + String.format("%03d", index) + "_${filename}";
         return fileName.replaceFirst(regex, replacement);
     }
