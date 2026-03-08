@@ -98,7 +98,7 @@ dependencies {
         //explicitly configuring JUnit version above, and want to ignore 4.11 that is being resolved here
         exclude group: 'junit', module: 'junit-dep'
     }
-    testImplementation 'org.mockito:mockito-core:4.0.0' //5.x requires Java 11
+    testImplementation 'org.mockito:mockito-core:5.22.0' //5.x requires Java 11
 }
 
 test {
