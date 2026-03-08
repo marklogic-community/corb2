@@ -91,7 +91,7 @@ dependencies {
     // externalsortinginjava classes with the corb distro in a fat jar
     implementation "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
     shadow "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
-    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+    testImplementation group: 'org.junit.vintage', name: 'junit-vintage-engine', version: '5.14.3'
     testImplementation 'org.jasypt:jasypt:1.9.3'
     //facilitates tests for methods that invoke System.exit
     testImplementation('com.github.stefanbirkner:system-rules:1.19.0') {
