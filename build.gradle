@@ -93,7 +93,11 @@ dependencies {
     shadow "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     testImplementation 'org.jasypt:jasypt:1.9.3'
-    testImplementation 'com.github.stefanbirkner:system-rules:1.19.0' //facilitates tests for methods that invoke System.exit
+    //facilitates tests for methods that invoke System.exit
+    testImplementation('com.github.stefanbirkner:system-rules:1.19.0') {
+        //explicitly configuring JUnit version above, and want to ignore 4.11 that is being resolved here
+        exclude group: 'junit', module: 'junit-dep'
+    }
     testImplementation 'org.mockito:mockito-core:4.0.0' //5.x requires Java 11
 }
 
