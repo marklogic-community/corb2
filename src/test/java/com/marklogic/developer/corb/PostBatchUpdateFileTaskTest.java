@@ -25,6 +25,10 @@ import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
 import static com.marklogic.developer.corb.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.marklogic.developer.corb.util.FileUtils;
+import com.marklogic.xcc.ResultItem;
+import com.marklogic.xcc.ResultSequence;
+import com.marklogic.xcc.types.XdmItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import com.marklogic.xcc.Request;
@@ -582,14 +586,14 @@ class PostBatchUpdateFileTaskTest {
             File file2 = new File(tempDir, "002_test-split.txt.tmp");
             File file3 = new File(tempDir, "003_test-split.txt.tmp");
 
-            assertTrue("First file should exist", file1.exists());
-            assertTrue("Second file should exist", file2.exists());
-            assertTrue("Third file should exist", file3.exists());
+            assertTrue(file1.exists());
+            assertTrue(file2.exists());
+            assertTrue(file3.exists());
 
             // Verify line counts
-            assertEquals("First file should have 2 lines", 2, FileUtils.getLineCount(file1));
-            assertEquals("Second file should have 2 lines", 2, FileUtils.getLineCount(file2));
-            assertEquals("Third file should have 1 line", 1, FileUtils.getLineCount(file3));
+            assertEquals(2, FileUtils.getLineCount(file1));
+            assertEquals(2, FileUtils.getLineCount(file2));
+            assertEquals(1, FileUtils.getLineCount(file3));
 
             //Now that the files are written, rename temp filenames to final
             instance.moveFile();
@@ -598,24 +602,24 @@ class PostBatchUpdateFileTaskTest {
             file2 = new File(tempDir, "002_test-split.txt");
             file3 = new File(tempDir, "003_test-split.txt");
 
-            assertTrue("First file should exist", file1.exists());
-            assertTrue("Second file should exist", file2.exists());
-            assertTrue("Third file should exist", file3.exists());
+            assertTrue(file1.exists());
+            assertTrue(file2.exists());
+            assertTrue(file3.exists());
 
             // Verify line counts
-            assertEquals("First file should have 2 lines", 2, FileUtils.getLineCount(file1));
-            assertEquals("Second file should have 2 lines", 2, FileUtils.getLineCount(file2));
-            assertEquals("Third file should have 1 line", 1, FileUtils.getLineCount(file3));
+            assertEquals(2, FileUtils.getLineCount(file1));
+            assertEquals(2, FileUtils.getLineCount(file2));
+            assertEquals(1, FileUtils.getLineCount(file3));
 
             instance.compressFile();
             File outputFile = new File(tempDir, "test-split.txt.zip");
-            assertTrue("files have been zipped", outputFile.exists());
+            assertTrue(outputFile.exists());
             try (ZipFile zipFile = new ZipFile(outputFile)) {
-                assertEquals("there are 3 entries in the zip", 3, zipFile.size());
+                assertEquals( 3, zipFile.size());
             }
-            assertFalse("First file should not exist", file1.exists());
-            assertFalse("Second file should not exist", file2.exists());
-            assertFalse("Third file should not exist", file3.exists());
+            assertFalse(file1.exists());
+            assertFalse(file2.exists());
+            assertFalse(file3.exists());
 
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
@@ -656,20 +660,20 @@ class PostBatchUpdateFileTaskTest {
             // Verify that split files were created
             File outputFile = new File(tempDir, "test-bottom.txt");
 
-            assertTrue("Output file should exist, and no partExt", outputFile.exists());
+            assertTrue(outputFile.exists());
 
             // Verify line counts
-            assertEquals("Output file should have 6 lines", 6, FileUtils.getLineCount(outputFile));
+            assertEquals(6, FileUtils.getLineCount(outputFile));
 
             instance.moveFile();
             //move is no-op because no partExt
-            assertTrue("Output file still exists", outputFile.exists());
+            assertTrue(outputFile.exists());
 
             instance.compressFile();
             File outputZipFile = new File(tempDir, "test-bottom.txt.zip");
-            assertTrue("files have been zipped", outputZipFile.exists());
+            assertTrue(outputZipFile.exists());
             try (ZipFile zipFile = new ZipFile(outputZipFile)) {
-                assertEquals("there is 1 entry in the zip", 1, zipFile.size());
+                assertEquals(1, zipFile.size());
             }
 
         } catch (Exception ex) {

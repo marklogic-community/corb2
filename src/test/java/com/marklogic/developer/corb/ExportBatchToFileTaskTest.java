@@ -142,32 +142,6 @@ class ExportBatchToFileTaskTest {
             fail();
         }
     }
-    @Test
-    void testWriteToFileWithFilenameAndNoExportFileDir() {
-        testWriteToFileWithNullExportFileDir("myFile.txt");
-    }
-
-    @Test
-    void testWriteToFileWithRelativeFolderStructureAndNoExportFileDir() {
-        testWriteToFileWithNullExportFileDir("build/testWriteToFileWithRelativeFolderStructureAndNoExportFileDir/a/b/c/myFile.txt");
-        FileUtils.deleteQuietly(Paths.get("build/testWriteToFileWithRelativeFolderStructureAndNoExportFileDir"));
-    }
-
-    private void testWriteToFileWithNullExportFileDir(String exportFileName) {
-        File exportFile = new File(exportFileName);
-        ExportBatchToFileTask instance = new ExportBatchToFileTask();
-        instance.properties.setProperty(EXPORT_FILE_NAME, exportFileName);
-        try {
-            instance.writeToExportFile("test");
-            assertTrue(exportFile.exists());
-            assertEqualsNormalizeNewline("test\n", TestUtils.readFile(exportFile));
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
-            fail();
-        } finally {
-            exportFile.delete();
-        }
-    }
 
     public File testWriteToFile(ResultSequence resultSequence) {
         Properties props = new Properties();

@@ -64,14 +64,14 @@ class NumberUtilsTest {
         assertEquals(1536, NumberUtils.parseSize("1.5kb"));
     }
 
-    @Test(expected = NumberFormatException.class)
-    public void testParseSizeInvalidUnit() {
-        NumberUtils.parseSize("5x");
+    @Test
+    void testParseSizeInvalidUnit() {
+        assertThrows(NumberFormatException.class, () -> NumberUtils.parseSize("5x"));
     }
 
-    @Test(expected = NumberFormatException.class)
-    public void testParseSizeInvalidValue() {
-        NumberUtils.parseSize("M");
+    @Test
+    void testParseSizeInvalidValue() {
+        assertThrows(NumberFormatException.class, () -> NumberUtils.parseSize("M"));
     }
 
 }
