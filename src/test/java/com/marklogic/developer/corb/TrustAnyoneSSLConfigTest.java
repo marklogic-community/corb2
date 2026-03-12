@@ -18,27 +18,28 @@
  */
 package com.marklogic.developer.corb;
 
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
-import org.junit.Test;
 
 import static com.marklogic.developer.corb.Options.SSL_ENABLED_PROTOCOLS;
-import static org.junit.Assert.*;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class TrustAnyoneSSLConfigTest {
+class TrustAnyoneSSLConfigTest {
 
     private static final Logger LOG = Logger.getLogger(TrustAnyoneSSLConfigTest.class.getName());
 
     @Test
-    public void testGetSSLContext() {
+    void testGetSSLContext() {
         try {
             TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
             SSLContext result = instance.getSSLContext();
@@ -50,7 +51,7 @@ public class TrustAnyoneSSLConfigTest {
     }
 
     @Test
-    public void testGetEnabledCipherSuites() {
+    void testGetEnabledCipherSuites() {
         TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
         String[] result = instance.getEnabledCipherSuites();
         assertNotNull(result);
@@ -58,7 +59,7 @@ public class TrustAnyoneSSLConfigTest {
     }
 
     @Test
-    public void testGetEnabledProtocols() {
+    void testGetEnabledProtocols() {
         TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
         String[] result = instance.getEnabledProtocols();
         assertNotNull(result);
@@ -66,7 +67,7 @@ public class TrustAnyoneSSLConfigTest {
     }
 
     @Test
-    public void testGetEnabledProtocolsSSL_ENABLED_PROTOCOLS() {
+    void testGetEnabledProtocolsSSL_ENABLED_PROTOCOLS() {
         TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
         Properties properties = new Properties();
         properties.setProperty(SSL_ENABLED_PROTOCOLS, "SSLv3");
@@ -76,7 +77,7 @@ public class TrustAnyoneSSLConfigTest {
     }
 
     @Test
-    public void testGetEnabledProtocolsUsingJdkTlsClientProtocols() {
+    void testGetEnabledProtocolsUsingJdkTlsClientProtocols() {
         System.setProperty("jdk.tls.client.protocols", "foo");
         TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
         String[] result = instance.getEnabledProtocols();

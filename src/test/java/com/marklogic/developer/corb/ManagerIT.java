@@ -22,10 +22,9 @@ import static com.marklogic.developer.corb.Options.*;
 import static com.marklogic.developer.corb.TestUtils.clearFile;
 import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
 import static com.marklogic.developer.corb.util.FileUtilsTest.getBytes;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -40,12 +39,6 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.contrib.java.lang.system.ExpectedSystemExit;
-
 import com.marklogic.developer.TestHandler;
 import com.marklogic.developer.corb.util.FileUtils;
 
@@ -53,10 +46,8 @@ import com.marklogic.developer.corb.util.FileUtils;
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class ManagerIT {
+class ManagerIT {
 
-    @Rule
-    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
     public static final String SLASH = "/";
     private final TestHandler testLogger = new TestHandler();
     private static final Logger MANAGER_LOG = Logger.getLogger(Manager.class.getName());
@@ -72,27 +63,28 @@ public class ManagerIT {
     private static final String POST_XQUERY_MODULE_OUTPUT = "This is from the POST-BATCH-MODULE using the POST-XQUERY-MODULE.";
     private static final String PRE_XQUERY_MODULE_OUTPUT = "This is being returned from the PRE-BATCH-MODULE which is often used for column headers.";
 
-    private void clearSystemProperties() {
+    private static void clearSystemProperties() {
 		TestUtils.clearSystemProperties();
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
 	}
 
-    @Before
-    public void setUp() throws IOException {
+    @BeforeEach
+    void setUp() throws IOException {
+        testLogger.clear();
         clearSystemProperties();
         MANAGER_LOG.addHandler(testLogger);
         File tempDir = TestUtils.createTempDirectory();
         ManagerTest.EXPORT_FILE_DIR = tempDir.toString();
     }
 
-    @After
-    public void tearDown() throws IOException {
+    @AfterEach
+    void tearDown() throws IOException {
         FileUtils.deleteFile(ManagerTest.EXPORT_FILE_DIR);
         clearSystemProperties();
     }
 
-    public boolean testManager(String[] args, File report) {
+    boolean testManager(String[] args, File report) {
         boolean passed = false;
         try (Manager manager = new Manager()) {
             //First, verify the output using run()
@@ -110,19 +102,20 @@ public class ManagerIT {
     }
 
     @Test
-    public void testMainNoUris() {
+    void testManagerNoUris() {
         try {
             File empty = File.createTempFile(this.getClass().getSimpleName(), "txt");
             empty.deleteOnExit();
-            exit.expectSystemExitWithStatus(0);
-            Manager.main(ManagerTest.XCC_CONNECTION_URI, "", "src/test/resources/transform.xqy|ADHOC", "1", "", "", "", "", "", "", "", "", "", "", "", empty.getAbsolutePath());
+
+            int exitCode = Manager.run(ManagerTest.XCC_CONNECTION_URI, "", "src/test/resources/transform.xqy|ADHOC", "1", "", "", "", "", "", "", "", "", "", "", "", empty.getAbsolutePath());
+            assertEquals(0, exitCode);
         } catch (IOException ex) {
             fail();
         }
     }
 
     @Test
-    public void testInitOptionsSetNumTPSForETC() {
+    void testInitOptionsSetNumTPSForETC() {
         Properties properties = ManagerTest.getDefaultProperties();
         properties.setProperty(Options.NUM_TPS_FOR_ETC, Integer.toString(500));
         try (Manager manager = new Manager()) {
@@ -134,14 +127,13 @@ public class ManagerIT {
     }
 
     @Test
-    public void testMainErrorRunning() {
-        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_PROCESSING_ERROR);
-        Manager.main(ManagerTest.XCC_CONNECTION_URI, "", "missing.xqy|ADHOC", "1", "missing.xqy|ADHOC");
+    void testRunErrorRunning() {
+        int exitCode = Manager.run(ManagerTest.XCC_CONNECTION_URI, "", "missing.xqy|ADHOC", "1", "missing.xqy|ADHOC");
+        assertEquals(Manager.EXIT_CODE_PROCESSING_ERROR, exitCode);
     }
 
     @Test
-    public void testManagerUsingProgArgs() {
-        clearSystemProperties();
+    void testManagerUsingProgArgs() {
         String exportFileName = "testManagerUsingProgArgs.txt";
         String exportFileDir = ManagerTest.EXPORT_FILE_DIR;
         String[] args = ManagerTest.getDefaultArgs();
@@ -153,14 +145,12 @@ public class ManagerIT {
         clearFile(report);
         assertTrue(passed);
 
-        //Then verify the exit code when invoking the main()
-        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
-        Manager.main(args);
+        int exitCode = Manager.run(args);
+        assertEquals(Manager.EXIT_CODE_SUCCESS, exitCode);
     }
 
     @Test
-    public void testManagerUsingSysProps() {
-        clearSystemProperties();
+    void testManagerUsingSysProps() {
         String exportFileName = "testManagerUsingSysProps2.txt";
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(Options.URIS_MODULE, "src/test/resources/selector.xqy|ADHOC");
@@ -173,14 +163,12 @@ public class ManagerIT {
         clearFile(report);
         assertTrue(passed);
 
-        //Then verify the exit code when invoking the main()
-        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
-        Manager.main(args);
+        int exitCode = Manager.run(args);
+        assertEquals(Manager.EXIT_CODE_SUCCESS, exitCode);
     }
 
     @Test
-    public void testManagerFailOnErrorFalseDefaultExitCode() {
-        clearSystemProperties();
+    void testManagerFailOnErrorFalseDefaultExitCode() {
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(Options.URIS_FILE, "src/test/resources/test-file-1.txt");
         System.setProperty(PROCESS_MODULE, "INLINE-XQUERY|declare variable $URI external; if ($URI = ('a')) then fn:error(xs:QName('error'), 'boom') else $URI");
@@ -191,15 +179,14 @@ public class ManagerIT {
         System.clearProperty(Options.EXPORT_FILE_DIR);
         System.clearProperty(Options.METRICS_LOG_LEVEL);
         String[] args = null;
-        //Then verify the exit code when invoking the main()
-        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
-        Manager.main(args);
+
+        int exitCode = Manager.run(args);
+        assertEquals(Manager.EXIT_CODE_SUCCESS, exitCode);
     }
 
     @Test
-    public void testManagerFailOnErrorFalseCustomExitCode() {
+    void testManagerFailOnErrorFalseCustomExitCode() {
         String customErrorCode = "99";
-        clearSystemProperties();
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(Options.URIS_FILE, "src/test/resources/test-file-1.txt");
         System.setProperty(PROCESS_MODULE, "INLINE-XQUERY|declare variable $URI external; if ($URI = ('a')) then fn:error(xs:QName('error'), 'boom') else $URI");
@@ -211,14 +198,13 @@ public class ManagerIT {
         System.clearProperty(Options.EXPORT_FILE_DIR);
         System.clearProperty(Options.METRICS_LOG_LEVEL);
         String[] args = null;
-        //Then verify the exit code when invoking the main()
-        exit.expectSystemExitWithStatus(Integer.parseInt(customErrorCode));
-        Manager.main(args);
+
+        int exitCode = Manager.run(args);
+        assertEquals(Integer.parseInt(customErrorCode), exitCode);
     }
 
     @Test
-    public void testManagerFailOnErrorTrueDefaultExitCode() {
-        clearSystemProperties();
+    void testManagerFailOnErrorTrueDefaultExitCode() {
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(Options.URIS_FILE, "src/test/resources/test-file-1.txt");
         System.setProperty(PROCESS_MODULE, "INLINE-XQUERY|declare variable $URI external; if ($URI = ('a')) then fn:error(xs:QName('error'), 'boom') else $URI");
@@ -229,14 +215,13 @@ public class ManagerIT {
         System.clearProperty(Options.EXPORT_FILE_DIR);
         System.clearProperty(Options.METRICS_LOG_LEVEL);
         String[] args = null;
-        //Then verify the exit code when invoking the main()
-        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_PROCESSING_ERROR);
-        Manager.main(args);
+
+        int exitCode = Manager.run(args);
+        assertEquals(Manager.EXIT_CODE_PROCESSING_ERROR, exitCode);
     }
 
     @Test
-    public void testManagerUsingSysPropsLargeUrisList() {
-        clearSystemProperties();
+    void testManagerUsingSysPropsLargeUrisList() {
         int uriCount = 100;
         String exportFilename = "testManagerUsingSysProps1.txt";
         Properties properties = ManagerTest.getDefaultProperties();
@@ -263,8 +248,7 @@ public class ManagerIT {
     }
 
     @Test
-    public void testManagerUsingSysPropsLargeUrisListAndBatchSize() {
-        clearSystemProperties();
+    void testManagerUsingSysPropsLargeUrisListAndBatchSize() {
         int uriCount = 100;
         int batchSize = 3;
         String exportFilename = "testManagerUsingSysProps1.txt";
@@ -290,9 +274,8 @@ public class ManagerIT {
     }
 
     @Test
-    public void testManagerUsingPropsFile() {
+    void testManagerUsingPropsFile() {
         String exportFileName = ManagerTest.EXPORT_FILE_DIR + SLASH + "testManagerUsingPropsFile.txt";
-        clearSystemProperties();
         System.setProperty(Options.OPTIONS_FILE, "src/test/resources/helloWorld.properties");
         System.setProperty(EXPORT_FILE_NAME, exportFileName);
         String[] args = {};
@@ -303,14 +286,13 @@ public class ManagerIT {
         assertTrue(passed);
 
         clearFile(report);
-        //Then verify the exit code when invoking the main()
-        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
-        Manager.main(args);
+
+        int exitCode = Manager.run(args);
+        assertEquals(Manager.EXIT_CODE_SUCCESS, exitCode);
     }
 
     @Test
-    public void testManagerUsingInputFile() {
-        clearSystemProperties();
+    void testManagerUsingInputFile() {
         String exportFileName = "testManagerUsingInputFile.txt";
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(EXPORT_FILE_NAME, exportFileName);
@@ -329,8 +311,7 @@ public class ManagerIT {
     }
 
     @Test
-    public void testManagersPreBatchTask() {
-        clearSystemProperties();
+    void testManagersPreBatchTask() {
         String exportFileName = "testManagersPreBatchTask.txt";
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(EXPORT_FILE_NAME, exportFileName);
@@ -351,8 +332,7 @@ public class ManagerIT {
     }
 
     @Test
-    public void testManagersPostBatchTask() {
-        clearSystemProperties();
+    void testManagersPostBatchTask() {
         String exportFileName = "testManagersPostBatchTask.txt";
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(EXPORT_FILE_NAME, exportFileName);
@@ -373,8 +353,7 @@ public class ManagerIT {
     }
 
     @Test
-    public void testManagersPostBatchTaskZip() {
-        clearSystemProperties();
+    void testManagersPostBatchTaskZip() {
         String exportFileName = "testManagersPostBatchTaskZip.txt";
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(EXPORT_FILE_NAME, exportFileName);
@@ -393,14 +372,13 @@ public class ManagerIT {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-        //Then verify the exit code when using the main() method
-        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
-        Manager.main(args);
+
+        int exitCode = Manager.run(args);
+        assertEquals(Manager.EXIT_CODE_SUCCESS, exitCode);
     }
 
     @Test
-    public void testManagerJavaScriptTransform() {
-        clearSystemProperties();
+    void testManagerJavaScriptTransform() {
         String exportFileName = "testManagerJavaScriptTransform.txt";
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(PROCESS_MODULE, "src/test/resources/mod-print-uri.sjs|ADHOC");
@@ -421,33 +399,33 @@ public class ManagerIT {
         }
 
         clearFile(report);
-        //Then verify the exit code when invoking the main()
-        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_SUCCESS);
-        Manager.main(args);
+
+        int exitCode = Manager.run(args);
+        assertEquals(Manager.EXIT_CODE_SUCCESS, exitCode);
     }
 
     @Test
-    public void testMainNullArgs() {
+    void testMainNullArgs() {
         String[] args = null;
-        exit.expectSystemExit();
-        Manager.main(args);
+
+        Manager.run(args);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.SEVERE, records.get(0).getLevel());
         assertEquals(CORB_INIT_ERROR_MSG, records.get(0).getMessage());
     }
 
     @Test
-    public void testMainException() {
+    void testMainException() {
         String[] args = ManagerTest.getDefaultArgs();
-        exit.expectSystemExit();
-        Manager.main(args);
+
+        Manager.run(args);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.SEVERE, records.get(0).getLevel());
         assertEquals(CORB_INIT_ERROR_MSG, records.get(0).getMessage());
     }
 
     @Test
-    public void testDefaultExportBatchToFileTaskWhenExportFileNameSpecified() {
+    void testDefaultExportBatchToFileTaskWhenExportFileNameSpecified() {
         String filename = "foo/bar";
         Properties props = new Properties();
         props.setProperty(XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
@@ -462,7 +440,7 @@ public class ManagerIT {
     }
 
     @Test
-    public void testDefaultExportBatchToFileTaskWhenBlankExportFileNameSpecified() {
+    void testDefaultExportBatchToFileTaskWhenBlankExportFileNameSpecified() {
         String filename = "";
         Properties props = new Properties();
         props.setProperty(XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
@@ -477,8 +455,7 @@ public class ManagerIT {
     }
 
     @Test
-    public void testCommandFilePause() {
-        clearSystemProperties();
+    void testCommandFilePause() {
         File exportFile = new File(ManagerTest.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_NAME);
         exportFile.deleteOnExit();
         File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);
@@ -536,8 +513,7 @@ public class ManagerIT {
     }
 
     @Test
-    public void testCommandFilePauseResumeWhenCommandFileChangedAndNoCommand() {
-        clearSystemProperties();
+    void testCommandFilePauseResumeWhenCommandFileChangedAndNoCommand() {
         File exportFile = new File(ManagerTest.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_NAME);
         exportFile.deleteOnExit();
         File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);
@@ -592,8 +568,7 @@ public class ManagerIT {
     }
 
     @Test
-    public void testCommandFileStop() {
-        clearSystemProperties();
+    void testCommandFileStop() {
         File exportFile = new File(ManagerTest.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_NAME);
         exportFile.deleteOnExit();
         File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);
@@ -622,8 +597,9 @@ public class ManagerIT {
         };
         ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
         service.schedule(stop, 1, TimeUnit.SECONDS);
-        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_STOP_COMMAND);
-        Manager.main();
+        String[] args = new String[0];
+        int exitCode = Manager.run(args);
+        assertEquals(Manager.EXIT_CODE_STOP_COMMAND, exitCode);
         try {
             int lineCount = FileUtils.getLineCount(exportFile);
             assertNotEquals(8, lineCount);
@@ -636,8 +612,7 @@ public class ManagerIT {
     }
 
     @Test
-    public void testCommandFileLowerThreads() {
-        clearSystemProperties();
+    void testCommandFileLowerThreads() {
         File exportFile = new File(ManagerTest.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_NAME);
         exportFile.deleteOnExit();
         File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);

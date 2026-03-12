@@ -27,10 +27,10 @@ import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
 
 import com.marklogic.xcc.SecurityOptions;
-import org.junit.After;
-import static org.junit.Assert.*;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -39,31 +39,31 @@ import static org.mockito.Mockito.when;
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class TwoWaySSLConfigTest {
+class TwoWaySSLConfigTest {
 
     public static final String SSL_PROPERTIES = "src/test/resources/SSL.properties";
     public static final String A_B_C = "a,b,c";
     private static final Logger LOG = Logger.getLogger(TwoWaySSLConfigTest.class.getName());
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         clearSystemProperties();
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         clearSystemProperties();
     }
 
     @Test
-    public void testGetEnabledCipherSuitesNullProperties() {
+    void testGetEnabledCipherSuitesNullProperties() {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         String[] result = instance.getEnabledCipherSuites();
         assertEquals(0, result.length);
     }
 
     @Test
-    public void testGetEnabledCipherSuitesNullCipherProperty() {
+    void testGetEnabledCipherSuitesNullCipherProperty() {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.setProperties(new Properties());
         String[] result = instance.getEnabledCipherSuites();
@@ -71,7 +71,7 @@ public class TwoWaySSLConfigTest {
     }
 
     @Test
-    public void testGetEnabledCipherSuites() {
+    void testGetEnabledCipherSuites() {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         Properties props = new Properties();
         props.setProperty(Options.SSL_CIPHER_SUITES, A_B_C);
@@ -84,7 +84,7 @@ public class TwoWaySSLConfigTest {
     }
 
     @Test
-    public void testGetEnabledCipherSuitesColonSeparator() {
+    void testGetEnabledCipherSuitesColonSeparator() {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         Properties props = new Properties();
         props.setProperty(Options.SSL_CIPHER_SUITES, "a:b:c");
@@ -97,26 +97,26 @@ public class TwoWaySSLConfigTest {
     }
 
     @Test
-    public void testGetEnabledProtocolsNullProperties() {
+    void testGetEnabledProtocolsNullProperties() {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         String[] result = instance.getEnabledProtocols();
         assertEquals(TwoWaySSLConfig.DEFAULT_PROTOCOL, result[0]);
     }
 
-    @Test (expected=ArrayIndexOutOfBoundsException.class)
-    public void testGetSSLContextInstanceNoProtocols() throws NoSuchAlgorithmException {
+    @Test
+    void testGetSSLContextInstanceNoProtocols() {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
-        instance.getSSLContextInstance(new String[]{});
-    }
-
-    @Test (expected=NoSuchAlgorithmException.class)
-    public void testGetSSLContextInstanceNoValidProtocols() throws NoSuchAlgorithmException {
-        TwoWaySSLConfig instance = new TwoWaySSLConfig();
-        instance.getSSLContextInstance(new String[]{"DoesNotExist"});
+        assertThrows(ArrayIndexOutOfBoundsException.class, () -> instance.getSSLContextInstance(new String[]{}));
     }
 
     @Test
-    public void testGetEnabledProtocolsNullProtocols() {
+    void testGetSSLContextInstanceNoValidProtocols() {
+        TwoWaySSLConfig instance = new TwoWaySSLConfig();
+        assertThrows(NoSuchAlgorithmException.class, () -> instance.getSSLContextInstance(new String[]{"DoesNotExist"}));
+    }
+
+    @Test
+    void testGetEnabledProtocolsNullProtocols() {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.setProperties(new Properties());
         String[] result = instance.getEnabledProtocols();
@@ -124,7 +124,7 @@ public class TwoWaySSLConfigTest {
     }
 
     @Test
-    public void testGetEnabledProtocols() {
+    void testGetEnabledProtocols() {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         Properties props = new Properties();
         props.setProperty(Options.SSL_ENABLED_PROTOCOLS, A_B_C);
@@ -137,7 +137,7 @@ public class TwoWaySSLConfigTest {
     }
 
     @Test
-    public void testGetSecurityOptions() throws NoSuchAlgorithmException, KeyManagementException {
+    void testGetSecurityOptions() throws NoSuchAlgorithmException, KeyManagementException {
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         Properties props = new Properties();
         props.setProperty(Options.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
@@ -147,7 +147,7 @@ public class TwoWaySSLConfigTest {
     }
 
     @Test
-    public void testLoadPropertiesFileNullSSLPropertiesFile() {
+    void testLoadPropertiesFileNullSSLPropertiesFile() {
         System.setProperty(Options.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.loadPropertiesFile();
@@ -155,16 +155,15 @@ public class TwoWaySSLConfigTest {
         System.clearProperty(Options.SSL_PROPERTIES_FILE);
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testLoadPropertiesFileDirectory() {
+    @Test
+    void testLoadPropertiesFileDirectory() {
         System.setProperty(Options.SSL_PROPERTIES_FILE, "src/test/resources");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
-        instance.loadPropertiesFile();
-        fail();
+        assertThrows(IllegalStateException.class, instance::loadPropertiesFile);
     }
 
     @Test
-    public void testLoadPropertiesFileWithEmptyProperties() {
+    void testLoadPropertiesFileWithEmptyProperties() {
         System.setProperty(Options.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.properties = new Properties();
@@ -174,7 +173,7 @@ public class TwoWaySSLConfigTest {
     }
 
     @Test
-    public void testLoadPropertiesFileWithNullProperties() {
+    void testLoadPropertiesFileWithNullProperties() {
         System.setProperty(Options.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.properties = null;
@@ -184,7 +183,7 @@ public class TwoWaySSLConfigTest {
     }
 
     @Test
-    public void testLoadPropertiesFileDoesNotExist() {
+    void testLoadPropertiesFileDoesNotExist() {
         System.setProperty(Options.SSL_PROPERTIES_FILE, "");
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         instance.loadPropertiesFile();
@@ -194,20 +193,15 @@ public class TwoWaySSLConfigTest {
     /**
      * Test of getSSLContext method, of class TwoWaySSLConfig.
      */
-    @Test(expected = IllegalStateException.class)
-    public void testGetSSLContextNoProperties() {
-        try {
-            System.clearProperty(Options.SSL_PROPERTIES_FILE);
-            TwoWaySSLConfig instance = new TwoWaySSLConfig();
-            instance.getSSLContext();
-        } catch (NoSuchAlgorithmException | KeyManagementException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+    @Test
+    void testGetSSLContextNoProperties() {
+        System.clearProperty(Options.SSL_PROPERTIES_FILE);
+        TwoWaySSLConfig instance = new TwoWaySSLConfig();
+        assertThrows(IllegalStateException.class, instance::getSSLContext);
     }
 
     @Test
-    public void testGetSSLContext() {
+    void testGetSSLContext() {
         System.setProperty(Options.SSL_PROPERTIES_FILE, SSL_PROPERTIES);
         TwoWaySSLConfig instance = new TwoWaySSLConfig();
         try {
@@ -222,16 +216,16 @@ public class TwoWaySSLConfigTest {
     }
 
     @Test
-    public void testGetSSLContextWithEncryptedValues() {
+    void testGetSSLContextWithEncryptedValues() {
         testGetSSLContext("changeit");
     }
 
     @Test
-    public void testGetSSLContextWithNullUnencryptedValues() {
+    void testGetSSLContextWithNullUnencryptedValues() {
         testGetSSLContext(null);
     }
 
-    public void testGetSSLContext(String valueToReturn) {
+    void testGetSSLContext(String valueToReturn) {
         Decrypter mockDecrypter = mock(Decrypter.class);
         when(mockDecrypter.decrypt(anyString(), anyString())).thenReturn(valueToReturn);
 

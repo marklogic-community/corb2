@@ -25,6 +25,8 @@ import static com.marklogic.developer.corb.FileUrisStreamingXMLLoaderTest.BUU_DI
 import static com.marklogic.developer.corb.FileUrisStreamingXMLLoaderTest.BUU_FILENAME;
 import static com.marklogic.developer.corb.FileUrisStreamingXMLLoaderTest.BUU_SCHEMA;
 import static com.marklogic.developer.corb.FileUrisStreamingXMLLoaderTest.NOT_BUU_SCHEMA;
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.marklogic.developer.corb.util.FileUtils;
 
 import java.io.BufferedReader;
@@ -34,16 +36,14 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.After;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.Before;
+
+import org.junit.jupiter.api.*;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class FileUrisStreamingXMLLoaderIT {
+class FileUrisStreamingXMLLoaderIT {
 
     private static final String STREAMING_XML_LOADER = "com.marklogic.developer.corb.FileUrisStreamingXMLLoader";
     private static final String LARGE_PREFIX = "LARGE.";
@@ -52,16 +52,16 @@ public class FileUrisStreamingXMLLoaderIT {
     private String exportFileDir;
     private static final Logger LOG = Logger.getLogger(FileUrisStreamingXMLLoaderIT.class.getName());
 
-    @Before
-    public void setUp() throws IOException {
+    @BeforeEach
+    void setUp() throws IOException {
         clearSystemProperties();
         File tempDir = TestUtils.createTempDirectory();
         exportFileDir = tempDir.toString();
         generateLargeInput(LARGE_COPIES_OF_BEM);
     }
 
-    @After
-    public void tearDown() throws IOException {
+    @AfterEach
+    void tearDown() throws IOException {
         clearSystemProperties();
         FileUtils.deleteFile(exportFileDir);
         File largeFile = new File(BUU_DIR + LARGE_BUU_FILENAME);
@@ -71,7 +71,7 @@ public class FileUrisStreamingXMLLoaderIT {
     }
 
     @Test
-    public void testInvalidLarge() {
+    void testInvalidLarge() {
         Properties properties = getBUUProperties();
         properties.setProperty(Options.XML_SCHEMA, BUU_DIR + NOT_BUU_SCHEMA);
         try {
@@ -83,7 +83,7 @@ public class FileUrisStreamingXMLLoaderIT {
     }
 
     @Test
-    public void testStreamingXMLUrisLoaderWithDefaultXPath() {
+    void testStreamingXMLUrisLoaderWithDefaultXPath() {
         try {
             int result = testStreamingXMLUrisLoader(BUU_FILENAME, getBUUProperties());
             assertEquals(6, result);
@@ -94,7 +94,7 @@ public class FileUrisStreamingXMLLoaderIT {
     }
 
     @Test
-    public void testStreamingXMLUrisLoaderWithXPath() {
+    void testStreamingXMLUrisLoaderWithXPath() {
         try {
             Properties properties = getBUUPropertiesWithXPath();
             properties.put("LAST_LINE", "NA");
@@ -111,7 +111,7 @@ public class FileUrisStreamingXMLLoaderIT {
     }
 
     @Test
-    public void testStreamingXMLUrisLoaderWithLargeInput() {
+    void testStreamingXMLUrisLoaderWithLargeInput() {
         int expected = LARGE_COPIES_OF_BEM + 1;
         Properties properties = getBUUProperties();
         properties.setProperty(Options.XML_FILE, BUU_DIR + LARGE_BUU_FILENAME);

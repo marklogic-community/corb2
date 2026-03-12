@@ -19,19 +19,20 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.xcc.ResultSequence;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class TransformTest {
+class TransformTest {
 
     @Test
-    public void testProcessResult()  {
+    void testProcessResult()  {
         try {
             ResultSequence seq = null;
             Transform instance = new Transform();
@@ -44,12 +45,12 @@ public class TransformTest {
     }
 
     @Test
-    public void testCall()  {
+    void testCall()  {
         try {
             Transform instance = new Transform();
             String[] result = instance.call();
             assertNotNull(result);
-            assertTrue(result.length == 0);
+            assertEquals(0, result.length);
         } catch (Exception ex) {
             Logger.getLogger(TransformTest.class.getName()).log(Level.SEVERE, null, ex);
             fail();

@@ -19,12 +19,12 @@
 package com.marklogic.developer.corb;
 
 import java.util.Properties;
-import org.junit.Before;
-import org.junit.Test;
 
 import static com.marklogic.developer.corb.TestUtils.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.exceptions.RequestPermissionException;
 import java.io.File;
@@ -42,7 +42,7 @@ import static org.mockito.Mockito.mock;
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class PostBatchUpdateFileTaskTest {
+class PostBatchUpdateFileTaskTest {
 
     private static final Logger LOG = Logger.getLogger(PostBatchUpdateFileTaskTest.class.getName());
     private static final String BOTTOM_CONTENT = "col1,col2,col3,col4";
@@ -60,13 +60,13 @@ public class PostBatchUpdateFileTaskTest {
     private static final String ZDDAB = "z...,d....,d....,a.....,b";
     private static final String DISTINCT = "distinct";
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         clearSystemProperties();
     }
 
     @Test
-    public void testGetBottomContent() {
+    void testGetBottomContent() {
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
         instance.properties = new Properties();
         instance.properties.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, BOTTOM_CONTENT);
@@ -75,14 +75,14 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testGetBottomContentNullBottom() {
+    void testGetBottomContentNullBottom() {
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
         String result = instance.getBottomContent();
         assertNull(result);
     }
 
     @Test
-    public void testWriteBottomContent() {
+    void testWriteBottomContent() {
         try {
             String expextedResult = BOTTOM_CONTENT.concat("\n");
             String filename = "export.csv";
@@ -105,10 +105,10 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testMoveFileStringString() {
+    void testMoveFileStringString() {
         try {
             File source = createSampleFile();
-            String destFilePath = source.toString() + BAK_EXT;
+            String destFilePath = source + BAK_EXT;
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.moveFile(source.toString(), destFilePath);
 
@@ -123,10 +123,10 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testMoveFileStringStringDestExists() {
+    void testMoveFileStringStringDestExists() {
         try {
             File source = createSampleFile();
-            String destFilePath = source.toString() + BAK_EXT;
+            String destFilePath = source + BAK_EXT;
             File dest = new File(destFilePath);
             if (dest.createNewFile()) {
                 dest.deleteOnExit();
@@ -146,7 +146,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testMoveFileZeroargs() {
+    void testMoveFileZeroargs() {
         try {
             File partFile = createSamplePartFile();
             String partFilePath = partFile.toString();
@@ -169,7 +169,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCompressFile() {
+    void testCompressFile() {
         try {
             File sampleFile = createSamplePartFile();
             Properties props = new Properties();
@@ -191,7 +191,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCompressFileOutputFileDoesNotExist() {
+    void testCompressFileOutputFileDoesNotExist() {
         try {
             File sampleFile = createSamplePartFile();
             if (sampleFile.delete()) {
@@ -217,7 +217,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCompressFileZipPartExists() {
+    void testCompressFileZipPartExists() {
         try {
             File sampleFile = createSamplePartFile();
             Properties props = new Properties();
@@ -245,7 +245,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCallRemoveDuplicatesAndSortAscUniq() {
+    void testCallRemoveDuplicatesAndSortAscUniq() {
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_SORT, "asc|uniq");
         try {
@@ -262,7 +262,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCallRemoveDuplicatesAndSortASCENDING() {
+    void testCallRemoveDuplicatesAndSortASCENDING() {
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_SORT, "ASCENDING|distinct");
         try {
@@ -275,7 +275,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCallRemoveDuplicatesAndSortTrueSortWithHeaderAndFooter() {
+    void testCallRemoveDuplicatesAndSortTrueSortWithHeaderAndFooter() {
         String header = "BEGIN\nletter\n";
         try {
             File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
@@ -304,35 +304,35 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCallRemoveDuplicatesAndSortCustomComparator() throws Exception {
+    void testCallRemoveDuplicatesAndSortCustomComparator() throws Exception {
         testCustomComparator(null, "b,z...,d....,d....,a.....");
     }
 
     @Test
-    public void testCallRemoveDuplicatesAndSortCustomComparatorDistinct() throws Exception {
+    void testCallRemoveDuplicatesAndSortCustomComparatorDistinct() throws Exception {
         testCustomComparator(DISTINCT, "b,z...,d....,a.....");
     }
 
     @Test
-    public void testCallRemoveDuplicatesAndSortCustomComparatorBadClass() throws Exception {
+    void testCallRemoveDuplicatesAndSortCustomComparatorBadClass() throws Exception {
         testCustomComparator(DISTINCT, ZDDAB, "java.lang.String");
     }
 
     @Test
-    public void testCallRemoveDuplicatesAndSortNoSortOrDedupDistinctOnly() throws Exception {
+    void testCallRemoveDuplicatesAndSortNoSortOrDedupDistinctOnly() throws Exception {
         testCustomComparator(DISTINCT, ZDDAB, null);
     }
 
     @Test
-    public void testCallRemoveDuplicatesAndSortNoSortOrDedupBlankSort() throws Exception {
+    void testCallRemoveDuplicatesAndSortNoSortOrDedupBlankSort() throws Exception {
         testCustomComparator(" ", ZDDAB, null);
     }
 
-    public void testCustomComparator(String sortProperty, String expected) throws Exception {
+    void testCustomComparator(String sortProperty, String expected) throws Exception {
         testCustomComparator(sortProperty, expected, "com.marklogic.developer.corb.PostBatchUpdateFileTaskTest$StringLengthComparator");
     }
 
-    public void testCustomComparator(String sortProperty, String expected, String comparator) throws Exception {
+    void testCustomComparator(String sortProperty, String expected, String comparator) throws Exception {
 
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
@@ -358,7 +358,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCallRemoveDuplicatesAndSortDescendingDistinct() {
+    void testCallRemoveDuplicatesAndSortDescendingDistinct() {
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_SORT, "desc|distinct");
         String result;
@@ -372,7 +372,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCallRemoveDuplicatesAndSortInvalidValue() {
+    void testCallRemoveDuplicatesAndSortInvalidValue() {
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_SORT, Boolean.toString(false));
         String result;
@@ -396,7 +396,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCallRemoveDuplicatesAndSortEmptyFileExtensionWithoutDot() {
+    void testCallRemoveDuplicatesAndSortEmptyFileExtensionWithoutDot() {
         try {
             File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
             file.deleteOnExit();
@@ -408,7 +408,7 @@ public class PostBatchUpdateFileTaskTest {
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.properties = props;
             instance.call();
-            assertTrue(file.length() == 0);
+            assertEquals(0, file.length());
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -416,7 +416,7 @@ public class PostBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testCallRemoveDuplicatesAndSortEmptyFileEmptyExtension() {
+    void testCallRemoveDuplicatesAndSortEmptyFileEmptyExtension() {
         try {
             File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
             file.deleteOnExit();
@@ -428,7 +428,7 @@ public class PostBatchUpdateFileTaskTest {
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.properties = props;
             instance.call();
-            assertTrue(file.length() == 0);
+            assertEquals(0, file.length());
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -463,23 +463,21 @@ public class PostBatchUpdateFileTaskTest {
         return TestUtils.readFile(output);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testCall() {
-
+    @Test
+    void testCall() {
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
         try {
-            instance.call();
+            assertThrows(NullPointerException.class, instance::call);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             if (ex instanceof NullPointerException) {
                 throw (NullPointerException) ex;
             }
         }
-        fail();
     }
 
     @Test
-    public void testHasRetryableMessage() {
+    void testHasRetryableMessage() {
         Request req = mock(Request.class);
         AbstractTask instance = new PostBatchUpdateFileTask();
         instance.properties = new Properties();

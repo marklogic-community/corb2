@@ -22,48 +22,46 @@ import static com.marklogic.developer.corb.ManagerIT.SLASH;
 import com.marklogic.developer.corb.util.FileUtils;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.Before;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class FileUrisDirectoryLoaderIT {
+class FileUrisDirectoryLoaderIT {
 
     public static final String LOADER_PROCESS_MODULE = "src/test/resources/fileUrisLoaderProcess.xqy|ADHOC";
     public static final String DOC_LOADER_PROCESS_MODULE = "src/test/resources/fileDocLoaderProcess.xqy|ADHOC";
     private static final Logger LOG = Logger.getLogger(FileUrisDirectoryLoaderIT.class.getName());
-    private File tempDir;
+
+    @TempDir
+    private static Path tempDir;
 
     public FileUrisDirectoryLoaderIT() {
     }
 
-    @Before
-    public void setUp() throws IOException {
-        tempDir = TestUtils.createTempDirectory();
-        tempDir.deleteOnExit();
-    }
-
     @Test
-    public void testLoadAll() {
+    void testLoadAll() {
         Properties properties = new Properties();
         properties.setProperty(Options.EXPORT_FILE_NAME, "testLoadAll.txt");
         try {
             testFileUrisDirectoryLoader(properties);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, ex.getMessage(), ex);
-            ex.printStackTrace();
             fail();
         }
     }
 
     @Test
-    public void testLoadAllAsDocs() {
+    void testLoadAllAsDocs() {
         Properties properties = new Properties();
         properties.setProperty(Options.EXPORT_FILE_NAME, "testLoadAllAsDocs.txt");
         properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_DOC);
@@ -76,19 +74,19 @@ public class FileUrisDirectoryLoaderIT {
         }
     }
 
-    @Test(expected = IOException.class)
-    public void testLoadAllAsDocsWithBatch() throws Exception {
+    @Test
+    void testLoadAllAsDocsWithBatch() {
         Properties properties = new Properties();
         properties.setProperty(Options.EXPORT_FILE_NAME, "testLoadAllAsDocsWithBatch.txt");
         properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_DOC);
         properties.setProperty(Options.BATCH_SIZE, Integer.toString(10));
         properties.setProperty(Options.PROCESS_MODULE, DOC_LOADER_PROCESS_MODULE);
 
-        testFileUrisDirectoryLoader(properties);
+        assertThrows(IOException.class, () -> testFileUrisDirectoryLoader(properties));
     }
 
     @Test
-    public void testLoadAllWithDiskQueue() {
+    void testLoadAllWithDiskQueue() {
         Properties properties = new Properties();
         properties.setProperty(Options.EXPORT_FILE_NAME, "testLoadAllWithDiskQueue.txt");
         properties.setProperty(Options.DISK_QUEUE, Boolean.toString(true));
@@ -110,16 +108,16 @@ public class FileUrisDirectoryLoaderIT {
 
         properties.putAll(additionalProperties);
         String exportFilename = additionalProperties.getProperty(Options.EXPORT_FILE_NAME);
-        Manager manager = new Manager();
+        try (Manager manager = new Manager()) {
+            manager.init(properties);
+            manager.run();
+        }
 
-        manager.init(properties);
-        manager.run();
-
-        String exportFilePath = tempDir.getPath() + SLASH + exportFilename;
+        String exportFilePath = tempDir + SLASH + exportFilename;
         verifyLoaderReport(exportFilePath);
     }
 
-    public static void verifyLoaderReport(String exportFilePath) throws IOException {
+    static void verifyLoaderReport(String exportFilePath) throws IOException {
         File report = new File(exportFilePath);
         report.deleteOnExit();
 
@@ -141,7 +139,7 @@ public class FileUrisDirectoryLoaderIT {
     private Properties getDefaultProperties() {
         Properties properties = new Properties();
         properties.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
-        properties.setProperty(Options.EXPORT_FILE_DIR, tempDir.getPath());
+        properties.setProperty(Options.EXPORT_FILE_DIR, tempDir.toString());
         properties.setProperty(Options.LOADER_PATH, FileUrisDirectoryLoaderTest.TEST_DIR);
         properties.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);
         properties.setProperty(Options.THREAD_COUNT, Integer.toString(8));

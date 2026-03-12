@@ -18,14 +18,15 @@
  */
 package com.marklogic.developer.corb;
 
-import org.junit.Test;
 
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
 
-public class BaseMonitorTest {
+import static org.junit.jupiter.api.Assertions.*;
+
+class BaseMonitorTest {
 
     @Test
-    public void formatTransactionsPerSecond() {
+    void formatTransactionsPerSecond() {
         assertEquals("0.54", BaseMonitor.formatTransactionsPerSecond(0.54321));
         assertEquals("5", BaseMonitor.formatTransactionsPerSecond(5.4321));
         assertEquals("54", BaseMonitor.formatTransactionsPerSecond(54.321));
@@ -35,7 +36,7 @@ public class BaseMonitorTest {
     }
 
     @Test
-    public void formatTransactionsPerSecondWithoutGrouping() {
+    void formatTransactionsPerSecondWithoutGrouping() {
         assertEquals("0.54", BaseMonitor.formatTransactionsPerSecond(0.54321, false));
         assertEquals("5", BaseMonitor.formatTransactionsPerSecond(5.4321, false));
         assertEquals("54", BaseMonitor.formatTransactionsPerSecond(54.321, false));

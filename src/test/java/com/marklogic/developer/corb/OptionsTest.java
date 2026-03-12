@@ -18,24 +18,23 @@
  */
 package com.marklogic.developer.corb;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Modifier;
 import java.util.Properties;
-
-import static org.junit.Assert.*;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class OptionsTest {
+class OptionsTest {
 
     /**
      * Ensure that each Option has a @Usage annotation, used to generate commandline usage message
      */
     @Test
-    public void testUsage() {
+    void testUsage() {
         for (java.lang.reflect.Field field : Options.class.getDeclaredFields()) {
             //Verify that all of the public String constants have usage annotations
             if (String.class.equals(field.getType()) && (field.getModifiers() & (Modifier.PROTECTED | Modifier.PRIVATE)) == 0) {
@@ -46,16 +45,16 @@ public class OptionsTest {
     }
 
     @Test
-    public void testStaticFields() {
+    void testStaticFields() {
         for (java.lang.reflect.Field field : Options.class.getDeclaredFields()) {
             if (String.class.equals(field.getType())) {
-                assertTrue(java.lang.reflect.Modifier.isStatic(field.getModifiers()));
+                assertTrue(Modifier.isStatic(field.getModifiers()));
             }
         }
     }
 
     @Test
-    public void testFindOption() {
+    void testFindOption() {
         String key = "foo";
         String value = "value";
         Properties properties = new Properties();
@@ -64,7 +63,7 @@ public class OptionsTest {
     }
 
     @Test
-    public void testFindOptionWithEmptyStringValue() {
+    void testFindOptionWithEmptyStringValue() {
         String key = "foo";
         String value = "";
         Properties properties = new Properties();
@@ -73,13 +72,13 @@ public class OptionsTest {
     }
 
     @Test
-    public void testFindOptionMissing() {
+    void testFindOptionMissing() {
         Properties properties = new Properties();
         assertNull(Options.findOption(properties, "foo"));
     }
 
     @Test
-    public void testFindOptionNullKey() {
+    void testFindOptionNullKey() {
         Properties properties = new Properties();
         assertNull(Options.findOption(properties, null));
     }

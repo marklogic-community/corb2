@@ -23,14 +23,15 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class AbstractDecrypterTest {
+class AbstractDecrypterTest {
 
     private static final String FOUR_SPACES = "    ";
     private static final String VALUE = "val";
@@ -41,7 +42,7 @@ public class AbstractDecrypterTest {
     private static final Logger LOG = Logger.getLogger(AbstractDecrypterTest.class.getName());
 
     @Test
-    public void testInitNullProperties()  {
+    void testInitNullProperties()  {
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         try {
             instance.init(null);
@@ -53,7 +54,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testInit() {
+    void testInit() {
         Properties props = new Properties();
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         try {
@@ -66,7 +67,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testDecryptNotEncrypted() {
+    void testDecryptNotEncrypted() {
         String property = "unencryptedProp";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         String result = instance.decrypt(property, VALUE);
@@ -74,7 +75,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testDecryptEncrypted() {
+    void testDecryptEncrypted() {
         String property = "encryptedProp";
         String value = "ENC("+ VALUE + ')';
         AbstractDecrypter instance = new AbstractDecrypterImpl();
@@ -83,7 +84,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testDoDecrypt() {
+    void testDoDecrypt() {
         String property = "key";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         String result = instance.doDecrypt(property, VALUE);
@@ -91,7 +92,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testGetPropertyNullProperties() {
+    void testGetPropertyNullProperties() {
         String key = "testProperty";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         String result = instance.getProperty(key);
@@ -99,7 +100,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testGetProperty() {
+    void testGetProperty() {
         String key = "testGetProperty";
         AbstractDecrypter instance = new AbstractDecrypterImpl();
         instance.properties = new Properties();
@@ -108,7 +109,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testGetPropertyBlankSystemProperty() {
+    void testGetPropertyBlankSystemProperty() {
         String key = "testGetSystemProperty";
         System.setProperty(key, FOUR_SPACES);
         AbstractDecrypter instance = new AbstractDecrypterImpl();
@@ -119,7 +120,7 @@ public class AbstractDecrypterTest {
     }
 
     @Test
-    public void testGetPropertyBlankPropertiesProperty() {
+    void testGetPropertyBlankPropertiesProperty() {
         String key = "testGetBlankProperty";
         System.setProperty(key, FOUR_SPACES);
         AbstractDecrypter instance = new AbstractDecrypterImpl();
@@ -133,7 +134,7 @@ public class AbstractDecrypterTest {
     private static class AbstractDecrypterImpl extends AbstractDecrypter {
 
         @Override
-        public void init_decrypter() throws IOException, ClassNotFoundException {
+        public void init_decrypter() {
             //required to satisfy the interface
         }
 

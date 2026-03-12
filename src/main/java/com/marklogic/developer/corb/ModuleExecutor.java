@@ -96,6 +96,7 @@ public class ModuleExecutor extends AbstractManager {
 
     /**
      * Main entry point for executing a module from the command line.
+     *
      * <p>
      * Initializes the ModuleExecutor, runs the module, and exits with an
      * appropriate exit code based on the result.
@@ -104,9 +105,25 @@ public class ModuleExecutor extends AbstractManager {
      * @param args command-line arguments
      */
     public static void main(String... args) {
+        int exitCode = ModuleExecutor.run(args);
+        System.exit(exitCode);
+    }
+
+    /**
+     * Entry point for executing a module programmatically, without causing System.exit
+     * .
+     * <p>
+     * Initializes the ModuleExecutor, runs the module, and returns an appropriate code based on the result.
+     * </p>
+     *
+     * @param args command-line arguments
+     * @return status code indicating su
+     */
+    public static int run(String... args) {
         ModuleExecutor moduleExecutor = new ModuleExecutor();
         if (hasUsage(args)) {
             moduleExecutor.usage();
+            return EXIT_CODE_SUCCESS;
         } else {
             try {
                 moduleExecutor.init(args);
@@ -114,17 +131,17 @@ public class ModuleExecutor extends AbstractManager {
                 LOG.log(SEVERE, "Error initializing ModuleExecutor", exc);
                 LOG.log(INFO, getHelpFlagMessage());
                 LOG.log(INFO, () -> "init error - exiting with code " + EXIT_CODE_INIT_ERROR);
-                System.exit(EXIT_CODE_INIT_ERROR);
+                return EXIT_CODE_INIT_ERROR;
             }
 
             try {
                 moduleExecutor.run();
                 LOG.log(INFO, () -> "success - exiting with code " + EXIT_CODE_SUCCESS);
-                System.exit(EXIT_CODE_SUCCESS);
+                return EXIT_CODE_SUCCESS;
             } catch (Exception exc) {
-                LOG.log(SEVERE, "Error while running CORB", exc);
+                LOG.log(SEVERE, "Error while running CoRB", exc);
                 LOG.log(INFO, () -> "processing error - exiting with code " + EXIT_CODE_PROCESSING_ERROR);
-                System.exit(EXIT_CODE_PROCESSING_ERROR);
+                return EXIT_CODE_PROCESSING_ERROR;
             }
         }
     }

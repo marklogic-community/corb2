@@ -91,20 +91,13 @@ dependencies {
     // externalsortinginjava classes with the corb distro in a fat jar
     implementation "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
     shadow "com.google.code.externalsortinginjava:externalsortinginjava:$externalsortinginjavaVersion"
-    testImplementation group: 'org.junit.vintage', name: 'junit-vintage-engine', version: '5.14.3'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+    testImplementation "org.junit.vintage:junit-vintage-engine:$junitVersion"
+    // Use the JUnit Jupiter engine for running tests
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation 'org.jasypt:jasypt:1.9.3'
-    //facilitates tests for methods that invoke System.exit
-    testImplementation('com.github.stefanbirkner:system-rules:1.19.0') {
-        //explicitly configuring JUnit version above, and want to ignore 4.11 that is being resolved here
-        exclude group: 'junit', module: 'junit-dep'
-    }
     testImplementation 'org.mockito:mockito-core:4.0.0' //5.x requires Java 11
-}
-
-test {
-    //we will run Integration and Performance tests in separate tasks
-    exclude '**/*IT.class'
-    exclude '**/*PT.class'
 }
 
 // perform token replacement in HTML for JavaScript library version paths
@@ -176,8 +169,20 @@ jacocoTestReport {
     }
 }
 
+tasks.named('test', Test) {
+    useJUnitPlatform()
+    //we will run Integration and Performance tests in separate tasks
+    exclude '**/*IT.class'
+    exclude '**/*PT.class'
+    testLogging {
+        events "failed", "skipped" //"passed"
+        showStandardStreams = false
+    }
+}
+
 tasks.register('integrationTest', Test) {
     dependsOn test
+    useJUnitPlatform()
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
     filter {
@@ -200,6 +205,7 @@ tasks.register('integrationTestReport', JacocoReport) {
 }
 
 tasks.register('performanceTest', Test) {
+    useJUnitPlatform()
     testClassesDirs = sourceSets.performanceTest.output.classesDirs
     classpath = sourceSets.performanceTest.runtimeClasspath
     filter {

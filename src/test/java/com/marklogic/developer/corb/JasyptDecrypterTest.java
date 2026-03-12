@@ -20,22 +20,22 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
+
+import org.junit.jupiter.api.*;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class JasyptDecrypterTest {
+class JasyptDecrypterTest {
 
     private static final Logger LOG = Logger.getLogger(JasyptDecrypter.class.getName());
     private final TestHandler testLogger = new TestHandler();
@@ -44,19 +44,19 @@ public class JasyptDecrypterTest {
     public static final String ERROR_NO_PASSWORD = "Unable to initialize jasypt decrypter. Couldn't find jasypt.password";
     private static final String UNENCRYPTED_PASSWORD = "corbencrypt";
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         clearSystemProperties();
         LOG.addHandler(testLogger);
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         clearSystemProperties();
     }
 
     @Test
-    public void testInitDecrypterPropertiesAreBlank() {
+    void testInitDecrypterPropertiesAreBlank() {
         clearSystemProperties();
         Properties props = new Properties();
         props.setProperty(Options.JASYPT_PROPERTIES_FILE, " ");
@@ -72,7 +72,7 @@ public class JasyptDecrypterTest {
     }
 
     @Test
-    public void testInitDecrypterWithPassord() {
+    void testInitDecrypterWithPassord() {
         clearSystemProperties();
         Properties props = new Properties();
         props.setProperty(Options.JASYPT_PROPERTIES_FILE, "src/test/resources/jasypt.properties");
@@ -88,7 +88,7 @@ public class JasyptDecrypterTest {
     }
 
     @Test
-    public void testDoDecrypt() {
+    void testDoDecrypt() {
         String property = "prop1";
         String value = "value";
         JasyptDecrypter instance = new JasyptDecrypter();
@@ -99,7 +99,7 @@ public class JasyptDecrypterTest {
     }
 
     @Test
-    public void testDoDecryptWithBlankValue() {
+    void testDoDecryptWithBlankValue() {
         String property = "";
         String value = "";
         JasyptDecrypter instance = new JasyptDecrypter();
@@ -111,7 +111,7 @@ public class JasyptDecrypterTest {
     }
 
     @Test
-    public void testDoDecryptDecryptorIsNull() {
+    void testDoDecryptDecryptorIsNull() {
         String property = "foo";
         String value = "bar";
         JasyptDecrypter instance = new JasyptDecrypter();
@@ -120,7 +120,7 @@ public class JasyptDecrypterTest {
         assertEquals(value, result);
     }
 
-    private class TestDecrypt {
+    private static class TestDecrypt {
 
         public String decrypt(String value) {
             return value;

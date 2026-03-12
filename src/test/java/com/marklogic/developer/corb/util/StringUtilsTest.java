@@ -23,16 +23,16 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.Test;
 
 import static com.marklogic.developer.corb.Options.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class StringUtilsTest {
+class StringUtilsTest {
 
     private static final Logger LOG = Logger.getLogger(StringUtilsTest.class.getName());
     private static final String ADHOC_SUFFIX = "|ADHOC";
@@ -47,77 +47,77 @@ public class StringUtilsTest {
     private static final String FOO = "foo";
 
     @Test
-    public void testAnyIsNull() {
+    void testAnyIsNull() {
         String missing = null;
         assertTrue(StringUtils.anyIsNull("a", missing, "c"));
     }
 
     @Test
-    public void testAnyIsNullWithoutNull() {
+    void testAnyIsNullWithoutNull() {
         assertFalse(StringUtils.anyIsNull("a", "b"));
     }
 
     @Test
-    public void testAnyIsNullWithSingleNullString() {
+    void testAnyIsNullWithSingleNullString() {
         String missing = null;
         assertTrue(StringUtils.anyIsNull(missing));
     }
 
     @Test
-    public void testEncodeIfNecessary() {
+    void testEncodeIfNecessary() {
         assertEquals("foo%2Bbar", StringUtils.urlEncodeIfNecessary("foo+bar"));
         assertEquals("foo+bar", StringUtils.urlEncodeIfNecessary("foo bar"));
         assertEquals("foo+%2Bbar", StringUtils.urlEncodeIfNecessary("foo +bar"));
     }
 
     @Test
-    public void testStringToBooleanStringIsEmpty() {
+    void testStringToBooleanStringIsEmpty() {
         boolean result = StringUtils.stringToBoolean("");
         assertFalse(result);
     }
 
     @Test
-    public void testGetPathExtension() {
+    void testGetPathExtension() {
         String result = StringUtils.getPathExtension("dirA/dirB/filename.csv");
         assertEquals("csv", result);
     }
 
     @Test
-    public void testGetPathExtensionMultipleDotsInPath() {
+    void testGetPathExtensionMultipleDotsInPath() {
         String result = StringUtils.getPathExtension("dir1/dir2/file.name.csv.txt");
         assertEquals("txt", result);
     }
 
     @Test
-    public void testGetPathExtensionNoExtension() {
+    void testGetPathExtensionNoExtension() {
         String path = "dir/dir/filename";
         String result = StringUtils.getPathExtension(path);
         assertEquals(path, result);
     }
 
     @Test
-    public void testJoinListString() {
+    void testJoinListString() {
         List<String> items = Arrays.asList("a", "b", "c");
         String result = StringUtils.join(items, DELIM);
         assertEquals(A_B_C, result);
     }
 
     @Test
-    public void testJoinListStringIsNull() {
+    void testJoinListStringIsNull() {
         List<String> items = null;
         String result = StringUtils.join(items, DELIM);
-        assertEquals(null, result);
+        assertNull(result);
     }
 
     @Test
-    public void testJoinEmptyList() {
+    void testJoinEmptyList() {
         List<String> items = new ArrayList<>(0);
         String result = StringUtils.join(items, DELIM);
         assertEquals("", result);
     }
 
     @Test
-    public void testJoinObjectArrString() {
+    void testJoinObjectArrString() {
         Object[] items = new Object[2];
         items[0] = 2;
         items[1] = FOO;
@@ -126,27 +126,27 @@ public class StringUtilsTest {
         assertEquals("2|foo", result);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testJoinObjectArrStringIsNull() {
+    @Test
+    void testJoinObjectArrStringIsNull() {
         Object[] items = null;
-        StringUtils.join(items, DELIM);
+        assertThrows(NullPointerException.class, () -> StringUtils.join(items, DELIM));
     }
 
     @Test
-    public void testJoinStringArrString() {
+    void testJoinStringArrString() {
         String[] items = new String[]{"a", "b", "c"};
         String result = StringUtils.join(items, DELIM);
         assertEquals(A_B_C, result);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testJoinStringArrStringIsNull() {
+    @Test
+    void testJoinStringArrStringIsNull() {
         String[] items = null;
-        StringUtils.join(items, DELIM);
+        assertThrows(NullPointerException.class, () -> StringUtils.join(items, DELIM));
     }
 
     @Test
-    public void testStringToBooleanString() {
+    void testStringToBooleanString() {
         assertFalse(StringUtils.stringToBoolean(""));
         assertFalse(StringUtils.stringToBoolean("0"));
         assertFalse(StringUtils.stringToBoolean("f"));
@@ -159,7 +159,7 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testStringToBooleanStringisTrue() {
+    void testStringToBooleanStringisTrue() {
         assertTrue(StringUtils.stringToBoolean("true"));
         assertTrue(StringUtils.stringToBoolean("asdf"));
         assertTrue(StringUtils.stringToBoolean("123"));
@@ -168,33 +168,33 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testStringToBooleanStringBoolean() {
+    void testStringToBooleanStringBoolean() {
         assertFalse(StringUtils.stringToBoolean(null, false));
         assertTrue(StringUtils.stringToBoolean(null, true));
     }
 
     @Test
-    public void testBuildModulePathClass() {
+    void testBuildModulePathClass() {
         String result = StringUtils.buildModulePath(String.class);
         assertEquals("/java/lang/String.xqy", result);
     }
 
     @Test
-    public void testBuildModulePathPackageString() {
+    void testBuildModulePathPackageString() {
         Package modulePackage = this.getClass().getPackage();
         String result = StringUtils.buildModulePath(modulePackage, "Utilities");
         assertEquals("/com/marklogic/developer/corb/util/Utilities.xqy", result);
     }
 
     @Test
-    public void testBuildModulePathPackageStringWithSuffix() {
+    void testBuildModulePathPackageStringWithSuffix() {
         Package modulePackage = this.getClass().getPackage();
         String result = StringUtils.buildModulePath(modulePackage, UTILITIES_FILENAME);
         assertEquals("/com/marklogic/developer/corb/util/" + UTILITIES_FILENAME, result);
     }
 
     @Test
-    public void testBuildModulePath() {
+    void testBuildModulePath() {
         String fooUtilities = "/foo/Utilities.xqy";
         assertEquals(ABSOLUTE_UTILITIES_FILE, StringUtils.buildModulePath(SLASH, ABSOLUTE_UTILITIES_FILE));
         assertEquals(ABSOLUTE_UTILITIES_FILE, StringUtils.buildModulePath(SLASH, UTILITIES_FILENAME));
@@ -205,7 +205,7 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testDumpHex() {
+    void testDumpHex() {
         try {
             String result = StringUtils.dumpHex("abcd", "UTF-8");
             assertEquals("61 62 63 64", result);
@@ -215,24 +215,18 @@ public class StringUtilsTest {
         }
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testDumpHexNull() {
-        try {
-            StringUtils.dumpHex(null, "UTF-8");
-        } catch (UnsupportedEncodingException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
-        fail();
-    }
-
-    @Test(expected = UnsupportedEncodingException.class)
-    public void testDumpHexUnsupportedEncoding() throws UnsupportedEncodingException {
-        StringUtils.dumpHex(FOO, "does not exist");
-        fail();
+    @Test
+    void testDumpHexNull() {
+        assertThrows(NullPointerException.class, () -> StringUtils.dumpHex(null, "UTF-8"));
     }
 
     @Test
-    public void testGetXccUri() {
+    void testDumpHexUnsupportedEncoding() {
+        assertThrows(UnsupportedEncodingException.class, () -> StringUtils.dumpHex(FOO, "does not exist"));
+    }
+
+    @Test
+    void testGetXccUri() {
         Map<String, String> uriParams = new HashMap<>();
         uriParams.put(XCC_USERNAME, "user");
         uriParams.put(XCC_PASSWORD, "pass+word");
@@ -267,7 +261,7 @@ public class StringUtilsTest {
         assertEquals("xccs://user:pass+word@host:8000", uri);
     }
     @Test
-    public void testGetXccUriDeprecated() {
+    void testGetXccUriDeprecated() {
         String user = "user";
         String host = "host";
         String password = "pass+word";
@@ -293,7 +287,7 @@ public class StringUtilsTest {
         assertEquals("xccs://user:pass+word@host:8000", uri);
     }
     @Test
-    public void testIsBlank() {
+    void testIsBlank() {
         assertTrue(StringUtils.isBlank(""));
         assertTrue(StringUtils.isBlank("  "));
         assertTrue(StringUtils.isBlank(" \n"));
@@ -301,50 +295,50 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testTrim() {
+    void testTrim() {
         assertEquals(FOO, StringUtils.trim("  foo  "));
     }
 
     @Test
-    public void testTrimBlank() {
+    void testTrimBlank() {
         assertEquals("", StringUtils.trim("    "));
     }
 
     @Test
-    public void testTrimNull() {
+    void testTrimNull() {
         assertNull(StringUtils.trim(null));
     }
 
     @Test
-    public void testTrimToEmpty() {
+    void testTrimToEmpty() {
         assertEquals(FOO, StringUtils.trimToEmpty("  foo  "));
     }
 
     @Test
-    public void testTrimToEmptyNull() {
+    void testTrimToEmptyNull() {
         assertEquals("", StringUtils.trimToEmpty(null));
     }
 
     @Test
-    public void testTrimToEmptyBlank() {
+    void testTrimToEmptyBlank() {
         assertEquals("", StringUtils.trimToEmpty("   "));
     }
 
     @Test
-    public void testIsAdhoc() {
+    void testIsAdhoc() {
         assertTrue(StringUtils.isAdhoc("/myModule.xqy|ADHOC"));
         assertTrue(StringUtils.isAdhoc("/myModule.xqy|adhoc"));
     }
 
     @Test
-    public void testIsAdhocDoesNotMatch() {
+    void testIsAdhocDoesNotMatch() {
         assertFalse(StringUtils.isAdhoc("/myModule.xqy"));
         assertFalse(StringUtils.isAdhoc("adhoc.xqy"));
         assertFalse(StringUtils.isAdhoc("/myModule.xqy|adhoc "));
     }
 
     @Test
-    public void testIsJavaScriptModule() {
+    void testIsJavaScriptModule() {
         assertTrue(StringUtils.isJavaScriptModule("/myModule.js"));
         assertTrue(StringUtils.isJavaScriptModule("/myModule.sjs"));
         assertTrue(StringUtils.isJavaScriptModule("/myModule.JS"));
@@ -361,7 +355,7 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testIsJavaScriptDoesNotMatch() {
+    void testIsJavaScriptDoesNotMatch() {
         assertFalse(StringUtils.isJavaScriptModule(null));
         assertFalse(StringUtils.isJavaScriptModule(""));
         assertFalse(StringUtils.isJavaScriptModule("/myModule.xqy"));
@@ -374,7 +368,7 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testIsInlineModule() {
+    void testIsInlineModule() {
         String code = INLINE_JAVASCRIPT_CODE;
         assertTrue(StringUtils.isInlineModule(INLINE_JAVASCRIPT_PREFIX + code));
         assertTrue(StringUtils.isInlineModule(INLINE_XQUERY_PREFIX + code));
@@ -386,21 +380,21 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testIsInlineModuleFalse() {
+    void testIsInlineModuleFalse() {
         String code = INLINE_JAVASCRIPT_CODE;
         assertFalse(StringUtils.isInlineModule("INLINE-JAVASCRIPT" + code)); //missing the |
         assertFalse(StringUtils.isInlineModule("INLINE-RUBY|" + code)); //wrong language
     }
 
     @Test
-    public void testInlineModuleLanguageJavaScript() {
+    void testInlineModuleLanguageJavaScript() {
         String value = INLINE_JAVASCRIPT_PREFIX + INLINE_JAVASCRIPT_CODE + ADHOC_SUFFIX;
         String result = StringUtils.inlineModuleLanguage(value);
         assertEquals("JAVASCRIPT", result);
     }
 
     @Test
-    public void testInlineModuleLanguageXQuery() {
+    void testInlineModuleLanguageXQuery() {
         String code = "for $i in (1 to 10) return $i";
         String value = INLINE_XQUERY_PREFIX + code;
         String result = StringUtils.inlineModuleLanguage(value);
@@ -408,13 +402,13 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testInlineModuleLanguageNull() {
+    void testInlineModuleLanguageNull() {
         String result = StringUtils.inlineModuleLanguage(null);
         assertEquals("", result);
     }
 
     @Test
-    public void testInlineModuleLanguageNotSupportedLang() {
+    void testInlineModuleLanguageNotSupportedLang() {
         String inline = "INLINE-PYTHON|1+1";
         String result = StringUtils.inlineModuleLanguage(inline);
         assertEquals("", result);
@@ -423,7 +417,7 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testInlineModuleCode() {
+    void testInlineModuleCode() {
         String code = INLINE_JAVASCRIPT_CODE;
         String value = INLINE_JAVASCRIPT_PREFIX + code + ADHOC_SUFFIX;
 
@@ -432,7 +426,7 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testInlineModuleCodeBadLanguage() {
+    void testInlineModuleCodeBadLanguage() {
         String code = "for $i in (1 to 10) return $i";
         String value = "INLINE-JAVA|" + code + ADHOC_SUFFIX;
 
@@ -441,26 +435,26 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testInlineModuleCodeNull() {
+    void testInlineModuleCodeNull() {
         String result = StringUtils.getInlineModuleCode(null);
         assertEquals("", result);
     }
 
     @Test
-    public void testParsePortRangesSingleNumber() {
+    void testParsePortRangesSingleNumber() {
         Set<Integer> result = StringUtils.parsePortRanges("80");
         assertEquals(1, result.size());
         assertEquals(80, result.toArray()[0]);
     }
 
     @Test
-    public void testParsePortRangesIncompleteRange() {
+    void testParsePortRangesIncompleteRange() {
         Set<Integer> result = StringUtils.parsePortRanges("80-");
         assertEquals(0, result.size());
     }
 
     @Test
-    public void testParsePortRanges() {
+    void testParsePortRanges() {
         Set<Integer> result = StringUtils.parsePortRanges("80,443, 8000-8002, 8003 -8005, 8006- 8008, 8010 - 8009,443 ");
         assertEquals(13, result.size());
         Integer[] ports = result.toArray(new Integer[result.size()]);
@@ -468,62 +462,60 @@ public class StringUtilsTest {
         assertEquals(8010, ports[12].intValue());
     }
 
-    @Test(expected = NumberFormatException.class)
-    public void testParsePortRangesWithNegativeNumber() {
-        StringUtils.parsePortRanges("-8002");
-        fail();
+    @Test
+    void testParsePortRangesWithNegativeNumber() {
+        assertThrows(NumberFormatException.class, () -> StringUtils.parsePortRanges("-8002"));
     }
 
     @Test
-    public void testParsePortRangesWithBlankValue() {
+    void testParsePortRangesWithBlankValue() {
         Set<Integer> result = StringUtils.parsePortRanges("  ");
         assertEquals(0, result.size());
     }
 
-    @Test(expected = NumberFormatException.class)
-    public void testParsePortRangesNoNumbers() {
-        StringUtils.parsePortRanges("1 to 5");
-        fail();
+    @Test
+    void testParsePortRangesNoNumbers() {
+        assertThrows(NumberFormatException.class, () -> StringUtils.parsePortRanges("1 to 5"));
     }
 
     @Test
-    public void testUrlEncode() {
+    void testUrlEncode() {
         assertEquals("a+b", StringUtils.urlEncode("a b"));
     }
 
     @Test
-    public void testUrlDecode() {
+    void testUrlDecode() {
         assertEquals("a b", StringUtils.urlDecode("a+b"));
     }
 
     @Test
-    public void testIsUrlEncoded(){
+    void testIsUrlEncoded(){
         assertTrue(StringUtils.isUrlEncoded("this%20that"));
         assertFalse(StringUtils.isUrlEncoded("this that"));
         assertFalse(StringUtils.isUrlEncoded("my milk is 2%"));
     }
 
     @Test
-    public void testRoundTripByteArrayToHexStringAndHexStringToByteArray() {
+    void testRoundTripByteArrayToHexStringAndHexStringToByteArray() {
         String input = "hello world";
         String hex = StringUtils.byteArrayToHexString(input.getBytes(StandardCharsets.UTF_8));
         byte[] bytes = StringUtils.hexStringToByteArray(hex);
         String output = new String(bytes, StandardCharsets.UTF_8);
-        assertTrue(input.equals(output));
+        assertEquals(input, output);
     }
 
     @Test
-    public void testByteArrayToHexString() {
+    void testByteArrayToHexString() {
         String input = "xyz";
         String hex = StringUtils.byteArrayToHexString(input.getBytes(StandardCharsets.UTF_8));
-        assertTrue("78797a".equals(hex));
+        assertEquals("78797a", hex);
     }
 
     @Test
-    public void testHexStringToByteArray() {
+    void testHexStringToByteArray() {
         byte[] bytes = StringUtils.hexStringToByteArray("70617373776F7264");
         byte[] expected = "password".getBytes(StandardCharsets.UTF_8);
-        assertTrue(Arrays.equals(expected, bytes));
+        assertArrayEquals(expected, bytes);
     }
 
 }
