@@ -532,11 +532,12 @@ public class Manager extends AbstractManager implements Closeable {
         }
         if (postBatchTask == null &&
             ExportBatchToFileTask.class.getName().equals(processTask) &&
-            (isNotBlank(properties.getProperty(EXPORT_FILE_SPLIT_MAX_LINES)) ||
+            (isNotBlank(properties.getProperty(EXPORT_FILE_SORT)) ||
+                isNotBlank(properties.getProperty(EXPORT_FILE_SPLIT_MAX_LINES)) ||
                 isNotBlank(properties.getProperty(EXPORT_FILE_SPLIT_MAX_SIZE)) ||
                 isNotBlank(properties.getProperty(EXPORT_FILE_BOTTOM_CONTENT)) ||
-                StringUtils.stringToBoolean(properties.getProperty(EXPORT_FILE_AS_ZIP))
-            )) {
+                StringUtils.stringToBoolean(properties.getProperty(EXPORT_FILE_AS_ZIP)))
+        ) {
             LOG.info(String.format("configuring %s since %s is configured and %s, %s, and/or %s was set and no %s was configured", PostBatchUpdateFileTask.class.getName(), ExportBatchToFileTask.class.getName(), EXPORT_FILE_SPLIT_MAX_LINES, EXPORT_FILE_SPLIT_MAX_SIZE, EXPORT_FILE_BOTTOM_CONTENT, POST_BATCH_TASK));
             postBatchTask = PostBatchUpdateFileTask.class.getName();
         }

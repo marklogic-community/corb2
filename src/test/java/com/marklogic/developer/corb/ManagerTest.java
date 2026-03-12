@@ -1642,6 +1642,25 @@ public class ManagerTest {
         }
     }
 
+    @Test
+    public void testAutoConfigurePostBatchTaskBecauseOfSort() {
+        Properties properties = ManagerTest.getDefaultProperties();
+        properties.remove(Options.PRE_BATCH_TASK);
+        properties.remove(Options.POST_BATCH_TASK);
+        properties.setProperty(Options.EXPORT_FILE_SORT, "descending");
+        System.getProperties().putAll(properties);
+        try (Manager manager = new Manager()) {
+            manager.init();
+            assertNull( manager.options.getPreBatchTaskClass());
+            assertEquals("descending", manager.getProperties().getProperty(Options.EXPORT_FILE_SORT));
+            assertEquals(PostBatchUpdateFileTask.class, manager.options.getPostBatchTaskClass());
+        } catch (CorbException ex) {
+            fail();
+        } finally {
+            clearSystemProperties();
+        }
+    }
+
     public static String[] getDefaultArgs() {
         return new String[]{XCC_CONNECTION_URI,
             COLLECTION_NAME,
