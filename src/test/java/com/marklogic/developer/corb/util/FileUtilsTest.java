@@ -21,15 +21,15 @@ package com.marklogic.developer.corb.util;
 import static com.marklogic.developer.corb.util.IOUtils.BUFFER_SIZE;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import java.nio.file.Paths;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -39,7 +39,7 @@ import static org.mockito.Mockito.when;
  */
 public class FileUtilsTest {
 
-    private final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
+    private static final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
     private static final String TEXT_FILE_EXT = "txt";
 
     @Test
@@ -49,7 +49,7 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testCopyFileFile() throws IOException {
+    void testCopyFileFile() throws IOException {
         File out = File.createTempFile("copiedFile", TEXT_FILE_EXT);
         out.deleteOnExit();
         copy(exampleContentFile, out);
@@ -58,7 +58,7 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testCopyStringString() throws IOException {
+    void testCopyStringString() throws IOException {
         String inFilePath = exampleContentFile.getAbsolutePath();
         File destFile = File.createTempFile("output", TEXT_FILE_EXT);
         destFile.deleteOnExit();
@@ -69,14 +69,14 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testDeleteFileFile() throws IOException {
+    void testDeleteFileFile() throws IOException {
         File file = File.createTempFile("originalFile", TEXT_FILE_EXT);
         FileUtils.deleteFile(file);
         assertFalse(file.exists());
     }
 
     @Test
-    public void testDeleteFileFileIsNull() throws IOException {
+    void testDeleteFileFileIsNull() throws IOException {
         File file = new File("/tmp/_doesNotExit_" + Math.random());
         file.deleteOnExit();
         FileUtils.deleteFile(file);
@@ -84,7 +84,7 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testDeleteFileFolderIsEmpty() throws IOException {
+    void testDeleteFileFolderIsEmpty() throws IOException {
         File tempDirectory = createTempDirectory();
         tempDirectory.deleteOnExit();
         FileUtils.deleteFile(tempDirectory);
@@ -92,7 +92,7 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testDeleteFileFolderHasFiles() throws IOException {
+    void testDeleteFileFolderHasFiles() throws IOException {
         File tempDirectory = createTempDirectory();
         File tempFile = File.createTempFile("deleteFile", "bar", tempDirectory);
         tempDirectory.deleteOnExit();
@@ -103,40 +103,41 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testDeleteFileStringIsNull() throws IOException {
+    void testDeleteFileStringIsNull() throws IOException {
         String filename = "/tmp/_doesNotExist_" + Math.random();
         FileUtils.deleteFile(filename);
         assertFalse(new File(filename).exists());
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testDeleteFileCannotDelete() throws IOException {
+    @Test
+    void testDeleteFileCannotDelete() throws IOException {
         File exceptionalFile = mock(File.class);
         when(exceptionalFile.exists()).thenReturn(true);
         when(exceptionalFile.isDirectory()).thenReturn(false);
         when(exceptionalFile.delete()).thenReturn(false);
         when(exceptionalFile.getCanonicalPath()).thenReturn("does/not/exist");
 
-        FileUtils.deleteFile(exceptionalFile);
+
+        assertThrows(NullPointerException.class, () -> FileUtils.deleteFile(exceptionalFile));
     }
 
     @Test
-    public void testGetLineCountNull() throws IOException {
+    void testGetLineCountNull() throws IOException {
         assertEquals(0, FileUtils.getLineCount(null));
     }
 
     @Test
-    public void testGetLineCountFileDoesNotExist() throws IOException {
+    void testGetLineCountFileDoesNotExist() throws IOException {
         assertEquals(0, FileUtils.getLineCount(new File("does/not/exist2")));
     }
 
     @Test
-    public void testGetLineCount() throws IOException {
+    void testGetLineCount() throws IOException {
         assertEquals(12, FileUtils.getLineCount(exampleContentFile));
     }
 
     @Test
-    public void testMoveFile() throws IOException {
+    void testMoveFile() throws IOException {
         File file = File.createTempFile("moveFile", TEXT_FILE_EXT);
         file.deleteOnExit();
         FileUtils.moveFile(file, file);
@@ -144,7 +145,7 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testGetFileFromClasspath() {
+    void testGetFileFromClasspath() {
         File file = FileUtils.getFile("doesNotExist");
         assertFalse(file.exists());
         file = FileUtils.getFile("selector.xqy");
@@ -152,7 +153,7 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testGetFileAbsolutePath() throws IOException {
+    void testGetFileAbsolutePath() throws IOException {
         File file = File.createTempFile("getFile", TEXT_FILE_EXT);
         file.deleteOnExit();
         File retrievedFile = FileUtils.getFile(file.getAbsolutePath());
@@ -160,7 +161,7 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testGetFileDoesNotExist() {
+    void testGetFileDoesNotExist() {
         File file = FileUtils.getFile("fileDoesNotExist");
         assertFalse(file.exists());
     }
@@ -175,11 +176,10 @@ public class FileUtilsTest {
      *
      * @param source A file to copy.
      * @param destination The new file where it should be copied to.
-     * @throws IOException
      */
     public static void copy(final File source, final File destination) throws IOException {
-        try (InputStream inputStream = new FileInputStream(source);
-                OutputStream outputStream = new FileOutputStream(destination)) {
+        try (InputStream inputStream = Files.newInputStream(source.toPath());
+             OutputStream outputStream = Files.newOutputStream(destination.toPath())) {
             IOUtilsTest.copy(inputStream, outputStream);
         }
     }
@@ -190,11 +190,10 @@ public class FileUtilsTest {
      * @param sourceFilePath Path to the existing file.
      * @param destinationFilePath Path where the file should be copied to.
      * @throws IOException
-     * @throws FileNotFoundException
      */
     public static void copy(final String sourceFilePath, final String destinationFilePath) throws IOException {
-        try (InputStream inputStream = new FileInputStream(sourceFilePath);
-                OutputStream outputStream = new FileOutputStream(destinationFilePath)) {
+        try (InputStream inputStream = Files.newInputStream(Paths.get(sourceFilePath));
+             OutputStream outputStream = Files.newOutputStream(Paths.get(destinationFilePath))) {
             IOUtilsTest.copy(inputStream, outputStream);
         }
     }
@@ -211,8 +210,8 @@ public class FileUtilsTest {
         byte[] buf = new byte[BUFFER_SIZE];
         int read;
 
-        try (InputStream is = new FileInputStream(contentFile);
-                ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+        try (InputStream is = Files.newInputStream(contentFile.toPath());
+             ByteArrayOutputStream os = new ByteArrayOutputStream()) {
             while ((read = is.read(buf)) > 0) {
                 os.write(buf, 0, read);
             }

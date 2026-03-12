@@ -20,9 +20,9 @@ package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static java.util.logging.Level.SEVERE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,12 +31,6 @@ import java.io.IOException;
 import java.util.logging.Logger;
 import java.util.List;
 import java.util.Properties;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 
 import com.marklogic.developer.TestHandler;
 import com.marklogic.developer.corb.util.FileUtils;
@@ -49,7 +43,7 @@ import com.marklogic.xcc.exceptions.RequestException;
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class MetricsIT {
+class MetricsIT {
 
     private static final String JSON_EXT = ".json";
     private static final String XML_EXT = ".xml";
@@ -57,32 +51,30 @@ public class MetricsIT {
     private static final String JS_MODULE = "saveMetrics.sjs|ADHOC";
     private static final String XQUERY_MODULE = "save-metrics.xqy|ADHOC";
 
-    @Rule
-    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
     public static final String SLASH = "/";
     private final TestHandler testLogger = new TestHandler();
-    private static final Logger MANAGER_LOG = Logger.getLogger(Manager.class.getName());
+    private static final Logger MANAGER_LOG = Logger.getLogger(MetricsIT.class.getName());
     private static final Logger LOG = Logger.getLogger(MetricsIT.class.getName());
     private static final String LARGE_URIS_MODULE = "src/test/resources/selectorLargeList.xqy|ADHOC";
     private static final String TRANSFORM_ERROR_MODULE = "src/test/resources/transform-error.xqy|ADHOC";
     protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\";\n";
 
-    @Before
-    public void setUp() throws IOException {
+    @BeforeEach
+    void setUp() throws IOException {
         clearSystemProperties();
         MANAGER_LOG.addHandler(testLogger);
         File tempDir = TestUtils.createTempDirectory();
         ManagerTest.EXPORT_FILE_DIR = tempDir.toString();
     }
 
-    @After
-    public void tearDown() throws IOException {
+    @AfterEach
+    void tearDown() throws IOException {
         FileUtils.deleteFile(ManagerTest.EXPORT_FILE_DIR);
         clearSystemProperties();
     }
 
     @Test
-    public void testManagerMetricsPeriodicSyncUsingSysPropsLargeUrisListJS() throws CorbException{
+    void testManagerMetricsPeriodicSyncUsingSysPropsLargeUrisListJS() throws CorbException{
         clearSystemProperties();
         int uriCount = 10;
         String collectionName = "testManagerMetricsPeriodicSyncUsingSysPropsLargeUrisListJS";
@@ -93,7 +85,7 @@ public class MetricsIT {
     }
 
     @Test
-    public void testManagerMetricsPeriodicSyncUsingSysPropsLargeUrisListXQUERY() throws CorbException{
+    void testManagerMetricsPeriodicSyncUsingSysPropsLargeUrisListXQUERY() throws CorbException{
         clearSystemProperties();
         int uriCount = 10;
         String collectionName = "testManagerMetricsPeriodicSyncUsingSysPropsLargeUrisListXQUERY";
@@ -104,7 +96,7 @@ public class MetricsIT {
     }
 
     @Test
-    public void testManagerMetricsNOPeriodicSyncJS() throws CorbException{
+    void testManagerMetricsNOPeriodicSyncJS() throws CorbException{
         clearSystemProperties();
         int uriCount = 10;
         String collectionName = "testManagerMetricsNOPeriodicSyncJS";
@@ -113,7 +105,7 @@ public class MetricsIT {
     }
 
     @Test
-    public void testManagerMetricsNOPeriodicSyncXQUERY() throws CorbException{
+    void testManagerMetricsNOPeriodicSyncXQUERY() throws CorbException{
         clearSystemProperties();
         int uriCount = 10;
         String collectionName = "testManagerMetricsNOPeriodicSyncXQUERY";
@@ -121,7 +113,7 @@ public class MetricsIT {
         testManager(uriCount, collectionName, exportFilename, null, null, XML_EXT);
     }
 
-    public static void cleanupDocs(ContentSourcePool contentSourcePool, String collection, String dbName) throws CorbException{
+    static void cleanupDocs(ContentSourcePool contentSourcePool, String collection, String dbName) throws CorbException{
         try (Session session = contentSourcePool.get().newSession()) {
             AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML
                     + "xdmp:invoke-function(function(){xdmp:collection-delete('" + collection
@@ -133,7 +125,7 @@ public class MetricsIT {
         }
     }
 
-    public static List<String> collectionCount(ContentSourcePool contentSourcePool, String collection, String dbName) throws CorbException{
+    static List<String> collectionCount(ContentSourcePool contentSourcePool, String collection, String dbName) throws CorbException{
         List<String> result = new ArrayList<>();
         try (Session session = contentSourcePool.get().newSession()) {
             AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML
@@ -148,7 +140,7 @@ public class MetricsIT {
         return result;
     }
 
-    public static List<String> docsWithEndTime(ContentSourcePool contentSourcePool, String collection, String dbName, boolean isXML) throws CorbException{
+    static List<String> docsWithEndTime(ContentSourcePool contentSourcePool, String collection, String dbName, boolean isXML) throws CorbException{
         List<String> result = new ArrayList<>();
         try (Session session = contentSourcePool.get().newSession()) {
             AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML + "declare namespace corb='" + JobStats.CORB_NAMESPACE + "';"
@@ -181,16 +173,16 @@ public class MetricsIT {
             assertEquals(uriCount / 2 + 2, lineCount);
             List<String> uris = collectionCount(manager.csp, collectionName, METRICS_DB_NAME);
             if (syncFrequency == null) {
-                assertTrue(uris.size() == 1);//more than one as it will log periodically
+                assertEquals(1, uris.size());//more than one as it will log periodically
             } else {
                 assertTrue(uris.size() > 1);//more than one as it will log periodically
             }
             //Check all uris have the same extension
             for (String uri : uris) {
-                assertTrue("Extension should be " + extension, uri.contains(extension));
+                assertTrue(uri.contains(extension));
             }
             List<String> urisWithEndTime = docsWithEndTime(manager.csp, collectionName, METRICS_DB_NAME, XML_EXT.equals(extension));
-            assertTrue("Only one URI with End Time", urisWithEndTime.size() == 1);
+            assertEquals(1, urisWithEndTime.size());
         } catch (Exception ex) {
             LOG.log(SEVERE, null, ex);
             fail();

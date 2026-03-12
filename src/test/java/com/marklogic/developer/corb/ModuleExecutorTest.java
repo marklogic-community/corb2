@@ -27,8 +27,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import org.junit.*;
-import static org.junit.Assert.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.*;
 
 import com.marklogic.xcc.ContentSource;
 import com.marklogic.xcc.Request;
@@ -50,7 +52,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -63,10 +64,8 @@ import static org.mockito.Mockito.when;
  *
  * @author matthew.heckel
  */
-public class ModuleExecutorTest {
+class ModuleExecutorTest {
 
-    @Rule
-    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
     private final TestHandler testLogger = new TestHandler();
     private static final Logger LOG = Logger.getLogger(ModuleExecutor.class.getName());
     public static final String XCC_CONNECTION_URI = "xcc://marklogic-corb-admin:marklogic-corb-admin-password@localhost:8223/marklogic-corb-content";
@@ -74,27 +73,27 @@ public class ModuleExecutorTest {
     public static final String EXPORT_FILE_NAME = "src/test/resources/helloWorld.txt";
     public static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
     private static final String FOO = "foo";
-    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-    private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
-    private PrintStream systemOut = System.out;
-    private PrintStream systemErr = System.err;
+    private static final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+    private static final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+    private static final PrintStream systemOut = System.out;
+    private static final PrintStream systemErr = System.err;
 
-    private void clearSystemProperties() {
+    private static void clearSystemProperties() {
 		TestUtils.clearSystemProperties();
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
 	}
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         clearSystemProperties();
         LOG.addHandler(testLogger);
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         // Add additional tear down code here
         clearSystemProperties();
         System.setOut(systemOut);
@@ -102,7 +101,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testModuleExecutor1() {
+    void testModuleExecutor1() {
         clearSystemProperties();
         ModuleExecutor result = new ModuleExecutor();
         assertNotNull(result);
@@ -118,7 +117,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testGetContentSource1() {
+    void testGetContentSource1() {
         clearSystemProperties();
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
         System.setProperty(Options.EXPORT_FILE_NAME, EXPORT_FILE_NAME);
@@ -129,7 +128,8 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testLogOptions() {
+    void testLogOptions() {
+        testLogger.clear();
         try {
             ModuleExecutor instance = getMockModuleExecutorWithEmptyResults();
             instance.logOptions();
@@ -153,7 +153,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testGetOption1() {
+    void testGetOption1() {
         clearSystemProperties();
         String argVal = "";
         String propName = Options.URIS_MODULE;
@@ -169,7 +169,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testGetOption2() {
+    void testGetOption2() {
         clearSystemProperties();
         System.setProperty(Options.URIS_MODULE, "helloWorld-selector.xqy");
         String argVal = "";
@@ -182,7 +182,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testGetOption3() {
+    void testGetOption3() {
         clearSystemProperties();
         String argVal = Options.URIS_MODULE;
         String propName = "";
@@ -194,7 +194,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testGetOptions1() {
+    void testGetOptions1() {
         try {
             clearSystemProperties();
             ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
@@ -208,7 +208,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testGetProperties1() {
+    void testGetProperties1() {
         try {
             clearSystemProperties();
             System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
@@ -223,7 +223,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testGetProperty1() {
+    void testGetProperty1() {
         try {
             clearSystemProperties();
             String key = "systemProperty";
@@ -241,7 +241,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testGetProperty2() {
+    void testGetProperty2() {
         try {
             clearSystemProperties();
             ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
@@ -259,7 +259,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testGetValueAsBytes1() {
+    void testGetValueAsBytes1() {
         clearSystemProperties();
         System.setProperty(Options.EXPORT_FILE_NAME, "src/test/resources/testGetValueAsBytes_1.txt");
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
@@ -270,8 +270,10 @@ public class ModuleExecutorTest {
             String[] args = {props.getProperty(Options.XCC_CONNECTION_URI)};
             ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
             executor.init(args);
-            ResultSequence resSeq = run(executor);
-            byte[] report = AbstractTask.getValueAsBytes(resSeq.next().getItem());
+            byte[] report;
+            try (ResultSequence resSeq = run(executor)) {
+                report = AbstractTask.getValueAsBytes(resSeq.next().getItem());
+            }
 
             assertNotNull(report);
         } catch (Exception ex) {
@@ -281,7 +283,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testMain1() {
+    void testMain1() {
 
         clearSystemProperties();
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
@@ -304,7 +306,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testNewTrustAnyoneDefaultOptions() {
+    void testNewTrustAnyoneDefaultOptions() {
         try {
             SecurityOptions result = new TrustAnyoneSSLConfig().getSecurityOptions();
             assertNotNull(result);
@@ -317,7 +319,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testPrepareContentSource() {
+    void testPrepareContentSource() {
         clearSystemProperties();
         try {
             ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
@@ -328,16 +330,16 @@ public class ModuleExecutorTest {
         }
     }
 
-    @Test(expected = CorbException.class)
-    public void testProcessResult() throws CorbException {
+    @Test
+    void testProcessResult() {
         clearSystemProperties();
         ModuleExecutor executor = new MockModuleExecutorCannotWrite();
         ResultSequence seq = null;
-        executor.processResult(seq);
+        assertThrows(CorbException.class, () -> executor.processResult(seq));
     }
 
     @Test
-    public void testRun1() {
+    void testRun1() {
         clearSystemProperties();
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
         System.setProperty(Options.PROCESS_MODULE, PROCESS_MODULE);
@@ -347,7 +349,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testRun2() {
+    void testRun2() {
         clearSystemProperties();
         String[] args = {
             XCC_CONNECTION_URI,
@@ -361,7 +363,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testRun3() {
+    void testRun3() {
         clearSystemProperties();
         String[] args = {};
         System.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
@@ -390,8 +392,8 @@ public class ModuleExecutorTest {
         }
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testRunInlineEmpty() {
+    @Test
+    void testRunInlineEmpty() {
         clearSystemProperties();
         String[] args = {};
         System.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
@@ -400,18 +402,17 @@ public class ModuleExecutorTest {
         try {
             ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
             executor.init(args);
-            executor.run();
+            assertThrows(IllegalStateException.class, executor::run);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             if (ex instanceof IllegalStateException) {
                 throw (IllegalStateException) ex;
             }
         }
-        fail();
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testRunAdhocIsEmpty() {
+    @Test
+    void testRunAdhocIsEmpty() {
         try {
             File emptyModule = File.createTempFile("emptyModule", "txt");
             emptyModule.deleteOnExit();
@@ -422,23 +423,22 @@ public class ModuleExecutorTest {
             System.setProperty(Options.EXPORT_FILE_NAME, EXPORT_FILE_NAME);
             ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
             executor.init(args);
-            executor.run();
+            assertThrows(IllegalStateException.class, executor::run);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             if (ex instanceof IllegalStateException) {
                 throw (IllegalStateException) ex;
             }
         }
-        fail();
     }
 
     @Test
-    public void testSetProperties1() {
+    void testSetProperties1() {
         try {
             clearSystemProperties();
             System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
             ModuleExecutor executor = this.buildModuleExecutorAndLoadProperties();
-            Map props = executor.getProperties();
+            Map<Object, Object> props = executor.getProperties();
 
             assertNotNull(props);
             assertFalse(props.isEmpty());
@@ -520,49 +520,46 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testMainNullArgs() {
+    void testMainNullArgs() {
         String[] args = null;
-        exit.expectSystemExit();
-        ModuleExecutor.main(args);
-        fail();
+        int exitCode = ModuleExecutor.run(args);
+        assertEquals(1, exitCode);
     }
 
     @Test
-    public void testMainEmptyArgs() {
+    void testMainEmptyArgs() {
         String[] args = new String[]{};
-        exit.expectSystemExit();
-        ModuleExecutor.main(args);
-        fail();
+        int exitCode = ModuleExecutor.run(args);
+        assertEquals(1, exitCode);
     }
 
-    @Test(expected = CorbException.class)
-    public void testInitStringArrNullProperties() throws CorbException {
+    @Test
+    void testInitStringArrNullProperties() {
         String[] args = null;
         Properties props = null;
         ModuleExecutor instance = new ModuleExecutor();
-        instance.init(args, props);
-        fail();
-    }
-
-    @Test(expected = CorbException.class)
-    public void testInitStringArrEmptyProperties() throws CorbException {
-        String[] args = null;
-        Properties props = new Properties();
-        ModuleExecutor instance = new ModuleExecutor();
-        instance.init(args, props);
-        fail();
-    }
-
-    @Test(expected = CorbException.class)
-    public void testInitOptionsMissingPROCESSMODULE() throws CorbException {
-        String[] args = new String[]{};
-        ModuleExecutor instance = new ModuleExecutor();
-        instance.initOptions(args);
-        fail();
+        assertThrows(CorbException.class, () -> instance.init(args, props));
     }
 
     @Test
-    public void testInitOptions() {
+    void testInitStringArrEmptyProperties() {
+        clearSystemProperties();
+        String[] args = null;
+        Properties props = new Properties();
+        ModuleExecutor instance = new ModuleExecutor();
+        assertThrows(CorbException.class, () -> instance.init(args, props));
+    }
+
+    @Test
+    void testInitOptionsMissingPROCESSMODULE() {
+        String[] args = new String[]{};
+        clearSystemProperties();
+        ModuleExecutor instance = new ModuleExecutor();
+        assertThrows(CorbException.class, () -> instance.initOptions(args));
+    }
+
+    @Test
+    void testInitOptions() {
         try {
             String exportDir = TestUtils.createTempDirectory().toString();
             String[] args = new String[]{FOO, "processModule", "", "", exportDir};
@@ -575,22 +572,16 @@ public class ModuleExecutorTest {
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testInitOptionsExportDirDoesNotExist() {
+    @Test
+    void testInitOptionsExportDirDoesNotExist() {
         String exportDir = "does/not/exist";
         String[] args = new String[]{FOO, "processModule", "", "", exportDir};
         ModuleExecutor instance = new ModuleExecutor();
-        try {
-            instance.initOptions(args);
-        } catch (CorbException ex) {
-            Logger.getLogger(ModuleExecutorTest.class.getName()).log(Level.SEVERE, null, ex);
-            fail();
-        }
-        fail();
+        assertThrows(IllegalArgumentException.class, () -> instance.initOptions(args));
     }
 
     @Test
-    public void testUsage() {
+    void testUsage() {
         AbstractManager aManager = new AbstractManagerTest.AbstractManagerImpl();
         aManager.usage();
         String aManagerUsage = outContent.toString();
@@ -603,22 +594,14 @@ public class ModuleExecutorTest {
         assertTrue(outContent.toString().contains(aManagerUsage));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testRunNullContentSource() {
+    @Test
+    void testRunNullContentSource() {
         ModuleExecutor instance = new ModuleExecutor();
-        try {
-            instance.run();
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            if (ex instanceof NullPointerException) {
-                throw (NullPointerException) ex;
-            }
-        }
-        fail();
+        assertThrows(NullPointerException.class, instance::run);
     }
 
     @Test
-    public void testGetProperty() {
+    void testGetProperty() {
         String key = "getPropertyKeyDoesNotExist";
         ModuleExecutor instance = new ModuleExecutor();
         String result = instance.getProperty(key);
@@ -626,7 +609,7 @@ public class ModuleExecutorTest {
     }
 
     @Test
-    public void testCustomProcessResults() {
+    void testCustomProcessResults() {
         try {
             String[] args = {"xcc://user:pass@localhost:8000", "module.xqy"};
             ModuleExecutor instance = getMockModuleExecutorCustomProcessResults();
@@ -634,7 +617,7 @@ public class ModuleExecutorTest {
             instance.run();
             MockModuleExecutorResults moduleExecutor = (MockModuleExecutorResults) instance;
             assertFalse(moduleExecutor.results.isEmpty());
-            assertTrue(moduleExecutor.results.size() == 2);
+            assertEquals(2, moduleExecutor.results.size());
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -702,7 +685,7 @@ public class ModuleExecutorTest {
 
     private static class MockModuleExecutorResults extends ModuleExecutor {
 
-        private List<String> results = new ArrayList<>();
+        private final List<String> results = new ArrayList<>();
 
         @Override
         protected void writeToFile(ResultSequence res) {

@@ -19,22 +19,23 @@
 package com.marklogic.developer.corb.util;
 
 import com.marklogic.developer.corb.CorbException;
-import org.junit.Test;
 import org.xml.sax.SAXParseException;
 
 import java.io.File;
 import java.util.List;
 import java.util.Properties;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
-public class XmlUtilsTest {
-    private String dir = "src/test/resources/streamingXMLUrisLoader/";
-    private File xmlDoc = new File(dir , "EDI.ICF15T.D150217.T113100716.T");
-    private File schema = new File(dir + "BenefitEnrollment.xsd");
-    private Properties options = new Properties();
+class XmlUtilsTest {
+    private final String dir = "src/test/resources/streamingXMLUrisLoader/";
+    private final File xmlDoc = new File(dir , "EDI.ICF15T.D150217.T113100716.T");
+    private final File schema = new File(dir + "BenefitEnrollment.xsd");
+    private final Properties options = new Properties();
+
     @Test
-    public void schemaValidate() {
+    void schemaValidate() {
         try {
             List<SAXParseException> exceptionList = XmlUtils.schemaValidate(xmlDoc, schema, options);
             assertTrue(exceptionList.isEmpty());
@@ -44,7 +45,7 @@ public class XmlUtilsTest {
     }
 
     @Test
-    public void schemaValidateWithError()  {
+    void schemaValidateWithError()  {
         File schema = new File(dir, "NotBenefitEnrollment.xsd");
         try {
             List<SAXParseException> exceptionList = XmlUtils.schemaValidate(xmlDoc, schema, options);
@@ -54,10 +55,10 @@ public class XmlUtilsTest {
         }
     }
 
-    @Test (expected = CorbException.class)
-    public void schemaValidateMissingFile() throws CorbException {
+    @Test
+    void schemaValidateMissingFile() {
         File missingFile = new File("does-not-exist.xml");
-        XmlUtils.schemaValidate(missingFile, schema, options);
+        assertThrows(CorbException.class, () -> XmlUtils.schemaValidate(missingFile, schema, options));
     }
 
 }

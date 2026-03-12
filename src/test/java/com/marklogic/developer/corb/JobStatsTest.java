@@ -35,65 +35,64 @@ import javax.xml.xpath.XPathFactory;
 import com.marklogic.xcc.*;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.impl.SessionImpl;
-import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.*;
 
-public class JobStatsTest {
+class JobStatsTest {
     private static final String FOO = "foo";
     private static final String BAR = "bar";
     private static final String METRICS_DB = "metricsDB";
 
     @Test
-    public void testGetAverageTransactionTimeNoCompletedTasks() {
+    void testGetAverageTransactionTimeNoCompletedTasks() {
         Manager manager = mock(Manager.class);
         JobStats jobStats = new JobStats(manager);
-        Double average = jobStats.getAverageTransactionTime(5000L, 0L, 0L);
-        assertFalse(average.isInfinite());
-        assertEquals(0, average.intValue());
+        double average = jobStats.getAverageTransactionTime(5000L, 0L, 0L);
+        assertFalse(Double.isInfinite(average));
+        assertEquals(0, (int) average);
     }
 
     @Test
-    public void testGetAverageTransactionNoValues() {
+    void testGetAverageTransactionNoValues() {
         Manager manager = mock(Manager.class);
         JobStats jobStats = new JobStats(manager);
-        Double average = jobStats.getAverageTransactionTime(0L, 0L, 0L);
-        assertFalse(average.isInfinite());
-        assertEquals(0, average.doubleValue(), 0.00);
+        double average = jobStats.getAverageTransactionTime(0L, 0L, 0L);
+        assertFalse(Double.isInfinite(average));
+        assertEquals(0, average, 0.00);
     }
 
     @Test
-    public void testGetAverageTransactionTimeNoFailed() {
+    void testGetAverageTransactionTimeNoFailed() {
         Manager manager = mock(Manager.class);
         JobStats jobStats = new JobStats(manager);
         assertFalse(Double.isInfinite(jobStats.getAverageTransactionTime(50L, 0L, 3000L)));
     }
 
     @Test
-    public void testGetAverageTransactionTimeNoSuccessful() {
+    void testGetAverageTransactionTimeNoSuccessful() {
         Manager manager = mock(Manager.class);
         JobStats jobStats = new JobStats(manager);
-        Double answer = jobStats.getAverageTransactionTime(50L, 300L, 0L);
-        assertFalse(answer.isInfinite());
+        double answer = jobStats.getAverageTransactionTime(50L, 300L, 0L);
+        assertFalse(Double.isInfinite(answer));
 
         Double averageOfOne = jobStats.getAverageTransactionTime(3L, 2L, 1L);
-        assertEquals(1d, averageOfOne.doubleValue(), 0.00);
+        assertEquals(1d, averageOfOne, 0.00);
 
         Double averageMoreSuccess = jobStats.getAverageTransactionTime(3L, 0L, 3L);
         Double averageMoreFailed = jobStats.getAverageTransactionTime(3L, 3L, 0L);
         assertEquals(averageMoreSuccess, averageMoreFailed);
-        assertEquals(1d, averageMoreFailed.doubleValue(), 0.00);
+        assertEquals(1d, averageMoreFailed, 0.00);
         assertEquals(averageOfOne, averageMoreSuccess);
     }
 
     @Test
-    public void getHostName() throws Exception {
+    void getHostName() {
         TransformOptions transformOptions = new TransformOptions();
         transformOptions.setJobName("JobStatsTest");
         Manager manager = new Manager();
@@ -103,12 +102,12 @@ public class JobStatsTest {
     }
 
     @Test
-    public void epochMillisAsFormattedDateString() throws Exception {
+    void epochMillisAsFormattedDateString() {
         assertEquals(20, JobStats.epochMillisAsFormattedDateString(0).length());
     }
 
     @Test
-    public void testToString() {
+    void testToString() {
         Manager manager = new Manager();
         JobStats jobStats = new JobStats(manager);
         assertTrue(jobStats.toString().startsWith("{"));
@@ -116,7 +115,7 @@ public class JobStatsTest {
     }
 
     @Test
-	public void testNullName() {
+	void testNullName() {
 	    Manager manager = new Manager();
 		JobStats jobStats = new JobStats(manager);
 
@@ -124,7 +123,7 @@ public class JobStatsTest {
 	}
 
 	@Test
-	public void testFailedUris() {
+	void testFailedUris() {
         Manager manager = new Manager();
         TransformOptions options = new TransformOptions();
         options.setJobName("myJob");
@@ -136,13 +135,13 @@ public class JobStatsTest {
 
 	private void assertXMLJSONNotNull(JobStats jobStats) {
 		String xml = jobStats.toXmlString();
-		assertTrue("Empty Failed URIs", xml != null);
-		assertTrue("Job is  null", jobStats.toJSON() != null);
-		assertTrue("Job is  null", jobStats.toJSON(true) != null);
+        assertNotNull(xml);
+        assertNotNull(jobStats.toJSON());
+        assertNotNull(jobStats.toJSON(true));
 	}
 
 	@Test
-	public void testXMLRanks() throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+	void testXMLRanks() throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
 		Map<String, Long> nodeVal = new HashMap<>();
         nodeVal.put("URI6", 1L);
         nodeVal.put("URI3", 4L);
@@ -182,17 +181,17 @@ public class JobStatsTest {
 
         String uri = (String) xpath.evaluate("/c:job/c:slowTransactions/c:Uri[1]/c:uri/text()", doc, XPathConstants.STRING);
         String rank = (String) xpath.evaluate("/c:job/c:slowTransactions/c:Uri[1]/c:rank/text()", doc, XPathConstants.STRING);
-        assertEquals("Rank is Correct", "1", rank);
-        assertTrue("Rank is Correct", uri.equals("URI" + rank));
+        assertEquals("1", rank);
+        assertEquals(uri, "URI" + rank);
 
         uri = (String) xpath.evaluate("/c:job/c:slowTransactions/c:Uri[last()]/c:uri/text()", doc, XPathConstants.STRING);
         rank = (String) xpath.evaluate("/c:job/c:slowTransactions/c:Uri[last()]/c:rank/text()", doc, XPathConstants.STRING);
-        assertEquals("Rank is Correct", "6", rank);
-        assertTrue("Rank is Correct", uri.equals("URI" + rank));
+        assertEquals("6", rank);
+        assertEquals(uri, "URI" + rank);
 	}
 
 	@Test
-    public void testToXMLWithEmptyJobStats() {
+    void testToXMLWithEmptyJobStats() {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         List<JobStats> jobStatsList = new ArrayList<>();
         Document doc = JobStats.toXML(documentBuilderFactory, jobStatsList, true);
@@ -201,7 +200,7 @@ public class JobStatsTest {
     }
 
     @Test
-    public void testToXMLRedactUris() {
+    void testToXMLRedactUris() {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         List<JobStats> jobStatsList = new ArrayList<>();
         Manager manager = mock(Manager.class);
@@ -226,7 +225,7 @@ public class JobStatsTest {
     }
 
     @Test
-    public void testToXMLDoNotRedactUris() {
+    void testToXMLDoNotRedactUris() {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         List<JobStats> jobStatsList = new ArrayList<>();
         Manager manager = mock(Manager.class);
@@ -252,7 +251,7 @@ public class JobStatsTest {
     }
 
     @Test
-    public void testToXMLParserConfigurationException() {
+    void testToXMLParserConfigurationException() {
         DocumentBuilderFactory documentBuilderFactory = mock(DocumentBuilderFactory.class);
         try {
             when(documentBuilderFactory.newDocumentBuilder()).thenThrow(ParserConfigurationException.class);
@@ -265,7 +264,7 @@ public class JobStatsTest {
     }
 
     @Test
-    public void testToXML() {
+    void testToXML() {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         List<JobStats> jobStatsList = new ArrayList<>();
 
@@ -279,7 +278,7 @@ public class JobStatsTest {
     }
 
 	@Test
-    public void testLogToServerNullContentSource() {
+    void testLogToServerNullContentSource() {
         ContentSource contentSource = mock(ContentSource.class);
         Manager manager = mock(Manager.class);
         ContentSourcePool csp = mock(ContentSourcePool.class);
@@ -296,7 +295,7 @@ public class JobStatsTest {
     }
 
     @Test
-    public void testLogToServerException() {
+    void testLogToServerException() {
         ContentSource contentSource = mock(ContentSource.class);
         Manager manager = mock(Manager.class);
         ContentSourcePool csp = mock(ContentSourcePool.class);
@@ -314,7 +313,7 @@ public class JobStatsTest {
     }
 
 	@Test
-    public void testLogToServerDefaultLevelNone() {
+    void testLogToServerDefaultLevelNone() {
         ContentSource contentSource = mock(ContentSource.class);
         Manager manager = mock(Manager.class);
         when(manager.getOptions()).thenReturn(mock(TransformOptions.class));
@@ -328,7 +327,7 @@ public class JobStatsTest {
     }
 
     @Test
-    public void testLogToServerWithLogLevel() {
+    void testLogToServerWithLogLevel() {
         ContentSource contentSource = mock(ContentSource.class);
         Manager manager = mock(Manager.class);
         TransformOptions transformOptions = new TransformOptions();
@@ -345,7 +344,7 @@ public class JobStatsTest {
     }
 
     @Test
-    public void testLogToServerWithNullMessage() {
+    void testLogToServerWithNullMessage() {
         ContentSource contentSource = mock(ContentSource.class);
         Manager manager = mock(Manager.class);
         TransformOptions transformOptions = new TransformOptions();
@@ -361,8 +360,8 @@ public class JobStatsTest {
         }
     }
 
-    @Test (expected = RequestException.class)
-    public void testLogToServerWithRequestException() throws RequestException {
+    @Test
+    void testLogToServerWithRequestException() throws RequestException {
         ContentSource contentSource = mock(ContentSource.class);
 
         Manager manager = mock(Manager.class);
@@ -378,11 +377,11 @@ public class JobStatsTest {
         when(session.submitRequest(any())).thenThrow(new RequestException("Boom!", request));
         JobStats jobStats = new JobStats(manager);
 
-        jobStats.logToServer(contentSource, null, BAR);
+        assertThrows(RequestException.class, () -> jobStats.logToServer(contentSource, null, BAR));
     }
 
     @Test
-    public void testExecuteModuleWithoutDatabaseConfigured() {
+    void testExecuteModuleWithoutDatabaseConfigured() {
         ContentSource contentSource = mock(ContentSource.class);
         ContentSourcePool csp = mock(ContentSourcePool.class);
         Manager manager = mock(Manager.class);
@@ -401,7 +400,7 @@ public class JobStatsTest {
     }
 
     @Test
-    public void testExecuteModule() {
+    void testExecuteModule() {
         ContentSource contentSource = mock(ContentSource.class);
         ContentSourcePool csp = mock(ContentSourcePool.class);
         Manager manager = mock(Manager.class);
@@ -425,7 +424,7 @@ public class JobStatsTest {
     }
 
     @Test
-    public void testExecuteModuleWithoutCSP() {
+    void testExecuteModuleWithoutCSP() {
         ContentSource contentSource = mock(ContentSource.class);
         Manager manager = mock(Manager.class);
         TransformOptions transformOptions = new TransformOptions();
@@ -438,7 +437,7 @@ public class JobStatsTest {
     }
 
     @Test
-    public void testExecuteModuleWithNullContentSource() {
+    void testExecuteModuleWithNullContentSource() {
         ContentSource contentSource = mock(ContentSource.class);
         ContentSourcePool csp = mock(ContentSourcePool.class);
         Manager manager = mock(Manager.class);
@@ -457,7 +456,7 @@ public class JobStatsTest {
     }
 
     @Test
-    public void testExecuteModuleContentSourcePoolGetThrows()  {
+    void testExecuteModuleContentSourcePoolGetThrows()  {
         ContentSource contentSource = mock(ContentSource.class);
         ContentSourcePool csp = mock(ContentSourcePool.class);
         Manager manager = mock(Manager.class);
@@ -477,7 +476,7 @@ public class JobStatsTest {
     }
 
     @Test
-    public void testRefreshMonitorStatsWhenDone() {
+    void testRefreshMonitorStatsWhenDone() {
         Manager manager = mock(Manager.class);
         Monitor monitor = mock(Monitor.class);
         when(monitor.getTaskCount()).thenReturn(1L);
@@ -490,12 +489,12 @@ public class JobStatsTest {
     }
 
     @Test
-    public void testAddFailedUris() {
+    void testAddFailedUris() {
 
     }
 
     @Test
-    public void testAddFailedUrisWhenNull() {
+    void testAddFailedUrisWhenNull() {
         Manager manager = mock(Manager.class);
         PausableThreadPoolExecutor threadPoolExecutor = mock(PausableThreadPoolExecutor.class);
         List<String> uris = new ArrayList<>(1);
@@ -524,7 +523,7 @@ public class JobStatsTest {
 	 * 		Log to Java console
 	 * 3: Log periodically XML or JSON
 	 * 		Fewer fields in concise mode for periodic logging
-	 * 		End time and average traansaction time is shown on the last entry
+	 * 		End time and average transaction time is shown on the last entry
 	 * 		Should only have one entry with end time
 	 * 		Should pause syncing when job is paused
 	 * 		Should log one extra full record when pausing

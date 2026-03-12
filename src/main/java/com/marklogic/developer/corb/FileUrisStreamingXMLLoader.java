@@ -350,6 +350,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
      * <p>
      * This method uses a StAX (Streaming API for XML) parser to process the XML file with
      * minimal memory consumption:
+     * </p>
      * <ol>
      *   <li>Opens the XML file with a buffered reader</li>
      *   <li>Creates a StAX stream reader for parsing</li>
@@ -360,15 +361,14 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
      *   <li>Opens a directory stream for iterating the extracted files</li>
      *   <li>Sets the total document count for progress tracking</li>
      * </ol>
-     * </p>
      * <p>
      * <b>Return Codes from extractElement:</b>
+     * </p>
      * <ul>
      *   <li>0 - No extraction performed, continue parsing</li>
      *   <li>1 - XML node extracted successfully (counts toward total)</li>
      *   <li>2 - Metadata extracted (does not count toward total)</li>
      * </ul>
-     * </p>
      *
      * @param xmlFile the path to the XML file to parse and split
      * @return an iterator over the temporary files containing extracted elements

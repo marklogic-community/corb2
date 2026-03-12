@@ -23,83 +23,77 @@ import java.io.IOException;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class TaskFactoryTest {
+class TaskFactoryTest {
 
     private static final Logger LOG = Logger.getLogger(TaskFactoryTest.class.getName());
     private static final String MODULE = "module";
 
-    @Test(expected = NullPointerException.class)
-    public void testNewProcessTaskStringArrNullManager() {
+    @Test
+    void testNewProcessTaskStringArrNullManager() {
         String[] uris = null;
         TaskFactory instance = new TaskFactory(null);
-        instance.newProcessTask(uris);
-        fail();
+        assertThrows(NullPointerException.class, () -> instance.newProcessTask(uris));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testNewProcessTaskStringArrNullPorcessTask() {
+    @Test
+    void testNewProcessTaskStringArrNullPorcessTask() {
         String[] uris = null;
         Manager manager = new Manager();
         TaskFactory instance = new TaskFactory(manager);
-        instance.newProcessTask(uris);
-        fail();
+        assertThrows(NullPointerException.class, () -> instance.newProcessTask(uris));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testNewProcessTaskStringArrNullUrisAndNullContentSource() {
+    @Test
+    void testNewProcessTaskStringArrNullUrisAndNullContentSource() {
         String[] uris = null;
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
         TaskFactory instance = new TaskFactory(manager);
-        instance.newProcessTask(uris);
-        fail();
+        assertThrows(NullPointerException.class, () -> instance.newProcessTask(uris));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testNewProcessTaskStringArrNullInputUriWithContentSourceAndModule() {
+    @Test
+    void testNewProcessTaskStringArrNullInputUriWithContentSourceAndModule() {
         String[] uris = null;
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
         manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
-        instance.newProcessTask(uris);
-        fail();
+        assertThrows(NullPointerException.class, () -> instance.newProcessTask(uris));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testNewProcessTaskStringArr() {
+    @Test
+    void testNewProcessTaskStringArr() {
         String[] uris = new String[]{MODULE};
         Manager manager = new Manager();
         manager.options.setProcessTaskClass(ExportBatchToFileTask.class);
         manager.options.setProcessModule(MODULE);
         manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
-        instance.newProcessTask(uris);
-        fail();
+        assertThrows(IllegalArgumentException.class, () -> instance.newProcessTask(uris));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testNewProcessTaskStringArrEmptyUris() {
+    @Test
+    void testNewProcessTaskStringArrEmptyUris() {
         String[] uris = new String[]{};
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
         manager.csp = mock(ContentSourcePool.class);
 
         TaskFactory instance = new TaskFactory(manager);
-        instance.newProcessTask(uris);
-        fail();
+        assertThrows(NullPointerException.class, () -> instance.newProcessTask(uris));
     }
 
     @Test
-    public void testNewProcessTaskStringArrWithProcessModuleAndContentSource() {
+    void testNewProcessTaskStringArrWithProcessModuleAndContentSource() {
         String[] uris = new String[]{"a"};
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
@@ -111,7 +105,7 @@ public class TaskFactoryTest {
     }
 
     @Test
-    public void testCustomTimeZone() {
+    void testCustomTimeZone() {
         String[] uris = new String[]{"testCustomTimeZone"};
         String timeZoneID = "Africa/Conakry";
         Manager manager = new Manager();
@@ -125,7 +119,7 @@ public class TaskFactoryTest {
     }
 
     @Test
-    public void testDefaultTimeZone() {
+    void testDefaultTimeZone() {
         String[] uris = new String[]{"testDefaultTimeZone"};
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
@@ -137,7 +131,7 @@ public class TaskFactoryTest {
     }
 
     @Test
-    public void testInvalidTimeZone() {
+    void testInvalidTimeZone() {
         String[] uris = new String[]{"testInvalidTimeZone"};
         String timeZoneID = "moon/darkside";
         Manager manager = new Manager();
@@ -150,32 +144,27 @@ public class TaskFactoryTest {
         assertEquals(TimeZone.getTimeZone("GMT"), ((AbstractTask) result).timeZone);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testNewProcessTaskStringArrNullProcessModule() {
+    @Test
+    void testNewProcessTaskStringArrNullProcessModule() {
         String[] uris = new String[]{"a"};
         Manager manager = new Manager();
         manager.csp = mock(ContentSourcePool.class);
 
         TaskFactory instance = new TaskFactory(manager);
-        Task result = instance.newProcessTask(uris);
-
-        assertNotNull(result);
-        fail();
+        assertThrows(NullPointerException.class, () -> instance.newProcessTask(uris));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testNewProcessTaskStringArrNullContentSource() {
+    @Test
+    void testNewProcessTaskStringArrNullContentSource() {
         String[] uris = new String[]{"a"};
         Manager manager = new Manager();
         manager.options.setProcessModule(MODULE);
         TaskFactory instance = new TaskFactory(manager);
-        Task result = instance.newProcessTask(uris);
-        assertNotNull(result);
-        fail();
+        assertThrows(NullPointerException.class, () -> instance.newProcessTask(uris));
     }
 
     @Test
-    public void testNewProcessTaskStringArrBoolean() {
+    void testNewProcessTaskStringArrBoolean() {
         String[] uris = new String[]{"a"};
         boolean failOnError = false;
         Manager manager = new Manager();
@@ -187,24 +176,23 @@ public class TaskFactoryTest {
     }
 
     @Test
-    public void testNewPreBatchTaskNoBatchTaskOrModule() {
+    void testNewPreBatchTaskNoBatchTaskOrModule() {
         Manager manager = new Manager();
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newPreBatchTask();
         assertNull(result);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testNewPreBatchTaskOnlyPreBatchTaskClass() {
+    @Test
+    void testNewPreBatchTaskOnlyPreBatchTaskClass() {
         Manager manager = new Manager();
         manager.options.setPreBatchTaskClass(ExportBatchToFileTask.class);
         TaskFactory instance = new TaskFactory(manager);
-        instance.newPreBatchTask();
-        fail();
+        assertThrows(IllegalArgumentException.class, instance::newPreBatchTask);
     }
 
     @Test
-    public void testNewPreBatchTaskWithClassModuleAndSource() {
+    void testNewPreBatchTaskWithClassModuleAndSource() {
         Manager manager = new Manager();
         manager.options.setPreBatchModule(MODULE);
         manager.csp = mock(ContentSourcePool.class);
@@ -213,130 +201,121 @@ public class TaskFactoryTest {
         assertNotNull(result);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testNewPreBatchTaskNoPreBatchModuleAndContent() {
+    @Test
+    void testNewPreBatchTaskNoPreBatchModuleAndContent() {
         Manager manager = new Manager();
         manager.options.setPreBatchTaskClass(ExportBatchToFileTask.class);
         manager.options.setPreBatchModule(MODULE);
         TaskFactory instance = new TaskFactory(manager);
-        instance.newPreBatchTask();
-        fail();
+        assertThrows(NullPointerException.class, instance::newPreBatchTask);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testNewPreBatchTaskWithPreBatchTaskClassAndContent() {
+    @Test
+    void testNewPreBatchTaskWithPreBatchTaskClassAndContent() {
         Manager manager = new Manager();
         manager.options.setPreBatchTaskClass(ExportBatchToFileTask.class);
         manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
-        instance.newPreBatchTask();
-        fail();
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testNewPreBatchTask() {
-        Manager manager = new Manager();
-        manager.options.setPreBatchModule(MODULE);
-        TaskFactory instance = new TaskFactory(manager);
-        instance.newPreBatchTask();
+        assertThrows(IllegalArgumentException.class, instance::newPreBatchTask);
     }
 
     @Test
-    public void testNewPostBatchTaskNoPostbatchTaskClassOrModule() {
+    void testNewPreBatchTask() {
+        Manager manager = new Manager();
+        manager.options.setPreBatchModule(MODULE);
+        TaskFactory instance = new TaskFactory(manager);
+        assertThrows(NullPointerException.class, instance::newPreBatchTask);
+    }
+
+    @Test
+    void testNewPostBatchTaskNoPostbatchTaskClassOrModule() {
         Manager manager = new Manager();
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newPostBatchTask();
         assertNull(result);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testNewPostBatchTaskOnlyPostBatchTaskClass() {
-        Manager manager = new Manager();
-        manager.options.setPostBatchTaskClass(ExportBatchToFileTask.class);
-        TaskFactory instance = new TaskFactory(null);
-        instance.newPostBatchTask();
-        fail();
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testNewPostBatchTaskNoPostBatchModuleAndContent() {
-        Manager manager = new Manager();
-        manager.options.setPostBatchTaskClass(ExportBatchToFileTask.class);
-        manager.options.setPostBatchModule(MODULE);
-
-        TaskFactory instance = new TaskFactory(manager);
-        instance.newPostBatchTask();
-        fail();
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testNewPostBatchTaskWithClassModuleAndSource() {
-        Manager manager = new Manager();
-        manager.options.setPostBatchTaskClass(ExportBatchToFileTask.class);
-        manager.options.setPostBatchModule(MODULE);
-        manager.csp = mock(ContentSourcePool.class);
-        TaskFactory instance = new TaskFactory(manager);
-        instance.newPostBatchTask();
-        fail();
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testNewPostBatchTask() {
-        Manager manager = new Manager();
-        manager.options.setPostBatchTaskClass(ExportBatchToFileTask.class);
-        manager.csp = mock(ContentSourcePool.class);
-        TaskFactory instance = new TaskFactory(manager);
-        instance.newPostBatchTask();
-        fail();
+    @Test
+    void testNewPostBatchTaskOnlyPostBatchTaskClass() {
+        try (Manager manager = new Manager()) {
+            manager.options.setPostBatchTaskClass(ExportBatchToFileTask.class);
+            TaskFactory instance = new TaskFactory(null);
+            assertThrows(NullPointerException.class, instance::newPostBatchTask);
+        }
     }
 
     @Test
-    public void testNewInitTaskNoPostbatchTaskClassOrModule() {
+    void testNewPostBatchTaskNoPostBatchModuleAndContent() {
+        Manager manager = new Manager();
+        manager.options.setPostBatchTaskClass(ExportBatchToFileTask.class);
+        manager.options.setPostBatchModule(MODULE);
+
+        TaskFactory instance = new TaskFactory(manager);
+        assertThrows(NullPointerException.class, instance::newPostBatchTask);
+    }
+
+    @Test
+    void testNewPostBatchTaskWithClassModuleAndSource() {
+        Manager manager = new Manager();
+        manager.options.setPostBatchTaskClass(ExportBatchToFileTask.class);
+        manager.options.setPostBatchModule(MODULE);
+        manager.csp = mock(ContentSourcePool.class);
+        TaskFactory instance = new TaskFactory(manager);
+        assertThrows(IllegalArgumentException.class, instance::newPostBatchTask);
+    }
+
+    @Test
+    void testNewPostBatchTask() {
+        Manager manager = new Manager();
+        manager.options.setPostBatchTaskClass(ExportBatchToFileTask.class);
+        manager.csp = mock(ContentSourcePool.class);
+        TaskFactory instance = new TaskFactory(manager);
+        assertThrows(IllegalArgumentException.class, instance::newPostBatchTask);
+    }
+
+    @Test
+    void testNewInitTaskNoPostbatchTaskClassOrModule() {
         Manager manager = new Manager();
         TaskFactory instance = new TaskFactory(manager);
         Task result = instance.newInitTask();
         assertNull(result);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testNewInitTaskWithInitTaskClassOnly() {
+    @Test
+    void testNewInitTaskWithInitTaskClassOnly() {
         Manager manager = new Manager();
         manager.options.setInitTaskClass(ExportBatchToFileTask.class);
         TaskFactory instance = new TaskFactory(manager);
-        instance.newInitTask();
-        fail();
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testNewInitTaskWithInitModuleOnly() {
-        Manager manager = new Manager();
-        manager.options.setInitModule(MODULE);
-        TaskFactory instance = new TaskFactory(manager);
-        instance.newInitTask();
-        fail();
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testNewInitTaskWithTaskClassAndInitModule() {
-        Manager manager = new Manager();
-        manager.options.setInitTaskClass(ExportBatchToFileTask.class);
-        manager.options.setInitModule(MODULE);
-        TaskFactory instance = new TaskFactory(manager);
-        instance.newInitTask();
-        fail();
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testNewInitTaskWithInitModule() {
-        Manager manager = new Manager();
-        manager.options.setInitModule(MODULE);
-        TaskFactory instance = new TaskFactory(manager);
-        instance.newInitTask();
-        fail();
+        assertThrows(IllegalArgumentException.class, instance::newInitTask);
     }
 
     @Test
-    public void testNewInitTaskWithInitModuleAndContentSource() {
+    void testNewInitTaskWithInitModuleOnly() {
+        Manager manager = new Manager();
+        manager.options.setInitModule(MODULE);
+        TaskFactory instance = new TaskFactory(manager);
+        assertThrows(NullPointerException.class, instance::newInitTask);
+    }
+
+    @Test
+    void testNewInitTaskWithTaskClassAndInitModule() {
+        Manager manager = new Manager();
+        manager.options.setInitTaskClass(ExportBatchToFileTask.class);
+        manager.options.setInitModule(MODULE);
+        TaskFactory instance = new TaskFactory(manager);
+        assertThrows(NullPointerException.class, instance::newInitTask);
+    }
+
+    @Test
+    void testNewInitTaskWithInitModule() {
+        Manager manager = new Manager();
+        manager.options.setInitModule(MODULE);
+        TaskFactory instance = new TaskFactory(manager);
+        assertThrows(NullPointerException.class, instance::newInitTask);
+    }
+
+    @Test
+    void testNewInitTaskWithInitModuleAndContentSource() {
         Manager manager = new Manager();
         manager.options.setInitModule(MODULE);
         manager.csp = mock(ContentSourcePool.class);
@@ -345,20 +324,18 @@ public class TaskFactoryTest {
         assertNotNull(result);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testNewInitTask() {
+    @Test
+    void testNewInitTask() {
         Manager manager = new Manager();
 
         manager.options.setInitTaskClass(ExportBatchToFileTask.class);
         manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
-        Task result = instance.newInitTask();
-        assertNotNull(result);
-        fail();
+        assertThrows(IllegalArgumentException.class, instance::newInitTask);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testNewInitTaskEmptyModule() {
+    @Test
+    void testNewInitTaskEmptyModule() {
         try {
             Manager manager = new Manager();
             File emptyModule = File.createTempFile("testNewInitTask", "txt");
@@ -367,36 +344,30 @@ public class TaskFactoryTest {
             manager.options.setInitTaskClass(ExportBatchToFileTask.class);
             manager.csp = mock(ContentSourcePool.class);
             TaskFactory instance = new TaskFactory(manager);
-            Task result = instance.newInitTask();
-            assertNotNull(result);
-            fail();
+            assertThrows(IllegalArgumentException.class, instance::newInitTask);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testNewInitTaskInline() {
+    @Test
+    void testNewInitTaskInline() {
         Manager manager = new Manager();
         manager.options.setInitModule("INLINE-XQUERY|for $i in (1 to 5) $i");
         manager.options.setInitTaskClass(ExportBatchToFileTask.class);
         manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
-        Task result = instance.newInitTask();
-        assertNotNull(result);
-        fail();
+        assertThrows(IllegalArgumentException.class, instance::newInitTask);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testNewInitTaskInlineIsEmpty() {
+    @Test
+    void testNewInitTaskInlineIsEmpty() {
         Manager manager = new Manager();
         manager.options.setInitModule("INLINE-JAVASCRIPT|");
         manager.options.setInitTaskClass(ExportBatchToFileTask.class);
         manager.csp = mock(ContentSourcePool.class);
         TaskFactory instance = new TaskFactory(manager);
-        Task result = instance.newInitTask();
-        assertNotNull(result);
-        fail();
+        assertThrows(IllegalArgumentException.class, instance::newInitTask);
     }
 }

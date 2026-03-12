@@ -19,7 +19,8 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.corb.util.FileUtils;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -31,14 +32,12 @@ import java.util.logging.Logger;
 
 import static com.marklogic.developer.corb.Options.*;
 
-import static org.junit.Assert.*;
-
-public class OneWaySSLConfigTest {
+class OneWaySSLConfigTest {
 
     private static final Logger LOG = Logger.getLogger(OneWaySSLConfigTest.class.getName());
 
     @Test
-    public void getSSLContext() {
+    void getSSLContext() {
         try {
             SSLConfig instance = new OneWaySSLConfig();
             SSLContext context = instance.getSSLContext();
@@ -50,7 +49,7 @@ public class OneWaySSLConfigTest {
     }
 
     @Test
-    public void testGetTrustManagers() {
+    void testGetTrustManagers() {
         OneWaySSLConfig instance = new OneWaySSLConfig();
         Properties properties = new Properties();
         properties.setProperty(SSL_TRUSTSTORE, FileUtils.getFile("keystore.jks").getAbsolutePath());
@@ -65,7 +64,7 @@ public class OneWaySSLConfigTest {
     }
 
     @Test
-    public void testGetTrustManagersWrongType() {
+    void testGetTrustManagersWrongType() {
         OneWaySSLConfig instance = new OneWaySSLConfig();
         Properties properties = new Properties();
         properties.setProperty(SSL_TRUSTSTORE, FileUtils.getFile("keystore.jks").getAbsolutePath());

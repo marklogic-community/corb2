@@ -434,11 +434,11 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
          * Adds a URI and its execution time to the list.
          * <p>
          * The URI is only added if:
+         * </p>
          * <ul>
          * <li>The list is not yet full, OR</li>
          * <li>The execution time is longer than the shortest time currently in the list</li>
          * </ul>
-         * </p>
          * <p>
          * If the list is full, the shortest-running URI(s) will be removed to make room.
          * This method is synchronized to ensure thread safety.

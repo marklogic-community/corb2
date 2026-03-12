@@ -21,20 +21,20 @@ package com.marklogic.developer.corb;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class ArrayQueueTest {
+class ArrayQueueTest {
 
     private static final String FOO = "foo";
     private static final String BAR = "bar";
 
     @Test
-    public void testSize() {
+    void testSize() {
         Queue<String> instance = new ArrayQueue<>(10);
         assertEquals(0, instance.size());
 
@@ -42,14 +42,13 @@ public class ArrayQueueTest {
         assertEquals(1, instance.size());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testSizeNegativeInit() {
-        new ArrayQueue<>(-1);
-        fail();
+    @Test
+    void testSizeNegativeInit() {
+        assertThrows(IllegalArgumentException.class, () -> new ArrayQueue<>(-1));
     }
 
     @Test
-    public void testPeek() {
+    void testPeek() {
         Queue<String> instance = new ArrayQueue<>(10);
 
         String result = instance.peek();
@@ -60,7 +59,7 @@ public class ArrayQueueTest {
     }
 
     @Test
-    public void testPoll() {
+    void testPoll() {
         Queue<String> instance = new ArrayQueue<>(1);
 
         String result = instance.poll();
@@ -71,7 +70,7 @@ public class ArrayQueueTest {
     }
 
     @Test
-    public void testOffer() {
+    void testOffer() {
         Queue<String> instance = new ArrayQueue<>(1);
 
         assertTrue(instance.offer(FOO));
@@ -79,7 +78,7 @@ public class ArrayQueueTest {
     }
 
     @Test
-    public void testIncrement() {
+    void testIncrement() {
         int i = 0;
         ArrayQueue<String> instance = new ArrayQueue<>(2);
         assertEquals(0, instance.size());
@@ -91,7 +90,7 @@ public class ArrayQueueTest {
     }
 
     @Test
-    public void testIterator() {
+    void testIterator() {
         ArrayQueue<String> instance = new ArrayQueue<>(2);
         instance.add(FOO);
         instance.add(BAR);
@@ -101,14 +100,14 @@ public class ArrayQueueTest {
     }
 
     @Test
-    public void testIteratorEmpty() {
+    void testIteratorEmpty() {
         Queue<String> instance = new ArrayQueue<>(2);
         Iterator<String> iterator = instance.iterator();
         assertFalse(iterator.hasNext());
     }
 
     @Test
-    public void testRemoveAt() {
+    void testRemoveAt() {
         ArrayQueue<String> instance = new ArrayQueue<>(2);
         instance.add(FOO);
         instance.add(BAR);
@@ -120,7 +119,7 @@ public class ArrayQueueTest {
     }
 
     @Test
-    public void testRemove() {
+    void testRemove() {
         Queue<String> instance = new ArrayQueue<>(2);
         instance.add(FOO);
         instance.add(BAR);
@@ -132,29 +131,26 @@ public class ArrayQueueTest {
         assertTrue(instance.isEmpty());
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testRemoveTwice() {
+    @Test
+    void testRemoveTwice() {
         Queue<String> instance = new ArrayQueue<>(2);
         instance.add(FOO);
         instance.add(BAR);
         Iterator<String> iterator = instance.iterator();
         iterator.next();
         iterator.remove();
-        iterator.remove();
-        fail();
+        assertThrows(IllegalStateException.class, iterator::remove);
     }
 
-    @Test(expected = NoSuchElementException.class)
-    public void testNextWhenEmpty() {
+    @Test
+    void testNextWhenEmpty() {
         Queue<String> instance = new ArrayQueue<>(2);
-        instance.iterator().next();
-        fail();
+        assertThrows(NoSuchElementException.class, () -> instance.iterator().next());
     }
 
-    @Test (expected = NullPointerException.class)
-    public void testOfferNull() {
+    @Test
+    void testOfferNull() {
         Queue<String> instance = new ArrayQueue<>(2);
-        instance.offer(null);
-        fail();
+        assertThrows(NullPointerException.class, () -> instance.offer(null));
     }
 }

@@ -21,20 +21,16 @@ package com.marklogic.developer.corb;
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.Rule;
-import org.junit.contrib.java.lang.system.ExpectedSystemExit;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class ModuleExecutorIT {
+class ModuleExecutorIT {
 
     private static final Logger LOG = Logger.getLogger(ModuleExecutorIT.class.getName());
-    @Rule
-    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     private void clearSystemProperties() {
 		TestUtils.clearSystemProperties();
@@ -43,7 +39,7 @@ public class ModuleExecutorIT {
 	}
 
     @Test
-    public void testRunMain() {
+    void testRunMain() {
         clearSystemProperties();
         String[] args = {};
         String exportFileName = "testRunMain.txt";
@@ -52,12 +48,13 @@ public class ModuleExecutorIT {
         System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
         File report = new File(exportFileName);
         report.deleteOnExit();
-        exit.expectSystemExit();
-        ModuleExecutor.main(args);
+
+        int exitCode = ModuleExecutor.run(args);
+        assertEquals(0, exitCode);
     }
 
     @Test
-    public void testRunInline() {
+    void testRunInline() {
         clearSystemProperties();
         String[] args = {};
         String exportFileName = "testRunInline.txt";

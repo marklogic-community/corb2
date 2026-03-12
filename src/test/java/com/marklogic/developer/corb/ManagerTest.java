@@ -20,13 +20,11 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
 import java.io.File;
-import org.junit.*;
 
 import static com.marklogic.developer.corb.AbstractManager.EXIT_CODE_PROCESSING_ERROR;
 import static com.marklogic.developer.corb.AbstractManager.EXIT_CODE_SUCCESS;
 import static com.marklogic.developer.corb.Manager.EXIT_CODE_STOP_COMMAND;
-import static org.junit.Assert.*;
-import org.junit.contrib.java.lang.system.ExpectedSystemExit;
+import static org.junit.jupiter.api.Assertions.*;
 
 import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
 import static org.mockito.Mockito.*;
@@ -45,7 +43,7 @@ import com.marklogic.xcc.types.XdmItem;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -56,6 +54,7 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
+import org.junit.jupiter.api.*;
 import org.mockito.exceptions.base.MockitoException;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -66,14 +65,12 @@ import org.mockito.stubbing.Answer;
  *
  * @author matthew.heckel
  */
-public class ManagerTest {
+class ManagerTest {
 
-    @Rule
-    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
     private final TestHandler testLogger = new TestHandler();
     private static final Logger MANAGER_LOGGER = Logger.getLogger(Manager.class.getName());
     private static final Logger LOG = Logger.getLogger(ManagerTest.class.getName());
-    private PrintStream systemErr = System.err;
+    private static final PrintStream systemErr = System.err;
     public static final String XCC_CONNECTION_URI = "xcc://marklogic-corb-admin:marklogic-corb-admin-password@localhost:8223/marklogic-corb-content";
     public static final String COLLECTION_NAME = "StringPassedToTheURIsModule";
     public static final String XQUERY_MODULE = "src/test/resources/transform.xqy|ADHOC";
@@ -94,45 +91,45 @@ public class ManagerTest {
     public static final String PRE_BATCH_XQUERY_MODULE_FOO = "pre-bar";
     public static final String PROCESS_MODULE = "src/test/resources/transform2.xqy|ADHOC";
 
-    private void clearSystemProperties() {
-    		TestUtils.clearSystemProperties();
+    private static void clearSystemProperties() {
+        TestUtils.clearSystemProperties();
         System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
         System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
     }
 
-    @Before
-    public void setUp() throws IOException {
+    @BeforeEach
+    void setUp() throws IOException {
         clearSystemProperties();
         MANAGER_LOGGER.addHandler(testLogger);
         File tempDir = TestUtils.createTempDirectory();
         EXPORT_FILE_DIR = tempDir.toString();
     }
 
-    @After
-    public void tearDown() throws IOException {
+    @AfterEach
+    void tearDown() throws IOException {
         FileUtils.deleteFile(ManagerTest.EXPORT_FILE_DIR);
         clearSystemProperties();
         System.setErr(systemErr);
     }
 
     @Test
-    public void testMainWithoutOptionsInitFailure() {
-        exit.expectSystemExitWithStatus(Manager.EXIT_CODE_INIT_ERROR);
-        Manager.main();
+    void testMainWithoutOptionsInitFailure() {
+        String[] args = new String[0];
+        int exitCode = Manager.run(args);
+        assertEquals(Manager.EXIT_CODE_INIT_ERROR, exitCode);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testRejectedExecutionNpe() {
+    @Test
+    void testRejectedExecutionNpe() {
         Runnable r = mock(Runnable.class);
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
 
         RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
-        cbp.rejectedExecution(r, threadPool);
-        fail();
+        assertThrows(NullPointerException.class, () -> cbp.rejectedExecution(r, threadPool));
     }
 
     @Test
-    public void testRejectedExecution() {
+    void testRejectedExecution() {
         Runnable r = mock(Runnable.class);
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
         @SuppressWarnings("unchecked")
@@ -145,20 +142,19 @@ public class ManagerTest {
         assertNull(threadPool.getQueue());
     }
 
-    @Test(expected = MockitoException.class)
-    public void testRejectedExecutionRejectedExecution() {
+    @Test
+    void testRejectedExecutionRejectedExecution() {
         Runnable r = mock(Runnable.class);
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
 
-        when(threadPool.getQueue()).thenThrow(new InterruptedException());
-        threadPool.getQueue();
+        when(threadPool.getQueue()).thenThrow(new MockitoException("testing"));
+
         RejectedExecutionHandler cbp = new Manager.CallerBlocksPolicy();
-        cbp.rejectedExecution(r, threadPool);
-        fail();
+        assertThrows(MockitoException.class, () -> cbp.rejectedExecution(r, threadPool));
     }
 
     @Test
-    public void testRejectedExecutionWarningIsTrueAndQueIsNotNull() {
+    void testRejectedExecutionWarningIsTrueAndQueIsNotNull() {
         Runnable r = mock(Runnable.class);
         ThreadPoolExecutor threadPool = mock(ThreadPoolExecutor.class);
         @SuppressWarnings("unchecked")
@@ -175,54 +171,49 @@ public class ManagerTest {
     }
 
     @Test
-    public void testHelp() {
+    void testHelp() {
         clearSystemProperties();
         String[] args =  new String[]{"--help"};
         ByteArrayOutputStream outContent = new ByteArrayOutputStream();
         System.setErr(new PrintStream(outContent));
-        Manager.main(args);
+        Manager.run(args);
         assertTrue(outContent.toString().contains("CoRB version"));
     }
 
-    @Test(expected = CorbException.class)
-    public void testInitNullArgsProperties() throws CorbException {
+    @Test
+    void testInitNullArgsProperties() throws CorbException {
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
         props.setProperty(Options.BATCH_SIZE, Integer.toString(5));
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
-            instance.init(args, props);
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            assertThrows(CorbException.class, () -> instance.init(args, props));
         } catch (RequestException ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
-        fail();
     }
 
     @Test
-    public void testInitBlankCollection() {
+    void testInitBlankCollection() {
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
         props.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
         //no "COLLECTION-NAME" specified
         props.setProperty(Options.PROCESS_MODULE, "src/test/resources/mod-print-uri.sjs|ADHOC");
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertEquals("", instance.collection);
         } catch (CorbException | RequestException ex) {
-            LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
 
     @Test
-    public void testInitPropertiesEmptyProperties() {
+    void testInitPropertiesEmptyProperties() {
         clearSystemProperties();
         Properties properties = new Properties();
-        Manager manager = new Manager();
-        try {
+        try (Manager manager = new Manager()) {
             manager.initProperties(properties);
             assertEquals(2, manager.properties.size());
         } catch (CorbException ex) {
@@ -231,11 +222,10 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitPropertiesNullProperties() {
+    void testInitPropertiesNullProperties() {
         clearSystemProperties();
         Properties properties = null;
-        Manager manager = new Manager();
-        try {
+        try (Manager manager = new Manager()) {
             manager.initProperties(properties);
             assertNotNull(manager.properties);
         } catch (CorbException ex) {
@@ -244,15 +234,14 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitProperties() {
+    void testInitProperties() {
         clearSystemProperties();
         System.setProperty(Options.BATCH_SIZE, "3");
         System.setProperty(Options.COMMAND, "pause");
 
         Properties properties = new Properties();
         properties.setProperty(Options.COMMAND, "resume");
-        Manager manager = new Manager();
-        try {
+        try (Manager manager = new Manager()) {
             manager.initProperties(properties);
             assertNotNull(manager.properties);
             assertEquals("resume", manager.properties.getProperty(Options.COMMAND));
@@ -263,79 +252,70 @@ public class ManagerTest {
     }
 
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testInitUrisFileDoesNoteExist() {
+    @Test
+    void testInitUrisFileDoesNoteExist() {
         clearSystemProperties();
         String[] args = null;
         Properties props = new Properties();
         props.setProperty(Options.XCC_CONNECTION_URI, XCC_CONNECTION_URI);
         props.setProperty(Options.PROCESS_MODULE, "src/test/resources/mod-print-uri.sjs|ADHOC");
         props.setProperty(Options.URIS_FILE, "does/not/exist");
-
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
-            instance.init(args, props);
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            assertThrows(IllegalArgumentException.class, () -> instance.init(args, props));
         } catch (CorbException | RequestException ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
-        fail();
     }
 
-    @Test(expected = CorbException.class)
-    public void testInitNullArgsEmptyProperties() throws CorbException {
+    @Test
+    void testInitNullArgsEmptyProperties() throws CorbException {
         String[] args = null;
         Properties props = new Properties();
         try {
             Manager instance = getMockManagerWithEmptyResults();
-            instance.init(args, props);
+            assertThrows(CorbException.class, () -> instance.init(args, props));
         } catch (RequestException ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
-        fail();
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testInitOptionsNullArgs() {
-        String[] args = null;
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
-            instance.initOptions(args);
-        } catch (CorbException | RequestException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
-        fail();
-    }
-
-    @Test(expected = CorbException.class)
-    public void testInitOptions() throws CorbException {
-        String[] args = {};
-        Manager instance = new Manager();
-        instance.initOptions(args);
-        fail();
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testInitOptionsWithEmptyProperties() {
-        String[] args = null;
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
-            instance.properties = new Properties();
-            instance.initOptions(args);
-
-        } catch (CorbException | RequestException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
-        fail();
     }
 
     @Test
-    public void testInitOptionsUrisFileIsBlank() {
+    void testInitOptionsNullArgs() {
+        String[] args = null;
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            assertThrows(NullPointerException.class, () -> instance.initOptions(args));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptions() {
+        String[] args = {};
+        clearSystemProperties();
+        try (Manager instance = new Manager()) {
+            assertThrows(CorbException.class, () -> instance.initOptions(args));
+        }
+    }
+
+    @Test
+    void testInitOptionsWithEmptyProperties() {
+        String[] args = null;
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.properties = new Properties();
+            assertThrows(NullPointerException.class, () -> instance.initOptions(args));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsUrisFileIsBlank() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[15] = "      ";
         Properties props = new Properties();
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertNull(instance.options.getUrisFile());
 
@@ -346,14 +326,13 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptionsUrisFileIsNull() {
+    void testInitOptionsUrisFileIsNull() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[15] = null;
 
         Properties props = new Properties();
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertNull(instance.options.getUrisFile());
         } catch (CorbException | RequestException ex) {
@@ -363,15 +342,14 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptionsSetXQUERYMODULEProperty() {
+    void testInitOptionsSetXQUERYMODULEProperty() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[2] = null;
 
         Properties props = new Properties();
         props.setProperty(Options.XQUERY_MODULE, PROCESS_MODULE);
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
         } catch (CorbException | RequestException ex) {
@@ -381,15 +359,14 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptionsSetPROCESSMODULEProperty() {
+    void testInitOptionsSetPROCESSMODULEProperty() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[2] = "";//process-module
 
         Properties props = new Properties();
         props.setProperty(Options.PROCESS_MODULE, PROCESS_MODULE);
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
         } catch (CorbException | RequestException ex) {
@@ -399,13 +376,12 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptionsSetInstallPropertyTrue() {
+    void testInitOptionsSetInstallPropertyTrue() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[7] = Boolean.toString(true);//install
         Properties props = new Properties();
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertTrue(instance.options.isDoInstall());
         } catch (CorbException | RequestException ex) {
@@ -415,13 +391,12 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptionsSetInstallPropertyOne() {
+    void testInitOptionsSetInstallPropertyOne() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[7] = "1";//install
         Properties props = new Properties();
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertTrue(instance.options.isDoInstall());
         } catch (CorbException | RequestException ex) {
@@ -431,13 +406,12 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptionsSetInstallPropertyMaybe() {
+    void testInitOptionsSetInstallPropertyMaybe() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[7] = "maybe";//install
         Properties props = new Properties();
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertFalse(instance.options.isDoInstall());
         } catch (CorbException | RequestException ex) {
@@ -447,13 +421,12 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptionsSetDISKQUEUEMAXINMEMORYSIZEProperty() {
+    void testInitOptionsSetDISKQUEUEMAXINMEMORYSIZEProperty() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
         props.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, "10");
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertEquals(10, instance.options.getDiskQueueMaxInMemorySize());
         } catch (CorbException | RequestException ex) {
@@ -462,29 +435,26 @@ public class ManagerTest {
         }
     }
 
-    @Test(expected = NumberFormatException.class)
-    public void testInitOptionsSetDISKQUEUEMAXINMEMORYSIZEPropertyNaN() {
+    @Test
+    void testInitOptionsSetDISKQUEUEMAXINMEMORYSIZEPropertyNaN() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
         props.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, "ten");
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
-            instance.init(args, props);
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            assertThrows(NumberFormatException.class, () -> instance.init(args, props));
         } catch (CorbException | RequestException ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
-        fail();
     }
 
     @Test
-    public void testInitOptionsMissingPROCESSMODULE() {
+    void testInitOptionsMissingPROCESSMODULE() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[2] = "";
         Properties props = new Properties();
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertNull(instance.options.getProcessModule());
         } catch (CorbException | RequestException ex) {
@@ -494,7 +464,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptionsNormalizeLegacySystemProperties() {
+    void testInitOptionsNormalizeLegacySystemProperties() {
         clearSystemProperties();
         String propertySuffix = ".foo";
         System.setProperty(Options.XQUERY_MODULE, PROCESS_MODULE);
@@ -510,8 +480,7 @@ public class ManagerTest {
         args[13] = null; //post-batch-module
 
         Properties props = new Properties();
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
 
             assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
@@ -527,7 +496,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptionsNormalizeLegacyProperties() {
+    void testInitOptionsNormalizeLegacyProperties() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[2] = null; //process-module
@@ -541,8 +510,7 @@ public class ManagerTest {
         props.setProperty(Options.PRE_BATCH_XQUERY_MODULE + propertySuffix, PRE_BATCH_XQUERY_MODULE_FOO);
         props.setProperty(Options.POST_BATCH_XQUERY_MODULE, POST_BATCH_MODULE);
         props.setProperty(Options.POST_BATCH_XQUERY_MODULE + propertySuffix, POST_BATCH_XQUERY_MODULE_FOO);
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertEquals(PROCESS_MODULE, instance.options.getProcessModule());
             assertEquals(XQUERY_MODULE_FOO, instance.properties.getProperty(Options.PROCESS_MODULE + propertySuffix));
@@ -556,29 +524,26 @@ public class ManagerTest {
         }
     }
 
-    @Test(expected = NumberFormatException.class)
-    public void testInitOptionsBatchSizeParseError() {
+    @Test
+    void testInitOptionsBatchSizeParseError() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
         props.setProperty(Options.BATCH_SIZE, "one");
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
-            instance.init(args, props);
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            assertThrows(NumberFormatException.class, () -> instance.init(args, props));
         } catch (CorbException | RequestException ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
-        fail();
     }
 
     @Test
-    public void testInitOptionsBatchSize() {
+    void testInitOptionsBatchSize() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
         props.setProperty(Options.BATCH_SIZE, Integer.toString(5));
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertEquals(5, instance.options.getBatchSize());
         } catch (CorbException | RequestException ex) {
@@ -588,13 +553,12 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitFailOnErrorFalseCaseInsensitive() {
+    void testInitFailOnErrorFalseCaseInsensitive() {
         clearSystemProperties();
         System.setProperty(Options.FAIL_ON_ERROR, "False");
         String[] args = getDefaultArgs();
         Properties props = new Properties();
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertFalse(instance.options.isFailOnError());
         } catch (CorbException | RequestException ex) {
@@ -604,13 +568,12 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitFailOnErrorInvalidValue() {
+    void testInitFailOnErrorInvalidValue() {
         clearSystemProperties();
         System.setProperty(Options.FAIL_ON_ERROR, "No");
         String[] args = getDefaultArgs();
         Properties props = new Properties();
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertTrue(instance.options.isFailOnError());
         } catch (CorbException | RequestException ex) {
@@ -620,14 +583,13 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptionsEnsurePropertiesAreSet() {
+    void testInitOptionsEnsurePropertiesAreSet() {
         clearSystemProperties();
         System.setProperty(Options.ERROR_FILE_NAME, "out");
         System.setProperty(Options.EXPORT_FILE_PART_EXT, "pt");
         String[] args = getDefaultArgs();
         Properties props = new Properties();
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertEquals(1, instance.options.getBatchSize());
             assertEquals(EXPORT_FILE_DIR, instance.properties.getProperty("EXPORT-FILE-DIR"));
@@ -639,23 +601,21 @@ public class ManagerTest {
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testInitOptionsExportDirNotExists() {
+    @Test
+    void testInitOptionsExportDirNotExists() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[13] = "/does/not/exist";
         Properties props = new Properties();
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
-            instance.init(args, props);
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            assertThrows(IllegalArgumentException.class, () -> instance.init(args, props));
         } catch (CorbException | RequestException ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
-        fail();
     }
 
     @Test
-    public void testInitOptionsExportFileAndErrorFileExists() {
+    void testInitOptionsExportFileAndErrorFileExists() {
         clearSystemProperties();
         String errorFilename = "error.txt";
         File errorFile = new File(EXPORT_FILE_DIR, errorFilename);
@@ -667,8 +627,9 @@ public class ManagerTest {
         props.setProperty(Options.ERROR_FILE_NAME, errorFilename);
         try {
             if (errorFile.createNewFile() && exportFile.createNewFile()) {
-                Manager instance = getMockManagerWithEmptyResults();
-                instance.init(args, props);
+                try (Manager instance = getMockManagerWithEmptyResults()) {
+                    instance.init(args, props);
+                }
             }
             assertFalse(errorFile.exists());
             assertFalse(exportFile.exists());
@@ -679,7 +640,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptionsClearExportFilePartExt() {
+    void testInitOptionsClearExportFilePartExt() {
         clearSystemProperties();
 
         System.setProperty(Options.EXPORT_FILE_PART_EXT, "exp");
@@ -687,8 +648,7 @@ public class ManagerTest {
         args[12] = null;
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_PART_EXT, "expt");
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try ( Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertNull(instance.properties.getProperty(Options.EXPORT_FILE_PART_EXT));
             assertNull(System.getProperty(Options.EXPORT_FILE_PART_EXT));
@@ -699,7 +659,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptionsDefaultOptions() {
+    void testInitOptionsDefaultOptions() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[3] = null;
@@ -747,13 +707,12 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptionsInitModule() {
+    void testInitOptionsInitModule() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
         props.setProperty(Options.INIT_MODULE, "initModule");
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertEquals("initModule", instance.options.getInitModule());
         } catch (CorbException | RequestException ex) {
@@ -763,13 +722,12 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptionsProcessTaskClass() {
+    void testInitOptionsProcessTaskClass() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         Properties props = new Properties();
         props.setProperty(Options.INIT_TASK, PROCESS_TASK);
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertEquals(PROCESS_TASK, instance.options.getProcessTaskClass().getName());
         } catch (CorbException | RequestException ex) {
@@ -779,14 +737,13 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptionsCustomUrisLoader() {
+    void testInitOptionsCustomUrisLoader() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         String loader = FileUrisLoader.class.getName();
         Properties props = new Properties();
         props.setProperty(Options.URIS_LOADER, loader);
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             assertEquals(loader, instance.options.getUrisLoaderClass().getName());
         } catch (CorbException | RequestException ex) {
@@ -796,7 +753,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInitOptionsInstallWithBlankModules() {
+    void testInitOptionsInstallWithBlankModules() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[4] = "src/test/resources/selector.xqy";
@@ -804,8 +761,7 @@ public class ManagerTest {
         args[7] = "true";
 
         Properties props = new Properties();
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.options.setModulesDatabase("");
             instance.init(args, props);
             List<LogRecord> records = testLogger.getLogRecords();
@@ -816,26 +772,23 @@ public class ManagerTest {
         }
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testInitOptionsInstallWithMissingModule() {
+    @Test
+    void testInitOptionsInstallWithMissingModule() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[4] = "src/test/resources/doesNotExist.xqy";
         args[7] = Boolean.toString(true);
         Properties props = new Properties();
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
-            instance.init(args, props);
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            assertThrows(NullPointerException.class, () -> instance.init(args, props));
         } catch (CorbException | RequestException ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
-        fail();
     }
 
     @Test
-    public void testNormalizeLegacyPropertiesWhenPropertiesIsNull() {
-        try {
-            Manager manager = getMockManagerWithEmptyResults();
+    void testNormalizeLegacyPropertiesWhenPropertiesIsNull() {
+        try (Manager manager = getMockManagerWithEmptyResults()) {
             manager.properties = null;
             manager.normalizeLegacyProperties();
             assertNull(manager.properties);
@@ -846,15 +799,14 @@ public class ManagerTest {
     }
 
     @Test
-    public void testNormalizeLegacyProperties() {
+    void testNormalizeLegacyProperties() {
         String legacyValue1 = "legacyVal1";
         String legacyValue2 = "legacyVal2";
         Properties props = new Properties();
         props.setProperty(Options.XQUERY_MODULE, legacyValue1);
         props.setProperty(Options.XQUERY_MODULE + ".bar", legacyValue2);
 
-        try {
-            Manager manager = getMockManagerWithEmptyResults();
+        try (Manager manager = getMockManagerWithEmptyResults()) {
             manager.properties = props;
             manager.normalizeLegacyProperties();
 
@@ -867,13 +819,12 @@ public class ManagerTest {
     }
 
     @Test
-    public void testNormalizeLegacyPropertiesPrecedenceChecks() {
+    void testNormalizeLegacyPropertiesPrecedenceChecks() {
         Properties props = new Properties();
         String processVal = "legacyValue";
         props.setProperty("PROCESS-MODULE.bar", processVal);
         props.setProperty("XQUERY-MODULE.bar", "asdf");
-        try {
-            Manager manager = getMockManagerWithEmptyResults();
+        try (Manager manager = getMockManagerWithEmptyResults()) {
             manager.properties = props;
             manager.normalizeLegacyProperties();
 
@@ -885,7 +836,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testClose() {
+    void testClose() {
         ContentSourcePool csp = mock(ContentSourcePool.class);
         ScheduledExecutorService scheduledExecutor = mock(ScheduledExecutorService.class);
         Manager manager = new Manager();
@@ -901,7 +852,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testCommandFileWatcherOnChangeFile() {
+    void testCommandFileWatcherOnChangeFile() {
         File file = FileUtils.getFile("helloWorld.properties");
         Manager manager = new Manager();
         Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
@@ -910,10 +861,9 @@ public class ManagerTest {
     }
 
     @Test
-    public void testCommandFileWatcherRun() {
-        try {
+    void testCommandFileWatcherRun() {
+        try (Manager manager = new Manager()) {
             File file = createTempFile("THREAD-COUNT=100");
-            Manager manager = new Manager();
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.run();
             assertEquals(100, manager.options.getThreadCount());
@@ -924,10 +874,9 @@ public class ManagerTest {
     }
 
     @Test
-    public void testCommandFileWatcherRunFileDoesNotExist() {
-        try {
+    void testCommandFileWatcherRunFileDoesNotExist() {
+        try (Manager manager = new Manager()) {
             File file = new File("doesnotexist");
-            Manager manager = new Manager();
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.run();
             assertEquals(1, manager.options.getThreadCount());
@@ -938,10 +887,10 @@ public class ManagerTest {
     }
 
     @Test
-    public void testCommandFileWatcherOnChangeFileIsPaused() {
-        try {
+    void testCommandFileWatcherOnChangeFileIsPaused() {
+        testLogger.clear();
+        try (Manager manager = new Manager()) {
             File file = createTempFile("COMMAND=PAUSE");
-            Manager manager = new Manager();
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.onChange(file);
             assertTrue(testLogger.getLogRecords().isEmpty());
@@ -952,10 +901,9 @@ public class ManagerTest {
     }
 
     @Test
-    public void testCommandFileWatcherOnChangeFileIsStop() {
-        try {
+    void testCommandFileWatcherOnChangeFileIsStop() {
+        try (Manager manager = new Manager()) {
             File file = createTempFile("COMMAND=STOP");
-            Manager manager = new Manager();
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.onChange(file);
             assertTrue(manager.stopCommand);
@@ -967,19 +915,18 @@ public class ManagerTest {
     }
 
     @Test
-    public void testCommandFileWatcherOnChangeThreadCount() {
+    void testCommandFileWatcherOnChangeThreadCount() {
         commandFileWatcherOnChangeThreadCount(11, 11);
     }
 
     @Test
-    public void testCommandFileWatcherOnChangeThreadCountIsZero() {
+    void testCommandFileWatcherOnChangeThreadCountIsZero() {
         commandFileWatcherOnChangeThreadCount(0, 1);
     }
 
-    public void commandFileWatcherOnChangeThreadCount(int threads, long expectedThreadCount) {
-        try {
-            File file = createTempFile("THREAD-COUNT=" + Integer.toString(threads));
-            Manager manager = new Manager();
+    void commandFileWatcherOnChangeThreadCount(int threads, long expectedThreadCount) {
+        try (Manager manager = new Manager()) {
+            File file = createTempFile("THREAD-COUNT=" + threads);
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.onChange(file);
             assertEquals(expectedThreadCount, manager.options.getThreadCount());
@@ -990,10 +937,10 @@ public class ManagerTest {
     }
 
     @Test
-    public void testCommandFileWatcherOnChangeFileDoesNotExist() {
-        try {
+    void testCommandFileWatcherOnChangeFileDoesNotExist() {
+        testLogger.clear();
+        try (Manager manager = new Manager()) {
             File file = new File("does-not-exist");
-            Manager manager = new Manager();
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.onChange(file);
         } catch (Exception ex) {
@@ -1006,20 +953,19 @@ public class ManagerTest {
         assertEquals(1, records.size());
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testCommandFileWatcherOnChangeFileIsNull() {
+    @Test
+    void testCommandFileWatcherOnChangeFileIsNull() {
         File file = null;
         Manager manager = new Manager();
         Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
-        fileWatcher.onChange(file);
+        assertThrows(NullPointerException.class, () -> fileWatcher.onChange(file));
     }
 
     @Test
-    public void testInsertModule() {
+    void testInsertModule() {
         Session session = mock(Session.class);
-        Manager manager = new Manager();
-        manager.options.setDoInstall(true);
-        try {
+        try (Manager manager = new Manager()) {
+            manager.options.setDoInstall(true);
             manager.insertModule(session, "src/test/resources/transform.xqy");
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -1028,11 +974,10 @@ public class ManagerTest {
     }
 
     @Test
-    public void testInsertModuleLoadedFromClassloader() {
+    void testInsertModuleLoadedFromClassloader() {
         Session session = mock(Session.class);
-        Manager manager = new Manager();
-        manager.options.setDoInstall(true);
-        try {
+        try (Manager manager = new Manager()) {
+            manager.options.setDoInstall(true);
             manager.insertModule(session, "transform.xqy");
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -1040,27 +985,22 @@ public class ManagerTest {
         }
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testInsertModuleLoadedFromClassloaderNotFound() {
+    @Test
+    void testInsertModuleLoadedFromClassloaderNotFound() {
         Session session = mock(Session.class);
-        Manager manager = new Manager();
-        manager.options.setDoInstall(true);
-        try {
-            manager.insertModule(session, "transformDoesNotExist.xqy");
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
+        try (Manager manager = new Manager()) {
+            manager.options.setDoInstall(true);
+            assertThrows(NullPointerException.class, () -> manager.insertModule(session, "transformDoesNotExist.xqy"));
         }
     }
 
-    @Test(expected = CorbException.class)
-    public void testInsertModuleAndThrowException() throws CorbException {
+    @Test
+    void testInsertModuleAndThrowException() {
         Session session = mock(Session.class);
-        try {
+        try (Manager manager = new Manager()) {
             doThrow(RequestException.class).when(session).insertContent(any(Content.class));
-            Manager manager = new Manager();
             manager.options.setDoInstall(true);
-            manager.insertModule(session, "src/test/resources/transform.xqy");
+            assertThrows(CorbException.class, () -> manager.insertModule(session, "src/test/resources/transform.xqy"));
         } catch (RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -1069,7 +1009,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testSetPoolSizeGrow() {
+    void testSetPoolSizeGrow() {
         int size = 5;
         ThreadPoolExecutor threadPool = testSetPoolSize(5, size);
         assertEquals(size, threadPool.getMaximumPoolSize());
@@ -1077,7 +1017,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testSetPoolSizeShrink() {
+    void testSetPoolSizeShrink() {
         int size = 1;
         ThreadPoolExecutor threadPool = testSetPoolSize(5, size);
         assertEquals(size, threadPool.getMaximumPoolSize());
@@ -1085,14 +1025,14 @@ public class ManagerTest {
     }
 
     @Test
-    public void testSetPoolSizeShrinkNegative() {
+    void testSetPoolSizeShrinkNegative() {
         int initialSize = 5;
         ThreadPoolExecutor threadPool = testSetPoolSize(initialSize, -1);
         assertEquals(initialSize, threadPool.getMaximumPoolSize());
         assertEquals(initialSize, threadPool.getCorePoolSize());
     }
 
-    public ThreadPoolExecutor testSetPoolSize(int initialSize, int size) {
+    ThreadPoolExecutor testSetPoolSize(int initialSize, int size) {
         ThreadPoolExecutor threadPool = new ThreadPoolExecutor(initialSize, initialSize, 100, TimeUnit.MILLISECONDS, mock(BlockingQueue.class));
         Manager instance = new Manager();
         instance.setPoolSize(threadPool, size);
@@ -1100,11 +1040,10 @@ public class ManagerTest {
     }
 
     @Test
-    public void testGetTaskCls() {
-        try {
+    void testGetTaskCls() {
+        try (Manager instance = new Manager()) {
             String type = "";
             String className = Transform.class.getName();
-            Manager instance = new Manager();
             Class<? extends Task> expResult = Transform.class;
             Class<? extends Task> result = instance.getTaskCls(type, className);
             assertEquals(expResult, result);
@@ -1114,27 +1053,20 @@ public class ManagerTest {
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testGetTaskClsNotTaskClass() {
+    @Test
+    void testGetTaskClsNotTaskClass() {
         String type = "";
-        Manager instance = new Manager();
         Class<? extends Task> expResult = Transform.class;
-        try {
-            Class<? extends Task> result = instance.getTaskCls(type, String.class.getName());
-            assertEquals(expResult, result);
-
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
-            LOG.log(Level.SEVERE, null, ex);
+        try (Manager instance = new Manager()) {
+            assertThrows(IllegalArgumentException.class, () -> instance.getTaskCls(type, String.class.getName()));
         }
-        fail();
     }
 
     @Test
-    public void testGetUrisLoaderCls() {
+    void testGetUrisLoaderCls() {
         String className = FileUrisLoader.class.getName();
-        Manager instance = new Manager();
         Class<? extends UrisLoader> expResult = FileUrisLoader.class;
-        try {
+        try (Manager instance = new Manager()) {
             Class<? extends UrisLoader> result = instance.getUrisLoaderCls(className);
             assertEquals(expResult, result);
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
@@ -1143,93 +1075,80 @@ public class ManagerTest {
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testGetUrisLoaderClsNotUrisClass() {
-        Manager instance = new Manager();
-        try {
-            instance.getUrisLoaderCls(String.class.getName());
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
-            LOG.log(Level.SEVERE, null, ex);
+    @Test
+    void testGetUrisLoaderClsNotUrisClass() {
+        try (Manager instance = new Manager()) {
+            assertThrows(IllegalArgumentException.class, () -> instance.getUrisLoaderCls(String.class.getName()));
         }
-        fail();
-    }
-
-    @Test(expected = ClassNotFoundException.class)
-    public void testGetUrisLoaderClsBadClassname() throws ClassNotFoundException {
-        String className = "does.not.Exist";
-        Manager instance = new Manager();
-        try {
-            instance.getUrisLoaderCls(className);
-        } catch (InstantiationException | IllegalAccessException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
-        fail();
     }
 
     @Test
-    public void testUsage() {
-        Manager instance = new Manager();
-        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        System.setErr(new PrintStream(outContent));
-
-        AbstractManager aManager = new AbstractManagerTest.AbstractManagerImpl();
-        aManager.usage();
-        String aManagerUsage = outContent.toString();
-        outContent.reset();
-        instance.usage();
-        assertTrue(outContent.toString().contains(aManagerUsage));
+    void testGetUrisLoaderClsBadClassname() {
+        String className = "does.not.Exist";
+        try (Manager instance = new Manager()) {
+            assertThrows(ClassNotFoundException.class, () -> instance.getUrisLoaderCls(className));
+        }
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testRunMissingURISMODULEFILEANDLOADER() {
-        Manager instance = new Manager();
-        try {
-            instance.run();
+    @Test
+    void testUsage() {
+        try (Manager instance = new Manager()) {
+            ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+            System.setErr(new PrintStream(outContent));
+
+            AbstractManager aManager = new AbstractManagerTest.AbstractManagerImpl();
+            aManager.usage();
+            String aManagerUsage = outContent.toString();
+            outContent.reset();
+            instance.usage();
+            assertTrue(outContent.toString().contains(aManagerUsage));
+        }
+    }
+
+    @Test
+    void testRunMissingURISMODULEFILEANDLOADER() {
+        try (Manager instance = new Manager()) {
+            assertThrows(IllegalArgumentException.class, instance::run);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             if (ex instanceof IllegalArgumentException) {
                 throw (IllegalArgumentException) ex;
             }
         }
-        fail();
+
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testRunGetURILoaderWithURISMODULENoContentSource() {
-        Manager instance = new Manager();
-        instance.options.setUrisModule("someFile1.xqy");
-        try {
-            instance.run();
+    @Test
+    void testRunGetURILoaderWithURISMODULENoContentSource() {
+        try (Manager instance = new Manager()) {
+            instance.options.setUrisModule("someFile1.xqy");
+            assertThrows(NullPointerException.class, instance::run);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             if (ex instanceof NullPointerException) {
                 throw (NullPointerException) ex;
             }
         }
-        fail();
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testRunGetURILoaderWithURISMODULEInvalidCollection() {
-        Manager instance = new Manager();
-        instance.options.setUrisModule("someFile2.xqy");
-        try {
+    @Test
+    void testRunGetURILoaderWithURISMODULEInvalidCollection() {
+        try ( Manager instance = new Manager()) {
+            instance.options.setUrisModule("someFile2.xqy");
             instance.initContentSourcePool(XCC_CONNECTION_URI);
 
-            instance.run();
+            assertThrows(IllegalArgumentException.class, instance::run);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             if (ex instanceof IllegalArgumentException) {
                 throw (IllegalArgumentException) ex;
             }
         }
-        fail();
     }
 
     @Test
-    public void testRunGetURILoaderWithURISMODULE() {
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+    void testRunGetURILoaderWithURISMODULE() {
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.initContentSourcePool(XCC_CONNECTION_URI);
             instance.collection = "URILoader_Modules";
             instance.options.setUrisModule("someFile3.xqy");
@@ -1242,9 +1161,9 @@ public class ManagerTest {
     }
 
     @Test
-    public void testRegisterStatusInfo() throws CorbException{
+    void testRegisterStatusInfo() throws CorbException{
         String xccRootValue = "xccRootValue";
-
+        testLogger.clear();
         ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -1267,10 +1186,8 @@ public class ManagerTest {
         when(second.getIndex()).thenReturn(1);
         when(resultSequence.next()).thenReturn(first, second);
 
-        try {
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             when(session.submitRequest(any(Request.class))).thenReturn(resultSequence);
-
-            Manager instance = getMockManagerWithEmptyResults();
             instance.csp = contentSourcePool;
             instance.registerStatusInfo();
 
@@ -1283,17 +1200,17 @@ public class ManagerTest {
         }
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testRegisterStatusInfoNullContentSource() throws CorbException{
-        Manager instance = new Manager();
-        instance.registerStatusInfo();
-        fail();
+    @Test
+    void testRegisterStatusInfoNullContentSource() {
+        try (Manager instance = new Manager()) {
+            assertThrows(NullPointerException.class, instance::registerStatusInfo);
+        }
     }
 
     @Test
-    public void testLogOptions() {
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+    void testLogOptions() {
+        testLogger.clear();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.logOptions();
             List<LogRecord> records = testLogger.getLogRecords();
             assertEquals(19, records.size());
@@ -1304,52 +1221,60 @@ public class ManagerTest {
     }
 
     @Test
-    public void testStop0args() {
-        Manager instance = new Manager();
-        instance.stop();
+    void testStop0args() {
+        testLogger.clear();
+        try (Manager instance = new Manager()) {
+            instance.stop();
+        }
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.INFO, records.get(0).getLevel());
         assertEquals("cleaning up", records.get(0).getMessage());
     }
 
     @Test
-    public void testStopExecutionException() {
+    void testStopExecutionException() {
+        testLogger.clear();
         ExecutionException e = new ExecutionException("test", new Error());
-        Manager manager = new Manager();
-        manager.stop(e);
-        List<LogRecord> records = testLogger.getLogRecords();
-        assertEquals(Level.SEVERE, records.get(0).getLevel());
-        assertEquals("fatal error", records.get(0).getMessage());
-        assertTrue("When stopped from an exception, execError is true", manager.hasExecError());
-        assertEquals(EXIT_CODE_PROCESSING_ERROR, manager.getExitCode());
+        try (Manager manager = new Manager()) {
+            manager.stop(e);
+            List<LogRecord> records = testLogger.getLogRecords();
+            assertEquals(Level.SEVERE, records.get(0).getLevel());
+            assertEquals("fatal error", records.get(0).getMessage());
+            //When stopped from an exception, execError is true
+            assertTrue(manager.hasExecError());
+            assertEquals(EXIT_CODE_PROCESSING_ERROR, manager.getExitCode());
+        }
     }
 
     @Test
-    public void testSetThreadCount() {
-        Manager instance = new Manager();
-        instance.setThreadCount(2);
-        assertEquals(2, instance.options.getThreadCount());
+    void testSetThreadCount() {
+        try (Manager instance = new Manager()) {
+            instance.setThreadCount(2);
+            assertEquals(2, instance.options.getThreadCount());
+        }
     }
 
     @Test
-    public void testSetThreadCountTwice() {
-        Manager instance = new Manager();
-        instance.setThreadCount(2);
-        instance.setThreadCount(2);
-        assertEquals(2, instance.options.getThreadCount());
+    void testSetThreadCountTwice() {
+        try (Manager instance = new Manager()) {
+            instance.setThreadCount(2);
+            instance.setThreadCount(2);
+            assertEquals(2, instance.options.getThreadCount());
+        }
     }
 
     @Test
-    public void testSetThreadCountWithInvalidValue() {
-        Manager instance = new Manager();
-        instance.setThreadCount(-5);
-        assertEquals(1, instance.options.getThreadCount());
-        instance.setThreadCount(0);
-        assertEquals(1, instance.options.getThreadCount());
+    void testSetThreadCountWithInvalidValue() {
+        try (Manager instance = new Manager()) {
+            instance.setThreadCount(-5);
+            assertEquals(1, instance.options.getThreadCount());
+            instance.setThreadCount(0);
+            assertEquals(1, instance.options.getThreadCount());
+        }
     }
 
     @Test
-    public void testNoResultsPrePostBatchAlwaysExecuteTrue() {
+    void testNoResultsPrePostBatchAlwaysExecuteTrue() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[4] = null;
@@ -1366,8 +1291,7 @@ public class ManagerTest {
         props.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE,"false");
         props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "bottom content");
         props.setProperty(Options.POST_BATCH_TASK, POST_BATCH_TASK);
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             instance.run();
 
@@ -1381,7 +1305,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testNoResultsDefaultPrePostExecution() {
+    void testNoResultsDefaultPrePostExecution() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[4] = null;
@@ -1392,8 +1316,7 @@ public class ManagerTest {
         props.setProperty(Options.URIS_LOADER, MockEmptyFileUrisLoader.class.getName());
         props.setProperty(Options.PRE_BATCH_TASK, PRE_BATCH_TASK);
         props.setProperty(Options.POST_BATCH_TASK, POST_BATCH_TASK);
-        try {
-            Manager manager = getMockManagerWithEmptyResults();
+        try (Manager manager = getMockManagerWithEmptyResults()) {
             manager.init(args, props);
             manager.run();
 
@@ -1408,7 +1331,7 @@ public class ManagerTest {
 
 
     @Test
-    public void testNoResultsPrePostBatchAlwaysExecuteFalseMinCountGreater() {
+    void testNoResultsPrePostBatchAlwaysExecuteFalseMinCountGreater() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[4] = null;
@@ -1422,8 +1345,7 @@ public class ManagerTest {
         props.setProperty(Options.POST_BATCH_MINIMUM_COUNT, Integer.toString(10));
         props.setProperty(Options.PRE_BATCH_TASK, PRE_BATCH_TASK);
         props.setProperty(Options.POST_BATCH_TASK, POST_BATCH_TASK);
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             instance.run();
 
@@ -1436,7 +1358,7 @@ public class ManagerTest {
     }
 
     @Test
-    public void testResultsPrePostBatchAlwaysExecuteFalseMinCountGreater() throws IOException {
+    void testResultsPrePostBatchAlwaysExecuteFalseMinCountGreater() {
         clearSystemProperties();
         String[] args = getDefaultArgs();
         args[4] = null;
@@ -1451,8 +1373,7 @@ public class ManagerTest {
         props.setProperty(Options.PRE_BATCH_TASK, PRE_BATCH_TASK);
         props.setProperty(Options.POST_BATCH_TASK, POST_BATCH_TASK);
 
-        try {
-            Manager instance = getMockManagerWithEmptyResults();
+        try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.init(args, props);
             instance.run();
 
@@ -1465,10 +1386,9 @@ public class ManagerTest {
     }
 
     @Test
-    public void testSubmitUriTasksWithUrisRedacted() {
+    void testSubmitUriTasksWithUrisRedacted() {
         UrisLoader urisLoader = mock(UrisLoader.class);
-        try {
-            Manager manager = getMockManagerWithEmptyResults();
+        try (Manager manager = getMockManagerWithEmptyResults()) {
             CompletionService completionService = mock(CompletionService.class);
             manager.completionService = completionService;
             manager.pool = mock(PausableThreadPoolExecutor.class);
@@ -1507,10 +1427,9 @@ public class ManagerTest {
     }
 
     @Test
-    public void testSubmitUriTasksWithUrisNotRedacted() {
+    void testSubmitUriTasksWithUrisNotRedacted() {
         UrisLoader urisLoader = mock(UrisLoader.class);
-        try {
-            Manager manager = getMockManagerWithEmptyResults();
+        try (Manager manager = getMockManagerWithEmptyResults()) {
             CompletionService completionService = mock(CompletionService.class);
             manager.completionService = completionService;
             manager.pool = mock(PausableThreadPoolExecutor.class);
@@ -1716,15 +1635,15 @@ public class ManagerTest {
         Path path = Files.createTempFile("tmp", "txt");
         File file = path.toFile();
         file.deleteOnExit();
-        Files.write(path, lines, Charset.forName("UTF-8"));
+        Files.write(path, lines, StandardCharsets.UTF_8);
         return file;
     }
 
     public static Manager getMockManagerWithEmptyResults() throws RequestException, CorbException{
-    		Manager manager = spy(new Manager());
-    		ContentSourcePool contentSourcePool = getMockContentSourceManagerWithEmptyResults();
-    		when(manager.createContentSourcePool()).thenReturn(contentSourcePool);
-    		return manager;
+        Manager manager = spy(new Manager());
+        ContentSourcePool contentSourcePool = getMockContentSourceManagerWithEmptyResults();
+        when(manager.createContentSourcePool()).thenReturn(contentSourcePool);
+        return manager;
     }
 
 
@@ -1754,17 +1673,21 @@ public class ManagerTest {
     }
 
     @Test
-    public void testLogIfNotLowMemory() {
-        Manager manager = new Manager();
-        manager.logIfLowMemory(Runtime.getRuntime().totalMemory());
+    void testLogIfNotLowMemory() {
+        testLogger.clear();
+        try (Manager manager = new Manager()) {
+            manager.logIfLowMemory(Runtime.getRuntime().totalMemory());
+        }
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(0, records.size());
     }
 
     @Test
-    public void testLogLowMemory() {
-        Manager manager = new Manager();
-        manager.logIfLowMemory(Runtime.getRuntime().freeMemory() * 6);
+    void testLogLowMemory() {
+        testLogger.clear();
+        try (Manager manager = new Manager()) {
+            manager.logIfLowMemory(Runtime.getRuntime().freeMemory() * 6);
+        }
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(2, records.size());
         assertEquals(Level.WARNING, records.get(0).getLevel());
@@ -1772,69 +1695,74 @@ public class ManagerTest {
     }
 
     @Test
-    public void testPause() {
+    void testPause() {
         PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
         when(pool.isRunning()).thenReturn(Boolean.TRUE);
         JobStats jobStats = mock(JobStats.class);
-        Manager manager = new Manager();
-        manager.pool = pool;
-        manager.jobStats = jobStats;
+        try (Manager manager = new Manager()) {
+            manager.pool = pool;
+            manager.jobStats = jobStats;
 
-        manager.pause();
+            manager.pause();
+        }
         verify(pool).pause();
     }
 
     @Test
-    public void testPauseNotRunning() {
+    void testPauseNotRunning() {
         PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
         when(pool.isRunning()).thenReturn(Boolean.FALSE);
         JobStats jobStats = mock(JobStats.class);
-        Manager manager = new Manager();
-        manager.pool = pool;
-        manager.jobStats = jobStats;
+        try (Manager manager = new Manager()) {
+            manager.pool = pool;
+            manager.jobStats = jobStats;
 
-        manager.pause();
+            manager.pause();
+        }
         verify(pool, never()).pause();
     }
 
     @Test
-    public void testResume() {
+    void testResume() {
         PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
         when(pool.isPaused()).thenReturn(Boolean.TRUE);
         when(pool.isRunning()).thenReturn(Boolean.TRUE);
         JobStats jobStats = mock(JobStats.class);
-        Manager manager = new Manager();
-        manager.pool = pool;
-        manager.jobStats = jobStats;
+        try (Manager manager = new Manager()) {
+            manager.pool = pool;
+            manager.jobStats = jobStats;
 
-        manager.resume();
+            manager.resume();
+        }
         verify(pool).resume();
     }
 
     @Test
-    public void testResumeNotPaused() {
+    void testResumeNotPaused() {
         PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
         when(pool.isPaused()).thenReturn(Boolean.FALSE);
         when(pool.isRunning()).thenReturn(Boolean.TRUE);
         JobStats jobStats = mock(JobStats.class);
-        Manager manager = new Manager();
-        manager.pool = pool;
-        manager.jobStats = jobStats;
+        try (Manager manager = new Manager()) {
+            manager.pool = pool;
+            manager.jobStats = jobStats;
 
-        manager.resume();
+            manager.resume();
+        }
         verify(pool, never()).resume();
     }
 
     @Test
-    public void testHasExecError() {
-        Manager manager = new Manager();
-        assertFalse(manager.hasExecError());
+    void testHasExecError() {
+        try (Manager manager = new Manager()) {
+            assertFalse(manager.hasExecError());
+        }
     }
 
     public static class MockEmptyFileUrisLoader extends FileUrisLoader {
 
         @Override
-        public void open() throws CorbException {
+        public void open() {
             this.setTotalCount(0);
         }
     }

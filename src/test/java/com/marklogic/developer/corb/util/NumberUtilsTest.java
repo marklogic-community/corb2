@@ -18,35 +18,35 @@
  */
 package com.marklogic.developer.corb.util;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class NumberUtilsTest {
+class NumberUtilsTest {
 
     @Test
-    public void testToIntString() {
+    void testToIntString() {
         int result = NumberUtils.toInt("6");
         assertEquals(6, result);
     }
 
     @Test
-    public void testToIntStringInvalid() {
+    void testToIntStringInvalid() {
         int result = NumberUtils.toInt("six");
         assertEquals(0, result);
     }
 
     @Test
-    public void testToIntStringInt() {
+    void testToIntStringInt() {
         int result = NumberUtils.toInt("7", -1);
         assertEquals(7, result);
     }
 
     @Test
-    public void testToIntStringIntInvalid() {
+    void testToIntStringIntInvalid() {
         int result = NumberUtils.toInt("seven", -1);
         assertEquals(-1, result);
     }

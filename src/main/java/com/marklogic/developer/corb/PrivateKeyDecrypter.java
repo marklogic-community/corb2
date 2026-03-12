@@ -441,8 +441,8 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
         PrivateKey privateKey = keyPair.getPrivate();
         PublicKey publicKey = keyPair.getPublic();
 
-        try (FileOutputStream privateFos = new FileOutputStream(new File(privateKeyPathName));
-                FileOutputStream publicFos = new FileOutputStream(new File(publicKeyPathName))) {
+        try (FileOutputStream privateFos = new FileOutputStream(privateKeyPathName);
+             FileOutputStream publicFos = new FileOutputStream(publicKeyPathName)) {
 
             privateFos.write(privateKey.getEncoded());
             System.out.println("Generated private key: " + privateKeyPathName); // NOPMD

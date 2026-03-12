@@ -37,10 +37,10 @@ public final class NumberUtils {
     }
 
     /**
-     * <p>Convert a {@code String} to an <code>int</code>, returning
+     * <p>Convert a {@code String} to an {@code int}, returning
      * {@code zero} if the conversion fails.</p>
      *
-     * <p>If the string is {@code null}, <code>zero</code> is returned.</p>
+     * <p>If the string is {@code null}, {@code zero} is returned.</p>
      *
      * @param val the string to convert, may be null
      * @return the int represented by the string, or {@code zero} if the
@@ -51,7 +51,7 @@ public final class NumberUtils {
     }
 
     /**
-     * <p>Convert a {@code String} to an <code>int</code>, returning a default
+     * <p>Convert a {@code String} to an {@code int}, returning a default
      * value if the conversion fails.</p>
      *
      * <p>If the string is {@code null}, the default value is returned.</p>

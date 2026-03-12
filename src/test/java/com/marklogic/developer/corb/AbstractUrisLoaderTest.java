@@ -19,107 +19,121 @@
 package com.marklogic.developer.corb;
 
 import java.util.Properties;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class AbstractUrisLoaderTest {
+class AbstractUrisLoaderTest {
 
     private static final String FOO = "foo";
     private static final String BAR = "bar";
 
     @Test
-    public void testSetOptions() {
+    void testSetOptions() {
         TransformOptions options = new TransformOptions();
-        AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        instance.setOptions(options);
-        assertEquals(options, instance.options);
+        try (AbstractUrisLoader instance = new AbstractUrisLoaderImpl()) {
+            instance.setOptions(options);
+            assertEquals(options, instance.options);
+        }
     }
 
     @Test
-    public void testSetContentSource() {
+    void testSetContentSource() {
         ContentSourcePool csp = mock(ContentSourcePool.class);
-        AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        instance.setContentSourcePool(csp);
-        assertEquals(csp, instance.csp);
+        try (AbstractUrisLoader instance = new AbstractUrisLoaderImpl()) {
+            instance.setContentSourcePool(csp);
+            assertEquals(csp, instance.csp);
+        }
     }
 
     @Test
-    public void testSetCollection() {
+    void testSetCollection() {
         String collection = FOO;
-        AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        instance.setCollection(collection);
-        assertEquals(collection, instance.collection);
+        try (AbstractUrisLoader instance = new AbstractUrisLoaderImpl()) {
+            instance.setCollection(collection);
+            assertEquals(collection, instance.collection);
+        }
     }
 
     @Test
-    public void testSetProperties() {
+    void testSetProperties() {
         Properties properties = new Properties();
-        AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        instance.setProperties(properties);
-        assertEquals(properties, instance.properties);
+        try (AbstractUrisLoader instance = new AbstractUrisLoaderImpl()) {
+            instance.setProperties(properties);
+            assertEquals(properties, instance.properties);
+        }
     }
 
     @Test
-    public void testGetBatchRef() {
-        AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        assertNull(instance.getBatchRef());
+    void testGetBatchRef() {
+        try (AbstractUrisLoader instance = new AbstractUrisLoaderImpl()) {
+            assertNull(instance.getBatchRef());
+        }
     }
 
     @Test
-    public void testGetTotalCount() {
-        AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        long result = instance.getTotalCount();
+    void testGetTotalCount() {
+        long result;
+        try (AbstractUrisLoader instance = new AbstractUrisLoaderImpl()) {
+            result = instance.getTotalCount();
+        }
         assertEquals(0, result);
     }
 
     @Test
-    public void testSetTotalCount() {
-        AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        instance.setProperties(new Properties());
-        assertEquals(0, instance.getTotalCount());
-        instance.setTotalCount(5);
-        assertEquals(5, instance.getTotalCount());
-        assertEquals(String.valueOf(5), instance.getProperty("PRE-BATCH-MODULE.URIS_TOTAL_COUNT"));
-        assertEquals(String.valueOf(5), instance.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
+    void testSetTotalCount() {
+        try (AbstractUrisLoader instance = new AbstractUrisLoaderImpl()) {
+            instance.setProperties(new Properties());
+            assertEquals(0, instance.getTotalCount());
+            instance.setTotalCount(5);
+            assertEquals(5, instance.getTotalCount());
+            assertEquals(String.valueOf(5), instance.getProperty("PRE-BATCH-MODULE.URIS_TOTAL_COUNT"));
+            assertEquals(String.valueOf(5), instance.getProperty("POST-BATCH-MODULE.URIS_TOTAL_COUNT"));
+        }
     }
 
     @Test
-    public void testGetProperty() {
+    void testGetProperty() {
         String key = FOO;
         String value = BAR;
         Properties props = new Properties();
         props.setProperty(key, value);
-        AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        instance.setProperties(props);
-        String result = instance.getProperty(key);
+        String result;
+        try (AbstractUrisLoader instance = new AbstractUrisLoaderImpl()) {
+            instance.setProperties(props);
+            result = instance.getProperty(key);
+        }
         assertEquals(value, result);
     }
 
     @Test
-    public void testGetPropertySystemPropAndNullProperties() {
+    void testGetPropertySystemPropAndNullProperties() {
         String key = FOO;
         String value = BAR;
         System.setProperty(key, value);
-        AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        String result = instance.getProperty(key);
+        String result;
+        try (AbstractUrisLoader instance = new AbstractUrisLoaderImpl()) {
+            result = instance.getProperty(key);
+        }
         System.clearProperty(key);
         assertEquals(value, result);
     }
 
     @Test
-    public void testGetPropertyIsNull() {
-        AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        String result = instance.getProperty(FOO);
-        assertEquals(null, result);
+    void testGetPropertyIsNull() {
+        String result;
+        try (AbstractUrisLoader instance = new AbstractUrisLoaderImpl()) {
+            result = instance.getProperty(FOO);
+        }
+        assertNull(result);
     }
 
     @Test
-    public void testCleanup() {
+    void testCleanup() {
         AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
         instance.cleanup();
         assertNull(instance.options);
@@ -130,39 +144,41 @@ public class AbstractUrisLoaderTest {
         assertNull(instance.batchRef);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testParseUriReplacePatternsUneven() {
-        AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        Properties props = new Properties();
-        props.setProperty(Options.URIS_REPLACE_PATTERN, "foo|bar");
-        instance.setProperties(props);
-        instance.parseUriReplacePatterns();
-        fail();
+    @Test
+    void testParseUriReplacePatternsUneven() {
+        try (AbstractUrisLoader instance = new AbstractUrisLoaderImpl()) {
+            Properties props = new Properties();
+            props.setProperty(Options.URIS_REPLACE_PATTERN, "foo|bar");
+            instance.setProperties(props);
+            assertThrows(IllegalArgumentException.class, instance::parseUriReplacePatterns);
+        }
     }
 
     @Test
-    public void testParseUriReplacePatterns() {
-        AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        Properties props = new Properties();
-        props.setProperty(Options.URIS_REPLACE_PATTERN, "foo,bar");
-        instance.setProperties(props);
-        instance.parseUriReplacePatterns();
-        assertTrue(instance.replacements.length == 2);
+    void testParseUriReplacePatterns() {
+        try (AbstractUrisLoader instance = new AbstractUrisLoaderImpl()) {
+            Properties props = new Properties();
+            props.setProperty(Options.URIS_REPLACE_PATTERN, "foo,bar");
+            instance.setProperties(props);
+            instance.parseUriReplacePatterns();
+            assertEquals(2, instance.replacements.length);
+        }
     }
 
     @Test
-    public void testGetLoaderPath() {
-        AbstractUrisLoader instance = new AbstractUrisLoaderImpl();
-        Properties props = new Properties();
-        props.setProperty(Options.XML_FILE, FOO);
-        props.setProperty(Options.LOADER_PATH, BAR);
-        instance.setProperties(props);
+    void testGetLoaderPath() {
+        try (AbstractUrisLoader instance = new AbstractUrisLoaderImpl()) {
+            Properties props = new Properties();
+            props.setProperty(Options.XML_FILE, FOO);
+            props.setProperty(Options.LOADER_PATH, BAR);
+            instance.setProperties(props);
 
-        assertEquals(BAR, instance.getLoaderPath());
-        assertEquals(FOO, instance.getLoaderPath(Options.XML_FILE));
-        assertEquals(FOO, instance.getLoaderPath(Options.ZIP_FILE, Options.XML_FILE));
-        assertEquals(FOO, instance.getLoaderPath(Options.XML_FILE, Options.ZIP_FILE));
-        assertEquals(BAR, instance.getLoaderPath(Options.ZIP_FILE));
+            assertEquals(BAR, instance.getLoaderPath());
+            assertEquals(FOO, instance.getLoaderPath(Options.XML_FILE));
+            assertEquals(FOO, instance.getLoaderPath(Options.ZIP_FILE, Options.XML_FILE));
+            assertEquals(FOO, instance.getLoaderPath(Options.XML_FILE, Options.ZIP_FILE));
+            assertEquals(BAR, instance.getLoaderPath(Options.ZIP_FILE));
+        }
     }
 
     public static class AbstractUrisLoaderImpl extends AbstractUrisLoader {

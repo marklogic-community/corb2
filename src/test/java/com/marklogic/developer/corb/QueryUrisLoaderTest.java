@@ -42,11 +42,10 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -55,64 +54,58 @@ import static org.mockito.Mockito.when;
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class QueryUrisLoaderTest {
+class QueryUrisLoaderTest {
 
-    private String foo = "foo";
-    private String bar = "bar";
-    private String none = "none";
-    private String root = "/root";
+    private final String foo = "foo";
+    private final String bar = "bar";
+    private final String none = "none";
+    private final String root = "/root";
     private static final String ADHOC_SUFFIX = "|ADHOC";
-    private static final Logger LOG = Logger.getLogger(QueryUrisLoaderTest.class.getName());
+    private static final Logger LOG = Logger.getLogger(QueryUrisLoader.class.getName());
     private static final Logger QUERY_URIS_LOG = Logger.getLogger(QueryUrisLoader.class.getName());
     private final TestHandler testLogger = new TestHandler();
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         QUERY_URIS_LOG.addHandler(testLogger);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testOpenNullPropertiesAndNullOptions() throws CorbException {
-        QueryUrisLoader instance = new QueryUrisLoader();
-        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
-        ContentSource contentSource = mock(ContentSource.class);
-        Session session = mock(Session.class);
-        when(contentSourcePool.get()).thenReturn(contentSource);
-        when(contentSource.newSession()).thenReturn(session);
-        instance.csp = contentSourcePool;
-        try {
-            instance.open();
-        } finally {
-            instance.close();
+    @Test
+    void testOpenNullPropertiesAndNullOptions() throws CorbException {
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
+            ContentSource contentSource = mock(ContentSource.class);
+            Session session = mock(Session.class);
+            when(contentSourcePool.get()).thenReturn(contentSource);
+            when(contentSource.newSession()).thenReturn(session);
+            instance.csp = contentSourcePool;
+
+            assertThrows(NullPointerException.class, instance::open);
         }
-        fail();
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testOpenWithBadUrisReplacePattern() throws CorbException{
-        QueryUrisLoader instance = new QueryUrisLoader();
-        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
-        ContentSource contentSource = mock(ContentSource.class);
-        Session session = mock(Session.class);
-        when(contentSourcePool.get()).thenReturn(contentSource);
-        when(contentSource.newSession()).thenReturn(session);
-        Properties props = new Properties();
-        props.setProperty(Options.URIS_REPLACE_PATTERN, foo);
-        instance.properties = props;
-        instance.csp = contentSourcePool;
-        try {
-            instance.open();
+    @Test
+    void testOpenWithBadUrisReplacePattern() {
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
+            ContentSource contentSource = mock(ContentSource.class);
+            Session session = mock(Session.class);
+            when(contentSourcePool.get()).thenReturn(contentSource);
+            when(contentSource.newSession()).thenReturn(session);
+            Properties props = new Properties();
+            props.setProperty(Options.URIS_REPLACE_PATTERN, foo);
+            instance.properties = props;
+            instance.csp = contentSourcePool;
+
+            assertThrows(IllegalArgumentException.class, instance::open);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
-        } finally {
-            instance.close();
         }
-        fail();
     }
 
-    @Test(expected = CorbException.class)
-    public void testOpenBadUriCount() throws CorbException {
-    		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
+    @Test
+    void testOpenBadUriCount() throws CorbException {
+        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         ModuleInvoke request = mock(ModuleInvoke.class);
@@ -139,15 +132,14 @@ public class QueryUrisLoaderTest {
             instance.csp = contentSourcePool;
             instance.options = transformOptions;
 
-            instance.open();
+            assertThrows(CorbException.class, instance::open);
         } catch (RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-        fail();
     }
 
-    @Test(expected = CorbException.class)
-    public void testOpenInlineUriModule() throws CorbException {
+    @Test
+    void testOpenInlineUriModule() throws CorbException {
     		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -175,15 +167,14 @@ public class QueryUrisLoaderTest {
             instance.csp = contentSourcePool;
             instance.options = transformOptions;
 
-            instance.open();
+            assertThrows(CorbException.class, instance::open);
         } catch (RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-        fail();
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testOpenNoCodeInInline() throws CorbException{
+    @Test
+    void testOpenNoCodeInInline() throws CorbException{
     		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
@@ -212,38 +203,32 @@ public class QueryUrisLoaderTest {
             instance.csp = contentSourcePool;
             instance.options = transformOptions;
 
-            instance.open();
-        } catch (RequestException | CorbException ex) {
+            assertThrows(IllegalStateException.class, instance::open);
+        } catch (RequestException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-        fail();
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testOpenAdHocIsDirectory() throws CorbException{
-        QueryUrisLoader instance = new QueryUrisLoader();
+    @Test
+    void testOpenAdHocIsDirectory() throws CorbException{
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
+            ContentSource contentSource = mock(ContentSource.class);
+            Session session = mock(Session.class);
+            when(contentSourcePool.get()).thenReturn(contentSource);
+            when(contentSource.newSession()).thenReturn(session);
+            TransformOptions transformOptions = new TransformOptions();
+            transformOptions.setUrisModule(ADHOC_SUFFIX);
+            instance.options = transformOptions;
+            instance.csp = contentSourcePool;
+
+            assertThrows(IllegalStateException.class, instance::open);
+        }
+    }
+
+    @Test
+    void testOpenAdHocIsEmpty() throws CorbException{
         ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
-        ContentSource contentSource = mock(ContentSource.class);
-        Session session = mock(Session.class);
-        when(contentSourcePool.get()).thenReturn(contentSource);
-        when(contentSource.newSession()).thenReturn(session);
-        TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setUrisModule(ADHOC_SUFFIX);
-        instance.options = transformOptions;
-        instance.csp = contentSourcePool;
-        try {
-            instance.open();
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        } finally {
-            instance.close();
-        }
-        fail();
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testOpenAdHocIsEmpty() throws CorbException{
-    		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         ContentSource contentSource = mock(ContentSource.class);
         Session session = mock(Session.class);
         when(contentSourcePool.get()).thenReturn(contentSource);
@@ -256,15 +241,15 @@ public class QueryUrisLoaderTest {
             instance.options = transformOptions;
             instance.csp = contentSourcePool;
 
-            instance.open();
-        } catch (IOException | CorbException ex) {
+            assertThrows(IllegalStateException.class, instance::open);
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
-        fail();
     }
 
     @Test
-    public void testOpen() {
+    void testOpen() {
         try {
             String processModuleKey1 = "PROCESS-MODULE.foo";
             String processModuleKey2 = "PROCESS-MODULE.foo-foo";
@@ -327,80 +312,71 @@ public class QueryUrisLoaderTest {
         }
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testOpenBadAdhocFilenameIsEmpty() throws CorbException{
-        QueryUrisLoader instance = new QueryUrisLoader();
-        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
-        ContentSource contentSource = mock(ContentSource.class);
-        Session session = mock(Session.class);
-        when(contentSourcePool.get()).thenReturn(contentSource);
-        when(contentSource.newSession()).thenReturn(session);
-        TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setUrisModule("  " + ADHOC_SUFFIX);
-        instance.options = transformOptions;
-        instance.csp = contentSourcePool;
-        try {
-            instance.open();
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        } finally {
-            instance.close();
-        }
-        fail();
-    }
+    @Test
+    void testOpenBadAdhocFilenameIsEmpty() {
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
+            ContentSource contentSource = mock(ContentSource.class);
+            Session session = mock(Session.class);
+            when(contentSourcePool.get()).thenReturn(contentSource);
+            when(contentSource.newSession()).thenReturn(session);
+            TransformOptions transformOptions = new TransformOptions();
+            transformOptions.setUrisModule("  " + ADHOC_SUFFIX);
+            instance.options = transformOptions;
+            instance.csp = contentSourcePool;
 
-    @Test(expected = IllegalStateException.class)
-    public void testOpenMaxOptsFromModuleZero() throws CorbException{
-        QueryUrisLoader instance = new QueryUrisLoader();
-        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
-        ContentSource contentSource = mock(ContentSource.class);
-        Session session = mock(Session.class);
-        when(contentSourcePool.get()).thenReturn(contentSource);
-        when(contentSource.newSession()).thenReturn(session);
-        TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setUrisModule("  " + ADHOC_SUFFIX);
-        Properties props = new Properties();
-        props.setProperty(Options.MAX_OPTS_FROM_MODULE, "0");
-        instance.properties = props;
-        instance.options = transformOptions;
-        instance.csp = contentSourcePool;
-        try {
-            instance.open();
+            assertThrows(IllegalStateException.class, instance::open);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
-        } finally {
-            instance.close();
+            fail();
         }
-        fail();
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testOpenInvalidMaxOptsFromModuleZero() throws CorbException{
-        QueryUrisLoader instance = new QueryUrisLoader();
-        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
-        ContentSource contentSource = mock(ContentSource.class);
-        Session session = mock(Session.class);
-        when(contentSourcePool.get()).thenReturn(contentSource);
-        when(contentSource.newSession()).thenReturn(session);
-        TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setUrisModule("  " + ADHOC_SUFFIX);
-        Properties props = new Properties();
-        props.setProperty(Options.MAX_OPTS_FROM_MODULE, "one");
-        instance.properties = props;
-        instance.options = transformOptions;
-        instance.csp = contentSourcePool;
-        try {
-            instance.open();
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        } finally {
-            instance.close();
-        }
-        fail();
     }
 
     @Test
-    public void testGetBatchRef() {
+    void testOpenMaxOptsFromModuleZero() throws CorbException{
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
+            ContentSource contentSource = mock(ContentSource.class);
+            Session session = mock(Session.class);
+            when(contentSourcePool.get()).thenReturn(contentSource);
+            when(contentSource.newSession()).thenReturn(session);
+            TransformOptions transformOptions = new TransformOptions();
+            transformOptions.setUrisModule("  " + ADHOC_SUFFIX);
+            Properties props = new Properties();
+            props.setProperty(Options.MAX_OPTS_FROM_MODULE, "0");
+            instance.properties = props;
+            instance.options = transformOptions;
+            instance.csp = contentSourcePool;
+
+            assertThrows(IllegalStateException.class, instance::open);
+        }
+    }
+
+    @Test
+    void testOpenInvalidMaxOptsFromModuleZero() {
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
+            ContentSource contentSource = mock(ContentSource.class);
+            Session session = mock(Session.class);
+            when(contentSourcePool.get()).thenReturn(contentSource);
+            when(contentSource.newSession()).thenReturn(session);
+            TransformOptions transformOptions = new TransformOptions();
+            transformOptions.setUrisModule("  " + ADHOC_SUFFIX);
+            Properties props = new Properties();
+            props.setProperty(Options.MAX_OPTS_FROM_MODULE, "one");
+            instance.properties = props;
+            instance.options = transformOptions;
+            instance.csp = contentSourcePool;
+
+            assertThrows(IllegalStateException.class, instance::open);
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    void testGetBatchRef() {
         String result;
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
             result = instance.getBatchRef();
@@ -409,7 +385,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testGetTotalCount() {
+    void testGetTotalCount() {
         long result;
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
             result = instance.getTotalCount();
@@ -418,7 +394,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testHasNextResultSequenceIsNull() {
+    void testHasNextResultSequenceIsNull() {
         boolean result;
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
             result = instance.hasNext();
@@ -431,7 +407,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testHasNextResultSequenceHasNext() {
+    void testHasNextResultSequenceHasNext() {
         try {
         	ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
             ContentSource contentSource = mock(ContentSource.class);
@@ -468,30 +444,30 @@ public class QueryUrisLoaderTest {
         }
     }
 
-    @Test (expected = CorbException.class)
-    public void testReadTotalCountWithArrayAsFirstItem() throws CorbException {
+    @Test
+    void testReadTotalCountWithArrayAsFirstItem() {
         ResultItem resultItem = mock(ResultItem.class);
         XdmItem xdmItem = mock(XdmItem.class);
         when(resultItem.getItem()).thenReturn(xdmItem);
         when(xdmItem.getItemType()).thenReturn(ItemType.ARRAY_NODE);
 
         try (QueryUrisLoader queryUrisLoader = new QueryUrisLoader()) {
-            queryUrisLoader.readTotalCount(resultItem);
-        }
-    }
-
-    @Test (expected = CorbException.class)
-    public void testReadTotalCountNullItem() throws CorbException {
-        ResultItem resultItem = mock(ResultItem.class);
-        when(resultItem.getItem()).thenReturn(null);
-
-        try (QueryUrisLoader queryUrisLoader = new QueryUrisLoader()) {
-            queryUrisLoader.readTotalCount(resultItem);
+            assertThrows(CorbException.class, () -> queryUrisLoader.readTotalCount(resultItem));
         }
     }
 
     @Test
-    public void testReadTotalCount() throws CorbException {
+    void testReadTotalCountNullItem() {
+        ResultItem resultItem = mock(ResultItem.class);
+        when(resultItem.getItem()).thenReturn(null);
+
+        try (QueryUrisLoader queryUrisLoader = new QueryUrisLoader()) {
+            assertThrows(CorbException.class, () -> queryUrisLoader.readTotalCount(resultItem));
+        }
+    }
+
+    @Test
+    void testReadTotalCount() throws CorbException {
         ResultItem resultItem = mock(ResultItem.class);
         XdmItem xdmItem = mock(XdmItem.class);
         when(resultItem.getItem()).thenReturn(xdmItem);
@@ -499,12 +475,12 @@ public class QueryUrisLoaderTest {
         when(xdmItem.asString()).thenReturn("2147483648");
         try (QueryUrisLoader queryUrisLoader = new QueryUrisLoader()) {
             queryUrisLoader.readTotalCount(resultItem);
-            assertEquals("Verify that a number larger than Integer.MAX_VALUE can be parsed",2147483648L, queryUrisLoader.getTotalCount());
+            assertEquals(2147483648L, queryUrisLoader.getTotalCount());
         }
     }
 
     @Test
-    public void testHasNextResultSequenceNotHasNext() {
+    void testHasNextResultSequenceNotHasNext() {
         ResultSequence resultSequence = mock(ResultSequence.class);
         when(resultSequence.hasNext()).thenReturn(false);
         boolean result;
@@ -519,7 +495,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testNext() {
+    void testNext() {
         try {
         		ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
             ContentSource contentSource = mock(ContentSource.class);
@@ -557,15 +533,15 @@ public class QueryUrisLoaderTest {
         }
     }
 
-    @Test(expected = NoSuchElementException.class)
-    public void testNextNoQueue() throws CorbException {
-        QueryUrisLoader instance = new QueryUrisLoader();
-        instance.next();
-        fail();
+    @Test
+    void testNextNoQueue() {
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            assertThrows(NoSuchElementException.class, instance::next);
+        }
     }
 
     @Test
-    public void testCloseNullSession() {
+    void testCloseNullSession() {
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.close();
         assertTrue(instance.createQueue().isEmpty());
@@ -573,7 +549,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testClose() {
+    void testClose() {
         Session session = mock(Session.class);
 
         QueryUrisLoader instance = new QueryUrisLoader();
@@ -583,7 +559,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testCleanup() {
+    void testCleanup() {
         QueryUrisLoader instance = new QueryUrisLoader();
         instance.options = new TransformOptions();
         instance.csp = mock(ContentSourcePool.class);
@@ -602,7 +578,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testCollectCustomInputsBatchRefFirstParam() {
+    void testCollectCustomInputsBatchRefFirstParam() {
         ResultSequence resultSequence = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         XdmItem xdmItem = mock(XdmItem.class);
@@ -612,16 +588,17 @@ public class QueryUrisLoaderTest {
         when(xdmItem.asString()).thenReturn(foo);
 
         Properties properties = new Properties();
-        QueryUrisLoader instance = new QueryUrisLoader();
-        instance.setProperties(properties);
-        instance.collectCustomInputs(resultSequence);
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            instance.setProperties(properties);
+            instance.collectCustomInputs(resultSequence);
 
-        assertTrue(instance.properties.isEmpty());
-        assertNotNull(instance.getBatchRef());
+            assertTrue(instance.properties.isEmpty());
+            assertNotNull(instance.getBatchRef());
+        }
     }
 
     @Test
-    public void testCollectCustomInputsCustomPropertyFirstParam() {
+    void testCollectCustomInputsCustomPropertyFirstParam() {
         ResultSequence resultSequence = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         XdmItem xdmItem = mock(XdmItem.class);
@@ -635,117 +612,129 @@ public class QueryUrisLoaderTest {
                 .thenReturn(Integer.toString(0));
 
         Properties properties = new Properties();
-        QueryUrisLoader instance = new QueryUrisLoader();
-        instance.setProperties(properties);
-        instance.collectCustomInputs(resultSequence);
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            instance.setProperties(properties);
+            instance.collectCustomInputs(resultSequence);
 
-        assertTrue(instance.properties.getProperty(PROCESS_MODULE + '.' + foo).equals(bar));
-        assertNotNull(instance.getBatchRef());
+            assertEquals(instance.properties.getProperty(PROCESS_MODULE + '.' + foo), bar);
+            assertNotNull(instance.getBatchRef());
+        }
     }
 
     @Test
-    public void testCollectCustomInputsResultItemIsNull() {
+    void testCollectCustomInputsResultItemIsNull() {
         ResultSequence resultSequence = mock(ResultSequence.class);
         when(resultSequence.next()).thenReturn(null);
 
         Properties properties = new Properties();
-        QueryUrisLoader instance = new QueryUrisLoader();
-        instance.setProperties(properties);
-        instance.collectCustomInputs(resultSequence);
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            instance.setProperties(properties);
+            instance.collectCustomInputs(resultSequence);
 
-        assertTrue(instance.properties.isEmpty());
-        assertNull(instance.getBatchRef());
+            assertTrue(instance.properties.isEmpty());
+            assertNull(instance.getBatchRef());
+        }
     }
 
     @Test
-    public void testPopulateQueueWithNullResultSequence() {
+    void testPopulateQueueWithNullResultSequence() {
         ResultSequence resultSequence = null;
-
-        QueryUrisLoader instance = new QueryUrisLoader();
-        Queue<String> queue = instance.createAndPopulateQueue(resultSequence);
+        Queue<String> queue;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            queue = instance.createAndPopulateQueue(resultSequence);
+        }
         assertTrue(queue.isEmpty());
     }
 
     @Test
-    public void testPopulateQueueWithBlankUrls() {
+    void testPopulateQueueWithBlankUrls() {
         ResultSequence resultSequence = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
         when(resultSequence.next()).thenReturn(resultItem);
         when(resultItem.asString()).thenReturn("");
 
-        QueryUrisLoader instance = new QueryUrisLoader();
-        instance.setTotalCount(1);
-        Queue<String> queue = instance.createAndPopulateQueue(resultSequence);
+        Queue<String> queue;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            instance.setTotalCount(1);
+            queue = instance.createAndPopulateQueue(resultSequence);
+        }
         assertTrue(queue.isEmpty());
     }
 
     @Test
-    public void testPopulateQueueWithValues() {
+    void testPopulateQueueWithValues() {
         ResultSequence resultSequence = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
         when(resultSequence.next()).thenReturn(resultItem);
         when(resultItem.asString()).thenReturn(foo);
-        QueryUrisLoader instance = new QueryUrisLoader();
-        instance.setTotalCount(1);
-        Queue<String> queue = instance.createAndPopulateQueue(resultSequence);
+        Queue<String> queue;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            instance.setTotalCount(1);
+            queue = instance.createAndPopulateQueue(resultSequence);
+        }
         assertFalse(queue.isEmpty());
     }
 
     @Test
-    public void testPopulateQueueWithValuesAndUriRedacted() {
+    void testPopulateQueueWithValuesAndUriRedacted() {
         ResultSequence resultSequence = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
         when(resultSequence.next()).thenReturn(resultItem);
         when(resultItem.asString()).thenReturn(foo);
-        QueryUrisLoader instance = new QueryUrisLoader();
-        instance.setTotalCount(1);
-        TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setShouldRedactUris(true);
-        instance.setOptions(transformOptions);
-        Queue<String> queue = instance.createAndPopulateQueue(resultSequence);
+        Queue<String> queue;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            instance.setTotalCount(1);
+            TransformOptions transformOptions = new TransformOptions();
+            transformOptions.setShouldRedactUris(true);
+            instance.setOptions(transformOptions);
+            queue = instance.createAndPopulateQueue(resultSequence);
+        }
         assertFalse(queue.isEmpty());
         List<LogRecord> records = testLogger.getLogRecords();
         assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "Received first URI")));
     }
 
     @Test
-    public void testLogQueStatus() {
-        QueryUrisLoader loader = new QueryUrisLoader();
-        loader.logQueueStatus(2,"uri", 10, 4001);
+    void testLogQueStatus() {
+        try (QueryUrisLoader loader = new QueryUrisLoader()) {
+            loader.logQueueStatus(2, "uri", 10, 4001);
+        }
         List<LogRecord> records = testLogger.getLogRecords();
         assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "queued 2/10 uri")));
-
     }
 
     @Test
-    public void testLogQueStatusWithUrisRedacted() {
-        QueryUrisLoader loader = new QueryUrisLoader();
-        TransformOptions transformOptions = new TransformOptions();
-        transformOptions.setShouldRedactUris(true);
-        loader.setOptions(transformOptions);
-        loader.logQueueStatus(2,"uri", 10, 4001);
+    void testLogQueStatusWithUrisRedacted() {
+        try (QueryUrisLoader loader = new QueryUrisLoader()) {
+            TransformOptions transformOptions = new TransformOptions();
+            transformOptions.setShouldRedactUris(true);
+            loader.setOptions(transformOptions);
+            loader.logQueueStatus(2, "uri", 10, 4001);
+        }
         List<LogRecord> records = testLogger.getLogRecords();
         assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "queued 2/10 ")));
     }
 
     @Test
-    public void testPopulateArrayQueueWithValuesAndNoRoom() {
+    void testPopulateArrayQueueWithValuesAndNoRoom() {
         ResultSequence resultSequence = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
         when(resultSequence.next()).thenReturn(resultItem);
         when(resultItem.asString()).thenReturn(foo);
-        QueryUrisLoader instance = new QueryUrisLoader();
-        instance.setTotalCount(0);
-        Queue<String> queue = instance.createAndPopulateQueue(resultSequence);
+        Queue<String> queue;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            instance.setTotalCount(0);
+            queue = instance.createAndPopulateQueue(resultSequence);
+        }
         assertTrue(queue.isEmpty());
     }
 
     @Test
-    public void testPopulateDiskQueueWithValuesAndNoRoom() {
+    void testPopulateDiskQueueWithValuesAndNoRoom() {
         ResultSequence resultSequence = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         when(resultSequence.hasNext()).thenReturn(true).thenReturn(false);
@@ -754,15 +743,17 @@ public class QueryUrisLoaderTest {
 
         TransformOptions options = new TransformOptions();
         options.setUseDiskQueue(true);
-        QueryUrisLoader instance = new QueryUrisLoader();
-        instance.setOptions(options);
-        instance.setTotalCount(0);
-        Queue<String> queue = instance.createAndPopulateQueue(resultSequence);
+        Queue<String> queue;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            instance.setOptions(options);
+            instance.setTotalCount(0);
+            queue = instance.createAndPopulateQueue(resultSequence);
+        }
         assertFalse(queue.isEmpty());
     }
 
     @Test
-    public void testGetPropertyNullProperties() {
+    void testGetPropertyNullProperties() {
         System.clearProperty(foo);
         String result;
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
@@ -772,7 +763,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testGetProperty() {
+    void testGetProperty() {
         System.clearProperty(foo);
         String result;
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
@@ -783,7 +774,7 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testGetPropertyExists() {
+    void testGetPropertyExists() {
         System.clearProperty(foo);
         String result;
         try (QueryUrisLoader instance = new QueryUrisLoader()) {
@@ -796,76 +787,87 @@ public class QueryUrisLoaderTest {
     }
 
     @Test
-    public void testCreateQueueDiskQueue() {
+    void testCreateQueueDiskQueue() {
         TransformOptions options = new TransformOptions();
         options.setUseDiskQueue(true);
-        QueryUrisLoader instance = new QueryUrisLoader();
-        instance.setOptions(options);
-        Queue<String> queue = instance.createQueue();
-        assertTrue(queue instanceof DiskQueue);
+        Queue<String> queue;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            instance.setOptions(options);
+            queue = instance.createQueue();
+        }
+        assertInstanceOf(DiskQueue.class, queue);
     }
 
     @Test
-    public void testCreateQueueArrayQueue() {
+    void testCreateQueueArrayQueue() {
         TransformOptions options = new TransformOptions();
         options.setUseDiskQueue(false);
-        QueryUrisLoader instance = new QueryUrisLoader();
-        instance.setOptions(options);
-        Queue<String> queue = instance.createQueue();
-        assertTrue(queue instanceof ArrayQueue);
+        Queue<String> queue;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            instance.setOptions(options);
+            queue = instance.createQueue();
+        }
+        assertInstanceOf(ArrayQueue.class, queue);
     }
 
     @Test
-    public void testCreateQueue() {
-        QueryUrisLoader instance = new QueryUrisLoader();
-        Queue<String> queue = instance.createQueue();
-        assertTrue(queue instanceof ArrayQueue);
+    void testCreateQueue() {
+        Queue<String> queue;
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            queue = instance.createQueue();
+        }
+        assertInstanceOf(ArrayQueue.class, queue);
     }
 
     @Test
-    public void testGetMaxOptionsFromModule() {
-        QueryUrisLoader instance = new QueryUrisLoader();
-        assertEquals(10, instance.getMaxOptionsFromModule());
-    }
-
-    @Test
-    public void testGetMaxOptionsFromModuleValidValue() {
-        QueryUrisLoader instance = new QueryUrisLoader();
-        Properties props = new Properties();
-        props.setProperty(Options.MAX_OPTS_FROM_MODULE, "42");
-        instance.setProperties(props);
-        assertEquals(42, instance.getMaxOptionsFromModule());
-    }
-
-    @Test
-    public void testGetMaxOptionsFromModuleInvalidValue() {
-        QueryUrisLoader instance = new QueryUrisLoader();
-        Properties props = new Properties();
-        props.setProperty(Options.MAX_OPTS_FROM_MODULE, "eleven");
-        instance.setProperties(props);
-        assertEquals(10, instance.getMaxOptionsFromModule());
-    }
-
-    @Test
-    public void testHasNextNullQueue() {
-        QueryUrisLoader instance = new QueryUrisLoader();
-        try {
-            assertFalse(instance.hasNext());
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
+    void testGetMaxOptionsFromModule() {
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            assertEquals(10, instance.getMaxOptionsFromModule());
         }
     }
 
     @Test
-    public void testHasNextEmptyQueue() {
-        QueryUrisLoader instance = new QueryUrisLoader();
-        try {
-            instance.createQueue();
-            assertFalse(instance.hasNext());
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
+    void testGetMaxOptionsFromModuleValidValue() {
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            Properties props = new Properties();
+            props.setProperty(Options.MAX_OPTS_FROM_MODULE, "42");
+            instance.setProperties(props);
+            assertEquals(42, instance.getMaxOptionsFromModule());
+        }
+    }
+
+    @Test
+    void testGetMaxOptionsFromModuleInvalidValue() {
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            Properties props = new Properties();
+            props.setProperty(Options.MAX_OPTS_FROM_MODULE, "eleven");
+            instance.setProperties(props);
+            assertEquals(10, instance.getMaxOptionsFromModule());
+        }
+    }
+
+    @Test
+    void testHasNextNullQueue() {
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            try {
+                assertFalse(instance.hasNext());
+            } catch (CorbException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                fail();
+            }
+        }
+    }
+
+    @Test
+    void testHasNextEmptyQueue() {
+        try (QueryUrisLoader instance = new QueryUrisLoader()) {
+            try {
+                instance.createQueue();
+                assertFalse(instance.hasNext());
+            } catch (CorbException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                fail();
+            }
         }
     }
 

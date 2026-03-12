@@ -22,29 +22,31 @@ import static com.marklogic.developer.corb.FileUrisZipLoaderTest.TEST_ZIP_FILE;
 import static com.marklogic.developer.corb.FileUrisZipLoaderTest.TEST_ZIP_FILE_PATH;
 import static com.marklogic.developer.corb.FileUrisZipLoaderTest.pack;
 import static com.marklogic.developer.corb.ManagerIT.SLASH;
-import java.io.File;
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.Before;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class FileUrisZipLoaderIT {
+class FileUrisZipLoaderIT {
 
     private static final Logger LOG = Logger.getLogger(FileUrisZipLoaderIT.class.getName());
-    private File tempDir;
+    @TempDir
+    private Path tempDir;
 
-    @Before
-    public void setUp() throws IOException {
-        tempDir = TestUtils.createTempDirectory();
-        tempDir.deleteOnExit();
+    @BeforeEach
+    void setUp() {
         try {
             Files.deleteIfExists(TEST_ZIP_FILE_PATH);
             pack(FileUrisDirectoryLoaderTest.TEST_DIR, TEST_ZIP_FILE);
@@ -55,19 +57,16 @@ public class FileUrisZipLoaderIT {
     }
 
     @Test
-    public void testFileUrisZipLoader() {
+    void testFileUrisZipLoader() {
         String exportFilename = "testFileUrisZipLoader.txt";
         Properties properties = getDefaultProperties();
         properties.setProperty(Options.EXPORT_FILE_NAME, exportFilename);
-        Manager manager = new Manager();
-
-        try {
+        try (Manager manager = new Manager()) {
             manager.init(properties);
             manager.run();
 
-            String exportFilePath = tempDir.getPath() + SLASH + exportFilename;
+            String exportFilePath = tempDir + SLASH + exportFilename;
             FileUrisDirectoryLoaderIT.verifyLoaderReport(exportFilePath);
-
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -77,7 +76,7 @@ public class FileUrisZipLoaderIT {
     private Properties getDefaultProperties() {
         Properties properties = new Properties();
         properties.setProperty(Options.XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
-        properties.setProperty(Options.EXPORT_FILE_DIR, tempDir.getPath());
+        properties.setProperty(Options.EXPORT_FILE_DIR, tempDir.toString());
         properties.setProperty(Options.ZIP_FILE, TEST_ZIP_FILE);
         //properties.setProperty(Options.FILE_LOADER_PATH, TEST_ZIP_FILE); //TODO: try ZIP_FILE, then try FILE_LOADER_PATH
         properties.setProperty(Options.PROCESS_TASK, ManagerTest.PROCESS_TASK);

@@ -1561,14 +1561,15 @@ public final class Options {
  * <p>
  * This annotation is applied to the static fields in {@link Options} to provide
  * human-readable descriptions and usage examples. The annotation data is used to:
+ * </p>
  * <ul>
  * <li>Generate user documentation</li>
  * <li>Provide usage/help messages</li>
  * <li>Document option purpose and accepted values</li>
  * </ul>
- * </p>
  * <p>
  * The {@link #description()} element should provide:
+ * </p>
  * <ul>
  * <li>A clear explanation of what the option does</li>
  * <li>Accepted values or format</li>
@@ -1576,15 +1577,14 @@ public final class Options {
  * <li>Examples of usage (when helpful)</li>
  * <li>Related options</li>
  * </ul>
- * </p>
  * <p>
  * Options without a description (empty string) are typically:
+ * </p>
  * <ul>
  * <li>Deprecated options</li>
  * <li>Internal options not meant for user configuration</li>
  * <li>Self-explanatory constant values</li>
  * </ul>
- * </p>
  *
  * @author Mads Hansen, MarkLogic Corporation
  * @since 2.3.0

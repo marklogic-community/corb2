@@ -130,6 +130,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
      * The host-specific private key derived from hardware and network identifiers.
      * <p>
      * This 256-bit AES key is derived at runtime from:
+     * </p>
      * <ul>
      *   <li>Hardware MAC address</li>
      *   <li>Hostname</li>
@@ -139,7 +140,6 @@ public class HostKeyDecrypter extends AbstractDecrypter {
      * These values are combined using XOR operations and hashed with SHA-256 to produce
      * a unique key for each host machine. The key is initialized once during
      * {@link #init_decrypter()} and reused for all encryption/decryption operations.
-     * </p>
      * <p>
      * <b>Important:</b> This key is <b>never stored</b> on disk and is regenerated each
      * time the application starts, ensuring that encrypted values remain bound to the
@@ -381,13 +381,13 @@ public class HostKeyDecrypter extends AbstractDecrypter {
          * Executes a system command and searches the output for a marker string to extract the serial number.
          * <p>
          * This helper method:
+         * </p>
          * <ol>
          *   <li>Executes the specified command</li>
          *   <li>Reads the output line by line</li>
          *   <li>Finds the first line containing the marker string</li>
          *   <li>Extracts the value after the marker</li>
          * </ol>
-         * </p>
          *
          * @param command the OS command to execute
          * @param marker the string marker to search for in the command output
@@ -429,13 +429,13 @@ public class HostKeyDecrypter extends AbstractDecrypter {
          * Executes a system command and returns a BufferedReader for reading the output.
          * <p>
          * This method:
+         * </p>
          * <ol>
          *   <li>Splits the command string on spaces</li>
          *   <li>Executes the command via {@link Runtime#exec(String[])}</li>
          *   <li>Closes the process output stream</li>
          *   <li>Returns a BufferedReader for the process input stream</li>
          * </ol>
-         * </p>
          *
          * @param command the command to execute (will be split on spaces)
          * @return a BufferedReader for reading the command's output

@@ -20,21 +20,23 @@ package com.marklogic.developer.corb;
 
 import static java.util.logging.Level.SEVERE;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.Before;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class StreamingXPathTest {
+class StreamingXPathTest {
 
-    private StreamingXPath xpathInstance;
+    private static StreamingXPath xpathInstance;
     private static final Logger LOG = Logger.getLogger(StreamingXPathTest.class.getName());
 
-    @Before
-    public void setUp() throws CorbException {
+    @BeforeEach
+    void setUp() throws CorbException {
         xpathInstance = new StreamingXPath();
     }
 
@@ -44,27 +46,27 @@ public class StreamingXPathTest {
     }
 
     @Test
-    public void testNormalizeAxesChild() {
+    void testNormalizeAxesChild() {
         testNormalizeAxes("/*/child::foo", "/*/foo");
     }
 
     @Test
-    public void testNormalizeAxesDescendant() {
+    void testNormalizeAxesDescendant() {
         testNormalizeAxes("/*/descendant::foo", "/*//foo");
     }
 
     @Test
-    public void testNormalizeAxesSelf() {
+    void testNormalizeAxesSelf() {
         testNormalizeAxes("/*/self::foo", "/*|foo");
     }
 
     @Test
-    public void testNormalizeAxesElementNameMatchPattern() {
+    void testNormalizeAxesElementNameMatchPattern() {
         testNormalizeAxes("a:baz", "//a:baz");
     }
 
     @Test
-    public void testValidateAxis() {
+    void testValidateAxis() {
         try {
             xpathInstance.validateAxis("/*/*");
         } catch (CorbException ex) {
@@ -72,120 +74,120 @@ public class StreamingXPathTest {
         }
     }
 
-    @Test(expected = CorbException.class)
-    public void testValidateAxisAncestor() throws CorbException {
-        xpathInstance.validateAxis("/b/ancestor::a");
-    }
-
-    @Test(expected = CorbException.class)
-    public void testValidateAxisAncestorOrSelf() throws CorbException {
-        xpathInstance.validateAxis("/b/ancestor-or-self::a");
-    }
-
-    @Test(expected = CorbException.class)
-    public void testValidateAxisAttribute() throws CorbException {
-        xpathInstance.validateAxis("/a/attribute::b");
-    }
-
-    @Test(expected = CorbException.class)
-    public void testValidateAxisDescendantOrSelf() throws CorbException {
-        xpathInstance.validateAxis("/a/descendant-or-self::b");
-    }
-
-    @Test(expected = CorbException.class)
-    public void testValidateAxisFollowing() throws CorbException {
-        xpathInstance.validateAxis("/a/following::a");
-    }
-
-    @Test(expected = CorbException.class)
-    public void testValidateAxisFollowingSibling() throws CorbException {
-        xpathInstance.validateAxis("/a/following-sibling::b");
-    }
-
-    @Test(expected = CorbException.class)
-    public void testValidateAxisNamespace() throws CorbException {
-        xpathInstance.validateAxis("/a/namespace::b");
-    }
-
-    @Test(expected = CorbException.class)
-    public void testValidateAxisParent() throws CorbException {
-        xpathInstance.validateAxis("//b/parent::a");
-    }
-
-    @Test(expected = CorbException.class)
-    public void testValidateAxisParent2() throws CorbException {
-        xpathInstance.validateAxis("//b/..");
-    }
-
-    @Test(expected = CorbException.class)
-    public void testValidateAxisPreceding() throws CorbException {
-        xpathInstance.validateAxis("//b/preceding::a");
-    }
-
-    @Test(expected = CorbException.class)
-    public void testValidateAxisPrecedingSibling() throws CorbException {
-        xpathInstance.validateAxis("//b/preceding-sibling::a");
-    }
-
-    @Test(expected = CorbException.class)
-    public void testValidateAxisSibling() throws CorbException {
-        xpathInstance.validateAxis("//b/sibling::c");
-    }
-
-    @Test(expected = CorbException.class)
-    public void testValidateAxisSelf() throws CorbException {
-        xpathInstance.validateAxis("//b/self::b");
+    @Test
+    void testValidateAxisAncestor() {
+        assertThrows(CorbException.class, () -> xpathInstance.validateAxis("/b/ancestor::a"));
     }
 
     @Test
-    public void testMatches() {
+    void testValidateAxisAncestorOrSelf() {
+        assertThrows(CorbException.class, () ->  xpathInstance.validateAxis("/b/ancestor-or-self::a"));
+    }
+
+    @Test
+    void testValidateAxisAttribute() {
+        assertThrows(CorbException.class, () -> xpathInstance.validateAxis("/a/attribute::b"));
+    }
+
+    @Test
+    void testValidateAxisDescendantOrSelf() {
+        assertThrows(CorbException.class, () -> xpathInstance.validateAxis("/a/descendant-or-self::b"));
+    }
+
+    @Test
+    void testValidateAxisFollowing() {
+        assertThrows(CorbException.class, () -> xpathInstance.validateAxis("/a/following::a"));
+    }
+
+    @Test
+    void testValidateAxisFollowingSibling() {
+        assertThrows(CorbException.class, () -> xpathInstance.validateAxis("/a/following-sibling::b"));
+    }
+
+    @Test
+    void testValidateAxisNamespace() {
+        assertThrows(CorbException.class, () -> xpathInstance.validateAxis("/a/namespace::b"));
+    }
+
+    @Test
+    void testValidateAxisParent() {
+        assertThrows(CorbException.class, () -> xpathInstance.validateAxis("//b/parent::a"));
+    }
+
+    @Test
+    void testValidateAxisParent2() {
+        assertThrows(CorbException.class, () -> xpathInstance.validateAxis("//b/.."));
+    }
+
+    @Test
+    void testValidateAxisPreceding() {
+        assertThrows(CorbException.class, () -> xpathInstance.validateAxis("//b/preceding::a"));
+    }
+
+    @Test
+    void testValidateAxisPrecedingSibling() {
+        assertThrows(CorbException.class, () -> xpathInstance.validateAxis("//b/preceding-sibling::a"));
+    }
+
+    @Test
+    void testValidateAxisSibling() {
+        assertThrows(CorbException.class, () -> xpathInstance.validateAxis("//b/sibling::c"));
+    }
+
+    @Test
+    void testValidateAxisSelf() {
+        assertThrows(CorbException.class, () -> xpathInstance.validateAxis("//b/self::b"));
+    }
+
+    @Test
+    void testMatches() {
         assertTrue(xpathInstance.matches("/a/b"));
         assertTrue(xpathInstance.matches("/a/c:b"));
     }
 
     @Test
-    public void testMatchesIsFalse() {
+    void testMatchesIsFalse() {
         assertFalse(xpathInstance.matches("/a"));
         assertFalse(xpathInstance.matches("/a/b/c"));
     }
 
     @Test
-    public void testGetRegexPathPattern() {
+    void testGetRegexPathPattern() {
         assertEquals("^/[^/]+/[^/]+", xpathInstance.getRegexPathPattern());
     }
 
     @Test
-    public void testParseRegex() {
+    void testParseRegex() {
         testParseXPathToRegex("/*//foo:bar[position()=1]", "^/[^/]+/[^/]*/?bar");
     }
 
     @Test
-    public void testParseRegexElementAnyLevel() {
+    void testParseRegexElementAnyLevel() {
         testParseXPathToRegex("//foo:bar", "^/[^/]*/?bar");
     }
 
     @Test
-    public void testParseRegexWithNamespacePrefixes() {
+    void testParseRegexWithNamespacePrefixes() {
         testParseXPathToRegex("/foo:bar/foo:baz", "^/bar/baz");
     }
 
     @Test
-    public void testParseRegexWithoutNamespacePrefixes() {
+    void testParseRegexWithoutNamespacePrefixes() {
         testParseXPathToRegex("/foo/bar/baz", "^/foo/bar/baz");
     }
 
     @Test
-    public void testParseRegexWithElementWildcard() {
+    void testParseRegexWithElementWildcard() {
         testParseXPathToRegex("/*/bar/*", "^/[^/]+/bar/[^/]+");
     }
 
     @Test
-    public void testParseRegexRelativePath() {
+    void testParseRegexRelativePath() {
         testParseXPathToRegex("foo:bar", "^/[^/]*/?bar");
     }
 
     @Test
-    public void testParseRegexWithPredicates() {
+    void testParseRegexWithPredicates() {
         testParseXPathToRegex("/foo:bar[@baz='1' and @bar='2']", "^/bar");
         testParseXPathToRegex("/foo:bar[@baz='1' and @bar='2']/baz", "^/bar/baz");
     }

@@ -19,8 +19,9 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.concurrent.CompletionService;
@@ -31,8 +32,7 @@ import java.util.logging.Logger;
 import static com.marklogic.developer.corb.Monitor.getProgressMessage;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -40,20 +40,20 @@ import static org.mockito.Mockito.when;
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class MonitorTest {
+class MonitorTest {
 
     private static final double DOUBLE_DELTA = 0.0;
     private final TestHandler testLogger = new TestHandler();
-    private static final Logger LOG = Logger.getLogger(Monitor.class.getName());
+    private static final Logger LOG = Logger.getLogger(MonitorTest.class.getName());
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         clearSystemProperties();
         LOG.addHandler(testLogger);
     }
 
     @Test
-    public void testRunWhenPaused() {
+    void testRunWhenPaused() {
         PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
         when(pool.isPaused()).thenReturn(true);
         Monitor instance = new Monitor(pool, mock(CompletionService.class), mock(Manager.class));
@@ -64,7 +64,7 @@ public class MonitorTest {
     }
 
     @Test
-    public void testCalculateTransactionsPerSecond3args() {
+    void testCalculateTransactionsPerSecond3args() {
         long amountCompleted = 10L;
         long previousMillis = 1000L;
         long currentMillis = 2000L;
@@ -74,7 +74,7 @@ public class MonitorTest {
     }
 
     @Test
-    public void testCalculateThreadsPerSecond4args() {
+    void testCalculateThreadsPerSecond4args() {
         long amountCompleted = 110L;
         long previouslyCompleted = 10L;
         long currentMillis = 2000L;
@@ -85,7 +85,7 @@ public class MonitorTest {
     }
 
     @Test
-    public void testCalculateThreadsPerSecondFractional() {
+    void testCalculateThreadsPerSecondFractional() {
         long amountCompleted = 10L;
         long previouslyCompleted = 9L;
         long currentMillis = 3000L;
@@ -96,7 +96,7 @@ public class MonitorTest {
     }
 
     @Test
-    public void testGetProgressMessage() {
+    void testGetProgressMessage() {
         assertEquals("10/100, 4 tps(avg), 3 tps(cur), ETC 00:00:11, 2 active threads.", getProgressMessage(10, 100, 4, 3, 8, 2, false));
         assertEquals("10/100, 0.4 tps(avg), 3 tps(cur), ETC 00:07:30 (paused), 2 active threads.", getProgressMessage(10, 100, 0.4, 3, 0.2, 2, true));
         assertEquals("10/100, 0.49 tps(avg), 3 tps(cur), ETC 00:03:03, 2 active threads.", getProgressMessage(10, 100, 0.49, 3, 0.49, 2, false));
@@ -106,13 +106,13 @@ public class MonitorTest {
     }
 
     @Test
-    public void testGetEstimatedTimeCompletionZero() {
+    void testGetEstimatedTimeCompletionZero() {
     	assertEquals("00:00:-1", Monitor.getEstimatedTimeCompletion(100, 50, 0, false));
         assertEquals("00:00:-1 (paused)", Monitor.getEstimatedTimeCompletion(100, 50, 0, true));
     }
 
     @Test
-    public void testGetEstimatedTimeCompletion() {
+    void testGetEstimatedTimeCompletion() {
         String fourtyFiveSeconds = "00:00:45";
         assertEquals("02:38:20", Monitor.getEstimatedTimeCompletion(100, 5, 0.01, false));
         assertEquals("01:23:20", Monitor.getEstimatedTimeCompletion(100, 50, 0.01, false));
@@ -130,7 +130,7 @@ public class MonitorTest {
     }
 
     @Test
-    public void testFormat() {
+    void testFormat() {
         String point96 = "0.96";
         String point01 = "0.01";
         assertEquals("1", Monitor.formatTransactionsPerSecond(1));

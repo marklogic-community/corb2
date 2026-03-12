@@ -514,7 +514,7 @@ public abstract class AbstractTask implements Task {
 
     /**
      * Converts a single input string to an XdmItem.
-     * Tries to parse as XML if input looks like XML (starts with '&lt;' and ends with '>').
+     * Tries to parse as XML if input looks like XML (starts with '&lt;' and ends with '&gt;').
      * Falls back to creating a text document node if XML parsing fails.
      *
      * @param builder the DocumentBuilder for XML parsing

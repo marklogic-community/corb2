@@ -31,14 +31,14 @@ import java.security.InvalidParameterException;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class FileUrisStreamingXMLLoaderTest {
+class FileUrisStreamingXMLLoaderTest {
 
     public static final String BUU_DIR = "src/test/resources/streamingXMLUrisLoader/";
     public static final String BUU_FILENAME = "EDI.ICF15T.D150217.T113100716.T";
@@ -49,68 +49,67 @@ public class FileUrisStreamingXMLLoaderTest {
     private static final Logger LOG = Logger.getLogger(FileUrisStreamingXMLLoaderTest.class.getName());
 
     @Test
-    public void testOpenWithDefaultXPath() {
+    void testOpenWithDefaultXPath() {
         testOpen(null, BUU_CHILD_ELEMENTS);
     }
 
     @Test
-    public void testOpenWithDescendantXpath() {
+    void testOpenWithDescendantXpath() {
         testOpen("//BenefitEnrollmentMaintenance", 5);
     }
 
     @Test
-    public void testOpenSingleFileWithElementNameOnly() {
+    void testOpenSingleFileWithElementNameOnly() {
         testOpen("BenefitEnrollmentMaintenance", 5);
     }
 
     @Test
-    public void testOpenWithElementWildcard() {
+    void testOpenWithElementWildcard() {
         testOpen("/*/BenefitEnrollmentMaintenance", 5);
     }
 
     @Test
-    public void testOpenWithMultipleWildcardSteps() {
+    void testOpenWithMultipleWildcardSteps() {
         testOpen("/*/*/*/MemberInformation", 15);
     }
 
     @Test
-    public void testOpenWithNamespace() {
+    void testOpenWithNamespace() {
         testOpen("/*/buu:FileInformation", 1);
     }
 
     @Test
-    public void testOpenWithUnknownNamespace() {
+    void testOpenWithUnknownNamespace() {
         testOpen("/*/xyz:FileInformation", 1);
     }
 
     @Test
-    public void testOpenUnindentedDefaultXPath() {
+    void testOpenUnindentedDefaultXPath() {
         testOpen(getUnindentedFileUrisXMLLoader(), "/*/*", 7);
     }
 
     @Test
-    public void testOpenUnindentedSelectFoo() {
+    void testOpenUnindentedSelectFoo() {
         testOpen(getUnindentedFileUrisXMLLoader(), "/doc/foo", 4);
         testOpen(getUnindentedFileUrisXMLLoader(), "/*/foo", 4);
         testOpen(getUnindentedFileUrisXMLLoader(), "//foo", 4);
     }
 
-    @Test (expected = CorbException.class)
-    public void testOpenUnindentedSelectFollowingSibling() throws CorbException {
+    @Test
+    void testOpenUnindentedSelectFollowingSibling() {
         try (FileUrisStreamingXMLLoader loader = getUnindentedFileUrisXMLLoader()) {
             loader.properties.setProperty(Options.XML_NODE, "/doc/foo/following-sibling::foo");
-            loader.open();
-            loader.getTotalCount();
+            assertThrows(CorbException.class, loader::open);
         }
     }
 
     @Test
-    public void testOpenUnindentedSelectWithNamespacePrefix() {
+    void testOpenUnindentedSelectWithNamespacePrefix() {
         testOpen(getUnindentedFileUrisXMLLoader(), "/doc/f:foo", 4);
     }
 
     @Test
-    public void testOpenUnindentedSelectBazElements() {
+    void testOpenUnindentedSelectBazElements() {
         testOpen(getUnindentedFileUrisXMLLoader(), "/doc/bar/baz", 1);
         testOpen(getUnindentedFileUrisXMLLoader(), "/doc/*/baz", 1);
         testOpen(getUnindentedFileUrisXMLLoader(), "/*/bar/baz", 1);
@@ -120,28 +119,28 @@ public class FileUrisStreamingXMLLoaderTest {
         testOpen(getUnindentedFileUrisXMLLoader(), "//*/baz", 1);
     }
 
-    @Test(expected = CorbException.class)
-    public void testOpenWithSchemaInvalidContent() throws CorbException {
+    @Test
+    void testOpenWithSchemaInvalidContent() {
         FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
         loader.properties.setProperty(XML_SCHEMA, BUU_DIR + NOT_BUU_SCHEMA);
-        loader.open();
+        assertThrows(CorbException.class, loader::open);
     }
 
-    public void testOpen(String XPath, int expectedItems) {
+    void testOpen(String XPath, int expectedItems) {
         FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
         testOpen(loader, XPath, expectedItems);
     }
 
-    public void testOpen(String XPath, String metaXPath, int expectedItems) {
+    void testOpen(String XPath, String metaXPath, int expectedItems) {
         FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
         testOpen(loader, XPath, null, expectedItems);
     }
 
-    public void testOpen(FileUrisStreamingXMLLoader loader, String XPath, int expectedItems) {
+    void testOpen(FileUrisStreamingXMLLoader loader, String XPath, int expectedItems) {
         testOpen(loader, XPath, null, expectedItems);
     }
 
-    public void testOpen(FileUrisStreamingXMLLoader loader, String XPath, String metaXPath, int expectedItems) {
+    void testOpen(FileUrisStreamingXMLLoader loader, String XPath, String metaXPath, int expectedItems) {
 
         if (XPath != null) {
             loader.properties.setProperty(Options.XML_NODE, XPath);
@@ -164,7 +163,7 @@ public class FileUrisStreamingXMLLoaderTest {
     }
 
     @Test
-    public void testOpenDefault() {
+    void testOpenDefault() {
         try (FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader()) {
             loader.open();
             assertEquals(BUU_CHILD_ELEMENTS, loader.getTotalCount());
@@ -183,8 +182,8 @@ public class FileUrisStreamingXMLLoaderTest {
     }
 
     @Test
-    public void testOpenWithoutEnvelope() {
-        try (FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();) {
+    void testOpenWithoutEnvelope() {
+        try (FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader()) {
             loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(false));
             loader.open();
             assertEquals(BUU_CHILD_ELEMENTS, loader.getTotalCount());
@@ -202,7 +201,7 @@ public class FileUrisStreamingXMLLoaderTest {
     }
 
     @Test
-    public void testOpenWithoutEnvelopeWithMetadata() {
+    void testOpenWithoutEnvelopeWithMetadata() {
         try (FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader()) {
             loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(false));
             loader.properties.setProperty(Options.XML_NODE, "/BenefitEnrollmentRequest/BenefitEnrollmentMaintenance");
@@ -229,7 +228,7 @@ public class FileUrisStreamingXMLLoaderTest {
     }
 
     @Test
-    public void testOpenWithEnvelopeWithMetadata() {
+    void testOpenWithEnvelopeWithMetadata() {
         try (FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader()) {
             loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(true));
             loader.properties.setProperty(Options.XML_NODE, "/BenefitEnrollmentRequest/BenefitEnrollmentMaintenance");
@@ -259,7 +258,7 @@ public class FileUrisStreamingXMLLoaderTest {
     }
 
     @Test
-    public void testOpenWithEnvelopeAndBase64Encoded() {
+    void testOpenWithEnvelopeAndBase64Encoded() {
         try (FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader()) {
             loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(true));
             loader.properties.setProperty(Options.LOADER_BASE64_ENCODE, Boolean.toString(true));
@@ -279,7 +278,7 @@ public class FileUrisStreamingXMLLoaderTest {
     }
 
     @Test
-    public void testOpenWithEnvelopeAndBase64EncodedWithMetadata() {
+    void testOpenWithEnvelopeAndBase64EncodedWithMetadata() {
         try (FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader()) {
             loader.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(true));
             loader.properties.setProperty(Options.LOADER_BASE64_ENCODE, Boolean.toString(true));
@@ -307,19 +306,19 @@ public class FileUrisStreamingXMLLoaderTest {
     }
 
     @Test
-    public void testCleanupWithoutTempDir() {
+    void testCleanupWithoutTempDir() {
         FileUrisStreamingXMLLoader loader = new FileUrisStreamingXMLLoader();
         loader.cleanup();
     }
 
     @Test
-    public void testCloseWhenNotOpen() {
+    void testCloseWhenNotOpen() {
         FileUrisStreamingXMLLoader loader = new FileUrisStreamingXMLLoader();
         loader.close();
     }
 
     @Test
-    public void testGetTempDir() {
+    void testGetTempDir() {
         Properties properties = new Properties();
         properties.setProperty(Options.TEMP_DIR, BUU_DIR);
         Path tempDir = null;
@@ -333,18 +332,14 @@ public class FileUrisStreamingXMLLoaderTest {
         assertEquals(0, tempDir.getParent().compareTo(Paths.get(BUU_DIR)));
     }
 
-    @Test(expected = InvalidParameterException.class)
-    public void testGetTempDirWhenFileSpecified() {
+    @Test
+    void testGetTempDirWhenFileSpecified() {
         Properties properties = new Properties();
         properties.setProperty(Options.TEMP_DIR, BUU_DIR + BUU_SCHEMA);
         try (FileUrisStreamingXMLLoader loader = new FileUrisStreamingXMLLoader()) {
             loader.properties = properties;
-            loader.getTempDir();
-        } catch (IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
+            assertThrows(InvalidParameterException.class, loader::getTempDir);
         }
-        fail();
     }
 
     public FileUrisStreamingXMLLoader getDefaultLargeFileUrisXMLLoader() {

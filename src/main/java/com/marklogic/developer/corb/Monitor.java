@@ -143,6 +143,7 @@ public class Monitor extends BaseMonitor implements Runnable {
      * Monitors task results by polling the completion service.
      * <p>
      * This method:
+     * </p>
      * <ol>
      * <li>Polls the completion service for completed tasks</li>
      * <li>Updates the completion count</li>
@@ -150,7 +151,6 @@ public class Monitor extends BaseMonitor implements Runnable {
      * <li>Detects when all tasks have completed</li>
      * <li>Waits for thread pool termination</li>
      * </ol>
-     * </p>
      * <p>
      * The method includes special handling for edge cases where the completion
      * count and thread pool statistics may temporarily diverge.
@@ -203,6 +203,7 @@ public class Monitor extends BaseMonitor implements Runnable {
      * Displays progress information at regular intervals.
      * <p>
      * Progress updates include:
+     * </p>
      * <ul>
      * <li>Number of completed tasks</li>
      * <li>Current and average TPS (transactions per second)</li>
@@ -212,7 +213,6 @@ public class Monitor extends BaseMonitor implements Runnable {
      * <li>Pause status</li>
      * <li>Low memory warnings</li>
      * </ul>
-     * </p>
      * <p>
      * Progress is only displayed if the configured interval has elapsed since
      * the last update.

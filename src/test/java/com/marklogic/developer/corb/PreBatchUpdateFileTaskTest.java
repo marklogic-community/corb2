@@ -25,20 +25,22 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import static org.mockito.Mockito.mock;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class PreBatchUpdateFileTaskTest {
+class PreBatchUpdateFileTaskTest {
 
     private static final Logger LOG = Logger.getLogger(PreBatchUpdateFileTaskTest.class.getName());
 
     @Test
-    public void testGetTopContent() {
+    void testGetTopContent() {
         Properties props = new Properties();
         props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "foo@" + Manager.URIS_BATCH_REF + "baz");
         props.setProperty(Manager.URIS_BATCH_REF, "bar");
@@ -49,7 +51,7 @@ public class PreBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testGetTopContentIsNull() {
+    void testGetTopContentIsNull() {
         Properties props = new Properties();
         props.setProperty(Manager.URIS_BATCH_REF, "bar");
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
@@ -59,7 +61,7 @@ public class PreBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testGetTopContentUrisBatchRefIsNull() {
+    void testGetTopContentUrisBatchRefIsNull() {
         Properties props = new Properties();
         String val = "foo@" + Manager.URIS_BATCH_REF + "baz";
         props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, val);
@@ -70,7 +72,7 @@ public class PreBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testWriteTopContent() {
+    void testWriteTopContent() {
         try {
             String content = "foo,bar,baz";
             File tempDir = TestUtils.createTempDirectory();
@@ -97,22 +99,21 @@ public class PreBatchUpdateFileTaskTest {
         }
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testCallNpe() {
+    @Test
+    void testCallNpe() {
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         try {
-            instance.call();
+            assertThrows(NullPointerException.class, instance::call);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             if (ex instanceof NullPointerException) {
                 throw (NullPointerException) ex;
             }
         }
-        fail();
     }
 
     @Test
-    public void testCall() {
+    void testCall() {
         String content = "foo,bar,baz";
         try {
             File tempDir = TestUtils.createTempDirectory();
@@ -140,7 +141,7 @@ public class PreBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testHasRetryableMessage() {
+    void testHasRetryableMessage() {
         Request req = mock(Request.class);
         AbstractTask instance = new PreBatchUpdateFileTask();
         instance.properties = new Properties();
