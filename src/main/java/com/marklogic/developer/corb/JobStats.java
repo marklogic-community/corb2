@@ -513,8 +513,8 @@ public class JobStats extends BaseMonitor {
 
                 refreshThreadPoolExecutorStats(monitor.getThreadPoolExecutor());
 
-                Long currentTimeMillis = System.currentTimeMillis();
-                Long totalTime = manager.getEndMillis() - manager.getStartMillis();
+                long currentTimeMillis = System.currentTimeMillis();
+                long totalTime = manager.getEndMillis() - manager.getStartMillis();
                 if (totalTime > 0) { //job has completed
                     currentThreadCount = 0L;
                     totalRunTimeInMillis = totalTime;

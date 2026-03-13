@@ -18,6 +18,8 @@
  */
 package com.marklogic.developer.corb.util;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -153,18 +155,18 @@ public final class FileUtils {
         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
 
             @Override
-            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+            public @NotNull FileVisitResult visitFile(final @NotNull Path file, final @NotNull BasicFileAttributes attrs) throws IOException {
                 Files.delete(file);
                 return CONTINUE;
             }
 
             @Override
-            public FileVisitResult visitFileFailed(final Path file, final IOException e) {
+            public @NotNull FileVisitResult visitFileFailed(final @NotNull Path file, final @NotNull IOException e) {
                 return handleException();
             }
 
             @Override
-            public FileVisitResult postVisitDirectory(final Path dir, final IOException e) throws IOException {
+            public @NotNull FileVisitResult postVisitDirectory(final @NotNull Path dir, final IOException e) throws IOException {
                 if (e != null) {
                     return handleException();
                 }

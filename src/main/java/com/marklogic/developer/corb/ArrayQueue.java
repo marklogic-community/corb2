@@ -18,6 +18,8 @@
  */
 package com.marklogic.developer.corb;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.Serializable;
 import java.util.AbstractQueue;
 import java.util.Iterator;
@@ -163,7 +165,7 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
      * @return an iterator over the elements in this queue
      */
     @Override
-    public Iterator<String> iterator() {
+    public @NotNull Iterator<String> iterator() {
         return new Itr();
     }
 

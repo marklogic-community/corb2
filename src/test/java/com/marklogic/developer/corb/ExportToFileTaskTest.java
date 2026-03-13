@@ -276,7 +276,7 @@ class ExportToFileTaskTest {
         exportToFileTask.properties.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
         try {
             String[] result = exportToFileTask.invokeModule();
-            assertEquals(result.length, 0);
+            assertEquals(0, result.length);
         } catch (CorbException ex) {
             fail();
         }

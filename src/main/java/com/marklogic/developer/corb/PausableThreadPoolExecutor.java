@@ -18,6 +18,8 @@
  */
 package com.marklogic.developer.corb;
 
+import org.jetbrains.annotations.NotNull;
+
 import static com.marklogic.developer.corb.TransformOptions.FAILED_URI_TOKEN;
 
 import java.util.ArrayList;
@@ -565,7 +567,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
              * @return negative if this time is less, zero if equal, positive if greater
              */
             @Override
-            public int compareTo(UriObject o) {
+            public int compareTo(@NotNull UriObject o) {
                 if (this.timeTaken != null && o.timeTaken != null) {
                     return this.timeTaken.compareTo(o.timeTaken);
                 } else {

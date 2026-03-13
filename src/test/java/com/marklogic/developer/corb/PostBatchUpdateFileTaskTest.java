@@ -288,15 +288,16 @@ class PostBatchUpdateFileTaskTest {
                 writer.append(A);
                 writer.append(B);
                 writer.flush();
-
-                Properties props = new Properties();
-                props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, header);
-                props.setProperty(Options.EXPORT_FILE_HEADER_LINE_COUNT, "2");
-                props.setProperty(Options.EXPORT_FILE_SORT, "ascending|distinct");
-                props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "END");
-                String result = testRemoveDuplicatesAndSort(file, props);
-                assertEqualsNormalizeNewline(splitAndAppendNewline("BEGIN,letter,a,b,d,z,END"), result);
             }
+
+            Properties props = new Properties();
+            props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, header);
+            props.setProperty(Options.EXPORT_FILE_HEADER_LINE_COUNT, "2");
+            props.setProperty(Options.EXPORT_FILE_SORT, "ascending|distinct");
+            props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "END");
+            String result = testRemoveDuplicatesAndSort(file, props);
+            assertEqualsNormalizeNewline(splitAndAppendNewline("BEGIN,letter,a,b,d,z,END"), result);
+
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

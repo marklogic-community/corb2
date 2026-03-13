@@ -26,6 +26,7 @@ import com.marklogic.developer.corb.util.StringUtils;
 import com.marklogic.xcc.ResultSequence;
 
 import java.io.*;
+import java.nio.file.Files;
 
 /**
  * A task implementation for exporting query results from MarkLogic to files on the local file system.
@@ -159,7 +160,7 @@ public class ExportToFileTask extends AbstractTask {
 	 * @throws IOException if an I/O error occurs during writing
 	 */
 	protected void writeToFile(ResultSequence seq, File exportFile) throws IOException {
-        try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(exportFile))) {
+        try (OutputStream writer = new BufferedOutputStream(Files.newOutputStream(exportFile.toPath()))) {
             write(seq, writer);
         }
     }

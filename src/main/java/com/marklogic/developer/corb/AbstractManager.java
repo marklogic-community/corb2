@@ -35,6 +35,7 @@ import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.Map.Entry;
@@ -262,7 +263,7 @@ public abstract class AbstractManager {
             if (is == null) {
                 File f = new File(module);
                 if (f.exists() && !f.isDirectory()) {
-                    is = new FileInputStream(f);
+                    is = Files.newInputStream(f.toPath());
                 } else {
                     throw new IllegalStateException("Unable to find adhoc query module " + module + " in classpath or filesystem");
                 }

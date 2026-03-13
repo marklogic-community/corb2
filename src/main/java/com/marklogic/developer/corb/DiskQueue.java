@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import com.marklogic.developer.corb.util.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A disk-backed queue implementation that maintains a fixed-size memory buffer and
@@ -252,7 +253,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
      * @throws UnsupportedOperationException always thrown as iteration is not supported
      */
     @Override
-    public Iterator<String> iterator() {
+    public @NotNull Iterator<String> iterator() {
         throw new UnsupportedOperationException(MessageFormat.format("Iterator is not supported for {0}", DiskQueue.class.getSimpleName()));
     }
 
@@ -470,7 +471,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
          * @return an iterator over the elements in this queue
          */
         @Override
-        public Iterator<String> iterator() {
+        public @NotNull Iterator<String> iterator() {
             return queue.iterator();
         }
 
