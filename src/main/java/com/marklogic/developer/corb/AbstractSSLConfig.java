@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -274,7 +275,7 @@ public abstract class AbstractSSLConfig implements SSLConfig {
             if (f.exists() && !f.isDirectory()) {
                 LOG.log(Level.INFO, () -> MessageFormat.format("Loading SSL configuration file {0} from filesystem", securityFileName));
 
-                try (InputStream is = new FileInputStream(f)) {
+                try (InputStream is = Files.newInputStream(f.toPath())) {
                     if (properties == null) {
                         properties = new Properties();
                     }

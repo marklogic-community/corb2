@@ -23,8 +23,6 @@ import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.developer.corb.util.NumberUtils;
 
 import static com.marklogic.developer.corb.Options.*;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_SPLIT_MAX_LINES;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_SPLIT_MAX_SIZE;
 import static com.marklogic.developer.corb.util.FileUtils.deleteFile;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;

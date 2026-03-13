@@ -37,6 +37,7 @@ import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -1531,7 +1532,7 @@ public class Manager extends AbstractManager implements Closeable {
          */
         public void onChange(File file) {
 
-            try (InputStream in = new FileInputStream(file)) {
+            try (InputStream in = Files.newInputStream(file.toPath())) {
 
                 Properties commandFile = new Properties();
                 commandFile.load(in);

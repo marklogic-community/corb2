@@ -32,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import static org.mockito.Mockito.*;
 
-import java.io.FileNotFoundException;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.Properties;

@@ -44,6 +44,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -397,7 +398,7 @@ public class ModuleExecutor extends AbstractManager {
         if (file.getParentFile() != null) {
             file.getAbsoluteFile().getParentFile().mkdirs();
         }
-        try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(file))) {
+        try (BufferedOutputStream writer = new BufferedOutputStream(Files.newOutputStream(file.toPath()))) {
             while (seq.hasNext()) {
                 writer.write(AbstractTask.getValueAsBytes(seq.next().getItem()));
                 writer.write(NEWLINE);
