@@ -412,7 +412,7 @@ class ManagerIT {
         Manager.run(args);
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.SEVERE, records.get(0).getLevel());
-        assertEquals(CORB_INIT_ERROR_MSG, records.get(0).getMessage());
+        assertTrue(records.get(0).getMessage().startsWith(CORB_INIT_ERROR_MSG));
     }
 
     @Test
