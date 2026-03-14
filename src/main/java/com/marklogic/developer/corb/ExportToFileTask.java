@@ -140,6 +140,7 @@ public class ExportToFileTask extends AbstractTask {
         if (seq == null || !seq.hasNext()) {
             return;
         }
+
         try (OutputStream writer = new BufferedOutputStream(Files.newOutputStream(exportFile.toPath()))) {
             write(seq, writer);
         }

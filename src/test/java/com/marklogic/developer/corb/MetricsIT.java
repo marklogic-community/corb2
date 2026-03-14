@@ -52,9 +52,9 @@ class MetricsIT {
     private static final String XQUERY_MODULE = "save-metrics.xqy|ADHOC";
 
     public static final String SLASH = "/";
-    private final TestHandler testLogger = new TestHandler();
-    private static final Logger MANAGER_LOG = Logger.getLogger(MetricsIT.class.getName());
-    private static final Logger LOG = Logger.getLogger(MetricsIT.class.getName());
+    private TestHandler testLogger = new TestHandler();
+    private static final Logger MANAGER_LOG = Logger.getLogger(Manager.class.getName());
+    private static final Logger LOG = Logger.getLogger(Manager.class.getName());
     private static final String LARGE_URIS_MODULE = "src/test/resources/selectorLargeList.xqy|ADHOC";
     private static final String TRANSFORM_ERROR_MODULE = "src/test/resources/transform-error.xqy|ADHOC";
     protected static final String XQUERY_VERSION_ML = "xquery version \"1.0-ml\";\n";
@@ -201,7 +201,7 @@ class MetricsIT {
         properties.setProperty(Options.EXPORT_FILE_NAME, exportFilename);
         properties.setProperty(Options.DISK_QUEUE, "true");
         properties.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10));
-        properties.setProperty(Options.DISK_QUEUE_TEMP_DIR, "/var/tmp");
+        properties.setProperty(Options.DISK_QUEUE_TEMP_DIR, "build");
         properties.setProperty(Options.PROCESS_MODULE, TRANSFORM_ERROR_MODULE);
         properties.setProperty(Options.FAIL_ON_ERROR, "false");
         if (syncFrequency != null) {

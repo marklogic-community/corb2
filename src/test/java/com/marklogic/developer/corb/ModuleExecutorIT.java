@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static org.junit.jupiter.api.Assertions.*;
@@ -70,8 +71,11 @@ class ModuleExecutorIT {
             report.deleteOnExit();
             boolean fileExists = report.exists();
             assertTrue(fileExists);
-            String result = TestUtils.readFile(report);
-            assertEquals("/d/e/f\n", result);
+
+            String result = Files.readAllLines(report.toPath()).get(0);
+            assertEquals("/d/e/f", result);
+            report.delete();
+
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

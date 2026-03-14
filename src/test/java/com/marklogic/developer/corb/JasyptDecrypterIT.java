@@ -43,7 +43,7 @@ import org.junit.jupiter.api.Test;
 class JasyptDecrypterIT {
 
     private static final Logger LOG = Logger.getLogger(JasyptDecrypter.class.getName());
-    private static final Logger JASYPT_DECRYPTER_LOG = Logger.getLogger(JasyptDecrypterIT.class.getName());
+    private static final Logger JASYPT_DECRYPTER_LOG = Logger.getLogger(JasyptDecrypter.class.getName());
     private final TestHandler testLogger = new TestHandler();
     private static final String TEMP_PREFIX = "temp";
     private static final String PROPERTIES_SUFFIX = ".properties";

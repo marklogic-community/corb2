@@ -159,7 +159,7 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
      * @throws CorbException if an error occurs reading the file or generating the document
      */
     protected Document toLoaderDoc(File file) throws CorbException {
-        try (InputStream inputStream = new FileInputStream(file)) {
+        try (InputStream inputStream = Files.newInputStream(file.toPath())) {
             Map<String, String> metadata = getMetadata(file);
             return AbstractFileUrisLoader.this.toLoaderDoc(metadata, inputStream);
         } catch (IOException ex) {

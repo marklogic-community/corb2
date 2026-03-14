@@ -30,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -284,7 +285,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
                     File f = new File(filename);
                     if (f.exists() && !f.isDirectory()) {
                         LOG.log(INFO, () -> MessageFormat.format("Loading private key file {0} from filesystem", filename));
-                        is = new FileInputStream(f);
+                        is = Files.newInputStream(f.toPath());
                     } else {
                         throw new IllegalStateException("Unable to load " + filename);
                     }

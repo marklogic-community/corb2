@@ -22,6 +22,8 @@ import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.logging.Logger;
@@ -224,7 +226,7 @@ public class TwoWaySSLConfig extends AbstractSSLConfig {
         }
         // adding custom key store
         KeyStore clientKeyStore = KeyStore.getInstance(sslKeyStoreType);
-        try (InputStream keystoreInputStream = new FileInputStream(sslKeyStore)) {
+        try (InputStream keystoreInputStream = Files.newInputStream(Paths.get(sslKeyStore))) {
             char[] sslKeystorePasswordChars = sslKeyStorePassword != null ? sslKeyStorePassword.toCharArray() : null;
             clientKeyStore.load(keystoreInputStream, sslKeystorePasswordChars);
         }

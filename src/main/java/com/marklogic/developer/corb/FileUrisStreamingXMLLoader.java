@@ -295,7 +295,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
                 metadata.put(META_SOURCE, file.getCanonicalPath());
                 Document document;
                 if (shouldBase64Encode()) {
-                    try (InputStream inputStream = new FileInputStream(file)) {
+                    try (InputStream inputStream = Files.newInputStream(file.toPath())) {
                         document = toLoaderDoc(metadata, inputStream);
                     }
                 } else {
