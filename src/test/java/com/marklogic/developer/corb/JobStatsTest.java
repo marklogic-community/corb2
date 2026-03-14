@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.*;
 import java.util.concurrent.CompletionService;
+import java.util.logging.Logger;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
@@ -490,11 +491,6 @@ class JobStatsTest {
 
     @Test
     void testAddFailedUris() {
-
-    }
-
-    @Test
-    void testAddFailedUrisWhenNull() {
         Manager manager = mock(Manager.class);
         PausableThreadPoolExecutor threadPoolExecutor = mock(PausableThreadPoolExecutor.class);
         List<String> uris = new ArrayList<>(1);
@@ -512,29 +508,31 @@ class JobStatsTest {
             fail();
         }
     }
-	/*
-	 * 1: Log once at the start and once at the end XML
-	 * 		Log to DB Document
-	 * 		Log to ML Error Log
-	 * 		Log to Java console
-	 * 2: Log once at the start and once at the end JSON
-	 * 		Log to DB Document
-	 * 		Log to ML Error Log
-	 * 		Log to Java console
-	 * 3: Log periodically XML or JSON
-	 * 		Fewer fields in concise mode for periodic logging
-	 * 		End time and average transaction time is shown on the last entry
-	 * 		Should only have one entry with end time
-	 * 		Should pause syncing when job is paused
-	 * 		Should log one extra full record when pausing
-	 * 5: COLLECTION Name
-	 * 6: Root directory
-	 * 7: Job run location can't be found and Job name not specified?
-	 * 8: Job Server Port
-	 * 		Specify single port
-	 * 		Specify range
-	 * 		Specify multiple ranges or multiple ports
-	 * 9: UI Validation
-	 * 		All fields
-	 */
+
+    @Test
+    void testLogMetrics() throws CorbException {
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setLogMetricsToServerLog("INFO");
+        Manager manager = mock(Manager.class);
+        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
+        when(contentSourcePool.get()).thenThrow(new RuntimeException("boom!"));
+        when(manager.getOptions()).thenReturn(transformOptions);
+        when(manager.getContentSourcePool()).thenReturn(contentSourcePool);
+
+        JobStats jobStats = new JobStats(manager);
+        assertThrows(RuntimeException.class, () -> jobStats.logMetrics("test", true, true));
+    }
+
+    @Test
+    void testLogMetricsWhenMetricsLogLevelNone() throws CorbException {
+        TransformOptions transformOptions = new TransformOptions();
+        transformOptions.setLogMetricsToServerLog("NONE");
+        Manager manager = mock(Manager.class);
+        ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
+        when(contentSourcePool.get()).thenThrow(new RuntimeException("boom!"));
+        when(manager.getOptions()).thenReturn(transformOptions);
+        when(manager.getContentSourcePool()).thenReturn(contentSourcePool);
+        JobStats jobStats = new JobStats(manager);
+        assertDoesNotThrow( () -> jobStats.logMetrics("test", true, true));
+    }
 }
