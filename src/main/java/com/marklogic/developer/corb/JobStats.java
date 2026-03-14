@@ -593,22 +593,25 @@ public class JobStats extends BaseMonitor {
      * @param logToConsole whether to log to console
      */
     public void logMetrics(String message, boolean concise, boolean logToConsole) {
-        String processModule = options.getMetricsModule();
-        Document doc = toXML(concise);
-        String metricsLogMessage = toJSON(doc);
-        if (logToConsole) {
-            LOG.info(metricsLogMessage);
-        }
+        String logLevel = options.getLogMetricsToServerLog();
+        if (options.isMetricsLoggingEnabled(logLevel)) {
+            String processModule = options.getMetricsModule();
+            Document doc = toXML(concise);
+            String metricsLogMessage = toJSON(doc);
+            if (logToConsole) {
+                LOG.info(metricsLogMessage);
+            }
 
-        String metricsDocument;
-        if (isJavaScriptModule(processModule)) {
-            metricsDocument = metricsLogMessage;
-        } else {
-            metricsDocument = XmlUtils.documentToString(doc);
-        }
+            String metricsDocument;
+            if (isJavaScriptModule(processModule)) {
+                metricsDocument = metricsLogMessage;
+            } else {
+                metricsDocument = XmlUtils.documentToString(doc);
+            }
 
-        executeModule(metricsDocument);
-        logToServer(message, metricsLogMessage);
+            executeModule(metricsDocument);
+            logToServer(message, metricsLogMessage);
+        }
     }
 
     /**
