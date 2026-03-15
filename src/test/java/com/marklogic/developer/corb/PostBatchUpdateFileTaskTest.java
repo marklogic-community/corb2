@@ -708,10 +708,10 @@ class PostBatchUpdateFileTaskTest {
     @Test
     public void insertIndexIntoFileName() {
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
-        assertEquals("handles back slashes", "C:\\test\\foo\\003_bar.baz", instance.insertIndexIntoFileName("C:\\test\\foo\\bar.baz", 3));
-        assertEquals("handles forward slashes", "/test/foo/003_bar.baz", instance.insertIndexIntoFileName("/test/foo/bar.baz", 3));
-        assertEquals("handles leading slashes", "/003_bar.baz", instance.insertIndexIntoFileName("/bar.baz", 3));
-        assertEquals("handles no slashes", "003_bar.baz", instance.insertIndexIntoFileName("bar.baz", 3));
+        assertEquals("C:\\test\\foo\\003_bar.baz", instance.insertIndexIntoFileName("C:\\test\\foo\\bar.baz", 3));
+        assertEquals("/test/foo/003_bar.baz", instance.insertIndexIntoFileName("/test/foo/bar.baz", 3));
+        assertEquals("/003_bar.baz", instance.insertIndexIntoFileName("/bar.baz", 3));
+        assertEquals( "003_bar.baz", instance.insertIndexIntoFileName("bar.baz", 3));
     }
 
     public static class StringLengthComparator implements Comparator<String> , Serializable{
