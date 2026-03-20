@@ -18,18 +18,12 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_PART_EXT;
-import static com.marklogic.developer.corb.Options.URIS_BATCH_REF;
-import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
-import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
+import static com.marklogic.developer.corb.Options.*;
+import static com.marklogic.developer.corb.util.StringUtils.*;
+
 import com.marklogic.xcc.ResultSequence;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+
+import java.io.*;
 
 /**
  * A specialized task for exporting batch results to files with support for batch-based naming
@@ -134,17 +128,58 @@ public class ExportBatchToFileTask extends ExportToFileTask {
 	 */
 	protected String getPartFileName() {
         String fileName = getFileName();
-		if (isNotEmpty(fileName)) {
-			String partExt = getProperty(EXPORT_FILE_PART_EXT);
-			if (isNotEmpty(partExt)) {
-				if (!partExt.startsWith(".")) {
-					partExt = '.' + partExt;
-				}
-				fileName += partExt;
-			}
-		}
-		return fileName;
+		return getPartFileName(fileName);
 	}
+
+    /**
+     * Returns the specified file name with an optional part extension appended.
+     * <p>
+     * If the {@value com.marklogic.developer.corb.Options#EXPORT_FILE_PART_EXT} property is configured
+     * and the provided file name is not empty, this method appends the part extension to the file name.
+     * The extension is automatically prefixed with a '.' if it doesn't already start with one.
+     * </p>
+     * <p>
+     * <b>Example:</b><br>
+     * If fileName is "batch-001" and EXPORT_FILE_PART_EXT is "tmp",
+     * this returns "batch-001.tmp"
+     * </p>
+     *
+     * @param fileName the base file name to append the part extension to
+     * @return the file name with the part extension appended, or the original file name
+     *         if no part extension is configured or the file name is empty
+     */
+    protected String getPartFileName(String fileName) {
+        if (isNotEmpty(fileName)) {
+            //If not specified, then it won't append a file extension
+            String partExt = getProperty(EXPORT_FILE_PART_EXT);
+            if (isNotEmpty(partExt)) {
+                if (!partExt.startsWith(".")) {
+                    partExt = '.' + partExt;
+                }
+                fileName += partExt;
+            }
+        }
+        return fileName;
+    }
+
+    /**
+     * Gets the part file extension for export files.
+     * <p>
+     * The extension is configured via {@value com.marklogic.developer.corb.Options#EXPORT_FILE_PART_EXT}.
+     * If not configured, defaults to ".part". Ensures the extension starts with a dot.
+     * </p>
+     *
+     * @return the part file extension (including leading dot)
+     */
+    protected String getPartExt() {
+        String partExt = getProperty(EXPORT_FILE_PART_EXT);
+        if (isEmpty(partExt)) {
+            partExt = ".part";
+        } else if (!partExt.startsWith(".")) {
+            partExt = '.' + partExt;
+        }
+        return partExt;
+    }
 
 	/**
 	 * Returns the export file with the part file name (including any part extension).
@@ -158,35 +193,38 @@ public class ExportBatchToFileTask extends ExportToFileTask {
         return getExportFile(getPartFileName());
     }
 
-	/**
-	 * Writes the result sequence to the export file in a thread-safe manner.
-	 * <p>
-	 * This method overrides the parent implementation to provide:
+    /**
+     * Writes the result sequence to the export file in a thread-safe manner.
+     * <p>
+     * This method overrides the parent implementation to provide:
      * </p>
-	 * <ul>
-	 *   <li><b>Synchronized writing:</b> Uses the {@link #SYNC_OBJ} monitor to ensure that
-	 *       only one thread writes to the file at a time</li>
-	 *   <li><b>Append mode:</b> Opens the file in append mode (true) to add results to the end
-	 *       of existing content rather than overwriting</li>
-	 *   <li><b>Buffered output:</b> Wraps the file output stream in a {@link BufferedOutputStream}
-	 *       for improved write performance</li>
-	 * </ul>
-	 * <p>
-	 * The synchronization ensures that when multiple batch tasks write to the same export file,
-	 * their outputs don't interleave or corrupt each other.
-	 * </p>
-	 *
-	 * @param seq the {@link ResultSequence} containing the data to write
-	 * @param exportFile the {@link File} to write the results to
-	 * @throws IOException if an I/O error occurs during writing
-	 */
-	@Override
-	protected void writeToFile(ResultSequence seq, File exportFile) throws IOException {
-		synchronized (SYNC_OBJ) {
-			try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(exportFile, true))){
-				write(seq, writer);
-			}
-		}
-	}
+     * <ul>
+     *   <li><b>Synchronized writing:</b> Uses the {@link #SYNC_OBJ} monitor to ensure that
+     *       only one thread writes to the file at a time</li>
+     *   <li><b>Append mode:</b> Opens the file in append mode (true) to add results to the end
+     *       of existing content rather than overwriting</li>
+     *   <li><b>Buffered output:</b> Wraps the file output stream in a {@link BufferedOutputStream}
+     *       for improved write performance</li>
+     * </ul>
+     * <p>
+     * The synchronization ensures that when multiple batch tasks write to the same export file,
+     * their outputs don't interleave or corrupt each other.
+     * </p>
+     *
+     * @param seq the {@link ResultSequence} containing the data to write
+     * @param exportFile the {@link File} to write the results to
+     * @throws IOException if an I/O error occurs during writing
+     */
+    @Override
+    protected void writeToFile(ResultSequence seq, File exportFile) throws IOException {
+        if (seq == null || !seq.hasNext()) {
+            return;
+        }
+        synchronized (SYNC_OBJ) {
+            try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(exportFile, true))){
+                write(seq, writer);
+            }
+        }
+    }
 
 }

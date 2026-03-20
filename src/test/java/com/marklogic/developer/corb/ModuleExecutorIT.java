@@ -68,12 +68,14 @@ class ModuleExecutorIT {
             executor.run();
             String reportPath = executor.getProperty(Options.EXPORT_FILE_NAME);
             File report = new File(reportPath);
-
+            report.deleteOnExit();
             boolean fileExists = report.exists();
             assertTrue(fileExists);
+
             String result = Files.readAllLines(report.toPath()).get(0);
             assertEquals("/d/e/f", result);
             report.delete();
+
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

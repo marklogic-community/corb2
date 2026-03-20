@@ -222,7 +222,8 @@ class ExportToFileTaskTest {
         when(seq.hasNext()).thenReturn(true).thenReturn(false);
 
         ExportToFileTask instance = new ExportToFileTask();
-        assertThrows(NullPointerException.class, () -> instance.processResult(seq));
+        assertThrows(NullPointerException.class, () -> instance.processResult(seq),
+            "Expected NullPointerException when inputUris is null because it can't generate export file name");
     }
 
     @Test

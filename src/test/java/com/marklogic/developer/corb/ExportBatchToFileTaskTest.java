@@ -133,21 +133,23 @@ class ExportBatchToFileTaskTest {
         when(seq.next()).thenReturn(item);
         when(item.getItem()).thenReturn(xdmItem);
         when(xdmItem.asString()).thenReturn("foo").thenReturn("bar").thenReturn("baz");
-        File file = testWriteToFile(seq);
+
         try {
+            File file = testWriteToFile(seq);
             assertEquals(3, FileUtils.getLineCount(file));
             assertEqualsNormalizeNewline("foo\nbar\nbaz\n", TestUtils.readFile(file));
         } catch (IOException ex) {
             fail();
         }
     }
+
     @Test
-    void testWriteToFileWithFilenameAndNoExportFileDir() {
+    public void testWriteToFileWithFilenameAndNoExportFileDir() {
         testWriteToFileWithNullExportFileDir("myFile.txt");
     }
 
     @Test
-    void testWriteToFileWithRelativeFolderStructureAndNoExportFileDir() {
+    public void testWriteToFileWithRelativeFolderStructureAndNoExportFileDir() {
         testWriteToFileWithNullExportFileDir("build/testWriteToFileWithRelativeFolderStructureAndNoExportFileDir/a/b/c/myFile.txt");
         FileUtils.deleteQuietly(Paths.get("build/testWriteToFileWithRelativeFolderStructureAndNoExportFileDir"));
     }
@@ -161,7 +163,6 @@ class ExportBatchToFileTaskTest {
             assertTrue(exportFile.exists());
             assertEqualsNormalizeNewline("test\n", TestUtils.readFile(exportFile));
         } catch (IOException ex) {
-            System.out.println(ex.getMessage());
             fail();
         } finally {
             exportFile.delete();
@@ -171,8 +172,8 @@ class ExportBatchToFileTaskTest {
     public File testWriteToFile(ResultSequence resultSequence) {
         Properties props = new Properties();
         try {
-            File batchFile = File.createTempFile("test", "txt");
-            props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
+            File batchFile = File.createTempFile("test", ".txt");
+            props.setProperty(EXPORT_FILE_NAME, batchFile.getCanonicalPath());
             batchFile.delete();
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, "Unable to create temp file", ex);
@@ -181,9 +182,9 @@ class ExportBatchToFileTaskTest {
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.setProperties(props);
         try {
-            instance.writeToFile(resultSequence);
+            instance.writeToFile(resultSequence, instance.getExportFile());
         } catch (IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, ex.getMessage(), ex);
             fail();
         }
         File exportFile = instance.getExportFile();

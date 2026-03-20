@@ -124,28 +124,28 @@ public class ExportToFileTask extends AbstractTask {
         return filename;
     }
 
-	/**
-	 * Writes a result sequence to the default export file.
-	 * <p>
-	 * This method serves as a convenience wrapper that:
+    /**
+     * Writes a result sequence to the default export file.
+     * <p>
+     * This method serves as a convenience wrapper that:
      * </p>
-	 * <ol>
-	 *   <li>Checks if the result sequence is null or empty (returns early if so)</li>
-	 *   <li>Obtains the export file using {@link #getExportFile()}</li>
-	 *   <li>Delegates to {@link #writeToFile(ResultSequence, File)} to perform the actual write</li>
-	 * </ol>
-	 *
-	 * @param seq the {@link ResultSequence} to write; may be null or empty
-	 * @throws IOException if an I/O error occurs during writing
-	 */
-	protected void writeToFile(ResultSequence seq) throws IOException {
-		if (seq == null || !seq.hasNext()) {
-			return;
-		}
+     * <ol>
+     *   <li>Checks if the result sequence is null or empty (returns early if so)</li>
+     *   <li>Obtains the export file using {@link #getExportFile()}</li>
+     *   <li>Delegates to {@link #writeToFile(ResultSequence, File)} to perform the actual write</li>
+     * </ol>
+     *
+     * @param seq the {@link ResultSequence} to write; may be null or empty
+     * @throws IOException if an I/O error occurs during writing
+     */
+    protected void writeToFile(ResultSequence seq) throws IOException {
+        if (seq == null || !seq.hasNext()) {
+            return;
+        }
 
         File exportFile = getExportFile();
         writeToFile(seq, exportFile);
-	}
+    }
 
 	/**
 	 * Writes a result sequence to the specified export file.
@@ -155,11 +155,15 @@ public class ExportToFileTask extends AbstractTask {
 	 * The stream is automatically closed after writing (using try-with-resources).
 	 * </p>
 	 *
-	 * @param seq the {@link ResultSequence} to write; should not be null
+	 * @param seq the {@link ResultSequence} to write; may be null or empty
 	 * @param exportFile the {@link File} to write to; parent directories will be created if needed
 	 * @throws IOException if an I/O error occurs during writing
 	 */
 	protected void writeToFile(ResultSequence seq, File exportFile) throws IOException {
+        if (seq == null || !seq.hasNext()) {
+            return;
+        }
+
         try (OutputStream writer = new BufferedOutputStream(Files.newOutputStream(exportFile.toPath()))) {
             write(seq, writer);
         }
@@ -184,7 +188,8 @@ public class ExportToFileTask extends AbstractTask {
      *
      * @param content the string content to append; null or empty content is skipped
      * @throws IOException if an I/O error occurs during writing
-     */
+     *
+     * */
     protected void writeToExportFile(String content) throws IOException {
         String trimmedContent = trimToEmpty(content);
         if (isNotEmpty(trimmedContent)) {
@@ -262,7 +267,7 @@ public class ExportToFileTask extends AbstractTask {
 	 * Processes the result sequence from the module execution by writing it to the export file.
 	 * <p>
 	 * This method overrides {@link AbstractTask#processResult(ResultSequence)} to provide
-	 * file export functionality. It delegates to {@link #writeToFile(ResultSequence)} to perform
+	 * file export functionality. It delegates to {@link #writeToFile(ResultSequence, File)} to perform
 	 * the actual file writing.
 	 * </p>
 	 *

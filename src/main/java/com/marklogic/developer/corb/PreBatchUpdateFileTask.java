@@ -75,31 +75,31 @@ import java.io.*;
  */
 public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 
-	/**
-	 * Retrieves and processes the top/header content to write to the export file.
-	 * <p>
-	 * This method:
+    /**
+     * Retrieves and processes the top/header content to write to the export file.
+     * <p>
+     * This method:
      * </p>
-	 * <ol>
-	 * <li>Gets the top content template from {@link Options#EXPORT_FILE_TOP_CONTENT}</li>
-	 * <li>Gets the batch reference from {@link Manager#URIS_BATCH_REF}</li>
-	 * <li>Replaces any {@code @URIS_BATCH_REF} placeholder with the actual batch reference</li>
-	 * </ol>
-	 * <p>
-	 * This allows for dynamic headers that include information about the current batch,
-	 * such as a timestamp, query identifier, or other context returned by the URIS-MODULE.
-	 * </p>
-	 *
-	 * @return the processed top content string, or null if not configured
-	 */
-	protected String getTopContent() {
-		String topContent = getProperty(EXPORT_FILE_TOP_CONTENT);
-		String batchRef = getProperty(Manager.URIS_BATCH_REF);
-		if (topContent != null && batchRef != null) {
-			topContent = topContent.replace('@' + Manager.URIS_BATCH_REF, batchRef);
-		}
-		return topContent;
-	}
+     * <ol>
+     * <li>Gets the top content template from {@link Options#EXPORT_FILE_TOP_CONTENT}</li>
+     * <li>Gets the batch reference from {@link Manager#URIS_BATCH_REF}</li>
+     * <li>Replaces any {@code @URIS_BATCH_REF} placeholder with the actual batch reference</li>
+     * </ol>
+     * <p>
+     * This allows for dynamic headers that include information about the current batch,
+     * such as a timestamp, query identifier, or other context returned by the URIS-MODULE.
+     * </p>
+     *
+     * @return the processed top content string, or null if not configured
+     */
+    protected String getTopContent() {
+        String topContent = getProperty(EXPORT_FILE_TOP_CONTENT);
+        String batchRef = getProperty(Manager.URIS_BATCH_REF);
+        if (topContent != null && batchRef != null) {
+            topContent = topContent.replace('@' + Manager.URIS_BATCH_REF, batchRef);
+        }
+        return topContent;
+    }
 
 	/**
 	 * Deletes the export file if it exists.
@@ -119,16 +119,28 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 	/**
 	 * Writes the top/header content to the export file.
 	 * <p>
-	 * The content is retrieved via {@link #getTopContent()} and written
-	 * using {@link #writeToExportFile(String)}. If no top content is configured,
-	 * this method does nothing.
+	 * The content is retrieved via {@link #getTopContent()} and written to the
+	 * export file using {@code appendToFile(String, File)}. The top content is
+	 * processed to replace any placeholders (such as {@code @URIS_BATCH_REF})
+	 * with actual values before writing.
+	 * </p>
+	 * <p>
+	 * If the top content is null or empty (i.e., {@link Options#EXPORT_FILE_TOP_CONTENT}
+	 * is not configured), this method completes without modifying the file.
+	 * </p>
+	 * <p>
+	 * This method is typically called during the pre-batch initialization phase
+	 * before any data processing begins, ensuring that headers are present at the
+	 * beginning of the export file.
 	 * </p>
 	 *
-	 * @throws IOException if an I/O error occurs while writing
+	 * @throws IOException if an I/O error occurs while writing to the export file
+	 * @see #getTopContent()
+	 * @see Options#EXPORT_FILE_TOP_CONTENT
 	 */
 	protected void writeTopContent() throws IOException {
 		String topContent = getTopContent();
-		writeToExportFile(topContent);
+        writeToExportFile(topContent);
 	}
 
 	/**

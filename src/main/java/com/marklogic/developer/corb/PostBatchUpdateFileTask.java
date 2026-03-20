@@ -19,26 +19,22 @@
 package com.marklogic.developer.corb;
 
 import com.google.code.externalsorting.ExternalSort;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_AS_ZIP;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_BOTTOM_CONTENT;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_HEADER_LINE_COUNT;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_PART_EXT;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_SORT;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_SORT_COMPARATOR;
 import com.marklogic.developer.corb.util.FileUtils;
+import com.marklogic.developer.corb.util.NumberUtils;
+
+import static com.marklogic.developer.corb.Options.*;
 import static com.marklogic.developer.corb.util.FileUtils.deleteFile;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
+
+import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -102,6 +98,10 @@ import java.util.zip.ZipOutputStream;
  * @see com.google.code.externalsorting.ExternalSort
  */
 public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
+
+    private int currentFileIndex = 1;
+    private long currentFileLineCount = 0;
+    private long currentFileSize = 0;
     /**
      * File suffix used for distinct/deduplicated file operations.
      * This constant is available for use by subclasses or related utilities.
@@ -239,33 +239,6 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     }
 
     /**
-     * Copies header lines from the input file to the output file.
-     * <p>
-     * This is used during sorting to preserve header lines that should not be sorted
-     * with the data lines.
-     * </p>
-     *
-     * @param inputFile the file to read header lines from
-     * @param headerLineCount the number of header lines to copy
-     * @param outputFile the file to write header lines to
-     * @throws IOException if an I/O error occurs
-     */
-    protected void copyHeaderIntoFile(File inputFile, int headerLineCount, File outputFile) throws IOException {
-
-        try (BufferedReader reader = Files.newBufferedReader(inputFile.toPath());
-             BufferedWriter writer = Files.newBufferedWriter(outputFile.toPath()) ) {
-            String line;
-            int currentLine = 0;
-            while ((line = reader.readLine()) != null && currentLine < headerLineCount) {
-                writer.write(line);
-                writer.newLine();
-                currentLine++;
-            }
-            writer.flush();
-        }
-    }
-
-    /**
      * Retrieves the bottom/footer content to append to the export file.
      * <p>
      * The content is specified via {@link Options#EXPORT_FILE_BOTTOM_CONTENT}.
@@ -278,17 +251,36 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     }
 
     /**
-     * Appends bottom/footer content to the export file.
+     * Appends bottom/footer content to the export file(s).
      * <p>
-     * The content is retrieved via {@link #getBottomContent()} and appended
-     * using {@link #writeToExportFile(String)}.
+     * The content is retrieved via {@link #getBottomContent()} and handling depends
+     * on whether file splitting is enabled:
+     * </p>
+     * <ul>
+     * <li>If file splitting is enabled (via {@link Options#EXPORT_FILE_SPLIT_MAX_LINES}
+     *     or {@link Options#EXPORT_FILE_SPLIT_MAX_SIZE}), delegates to
+     *     {@link #writeBottomContentWithSplitting(String)} to append content to
+     *     each split file appropriately</li>
+     * <li>If file splitting is disabled, directly appends content to the single
+     *     export file using {@code appendToFile(String, File)}</li>
+     * </ul>
+     * <p>
+     * If the bottom content is null or empty (i.e., {@link Options#EXPORT_FILE_BOTTOM_CONTENT}
+     * is not configured), this method completes without modifying any files.
      * </p>
      *
-     * @throws IOException if an I/O error occurs while writing
+     * @throws IOException if an I/O error occurs while writing to the export file(s)
+     * @see #getBottomContent()
+     * @see #writeBottomContentWithSplitting(String)
+     * @see #shouldSplitFiles()
      */
     protected void writeBottomContent() throws IOException {
         String bottomContent = getBottomContent();
-        writeToExportFile(bottomContent);
+        if (shouldSplitFiles()) {
+            writeBottomContentWithSplitting(bottomContent);
+        } else {
+            writeToExportFile(bottomContent);
+        }
     }
 
     /**
@@ -298,9 +290,95 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
      * This is typically done after all processing is complete to indicate the file
      * is finalized and ready for use.
      * </p>
+     * @throws IOException if an I/O error occurs
      */
-    protected void moveFile() {
-        moveFile(getPartFileName(), getFileName());
+    protected void moveFile() throws IOException {
+
+        if (shouldSplitFiles()) {
+            File exportFile = getExportFile();
+            String partExt = getPartExt();
+            for (File splitFile : getSplitFiles(exportFile)) {
+                String splitFileName = splitFile.getName();
+                String baseFileName = splitFileName.substring(0, splitFileName.lastIndexOf(partExt));
+                File splitFileWithoutPartExt = new File(splitFile.getParent(), baseFileName);
+                FileUtils.moveFile(splitFile, splitFileWithoutPartExt);
+            }
+            deleteFile(exportFile);
+        } else {
+            //No need to split, just rename
+            moveFile(getPartFileName(), getFileName());
+        }
+    }
+
+    protected void writeBottomContentWithSplitting(String bottomContent) throws IOException {
+        File exportFile = getExportFile();
+        writeBottomContentWithSplitting(exportFile, bottomContent, getMaxLines(), getMaxSize());
+    }
+
+    /**
+     * Writes the bottom content to the output file, splitting files as needed
+     * based upon line count or file size thresholds.
+     *
+     * @param batchFile the batch file to split
+     * @param maxLines maximum lines per file (0 or negative to disable)
+     * @param maxSize maximum bytes per file (0 or negative to disable)
+     * @throws IOException if an I/O error occurs
+     */
+    protected void writeBottomContentWithSplitting(File batchFile, String bottomContent, long maxLines, long maxSize) throws IOException {
+
+        try (BufferedReader reader = Files.newBufferedReader(batchFile.toPath())) {
+
+            File splitFile = getCurrentSplitFile();
+            OutputStream writer = new BufferedOutputStream(new FileOutputStream(splitFile, true));
+
+            int headerLineCount = getIntProperty(EXPORT_FILE_HEADER_LINE_COUNT);
+            if (headerLineCount > 0) {
+                copyHeaderIntoFile(batchFile, headerLineCount, splitFile);
+                //skip over headerLineCount lines in the reader
+                while (reader.readLine() != null && currentFileLineCount < headerLineCount) { currentFileLineCount++; }
+                //reset line count after reading in the header, so that it's not counted for splits
+                currentFileLineCount = 0;
+            }
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                // Check if we need to rotate to a new file
+                boolean needsRotation = false;
+                if (maxLines > 0 && currentFileLineCount >= maxLines) {
+                    needsRotation = true;
+                } else if (maxSize > 0 && currentFileSize >= maxSize) {
+                    needsRotation = true;
+                }
+
+                if (needsRotation) {
+                    if (isNotEmpty(bottomContent)) {
+                        writer.write(bottomContent.getBytes(StandardCharsets.UTF_8));
+                    }
+                    writer.flush();
+                    writer.close();
+
+                    currentFileIndex++;
+                    currentFileLineCount = 0;
+                    currentFileSize = 0;
+                    File nextFile = getCurrentSplitFile();
+
+                    if (headerLineCount > 0) {
+                        copyHeaderIntoFile(batchFile, headerLineCount, nextFile);
+                    }
+                    writer = new BufferedOutputStream(new FileOutputStream(nextFile, true));
+                }
+                writer.write(line.getBytes(StandardCharsets.UTF_8));
+                writer.write(NEWLINE);
+
+                currentFileLineCount++;
+                currentFileSize += line.getBytes(StandardCharsets.UTF_8).length + NEWLINE.length;
+            }
+            if (isNotEmpty(bottomContent)) {
+                writer.write(bottomContent.getBytes(StandardCharsets.UTF_8));
+            }
+            writer.flush();
+            writer.close();
+        }
     }
 
     /**
@@ -364,33 +442,228 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             String partZipFileName = outZipFileName + partExt;
 
             File outFile = getExportFile(outFileName);
+            List<File> splitFiles = getSplitFiles(outFile);
             File zipFile = getExportFile(partZipFileName);
 
-            if (outFile.exists()) {
+            if (outFile.exists() || !splitFiles.isEmpty()) {
+
                 deleteFile(zipFile);
 
                 try (FileOutputStream fos = new FileOutputStream(zipFile);
-                        ZipOutputStream zos = new ZipOutputStream(fos)) {
-                    ZipEntry ze = new ZipEntry(outFileName);
-                    zos.putNextEntry(ze);
-                    byte[] buffer = new byte[2048];
-                    try (FileInputStream fis = new FileInputStream(outFile)) {
-                        int len;
-                        while ((len = fis.read(buffer)) > 0) {
-                            zos.write(buffer, 0, len);
+                     ZipOutputStream zos = new ZipOutputStream(fos)) {
+                    if (shouldSplitFiles()) {
+                        for (File splitFile : splitFiles) {
+                            addZipEntry(zos, splitFile);
+                            deleteFile(splitFile);
                         }
+                    } else {
+                        addZipEntry(zos, outFile);
                     }
-                    zos.closeEntry();
-                    zos.flush();
+                }
+                // move the zip file, if required
+                moveFile(partZipFileName, outZipFileName);
+                // now that we have everything, delete the uncompressed output file
+                deleteFile(outFile);
+            }
+        }
+    }
+
+    /**
+     * Compresses a single export file into a ZIP archive.
+     * <p>
+     * This method performs the following operations:
+     * </p>
+     * <ol>
+     * <li>Creates a temporary ZIP file (with {@link #getPartExt()} extension)</li>
+     * <li>Adds the export file to the ZIP archive using its canonical path as the entry name</li>
+     * <li>Moves the temporary ZIP file to its final name (removing temp extension)</li>
+     * <li>Deletes the original uncompressed export file</li>
+     * </ol>
+     * <p>
+     * The ZIP file is created with the same base name as the export file, plus a ".zip" extension.
+     * If the export file does not exist, this method does nothing.
+     * </p>
+     * <p>
+     * This method is called by {@link #compressFile()} for each split file when ZIP compression
+     * is enabled via {@link Options#EXPORT_FILE_AS_ZIP}.
+     * </p>
+     *
+     * @param zos the Zip File Output Stream to add the file entry to
+     * @param outFile the export file to compress; must not be null
+     * @throws IOException if an I/O error occurs during ZIP creation, file reading, or file deletion
+     */
+    protected void addZipEntry(ZipOutputStream zos, File outFile) throws IOException {
+        if (outFile.exists()) {
+            ZipEntry ze = new ZipEntry(outFile.getName());
+            zos.putNextEntry(ze);
+            byte[] buffer = new byte[2048];
+            try (FileInputStream fis = new FileInputStream(outFile)) {
+                int len;
+                while ((len = fis.read(buffer)) > 0) {
+                    zos.write(buffer, 0, len);
                 }
             }
-
-            // move the file if required
-            moveFile(partZipFileName, outZipFileName);
-
-            // now that we have everything, delete the uncompressed output file
-            deleteFile(outFile);
+            zos.closeEntry();
+            zos.flush();
         }
+    }
+
+    /**
+     * Retrieves all split files associated with a base export file.
+     * <p>
+     * When large exports are split across multiple files, this method identifies and
+     * returns all related file parts. The method searches for:
+     * </p>
+     * <ol>
+     * <li>The base file itself (if it exists)</li>
+     * <li>Numbered split files in sequential order (e.g., file.txt, file_1.txt, file_2.txt, etc.)</li>
+     * </ol>
+     * <p>
+     * The search continues sequentially until a numbered file is not found, at which point
+     * the search terminates. File numbering is expected to be consecutive starting from 1.
+     * </p>
+     * <p>
+     * The returned list maintains the order of files, with the base file first (if present),
+     * followed by numbered split files in ascending order. This method relies on
+     * {@link #insertIndexIntoFileName(String, int)} to generate expected split file names.
+     * </p>
+     *
+     * @param baseFile the base export file to search for splits; must not be null
+     * @return a list of all existing split files (may be empty if no files exist);
+     *         never returns null
+     */
+    protected List<File> getSplitFiles(File baseFile) {
+        List<File> splitFiles = new ArrayList<>();
+        // Find all numbered split files
+        int index = 1;
+        while (true) {
+            String splitFileName = insertIndexIntoFileName(baseFile.getName(), index);
+            File splitFile = new File(baseFile.getParent(), splitFileName);
+            if (splitFile.exists()) {
+                splitFiles.add(splitFile);
+                index++;
+            } else {
+                break;
+            }
+        }
+
+        return splitFiles;
+    }
+
+    /**
+     * Copies header lines from the input file to the output file.
+     * <p>
+     * This is used during sorting to preserve header lines that should not be sorted
+     * with the data lines.
+     * </p>
+     *
+     * @param inputFile the file to read header lines from
+     * @param headerLineCount the number of header lines to copy
+     * @param outputFile the file to write header lines to
+     * @throws IOException if an I/O error occurs
+     */
+    protected void copyHeaderIntoFile(File inputFile, int headerLineCount, File outputFile) throws IOException {
+
+        try (BufferedReader reader = Files.newBufferedReader(inputFile.toPath());
+             BufferedWriter writer = Files.newBufferedWriter(outputFile.toPath()) ) {
+            String line;
+            int currentLine = 0;
+            while ((line = reader.readLine()) != null && currentLine < headerLineCount) {
+                writer.write(line);
+                writer.newLine();
+                currentLine++;
+            }
+            writer.flush();
+        }
+    }
+
+    /**
+     * Gets the maximum number of lines per file from configuration.
+     *
+     * @return maximum lines per file, or -1 if not configured
+     */
+    protected long getMaxLines() {
+        String maxLinesStr = getProperty(EXPORT_FILE_SPLIT_MAX_LINES);
+        if (isNotEmpty(maxLinesStr)) {
+            try {
+                return Long.parseLong(maxLinesStr.trim());
+            } catch (NumberFormatException e) {
+                LOG.warning("Invalid value for " + EXPORT_FILE_SPLIT_MAX_LINES + ": " + maxLinesStr);
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Gets the maximum file size in bytes from configuration.
+     *
+     * @return maximum file size in bytes, or -1 if not configured
+     */
+    protected long getMaxSize() {
+        String maxSizeStr = getProperty(EXPORT_FILE_SPLIT_MAX_SIZE);
+        if (isNotEmpty(maxSizeStr)) {
+            try {
+                return NumberUtils.parseSize(maxSizeStr);
+            } catch (NumberFormatException e) {
+                LOG.warning("Invalid value for " + EXPORT_FILE_SPLIT_MAX_SIZE + ": " + maxSizeStr);
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Gets the current split file based on the current file index.
+     * <p>
+     * This method retrieves the part file name and generates the corresponding split file
+     * using the {@link #currentFileIndex}. The index is formatted and inserted into the
+     * filename via {@link #insertIndexIntoFileName(String, int)}.
+     * </p>
+     *
+     * @return the File object for the current split file
+     * @see #getCurrentSplitFile(String, int)
+     * @see #currentFileIndex
+     */
+    protected File getCurrentSplitFile() {
+        String baseFileName = getPartFileName();
+        return getCurrentSplitFile(baseFileName, currentFileIndex);
+    }
+
+    /**
+     * Gets a split file based on the specified base filename and index.
+     * <p>
+     * This method generates a split filename by inserting the specified index into the
+     * base filename (e.g., "file.txt" with index 1 becomes "001_file.txt"). The generated
+     * filename is then resolved to a File object in the export directory.
+     * </p>
+     * <p>
+     * This method is used when file splitting is enabled to create multiple output files
+     * that meet size or line count constraints configured via {@link Options#EXPORT_FILE_SPLIT_MAX_SIZE}
+     * or {@link Options#EXPORT_FILE_SPLIT_MAX_LINES}.
+     * </p>
+     *
+     * @param baseFileName the base filename to insert the index into
+     * @param index the numeric index to insert (formatted as 3 digits with leading zeros)
+     * @return the File object for the split file in the export directory
+     * @see #insertIndexIntoFileName(String, int)
+     * @see #getExportFile(String)
+     */
+    protected File getCurrentSplitFile(String baseFileName, int index) {
+        String splitFileName = insertIndexIntoFileName(baseFileName, index);
+        return getExportFile(splitFileName);
+    }
+
+    /**
+     * Inserts an index into a filename before the extension.
+     * For example: "output.txt" with index 1 becomes "output1.txt"
+     *
+     * @param fileName the base filename
+     * @param index the index to insert
+     * @return the filename with the index inserted
+     */
+    protected String insertIndexIntoFileName(String fileName, int index) {
+        String regex = "(?<path>.*[\\\\/])*(?<filename>.+?)$";
+        String replacement = "${path}" + String.format("%03d", index) + "_${filename}";
+        return fileName.replaceFirst(regex, replacement);
     }
 
     /**
@@ -405,6 +678,16 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
     @Override
     protected boolean shouldHaveProcessModule(){
         return false;
+    }
+
+    /**
+     * Checks if file splitting was enabled
+     * @return true if splitting options were configured
+     */
+    protected boolean shouldSplitFiles() {
+        String maxLines = getProperty(EXPORT_FILE_SPLIT_MAX_LINES);
+        String maxSize = getProperty(EXPORT_FILE_SPLIT_MAX_SIZE);
+        return isNotEmpty(maxLines) || isNotEmpty(maxSize);
     }
 
     /**
@@ -434,7 +717,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
           	sortAndRemoveDuplicates();
             invokeModule();
             writeBottomContent();
-            moveFile();
+            moveFile(); //ensure that EXPORT-FILE-PART-EXT is removed
             compressFile();
             return new String[0];
         } finally {

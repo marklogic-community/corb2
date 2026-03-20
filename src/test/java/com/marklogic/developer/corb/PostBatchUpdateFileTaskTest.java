@@ -18,11 +18,17 @@
  */
 package com.marklogic.developer.corb;
 
+import java.nio.file.Files;
 import java.util.Properties;
 
+import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
 import static com.marklogic.developer.corb.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.marklogic.developer.corb.util.FileUtils;
+import com.marklogic.xcc.ResultItem;
+import com.marklogic.xcc.ResultSequence;
+import com.marklogic.xcc.types.XdmItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import com.marklogic.xcc.Request;
@@ -36,7 +42,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipFile;
+
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  *
@@ -84,20 +93,21 @@ class PostBatchUpdateFileTaskTest {
     @Test
     void testWriteBottomContent() {
         try {
-            String expextedResult = BOTTOM_CONTENT.concat("\n");
+            String expectedResult = BOTTOM_CONTENT.concat("\n");
             String filename = "export.csv";
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.properties = new Properties();
             instance.properties.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, BOTTOM_CONTENT);
             instance.properties.setProperty(Options.EXPORT_FILE_NAME, filename);
+            instance.properties.setProperty(Options.EXPORT_FILE_PART_EXT, ".temp");
             File tempDir = createTempDirectory();
             instance.exportDir = tempDir.toString();
 
             instance.writeBottomContent();
 
-            File outputFile = new File(tempDir, instance.getPartFileName());
+            File outputFile = new File(tempDir, "export.csv.temp");
             String outputText = TestUtils.readFile(outputFile);
-            assertEqualsNormalizeNewline(expextedResult, outputText);
+            assertEqualsNormalizeNewline(expectedResult, outputText);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -478,6 +488,62 @@ class PostBatchUpdateFileTaskTest {
     }
 
     @Test
+    void testGetMaxLines() {
+        PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+        Properties props = new Properties();
+
+        // Test with valid value
+        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "100");
+        instance.setProperties(props);
+        assertEquals(100, instance.getMaxLines());
+
+        // Test with no value
+        props.clear();
+        instance.setProperties(props);
+        assertEquals(-1, instance.getMaxLines());
+
+        // Test with invalid value
+        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "not-a-number");
+        instance.setProperties(props);
+        assertEquals(-1, instance.getMaxLines());
+    }
+    @Test
+    void testInsertIndexIntoFileName() {
+        PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+
+        // Test with extension
+        assertEquals("001_output.txt", instance.insertIndexIntoFileName("output.txt", 1));
+        assertEquals("002_output.csv", instance.insertIndexIntoFileName("output.csv", 2));
+
+        // Test without extension
+        assertEquals("001_output", instance.insertIndexIntoFileName("output", 1));
+
+        // Test with multiple dots
+        assertEquals("001_my.output.txt", instance.insertIndexIntoFileName("my.output.txt", 1));
+    }
+
+    @Test
+    void testGetMaxSize() {
+        PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+        Properties props = new Properties();
+
+        // Test with valid value
+        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "1024");
+        instance.setProperties(props);
+        assertEquals(1024, instance.getMaxSize());
+
+        // Test with no value
+        props.clear();
+        instance.setProperties(props);
+        assertEquals(-1, instance.getMaxSize());
+
+        // Test with invalid value
+        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "invalid");
+        instance.setProperties(props);
+        assertEquals(-1, instance.getMaxSize());
+    }
+
+    @Test
     void testHasRetryableMessage() {
         Request req = mock(Request.class);
         AbstractTask instance = new PostBatchUpdateFileTask();
@@ -488,6 +554,138 @@ class PostBatchUpdateFileTaskTest {
 
         exception = new RequestPermissionException("Authentication failure for user 'user-name'", req, AbstractTaskTest.USER_NAME, false);
         assertTrue(instance.hasRetryableMessage(exception));
+    }
+
+    @Test
+    void testWriteBottomContentWithSplitByLinesAndZip() {
+        Properties props = new Properties();
+        File tempDir = null;
+        try {
+            tempDir = Files.createTempDirectory("corb-test").toFile();
+            File batchFile = new File(tempDir, "test-split.txt");
+            props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
+            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "2");
+            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
+            props.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
+            PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+            instance.setProperties(props);
+
+            // Create a mock ResultSequence with 5 items
+            ResultSequence seq = mock(ResultSequence.class);
+            ResultItem item = mock(ResultItem.class);
+            XdmItem xdmItem = mock(XdmItem.class);
+
+            //Need one extra hasNext() because it's tested first in writeToFile(seq)
+            when(seq.hasNext()).thenReturn(true, true, true, true, true, true,  false);
+            when(seq.next()).thenReturn(item);
+            when(item.getItem()).thenReturn(xdmItem);
+            when(xdmItem.asString()).thenReturn("line1", "line2", "line3", "line4", "line5");
+            instance.writeToFile(seq, instance.getExportFile());
+
+            instance.writeBottomContent();
+            // Verify that split files were created
+            File file1 = new File(tempDir, "001_test-split.txt.tmp");
+            File file2 = new File(tempDir, "002_test-split.txt.tmp");
+            File file3 = new File(tempDir, "003_test-split.txt.tmp");
+
+            assertTrue(file1.exists());
+            assertTrue(file2.exists());
+            assertTrue(file3.exists());
+
+            // Verify line counts
+            assertEquals(2, FileUtils.getLineCount(file1));
+            assertEquals(2, FileUtils.getLineCount(file2));
+            assertEquals(1, FileUtils.getLineCount(file3));
+
+            //Now that the files are written, rename temp filenames to final
+            instance.moveFile();
+            // Verify that split files were created
+            file1 = new File(tempDir, "001_test-split.txt");
+            file2 = new File(tempDir, "002_test-split.txt");
+            file3 = new File(tempDir, "003_test-split.txt");
+
+            assertTrue(file1.exists());
+            assertTrue(file2.exists());
+            assertTrue(file3.exists());
+
+            // Verify line counts
+            assertEquals(2, FileUtils.getLineCount(file1));
+            assertEquals(2, FileUtils.getLineCount(file2));
+            assertEquals(1, FileUtils.getLineCount(file3));
+
+            instance.compressFile();
+            File outputFile = new File(tempDir, "test-split.txt.zip");
+            assertTrue(outputFile.exists());
+            try (ZipFile zipFile = new ZipFile(outputFile)) {
+                assertEquals( 3, zipFile.size());
+            }
+            assertFalse(file1.exists());
+            assertFalse(file2.exists());
+            assertFalse(file3.exists());
+
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, "Test failed", ex);
+            fail("Exception occurred: " + ex.getMessage());
+        } finally {
+            if (tempDir != null) {
+                FileUtils.deleteQuietly(tempDir.toPath());
+            }
+        }
+    }
+
+    @Test
+    void testWriteBottomContentForBatchAndZip() {
+        Properties props = new Properties();
+        File tempDir = null;
+        try {
+            tempDir = Files.createTempDirectory("corb-test").toFile();
+            File batchFile = new File(tempDir, "test-bottom.txt");
+            props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
+            props.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
+            props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "FOOTER");
+            PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+            instance.setProperties(props);
+
+            // Create a mock ResultSequence with 5 items
+            ResultSequence seq = mock(ResultSequence.class);
+            ResultItem item = mock(ResultItem.class);
+            XdmItem xdmItem = mock(XdmItem.class);
+
+            //Need one extra hasNext() because it's tested first in writeToFile(seq)
+            when(seq.hasNext()).thenReturn(true, true, true, true, true, true,  false);
+            when(seq.next()).thenReturn(item);
+            when(item.getItem()).thenReturn(xdmItem);
+            when(xdmItem.asString()).thenReturn("line1", "line2", "line3", "line4", "line5");
+            instance.writeToFile(seq, instance.getExportFile());
+
+            instance.writeBottomContent();
+            // Verify that split files were created
+            File outputFile = new File(tempDir, "test-bottom.txt");
+
+            assertTrue(outputFile.exists());
+
+            // Verify line counts
+            assertEquals(6, FileUtils.getLineCount(outputFile));
+
+            instance.moveFile();
+            //move is no-op because no partExt
+            assertTrue(outputFile.exists());
+
+            instance.compressFile();
+            File outputZipFile = new File(tempDir, "test-bottom.txt.zip");
+            assertTrue(outputZipFile.exists());
+            try (ZipFile zipFile = new ZipFile(outputZipFile)) {
+                assertEquals(1, zipFile.size());
+            }
+
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, "Test failed", ex);
+            fail("Exception occurred: " + ex.getMessage());
+        } finally {
+            if (tempDir != null) {
+                FileUtils.deleteQuietly(tempDir.toPath());
+            }
+        }
     }
 
     private File createSampleFile() throws IOException {
@@ -505,6 +703,15 @@ class PostBatchUpdateFileTaskTest {
 
     private File createSamplePartFile() throws IOException {
         return createSampleFile(".part");
+    }
+
+    @Test
+    public void insertIndexIntoFileName() {
+        PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+        assertEquals("C:\\test\\foo\\003_bar.baz", instance.insertIndexIntoFileName("C:\\test\\foo\\bar.baz", 3));
+        assertEquals("/test/foo/003_bar.baz", instance.insertIndexIntoFileName("/test/foo/bar.baz", 3));
+        assertEquals("/003_bar.baz", instance.insertIndexIntoFileName("/bar.baz", 3));
+        assertEquals( "003_bar.baz", instance.insertIndexIntoFileName("bar.baz", 3));
     }
 
     public static class StringLengthComparator implements Comparator<String> , Serializable{

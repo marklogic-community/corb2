@@ -18,46 +18,12 @@
  */
 package com.marklogic.developer.corb;
 
-import static com.marklogic.developer.corb.Options.BATCH_SIZE;
-import static com.marklogic.developer.corb.Options.COLLECTION_NAME;
-import static com.marklogic.developer.corb.Options.COMMAND_FILE;
-import static com.marklogic.developer.corb.Options.DISK_QUEUE;
-import static com.marklogic.developer.corb.Options.DISK_QUEUE_TEMP_DIR;
-import static com.marklogic.developer.corb.Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE;
-import static com.marklogic.developer.corb.Options.ERROR_FILE_NAME;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_DIR;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_PART_EXT;
-import static com.marklogic.developer.corb.Options.FAIL_ON_ERROR;
-import static com.marklogic.developer.corb.Options.INIT_MODULE;
-import static com.marklogic.developer.corb.Options.INIT_TASK;
-import static com.marklogic.developer.corb.Options.INSTALL;
-import static com.marklogic.developer.corb.Options.MODULES_DATABASE;
-import static com.marklogic.developer.corb.Options.MODULE_ROOT;
-import static com.marklogic.developer.corb.Options.NUM_TPS_FOR_ETC;
-import static com.marklogic.developer.corb.Options.OPTIONS_FILE;
-import static com.marklogic.developer.corb.Options.POST_BATCH_MINIMUM_COUNT;
-import static com.marklogic.developer.corb.Options.POST_BATCH_MODULE;
-import static com.marklogic.developer.corb.Options.POST_BATCH_TASK;
-import static com.marklogic.developer.corb.Options.POST_BATCH_XQUERY_MODULE;
-import static com.marklogic.developer.corb.Options.PRE_BATCH_MINIMUM_COUNT;
-import static com.marklogic.developer.corb.Options.PRE_BATCH_MODULE;
-import static com.marklogic.developer.corb.Options.PRE_BATCH_TASK;
-import static com.marklogic.developer.corb.Options.PRE_BATCH_XQUERY_MODULE;
-import static com.marklogic.developer.corb.Options.PRE_POST_BATCH_ALWAYS_EXECUTE;
-import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
-import static com.marklogic.developer.corb.Options.PROCESS_TASK;
-import static com.marklogic.developer.corb.Options.TEMP_DIR;
-import static com.marklogic.developer.corb.Options.THREAD_COUNT;
-import static com.marklogic.developer.corb.Options.URIS_FILE;
-import static com.marklogic.developer.corb.Options.URIS_LOADER;
-import static com.marklogic.developer.corb.Options.URIS_MODULE;
-import static com.marklogic.developer.corb.Options.XCC_CONNECTION_URI;
-import static com.marklogic.developer.corb.Options.XQUERY_MODULE;
 import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.developer.corb.util.IOUtils;
 import com.marklogic.developer.corb.util.NumberUtils;
 import com.marklogic.developer.corb.util.StringUtils;
+
+import static com.marklogic.developer.corb.Options.*;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
@@ -569,14 +535,31 @@ public class Manager extends AbstractManager implements Closeable {
             properties.put(EXPORT_FILE_NAME, exportFileName);
         }
         if (properties.containsKey(EXPORT_FILE_NAME) && isNotBlank(properties.getProperty(EXPORT_FILE_NAME)) && processTask == null) {
-            LOG.info("configuring ExportBatchToFileTask since EXPORT-FILE-NAME was set and without PROCESS-TASK");
+            LOG.info(String.format("configuring %s since %s was set and without %s", ExportBatchToFileTask.class.getName(), EXPORT_FILE_NAME, PROCESS_TASK));
             processTask = ExportBatchToFileTask.class.getName();
             properties.put(PROCESS_TASK, processTask);
         }
+        if (preBatchTask == null &&
+            ExportBatchToFileTask.class.getName().equals(processTask) &&
+            isNotBlank(properties.getProperty(EXPORT_FILE_TOP_CONTENT))) {
+            LOG.info(String.format("configuring %s since %s is configured and %s was set and no %s was configured", PreBatchUpdateFileTask.class.getName(), ExportBatchToFileTask.class.getName(), EXPORT_FILE_TOP_CONTENT, PRE_BATCH_TASK));
+            preBatchTask = PreBatchUpdateFileTask.class.getName();
+        }
+        if (postBatchTask == null &&
+            ExportBatchToFileTask.class.getName().equals(processTask) &&
+            (isNotBlank(properties.getProperty(EXPORT_FILE_SORT)) ||
+                isNotBlank(properties.getProperty(EXPORT_FILE_SPLIT_MAX_LINES)) ||
+                isNotBlank(properties.getProperty(EXPORT_FILE_SPLIT_MAX_SIZE)) ||
+                isNotBlank(properties.getProperty(EXPORT_FILE_BOTTOM_CONTENT)) ||
+                StringUtils.stringToBoolean(properties.getProperty(EXPORT_FILE_AS_ZIP)))
+        ) {
+            LOG.info(String.format("configuring %s since %s is configured and %s, %s, and/or %s was set and no %s was configured", PostBatchUpdateFileTask.class.getName(), ExportBatchToFileTask.class.getName(), EXPORT_FILE_SPLIT_MAX_LINES, EXPORT_FILE_SPLIT_MAX_SIZE, EXPORT_FILE_BOTTOM_CONTENT, POST_BATCH_TASK));
+            postBatchTask = PostBatchUpdateFileTask.class.getName();
+        }
+
         if (!properties.containsKey(ERROR_FILE_NAME) && errorFileName != null) {
             properties.put(ERROR_FILE_NAME, errorFileName);
         }
-
         if (initModule != null) {
             options.setInitModule(initModule);
         }
