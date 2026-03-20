@@ -124,6 +124,29 @@ public class ExportToFileTask extends AbstractTask {
         return filename;
     }
 
+    /**
+     * Writes a result sequence to the default export file.
+     * <p>
+     * This method serves as a convenience wrapper that:
+     * </p>
+     * <ol>
+     *   <li>Checks if the result sequence is null or empty (returns early if so)</li>
+     *   <li>Obtains the export file using {@link #getExportFile()}</li>
+     *   <li>Delegates to {@link #writeToFile(ResultSequence, File)} to perform the actual write</li>
+     * </ol>
+     *
+     * @param seq the {@link ResultSequence} to write; may be null or empty
+     * @throws IOException if an I/O error occurs during writing
+     */
+    protected void writeToFile(ResultSequence seq) throws IOException {
+        if (seq == null || !seq.hasNext()) {
+            return;
+        }
+
+        File exportFile = getExportFile();
+        writeToFile(seq, exportFile);
+    }
+
 	/**
 	 * Writes a result sequence to the specified export file.
 	 * <p>
@@ -147,15 +170,31 @@ public class ExportToFileTask extends AbstractTask {
     }
 
     /**
-     * Helper method to append content to a specific file
-     * @param content the content to write
-     * @param file the file to append content
-     * @throws IOException if an I/O error occurs
-     */
-    protected void appendToFile(String content, File file) throws IOException {
+     * Appends string content to the default export file.
+     * <p>
+     * This method provides a convenient way to append text content to the export file:
+     * </p>
+     * <ul>
+     *   <li>Trims whitespace from the content</li>
+     *   <li>Skips writing if the trimmed content is empty</li>
+     *   <li>Opens the file in append mode to preserve existing content</li>
+     *   <li>Adds a newline character after the content</li>
+     *   <li>Uses buffered writing for efficiency</li>
+     * </ul>
+     * <p>
+     * <b>Note:</b> This method is not synchronized. If multiple threads write to the same file,
+     * external synchronization or a subclass like {@link ExportBatchToFileTask} should be used.
+     * </p>
+     *
+     * @param content the string content to append; null or empty content is skipped
+     * @throws IOException if an I/O error occurs during writing
+     *
+     * */
+    protected void writeToExportFile(String content) throws IOException {
         String trimmedContent = trimToEmpty(content);
         if (isNotEmpty(trimmedContent)) {
-            try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(file, true))) {
+            File exportFile = getExportFile();
+            try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(exportFile, true))) {
                 writer.write(trimmedContent.getBytes());
                 writer.write(NEWLINE);
             }
@@ -238,11 +277,8 @@ public class ExportToFileTask extends AbstractTask {
 	 */
 	@Override
 	protected String processResult(ResultSequence seq) throws CorbException {
-        if (seq == null || !seq.hasNext()) {
-            return TRUE;
-        }
 		try {
-			writeToFile(seq, getExportFile());
+			writeToFile(seq);
 			return TRUE;
 		} catch (IOException exc) {
 			throw new CorbException(exc.getMessage(), exc);

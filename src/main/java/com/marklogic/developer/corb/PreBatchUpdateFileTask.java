@@ -140,8 +140,7 @@ public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 	 */
 	protected void writeTopContent() throws IOException {
 		String topContent = getTopContent();
-        File exportFile = getExportFile();
-        appendToFile(topContent, exportFile);
+        writeToExportFile(topContent);
 	}
 
 	/**

@@ -185,7 +185,7 @@ class ExportToFileTaskTest {
         try {
             instance.exportDir = tempFolder.toString();
             instance.setInputURI(uri);
-            instance.writeToFile(resultSequence, instance.getExportFile());
+            instance.writeToFile(resultSequence);
             file = new File(instance.exportDir, instance.getFileName());
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -222,7 +222,8 @@ class ExportToFileTaskTest {
         when(seq.hasNext()).thenReturn(true).thenReturn(false);
 
         ExportToFileTask instance = new ExportToFileTask();
-        assertThrows(NullPointerException.class, () -> instance.processResult(seq));
+        assertThrows(NullPointerException.class, () -> instance.processResult(seq),
+            "Expected NullPointerException when inputUris is null because it can't generate export file name");
     }
 
     @Test

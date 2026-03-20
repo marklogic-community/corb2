@@ -279,7 +279,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
         if (shouldSplitFiles()) {
             writeBottomContentWithSplitting(bottomContent);
         } else {
-            appendToFile(bottomContent, getExportFile());
+            writeToExportFile(bottomContent);
         }
     }
 

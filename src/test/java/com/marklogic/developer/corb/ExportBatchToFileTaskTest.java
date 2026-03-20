@@ -23,6 +23,7 @@ import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -139,6 +140,32 @@ class ExportBatchToFileTaskTest {
             assertEqualsNormalizeNewline("foo\nbar\nbaz\n", TestUtils.readFile(file));
         } catch (IOException ex) {
             fail();
+        }
+    }
+
+    @Test
+    public void testWriteToFileWithFilenameAndNoExportFileDir() {
+        testWriteToFileWithNullExportFileDir("myFile.txt");
+    }
+
+    @Test
+    public void testWriteToFileWithRelativeFolderStructureAndNoExportFileDir() {
+        testWriteToFileWithNullExportFileDir("build/testWriteToFileWithRelativeFolderStructureAndNoExportFileDir/a/b/c/myFile.txt");
+        FileUtils.deleteQuietly(Paths.get("build/testWriteToFileWithRelativeFolderStructureAndNoExportFileDir"));
+    }
+
+    private void testWriteToFileWithNullExportFileDir(String exportFileName) {
+        File exportFile = new File(exportFileName);
+        ExportBatchToFileTask instance = new ExportBatchToFileTask();
+        instance.properties.setProperty(EXPORT_FILE_NAME, exportFileName);
+        try {
+            instance.writeToExportFile("test");
+            assertTrue(exportFile.exists());
+            assertEqualsNormalizeNewline("test\n", TestUtils.readFile(exportFile));
+        } catch (IOException ex) {
+            fail();
+        } finally {
+            exportFile.delete();
         }
     }
 
