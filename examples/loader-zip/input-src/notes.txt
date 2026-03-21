@@ -1,0 +1,1 @@
+This file is included in the sample ZIP archive for the FileUrisZipLoader example.
