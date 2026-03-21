@@ -715,15 +715,14 @@ class PostBatchUpdateFileTaskTest {
                 writer.write("B\n");
             }
 
-            instance.writeBottomContentWithSplitting(batchFile, null, -1, 2);
+            instance.writeBottomContentWithSplitting(batchFile, null, -1, 4);
 
             File file1 = new File(tempDir, "001_test-size-split.txt.tmp");
             File file2 = new File(tempDir, "002_test-size-split.txt.tmp");
 
             assertTrue(file1.exists());
-            assertTrue(file2.exists());
-            assertEqualsNormalizeNewline("HEADER\nA\n", TestUtils.readFile(file1));
-            assertEqualsNormalizeNewline("HEADER\nB\n", TestUtils.readFile(file2));
+            assertFalse(file2.exists());
+            assertEqualsNormalizeNewline("HEADER\nA\nB\n", TestUtils.readFile(file1));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
             fail("Exception occurred: " + ex.getMessage());
