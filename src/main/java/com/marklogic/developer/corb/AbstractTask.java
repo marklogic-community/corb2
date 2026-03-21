@@ -447,7 +447,17 @@ public abstract class AbstractTask implements Task {
             request.setNewStringVariable(URIS_BATCH_REF, getProperty(URIS_BATCH_REF));
         }
 
-        //set custom inputs
+        setCustomInputs(request);
+        return request;
+    }
+
+    /**
+     * Sets custom input variables on the request based on properties that start with the module type prefix.
+     * For each property named "&lt;moduleType&gt;.&lt;varName&gt;", a request variable named "&lt;varName&gt;" is set with the property value.
+     *
+     * @param request the XCC Request to set variables on
+     */
+    private void setCustomInputs(Request request) {
         for (String customInputPropertyName : getCustomInputPropertyNames()) {
             String varName = customInputPropertyName.substring(moduleType.length() + 1);
             String value = getProperty(customInputPropertyName);
@@ -455,7 +465,6 @@ public abstract class AbstractTask implements Task {
                 request.setNewStringVariable(varName, value);
             }
         }
-        return request;
     }
 
     /**
