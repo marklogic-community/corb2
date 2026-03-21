@@ -22,7 +22,6 @@ import static com.marklogic.developer.corb.Options.*;
 import static com.marklogic.developer.corb.util.IOUtils.isDirectory;
 
 import com.marklogic.developer.corb.util.NumberUtils;
-import com.marklogic.developer.corb.util.StringUtils;
 
 import com.marklogic.xcc.*;
 import com.marklogic.xcc.exceptions.RequestException;
@@ -45,7 +44,6 @@ import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 import static java.util.logging.Level.SEVERE;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -704,7 +702,7 @@ public abstract class AbstractManager {
                                         }
                                     }
                                 } catch (UnsupportedEncodingException e) {
-                                    LOG.log(Level.SEVERE, "Unsupported encoding in XCC URI for " + pair, e);
+                                    LOG.log(SEVERE, "Unsupported encoding in XCC URI for " + pair, e);
                                     throw new IllegalStateException(e);
                                 }
                             }
@@ -888,7 +886,7 @@ public abstract class AbstractManager {
         if (isNotBlank(argVal)) {
             retVal = argVal.trim();
         } else {
-            String property = Options.findOption(properties, propertyName);
+            String property = findOption(properties, propertyName);
             if (isNotBlank(property)) {
                 retVal = property;
             }
@@ -925,7 +923,7 @@ public abstract class AbstractManager {
                 + "from the OPTIONS-FILE properties file.\n\n"
                 + "CoRB Options:\n"); // NOPMD
 
-        for (java.lang.reflect.Field field : Options.class.getDeclaredFields()) {
+        for (Field field : Options.class.getDeclaredFields()) {
             Usage usage = field.getAnnotation(Usage.class);
             if (usage != null && isNotEmpty(usage.description())) {
                 err.println(field.getName() + "\n\t" + usage.description()); // NOPMD
