@@ -1543,6 +1543,44 @@ class ManagerTest {
     }
 
     @Test
+    void testAutoConfigurePostBatchTaskBecauseOfLegacyCompressionOption() {
+        Properties properties = ManagerTest.getDefaultProperties();
+        properties.remove(Options.PRE_BATCH_TASK);
+        properties.remove(Options.POST_BATCH_TASK);
+        properties.setProperty(Options.EXPORT_FILE_AS_ZIP_LEGACY, "true");
+        System.getProperties().putAll(properties);
+        try (Manager manager = new Manager()) {
+            manager.init();
+            assertNull(manager.options.getPreBatchTaskClass());
+            assertEquals("true", manager.getProperties().getProperty(Options.EXPORT_FILE_AS_ZIP));
+            assertEquals(PostBatchUpdateFileTask.class, manager.options.getPostBatchTaskClass());
+        } catch (CorbException ex) {
+            fail();
+        } finally {
+            clearSystemProperties();
+        }
+    }
+
+    @Test
+    void testDashCompressionOptionOverridesLegacyCompressionOption() {
+        Properties properties = ManagerTest.getDefaultProperties();
+        properties.remove(Options.PRE_BATCH_TASK);
+        properties.remove(Options.POST_BATCH_TASK);
+        properties.setProperty(Options.EXPORT_FILE_AS_ZIP, "false");
+        properties.setProperty(Options.EXPORT_FILE_AS_ZIP_LEGACY, "true");
+        System.getProperties().putAll(properties);
+        try (Manager manager = new Manager()) {
+            manager.init();
+            assertEquals("false", manager.getProperties().getProperty(Options.EXPORT_FILE_AS_ZIP));
+            assertNull(manager.options.getPostBatchTaskClass());
+        } catch (CorbException ex) {
+            fail();
+        } finally {
+            clearSystemProperties();
+        }
+    }
+
+    @Test
     void testAutoConfigurePostBatchTaskBecauseOfBottomContent() {
         Properties properties = ManagerTest.getDefaultProperties();
         properties.remove(Options.PRE_BATCH_TASK);

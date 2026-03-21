@@ -304,7 +304,9 @@ public final class Options {
      * compresses the output file as a zip file.
      */
     @Usage(description = "If true, PostBatchUpdateFileTask compresses the output file as a zip file.")
-    public static final String EXPORT_FILE_AS_ZIP = "EXPORT_FILE_AS_ZIP";
+    public static final String EXPORT_FILE_AS_ZIP = "EXPORT-FILE-AS-ZIP";
+    /** Legacy underscore-delimited spelling retained for backwards compatibility. */
+    protected static final String EXPORT_FILE_AS_ZIP_LEGACY = "EXPORT_FILE_AS_ZIP";
 
     /**
      * Used by {@link com.marklogic.developer.corb.PostBatchUpdateFileTask} to

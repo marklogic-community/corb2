@@ -426,6 +426,7 @@ public class Manager extends AbstractManager implements Closeable {
     @Override
     protected void initOptions(String... args) throws CorbException {
         super.initOptions(args);
+        normalizeLegacyExportFileAsZipOption();
         // gather inputs
         String processModule = getOption(args, 2, PROCESS_MODULE);
         String threadCount = getOption(args, 3, THREAD_COUNT);
@@ -1018,6 +1019,16 @@ public class Manager extends AbstractManager implements Closeable {
             for (String resourceModule : resourceModules) {
                 insertModule(session, resourceModule);
             }
+        }
+    }
+
+    protected void normalizeLegacyExportFileAsZipOption() {
+        if (System.getProperty(EXPORT_FILE_AS_ZIP) != null || properties.containsKey(EXPORT_FILE_AS_ZIP)) {
+            return;
+        }
+        String legacyValue = Options.findOption(properties, Options.EXPORT_FILE_AS_ZIP_LEGACY);
+        if (isNotBlank(legacyValue)) {
+            properties.setProperty(EXPORT_FILE_AS_ZIP, legacyValue);
         }
     }
 

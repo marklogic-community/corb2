@@ -64,9 +64,10 @@ public final class TestUtils {
                     System.clearProperty(option);
                     //remove any custom input properties (i.e. URIS-MODULE.foo)
                     systemProperties.stream()
-                            .filter(property -> property.startsWith(option + '.'))
-                            .forEach(System::clearProperty);
-                });
+                             .filter(property -> property.startsWith(option + '.'))
+                             .forEach(System::clearProperty);
+                 });
+        System.clearProperty(Options.EXPORT_FILE_AS_ZIP_LEGACY);
     }
 
     public static String readFile(String filePath) throws FileNotFoundException {
