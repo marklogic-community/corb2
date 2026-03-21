@@ -258,7 +258,7 @@ export function dashboard({ pollingMs = 2000 } = {}) {
 
         init() {
             try {
-                this.addMonitor({ host: location.hostname , ports: location.port });
+                this.addMonitor({ host: location.hostname, ports: location.port });
             } catch {}
             addEventListener("beforeunload", () => this.destroy());
         },
