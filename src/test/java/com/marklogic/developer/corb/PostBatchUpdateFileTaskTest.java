@@ -21,7 +21,7 @@ package com.marklogic.developer.corb;
 import java.nio.file.Files;
 import java.util.Properties;
 
-import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
+import static com.marklogic.developer.corb.Options.*;
 import static com.marklogic.developer.corb.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -78,7 +78,7 @@ class PostBatchUpdateFileTaskTest {
     void testGetBottomContent() {
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
         instance.properties = new Properties();
-        instance.properties.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, BOTTOM_CONTENT);
+        instance.properties.setProperty(EXPORT_FILE_BOTTOM_CONTENT, BOTTOM_CONTENT);
         String result = instance.getBottomContent();
         assertEquals(BOTTOM_CONTENT, result);
     }
@@ -97,9 +97,9 @@ class PostBatchUpdateFileTaskTest {
             String filename = "export.csv";
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.properties = new Properties();
-            instance.properties.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, BOTTOM_CONTENT);
-            instance.properties.setProperty(Options.EXPORT_FILE_NAME, filename);
-            instance.properties.setProperty(Options.EXPORT_FILE_PART_EXT, ".temp");
+            instance.properties.setProperty(EXPORT_FILE_BOTTOM_CONTENT, BOTTOM_CONTENT);
+            instance.properties.setProperty(EXPORT_FILE_NAME, filename);
+            instance.properties.setProperty(EXPORT_FILE_PART_EXT, ".temp");
             File tempDir = createTempDirectory();
             instance.exportDir = tempDir.toString();
 
@@ -162,8 +162,8 @@ class PostBatchUpdateFileTaskTest {
             String partFilePath = partFile.toString();
             String exportFilePath = partFilePath.substring(0, partFilePath.lastIndexOf('.'));
             Properties props = new Properties();
-            props.setProperty(Options.EXPORT_FILE_PART_EXT, PART_EXT);
-            props.setProperty(Options.EXPORT_FILE_NAME, exportFilePath);
+            props.setProperty(EXPORT_FILE_PART_EXT, PART_EXT);
+            props.setProperty(EXPORT_FILE_NAME, exportFilePath);
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.properties = props;
             instance.moveFile();
@@ -183,9 +183,9 @@ class PostBatchUpdateFileTaskTest {
         try {
             File sampleFile = createSamplePartFile();
             Properties props = new Properties();
-            props.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
-            props.setProperty(Options.EXPORT_FILE_NAME, sampleFile.toString());
-            props.setProperty(Options.EXPORT_FILE_PART_EXT, PART_FILE_EXT);
+            props.setProperty(EXPORT_FILE_AS_ZIP, "true");
+            props.setProperty(EXPORT_FILE_NAME, sampleFile.toString());
+            props.setProperty(EXPORT_FILE_PART_EXT, PART_FILE_EXT);
 
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.properties = props;
@@ -206,9 +206,9 @@ class PostBatchUpdateFileTaskTest {
             File sampleFile = createSamplePartFile();
             if (sampleFile.delete()) {
                 Properties props = new Properties();
-                props.setProperty(Options.EXPORT_FILE_AS_ZIP, Boolean.TRUE.toString());
-                props.setProperty(Options.EXPORT_FILE_NAME, sampleFile.toString());
-                props.setProperty(Options.EXPORT_FILE_PART_EXT, PART_FILE_EXT);
+                props.setProperty(EXPORT_FILE_AS_ZIP, Boolean.TRUE.toString());
+                props.setProperty(EXPORT_FILE_NAME, sampleFile.toString());
+                props.setProperty(EXPORT_FILE_PART_EXT, PART_FILE_EXT);
 
                 PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
                 instance.properties = props;
@@ -231,9 +231,9 @@ class PostBatchUpdateFileTaskTest {
         try {
             File sampleFile = createSamplePartFile();
             Properties props = new Properties();
-            props.setProperty(Options.EXPORT_FILE_AS_ZIP, Boolean.toString(true));
-            props.setProperty(Options.EXPORT_FILE_NAME, sampleFile.toString());
-            props.setProperty(Options.EXPORT_FILE_PART_EXT, "zpart");
+            props.setProperty(EXPORT_FILE_AS_ZIP, Boolean.toString(true));
+            props.setProperty(EXPORT_FILE_NAME, sampleFile.toString());
+            props.setProperty(EXPORT_FILE_PART_EXT, "zpart");
             String zipFilePart = sampleFile.toString().concat(ZIP_EXT).concat(PART_EXT);
             File existingZipFilePart = new File(zipFilePart);
             if (existingZipFilePart.createNewFile()) {
@@ -257,7 +257,7 @@ class PostBatchUpdateFileTaskTest {
     @Test
     void testCallRemoveDuplicatesAndSortAscUniq() {
         Properties props = new Properties();
-        props.setProperty(Options.EXPORT_FILE_SORT, "asc|uniq");
+        props.setProperty(EXPORT_FILE_SORT, "asc|uniq");
         try {
             String result = testRemoveDuplicatesAndSort(props);
             List<String> tokens = Arrays.asList(result.split("\\R"));
@@ -274,7 +274,7 @@ class PostBatchUpdateFileTaskTest {
     @Test
     void testCallRemoveDuplicatesAndSortASCENDING() {
         Properties props = new Properties();
-        props.setProperty(Options.EXPORT_FILE_SORT, "ASCENDING|distinct");
+        props.setProperty(EXPORT_FILE_SORT, "ASCENDING|distinct");
         try {
             String result = testRemoveDuplicatesAndSort(props);
             assertEqualsNormalizeNewline(splitAndAppendNewline("a,b,d,z"), result);
@@ -301,10 +301,10 @@ class PostBatchUpdateFileTaskTest {
             }
 
             Properties props = new Properties();
-            props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, header);
-            props.setProperty(Options.EXPORT_FILE_HEADER_LINE_COUNT, "2");
-            props.setProperty(Options.EXPORT_FILE_SORT, "ascending|distinct");
-            props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "END");
+            props.setProperty(EXPORT_FILE_TOP_CONTENT, header);
+            props.setProperty(EXPORT_FILE_HEADER_LINE_COUNT, "2");
+            props.setProperty(EXPORT_FILE_SORT, "ascending|distinct");
+            props.setProperty(EXPORT_FILE_BOTTOM_CONTENT, "END");
             String result = testRemoveDuplicatesAndSort(file, props);
             assertEqualsNormalizeNewline(splitAndAppendNewline("BEGIN,letter,a,b,d,z,END"), result);
 
@@ -359,10 +359,10 @@ class PostBatchUpdateFileTaskTest {
 
         Properties props = new Properties();
         if (comparator != null) {
-            props.setProperty(Options.EXPORT_FILE_SORT_COMPARATOR, comparator);
+            props.setProperty(EXPORT_FILE_SORT_COMPARATOR, comparator);
         }
         if (sortProperty != null) {
-            props.setProperty(Options.EXPORT_FILE_SORT, sortProperty);
+            props.setProperty(EXPORT_FILE_SORT, sortProperty);
         }
         String result = testRemoveDuplicatesAndSort(file, props);
         assertEqualsNormalizeNewline(splitAndAppendNewline(expected), result);
@@ -371,7 +371,7 @@ class PostBatchUpdateFileTaskTest {
     @Test
     void testCallRemoveDuplicatesAndSortDescendingDistinct() {
         Properties props = new Properties();
-        props.setProperty(Options.EXPORT_FILE_SORT, "desc|distinct");
+        props.setProperty(EXPORT_FILE_SORT, "desc|distinct");
         String result;
         try {
             result = testRemoveDuplicatesAndSort(props);
@@ -385,7 +385,7 @@ class PostBatchUpdateFileTaskTest {
     @Test
     void testCallRemoveDuplicatesAndSortInvalidValue() {
         Properties props = new Properties();
-        props.setProperty(Options.EXPORT_FILE_SORT, Boolean.toString(false));
+        props.setProperty(EXPORT_FILE_SORT, Boolean.toString(false));
         String result;
         try {
             result = testRemoveDuplicatesAndSort(props);
@@ -412,10 +412,10 @@ class PostBatchUpdateFileTaskTest {
             File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
             file.deleteOnExit();
             Properties props = new Properties();
-            props.setProperty(Options.EXPORT_FILE_SORT, Boolean.toString(true));
-            props.setProperty(Options.EXPORT_FILE_NAME, file.toString());
-            props.setProperty(Options.EXPORT_FILE_PART_EXT, "pt");
-            props.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
+            props.setProperty(EXPORT_FILE_SORT, Boolean.toString(true));
+            props.setProperty(EXPORT_FILE_NAME, file.toString());
+            props.setProperty(EXPORT_FILE_PART_EXT, "pt");
+            props.setProperty(EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.properties = props;
             instance.call();
@@ -432,10 +432,10 @@ class PostBatchUpdateFileTaskTest {
             File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
             file.deleteOnExit();
             Properties props = new Properties();
-            props.setProperty(Options.EXPORT_FILE_SORT, Boolean.TRUE.toString());
-            props.setProperty(Options.EXPORT_FILE_NAME, file.toString());
-            props.setProperty(Options.EXPORT_FILE_PART_EXT, "");
-            props.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
+            props.setProperty(EXPORT_FILE_SORT, Boolean.TRUE.toString());
+            props.setProperty(EXPORT_FILE_NAME, file.toString());
+            props.setProperty(EXPORT_FILE_PART_EXT, "");
+            props.setProperty(EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.properties = props;
             instance.call();
@@ -463,9 +463,9 @@ class PostBatchUpdateFileTaskTest {
     private String testRemoveDuplicatesAndSort(File fileToSort, Properties props)
             throws Exception {
 
-        props.setProperty(Options.EXPORT_FILE_AS_ZIP, Boolean.FALSE.toString());
-        props.setProperty(Options.EXPORT_FILE_NAME, fileToSort.toString());
-        props.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
+        props.setProperty(EXPORT_FILE_AS_ZIP, Boolean.FALSE.toString());
+        props.setProperty(EXPORT_FILE_NAME, fileToSort.toString());
+        props.setProperty(EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
         instance.properties = props;
         instance.call();
@@ -493,7 +493,7 @@ class PostBatchUpdateFileTaskTest {
         Properties props = new Properties();
 
         // Test with valid value
-        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "100");
+        props.setProperty(EXPORT_FILE_SPLIT_MAX_LINES, "100");
         instance.setProperties(props);
         assertEquals(100, instance.getMaxLines());
 
@@ -503,7 +503,7 @@ class PostBatchUpdateFileTaskTest {
         assertEquals(-1, instance.getMaxLines());
 
         // Test with invalid value
-        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "not-a-number");
+        props.setProperty(EXPORT_FILE_SPLIT_MAX_LINES, "not-a-number");
         instance.setProperties(props);
         assertEquals(-1, instance.getMaxLines());
     }
@@ -528,7 +528,7 @@ class PostBatchUpdateFileTaskTest {
         Properties props = new Properties();
 
         // Test with valid value
-        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "1024");
+        props.setProperty(EXPORT_FILE_SPLIT_MAX_SIZE, "1024");
         instance.setProperties(props);
         assertEquals(1024, instance.getMaxSize());
 
@@ -538,7 +538,7 @@ class PostBatchUpdateFileTaskTest {
         assertEquals(-1, instance.getMaxSize());
 
         // Test with invalid value
-        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "invalid");
+        props.setProperty(EXPORT_FILE_SPLIT_MAX_SIZE, "invalid");
         instance.setProperties(props);
         assertEquals(-1, instance.getMaxSize());
     }
@@ -548,17 +548,17 @@ class PostBatchUpdateFileTaskTest {
         PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
         Properties props = new Properties();
 
-        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "invalid");
+        props.setProperty(EXPORT_FILE_SPLIT_MAX_LINES, "invalid");
         instance.setProperties(props);
         assertFalse(instance.shouldSplitFiles());
 
         props.clear();
-        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "invalid");
+        props.setProperty(EXPORT_FILE_SPLIT_MAX_SIZE, "invalid");
         instance.setProperties(props);
         assertFalse(instance.shouldSplitFiles());
 
         props.clear();
-        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "2");
+        props.setProperty(EXPORT_FILE_SPLIT_MAX_LINES, "2");
         instance.setProperties(props);
         assertTrue(instance.shouldSplitFiles());
     }
@@ -568,7 +568,7 @@ class PostBatchUpdateFileTaskTest {
         Request req = mock(Request.class);
         AbstractTask instance = new PostBatchUpdateFileTask();
         instance.properties = new Properties();
-        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_MESSAGE, "FOO,Authentication failure for user,BAR");
+        instance.properties.setProperty(QUERY_RETRY_ERROR_MESSAGE, "FOO,Authentication failure for user,BAR");
         RequestPermissionException exception = new RequestPermissionException(AbstractTaskTest.REJECTED_MSG, req, AbstractTaskTest.USER_NAME, false);
         assertFalse(instance.hasRetryableMessage(exception));
 
@@ -584,9 +584,9 @@ class PostBatchUpdateFileTaskTest {
             tempDir = Files.createTempDirectory("corb-test").toFile();
             File batchFile = new File(tempDir, "test-split.txt");
             props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
-            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "2");
-            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
-            props.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
+            props.setProperty(EXPORT_FILE_SPLIT_MAX_LINES, "2");
+            props.setProperty(EXPORT_FILE_PART_EXT, ".tmp");
+            props.setProperty(EXPORT_FILE_AS_ZIP, "true");
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.setProperties(props);
 
@@ -661,9 +661,9 @@ class PostBatchUpdateFileTaskTest {
             tempDir = Files.createTempDirectory("corb-test").toFile();
             File batchFile = new File(tempDir, "test-split-footer.txt");
             props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
-            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "2");
-            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
-            props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "FOOTER");
+            props.setProperty(EXPORT_FILE_SPLIT_MAX_LINES, "2");
+            props.setProperty(EXPORT_FILE_PART_EXT, ".tmp");
+            props.setProperty(EXPORT_FILE_BOTTOM_CONTENT, "FOOTER");
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.setProperties(props);
 
@@ -704,8 +704,8 @@ class PostBatchUpdateFileTaskTest {
             tempDir = Files.createTempDirectory("corb-test").toFile();
             File batchFile = new File(tempDir, "test-size-split.txt.tmp");
             props.setProperty(EXPORT_FILE_NAME, new File(tempDir, "test-size-split.txt").getAbsolutePath());
-            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
-            props.setProperty(Options.EXPORT_FILE_HEADER_LINE_COUNT, "1");
+            props.setProperty(EXPORT_FILE_PART_EXT, ".tmp");
+            props.setProperty(EXPORT_FILE_HEADER_LINE_COUNT, "1");
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.setProperties(props);
 
@@ -741,9 +741,9 @@ class PostBatchUpdateFileTaskTest {
             tempDir = Files.createTempDirectory("corb-test").toFile();
             File batchFile = new File(tempDir, "test-both-split-options.txt");
             props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
-            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "3");
-            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "1");
-            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
+            props.setProperty(EXPORT_FILE_SPLIT_MAX_LINES, "3");
+            props.setProperty(EXPORT_FILE_SPLIT_MAX_SIZE, "1");
+            props.setProperty(EXPORT_FILE_PART_EXT, ".tmp");
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.setProperties(props);
 
@@ -786,9 +786,9 @@ class PostBatchUpdateFileTaskTest {
             tempDir = Files.createTempDirectory("corb-test").toFile();
             File batchFile = new File(tempDir, "test-invalid-line-valid-size.txt");
             props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
-            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "invalid");
-            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "8");
-            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
+            props.setProperty(EXPORT_FILE_SPLIT_MAX_LINES, "invalid");
+            props.setProperty(EXPORT_FILE_SPLIT_MAX_SIZE, "8");
+            props.setProperty(EXPORT_FILE_PART_EXT, ".tmp");
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.setProperties(props);
 
@@ -831,9 +831,9 @@ class PostBatchUpdateFileTaskTest {
             tempDir = Files.createTempDirectory("corb-test").toFile();
             File batchFile = new File(tempDir, "test-invalid-split.txt");
             props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
-            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "invalid");
-            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
-            props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "FOOTER");
+            props.setProperty(EXPORT_FILE_SPLIT_MAX_LINES, "invalid");
+            props.setProperty(EXPORT_FILE_PART_EXT, ".tmp");
+            props.setProperty(EXPORT_FILE_BOTTOM_CONTENT, "FOOTER");
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.setProperties(props);
 
@@ -874,10 +874,10 @@ class PostBatchUpdateFileTaskTest {
             tempDir = Files.createTempDirectory("corb-test").toFile();
             File batchFile = new File(tempDir, "test-both-split-zip.txt");
             props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
-            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "3");
-            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "1");
-            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
-            props.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
+            props.setProperty(EXPORT_FILE_SPLIT_MAX_LINES, "3");
+            props.setProperty(EXPORT_FILE_SPLIT_MAX_SIZE, "1");
+            props.setProperty(EXPORT_FILE_PART_EXT, ".tmp");
+            props.setProperty(EXPORT_FILE_AS_ZIP, "true");
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.setProperties(props);
 
@@ -920,10 +920,10 @@ class PostBatchUpdateFileTaskTest {
             tempDir = Files.createTempDirectory("corb-test").toFile();
             File batchFile = new File(tempDir, "test-invalid-line-size-zip.txt");
             props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
-            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "invalid");
-            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "8");
-            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
-            props.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
+            props.setProperty(EXPORT_FILE_SPLIT_MAX_LINES, "invalid");
+            props.setProperty(EXPORT_FILE_SPLIT_MAX_SIZE, "8");
+            props.setProperty(EXPORT_FILE_PART_EXT, ".tmp");
+            props.setProperty(EXPORT_FILE_AS_ZIP, "true");
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.setProperties(props);
 
@@ -966,8 +966,8 @@ class PostBatchUpdateFileTaskTest {
             tempDir = Files.createTempDirectory("corb-test").toFile();
             File batchFile = new File(tempDir, "test-bottom.txt");
             props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
-            props.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
-            props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "FOOTER");
+            props.setProperty(EXPORT_FILE_AS_ZIP, "true");
+            props.setProperty(EXPORT_FILE_BOTTOM_CONTENT, "FOOTER");
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.setProperties(props);
 

@@ -27,6 +27,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.jupiter.api.Test;
+
+import static com.marklogic.developer.corb.Options.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import static org.mockito.Mockito.mock;
@@ -42,7 +44,7 @@ class PreBatchUpdateFileTaskTest {
     @Test
     void testGetTopContent() {
         Properties props = new Properties();
-        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "foo@" + Manager.URIS_BATCH_REF + "baz");
+        props.setProperty(EXPORT_FILE_TOP_CONTENT, "foo@" + Manager.URIS_BATCH_REF + "baz");
         props.setProperty(Manager.URIS_BATCH_REF, "bar");
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.properties = props;
@@ -64,7 +66,7 @@ class PreBatchUpdateFileTaskTest {
     void testGetTopContentUrisBatchRefIsNull() {
         Properties props = new Properties();
         String val = "foo@" + Manager.URIS_BATCH_REF + "baz";
-        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, val);
+        props.setProperty(EXPORT_FILE_TOP_CONTENT, val);
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.properties = props;
         String result = instance.getTopContent();
@@ -81,8 +83,8 @@ class PreBatchUpdateFileTaskTest {
             if (tempFile.createNewFile()) {
                 tempFile.deleteOnExit();
                 Properties props = new Properties();
-                props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, content);
-                props.setProperty(Options.EXPORT_FILE_NAME, tempFile.getName());
+                props.setProperty(EXPORT_FILE_TOP_CONTENT, content);
+                props.setProperty(EXPORT_FILE_NAME, tempFile.getName());
 
                 PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
                 instance.properties = props;
@@ -121,9 +123,9 @@ class PreBatchUpdateFileTaskTest {
             if (tempFile.createNewFile()) {
                 tempFile.deleteOnExit();
                 Properties props = new Properties();
-                props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, content);
-                props.setProperty(Options.EXPORT_FILE_NAME, tempFile.getName());
-                props.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
+                props.setProperty(EXPORT_FILE_TOP_CONTENT, content);
+                props.setProperty(EXPORT_FILE_NAME, tempFile.getName());
+                props.setProperty(EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
                 PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
                 instance.properties = props;
                 instance.exportDir = tempDir.toString();
@@ -149,9 +151,9 @@ class PreBatchUpdateFileTaskTest {
             if (tempFile.createNewFile()) {
                 tempFile.deleteOnExit();
                 Properties props = new Properties();
-                props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, content);
-                props.setProperty(Options.EXPORT_FILE_NAME, tempFile.getName());
-                props.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
+                props.setProperty(EXPORT_FILE_TOP_CONTENT, content);
+                props.setProperty(EXPORT_FILE_NAME, tempFile.getName());
+                props.setProperty(EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
                 PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
                 instance.properties = props;
                 instance.exportDir = tempDir.toString();
@@ -159,7 +161,7 @@ class PreBatchUpdateFileTaskTest {
 
                 instance.call();
 
-                assertEquals("2", props.getProperty(Options.EXPORT_FILE_HEADER_LINE_COUNT));
+                assertEquals("2", props.getProperty(EXPORT_FILE_HEADER_LINE_COUNT));
                 assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(partFile));
             } else {
                 fail();
@@ -175,7 +177,7 @@ class PreBatchUpdateFileTaskTest {
         Request req = mock(Request.class);
         AbstractTask instance = new PreBatchUpdateFileTask();
         instance.properties = new Properties();
-        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_MESSAGE, "FOO,Authentication failure for user,BAR");
+        instance.properties.setProperty(QUERY_RETRY_ERROR_MESSAGE, "FOO,Authentication failure for user,BAR");
         RequestPermissionException exception = new RequestPermissionException(AbstractTaskTest.REJECTED_MSG, req, AbstractTaskTest.USER_NAME, false);
         assertFalse(instance.hasRetryableMessage(exception));
 

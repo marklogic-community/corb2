@@ -21,14 +21,9 @@ package com.marklogic.developer.corb;
 import com.marklogic.developer.corb.util.FileUtils;
 import com.marklogic.developer.corb.util.IOUtils;
 import com.marklogic.developer.corb.util.NumberUtils;
-import com.marklogic.developer.corb.util.StringUtils;
 
 import static com.marklogic.developer.corb.Options.*;
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
-import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
-import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
-import static com.marklogic.developer.corb.util.StringUtils.stringToBoolean;
+
 import com.marklogic.xcc.Content;
 import com.marklogic.xcc.ContentCreateOptions;
 import com.marklogic.xcc.ContentFactory;
@@ -41,6 +36,8 @@ import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.*;
+
+import static com.marklogic.developer.corb.util.StringUtils.*;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
@@ -552,7 +549,7 @@ public class Manager extends AbstractManager implements Closeable {
                 isNotBlank(properties.getProperty(EXPORT_FILE_SPLIT_MAX_LINES)) ||
                 isNotBlank(properties.getProperty(EXPORT_FILE_SPLIT_MAX_SIZE)) ||
                 isNotBlank(properties.getProperty(EXPORT_FILE_BOTTOM_CONTENT)) ||
-                StringUtils.stringToBoolean(properties.getProperty(EXPORT_FILE_AS_ZIP)))
+                stringToBoolean(properties.getProperty(EXPORT_FILE_AS_ZIP)))
         ) {
             LOG.info(String.format("configuring %s since %s is configured and %s, %s, and/or %s was set and no %s was configured", PostBatchUpdateFileTask.class.getName(), ExportBatchToFileTask.class.getName(), EXPORT_FILE_SPLIT_MAX_LINES, EXPORT_FILE_SPLIT_MAX_SIZE, EXPORT_FILE_BOTTOM_CONTENT, POST_BATCH_TASK));
             postBatchTask = PostBatchUpdateFileTask.class.getName();
@@ -625,7 +622,7 @@ public class Manager extends AbstractManager implements Closeable {
             if (metricsLogLevel.toLowerCase().matches(ML_LOG_LEVELS)) {
                 options.setLogMetricsToServerLog(metricsLogLevel.toLowerCase());
             } else {
-                throw new IllegalArgumentException("INVALID VALUE for METRICS-TO-ERROR-LOG: " + metricsLogLevel + ". Supported LOG LEVELS are one of: " + Options.ML_LOG_LEVELS);
+                throw new IllegalArgumentException("INVALID VALUE for METRICS-TO-ERROR-LOG: " + metricsLogLevel + ". Supported LOG LEVELS are one of: " + ML_LOG_LEVELS);
             }
         }
         String metricsCollections = getOption(METRICS_COLLECTIONS);
@@ -683,7 +680,7 @@ public class Manager extends AbstractManager implements Closeable {
         String jobServerPort = getOption(JOB_SERVER_PORT);
         //no defaults for this function
         try {
-            Set<Integer> jobServerPorts = new LinkedHashSet<>(StringUtils.parsePortRanges(jobServerPort));
+            Set<Integer> jobServerPorts = new LinkedHashSet<>(parsePortRanges(jobServerPort));
             options.setJobServerPortsToChoose(jobServerPorts);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(JOB_SERVER_PORT + " must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090");
@@ -824,13 +821,13 @@ public class Manager extends AbstractManager implements Closeable {
         args.add(buildSystemPropertyArg(POST_BATCH_MODULE, "post-batch.xqy"));
         args.add(buildSystemPropertyArg("... ", null));
         args.add(NAME);
-        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
+        err.println(TAB + join(args, SPACE)); // NOPMD
 
         err.println("\nusage 3:"); // NOPMD
         args.clear();
         args.add(buildSystemPropertyArg(OPTIONS_FILE, optionsFile));
         args.add(NAME);
-        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
+        err.println(TAB + join(args, SPACE)); // NOPMD
 
         err.println("\nusage 4:"); // NOPMD
         args.clear();
@@ -838,7 +835,7 @@ public class Manager extends AbstractManager implements Closeable {
         args.add(buildSystemPropertyArg(THREAD_COUNT, threadCount));
         args.add(NAME);
         args.add(xccConnectionUri);
-        err.println(TAB + StringUtils.join(args, SPACE)); // NOPMD
+        err.println(TAB + join(args, SPACE)); // NOPMD
     }
 
     /**
