@@ -16,15 +16,15 @@ For additional information, refer to the [CoRB Wiki](https://github.com/marklogi
 ### Downloads
 Download the latest release directly from https://github.com/marklogic-community/corb2/releases or resolve dependencies through [Maven Central](http://mvnrepository.com/artifact/com.marklogic/marklogic-corb).
 
-### Compatability 
+### Compatibility 
 -  [CoRB v2.4.0](https://github.com/marklogic-community/corb2/releases/tag/2.4.0) (or later) requires Java 8 (or later) to run.
--  [CoRB v2.3.2](https://github.com/marklogic-community/corb2/releases/tag/2.3.2) is the last release compatable with Java 7 and 6.
+-  [CoRB v2.3.2](https://github.com/marklogic-community/corb2/releases/tag/2.3.2) is the last release compatible with Java 7 and 6.
 -  [CoRB v2.2.0](https://github.com/marklogic-community/corb2/releases/tag/2.2.0) (or later) requires [marklogic-xcc 8.0.* (or later)](https://developer.marklogic.com/products/xcc) to run.
   > Note: marklogic-xcc 8 is backwards compatible to MarkLogic 5 and runs on Java 1.6 or later.
 
 ### Getting Help
 To get help with CoRB
-- [Post a question to Stack Overflow](http://stackoverflow.com/questions/ask?tags=marklogic+corb) with the [<code>markogic</code>](https://stackoverflow.com/questions/tagged/marklogic) and [<code>corb</code>](https://stackoverflow.com/questions/tagged/corb) tags.  
+- [Post a question to Stack Overflow](http://stackoverflow.com/questions/ask?tags=marklogic+corb) with the [<code>marklogic</code>](https://stackoverflow.com/questions/tagged/marklogic) and [<code>corb</code>](https://stackoverflow.com/questions/tagged/corb) tags.  
 - Submit issues or feature requests at https://github.com/marklogic-community/corb2/issues
 
 ### [Running CoRB](https://github.com/marklogic-community/corb2/wiki/Running-CoRB)
@@ -42,7 +42,10 @@ If specified in more than one place, a command line parameter takes precedence o
 
 > Note: Any or all of the properties can be specified as Java system properties or key value pairs in properties file.
 
-> Note: CoRB exit codes `0` - successful, `0` - nothing to process (ref: EXIT-CODE-NO-URIS), `1` - initialization or connection error and `2` - execution error
+> Note: CoRB exit codes:
+> - `0` - successful, nothing to process (ref: EXIT-CODE-NO-URIS) 
+> - `1` - initialization or connection error 
+> - `2` - execution error
 
 > Note: CoRB now supports [Logging Job Metrics](METRICS.md) back to the MarkLogic database log and/or as document in the database.
 
