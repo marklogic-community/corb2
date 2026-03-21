@@ -21,7 +21,6 @@ package com.marklogic.developer.corb;
 import com.marklogic.developer.corb.util.IOUtils;
 import com.marklogic.developer.corb.util.StringUtils;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;

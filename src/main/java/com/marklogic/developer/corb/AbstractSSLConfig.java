@@ -21,7 +21,6 @@ package com.marklogic.developer.corb;
 import static com.marklogic.developer.corb.Options.*;
 import static com.marklogic.developer.corb.util.StringUtils.*;
 
-import com.marklogic.developer.corb.util.StringUtils;
 import com.marklogic.xcc.SecurityOptions;
 
 import javax.net.ssl.SSLContext;
@@ -133,7 +132,7 @@ public abstract class AbstractSSLConfig implements SSLConfig {
     public String[] getEnabledProtocols() {
         String[] protocols = getPropertyAndSplitToArray(SSL_ENABLED_PROTOCOLS);
         if (protocols.length == 0){
-            protocols = StringUtils.split(System.getProperty("jdk.tls.client.protocols"), DELIMITER);
+            protocols = split(System.getProperty("jdk.tls.client.protocols"), DELIMITER);
             List<String> protocolList = new ArrayList<>(Arrays.asList(protocols));
             protocolList.removeAll(Arrays.asList("", null));
             protocols = protocolList.toArray(new String[protocolList.size()]);
@@ -159,11 +158,11 @@ public abstract class AbstractSSLConfig implements SSLConfig {
         TrustManager[] trustManagers = null;
         String trustStoreFile = getProperty(SSL_TRUSTSTORE);
 
-        if (StringUtils.isNotBlank(trustStoreFile)) {
+        if (isNotBlank(trustStoreFile)) {
             try (FileInputStream customTrust = new FileInputStream(trustStoreFile)) {
 
                 String keystoreType = getProperty(SSL_TRUSTSTORE_TYPE);
-                if (StringUtils.isBlank(keystoreType)) {
+                if (isBlank(keystoreType)) {
                     keystoreType = KeyStore.getDefaultType();
                 }
 
@@ -203,7 +202,7 @@ public abstract class AbstractSSLConfig implements SSLConfig {
     private String[] getPropertyAndSplitToArray(String propertyName) {
         if (properties != null) {
             String values = properties.getProperty(propertyName);
-            String[] valueArray = StringUtils.split(values, DELIMITER);
+            String[] valueArray = split(values, DELIMITER);
             if (valueArray.length > 0) {
                 LOG.log(Level.INFO, "Configured {0}: {1}", new Object[]{propertyName, Arrays.toString(valueArray)});
                 return valueArray;

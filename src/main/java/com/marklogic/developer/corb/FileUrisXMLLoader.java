@@ -26,11 +26,9 @@ import static com.marklogic.developer.corb.Options.PROCESS_MODULE;
 import static com.marklogic.developer.corb.Options.XML_FILE;
 import static com.marklogic.developer.corb.Options.XML_METADATA;
 import static com.marklogic.developer.corb.Options.XML_NODE;
+import static com.marklogic.developer.corb.util.StringUtils.*;
+
 import com.marklogic.developer.corb.util.FileUtils;
-import com.marklogic.developer.corb.util.StringUtils;
-import static com.marklogic.developer.corb.util.StringUtils.isBlank;
-import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
-import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -416,7 +414,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
     @Override
     protected boolean shouldBase64Encode() {
         String shouldEncode = getProperty(Options.LOADER_BASE64_ENCODE);
-        return StringUtils.stringToBoolean(shouldEncode, false);
+        return stringToBoolean(shouldEncode, false);
     }
 
     /**
@@ -526,7 +524,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
      */
     protected void schemaValidate(File xmlFile) throws CorbException {
         String schemaFilename = getProperty(Options.XML_SCHEMA);
-        if (StringUtils.isNotEmpty(schemaFilename)) {
+        if (isNotEmpty(schemaFilename)) {
             File schemaFile = FileUtils.getFile(schemaFilename);
             List<SAXParseException> validationErrors = XmlUtils.schemaValidate(xmlFile, schemaFile, properties);
             if (!validationErrors.isEmpty()) {
@@ -630,7 +628,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
         if (content != null) {
             properties.put(PRE_BATCH_MODULE + '.' + METADATA, content);
             properties.put(POST_BATCH_MODULE + '.' + METADATA, content);
-            if (StringUtils.stringToBoolean(getProperty(METADATA_TO_PROCESS_MODULE), false)) {
+            if (stringToBoolean(getProperty(METADATA_TO_PROCESS_MODULE), false)) {
                 properties.put(PROCESS_MODULE + '.' + METADATA, content);
             }
         }

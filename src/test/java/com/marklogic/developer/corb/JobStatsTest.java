@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.*;
 import java.util.concurrent.CompletionService;
-import java.util.logging.Logger;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;

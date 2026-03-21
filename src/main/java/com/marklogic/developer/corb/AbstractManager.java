@@ -523,18 +523,18 @@ public abstract class AbstractManager {
         //OAuth
         String oauthToken = getOption(XCC_OAUTH_TOKEN);
 
-        if (StringUtils.anyIsNull(uriAsStrings)) {
-            if (StringUtils.anyIsNull(hostnames, port)) {
+        if (anyIsNull(uriAsStrings)) {
+            if (anyIsNull(hostnames, port)) {
                 throw new CorbException(String.format("Either %1$s or %2$s and %3$s must be specified",
                     XCC_CONNECTION_URI, XCC_HOSTNAME, XCC_PORT));
             }
-            if (StringUtils.anyIsNull(username, password) && StringUtils.anyIsNull(basePath, apiKey) && StringUtils.anyIsNull(oauthToken)) {
+            if (anyIsNull(username, password) && anyIsNull(basePath, apiKey) && anyIsNull(oauthToken)) {
                 LOG.warning(String.format("Either %1$s and %2$s or %3$s and %4$s or %5$s must be specified",
                     XCC_USERNAME, XCC_PASSWORD, XCC_BASE_PATH, XCC_API_KEY, XCC_OAUTH_TOKEN));
             }
         }
         List<String> connectionUriList = new ArrayList<>();
-        String urlEncode = getOption(Options.XCC_URL_ENCODE_COMPONENTS);
+        String urlEncode = getOption(XCC_URL_ENCODE_COMPONENTS);
         if (uriAsStrings == null) {
             if (decrypter != null) {
                 apiKey = decryptIfNotBlank(XCC_API_KEY, apiKey);
@@ -561,16 +561,16 @@ public abstract class AbstractManager {
             putIfNotBlank(xccConnectionParameters, XCC_TOKEN_ENDPOINT, tokenEndpoint);
             putIfNotBlank(xccConnectionParameters, XCC_USERNAME, username);
 
-            for (String host: StringUtils.commaSeparatedValuesToList(hostnames)) {
+            for (String host: commaSeparatedValuesToList(hostnames)) {
                 if (decrypter != null) {
                     host = decrypter.decrypt(XCC_HOSTNAME, host);
                 }
                 xccConnectionParameters.put(XCC_HOSTNAME, host);
-                String connectionUri = StringUtils.getXccUri(xccConnectionParameters, urlEncode);
+                String connectionUri = getXccUri(xccConnectionParameters, urlEncode);
                 connectionUriList.add(connectionUri);
             }
         } else {
-            for (String connectionUri : StringUtils.commaSeparatedValuesToList(uriAsStrings)) {
+            for (String connectionUri : commaSeparatedValuesToList(uriAsStrings)) {
                 if (decrypter != null) {
                     connectionUri = decrypter.decrypt(XCC_CONNECTION_URI, connectionUri);
                     //see if individual parts of the connection string are encrypted separately
@@ -710,7 +710,7 @@ public abstract class AbstractManager {
                             }
                         }
                     }
-                    uriAfterDecrypt = StringUtils.getXccUri(urlComponents, urlEncode);
+                    uriAfterDecrypt = getXccUri(urlComponents, urlEncode);
                 }
             }
         } catch (IllegalStateException exc) {
@@ -729,7 +729,7 @@ public abstract class AbstractManager {
      */
     protected ContentSourcePool createContentSourcePool() throws CorbException {
         ContentSourcePool contentSourcePool;
-        String contentSourcePoolClassName = getOption(Options.CONTENT_SOURCE_POOL);
+        String contentSourcePoolClassName = getOption(CONTENT_SOURCE_POOL);
         if (contentSourcePoolClassName != null) {
             contentSourcePool = createContentSourcePool(contentSourcePoolClassName);
         } else {
@@ -778,9 +778,9 @@ public abstract class AbstractManager {
      */
     protected void initOptions(String... args) throws CorbException {
         final String xccHttpCompliantPropertyName = "xcc.httpcompliant";
-        final String xccHttpCompliantOption = getOption(Options.XCC_HTTPCOMPLIANT);
+        final String xccHttpCompliantOption = getOption(XCC_HTTPCOMPLIANT);
         if (isNotBlank(xccHttpCompliantOption)) {
-            System.setProperty(xccHttpCompliantPropertyName, Boolean.toString(StringUtils.stringToBoolean(xccHttpCompliantOption)));
+            System.setProperty(xccHttpCompliantPropertyName, Boolean.toString(stringToBoolean(xccHttpCompliantOption)));
         } else { // if not explicitly set as a system property or option, enable HTTP compliance so that we play nice with load balancers out of the box
             System.setProperty(xccHttpCompliantPropertyName, Boolean.toString(true));
         }
@@ -927,7 +927,7 @@ public abstract class AbstractManager {
 
         for (java.lang.reflect.Field field : Options.class.getDeclaredFields()) {
             Usage usage = field.getAnnotation(Usage.class);
-            if (usage != null && StringUtils.isNotEmpty(usage.description())) {
+            if (usage != null && isNotEmpty(usage.description())) {
                 err.println(field.getName() + "\n\t" + usage.description()); // NOPMD
             }
         }
@@ -946,7 +946,7 @@ public abstract class AbstractManager {
     protected String buildSystemPropertyArg(String property, String value) {
         StringBuilder arg = new StringBuilder("-D");
         arg.append(property);
-        if (StringUtils.isNotEmpty(value)) {
+        if (isNotEmpty(value)) {
             arg.append('=');
             arg.append(value);
         }
@@ -966,7 +966,7 @@ public abstract class AbstractManager {
                 argsToLog.add(argument);
             }
         }
-        LOG.log(INFO, () -> MessageFormat.format("runtime arguments = {0}", StringUtils.join(argsToLog, SPACE)));
+        LOG.log(INFO, () -> MessageFormat.format("runtime arguments = {0}", join(argsToLog, SPACE)));
     }
 
     /**
@@ -997,7 +997,7 @@ public abstract class AbstractManager {
         if (isInlineOrAdhoc(processModule)) {
             String adhocQuery;
             if (isInlineModule(processModule)) {
-                adhocQuery = StringUtils.getInlineModuleCode(processModule);
+                adhocQuery = getInlineModuleCode(processModule);
                 if (isBlank(adhocQuery)) {
                     throw new IllegalStateException("Unable to read inline query ");
                 }

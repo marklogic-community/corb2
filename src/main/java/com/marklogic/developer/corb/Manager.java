@@ -416,7 +416,7 @@ public class Manager extends AbstractManager implements Closeable {
         String commandFile = getOption(COMMAND_FILE);
         if (isNotBlank(commandFile)) {
             Runnable commandFileWatcher = new CommandFileWatcher(FileUtils.getFile(commandFile), this);
-            int pollInterval = NumberUtils.toInt(getOption(Options.COMMAND_FILE_POLL_INTERVAL), 1);
+            int pollInterval = NumberUtils.toInt(getOption(COMMAND_FILE_POLL_INTERVAL), 1);
             //execute immediately, in order to read command file before the job starts
             scheduledExecutor.execute(commandFileWatcher);
             scheduledExecutor.scheduleWithFixedDelay(commandFileWatcher, pollInterval, pollInterval, TimeUnit.SECONDS);
@@ -516,7 +516,7 @@ public class Manager extends AbstractManager implements Closeable {
             options.setNumTpsForETC(Integer.parseInt(numTpsForETC));
         }
 
-        options.setShouldRedactUris(stringToBoolean(getOption(Options.URIS_REDACTED)));
+        options.setShouldRedactUris(stringToBoolean(getOption(URIS_REDACTED)));
         options.setPrePostBatchAlwaysExecute(stringToBoolean(getOption(PRE_POST_BATCH_ALWAYS_EXECUTE)));
 
         String postBatchMinimumCount = getOption(POST_BATCH_MINIMUM_COUNT);
@@ -620,35 +620,35 @@ public class Manager extends AbstractManager implements Closeable {
             }
         }
 
-        String metricsLogLevel = getOption(Options.METRICS_LOG_LEVEL);
+        String metricsLogLevel = getOption(METRICS_LOG_LEVEL);
         if (metricsLogLevel != null) {
-            if (metricsLogLevel.toLowerCase().matches(Options.ML_LOG_LEVELS)) {
+            if (metricsLogLevel.toLowerCase().matches(ML_LOG_LEVELS)) {
                 options.setLogMetricsToServerLog(metricsLogLevel.toLowerCase());
             } else {
                 throw new IllegalArgumentException("INVALID VALUE for METRICS-TO-ERROR-LOG: " + metricsLogLevel + ". Supported LOG LEVELS are one of: " + Options.ML_LOG_LEVELS);
             }
         }
-        String metricsCollections = getOption(Options.METRICS_COLLECTIONS);
+        String metricsCollections = getOption(METRICS_COLLECTIONS);
         if (metricsCollections != null) {
             options.setMetricsCollections(metricsCollections);
         }
-        String metricsDatabase = getOption(Options.METRICS_DATABASE);
+        String metricsDatabase = getOption(METRICS_DATABASE);
         if (metricsDatabase != null) {
             options.setMetricsDatabase(metricsDatabase);
         }
-        String metricsModule = getOption(Options.METRICS_MODULE);
+        String metricsModule = getOption(METRICS_MODULE);
         if (metricsModule != null) {
             options.setMetricsModule(metricsModule);
         }
-        String metricsRoot = getOption(Options.METRICS_ROOT);
+        String metricsRoot = getOption(METRICS_ROOT);
         if (metricsRoot != null) {
             options.setMetricsRoot(metricsRoot);
         }
-        String jobName = getOption(Options.JOB_NAME);
+        String jobName = getOption(JOB_NAME);
         if (jobName != null) {
             options.setJobName(jobName);
         }
-        String numberOfLongRunningUris = getOption(Options.METRICS_NUM_SLOW_TRANSACTIONS);
+        String numberOfLongRunningUris = getOption(METRICS_NUM_SLOW_TRANSACTIONS);
         if (numberOfLongRunningUris != null) {
             try {
                 int intNumberOfLongRunningUris = Integer.parseInt(numberOfLongRunningUris);
@@ -657,10 +657,10 @@ public class Manager extends AbstractManager implements Closeable {
                 }
                 options.setNumberOfLongRunningUris(intNumberOfLongRunningUris);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException(Options.METRICS_NUM_SLOW_TRANSACTIONS + " = " + numberOfLongRunningUris + " is invalid. Value must be a valid integer.");
+                throw new IllegalArgumentException(METRICS_NUM_SLOW_TRANSACTIONS + " = " + numberOfLongRunningUris + " is invalid. Value must be a valid integer.");
             }
         }
-        String numberOfFailedUris = getOption(Options.METRICS_NUM_FAILED_TRANSACTIONS);
+        String numberOfFailedUris = getOption(METRICS_NUM_FAILED_TRANSACTIONS);
         if (numberOfFailedUris != null) {
             int intNumFailedTransactions = Integer.parseInt(numberOfFailedUris);
             if (intNumFailedTransactions > TransformOptions.MAX_NUM_FAILED_TRANSACTIONS) {
@@ -668,7 +668,7 @@ public class Manager extends AbstractManager implements Closeable {
             }
             options.setNumberOfFailedUris(intNumFailedTransactions);
         }
-        String metricsSyncFrequencyInSeconds = getOption(Options.METRICS_SYNC_FREQUENCY);
+        String metricsSyncFrequencyInSeconds = getOption(METRICS_SYNC_FREQUENCY);
         if ((metricsDatabase != null || options.isMetricsLoggingEnabled(metricsLogLevel)) && metricsSyncFrequencyInSeconds != null) {
             //periodically update db only if db name is set or logging enabled and sync frequency is selected
             //no defaults for this function
@@ -676,17 +676,17 @@ public class Manager extends AbstractManager implements Closeable {
                 int intMetricsSyncFrequencyInSeconds = Integer.parseInt(metricsSyncFrequencyInSeconds);
                 options.setMetricsSyncFrequencyInMillis(intMetricsSyncFrequencyInSeconds * 1000);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException(Options.METRICS_SYNC_FREQUENCY + " = " + metricsSyncFrequencyInSeconds + " is invalid. Value must be a valid integer.");
+                throw new IllegalArgumentException(METRICS_SYNC_FREQUENCY + " = " + metricsSyncFrequencyInSeconds + " is invalid. Value must be a valid integer.");
             }
         }
 
-        String jobServerPort = getOption(Options.JOB_SERVER_PORT);
+        String jobServerPort = getOption(JOB_SERVER_PORT);
         //no defaults for this function
         try {
             Set<Integer> jobServerPorts = new LinkedHashSet<>(StringUtils.parsePortRanges(jobServerPort));
             options.setJobServerPortsToChoose(jobServerPorts);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(Options.JOB_SERVER_PORT + " must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090");
+            throw new IllegalArgumentException(JOB_SERVER_PORT + " must be a valid port(s) or a valid range of ports. Ex: 9080 Ex: 9080,9083,9087 Ex: 9080-9090 Ex: 9080-9083,9085-9090");
         }
 
         // delete the export file if it exists
@@ -1026,7 +1026,7 @@ public class Manager extends AbstractManager implements Closeable {
         if (System.getProperty(EXPORT_FILE_AS_ZIP) != null || properties.containsKey(EXPORT_FILE_AS_ZIP)) {
             return;
         }
-        String legacyValue = Options.findOption(properties, Options.EXPORT_FILE_AS_ZIP_LEGACY);
+        String legacyValue = findOption(properties, EXPORT_FILE_AS_ZIP_LEGACY);
         if (isNotBlank(legacyValue)) {
             properties.setProperty(EXPORT_FILE_AS_ZIP, legacyValue);
         }
@@ -1548,7 +1548,7 @@ public class Manager extends AbstractManager implements Closeable {
                 Properties commandFile = new Properties();
                 commandFile.load(in);
 
-                String command = commandFile.getProperty(Options.COMMAND);
+                String command = commandFile.getProperty(COMMAND);
                 if ("PAUSE".equalsIgnoreCase(command)) {
                     manager.pause();
                 } else if ("STOP".equalsIgnoreCase(command)) {

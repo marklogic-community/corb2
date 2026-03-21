@@ -66,8 +66,8 @@ class ManagerIT {
 
     private static void clearSystemProperties() {
 		TestUtils.clearSystemProperties();
-	    System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
-	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
+	    System.setProperty(XCC_CONNECTION_RETRY_LIMIT, "0");
+	    System.setProperty(XCC_CONNECTION_RETRY_INTERVAL, "0");
 	}
 
     @BeforeEach
@@ -118,7 +118,7 @@ class ManagerIT {
     @Test
     void testInitOptionsSetNumTPSForETC() {
         Properties properties = ManagerTest.getDefaultProperties();
-        properties.setProperty(Options.NUM_TPS_FOR_ETC, Integer.toString(500));
+        properties.setProperty(NUM_TPS_FOR_ETC, Integer.toString(500));
         try (Manager manager = new Manager()) {
             manager.init(properties);
             assertEquals(500, manager.options.getNumTpsForETC());
@@ -154,7 +154,7 @@ class ManagerIT {
     void testManagerUsingSysProps() {
         String exportFileName = "testManagerUsingSysProps2.txt";
         ManagerTest.setDefaultSystemProperties();
-        System.setProperty(Options.URIS_MODULE, "src/test/resources/selector.xqy|ADHOC");
+        System.setProperty(URIS_MODULE, "src/test/resources/selector.xqy|ADHOC");
         System.setProperty(EXPORT_FILE_NAME, exportFileName);
         String[] args = null;
         File report = new File(ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName);
@@ -171,14 +171,14 @@ class ManagerIT {
     @Test
     void testManagerFailOnErrorFalseDefaultExitCode() {
         ManagerTest.setDefaultSystemProperties();
-        System.setProperty(Options.URIS_FILE, "src/test/resources/test-file-1.txt");
+        System.setProperty(URIS_FILE, "src/test/resources/test-file-1.txt");
         System.setProperty(PROCESS_MODULE, "INLINE-XQUERY|declare variable $URI external; if ($URI = ('a')) then fn:error(xs:QName('error'), 'boom') else $URI");
-        System.setProperty(Options.FAIL_ON_ERROR, "false");
-        System.clearProperty(Options.PRE_BATCH_TASK);
-        System.clearProperty(Options.POST_BATCH_TASK);
+        System.setProperty(FAIL_ON_ERROR, "false");
+        System.clearProperty(PRE_BATCH_TASK);
+        System.clearProperty(POST_BATCH_TASK);
         System.clearProperty(PROCESS_TASK);
-        System.clearProperty(Options.EXPORT_FILE_DIR);
-        System.clearProperty(Options.METRICS_LOG_LEVEL);
+        System.clearProperty(EXPORT_FILE_DIR);
+        System.clearProperty(METRICS_LOG_LEVEL);
         String[] args = null;
 
         int exitCode = Manager.run(args);
@@ -189,15 +189,15 @@ class ManagerIT {
     void testManagerFailOnErrorFalseCustomExitCode() {
         String customErrorCode = "99";
         ManagerTest.setDefaultSystemProperties();
-        System.setProperty(Options.URIS_FILE, "src/test/resources/test-file-1.txt");
+        System.setProperty(URIS_FILE, "src/test/resources/test-file-1.txt");
         System.setProperty(PROCESS_MODULE, "INLINE-XQUERY|declare variable $URI external; if ($URI = ('a')) then fn:error(xs:QName('error'), 'boom') else $URI");
-        System.setProperty(Options.FAIL_ON_ERROR, "false");
-        System.setProperty(Options.EXIT_CODE_IGNORED_ERRORS, customErrorCode);
-        System.clearProperty(Options.PRE_BATCH_TASK);
-        System.clearProperty(Options.POST_BATCH_TASK);
-        System.clearProperty(Options.PROCESS_TASK);
-        System.clearProperty(Options.EXPORT_FILE_DIR);
-        System.clearProperty(Options.METRICS_LOG_LEVEL);
+        System.setProperty(FAIL_ON_ERROR, "false");
+        System.setProperty(EXIT_CODE_IGNORED_ERRORS, customErrorCode);
+        System.clearProperty(PRE_BATCH_TASK);
+        System.clearProperty(POST_BATCH_TASK);
+        System.clearProperty(PROCESS_TASK);
+        System.clearProperty(EXPORT_FILE_DIR);
+        System.clearProperty(METRICS_LOG_LEVEL);
         String[] args = null;
 
         int exitCode = Manager.run(args);
@@ -207,14 +207,14 @@ class ManagerIT {
     @Test
     void testManagerFailOnErrorTrueDefaultExitCode() {
         ManagerTest.setDefaultSystemProperties();
-        System.setProperty(Options.URIS_FILE, "src/test/resources/test-file-1.txt");
+        System.setProperty(URIS_FILE, "src/test/resources/test-file-1.txt");
         System.setProperty(PROCESS_MODULE, "INLINE-XQUERY|declare variable $URI external; if ($URI = ('a')) then fn:error(xs:QName('error'), 'boom') else $URI");
-        System.setProperty(Options.FAIL_ON_ERROR, "true");
-        System.clearProperty(Options.PRE_BATCH_TASK);
-        System.clearProperty(Options.POST_BATCH_TASK);
-        System.clearProperty(Options.PROCESS_TASK);
-        System.clearProperty(Options.EXPORT_FILE_DIR);
-        System.clearProperty(Options.METRICS_LOG_LEVEL);
+        System.setProperty(FAIL_ON_ERROR, "true");
+        System.clearProperty(PRE_BATCH_TASK);
+        System.clearProperty(POST_BATCH_TASK);
+        System.clearProperty(PROCESS_TASK);
+        System.clearProperty(EXPORT_FILE_DIR);
+        System.clearProperty(METRICS_LOG_LEVEL);
         String[] args = null;
 
         int exitCode = Manager.run(args);
@@ -226,14 +226,14 @@ class ManagerIT {
         int uriCount = 100;
         String exportFilename = "testManagerUsingSysProps1.txt";
         Properties properties = ManagerTest.getDefaultProperties();
-        properties.setProperty(Options.THREAD_COUNT, String.valueOf(4));
-        properties.setProperty(Options.URIS_MODULE, LARGE_URIS_MODULE);
-        properties.setProperty(Options.URIS_MODULE + ".count", String.valueOf(uriCount));
-        properties.setProperty(Options.BATCH_SIZE, String.valueOf(1));
+        properties.setProperty(THREAD_COUNT, String.valueOf(4));
+        properties.setProperty(URIS_MODULE, LARGE_URIS_MODULE);
+        properties.setProperty(URIS_MODULE + ".count", String.valueOf(uriCount));
+        properties.setProperty(BATCH_SIZE, String.valueOf(1));
         properties.setProperty(EXPORT_FILE_NAME, exportFilename);
-        properties.setProperty(Options.DISK_QUEUE, "true");
-        properties.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10));
-        properties.setProperty(Options.DISK_QUEUE_TEMP_DIR, "/var/tmp");
+        properties.setProperty(DISK_QUEUE, "true");
+        properties.setProperty(DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10));
+        properties.setProperty(DISK_QUEUE_TEMP_DIR, "/var/tmp");
 
         try (Manager manager = new Manager()) {
             manager.init(properties);
@@ -254,12 +254,12 @@ class ManagerIT {
         int batchSize = 3;
         String exportFilename = "testManagerUsingSysProps1.txt";
         Properties properties = ManagerTest.getDefaultProperties();
-        properties.setProperty(Options.THREAD_COUNT, String.valueOf(4));
-        properties.setProperty(Options.URIS_MODULE, LARGE_URIS_MODULE);
-        properties.setProperty(Options.URIS_MODULE + ".count", String.valueOf(uriCount));
-        properties.setProperty(Options.BATCH_SIZE, String.valueOf(batchSize));
+        properties.setProperty(THREAD_COUNT, String.valueOf(4));
+        properties.setProperty(URIS_MODULE, LARGE_URIS_MODULE);
+        properties.setProperty(URIS_MODULE + ".count", String.valueOf(uriCount));
+        properties.setProperty(BATCH_SIZE, String.valueOf(batchSize));
         properties.setProperty(EXPORT_FILE_NAME, exportFilename);
-        properties.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10));
+        properties.setProperty(DISK_QUEUE_MAX_IN_MEMORY_SIZE, String.valueOf(10));
 
         try (Manager manager = new Manager() ) {
             manager.init(properties);
@@ -277,7 +277,7 @@ class ManagerIT {
     @Test
     void testManagerUsingPropsFile() {
         String exportFileName = ManagerTest.EXPORT_FILE_DIR + SLASH + "testManagerUsingPropsFile.txt";
-        System.setProperty(Options.OPTIONS_FILE, "src/test/resources/helloWorld.properties");
+        System.setProperty(OPTIONS_FILE, "src/test/resources/helloWorld.properties");
         System.setProperty(EXPORT_FILE_NAME, exportFileName);
         String[] args = {};
         File report = new File(exportFileName);
@@ -297,7 +297,7 @@ class ManagerIT {
         String exportFileName = "testManagerUsingInputFile.txt";
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(EXPORT_FILE_NAME, exportFileName);
-        System.setProperty(Options.URIS_FILE, "src/test/resources/uriInputFile.txt");
+        System.setProperty(URIS_FILE, "src/test/resources/uriInputFile.txt");
         String[] args = {};
         String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
         File report = new File(exportFilePath);
@@ -316,8 +316,8 @@ class ManagerIT {
         String exportFileName = "testManagersPreBatchTask.txt";
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(EXPORT_FILE_NAME, exportFileName);
-        System.setProperty(Options.PRE_BATCH_MODULE, "preBatchModule.xqy|ADHOC");
-        System.setProperty(Options.PRE_BATCH_TASK, "com.marklogic.developer.corb.PreBatchUpdateFileTask");
+        System.setProperty(PRE_BATCH_MODULE, "preBatchModule.xqy|ADHOC");
+        System.setProperty(PRE_BATCH_TASK, "com.marklogic.developer.corb.PreBatchUpdateFileTask");
         String[] args = {};
         String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
         File report = new File(exportFilePath);
@@ -337,8 +337,8 @@ class ManagerIT {
         String exportFileName = "testManagersPostBatchTask.txt";
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(EXPORT_FILE_NAME, exportFileName);
-        System.setProperty(Options.POST_BATCH_MODULE, "postBatchModule.xqy|ADHOC");
-        System.setProperty(Options.POST_BATCH_TASK, "com.marklogic.developer.corb.PostBatchUpdateFileTask");
+        System.setProperty(POST_BATCH_MODULE, "postBatchModule.xqy|ADHOC");
+        System.setProperty(POST_BATCH_TASK, "com.marklogic.developer.corb.PostBatchUpdateFileTask");
         String[] args = {};
         String exportFilePath = ManagerTest.EXPORT_FILE_DIR + SLASH + exportFileName;
         File report = new File(exportFilePath);
@@ -358,7 +358,7 @@ class ManagerIT {
         String exportFileName = "testManagersPostBatchTaskZip.txt";
         ManagerTest.setDefaultSystemProperties();
         System.setProperty(EXPORT_FILE_NAME, exportFileName);
-        System.setProperty(Options.EXPORT_FILE_AS_ZIP, Boolean.toString(true));
+        System.setProperty(EXPORT_FILE_AS_ZIP, Boolean.toString(true));
         String[] args = {};
         //First, verify the output using run()
         try (Manager manager = new Manager()) {
@@ -462,18 +462,18 @@ class ManagerIT {
         File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);
         commandFile.deleteOnExit();
         System.setProperty(XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
-        System.setProperty(Options.THREAD_COUNT, Integer.toString(1));
+        System.setProperty(URIS_FILE, ManagerTest.URIS_FILE);
+        System.setProperty(THREAD_COUNT, Integer.toString(1));
         System.setProperty(PROCESS_MODULE, TRANSFORM_SLOW_MODULE);
         System.setProperty(PROCESS_TASK, ManagerTest.PROCESS_TASK);
         System.setProperty(EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
-        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
-        System.setProperty(Options.COMMAND_FILE, commandFile.getAbsolutePath());
+        System.setProperty(EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        System.setProperty(COMMAND_FILE, commandFile.getAbsolutePath());
 
         Runnable pause = () -> {
             Properties props = new Properties();
-            props.put(Options.COMMAND, SLOW_CMD);
-            File commandFile1 = new File(System.getProperty(Options.COMMAND_FILE));
+            props.put(COMMAND, SLOW_CMD);
+            File commandFile1 = new File(System.getProperty(COMMAND_FILE));
             try {
                 if (commandFile1.createNewFile()) {
                     try (final FileOutputStream fos = new FileOutputStream(commandFile1)) {
@@ -486,9 +486,9 @@ class ManagerIT {
         };
         Runnable resume = () -> {
             Properties props = new Properties();
-            props.put(Options.COMMAND, "RESUME");
-            props.put(Options.THREAD_COUNT, Integer.toString(6));
-            File commandFile1 = new File(System.getProperty(Options.COMMAND_FILE));
+            props.put(COMMAND, "RESUME");
+            props.put(THREAD_COUNT, Integer.toString(6));
+            File commandFile1 = new File(System.getProperty(COMMAND_FILE));
             try (final FileOutputStream fos = new FileOutputStream(commandFile1)) {
                 props.store(fos, null);
             } catch (IOException ex) {
@@ -520,17 +520,17 @@ class ManagerIT {
         File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);
         commandFile.deleteOnExit();
         System.setProperty(XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
-        System.setProperty(Options.THREAD_COUNT, Integer.toString(1));
+        System.setProperty(URIS_FILE, ManagerTest.URIS_FILE);
+        System.setProperty(THREAD_COUNT, Integer.toString(1));
         System.setProperty(PROCESS_MODULE, TRANSFORM_SLOW_MODULE);
         System.setProperty(PROCESS_TASK, ManagerTest.PROCESS_TASK);
         System.setProperty(EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
-        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
-        System.setProperty(Options.COMMAND_FILE, commandFile.getAbsolutePath());
+        System.setProperty(EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        System.setProperty(COMMAND_FILE, commandFile.getAbsolutePath());
         Runnable pause = () -> {
             Properties props = new Properties();
-            props.put(Options.COMMAND, SLOW_CMD);
-            File commandFile1 = new File(System.getProperty(Options.COMMAND_FILE));
+            props.put(COMMAND, SLOW_CMD);
+            File commandFile1 = new File(System.getProperty(COMMAND_FILE));
             try {
                 if (commandFile1.createNewFile()) {
                     try (final FileOutputStream fos = new FileOutputStream(commandFile1)) {
@@ -543,7 +543,7 @@ class ManagerIT {
         };
         Runnable resume = () -> {
             Properties props = new Properties();
-            File commandFile1 = new File(System.getProperty(Options.COMMAND_FILE));
+            File commandFile1 = new File(System.getProperty(COMMAND_FILE));
             try (final FileOutputStream fos = new FileOutputStream(commandFile1)) {
                 props.store(fos, null);
             } catch (IOException ex) {
@@ -575,17 +575,17 @@ class ManagerIT {
         File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);
         commandFile.deleteOnExit();
         System.setProperty(XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
-        System.setProperty(Options.THREAD_COUNT, Integer.toString(1));
+        System.setProperty(URIS_FILE, ManagerTest.URIS_FILE);
+        System.setProperty(THREAD_COUNT, Integer.toString(1));
         System.setProperty(PROCESS_MODULE, TRANSFORM_SLOW_MODULE);
         System.setProperty(PROCESS_TASK, ManagerTest.PROCESS_TASK);
         System.setProperty(EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
-        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
-        System.setProperty(Options.COMMAND_FILE, commandFile.getAbsolutePath());
+        System.setProperty(EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        System.setProperty(COMMAND_FILE, commandFile.getAbsolutePath());
         Runnable stop = () -> {
             Properties props = new Properties();
-            props.put(Options.COMMAND, "STOP");
-            File commandFile1 = new File(System.getProperty(Options.COMMAND_FILE));
+            props.put(COMMAND, "STOP");
+            File commandFile1 = new File(System.getProperty(COMMAND_FILE));
             try {
                 if (commandFile1.createNewFile()) {
                     try (final FileOutputStream fos = new FileOutputStream(commandFile1)) {
@@ -619,20 +619,20 @@ class ManagerIT {
         File commandFile = new File(ManagerTest.EXPORT_FILE_DIR, Math.random() + EXT_TXT);
         commandFile.deleteOnExit();
         System.setProperty(XCC_CONNECTION_URI, ManagerTest.XCC_CONNECTION_URI);
-        System.setProperty(Options.URIS_FILE, ManagerTest.URIS_FILE);
-        System.setProperty(Options.THREAD_COUNT, Integer.toString(3));
+        System.setProperty(URIS_FILE, ManagerTest.URIS_FILE);
+        System.setProperty(THREAD_COUNT, Integer.toString(3));
         System.setProperty(PROCESS_MODULE, TRANSFORM_SLOW_MODULE);
         System.setProperty(PROCESS_TASK, ManagerTest.PROCESS_TASK);
         System.setProperty(EXPORT_FILE_NAME, ManagerTest.EXPORT_FILE_NAME);
-        System.setProperty(Options.EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
-        System.setProperty(Options.COMMAND_FILE, commandFile.getAbsolutePath());
+        System.setProperty(EXPORT_FILE_DIR, ManagerTest.EXPORT_FILE_DIR);
+        System.setProperty(COMMAND_FILE, commandFile.getAbsolutePath());
 
         Runnable adjustThreads = () -> {
-            File commandFile1 = new File(System.getProperty(Options.COMMAND_FILE));
+            File commandFile1 = new File(System.getProperty(COMMAND_FILE));
             try {
                 if (commandFile1.createNewFile()) {
                     Properties props = new Properties();
-                    props.put(Options.THREAD_COUNT, Integer.toString(1));
+                    props.put(THREAD_COUNT, Integer.toString(1));
                     try (final FileOutputStream fos = new FileOutputStream(commandFile1)) {
                         props.store(fos, null);
                     }
@@ -655,6 +655,6 @@ class ManagerIT {
             fail();
         }
         List<LogRecord> records = testLogger.getLogRecords();
-        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "Changed " + Options.THREAD_COUNT + " to " + 1)));
+        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "Changed " + THREAD_COUNT + " to " + 1)));
     }
 }

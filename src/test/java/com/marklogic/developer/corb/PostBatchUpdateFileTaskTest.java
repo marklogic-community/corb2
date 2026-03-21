@@ -106,7 +106,7 @@ class PostBatchUpdateFileTaskTest {
             instance.writeBottomContent();
 
             File outputFile = new File(tempDir, "export.csv.temp");
-            String outputText = TestUtils.readFile(outputFile);
+            String outputText = readFile(outputFile);
             assertEqualsNormalizeNewline(expectedResult, outputText);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -125,7 +125,7 @@ class PostBatchUpdateFileTaskTest {
             File dest = new File(destFilePath);
             assertFalse(source.exists());
             assertTrue(dest.exists());
-            assertEquals(EXAMPLE_CONTENT, TestUtils.readFile(dest));
+            assertEquals(EXAMPLE_CONTENT, readFile(dest));
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -145,7 +145,7 @@ class PostBatchUpdateFileTaskTest {
 
                 assertFalse(source.exists());
                 assertTrue(dest.exists());
-                assertEquals(EXAMPLE_CONTENT, TestUtils.readFile(dest));
+                assertEquals(EXAMPLE_CONTENT, readFile(dest));
             } else {
                 fail();
             }
@@ -171,7 +171,7 @@ class PostBatchUpdateFileTaskTest {
             File dest = new File(exportFilePath);
             assertTrue(dest.exists());
             assertFalse(partFile.exists());
-            assertEquals(EXAMPLE_CONTENT, TestUtils.readFile(dest));
+            assertEquals(EXAMPLE_CONTENT, readFile(dest));
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -471,7 +471,7 @@ class PostBatchUpdateFileTaskTest {
         instance.call();
         File output = new File(fileToSort.toString());
         output.deleteOnExit();
-        return TestUtils.readFile(output);
+        return readFile(output);
     }
 
     @Test
@@ -683,9 +683,9 @@ class PostBatchUpdateFileTaskTest {
             File file2 = new File(tempDir, "002_test-split-footer.txt.tmp");
             File file3 = new File(tempDir, "003_test-split-footer.txt.tmp");
 
-            assertEqualsNormalizeNewline("line1\nline2\nFOOTER\n", TestUtils.readFile(file1));
-            assertEqualsNormalizeNewline("line3\nline4\nFOOTER\n", TestUtils.readFile(file2));
-            assertEqualsNormalizeNewline("line5\nFOOTER\n", TestUtils.readFile(file3));
+            assertEqualsNormalizeNewline("line1\nline2\nFOOTER\n", readFile(file1));
+            assertEqualsNormalizeNewline("line3\nline4\nFOOTER\n", readFile(file2));
+            assertEqualsNormalizeNewline("line5\nFOOTER\n", readFile(file3));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
             fail("Exception occurred: " + ex.getMessage());
@@ -722,7 +722,7 @@ class PostBatchUpdateFileTaskTest {
 
             assertTrue(file1.exists());
             assertFalse(file2.exists());
-            assertEqualsNormalizeNewline("HEADER\nA\nB\n", TestUtils.readFile(file1));
+            assertEqualsNormalizeNewline("HEADER\nA\nB\n", readFile(file1));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
             fail("Exception occurred: " + ex.getMessage());
@@ -766,8 +766,8 @@ class PostBatchUpdateFileTaskTest {
             assertTrue(file1.exists());
             assertTrue(file2.exists());
             assertFalse(file3.exists());
-            assertEqualsNormalizeNewline("line1\nline2\nline3\n", TestUtils.readFile(file1));
-            assertEqualsNormalizeNewline("line4\nline5\n", TestUtils.readFile(file2));
+            assertEqualsNormalizeNewline("line1\nline2\nline3\n", readFile(file1));
+            assertEqualsNormalizeNewline("line4\nline5\n", readFile(file2));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
             fail("Exception occurred: " + ex.getMessage());
@@ -811,8 +811,8 @@ class PostBatchUpdateFileTaskTest {
             assertTrue(file1.exists());
             assertTrue(file2.exists());
             assertFalse(file3.exists());
-            assertEqualsNormalizeNewline("line1\nline2\n", TestUtils.readFile(file1));
-            assertEqualsNormalizeNewline("line3\n", TestUtils.readFile(file2));
+            assertEqualsNormalizeNewline("line1\nline2\n", readFile(file1));
+            assertEqualsNormalizeNewline("line3\n", readFile(file2));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
             fail("Exception occurred: " + ex.getMessage());
@@ -855,7 +855,7 @@ class PostBatchUpdateFileTaskTest {
 
             assertTrue(finalFile.exists());
             assertFalse(splitFile.exists());
-            assertEqualsNormalizeNewline("line1\nline2\nFOOTER\n", TestUtils.readFile(finalFile));
+            assertEqualsNormalizeNewline("line1\nline2\nFOOTER\n", readFile(finalFile));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
             fail("Exception occurred: " + ex.getMessage());

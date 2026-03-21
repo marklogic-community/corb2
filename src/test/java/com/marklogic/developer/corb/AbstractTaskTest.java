@@ -19,8 +19,8 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
-import static com.marklogic.developer.corb.Options.INIT_MODULE;
-import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_MESSAGE;
+
+import static com.marklogic.developer.corb.Options.*;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ContentSource;
@@ -236,7 +236,7 @@ class AbstractTaskTest {
             Properties props = new Properties();
             props.setProperty(key1, BAZ);
             props.setProperty(key2, "boo");
-            props.setProperty(Options.BATCH_URI_DELIM, "");
+            props.setProperty(BATCH_URI_DELIM, "");
             task.properties = props;
 
             task.inputUris = new String[]{URI, "uri2"};
@@ -289,7 +289,7 @@ class AbstractTaskTest {
         String[] uris = new String[]{"<doc1/>", "<doc2/>", "<doc3/>"};
         AbstractTask task = new AbstractTaskImpl();
         task.moduleUri = URI;
-        task.properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_DOC);
+        task.properties.setProperty(LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_DOC);
         task.inputUris = uris;
 
         try {
@@ -314,7 +314,7 @@ class AbstractTaskTest {
 
         AbstractTask task = new AbstractTaskImpl();
         task.moduleUri = URI;
-        task.properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_URI);
+        task.properties.setProperty(LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_URI);
         task.inputUris = new String[]{EMPTY_DOC_ELEMENT};
 
         try {
@@ -337,7 +337,7 @@ class AbstractTaskTest {
 
         AbstractTask task = new AbstractTaskImpl();
         task.moduleUri = URI;
-        task.properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_URI);
+        task.properties.setProperty(LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_URI);
         task.inputUris = new String[]{EMPTY_DOC_ELEMENT, EMPTY_DOC_ELEMENT, EMPTY_DOC_ELEMENT};
 
         try {
@@ -401,7 +401,7 @@ class AbstractTaskTest {
         task.moduleUri = URI;
         task.setModuleType(INIT_MODULE);
         task.properties.setProperty(INIT_MODULE + '.' + FOO, BAR);
-        task.properties.setProperty(Options.POST_BATCH_MODULE + '.' + BAZ, BAR);
+        task.properties.setProperty(POST_BATCH_MODULE + '.' + BAZ, BAR);
         try {
             task.generateRequest(session);
         } catch (CorbException ex) {
@@ -426,7 +426,7 @@ class AbstractTaskTest {
         AbstractTask task = new AbstractTaskImpl();
         task.moduleUri = URI;
         task.setModuleType(INIT_MODULE);
-        task.properties.setProperty(Options.URIS_BATCH_REF, BAZ);
+        task.properties.setProperty(URIS_BATCH_REF, BAZ);
         try {
             task.generateRequest(session);
         } catch (CorbException ex) {
@@ -435,7 +435,7 @@ class AbstractTaskTest {
         }
         List<XdmVariable> variableList = Arrays.asList(request.getVariables());
 
-        XdmVariable customInputVariable = buildStringXdmVariable(Options.URIS_BATCH_REF, BAR);
+        XdmVariable customInputVariable = buildStringXdmVariable(URIS_BATCH_REF, BAR);
         assertTrue(variableList.contains(customInputVariable));
     }
 
@@ -471,7 +471,7 @@ class AbstractTaskTest {
         Properties props = new Properties();
         props.setProperty(key1, BAZ);
         props.setProperty(key2, "boo");
-        props.setProperty(Options.BATCH_URI_DELIM, "");
+        props.setProperty(BATCH_URI_DELIM, "");
         task.properties = props;
         Set<String> inputs = task.getCustomInputPropertyNames();
         assertEquals(2, inputs.size());
@@ -589,10 +589,10 @@ class AbstractTaskTest {
         task.failOnError = true;
         task.inputUris = uris;
         task.properties = new Properties();
-        task.properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(retry));
-        task.properties.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(retry));
-        task.properties.setProperty(Options.QUERY_RETRY_INTERVAL, Integer.toString(retry));
-        task.properties.setProperty(Options.QUERY_RETRY_LIMIT, Integer.toString(retry));
+        task.properties.setProperty(XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(retry));
+        task.properties.setProperty(XCC_CONNECTION_RETRY_LIMIT, Integer.toString(retry));
+        task.properties.setProperty(QUERY_RETRY_INTERVAL, Integer.toString(retry));
+        task.properties.setProperty(QUERY_RETRY_LIMIT, Integer.toString(retry));
         assertThrows(CorbException.class, () -> task.handleRequestException(exception));
     }
 
@@ -611,10 +611,10 @@ class AbstractTaskTest {
             task.failOnError = true;
             task.inputUris = uris;
             task.properties = new Properties();
-            task.properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(retry));
-            task.properties.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(retry));
-            task.properties.setProperty(Options.QUERY_RETRY_INTERVAL, Integer.toString(retry));
-            task.properties.setProperty(Options.QUERY_RETRY_LIMIT, Integer.toString(retry));
+            task.properties.setProperty(XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(retry));
+            task.properties.setProperty(XCC_CONNECTION_RETRY_LIMIT, Integer.toString(retry));
+            task.properties.setProperty(QUERY_RETRY_INTERVAL, Integer.toString(retry));
+            task.properties.setProperty(QUERY_RETRY_LIMIT, Integer.toString(retry));
             task.properties.setProperty(QUERY_RETRY_ERROR_MESSAGE, "Premature EOF");
 
             task.handleRequestException(exception);
@@ -656,7 +656,7 @@ class AbstractTaskTest {
         Request req = mock(Request.class);
         AbstractTask task = new AbstractTaskImpl();
         task.properties = new Properties();
-        task.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "foo, SVC-EXTIME, XDMP-EXTIME, bar");
+        task.properties.setProperty(QUERY_RETRY_ERROR_CODES, "foo, SVC-EXTIME, XDMP-EXTIME, bar");
         XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", false, new String[0], new QueryStackFrame[0]);
         assertTrue(task.shouldRetry(exception));
     }
@@ -666,15 +666,15 @@ class AbstractTaskTest {
         Request req = mock(Request.class);
         AbstractTask task = new AbstractTaskImpl();
         task.properties = new Properties();
-        task.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,XDMP-BAR,XDMP-BAZ");
+        task.properties.setProperty(QUERY_RETRY_ERROR_CODES, "SVC-FOO,XDMP-BAR,XDMP-BAZ");
         XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", false, new String[0], new QueryStackFrame[0]);
 
         assertFalse(task.shouldRetry(exception));
 
-        task.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, SVC_EXTIME + ",XDMP-EXTIME");
+        task.properties.setProperty(QUERY_RETRY_ERROR_CODES, SVC_EXTIME + ",XDMP-EXTIME");
         assertTrue(task.shouldRetry(exception));
 
-        task.properties.remove(Options.QUERY_RETRY_ERROR_CODES);
+        task.properties.remove(QUERY_RETRY_ERROR_CODES);
         assertFalse(task.shouldRetry(exception)); //no match on code(and no exception attempting to split null)
     }
 
@@ -683,15 +683,15 @@ class AbstractTaskTest {
         Request req = mock(Request.class);
         AbstractTask task = new AbstractTaskImpl();
         task.properties = new Properties();
-        task.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
+        task.properties.setProperty(QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
         XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
 
         assertTrue(task.shouldRetry(exception)); //since it's retryable, doesn't matter if code matches
 
-        task.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, SVC_EXTIME + ",XDMP-EXTIME");
+        task.properties.setProperty(QUERY_RETRY_ERROR_CODES, SVC_EXTIME + ",XDMP-EXTIME");
         assertTrue(task.shouldRetry(exception)); //is retryable and the code matches
 
-        task.properties.remove(Options.QUERY_RETRY_ERROR_CODES);
+        task.properties.remove(QUERY_RETRY_ERROR_CODES);
         assertTrue(task.shouldRetry(exception));
     }
 
@@ -700,7 +700,7 @@ class AbstractTaskTest {
         Request req = mock(Request.class);
         AbstractTask task = new AbstractTaskImpl();
         task.properties = new Properties();
-        task.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "XDMP-FOO,SVC-BAR,SVC-BAZ");
+        task.properties.setProperty(QUERY_RETRY_ERROR_CODES, "XDMP-FOO,SVC-BAR,SVC-BAZ");
         RequestPermissionException exception = new RequestPermissionException(REJECTED_MSG, req, USER_NAME, false);
         assertFalse(task.shouldRetry(exception));
 
@@ -713,7 +713,7 @@ class AbstractTaskTest {
         Request req = mock(Request.class);
         AbstractTask task = new AbstractTaskImpl();
         task.properties = new Properties();
-        task.properties.setProperty(Options.QUERY_RETRY_ERROR_MESSAGE, "FOO,Authentication failure for user,BAR");
+        task.properties.setProperty(QUERY_RETRY_ERROR_MESSAGE, "FOO,Authentication failure for user,BAR");
         RequestPermissionException exception = new RequestPermissionException(REJECTED_MSG, req, USER_NAME, false);
         assertFalse(task.hasRetryableMessage(exception));
 
@@ -730,7 +730,7 @@ class AbstractTaskTest {
         ServerConnectionException exception = new ServerConnectionException("Error parsing HTTP headers: Premature EOF, partial header line read: ''", req);
         assertFalse(task.hasRetryableMessage(exception));
 
-        task.properties.setProperty(Options.QUERY_RETRY_ERROR_MESSAGE, "Premature EOF");
+        task.properties.setProperty(QUERY_RETRY_ERROR_MESSAGE, "Premature EOF");
         assertTrue(task.hasRetryableMessage(exception));
     }
 
@@ -932,7 +932,7 @@ class AbstractTaskTest {
 
     @Test
     void testGetProperty() {
-        String key = Options.INIT_TASK;
+        String key = INIT_TASK;
         String val = FOO;
         Properties props = new Properties();
         props.setProperty(key, val);
@@ -944,7 +944,7 @@ class AbstractTaskTest {
 
     @Test
     void testGetPropertySystemPropertyTakesPrecedence() {
-        String key = Options.INIT_TASK;
+        String key = INIT_TASK;
         String val = FOO;
         System.setProperty(key, val);
         Properties props = new Properties();
@@ -1004,17 +1004,17 @@ class AbstractTaskTest {
         task.exportDir = dir.getAbsolutePath();
         task.properties = new Properties();
         if (errorFilename != null) {
-            task.properties.setProperty(Options.ERROR_FILE_NAME, errorFilename);
+            task.properties.setProperty(ERROR_FILE_NAME, errorFilename);
         }
         if (delim != null) {
-            task.properties.setProperty(Options.BATCH_URI_DELIM, delim);
+            task.properties.setProperty(BATCH_URI_DELIM, delim);
         }
 
-        task.properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
-        task.properties.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(retryLimit));
+        task.properties.setProperty(XCC_CONNECTION_RETRY_INTERVAL, "1");
+        task.properties.setProperty(XCC_CONNECTION_RETRY_LIMIT, Integer.toString(retryLimit));
 
-        task.properties.setProperty(Options.QUERY_RETRY_INTERVAL, "2");
-        task.properties.setProperty(Options.QUERY_RETRY_LIMIT, Integer.toString(retryLimit));
+        task.properties.setProperty(QUERY_RETRY_INTERVAL, "2");
+        task.properties.setProperty(QUERY_RETRY_LIMIT, Integer.toString(retryLimit));
 
         task.handleRequestException(exception);
         List<LogRecord> records = testLogger.getLogRecords();
@@ -1063,7 +1063,7 @@ class AbstractTaskTest {
     void testWrapProcessExceptionRedacted() {
         AbstractTask task = new AbstractTaskImpl();
         Properties properties = new Properties();
-        properties.setProperty(Options.URIS_REDACTED, Boolean.TRUE.toString());
+        properties.setProperty(URIS_REDACTED, Boolean.TRUE.toString());
         task.setProperties(properties);
         Exception ex = new IllegalAccessException();
         CorbException corbException = task.wrapProcessException(ex, "uri1", "uri2");
