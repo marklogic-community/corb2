@@ -108,9 +108,7 @@ class PreBatchUpdateFileTaskTest {
             assertThrows(NullPointerException.class, instance::call);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
-            if (ex instanceof NullPointerException) {
-                throw (NullPointerException) ex;
-            }
+            fail();
         }
     }
 

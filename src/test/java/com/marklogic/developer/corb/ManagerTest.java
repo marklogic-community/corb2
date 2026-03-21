@@ -1111,9 +1111,7 @@ class ManagerTest {
             assertThrows(IllegalArgumentException.class, instance::run);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
-            if (ex instanceof IllegalArgumentException) {
-                throw (IllegalArgumentException) ex;
-            }
+            fail();
         }
 
     }
@@ -1125,9 +1123,7 @@ class ManagerTest {
             assertThrows(NullPointerException.class, instance::run);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
-            if (ex instanceof NullPointerException) {
-                throw (NullPointerException) ex;
-            }
+            fail();
         }
     }
 
@@ -1140,9 +1136,7 @@ class ManagerTest {
             assertThrows(IllegalArgumentException.class, instance::run);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
-            if (ex instanceof IllegalArgumentException) {
-                throw (IllegalArgumentException) ex;
-            }
+            fail();
         }
     }
 
