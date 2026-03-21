@@ -544,6 +544,26 @@ class PostBatchUpdateFileTaskTest {
     }
 
     @Test
+    void testShouldSplitFilesUsesValidThresholdsOnly() {
+        PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+        Properties props = new Properties();
+
+        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "invalid");
+        instance.setProperties(props);
+        assertFalse(instance.shouldSplitFiles());
+
+        props.clear();
+        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "invalid");
+        instance.setProperties(props);
+        assertFalse(instance.shouldSplitFiles());
+
+        props.clear();
+        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "2");
+        instance.setProperties(props);
+        assertTrue(instance.shouldSplitFiles());
+    }
+
+    @Test
     void testHasRetryableMessage() {
         Request req = mock(Request.class);
         AbstractTask instance = new PostBatchUpdateFileTask();
@@ -623,6 +643,312 @@ class PostBatchUpdateFileTaskTest {
             assertFalse(file2.exists());
             assertFalse(file3.exists());
 
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, "Test failed", ex);
+            fail("Exception occurred: " + ex.getMessage());
+        } finally {
+            if (tempDir != null) {
+                FileUtils.deleteQuietly(tempDir.toPath());
+            }
+        }
+    }
+
+    @Test
+    void testWriteBottomContentWithSplitByLinesAddsFooterToEachSplitFile() {
+        Properties props = new Properties();
+        File tempDir = null;
+        try {
+            tempDir = Files.createTempDirectory("corb-test").toFile();
+            File batchFile = new File(tempDir, "test-split-footer.txt");
+            props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
+            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "2");
+            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
+            props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "FOOTER");
+            PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+            instance.setProperties(props);
+
+            ResultSequence seq = mock(ResultSequence.class);
+            ResultItem item = mock(ResultItem.class);
+            XdmItem xdmItem = mock(XdmItem.class);
+
+            when(seq.hasNext()).thenReturn(true, true, true, true, true, true, false);
+            when(seq.next()).thenReturn(item);
+            when(item.getItem()).thenReturn(xdmItem);
+            when(xdmItem.asString()).thenReturn("line1", "line2", "line3", "line4", "line5");
+            instance.writeToFile(seq, instance.getExportFile());
+
+            instance.writeBottomContent();
+
+            File file1 = new File(tempDir, "001_test-split-footer.txt.tmp");
+            File file2 = new File(tempDir, "002_test-split-footer.txt.tmp");
+            File file3 = new File(tempDir, "003_test-split-footer.txt.tmp");
+
+            assertEqualsNormalizeNewline("line1\nline2\nFOOTER\n", TestUtils.readFile(file1));
+            assertEqualsNormalizeNewline("line3\nline4\nFOOTER\n", TestUtils.readFile(file2));
+            assertEqualsNormalizeNewline("line5\nFOOTER\n", TestUtils.readFile(file3));
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, "Test failed", ex);
+            fail("Exception occurred: " + ex.getMessage());
+        } finally {
+            if (tempDir != null) {
+                FileUtils.deleteQuietly(tempDir.toPath());
+            }
+        }
+    }
+
+    @Test
+    void testWriteBottomContentWithSplitBySizeNotCountingHeaderBytes() {
+        Properties props = new Properties();
+        File tempDir = null;
+        try {
+            tempDir = Files.createTempDirectory("corb-test").toFile();
+            File batchFile = new File(tempDir, "test-size-split.txt.tmp");
+            props.setProperty(EXPORT_FILE_NAME, new File(tempDir, "test-size-split.txt").getAbsolutePath());
+            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
+            props.setProperty(Options.EXPORT_FILE_HEADER_LINE_COUNT, "1");
+            PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+            instance.setProperties(props);
+
+            try (FileWriter writer = new FileWriter(batchFile)) {
+                writer.write("HEADER\n");
+                writer.write("A\n");
+                writer.write("B\n");
+            }
+
+            instance.writeBottomContentWithSplitting(batchFile, null, -1, 2);
+
+            File file1 = new File(tempDir, "001_test-size-split.txt.tmp");
+            File file2 = new File(tempDir, "002_test-size-split.txt.tmp");
+
+            assertTrue(file1.exists());
+            assertTrue(file2.exists());
+            assertEqualsNormalizeNewline("HEADER\nA\n", TestUtils.readFile(file1));
+            assertEqualsNormalizeNewline("HEADER\nB\n", TestUtils.readFile(file2));
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, "Test failed", ex);
+            fail("Exception occurred: " + ex.getMessage());
+        } finally {
+            if (tempDir != null) {
+                FileUtils.deleteQuietly(tempDir.toPath());
+            }
+        }
+    }
+
+    @Test
+    void testWriteBottomContentWithBothSplitOptionsPrefersLineCount() {
+        Properties props = new Properties();
+        File tempDir = null;
+        try {
+            tempDir = Files.createTempDirectory("corb-test").toFile();
+            File batchFile = new File(tempDir, "test-both-split-options.txt");
+            props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
+            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "3");
+            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "1");
+            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
+            PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+            instance.setProperties(props);
+
+            ResultSequence seq = mock(ResultSequence.class);
+            ResultItem item = mock(ResultItem.class);
+            XdmItem xdmItem = mock(XdmItem.class);
+
+            when(seq.hasNext()).thenReturn(true, true, true, true, true, true, false);
+            when(seq.next()).thenReturn(item);
+            when(item.getItem()).thenReturn(xdmItem);
+            when(xdmItem.asString()).thenReturn("line1", "line2", "line3", "line4", "line5");
+            instance.writeToFile(seq, instance.getExportFile());
+
+            instance.writeBottomContent();
+
+            File file1 = new File(tempDir, "001_test-both-split-options.txt.tmp");
+            File file2 = new File(tempDir, "002_test-both-split-options.txt.tmp");
+            File file3 = new File(tempDir, "003_test-both-split-options.txt.tmp");
+
+            assertTrue(file1.exists());
+            assertTrue(file2.exists());
+            assertFalse(file3.exists());
+            assertEqualsNormalizeNewline("line1\nline2\nline3\n", TestUtils.readFile(file1));
+            assertEqualsNormalizeNewline("line4\nline5\n", TestUtils.readFile(file2));
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, "Test failed", ex);
+            fail("Exception occurred: " + ex.getMessage());
+        } finally {
+            if (tempDir != null) {
+                FileUtils.deleteQuietly(tempDir.toPath());
+            }
+        }
+    }
+
+    @Test
+    void testWriteBottomContentWithInvalidLineThresholdFallsBackToSizeSplit() {
+        Properties props = new Properties();
+        File tempDir = null;
+        try {
+            tempDir = Files.createTempDirectory("corb-test").toFile();
+            File batchFile = new File(tempDir, "test-invalid-line-valid-size.txt");
+            props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
+            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "invalid");
+            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "8");
+            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
+            PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+            instance.setProperties(props);
+
+            ResultSequence seq = mock(ResultSequence.class);
+            ResultItem item = mock(ResultItem.class);
+            XdmItem xdmItem = mock(XdmItem.class);
+
+            when(seq.hasNext()).thenReturn(true, true, true, true, false);
+            when(seq.next()).thenReturn(item);
+            when(item.getItem()).thenReturn(xdmItem);
+            when(xdmItem.asString()).thenReturn("line1", "line2", "line3");
+            instance.writeToFile(seq, instance.getExportFile());
+
+            instance.writeBottomContent();
+
+            File file1 = new File(tempDir, "001_test-invalid-line-valid-size.txt.tmp");
+            File file2 = new File(tempDir, "002_test-invalid-line-valid-size.txt.tmp");
+            File file3 = new File(tempDir, "003_test-invalid-line-valid-size.txt.tmp");
+
+            assertTrue(file1.exists());
+            assertTrue(file2.exists());
+            assertFalse(file3.exists());
+            assertEqualsNormalizeNewline("line1\nline2\n", TestUtils.readFile(file1));
+            assertEqualsNormalizeNewline("line3\n", TestUtils.readFile(file2));
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, "Test failed", ex);
+            fail("Exception occurred: " + ex.getMessage());
+        } finally {
+            if (tempDir != null) {
+                FileUtils.deleteQuietly(tempDir.toPath());
+            }
+        }
+    }
+
+    @Test
+    void testInvalidSplitThresholdFallsBackToSingleOutputFile() {
+        Properties props = new Properties();
+        File tempDir = null;
+        try {
+            tempDir = Files.createTempDirectory("corb-test").toFile();
+            File batchFile = new File(tempDir, "test-invalid-split.txt");
+            props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
+            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "invalid");
+            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
+            props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "FOOTER");
+            PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+            instance.setProperties(props);
+
+            ResultSequence seq = mock(ResultSequence.class);
+            ResultItem item = mock(ResultItem.class);
+            XdmItem xdmItem = mock(XdmItem.class);
+
+            when(seq.hasNext()).thenReturn(true, true, true, false);
+            when(seq.next()).thenReturn(item);
+            when(item.getItem()).thenReturn(xdmItem);
+            when(xdmItem.asString()).thenReturn("line1", "line2");
+            instance.writeToFile(seq, instance.getExportFile());
+
+            instance.writeBottomContent();
+            instance.moveFile();
+
+            File finalFile = new File(tempDir, "test-invalid-split.txt");
+            File splitFile = new File(tempDir, "001_test-invalid-split.txt.tmp");
+
+            assertTrue(finalFile.exists());
+            assertFalse(splitFile.exists());
+            assertEqualsNormalizeNewline("line1\nline2\nFOOTER\n", TestUtils.readFile(finalFile));
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, "Test failed", ex);
+            fail("Exception occurred: " + ex.getMessage());
+        } finally {
+            if (tempDir != null) {
+                FileUtils.deleteQuietly(tempDir.toPath());
+            }
+        }
+    }
+
+    @Test
+    void testWriteBottomContentWithBothSplitOptionsAndZipPrefersLineCount() {
+        Properties props = new Properties();
+        File tempDir = null;
+        try {
+            tempDir = Files.createTempDirectory("corb-test").toFile();
+            File batchFile = new File(tempDir, "test-both-split-zip.txt");
+            props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
+            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "3");
+            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "1");
+            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
+            props.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
+            PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+            instance.setProperties(props);
+
+            ResultSequence seq = mock(ResultSequence.class);
+            ResultItem item = mock(ResultItem.class);
+            XdmItem xdmItem = mock(XdmItem.class);
+
+            when(seq.hasNext()).thenReturn(true, true, true, true, true, true, false);
+            when(seq.next()).thenReturn(item);
+            when(item.getItem()).thenReturn(xdmItem);
+            when(xdmItem.asString()).thenReturn("line1", "line2", "line3", "line4", "line5");
+            instance.writeToFile(seq, instance.getExportFile());
+
+            instance.writeBottomContent();
+            instance.moveFile();
+            instance.compressFile();
+
+            File outputZipFile = new File(tempDir, "test-both-split-zip.txt.zip");
+            assertTrue(outputZipFile.exists());
+            try (ZipFile zipFile = new ZipFile(outputZipFile)) {
+                assertEquals(2, zipFile.size());
+                assertNotNull(zipFile.getEntry("001_test-both-split-zip.txt"));
+                assertNotNull(zipFile.getEntry("002_test-both-split-zip.txt"));
+            }
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, "Test failed", ex);
+            fail("Exception occurred: " + ex.getMessage());
+        } finally {
+            if (tempDir != null) {
+                FileUtils.deleteQuietly(tempDir.toPath());
+            }
+        }
+    }
+
+    @Test
+    void testWriteBottomContentWithInvalidLineThresholdAndZipFallsBackToSizeSplit() {
+        Properties props = new Properties();
+        File tempDir = null;
+        try {
+            tempDir = Files.createTempDirectory("corb-test").toFile();
+            File batchFile = new File(tempDir, "test-invalid-line-size-zip.txt");
+            props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
+            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "invalid");
+            props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "8");
+            props.setProperty(Options.EXPORT_FILE_PART_EXT, ".tmp");
+            props.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
+            PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+            instance.setProperties(props);
+
+            ResultSequence seq = mock(ResultSequence.class);
+            ResultItem item = mock(ResultItem.class);
+            XdmItem xdmItem = mock(XdmItem.class);
+
+            when(seq.hasNext()).thenReturn(true, true, true, true, false);
+            when(seq.next()).thenReturn(item);
+            when(item.getItem()).thenReturn(xdmItem);
+            when(xdmItem.asString()).thenReturn("line1", "line2", "line3");
+            instance.writeToFile(seq, instance.getExportFile());
+
+            instance.writeBottomContent();
+            instance.moveFile();
+            instance.compressFile();
+
+            File outputZipFile = new File(tempDir, "test-invalid-line-size-zip.txt.zip");
+            assertTrue(outputZipFile.exists());
+            try (ZipFile zipFile = new ZipFile(outputZipFile)) {
+                assertEquals(2, zipFile.size());
+                assertNotNull(zipFile.getEntry("001_test-invalid-line-size-zip.txt"));
+                assertNotNull(zipFile.getEntry("002_test-invalid-line-size-zip.txt"));
+            }
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
             fail("Exception occurred: " + ex.getMessage());

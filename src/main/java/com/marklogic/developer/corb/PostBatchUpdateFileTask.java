@@ -325,34 +325,31 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
      * @throws IOException if an I/O error occurs
      */
     protected void writeBottomContentWithSplitting(File batchFile, String bottomContent, long maxLines, long maxSize) throws IOException {
-
+        IOException pendingException = null;
+        OutputStream writer = null;
         try (BufferedReader reader = Files.newBufferedReader(batchFile.toPath())) {
-
             File splitFile = getCurrentSplitFile();
-            OutputStream writer = new BufferedOutputStream(new FileOutputStream(splitFile, true));
-
             int headerLineCount = getIntProperty(EXPORT_FILE_HEADER_LINE_COUNT);
             if (headerLineCount > 0) {
                 copyHeaderIntoFile(batchFile, headerLineCount, splitFile);
                 //skip over headerLineCount lines in the reader
-                while (reader.readLine() != null && currentFileLineCount < headerLineCount) { currentFileLineCount++; }
+                while (currentFileLineCount < headerLineCount && reader.readLine() != null) { currentFileLineCount++; }
                 //reset line count after reading in the header, so that it's not counted for splits
                 currentFileLineCount = 0;
             }
+            writer = new BufferedOutputStream(new FileOutputStream(splitFile, true));
 
             String line;
             while ((line = reader.readLine()) != null) {
                 // Check if we need to rotate to a new file
-                boolean needsRotation = false;
-                if (maxLines > 0 && currentFileLineCount >= maxLines) {
-                    needsRotation = true;
-                } else if (maxSize > 0 && currentFileSize >= maxSize) {
-                    needsRotation = true;
-                }
+                boolean needsRotation = maxLines > 0
+                    ? currentFileLineCount >= maxLines
+                    : maxSize > 0 && currentFileSize >= maxSize;
 
                 if (needsRotation) {
                     if (isNotEmpty(bottomContent)) {
                         writer.write(bottomContent.getBytes(StandardCharsets.UTF_8));
+                        writer.write(NEWLINE);
                     }
                     writer.flush();
                     writer.close();
@@ -367,17 +364,33 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
                     }
                     writer = new BufferedOutputStream(new FileOutputStream(nextFile, true));
                 }
-                writer.write(line.getBytes(StandardCharsets.UTF_8));
+                byte[] lineBytes = line.getBytes(StandardCharsets.UTF_8);
+                writer.write(lineBytes);
                 writer.write(NEWLINE);
 
                 currentFileLineCount++;
-                currentFileSize += line.getBytes(StandardCharsets.UTF_8).length + NEWLINE.length;
+                currentFileSize += lineBytes.length + NEWLINE.length;
             }
             if (isNotEmpty(bottomContent)) {
                 writer.write(bottomContent.getBytes(StandardCharsets.UTF_8));
+                writer.write(NEWLINE);
             }
             writer.flush();
-            writer.close();
+        } catch (IOException ex) {
+            pendingException = ex;
+            throw ex;
+        } finally {
+            if (writer != null) {
+                if (pendingException != null) {
+                    try {
+                        writer.close();
+                    } catch (IOException closeException) {
+                        pendingException.addSuppressed(closeException);
+                    }
+                } else {
+                    writer.close();
+                }
+            }
         }
     }
 
@@ -685,9 +698,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
      * @return true if splitting options were configured
      */
     protected boolean shouldSplitFiles() {
-        String maxLines = getProperty(EXPORT_FILE_SPLIT_MAX_LINES);
-        String maxSize = getProperty(EXPORT_FILE_SPLIT_MAX_SIZE);
-        return isNotEmpty(maxLines) || isNotEmpty(maxSize);
+        return getMaxLines() > 0 || getMaxSize() > 0;
     }
 
     /**

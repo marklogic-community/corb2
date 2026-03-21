@@ -141,6 +141,36 @@ class PreBatchUpdateFileTaskTest {
     }
 
     @Test
+    void testCallAddsHeaderLineCountForMultilineTopContent() {
+        String content = "header-one\nheader-two";
+        try {
+            File tempDir = TestUtils.createTempDirectory();
+            File tempFile = new File(tempDir, "topContentWithHeaderCount");
+            if (tempFile.createNewFile()) {
+                tempFile.deleteOnExit();
+                Properties props = new Properties();
+                props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, content);
+                props.setProperty(Options.EXPORT_FILE_NAME, tempFile.getName());
+                props.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
+                PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
+                instance.properties = props;
+                instance.exportDir = tempDir.toString();
+                File partFile = new File(tempDir, instance.getPartFileName());
+
+                instance.call();
+
+                assertEquals("2", props.getProperty(Options.EXPORT_FILE_HEADER_LINE_COUNT));
+                assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(partFile));
+            } else {
+                fail();
+            }
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
     void testHasRetryableMessage() {
         Request req = mock(Request.class);
         AbstractTask instance = new PreBatchUpdateFileTask();
