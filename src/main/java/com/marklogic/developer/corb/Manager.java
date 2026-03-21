@@ -272,7 +272,7 @@ public class Manager extends AbstractManager implements Closeable {
     }
 
     /**
-     *
+     * Runs the CoRB job with the given command-line arguments and returns an exit code.
      * <p>
      * Initializes the Manager, processes arguments, runs the job, and returns an appropriate exit code.
      * </p>
