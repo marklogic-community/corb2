@@ -423,7 +423,6 @@ public class Manager extends AbstractManager implements Closeable {
     @Override
     protected void initOptions(String... args) throws CorbException {
         super.initOptions(args);
-        normalizeLegacyExportFileAsZipOption();
         // gather inputs
         String processModule = getOption(args, 2, PROCESS_MODULE);
         String threadCount = getOption(args, 3, THREAD_COUNT);
@@ -466,6 +465,7 @@ public class Manager extends AbstractManager implements Closeable {
         String numTpsForETC = getOption(NUM_TPS_FOR_ETC);
 
         //Check legacy properties keys, for backwards compatibility
+        normalizeLegacyExportFileAsZipOption();
         if (processModule == null) {
             processModule = getOption(XQUERY_MODULE);
         }
@@ -475,6 +475,8 @@ public class Manager extends AbstractManager implements Closeable {
         if (postBatchModule == null) {
             postBatchModule = getOption(POST_BATCH_XQUERY_MODULE);
         }
+
+
         if (moduleRoot != null) {
             options.setModuleRoot(moduleRoot);
         }
