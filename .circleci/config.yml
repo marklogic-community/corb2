@@ -29,21 +29,14 @@ jobs:
           paths:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
-
-      - run:
-          name: Create test results directory
-          command: mkdir -p ~/test-results # Create a directory to store test results
-      
+ 
       - run:
           name: Run Tests
           command: ./gradlew test
 
-      - run:
-          name: Collect Test Results
-          command: find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-      
       - store_test_results:
-          path: ~/test-results
-      
+          path: build/test-results/test/
+
       - store_artifacts:
-          path: ~/test-results
+          path: build/reports/test/
+          destination: test-reports
