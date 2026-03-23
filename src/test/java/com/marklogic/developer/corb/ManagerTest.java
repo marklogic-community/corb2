@@ -1530,6 +1530,7 @@ class ManagerTest {
             assertEquals( "true", manager.getProperties().getProperty(Options.EXPORT_FILE_AS_ZIP));
             assertEquals(PostBatchUpdateFileTask.class, manager.options.getPostBatchTaskClass());
         } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, "testAutoConfigurePostBatchTaskBecauseOfCompression", ex);
             fail();
         } finally {
             clearSystemProperties();
