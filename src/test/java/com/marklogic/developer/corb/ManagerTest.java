@@ -1293,7 +1293,7 @@ class ManagerTest {
             assertTrue(exportFile.exists());
             assertEquals(2, FileUtils.getLineCount(exportFile));
         } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, "testNoResultsPrePostBatchAlwaysExecuteTrue exception thrown", ex);
             fail();
         }
     }
@@ -1606,6 +1606,7 @@ class ManagerTest {
             assertEquals("descending", manager.getProperties().getProperty(Options.EXPORT_FILE_SORT));
             assertEquals(PostBatchUpdateFileTask.class, manager.options.getPostBatchTaskClass());
         } catch (CorbException ex) {
+
             fail();
         } finally {
             clearSystemProperties();
