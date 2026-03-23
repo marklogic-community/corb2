@@ -661,14 +661,14 @@ class ManagerIT {
     @Test
     void testAutoConfigurePostBatchTaskBecauseOfCompression() {
         Properties properties = ManagerTest.getDefaultProperties();
-        properties.remove(Options.PRE_BATCH_TASK);
-        properties.remove(Options.POST_BATCH_TASK);
-        properties.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
+        properties.remove(PRE_BATCH_TASK);
+        properties.remove(POST_BATCH_TASK);
+        properties.setProperty(EXPORT_FILE_AS_ZIP, "true");
         System.getProperties().putAll(properties);
         try (Manager manager = new Manager()) {
             manager.init();
             assertNull(manager.options.getPreBatchTaskClass());
-            assertEquals( "true", manager.getProperties().getProperty(Options.EXPORT_FILE_AS_ZIP));
+            assertEquals( "true", manager.getProperties().getProperty(EXPORT_FILE_AS_ZIP));
             assertEquals(PostBatchUpdateFileTask.class, manager.options.getPostBatchTaskClass());
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, "testAutoConfigurePostBatchTaskBecauseOfCompression", ex);
@@ -680,14 +680,14 @@ class ManagerIT {
     @Test
     void testAutoConfigurePostBatchTaskBecauseOfLegacyCompressionOption() {
         Properties properties = ManagerTest.getDefaultProperties();
-        properties.remove(Options.PRE_BATCH_TASK);
-        properties.remove(Options.POST_BATCH_TASK);
-        properties.setProperty(Options.EXPORT_FILE_AS_ZIP_LEGACY, "true");
+        properties.remove(PRE_BATCH_TASK);
+        properties.remove(POST_BATCH_TASK);
+        properties.setProperty(EXPORT_FILE_AS_ZIP_LEGACY, "true");
         System.getProperties().putAll(properties);
         try (Manager manager = new Manager()) {
             manager.init();
             assertNull(manager.options.getPreBatchTaskClass());
-            assertEquals("true", manager.getProperties().getProperty(Options.EXPORT_FILE_AS_ZIP));
+            assertEquals("true", manager.getProperties().getProperty(EXPORT_FILE_AS_ZIP));
             assertEquals(PostBatchUpdateFileTask.class, manager.options.getPostBatchTaskClass());
         } catch (CorbException ex) {
             fail();
@@ -699,14 +699,14 @@ class ManagerIT {
     @Test
     void testAutoConfigurePostBatchTaskBecauseOfSplitLines() {
         Properties properties = ManagerTest.getDefaultProperties();
-        properties.remove(Options.PRE_BATCH_TASK);
-        properties.remove(Options.POST_BATCH_TASK);
-        properties.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "5");
+        properties.remove(PRE_BATCH_TASK);
+        properties.remove(POST_BATCH_TASK);
+        properties.setProperty(EXPORT_FILE_SPLIT_MAX_LINES, "5");
         System.getProperties().putAll(properties);
         try (Manager manager = new Manager()) {
             manager.init();
             assertNull(manager.options.getPreBatchTaskClass());
-            assertEquals("5", manager.getProperties().getProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES));
+            assertEquals("5", manager.getProperties().getProperty(EXPORT_FILE_SPLIT_MAX_LINES));
             assertEquals(PostBatchUpdateFileTask.class, manager.options.getPostBatchTaskClass());
         } catch (CorbException ex) {
             fail();
@@ -718,14 +718,14 @@ class ManagerIT {
     @Test
     void testDashCompressionOptionOverridesLegacyCompressionOption() {
         Properties properties = ManagerTest.getDefaultProperties();
-        properties.remove(Options.PRE_BATCH_TASK);
-        properties.remove(Options.POST_BATCH_TASK);
-        properties.setProperty(Options.EXPORT_FILE_AS_ZIP, "false");
-        properties.setProperty(Options.EXPORT_FILE_AS_ZIP_LEGACY, "true");
+        properties.remove(PRE_BATCH_TASK);
+        properties.remove(POST_BATCH_TASK);
+        properties.setProperty(EXPORT_FILE_AS_ZIP, "false");
+        properties.setProperty(EXPORT_FILE_AS_ZIP_LEGACY, "true");
         System.getProperties().putAll(properties);
         try (Manager manager = new Manager()) {
             manager.init();
-            assertEquals("false", manager.getProperties().getProperty(Options.EXPORT_FILE_AS_ZIP));
+            assertEquals("false", manager.getProperties().getProperty(EXPORT_FILE_AS_ZIP));
             assertNull(manager.options.getPostBatchTaskClass());
         } catch (CorbException ex) {
             fail();
@@ -737,14 +737,14 @@ class ManagerIT {
     @Test
     void testAutoConfigurePostBatchTaskBecauseOfBottomContent() {
         Properties properties = ManagerTest.getDefaultProperties();
-        properties.remove(Options.PRE_BATCH_TASK);
-        properties.remove(Options.POST_BATCH_TASK);
-        properties.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "footer");
+        properties.remove(PRE_BATCH_TASK);
+        properties.remove(POST_BATCH_TASK);
+        properties.setProperty(EXPORT_FILE_BOTTOM_CONTENT, "footer");
         System.getProperties().putAll(properties);
         try (Manager manager = new Manager()) {
             manager.init();
             assertNull(manager.options.getPreBatchTaskClass());
-            assertEquals( "footer", manager.getProperties().getProperty(Options.EXPORT_FILE_BOTTOM_CONTENT));
+            assertEquals( "footer", manager.getProperties().getProperty(EXPORT_FILE_BOTTOM_CONTENT));
             assertEquals( PostBatchUpdateFileTask.class, manager.options.getPostBatchTaskClass());
         } catch (CorbException ex) {
             fail();
@@ -756,14 +756,14 @@ class ManagerIT {
     @Test
     void testAutoConfigurePostBatchTaskBecauseOfSplitSize() {
         Properties properties = ManagerTest.getDefaultProperties();
-        properties.remove(Options.PRE_BATCH_TASK);
-        properties.remove(Options.POST_BATCH_TASK);
-        properties.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "1kb");
+        properties.remove(PRE_BATCH_TASK);
+        properties.remove(POST_BATCH_TASK);
+        properties.setProperty(EXPORT_FILE_SPLIT_MAX_SIZE, "1kb");
         System.getProperties().putAll(properties);
         try (Manager manager = new Manager()) {
             manager.init();
             assertNull(manager.options.getPreBatchTaskClass());
-            assertEquals("1kb", manager.getProperties().getProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE));
+            assertEquals("1kb", manager.getProperties().getProperty(EXPORT_FILE_SPLIT_MAX_SIZE));
             assertEquals(PostBatchUpdateFileTask.class, manager.options.getPostBatchTaskClass());
         } catch (CorbException ex) {
             fail();
@@ -775,14 +775,14 @@ class ManagerIT {
     @Test
     void testAutoConfigurePreBatchTask() {
         Properties properties = ManagerTest.getDefaultProperties();
-        properties.remove(Options.PRE_BATCH_TASK);
-        properties.remove(Options.POST_BATCH_TASK);
-        properties.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "top");
+        properties.remove(PRE_BATCH_TASK);
+        properties.remove(POST_BATCH_TASK);
+        properties.setProperty(EXPORT_FILE_TOP_CONTENT, "top");
         System.getProperties().putAll(properties);
         try (Manager manager = new Manager()) {
             manager.init();
             assertNull(manager.options.getPostBatchTaskClass());
-            assertEquals("top", manager.getProperties().getProperty(Options.EXPORT_FILE_TOP_CONTENT));
+            assertEquals("top", manager.getProperties().getProperty(EXPORT_FILE_TOP_CONTENT));
             assertEquals(PreBatchUpdateFileTask.class, manager.options.getPreBatchTaskClass());
         } catch (CorbException ex) {
             fail();
@@ -794,14 +794,14 @@ class ManagerIT {
     @Test
     void testAutoConfigurePostBatchTaskBecauseOfSort() {
         Properties properties = ManagerTest.getDefaultProperties();
-        properties.remove(Options.PRE_BATCH_TASK);
-        properties.remove(Options.POST_BATCH_TASK);
-        properties.setProperty(Options.EXPORT_FILE_SORT, "descending");
+        properties.remove(PRE_BATCH_TASK);
+        properties.remove(POST_BATCH_TASK);
+        properties.setProperty(EXPORT_FILE_SORT, "descending");
         System.getProperties().putAll(properties);
         try (Manager manager = new Manager()) {
             manager.init();
             assertNull( manager.options.getPreBatchTaskClass());
-            assertEquals("descending", manager.getProperties().getProperty(Options.EXPORT_FILE_SORT));
+            assertEquals("descending", manager.getProperties().getProperty(EXPORT_FILE_SORT));
             assertEquals(PostBatchUpdateFileTask.class, manager.options.getPostBatchTaskClass());
         } catch (CorbException ex) {
 
