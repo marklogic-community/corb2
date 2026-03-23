@@ -1525,13 +1525,15 @@ class ManagerTest {
         properties.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
         System.getProperties().putAll(properties);
         try (Manager manager = new Manager()) {
+            LOG.info("EXPORT_FILE_DIR: " + EXPORT_FILE_DIR);
+            LOG.info("Working directory: " + System.getProperty("user.dir"));
             manager.init();
             assertNull(manager.options.getPreBatchTaskClass());
             assertEquals( "true", manager.getProperties().getProperty(Options.EXPORT_FILE_AS_ZIP));
             assertEquals(PostBatchUpdateFileTask.class, manager.options.getPostBatchTaskClass());
         } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, "testAutoConfigurePostBatchTaskBecauseOfCompression", ex);
-            fail();
+            ex.printStackTrace(System.err);
+            fail("Test failed with CorbException: " + ex.getMessage());
         } finally {
             clearSystemProperties();
         }
