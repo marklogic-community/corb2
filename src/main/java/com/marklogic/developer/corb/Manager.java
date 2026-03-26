@@ -32,7 +32,10 @@ import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -199,6 +202,16 @@ public class Manager extends AbstractManager implements Closeable {
     protected ScheduledExecutorService scheduledExecutor;
 
     /**
+     * Restart state manager used when restartability is enabled.
+     */
+    protected RestartableJobState restartableJobState;
+
+    /**
+     * Number of URIs skipped because they were already completed in a prior run.
+     */
+    protected long restartableSkippedCount;
+
+    /**
      * Exit code to return when no URIs are found to process.
      * Defaults to {@link #EXIT_CODE_SUCCESS} but can be overridden via
      * {@link Options#EXIT_CODE_NO_URIS} property.
@@ -250,6 +263,7 @@ public class Manager extends AbstractManager implements Closeable {
      * Logged when the job resumes from paused state via {@link #resume()}.
      */
     private static final String RESUMING_JOB_MESSAGE = "RESUMING CORB JOB:";
+    private static final int RESTART_STATE_HASH_LENGTH = 12;
 
     /**
      * Log message prefix for job completion events.
@@ -373,6 +387,7 @@ public class Manager extends AbstractManager implements Closeable {
             //This will shutdown the scheduled executors for the command file watcher and logging JobStats
             scheduledExecutor.shutdown();
         }
+        IOUtils.closeQuietly(restartableJobState);
         IOUtils.closeQuietly(csp);
         stopJobServer();
     }
@@ -454,6 +469,9 @@ public class Manager extends AbstractManager implements Closeable {
         String batchSize = getOption(BATCH_SIZE);
         String failOnError = getOption(FAIL_ON_ERROR);
         String errorFileName = getOption(ERROR_FILE_NAME);
+        String restartable = getOption(RESTARTABLE);
+        String restartStateDir = getOption(RESTART_STATE_DIR);
+        String jobName = getOption(JOB_NAME);
 
         options.setUseDiskQueue(stringToBoolean(getOption(DISK_QUEUE)));
         String diskQueueMaxInMemorySize = getOption(DISK_QUEUE_MAX_IN_MEMORY_SIZE);
@@ -461,6 +479,15 @@ public class Manager extends AbstractManager implements Closeable {
         String tempDir = getOption(TEMP_DIR);
         if (isBlank(diskQueueTempDir) && isNotBlank(tempDir)) {
             diskQueueTempDir = tempDir;
+        }
+        if (stringToBoolean(restartable) && isBlank(restartStateDir)) {
+            restartStateDir = isNotBlank(tempDir) ? tempDir : System.getProperty("java.io.tmpdir");
+        }
+        if (stringToBoolean(restartable) && isNotBlank(restartStateDir)) {
+            restartStateDir = new File(restartStateDir, buildRestartStateId(jobName)).getAbsolutePath();
+        }
+        if (isNotBlank(restartStateDir)) {
+            properties.setProperty(RESTART_STATE_DIR, restartStateDir);
         }
         String numTpsForETC = getOption(NUM_TPS_FOR_ETC);
 
@@ -508,6 +535,7 @@ public class Manager extends AbstractManager implements Closeable {
         if ("false".equalsIgnoreCase(failOnError)) {
             options.setFailOnError(false);
         }
+        options.setRestartable(stringToBoolean(restartable));
         if (diskQueueMaxInMemorySize != null) {
             options.setDiskQueueMaxInMemorySize(Integer.parseInt(diskQueueMaxInMemorySize));
         }
@@ -618,7 +646,17 @@ public class Manager extends AbstractManager implements Closeable {
                 throw new IllegalArgumentException("Cannot write to queue temp directory " + diskQueueTempDir);
             }
         }
-
+        if (restartStateDir != null) {
+            File dirFile = new File(restartStateDir);
+            if (!dirFile.exists() && !dirFile.mkdirs()) {
+                throw new IllegalArgumentException("Cannot create restart state directory " + restartStateDir);
+            }
+            if (dirFile.exists() && dirFile.isDirectory() && dirFile.canWrite()) {
+                options.setRestartStateDir(dirFile);
+            } else {
+                throw new IllegalArgumentException("Cannot write to restart state directory " + restartStateDir);
+            }
+        }
         String metricsLogLevel = getOption(METRICS_LOG_LEVEL);
         if (metricsLogLevel != null) {
             if (metricsLogLevel.toLowerCase().matches(ML_LOG_LEVELS)) {
@@ -643,7 +681,6 @@ public class Manager extends AbstractManager implements Closeable {
         if (metricsRoot != null) {
             options.setMetricsRoot(metricsRoot);
         }
-        String jobName = getOption(JOB_NAME);
         if (jobName != null) {
             options.setJobName(jobName);
         }
@@ -894,6 +931,9 @@ public class Manager extends AbstractManager implements Closeable {
             }
             endMillis = System.currentTimeMillis();
             jobStats.logMetrics(END_RUNNING_JOB_MESSAGE, false, true);
+            if (options.isRestartable() && restartableJobState != null) {
+                restartableJobState.deleteStateFiles();
+            }
             LOG.info("all done");
             return urisCount;
         } catch (Exception e) {
@@ -1097,6 +1137,8 @@ public class Manager extends AbstractManager implements Closeable {
         LOG.log(INFO, () -> MessageFormat.format("Configured failonError: {0}", options.isFailOnError()));
         LOG.log(INFO, () -> MessageFormat.format("Configured URIs queue max in-memory size: {0}", options.getDiskQueueMaxInMemorySize()));
         LOG.log(INFO, () -> MessageFormat.format("Configured URIs queue temp dir: {0}", options.getDiskQueueTempDir()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured restartable: {0}", options.isRestartable()));
+        LOG.log(INFO, () -> MessageFormat.format("Configured restart state dir: {0}", options.getRestartStateDir()));
     }
 
     /**
@@ -1213,6 +1255,7 @@ public class Manager extends AbstractManager implements Closeable {
      */
     private long populateQueue() throws Exception {
         long expectedTotalCount = -1;
+        restartableSkippedCount = 0;
         if (!this.stopCommand) {
             try (UrisLoader urisLoader = getUriLoader()) {
                 LOG.info("populating queue");
@@ -1221,6 +1264,7 @@ public class Manager extends AbstractManager implements Closeable {
                 runInitTask(taskFactory);
                 // Invoke URIs Module, read text file, etc.
                 runUrisLoader(urisLoader);
+                initializeRestartableJobState();
 
                 expectedTotalCount = urisLoader.getTotalCount();
                 LOG.log(INFO, MessageFormat.format("expecting total {0,number}", expectedTotalCount));
@@ -1241,11 +1285,21 @@ public class Manager extends AbstractManager implements Closeable {
                 transformStartMillis = System.currentTimeMillis();
                 urisCount = submitUriTasks(urisLoader, taskFactory, expectedTotalCount);
 
-                if (urisCount == expectedTotalCount) {
+                long accountedForCount = urisCount + restartableSkippedCount;
+                if (restartableSkippedCount > 0) {
+                    LOG.log(INFO, MessageFormat.format("skipped {0,number} previously completed uris from restart state", restartableSkippedCount));
+                }
+                if (urisCount == 0) {
+                    monitor.setTaskCount(0);
+                    monitor.shutdownNow();
+                } else if (urisCount != expectedTotalCount) {
+                    monitor.setTaskCount(urisCount);
+                }
+
+                if (accountedForCount == expectedTotalCount) {
                     LOG.log(INFO, MessageFormat.format("queue is populated with {0,number} tasks", urisCount));
                 } else {
                     LOG.log(WARNING, MessageFormat.format("queue is expected to be populated with {0,number} tasks, but got {1,number} tasks.", expectedTotalCount, urisCount));
-                    monitor.setTaskCount(urisCount);
                 }
 
                 if (pool != null) {
@@ -1260,6 +1314,132 @@ public class Manager extends AbstractManager implements Closeable {
             }
         }
         return urisCount;
+    }
+
+    /**
+     * Initializes restart state for the current job when restartability is enabled.
+     *
+     * @throws CorbException if the restart state cannot be opened or indexed
+     */
+    protected void initializeRestartableJobState() throws CorbException {
+        if (!options.isRestartable() || restartableJobState != null) {
+            return;
+        }
+        try {
+            restartableJobState = new RestartableJobState(options.getRestartStateDir());
+            LOG.log(INFO, () -> MessageFormat.format(
+                "Loaded {0,number} previously completed uris from {1}",
+                restartableJobState.getPreviouslyCompletedUriCount(),
+                restartableJobState.getCompletedUrisFile()
+            ));
+        } catch (IOException ex) {
+            throw new CorbException("Unable to initialize restart state", ex);
+        }
+    }
+
+    /**
+     * Builds the job-scoped directory name used beneath the configured restart root.
+     * The name combines a sanitized human-readable label with a stable fingerprint
+     * derived from job configuration.
+     *
+     * @param jobName configured job name, if any
+     * @return job-scoped restart state directory name
+     * @throws CorbException if the restart fingerprint cannot be computed
+     */
+    private String buildRestartStateId(String jobName) throws CorbException {
+        String label = sanitizeRestartStateLabel(isNotBlank(jobName) ? jobName : "job");
+        String fingerprint = buildRestartStateFingerprint();
+        return label + '-' + fingerprint.substring(0, RESTART_STATE_HASH_LENGTH);
+    }
+
+    /**
+     * Builds a stable fingerprint for restart-state scoping from non-sensitive,
+     * behavior-affecting job properties.
+     *
+     * @return hexadecimal fingerprint string
+     * @throws CorbException if the fingerprint cannot be computed
+     */
+    private String buildRestartStateFingerprint() throws CorbException {
+        StringBuilder fingerprintSource = new StringBuilder();
+        properties.stringPropertyNames().stream()
+            .filter(this::shouldIncludeInRestartStateFingerprint)
+            .sorted()
+            .forEach(key -> fingerprintSource
+                .append(key)
+                .append('=')
+                .append(properties.getProperty(key))
+                .append('\n'));
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(fingerprintSource.toString().getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(hash.length * 2);
+            for (byte currentByte : hash) {
+                hex.append(String.format("%02x", currentByte));
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException ex) {
+            throw new CorbException("Unable to build restart state fingerprint", ex);
+        }
+    }
+
+    /**
+     * Determines whether a property should contribute to the restart-state fingerprint.
+     * Sensitive values and settings that do not materially change restart identity are excluded.
+     *
+     * @param propertyName property name to evaluate
+     * @return true if the property should be included in the fingerprint
+     */
+    private boolean shouldIncludeInRestartStateFingerprint(String propertyName) {
+        if (propertyName == null || propertyName.isEmpty()) {
+            return false;
+        }
+        if (propertyName.startsWith("XCC-") || propertyName.contains("PASSWORD") || propertyName.contains("SSL")
+            || propertyName.contains("OAUTH") || propertyName.contains("API-KEY")) {
+            return false;
+        }
+        if (propertyName.startsWith("RESTART-") || propertyName.startsWith("METRICS-")
+            || propertyName.startsWith("EXPORT-FILE-") || propertyName.startsWith("COMMAND")) {
+            return false;
+        }
+        return !JOB_NAME.equals(propertyName)
+            && !THREAD_COUNT.equals(propertyName)
+            && !BATCH_SIZE.equals(propertyName)
+            && !BATCH_URI_DELIM.equals(propertyName)
+            && !FAIL_ON_ERROR.equals(propertyName)
+            && !ERROR_FILE_NAME.equals(propertyName)
+            && !DISK_QUEUE.equals(propertyName)
+            && !DISK_QUEUE_MAX_IN_MEMORY_SIZE.equals(propertyName)
+            && !DISK_QUEUE_TEMP_DIR.equals(propertyName)
+            && !TEMP_DIR.equals(propertyName)
+            && !JOB_SERVER_PORT.equals(propertyName)
+            && !NUM_TPS_FOR_ETC.equals(propertyName)
+            && !PRE_BATCH_MINIMUM_COUNT.equals(propertyName)
+            && !POST_BATCH_MINIMUM_COUNT.equals(propertyName)
+            && !PRE_POST_BATCH_ALWAYS_EXECUTE.equals(propertyName)
+            && !Options.EXIT_CODE_IGNORED_ERRORS.equals(propertyName)
+            && !Options.EXIT_CODE_NO_URIS.equals(propertyName);
+    }
+
+    /**
+     * Converts a label into a filesystem-friendly directory prefix.
+     *
+     * @param label source label
+     * @return sanitized label suitable for a directory name
+     */
+    private String sanitizeRestartStateLabel(String label) {
+        String sanitized = label.toLowerCase().replaceAll("[^a-z0-9._-]+", "-").replaceAll("^-+|-+$", "");
+        return sanitized.isEmpty() ? "job" : sanitized;
+    }
+
+    protected void recordCompletedUris(String[] uris) throws CorbException {
+        if (restartableJobState == null || uris == null || uris.length == 0) {
+            return;
+        }
+        try {
+            restartableJobState.appendCompletedUris(uris);
+        } catch (IOException ex) {
+            throw new CorbException("Unable to persist restart state", ex);
+        }
     }
 
     /**
@@ -1288,6 +1468,10 @@ public class Manager extends AbstractManager implements Closeable {
             }
             uri = urisLoader.next();
             if (isBlank(uri)) {
+                continue;
+            }
+            if (restartableJobState != null && restartableJobState.wasCompletedInPreviousRun(uri)) {
+                restartableSkippedCount++;
                 continue;
             }
             uriBatch.add(uri);

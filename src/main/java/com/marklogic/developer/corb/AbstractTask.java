@@ -101,6 +101,11 @@ public abstract class AbstractTask implements Task {
     private static final Object ERROR_SYNC_OBJ = new Object();
 
     /**
+     * Synchronization object for thread-safe restart journal writes.
+     */
+    private static final Object RESTART_STATE_SYNC_OBJ = new Object();
+
+    /**
      * String constant for boolean true value.
      * Used for property and configuration comparisons.
      */
@@ -390,6 +395,7 @@ public abstract class AbstractTask implements Task {
             processResult(seq);
             seq.close();
             Thread.yield();// try to avoid thread starvation
+            writeCompletedUrisToRestartState(inputUris);
 
             return inputUris;
         } catch (RequestException exc) {
@@ -729,6 +735,7 @@ public abstract class AbstractTask implements Task {
      */
     protected String[] handleProcessException(Exception ex) throws CorbException {
         String exceptionName = ex.getClass().getSimpleName();
+        writeCompletedUrisToRestartState(inputUris);
         if (failOnError) {
             Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
             throw wrapProcessException(ex, inputUris);
@@ -919,6 +926,35 @@ public abstract class AbstractTask implements Task {
                 LOG.log(SEVERE, "Problem writing uris to " + ERROR_FILE_NAME, exc);
             }
         }
+    }
+
+    private void writeCompletedUrisToRestartState(String[] uris) throws CorbException {
+        if (uris == null || uris.length == 0 || !StringUtils.stringToBoolean(getProperty(Options.RESTARTABLE))) {
+            return;
+        }
+        String restartStateDir = getResolvedRestartStateDir();
+        if (isEmpty(restartStateDir)) {
+            throw new CorbException("Unable to resolve restart state directory");
+        }
+        synchronized (RESTART_STATE_SYNC_OBJ) {
+            try {
+                RestartableJobState.appendCompletedUris(new File(restartStateDir), uris);
+            } catch (IOException ex) {
+                throw new CorbException("Unable to persist restart state", ex);
+            }
+        }
+    }
+
+    protected String getResolvedRestartStateDir() {
+        String restartStateDir = getProperty(Options.RESTART_STATE_DIR);
+        if (isNotEmpty(restartStateDir)) {
+            return restartStateDir;
+        }
+        String tempDir = getProperty(Options.TEMP_DIR);
+        if (isNotEmpty(tempDir)) {
+            return tempDir;
+        }
+        return System.getProperty("java.io.tmpdir");
     }
 
 }

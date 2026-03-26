@@ -46,6 +46,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -445,6 +446,98 @@ class ManagerTest {
             assertThrows(NumberFormatException.class, () -> instance.init(args, props));
         } catch (CorbException | RequestException ex) {
             fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsSetRestartStateDirAndCreateIt() throws Exception {
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        File restartStateRootDir = TestUtils.createTempDirectory();
+        Properties props = new Properties();
+        props.setProperty(Options.RESTARTABLE, "true");
+        props.setProperty(Options.RESTART_STATE_DIR, restartStateRootDir.getAbsolutePath());
+        props.setProperty(Options.JOB_NAME, "Restart State Test");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(args, props);
+            assertTrue(instance.options.isRestartable());
+            assertTrue(instance.options.getRestartStateDir().exists());
+            assertEquals(restartStateRootDir.getCanonicalFile(), instance.options.getRestartStateDir().getParentFile().getCanonicalFile());
+            assertTrue(instance.options.getRestartStateDir().getName().startsWith("restart-state-test-"));
+        } finally {
+            FileUtils.deleteFile(restartStateRootDir.getAbsolutePath());
+        }
+    }
+
+    @Test
+    void testInitOptionsRestartableDefaultsRestartStateDirToTempDir() throws Exception {
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        File tempDir = TestUtils.createTempDirectory();
+        Properties props = new Properties();
+        props.setProperty(Options.RESTARTABLE, "true");
+        props.setProperty(Options.TEMP_DIR, tempDir.getAbsolutePath());
+        props.setProperty(Options.JOB_NAME, "Temp Dir Restart");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(args, props);
+            assertTrue(instance.options.isRestartable());
+            assertEquals(tempDir.getCanonicalFile(), instance.options.getRestartStateDir().getParentFile().getCanonicalFile());
+            assertTrue(instance.options.getRestartStateDir().getName().startsWith("temp-dir-restart-"));
+            assertEquals(instance.options.getRestartStateDir().getAbsolutePath(), instance.properties.getProperty(Options.RESTART_STATE_DIR));
+        } finally {
+            FileUtils.deleteFile(tempDir.getAbsolutePath());
+        }
+    }
+
+    @Test
+    void testInitOptionsRestartableScopesStateDirByJobIdentity() throws Exception {
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        File restartStateRootDir = TestUtils.createTempDirectory();
+        Properties propsOne = new Properties();
+        propsOne.putAll(getDefaultProperties());
+        propsOne.setProperty(Options.RESTARTABLE, "true");
+        propsOne.setProperty(Options.RESTART_STATE_DIR, restartStateRootDir.getAbsolutePath());
+        propsOne.setProperty(Options.JOB_NAME, "Job One");
+        Properties propsTwo = new Properties();
+        propsTwo.putAll(getDefaultProperties());
+        propsTwo.setProperty(Options.RESTARTABLE, "true");
+        propsTwo.setProperty(Options.RESTART_STATE_DIR, restartStateRootDir.getAbsolutePath());
+        propsTwo.setProperty(Options.JOB_NAME, "Job Two");
+        try (Manager first = getMockManagerWithEmptyResults(); Manager second = getMockManagerWithEmptyResults()) {
+            first.init(args, propsOne);
+            second.init(args, propsTwo);
+            assertNotEquals(first.options.getRestartStateDir().getCanonicalPath(), second.options.getRestartStateDir().getCanonicalPath());
+            assertEquals(restartStateRootDir.getCanonicalFile(), first.options.getRestartStateDir().getParentFile().getCanonicalFile());
+            assertEquals(restartStateRootDir.getCanonicalFile(), second.options.getRestartStateDir().getParentFile().getCanonicalFile());
+        } finally {
+            FileUtils.deleteFile(restartStateRootDir.getAbsolutePath());
+        }
+    }
+
+    @Test
+    void testInitOptionsRestartableDefaultsRestartStateDirToJavaTmpDir() throws Exception {
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        File javaTmpDir = TestUtils.createTempDirectory();
+        String originalJavaTmpDir = System.getProperty("java.io.tmpdir");
+        Properties props = new Properties();
+        props.setProperty(Options.RESTARTABLE, "true");
+        props.setProperty(Options.JOB_NAME, "Java Tmp Restart");
+        System.setProperty("java.io.tmpdir", javaTmpDir.getAbsolutePath());
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(args, props);
+            assertTrue(instance.options.isRestartable());
+            assertEquals(javaTmpDir.getCanonicalFile(), instance.options.getRestartStateDir().getParentFile().getCanonicalFile());
+            assertTrue(instance.options.getRestartStateDir().getName().startsWith("java-tmp-restart-"));
+            assertEquals(instance.options.getRestartStateDir().getAbsolutePath(), instance.properties.getProperty(Options.RESTART_STATE_DIR));
+        } finally {
+            if (originalJavaTmpDir != null) {
+                System.setProperty("java.io.tmpdir", originalJavaTmpDir);
+            } else {
+                System.clearProperty("java.io.tmpdir");
+            }
+            FileUtils.deleteFile(javaTmpDir.getAbsolutePath());
         }
     }
 
@@ -1187,7 +1280,7 @@ class ManagerTest {
 
             assertEquals(xccRootValue, instance.options.getXDBC_ROOT());
             List<LogRecord> records = testLogger.getLogRecords();
-            assertEquals(19, records.size());
+            assertEquals(21, records.size());
         } catch (RequestException|CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -1207,7 +1300,7 @@ class ManagerTest {
         try (Manager instance = getMockManagerWithEmptyResults()) {
             instance.logOptions();
             List<LogRecord> records = testLogger.getLogRecords();
-            assertEquals(19, records.size());
+            assertEquals(21, records.size());
         } catch (RequestException|CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -1457,6 +1550,81 @@ class ManagerTest {
 
         } catch (Exception ex) {
             fail();
+        }
+    }
+
+    @Test
+    void testSubmitUriTasksSkipsPreviouslyCompletedUris() throws Exception {
+        UrisLoader urisLoader = mock(UrisLoader.class);
+        File restartStateRootDir = TestUtils.createTempDirectory();
+        try {
+            try (Manager manager = getMockManagerWithEmptyResults()) {
+                CompletionService completionService = mock(CompletionService.class);
+                manager.completionService = completionService;
+                manager.pool = mock(PausableThreadPoolExecutor.class);
+                when(urisLoader.hasNext()).thenReturn(true, true, true, true, true, false);
+                when(urisLoader.next()).thenReturn("uri-1", "uri-2", "uri-3", "uri-4", "uri-5");
+                Properties properties = ManagerTest.getDefaultProperties();
+                properties.setProperty(Options.RESTARTABLE, "true");
+                properties.setProperty(Options.RESTART_STATE_DIR, restartStateRootDir.getAbsolutePath());
+                properties.setProperty(Options.JOB_NAME, "Skip Restart URIs");
+                properties.setProperty(Options.FAIL_ON_ERROR, Boolean.FALSE.toString());
+
+                manager.init(properties);
+                Files.write(
+                    new File(manager.options.getRestartStateDir(), RestartableJobState.COMPLETED_URIS_FILENAME).toPath(),
+                    Arrays.asList("uri-2", "uri-4"),
+                    StandardCharsets.UTF_8
+                );
+                manager.initializeRestartableJobState();
+
+                long processedCount = manager.submitUriTasks(urisLoader, mock(TaskFactory.class), 5);
+                assertEquals(3, processedCount);
+                assertEquals(2, manager.restartableSkippedCount);
+                verify(completionService, times(3)).submit(any());
+            }
+        } finally {
+            FileUtils.deleteFile(restartStateRootDir.getAbsolutePath());
+        }
+    }
+
+    @Test
+    void testRunDeletesRestartStateFilesOnSuccess() throws Exception {
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[4] = null;
+        args[9] = null;
+        args[11] = null;
+        args[15] = null;
+        File restartStateRootDir = TestUtils.createTempDirectory();
+        Properties props = new Properties();
+        props.setProperty(Options.RESTARTABLE, "true");
+        props.setProperty(Options.RESTART_STATE_DIR, restartStateRootDir.getAbsolutePath());
+        props.setProperty(Options.JOB_NAME, "Cleanup Restart State");
+        props.setProperty(Options.URIS_LOADER, MockEmptyFileUrisLoader.class.getName());
+        try (Manager manager = getMockManagerWithEmptyResults()) {
+            manager.init(args, props);
+            File restartStateDir = manager.options.getRestartStateDir();
+            Files.createDirectories(restartStateDir.toPath());
+            Files.write(
+                new File(restartStateDir, RestartableJobState.COMPLETED_URIS_FILENAME).toPath(),
+                Arrays.asList("uri-1"),
+                StandardCharsets.UTF_8
+            );
+            Files.createDirectories(new File(restartStateDir, RestartableJobState.COMPLETED_URIS_INDEX_DIRNAME).toPath());
+            Files.write(
+                new File(restartStateDir, RestartableJobState.COMPLETED_URIS_INDEX_METADATA_FILENAME).toPath(),
+                Arrays.asList("indexed.uniqueCount=1"),
+                StandardCharsets.UTF_8
+            );
+
+            manager.run();
+
+            assertFalse(restartStateDir.exists());
+        } finally {
+            if (restartStateRootDir.exists()) {
+                FileUtils.deleteFile(restartStateRootDir.getAbsolutePath());
+            }
         }
     }
 

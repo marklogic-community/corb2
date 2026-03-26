@@ -275,6 +275,24 @@ public final class Options {
     public static final String DISK_QUEUE_TEMP_DIR = "DISK-QUEUE-TEMP-DIR";
 
     /**
+     * Boolean flag indicating whether CoRB should persist completion state locally
+     * so a later run can skip already-completed URIs.
+     *
+     * @since 2.6.0
+     */
+    @Usage(description = "Boolean value indicating whether CoRB should persist completion state locally so a later run can skip already-completed URIs. Restartability provides best-effort at-least-once resume semantics.")
+    public static final String RESTARTABLE = "RESTARTABLE";
+
+    /**
+     * Directory where restart state files are stored when {@value #RESTARTABLE}
+     * is enabled.
+     *
+     * @since 2.6.0
+     */
+    @Usage(description = "Directory where restart state files are stored when RESTARTABLE is enabled. If not specified, TEMP-DIR is used, and if TEMP-DIR is also not specified then java.io.tmpdir is used. CoRB stores restart files beneath a job-scoped subdirectory derived from JOB-NAME when available, otherwise from a hash of job options. The directory will be created if it does not exist.")
+    public static final String RESTART_STATE_DIR = "RESTART-STATE-DIR";
+
+    /**
      * Used when {@value #FAIL_ON_ERROR} is {@code false}. If specified true,
      * removes duplicates from, the errored URIs along with error messages will
      * be written to this file. Uses {@value #BATCH_URI_DELIM} or default
