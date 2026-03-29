@@ -164,7 +164,7 @@ public final class Options {
      *
      * @since 2.4.0
      */
-    @Usage(description = "Connection policy for allocating connections to tasks while using DefaultConnectionPool. Acceptable values ROUNBD-ROBIN, RANDOM and LOAD. Default is ROUND-ROBIN")
+    @Usage(description = "Connection policy for allocating connections to tasks while using DefaultConnectionPool. Acceptable values ROUND-ROBIN, RANDOM and LOAD. Default is ROUND-ROBIN")
     public static final String CONNECTION_POLICY = "CONNECTION-POLICY";
 
     /**

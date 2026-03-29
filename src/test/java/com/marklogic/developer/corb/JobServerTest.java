@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
@@ -55,9 +56,13 @@ class JobServerTest {
             URL url = new URL(localhostUrl );
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod(GET);
-            byte[] content = IOUtils.toByteArray(conn.getInputStream());
-            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-            assertNotNull(content);
+             byte[] content = IOUtils.toByteArray(conn.getInputStream());
+             assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+             assertNotNull(content);
+             assertTrue(new String(content).contains("Options Builder"));
+             assertTrue(new String(content).contains("options-builder-content"));
+             assertTrue(new String(content).contains("toggleBuilderDescription(option.name)"));
+             assertTrue(new String(content).contains(":title=\"option.description || ''\""));
 
             url = new URL(localhostUrl + "/");
             conn = (HttpURLConnection) url.openConnection();
@@ -123,5 +128,40 @@ class JobServerTest {
         server.addManager(manager);
         assertNotNull(manager.jobServer);
         assertEquals(server, manager.jobServer);
+    }
+
+    @Test
+    void testOptionsBuilderMetadataAndPropertiesEndpoints() throws Exception {
+        int port = 9994;
+        String localhostUrl = "http://localhost:" + port;
+        JobServer server = JobServer.create(port);
+        server.start();
+
+        try {
+            URL url = new URL(localhostUrl + JobBuilderHandler.BUILDER_METADATA_PATH);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            String metadata = new String(IOUtils.toByteArray(conn.getInputStream()));
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+            assertTrue(metadata.contains("\"groups\""));
+            assertTrue(metadata.contains("XCC-CONNECTION-URI"));
+
+            url = new URL(localhostUrl + JobBuilderHandler.BUILDER_PROPERTIES_PATH);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+            try (OutputStream out = conn.getOutputStream()) {
+                out.write((Options.PROCESS_MODULE + "=%2Fext%2Fprocess.xqy&" + JobBuilderService.PARAM_ADDITIONAL_PROPERTIES + "=CUSTOM-OPTION%3Dtrue").getBytes());
+            }
+            String properties = new String(IOUtils.toByteArray(conn.getInputStream()));
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+            assertEquals("text/plain; charset=utf-8", conn.getHeaderField(JobServer.HEADER_CONTENT_TYPE));
+            assertTrue(conn.getHeaderField("Content-Disposition").contains("corb-job.properties"));
+            assertTrue(properties.contains("PROCESS-MODULE=/ext/process.xqy"));
+            assertTrue(properties.contains("CUSTOM-OPTION=true"));
+        } finally {
+            server.stop(0);
+        }
     }
 }

@@ -30,7 +30,7 @@ import javax.xml.transform.TransformerFactory;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 
 import java.util.*;
@@ -40,6 +40,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static com.marklogic.developer.corb.Options.JOB_SERVER_PORT;
+import static com.marklogic.developer.corb.util.StringUtils.parsePortRanges;
 import static java.util.logging.Level.INFO;
 
 /**
@@ -215,6 +217,11 @@ public class JobServer {
     private Templates jobStatsToJsonTemplates;
 
     /**
+     * Handler for Job Server options-builder endpoints.
+     */
+    private final JobBuilderHandler jobBuilderHandler;
+
+    /**
      * Flag indicating whether the server has received any HTTP requests.
      * <p>
      * Used to determine shutdown behavior - if requests have been received, the server
@@ -223,6 +230,24 @@ public class JobServer {
      * </p>
      */
     private boolean hasReceivedRequests = false;
+
+    /**
+     * Main method to start the JobServer.
+     * <p>
+     * The server will attempt to bind to the first available port from the specified
+     * range (defaulting to 8003-9999 if not provided). Once started, it will log
+     * access URLs for monitoring and managing jobs.
+     * </p>
+     *
+     * @param args command-line arguments (optional port range)
+     * @throws IOException if the server fails to start or bind to a port
+     */
+    public static void main(String[] args) throws IOException {
+        String portOption = args != null && args.length > 0 ? args[0] : System.getProperty(JOB_SERVER_PORT);
+        String jobServerPortRange = portOption != null ? portOption : "8003-9999";
+        Set<Integer> jobServerPorts = new LinkedHashSet<>(parsePortRanges(jobServerPortRange));
+        JobServer.create(jobServerPorts, null).start();
+    }
 
     /**
      * Creates a JobServer instance bound to the specified port.
@@ -273,6 +298,7 @@ public class JobServer {
         server = HttpServer.create();
         bindFirstAvailablePort(portCandidates, requestQueueSize);
         setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
+        this.jobBuilderHandler = new JobBuilderHandler(this);
         addManager(manager);
 
         createContext(HTTP_RESOURCE_PATH, this::handleRequest);
@@ -294,7 +320,13 @@ public class JobServer {
         String querystring = httpExchange.getRequestURI().getQuery();
         Map<String,String> params = JobServicesHandler.querystringToMap(querystring);
 
-        if (METRICS_PATH.equals(path) || hasParameter(params, JobServicesHandler.PARAM_FORMAT)) {
+        if (JobBuilderHandler.canHandle(path)) {
+            try {
+                jobBuilderHandler.handle(httpExchange);
+            } catch (IOException ex) {
+                LOG.log(Level.WARNING, "Unable to handle options builder request", ex);
+            }
+        } else if (METRICS_PATH.equals(path) || hasParameter(params, JobServicesHandler.PARAM_FORMAT)) {
             alowXSS(httpExchange);
 
             String contentType = determineContentType(params);
@@ -326,7 +358,7 @@ public class JobServer {
 
             try (OutputStream out = httpExchange.getResponseBody()) {
                 httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length());
-                out.write(response.toString().getBytes(Charset.forName("UTF-8")));
+                out.write(response.toString().getBytes(StandardCharsets.UTF_8));
                 out.flush();
             } catch (IOException ex) {
                 LOG.log(Level.WARNING, "Unable to list jobs", ex);

@@ -14,8 +14,159 @@
 </head>
 <body>
 <main x-data="dashboard()">
-    <h1>Job Dashboard</h1>
-    <div class="section">
+    <h1>CoRB</h1>
+
+    <nav>
+        <button @click="currentTab = 1" :class=" {active: currentTab==1}">Jobs Dashboard</button>
+        <button @click="currentTab = 2" :class="{active: currentTab==2}">Options Builder</button>
+    </nav>
+
+    <div class="section builder-panel" x-cloak x-show="currentTab === 2">
+        <div class="builder-header">
+            <div class="builder-heading">
+                <h2 class="page-header">Options Builder</h2>
+                <p class="builder-subtitle">Build a CoRB job configuration, download the resulting properties file, or run the job directly from here.</p>
+            </div>
+            <div class="builder-actions">
+                <input class="input builder-file-name" type="text" x-model="builder.downloadFileName" placeholder="corb-job.properties" />
+                <button class="btn secondary" :disabled="builder.loadingMetadata || builder.downloading" @click="downloadBuilderProperties()">
+                    <span x-text="builder.downloading ? 'Preparing...' : 'Download Options File'"></span>
+                </button>
+                <button class="btn" :disabled="builder.loadingMetadata || builder.running" @click="runBuilderJob()">
+                    <span x-text="builder.running ? 'Starting...' : 'Run job'"></span>
+                </button>
+            </div>
+        </div>
+
+        <div id="options-builder-content" x-show="!builder.collapsed">
+
+            <div x-show="builder.loadingMetadata" class="hint">Loading options builder metadata...</div>
+            <div x-show="builder.error" class="hint" x-text="builder.error"></div>
+
+            <template x-if="!builder.loadingMetadata && builder.groups.length">
+                <div>
+
+                <div class="builder-tabs" role="tablist" aria-label="Options builder groups">
+                    <template x-for="group in builder.groups" :key="group.id">
+                        <button type="button"
+                                class="builder-tab"
+                                :class="{ active: builder.activeGroupId === group.id }"
+                                @click="builder.activeGroupId = group.id"
+                                x-text="`${group.title} (${builderGroupOptionCount(group)})`"></button>
+                    </template>
+                    <input class="input builder-search" type="text" x-model="builder.searchTerm" placeholder="Search options" />
+
+                </div>
+
+                <div class="builder-summary">
+                    <span x-text="`${builderVisibleOptionCount()} of ${builderTotalOptionCount()} options shown`"></span>
+                </div>
+
+                <template x-for="group in builder.groups" :key="group.id + '-panel'">
+                    <section class="builder-group" x-show="builder.activeGroupId === group.id">
+                        <div class="builder-group-header">
+                            <h3 x-text="group.title"></h3>
+                            <p class="builder-group-description" x-text="group.description"></p>
+                        </div>
+
+                        <template x-if="group.id === 'connection'">
+                            <div class="builder-toggle-row">
+                                <span class="builder-toggle-label">XCC Connection</span>
+                                <div class="builder-toggle-buttons">
+                                    <button type="button" class="btn secondary" :class="{ selected: builder.connectionMode === 'uri' }" @click="setConnectionMode('uri')">URI</button>
+                                    <button type="button" class="btn secondary" :class="{ selected: builder.connectionMode === 'fields' }" @click="setConnectionMode('fields')">Individual Fields</button>
+                                </div>
+                            </div>
+                        </template>
+
+                        <div class="builder-subgroups">
+                            <template x-for="subgroup in visibleBuilderSubgroups(group)" :key="`${group.id}-${subgroup.id}`">
+                                <section class="builder-subgroup">
+                                    <div class="builder-subgroup-header">
+                                        <h4 x-text="subgroup.title"></h4>
+                                        <span class="builder-subgroup-count" x-text="`${visibleBuilderOptionsForSubgroup(group, subgroup).length} option(s)`"></span>
+                                    </div>
+
+                                    <div class="builder-form-grid">
+                                        <template x-for="option in visibleBuilderOptionsForSubgroup(group, subgroup)" :key="option.name">
+                                            <div class="builder-field">
+                                                <label class="builder-label"
+                                                       :class="{ interactive: hasBuilderDescription(option) }"
+                                                       :for="builderFieldId(option.name)"
+                                                       :title="option.description || ''"
+                                                       :aria-expanded="isBuilderDescriptionVisible(option.name).toString()"
+                                                       :aria-controls="builderDescriptionId(option.name)"
+                                                       :tabindex="hasBuilderDescription(option) ? '0' : null"
+                                                       @click.prevent="hasBuilderDescription(option) && toggleBuilderDescription(option.name)"
+                                                       @keydown.enter.prevent="hasBuilderDescription(option) && toggleBuilderDescription(option.name)"
+                                                       @keydown.space.prevent="hasBuilderDescription(option) && toggleBuilderDescription(option.name)"
+                                                       x-text="option.label"></label>
+
+                                                <template x-if="option.inputType === 'textarea'">
+                                                    <textarea class="input builder-textarea"
+                                                              :id="builderFieldId(option.name)"
+                                                              :placeholder="option.placeholder"
+                                                              x-model="builder.values[option.name]"></textarea>
+                                                </template>
+
+                                                <template x-if="option.inputType === 'boolean'">
+                                                    <select class="input"
+                                                            :id="builderFieldId(option.name)"
+                                                            x-model="builder.values[option.name]">
+                                                        <option value="">Not set</option>
+                                                        <option value="true">true</option>
+                                                        <option value="false">false</option>
+                                                    </select>
+                                                </template>
+
+                                                <template x-if="option.inputType !== 'textarea' && option.inputType !== 'boolean'">
+                                                    <input class="input"
+                                                           :id="builderFieldId(option.name)"
+                                                           :type="option.inputType"
+                                                           :placeholder="option.placeholder"
+                                                           x-model="builder.values[option.name]" />
+                                                </template>
+
+                                                <div class="builder-help"
+                                                     x-cloak
+                                                     x-show="isBuilderDescriptionVisible(option.name)"
+                                                     :id="builderDescriptionId(option.name)"
+                                                     x-text="option.description"></div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </section>
+                            </template>
+                        </div>
+
+                        <div class="builder-empty-state" x-show="visibleBuilderOptions(group).length === 0">
+                            No options in this section match the current search or connection mode.
+                        </div>
+
+                        <template x-if="group.id === 'advanced'">
+                            <div class="builder-field builder-additional-properties">
+                                <label class="builder-label" for="builder-additional-properties">Additional properties</label>
+                                <textarea id="builder-additional-properties"
+                                          class="input builder-textarea"
+                                          placeholder="CUSTOM-OPTION=value"
+                                          x-model="builder.additionalProperties"></textarea>
+                                <div class="builder-help">Use this for options that are not modeled in the form yet, or for custom task/module properties.</div>
+                            </div>
+                        </template>
+                    </section>
+                </template>
+
+                <div class="section">
+                    <h3>Generated options preview</h3>
+                    <textarea class="input builder-preview" readonly :value="builderPropertiesPreview()"></textarea>
+                </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <div class="section builder-panel" x-show="currentTab === 1">
+        <h2 class="page-header">Monitor Jobs</h2>
         <table>
             <thead>
             <tr>
@@ -62,7 +213,6 @@
                                     @click="togglePause(i)"
                                     x-text="i.paused ? 'Resume' : 'Pause'">
                             </button>
-                            <!-- lightweight spinner / pending dot -->
                             <span x-show="isPending(i.id)" class="spinner" aria-label="Pending"></span>
                         </div>
                     </td>
@@ -76,7 +226,7 @@
         </table>
     </div>
 
-    <div class="section">
+    <div class="section builder-panel" x-show="currentTab === 1">
         <h3 id="monitorHosts">Monitor Hosts</h3>
         <div class="outer-grid">
             <div class="row" style="margin-bottom:0.75rem;">
@@ -109,7 +259,6 @@
         </div>
     </div>
 
-    <!-- Toasts -->
     <div aria-live="polite" class="toast-wrap">
         <template x-for="t in toasts" :key="t.id">
             <div class="toast" :class="t.type" x-text="t.message" @click="removeToast(t.id)"></div>
