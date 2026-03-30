@@ -97,7 +97,7 @@ dependencies {
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation 'org.jasypt:jasypt:1.9.3'
-    testImplementation 'org.mockito:mockito-core:4.0.0' //5.x requires Java 11
+    testImplementation 'org.mockito:mockito-core:4.11.0' //5.x requires Java 11
 }
 
 // perform token replacement in HTML for JavaScript library version paths
