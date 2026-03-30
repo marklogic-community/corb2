@@ -116,7 +116,7 @@ processTestResources.dependsOn processResources
 //disabling, because we want to incorporate externalsortingjava and UI resources in uber jar and use as the artifact
 jar {
     enabled = false
-    dependsOn(shadowJar { classifier = null })
+    dependsOn(shadowJar { archiveClassifier.set(null) })
 }
 shadowJar {
     //project.configurations.implementation.canBeResolved = true
@@ -126,7 +126,7 @@ shadowJar {
         include(dependency("org.webjars.npm:alpinejs:$alpineVersion"))
     }
     //generate same name as the jar task would
-    archiveFileName.set("${baseName}-${version}.${extension}")
+    archiveFileName.set("${archiveBaseName.get()}-${archiveVersion.get()}.${archiveExtension.get()}")
     manifest {
         attributes 'Application-Version': project.version
         attributes 'Build-date' : new Date()
@@ -152,17 +152,18 @@ sonarqube {
 tasks.register('sourcesJar', Jar) {
     dependsOn classes
     description = "Create a JAR of source files; required for publishing"
-    classifier 'sources'
+    archiveClassifier.set('sources')
     from sourceSets.main.allJava
 }
 
 tasks.register('javadocJar', Jar) {
     dependsOn javadoc
-    classifier = 'javadoc'
+    archiveClassifier.set('javadoc')
     from 'build/docs/javadoc'
 }
 
 jacocoTestReport {
+    mustRunAfter 'test', 'integrationTest'
     reports {
         xml.required.set(true) // coveralls plugin depends on xml format report
         html.required.set(true)
