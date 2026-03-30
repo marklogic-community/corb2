@@ -24,8 +24,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
+import java.security.InvalidParameterException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -39,6 +42,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
+
+import static com.marklogic.developer.corb.Options.LOADER_BASE64_ENCODE;
+import static com.marklogic.developer.corb.Options.LOADER_USE_ENVELOPE;
 
 /**
  * Abstract base class for file-based URI loaders.
@@ -189,6 +195,26 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
     }
 
     /**
+     * Creates a loader document from metadata and raw text content.
+     *
+     * @param metadata map of metadata key-value pairs
+     * @param content raw content to place in the loader document
+     * @param isContentBase64Encoded true if content is already base64 encoded
+     * @return an XML Document containing metadata and content
+     * @throws CorbException if an error occurs generating the document
+     */
+    protected Document toLoaderDoc(Map<String, String> metadata, String content, boolean isContentBase64Encoded) throws CorbException {
+        try {
+            DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+            Document doc = docBuilder.newDocument();
+            Text contentText = doc.createTextNode(content == null ? "" : content);
+            return AbstractFileUrisLoader.this.toLoaderDoc(metadata, contentText, isContentBase64Encoded);
+        } catch (ParserConfigurationException ex) {
+            throw new CorbException("Error generating corb-ingest document", ex);
+        }
+    }
+
+    /**
      * Creates a loader document from metadata and a content node.
      * Constructs an XML document with the structure:
      * <pre>
@@ -292,6 +318,31 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
     }
 
     /**
+     * Creates a temporary directory.
+     *
+     * @param baseFile the base file to use for naming the temporary directory
+     * @param tempDirOption the optional path for the temporary directory
+     * @param attrs the file attributes to set on the temporary directory
+     * @return the path to the created temporary directory
+     * @throws IOException if an error occurs creating the temporary directory
+     * @throws InvalidParameterException if the provided tempDirOption is not a valid writable directory
+     */
+    protected Path getTempDir(File baseFile, String tempDirOption, FileAttribute<?>... attrs) throws IOException {
+        Path dir;
+        String prefix = baseFile != null ? baseFile.getName() : "temp";
+        if (!StringUtils.isBlank(tempDirOption)) {
+            File temporaryDirectory = new File(tempDirOption);
+            if (!(temporaryDirectory.exists() && temporaryDirectory.isDirectory() && temporaryDirectory.canWrite())) {
+                throw new InvalidParameterException("temporary directory " + tempDirOption + " must exist and be writable");
+            }
+            dir = Files.createTempDirectory(temporaryDirectory.toPath(), prefix, attrs);
+        } else {
+            dir = Files.createTempDirectory(prefix, attrs);
+        }
+        return dir;
+    }
+
+    /**
      * Converts a FileTime to an ISO 8601 formatted date-time string.
      * Uses the format "yyyy-MM-dd'T'HH:mmX" in UTC timezone.
      *
@@ -334,7 +385,7 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
      * @return true if envelope structure should be used, false otherwise
      */
     protected boolean shouldUseEnvelope() {
-        String useEnvelope = getProperty(Options.LOADER_USE_ENVELOPE);
+        String useEnvelope = getProperty(LOADER_USE_ENVELOPE);
         return StringUtils.stringToBoolean(useEnvelope, true);
     }
 
@@ -345,7 +396,7 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
      * @return true if content should be base64-encoded, false otherwise
      */
     protected boolean shouldBase64Encode() {
-        String shouldEncode = getProperty(Options.LOADER_BASE64_ENCODE);
+        String shouldEncode = getProperty(LOADER_BASE64_ENCODE);
         return StringUtils.stringToBoolean(shouldEncode, true);
     }
 }

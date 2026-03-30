@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "source": "loader-json-example",
+    "batch": 1
+  },
+  "items": [
+    {
+      "uri": "/example/items/1.json",
+      "type": "alpha"
+    },
+    {
+      "uri": "/example/items/2.json",
+      "type": "beta"
+    }
+  ]
+}

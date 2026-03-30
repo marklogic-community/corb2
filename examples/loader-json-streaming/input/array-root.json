@@ -1,0 +1,14 @@
+[
+  {
+    "uri": "/example/streaming/1.json",
+    "type": "alpha"
+  },
+  {
+    "uri": "/example/streaming/2.json",
+    "type": "beta"
+  },
+  {
+    "uri": "/example/streaming/3.json",
+    "type": "gamma"
+  }
+]

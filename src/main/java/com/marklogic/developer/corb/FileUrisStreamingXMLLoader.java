@@ -429,22 +429,11 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
      *         is not a directory, or is not writable
      */
     protected Path getTempDir() throws IOException {
-        Path dir;
         String tempDirOption = getProperty(Options.XML_TEMP_DIR);
         if (StringUtils.isBlank(tempDirOption)) {
             tempDirOption = getProperty(Options.TEMP_DIR);
         }
-        String prefix = xmlFile != null ? xmlFile.getName() : "temp";
-        if (!StringUtils.isBlank(tempDirOption)) {
-            File temporaryDirectory = new File(tempDirOption);
-            if (!(temporaryDirectory.exists() && temporaryDirectory.isDirectory() && temporaryDirectory.canWrite())) {
-                throw new InvalidParameterException(this.getClass().getSimpleName() + " temporary directory " + tempDirOption + " must exist and be writable");
-            }
-            dir = Files.createTempDirectory(temporaryDirectory.toPath(), prefix, fileAttributes);
-        } else {
-            dir = Files.createTempDirectory(prefix, fileAttributes);
-        }
-        return dir;
+        return getTempDir(xmlFile, tempDirOption, fileAttributes);
     }
 
     /**

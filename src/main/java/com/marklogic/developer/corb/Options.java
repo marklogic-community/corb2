@@ -1482,6 +1482,85 @@ public final class Options {
     public static final String XML_TEMP_DIR = "XML-TEMP-DIR";
 
     /**
+     * In order to use this option a class
+     * {@link com.marklogic.developer.corb.FileUrisJSONLoader} or
+     * {@link com.marklogic.developer.corb.FileUrisStreamingJSONLoader} has to be
+     * specified in the {@value #URIS_LOADER} option. If defined instead of
+     * {@value #URIS_MODULE}, JSON values selected from the file located on the
+     * client will be used as URIs. The file path may be relative or absolute.
+     * <p>
+     * Default processing selects the immediate children of the root JSON value
+     * (i.e. {@code /*}).
+     * </p>
+     * <p>
+     * The {@value #JSON_NODE} option can be specified with a simple streaming
+     * JSON path expression to address a different set of nodes.
+     * </p>
+     *
+     * @see #JSON_NODE
+     * @since 2.6.0
+     */
+    @Usage(description = "In order to use this option a class com.marklogic.developer.corb.FileUrisJSONLoader "
+        + "or com.marklogic.developer.corb.FileUrisStreamingJSONLoader has to be specified in the URIS-LOADER option. "
+        + "If defined instead of URIS-MODULE, JSON values selected from the file located on the client will be used as URIs. "
+        + "The file path may be relative or absolute. Default processing selects the immediate children of the root JSON value "
+        + "(i.e. /*). The JSON-NODE option can be specified with a simple JSON path expression to address a different set of nodes.")
+    public static final String JSON_FILE = "JSON-FILE";
+
+    /**
+     * A simple JSON path expression identifying the JSON value that contains
+     * metadata for all extracted JSON nodes. This must be different from the
+     * {@value #JSON_NODE}.
+     * <p>
+     * The metadata is set as an external variable with name {@value #METADATA}
+     * to {@value #PRE_BATCH_MODULE} and {@value #POST_BATCH_MODULE}, and also
+     * to {@value #PROCESS_MODULE} if enabled by
+     * {@value #METADATA_TO_PROCESS_MODULE}.
+     * </p>
+     *
+     * @see #JSON_FILE
+     * @since 2.6.0
+     */
+    @Usage(description = "A simple JSON path expression identifying the JSON value that contains metadata for all extracted JSON nodes. "
+        + "This must be different from JSON-NODE. The metadata is set as an external variable with name METADATA to PRE-BATCH-MODULE "
+        + "and POST-BATCH-MODULE and also PROCESS-MODULE if enabled by METADATA-TO-PROCESS-MODULE.")
+    public static final String JSON_METADATA = "JSON-METADATA";
+
+    /**
+     * A simple JSON path expression identifying the JSON values to be returned
+     * from a {@value #JSON_FILE} by
+     * {@link com.marklogic.developer.corb.FileUrisJSONLoader} or
+     * {@link com.marklogic.developer.corb.FileUrisStreamingJSONLoader}.
+     * <p>
+     * If not specified, the default behavior is to select the immediate
+     * children of the root JSON value (i.e. {@code /*}).
+     * </p>
+     *
+     * @see #JSON_FILE
+     * @since 2.6.0
+     */
+    @Usage(description = "An XPath expression identifying the JSON values to be returned in a JSON-FILE by "
+        + "com.marklogic.developer.corb.FileUrisJSONLoader or com.marklogic.developer.corb.FileUrisStreamingJSONLoader. "
+        + "If not specified, the default behavior is to select the immediate children of the root JSON value (i.e. /*).")
+    public static final String JSON_NODE = "JSON-NODE";
+
+    /**
+     * Temporary directory used by
+     * {@link com.marklogic.developer.corb.FileUrisStreamingJSONLoader} to store
+     * JSON values extracted from the {@value #JSON_FILE}.
+     * <p>
+     * If not specified, {@value #TEMP_DIR} will be used. If that is not
+     * specified, the default Java temp directory will be used.
+     * </p>
+     *
+     * @since 2.6.0
+     */
+    @Usage(description = "Temporary directory used by com.marklogic.developer.corb.FileUrisStreamingJSONLoader to store "
+        + "values extracted from the JSON-FILE. If not specified, TEMP-DIR value will be used. "
+        + "If not specified, then the default Java java.tmp.dir will be used.")
+    public static final String JSON_TEMP_DIR = "JSON-TEMP-DIR";
+
+    /**
      * In order to use this option a class com.marklogic.developer.corb.FileUrisZipLoader
      * has to be specified in the URIS-LOADER option. If defined instead of
      * URIS-MODULE, each file will be base64 encoded and set as the

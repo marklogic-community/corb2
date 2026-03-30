@@ -23,6 +23,8 @@ When executing the `corb` task, set the options file as a project property with 
     ./gradlew corb -PcorbOptionsFile=feature-demo/job.properties
     ./gradlew corb -PcorbOptionsFile=inline-adhoc/job.properties
     ./gradlew corb -PcorbOptionsFile=javascript/job.properties
+    ./gradlew corb -PcorbOptionsFile=loader-json/job.properties
+    ./gradlew corb -PcorbOptionsFile=loader-json-streaming/job.properties
     ./gradlew corb -PcorbOptionsFile=loader-xml/job.properties
     ./gradlew corb -PcorbOptionsFile=loader-zip/job.properties
     ./gradlew corb -PcorbOptionsFile=schemaValidate/job.properties
