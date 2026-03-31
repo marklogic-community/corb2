@@ -1,0 +1,10 @@
+[
+  {
+    "uri": "/array/1.json",
+    "type": "alpha"
+  },
+  {
+    "uri": "/array/2.json",
+    "type": "beta"
+  }
+]
