@@ -52,7 +52,15 @@ class JobBuilderServiceTest {
         assertTrue(json.contains("\"subgroupTitle\":\"METRICS\""));
         assertTrue(json.contains("\"subgroupTitle\":\"URIS\""));
         assertTrue(json.contains("\"subgroupTitle\":\"LOADER\""));
+        assertTrue(json.contains("\"subgroupTitle\":\"RESTART\""));
         assertFalse(json.contains("\"name\":\"XQUERY-MODULE\""));
+
+        String restartableOption = metadataForOption(json, Options.RESTARTABLE);
+        assertTrue(restartableOption.contains("\"inputType\":\"boolean\""));
+        assertTrue(restartableOption.contains("\"subgroupTitle\":\"RESTART\""));
+
+        String restartStateDirOption = metadataForOption(json, Options.RESTART_STATE_DIR);
+        assertTrue(restartStateDirOption.contains("\"subgroupTitle\":\"RESTART\""));
     }
 
     @Test
@@ -108,5 +116,14 @@ class JobBuilderServiceTest {
         values.put(JobBuilderService.PARAM_DOWNLOAD_FILE_NAME, "../nightly-export");
 
         assertEquals("..-nightly-export.properties", service.resolveDownloadFilename(values));
+    }
+
+    private String metadataForOption(String json, String optionName) {
+        String marker = "\"name\":\"" + optionName + "\"";
+        int start = json.indexOf(marker);
+        assertTrue(start >= 0, "Expected option metadata for " + optionName);
+        int end = json.indexOf('}', start);
+        assertTrue(end > start, "Expected JSON object to close for " + optionName);
+        return json.substring(start, end);
     }
 }

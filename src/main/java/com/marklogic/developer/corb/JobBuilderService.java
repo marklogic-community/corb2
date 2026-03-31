@@ -75,6 +75,7 @@ public class JobBuilderService {
         Options.LOADER_USE_ENVELOPE,
         Options.METADATA_TO_PROCESS_MODULE,
         Options.PRE_POST_BATCH_ALWAYS_EXECUTE,
+        Options.RESTARTABLE,
         Options.URIS_REDACTED,
         Options.XCC_HTTPCOMPLIANT,
         Options.XCC_URL_ENCODE_COMPONENTS,
@@ -382,7 +383,7 @@ public class JobBuilderService {
         builders.put(GROUP_INPUT, new OptionGroupBuilder(
             GROUP_INPUT,
             "Input & Loaders",
-            "Choose where URIs come from and how loader-driven XML or ZIP inputs are interpreted.",
+            "Choose where URIs come from and how loader-driven by text file, XML, JSON, Directory, or ZIP inputs are interpreted.",
             Arrays.asList(
                 Options.COLLECTION_NAME,
                 Options.URIS_MODULE,
@@ -395,6 +396,10 @@ public class JobBuilderService {
                 Options.LOADER_USE_ENVELOPE,
                 Options.LOADER_BASE64_ENCODE,
                 Options.LOADER_SET_URIS_BATCH_REF,
+                Options.JSON_FILE,
+                Options.JSON_NODE,
+                Options.JSON_METADATA,
+                Options.JSON_TEMP_DIR,
                 Options.XML_FILE,
                 Options.XML_NODE,
                 Options.XML_METADATA,
@@ -492,6 +497,8 @@ public class JobBuilderService {
                 Options.QUERY_RETRY_ERROR_MESSAGE,
                 Options.QUERY_RETRY_INTERVAL,
                 Options.QUERY_RETRY_LIMIT,
+                Options.RESTARTABLE,
+                Options.RESTART_STATE_DIR,
                 Options.XCC_CONNECTION_RETRY_LIMIT,
                 Options.XCC_CONNECTION_RETRY_INTERVAL,
                 Options.XCC_CONNECTION_HOST_RETRY_LIMIT
@@ -548,33 +555,43 @@ public class JobBuilderService {
     }
 
     private String determineGroupId(String fieldName) {
+        if ("COLLECTION_NAME".equals(fieldName) || "MAX_OPTS_FROM_MODULE".equals(fieldName)) {
+            return GROUP_ADVANCED;
+        }
+        if (fieldName.contains("_RETRY") || fieldName.startsWith("RESTART")  ) {
+            return GROUP_RETRY;
+        }
         if (fieldName.startsWith("XCC_") || fieldName.startsWith("CONTENT_SOURCE_") || "CONNECTION_POLICY".equals(fieldName)) {
             return GROUP_CONNECTION;
         }
         if (fieldName.startsWith("SSL_") || fieldName.startsWith("PRIVATE_KEY_") || "DECRYPTER".equals(fieldName) || "JASYPT_PROPERTIES_FILE".equals(fieldName)) {
             return GROUP_SECURITY;
         }
-        if (fieldName.startsWith("URIS_") || fieldName.startsWith("LOADER_") || fieldName.startsWith("XML_") || "ZIP_FILE".equals(fieldName) || "COLLECTION_NAME".equals(fieldName)) {
+        if (fieldName.startsWith("METRICS_")
+            || "JOB_NAME".equals(fieldName) || "JOB_SERVER_PORT".equals(fieldName)
+            || "NUM_TPS_FOR_ETC".equals(fieldName)
+            || "URIS_REDACTED".equals(fieldName) || "URIS_REPLACE_PATTERN".equals(fieldName)) {
+            return GROUP_MONITORING;
+        }
+        if (fieldName.startsWith("URIS_") || fieldName.startsWith("LOADER_")
+            || fieldName.startsWith("JSON_")
+            || fieldName.startsWith("XML_") || fieldName.startsWith("METADATA")
+            || "ZIP_FILE".equals(fieldName)) {
             return GROUP_INPUT;
         }
-        if (fieldName.endsWith("_MODULE") || fieldName.endsWith("_TASK") || "MODULE_ROOT".equals(fieldName) || "MODULES_DATABASE".equals(fieldName)
-            || "INSTALL".equals(fieldName) || "MAX_OPTS_FROM_MODULE".equals(fieldName) || "METADATA".equals(fieldName)
-            || "METADATA_TO_PROCESS_MODULE".equals(fieldName)) {
+        if (fieldName.startsWith("INIT_") || fieldName.startsWith("PRE_") || fieldName.startsWith("POST_")
+            || fieldName.startsWith("PROCESS_")
+            || fieldName.endsWith("_TASK")
+            || "MODULE_ROOT".equals(fieldName) || "MODULES_DATABASE".equals(fieldName)
+            || "INSTALL".equals(fieldName)) {
             return GROUP_PROCESSING;
         }
         if (fieldName.startsWith("EXPORT_") || "ERROR_FILE_NAME".equals(fieldName)) {
             return GROUP_EXPORT;
         }
-        if (fieldName.startsWith("METRICS_") || "JOB_NAME".equals(fieldName) || "JOB_SERVER_PORT".equals(fieldName) || "NUM_TPS_FOR_ETC".equals(fieldName)) {
-            return GROUP_MONITORING;
-        }
-        if (fieldName.startsWith("QUERY_RETRY_") || fieldName.startsWith("XCC_CONNECTION_RETRY_") || "XCC_CONNECTION_HOST_RETRY_LIMIT".equals(fieldName)) {
-            return GROUP_RETRY;
-        }
         if (fieldName.startsWith("EXIT_CODE_") || fieldName.startsWith("BATCH_") || "FAIL_ON_ERROR".equals(fieldName)
             || "THREAD_COUNT".equals(fieldName) || "TEMP_DIR".equals(fieldName) || fieldName.startsWith("DISK_QUEUE")
-            || fieldName.endsWith("_MINIMUM_COUNT") || fieldName.startsWith("COMMAND") || fieldName.startsWith("OPTIONS_FILE")
-            || "PRE_POST_BATCH_ALWAYS_EXECUTE".equals(fieldName)) {
+            || fieldName.startsWith("COMMAND") || fieldName.startsWith("OPTIONS_FILE")) {
             return GROUP_EXECUTION;
         }
         return GROUP_ADVANCED;
@@ -612,11 +629,14 @@ public class JobBuilderService {
         if (optionName.startsWith("CONTENT-SOURCE-")) {
             return "CONTENT-SOURCE";
         }
-        if (optionName.startsWith("DISK-QUEUE-")) {
+        if (optionName.startsWith("DISK-QUEUE")) {
             return "DISK-QUEUE";
         }
         if (optionName.startsWith("OPTIONS-FILE-")) {
             return "OPTIONS-FILE";
+        }
+        if (optionName.startsWith("RESTART")) {
+            return "RESTART";
         }
         if (optionName.startsWith("SSL-")) {
             return "SSL";
@@ -624,7 +644,7 @@ public class JobBuilderService {
         if (optionName.startsWith("XCC-")) {
             return "XCC";
         }
-        if (optionName.startsWith("XML-")) {
+        if (optionName.startsWith("XML") || optionName.startsWith("METADATA")) {
             return "XML";
         }
         if (optionName.startsWith("URIS-")) {
@@ -635,6 +655,9 @@ public class JobBuilderService {
         }
         if (optionName.startsWith("METRICS-")) {
             return "METRICS";
+        }
+        if (optionName.startsWith("MODULE")) {
+            return "MODULES";
         }
         if (optionName.startsWith("PRE-BATCH-")) {
             return "PRE-BATCH";
@@ -653,6 +676,9 @@ public class JobBuilderService {
         }
         if (optionName.startsWith("PROCESS-")) {
             return "PROCESS";
+        }
+        if ("NUM-TPS-FOR-ETC".equals(optionName)) {
+            return "ETC";
         }
         if (optionName.startsWith("MODULE-")) {
             return "MODULE";
