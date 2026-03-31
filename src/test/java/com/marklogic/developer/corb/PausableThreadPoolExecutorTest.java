@@ -63,8 +63,8 @@ class PausableThreadPoolExecutorTest {
         BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
         PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
-        Thread thread = null;
-        Runnable runnable = null;
+        Thread thread = mock(Thread.class);
+        Runnable runnable = mock(Runnable.class);
         executor.pause();
 
         LocalDateTime startedAt = LocalDateTime.now();

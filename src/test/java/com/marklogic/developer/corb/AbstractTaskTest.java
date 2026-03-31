@@ -1142,7 +1142,10 @@ class AbstractTaskTest {
         AbstractTask task = new AbstractTaskImpl();
         Exception ex = new IllegalAccessException();
         CorbException corbException = task.wrapProcessException(ex, "uri1", "uri2");
+        assertNotNull(corbException);
+        assertNotNull(corbException.getCause());
         assertEquals(IllegalAccessException.class, corbException.getCause().getClass());
+        assertNotNull(corbException.getMessage());
         assertTrue(corbException.getMessage().contains("uri1"));
     }
 

@@ -394,8 +394,9 @@ public class ModuleExecutor extends AbstractManager {
         LOG.info("Writing output to file");
 
         File file = new File(fileDir, fileName);
-        if (file.getParentFile() != null) {
-            file.getAbsoluteFile().getParentFile().mkdirs();
+        File parentDir = file.getAbsoluteFile().getParentFile();
+        if (parentDir != null) {
+            parentDir.mkdirs();
         }
         try (BufferedOutputStream writer = new BufferedOutputStream(Files.newOutputStream(file.toPath()))) {
             while (seq.hasNext()) {

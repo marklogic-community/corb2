@@ -1149,7 +1149,6 @@ class ManagerTest {
     @Test
     void testGetTaskClsNotTaskClass() {
         String type = "";
-        Class<? extends Task> expResult = Transform.class;
         try (Manager instance = new Manager()) {
             assertThrows(IllegalArgumentException.class, () -> instance.getTaskCls(type, String.class.getName()));
         }

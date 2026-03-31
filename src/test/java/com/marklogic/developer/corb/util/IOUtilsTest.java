@@ -47,7 +47,9 @@ class IOUtilsTest {
     private static final String NULL_OUTPUTSTREAM_MSG = "null OutputStream";
 
     public IOUtilsTest() throws IOException {
-        exampleContent = cat(new FileReader(exampleContentFile));
+        try (FileReader fileReader = new FileReader(exampleContentFile)) {
+            exampleContent = cat(fileReader);
+        }
     }
 
     @Test
@@ -77,7 +79,9 @@ class IOUtilsTest {
         InputStream in = null;
         File out = File.createTempFile("copiedFile", "txt");
         out.deleteOnExit();
-        assertThrows(IOException.class, () -> copy(in, Files.newOutputStream(out.toPath())));
+        try (OutputStream outputStream = Files.newOutputStream(out.toPath())) {
+            assertThrows(IOException.class, () -> copy(in, outputStream));
+        }
     }
 
     @Test
@@ -102,8 +106,12 @@ class IOUtilsTest {
     @Test
     void testCopyReaderIsNullOutputStream() {
         Reader in = null;
-        OutputStream out = new ByteArrayOutputStream();
-        assertThrows(IOException.class, () -> copy(in, out));
+        try (OutputStream out = new ByteArrayOutputStream()) {
+            assertThrows(IOException.class, () -> copy(in, out));
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     @Test

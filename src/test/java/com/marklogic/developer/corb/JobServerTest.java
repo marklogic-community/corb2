@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -56,29 +57,35 @@ class JobServerTest {
             URL url = new URL(localhostUrl );
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod(GET);
-             byte[] content = IOUtils.toByteArray(conn.getInputStream());
-             assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-             assertNotNull(content);
-             assertTrue(new String(content).contains("Options Builder"));
-             assertTrue(new String(content).contains("options-builder-content"));
-             assertTrue(new String(content).contains("toggleBuilderDescription(option.name)"));
-             assertTrue(new String(content).contains(":title=\"option.description || ''\""));
+            byte[] content = null;
+            try (InputStream inputStream = conn.getInputStream()) {
+                content = IOUtils.toByteArray(inputStream);
+                assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+                assertNotNull(content);
+                assertTrue(new String(content).contains("Options Builder"));
+                assertTrue(new String(content).contains("options-builder-content"));
+                assertTrue(new String(content).contains("toggleBuilderDescription(option.name)"));
+                assertTrue(new String(content).contains(":title=\"option.description || ''\""));
+            }
 
             url = new URL(localhostUrl + "/");
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod(GET);
-            content = IOUtils.toByteArray(conn.getInputStream());
-            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-            assertNotNull(content);
+            try (InputStream inputStream = conn.getInputStream()) {
+                content = IOUtils.toByteArray(inputStream);
+                assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+                assertNotNull(content);
+            }
 
             // ensure that base path (without extenstion) gets a response
             url = new URL(localhostUrl +  JobServer.METRICS_PATH);
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod(GET);
-            content = IOUtils.toByteArray(conn.getInputStream());
-            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-            assertNotNull(content);
-
+            try (InputStream inputStream = conn.getInputStream()) {
+                content = IOUtils.toByteArray(inputStream);
+                assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+                assertNotNull(content);
+            }
             //verify that invalid paths result in 404
             url = new URL(localhostUrl + "/DoesNotExist");
             conn = (HttpURLConnection) url.openConnection();

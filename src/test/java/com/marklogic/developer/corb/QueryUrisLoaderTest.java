@@ -86,10 +86,11 @@ class QueryUrisLoaderTest {
 
     @Test
     void testOpenWithBadUrisReplacePattern() {
-        try (QueryUrisLoader instance = new QueryUrisLoader()) {
-            ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
+        try (QueryUrisLoader instance = new QueryUrisLoader();
+             Session session = mock(Session.class);
+             ContentSourcePool contentSourcePool = mock(ContentSourcePool.class)
+        ) {
             ContentSource contentSource = mock(ContentSource.class);
-            Session session = mock(Session.class);
             when(contentSourcePool.get()).thenReturn(contentSource);
             when(contentSource.newSession()).thenReturn(session);
             Properties props = new Properties();
@@ -98,7 +99,7 @@ class QueryUrisLoaderTest {
             instance.csp = contentSourcePool;
 
             assertThrows(IllegalArgumentException.class, instance::open);
-        } catch (CorbException ex) {
+        } catch (IOException | CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
     }

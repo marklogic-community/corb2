@@ -219,9 +219,11 @@ class JobStatsTest {
         jobStat.refreshThreadPoolExecutorStats(threadPool);
         jobStatsList.add(jobStat);
         Document doc = JobStats.toXML(documentBuilderFactory, jobStatsList, false);
-
-        assertEquals(0, doc.getDocumentElement().getElementsByTagNameNS(JobStats.CORB_NAMESPACE, "failedTransactions").getLength());
-        assertEquals(0, doc.getDocumentElement().getElementsByTagNameNS(JobStats.CORB_NAMESPACE, "slowTransactions").getLength());
+        assertNotNull(doc);
+        Element documentElement = doc.getDocumentElement();
+        assertNotNull(documentElement);
+        assertEquals(0, documentElement.getElementsByTagNameNS(JobStats.CORB_NAMESPACE, "failedTransactions").getLength());
+        assertEquals(0, documentElement.getElementsByTagNameNS(JobStats.CORB_NAMESPACE, "slowTransactions").getLength());
     }
 
     @Test

@@ -426,8 +426,10 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
          */
         Map<String, Long> getData() {
             Map<String, Long> map = new HashMap<>();
-            for (UriObject obj : list) {
-                map.put(obj.uri, obj.timeTaken);
+            synchronized (lock) {
+                for (UriObject obj : list) {
+                    map.put(obj.uri, obj.timeTaken);
+                }
             }
             return map;
         }

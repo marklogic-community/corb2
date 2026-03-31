@@ -316,7 +316,7 @@ public abstract class AbstractTask implements Task {
      * @param failOnError true to throw exceptions, false to log and continue
      */
     @Override
-    public void setFailOnError(boolean failOnError) {
+    public synchronized void setFailOnError(boolean failOnError) {
         this.failOnError = failOnError;
     }
 

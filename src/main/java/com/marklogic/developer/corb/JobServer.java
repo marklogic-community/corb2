@@ -18,6 +18,7 @@
  */
 package com.marklogic.developer.corb;
 
+import com.marklogic.developer.corb.util.StringUtils;
 import com.marklogic.developer.corb.util.XmlUtils;
 import com.sun.net.httpserver.*;
 import org.w3c.dom.Document;
@@ -409,7 +410,7 @@ public class JobServer {
              OutputStream output = httpExchange.getResponseBody()) {
 
             if (webInputStream == null && webJarInputStream == null) {
-                String response = "Error 404 File not found: " + path;
+                String response = "Error 404 File not found: " + StringUtils.encodeForHtml(path);
                 httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, response.length());
                 output.write(response.getBytes());
             } else {

@@ -226,6 +226,12 @@ class StringUtilsTest {
     }
 
     @Test
+    void testEncodeForHtml() {
+        String result = StringUtils.encodeForHtml("<div>\"Hello & welcome\"</div>");
+        assertEquals("&lt;div&gt;&quot;Hello &amp; welcome&quot;&lt;/div&gt;", result);
+    }
+
+    @Test
     void testGetXccUri() {
         Map<String, String> uriParams = new HashMap<>();
         uriParams.put(XCC_USERNAME, "user");

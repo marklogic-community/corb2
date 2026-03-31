@@ -307,14 +307,16 @@ class FileUrisStreamingXMLLoaderTest {
 
     @Test
     void testCleanupWithoutTempDir() {
-        FileUrisStreamingXMLLoader loader = new FileUrisStreamingXMLLoader();
-        loader.cleanup();
+        try (FileUrisStreamingXMLLoader loader = new FileUrisStreamingXMLLoader()) {
+            loader.cleanup();
+        }
     }
 
     @Test
     void testCloseWhenNotOpen() {
-        FileUrisStreamingXMLLoader loader = new FileUrisStreamingXMLLoader();
-        loader.close();
+        try (FileUrisStreamingXMLLoader loader = new FileUrisStreamingXMLLoader()) {
+            loader.close();
+        }
     }
 
     @Test
