@@ -19,7 +19,7 @@
     <div class="section">
         <div>
             <span class="stat success">Success (<span x-text="successPercent"></span>%)</span>
-            <span class="stat fail">Failed (<span x-text="failedPercent"></span>%)</span>
+            <span class="stat fail" x-show="failedPercent > 0">Failed (<span x-text="failedPercent"></span>%)</span>
         </div>
         <div>
             <progress :max="job.totalNumberOfTasks ?? 0" :value="(job.numberOfSucceededTasks ?? 0) + (job.numberOfFailedTasks ?? 0)" :title="job.numberOfSucceededTasks + job.numberOfFailedTasks"></progress>

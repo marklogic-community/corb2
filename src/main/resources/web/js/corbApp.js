@@ -1,8 +1,5 @@
 "use strict";
 
-// ----------------------
-// Shared utilities
-// ----------------------
 export function msToTime(ms) {
     if (!Number.isFinite(ms) || ms < 0) { return "00:00:00"; }
     const totalSeconds = Math.floor(ms / 1000);
@@ -19,7 +16,6 @@ function withTimeout(ms = 8000) {
 }
 
 function jobBaseUrl(job) {
-    // job: { id, host, port }
     const origin = `${location.protocol}//${job.host}${job.port ? `:${job.port}` : ""}`;
     return new URL(`/${encodeURIComponent(job.id)}`, origin);
 }
@@ -28,10 +24,13 @@ function metricsUrl(host, port, { concise = true } = {}) {
     const url = new URL(`http://${host}:${port}/`);
     url.searchParams.set("format", "json");
     if (concise) {
-        // Presence-only parameter (serialized as `concise=`); server should treat presence as true
         url.searchParams.append("concise", "");
     }
     return url;
+}
+
+function builderUrl(path) {
+    return new URL(path, location.origin);
 }
 
 async function fetchJson(url, { signal } = {}) {
@@ -44,7 +43,6 @@ async function fetchJson(url, { signal } = {}) {
         }
         return await res.json();
     } catch (e) {
-        // Map network/abort failures to synthetic -1 to retain legacy handling
         if (e && typeof e.status === "undefined") {
             e.status = -1;
         }
@@ -52,11 +50,9 @@ async function fetchJson(url, { signal } = {}) {
     }
 }
 
-// POST commands via QUERY STRING (server requires query params)
 async function postQuery(job, params, { signal } = {}) {
     const url = jobBaseUrl(job);
     url.searchParams.set("format", "json");
-    // append provided params as query string
     for (const [k, v] of Object.entries(params)) {
         if (typeof v === "undefined" || v === null) { continue; }
         url.searchParams.set(k, String(v));
@@ -77,6 +73,29 @@ async function postQuery(job, params, { signal } = {}) {
     }
 }
 
+async function postForm(url, params, { signal } = {}) {
+    try {
+        const res = await fetch(url.toString(), {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+            body: params.toString(),
+            signal,
+        });
+        if (!res.ok) {
+            const message = await res.text();
+            const err = new Error(message || `POST ${url} failed with ${res.status}`);
+            err.status = res.status;
+            throw err;
+        }
+        return res;
+    } catch (e) {
+        if (e && typeof e.status === "undefined") {
+            e.status = -1;
+        }
+        throw e;
+    }
+}
+
 function isDone(job) {
     const total = job?.totalNumberOfTasks ?? 0;
     const progressed = (job?.numberOfSucceededTasks ?? 0) + (job?.numberOfFailedTasks ?? 0);
@@ -88,10 +107,9 @@ function isRunning(job) {
     return !isDone(job) && (job?.currentThreadCount ?? 0) !== 0;
 }
 
-// Minimal toast manager
 function toastMixin() {
     return {
-        toasts: [], // { id, message, type }
+        toasts: [],
         _toastId: 0,
         pushToast(message, type = "error", duration = 4000) {
             const id = ++this._toastId;
@@ -105,17 +123,51 @@ function toastMixin() {
     };
 }
 
-// ----------------------
-// Single-Job View Component
-// ----------------------
+function parseContentDispositionFilename(headerValue) {
+    if (!headerValue) {
+        return null;
+    }
+    const match = headerValue.match(/filename="?([^";]+)"?/i);
+    return match ? match[1] : null;
+}
+
+function escapePropertiesValue(value) {
+    if (value === null || typeof value === "undefined") {
+        return "";
+    }
+    let text = String(value)
+        .replace(/\\/g, "\\\\")
+        .replace(/\n/g, "\\n")
+        .replace(/\r/g, "\\r")
+        .replace(/\t/g, "\\t");
+    if (text.startsWith(" ")) {
+        text = `\\${text}`;
+    }
+    return text;
+}
+
+const CONNECTION_COMPONENT_OPTIONS = new Set([
+    "XCC-PROTOCOL",
+    "XCC-HOSTNAME",
+    "XCC-PORT",
+    "XCC-DBNAME",
+    "XCC-USERNAME",
+    "XCC-PASSWORD",
+    "XCC-BASE-PATH",
+    "XCC-API-KEY",
+    "XCC-OAUTH-TOKEN",
+    "XCC-GRANT-TYPE",
+    "XCC-TOKEN-DURATION",
+    "XCC-TOKEN-ENDPOINT"
+]);
+
 export function jobStatus({ pollingMs = 3000 } = {}) {
     return {
         ...toastMixin(),
         job: { currentThreadCount: 0 },
         timers: new Map(),
         error: null,
-        pending: false, // for pause/resume only; thread input remains enabled
-        // First load retrieves full payload (with options), subsequent polls use concise
+        pending: false,
         _firstLoad: true,
 
         get totalNumberOfTasks() { return this.job?.totalNumberOfTasks ?? 0; },
@@ -152,7 +204,6 @@ export function jobStatus({ pollingMs = 3000 } = {}) {
             const url = new URL(location.href);
             url.searchParams.set("format", "json");
             if (!this._firstLoad) {
-                // Compact payload for polling cycles
                 url.searchParams.append("concise", "");
             }
             return url;
@@ -168,7 +219,6 @@ export function jobStatus({ pollingMs = 3000 } = {}) {
                     this.stopTimer(url.toString());
                 }
             } catch (e) {
-                // Handle 404 or synthetic -1 (no backend)
                 if (e.status === 404 || e.status === -1) {
                     this.stopTimer(url.toString());
                 }
@@ -217,7 +267,7 @@ export function jobStatus({ pollingMs = 3000 } = {}) {
         updateThreadCount(job, threads) {
             const n = Number(threads);
             if (!Number.isFinite(n) || n < 1) { return; }
-            this.job.currentThreadCount = n; // optimistic
+            this.job.currentThreadCount = n;
             if (this._threadTimer) { clearTimeout(this._threadTimer); }
             this._threadTimer = setTimeout(() => this.commitThreadCount(job, n), 300);
         },
@@ -232,7 +282,6 @@ export function jobStatus({ pollingMs = 3000 } = {}) {
                 console.warn(e);
                 this.error = e.message;
                 this.pushToast(`Thread update failed (${e.status === -1 ? jobBaseUrl(job) + " unavailable" : e.status})`);
-                // Optional: re-fetch to reconcile optimistic update
                 await this.refresh();
             } finally {
                 done();
@@ -243,23 +292,37 @@ export function jobStatus({ pollingMs = 3000 } = {}) {
     };
 }
 
-// ----------------------
-// Dashboard (Multi-Job) Component
-// ----------------------
 export function dashboard({ pollingMs = 2000 } = {}) {
     const HOST_RE = /^(?:\[(?:[A-Fa-f0-9:]+)\]|(?:[A-Za-z0-9-.]+))$/;
     return {
         ...toastMixin(),
-        monitorHosts: [], // [{ host: string, ports: string }]
-        timers: new Map(), // metricsUrl -> intervalId
+        monitorHosts: [],
+        timers: new Map(),
         jobs: [],
         error: null,
-        pendingJobs: new Set(), // job.id values for which a command is in-flight
+        pendingJobs: new Set(),
+        currentTab: 1,
+        builder: {
+            groups: [],
+            values: {},
+            expandedDescriptions: {},
+            additionalProperties: "",
+            connectionMode: "uri",
+            activeGroupId: "connection",
+            searchTerm: "",
+            collapsed: false,
+            loadingMetadata: false,
+            running: false,
+            downloading: false,
+            error: null,
+            downloadFileName: "corb-job.properties",
+        },
 
         init() {
             try {
                 this.addMonitor({ host: location.hostname, ports: location.port });
             } catch {}
+            this.loadBuilderMetadata();
             addEventListener("beforeunload", () => this.destroy());
         },
 
@@ -297,7 +360,7 @@ export function dashboard({ pollingMs = 2000 } = {}) {
                     const u = new URL(h);
                     h = u.hostname;
                 } else if (!HOST_RE.test(h)) {
-                    return out; // invalid host token
+                    return out;
                 }
             } catch {
                 return out;
@@ -404,7 +467,7 @@ export function dashboard({ pollingMs = 2000 } = {}) {
         updateThreadCount(job, threads) {
             const n = Number(threads);
             if (!Number.isFinite(n) || n < 1) { return; }
-            job.currentThreadCount = n; // optimistic
+            job.currentThreadCount = n;
             const existing = this._threadTimers.get(job.id);
             if (existing) { clearTimeout(existing); }
             const to = setTimeout(() => this.commitThreadCount(job, n), 300);
@@ -431,6 +494,198 @@ export function dashboard({ pollingMs = 2000 } = {}) {
         openJob(job) {
             const url = jobBaseUrl(job);
             window.open(url.toString(), "_blank");
-        }
+        },
+
+        async loadBuilderMetadata() {
+            this.builder.loadingMetadata = true;
+            this.builder.error = null;
+            const { signal, done } = withTimeout(15000);
+            try {
+                const data = await fetchJson(builderUrl("/builder/metadata"), { signal });
+                this.builder.groups = [].concat(data.groups ?? []);
+                this.builder.activeGroupId = this.builder.groups.length ? this.builder.groups[0].id : "connection";
+                const values = {};
+                this.builder.groups.forEach((group) => {
+                    group.options.forEach((option) => {
+                        if (!Object.prototype.hasOwnProperty.call(values, option.name)) {
+                            values[option.name] = "";
+                        }
+                    });
+                });
+                this.builder.values = Object.assign(values, this.builder.values);
+                this.builder.expandedDescriptions = Object.assign({}, this.builder.expandedDescriptions);
+            } catch (e) {
+                console.warn(e);
+                this.builder.error = e.message;
+                this.pushToast(`Options builder error: ${e.message}`);
+            } finally {
+                this.builder.loadingMetadata = false;
+                done();
+            }
+        },
+
+        builderFieldId(name) {
+            return `builder-${String(name).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+        },
+
+        builderDescriptionId(name) {
+            return `${this.builderFieldId(name)}-description`;
+        },
+
+        setConnectionMode(mode) {
+            this.builder.connectionMode = mode;
+        },
+
+        toggleBuilderCollapsed() {
+            this.builder.collapsed = !this.builder.collapsed;
+        },
+
+        visibleBuilderOptions(group) {
+            return (group?.options ?? []).filter((option) => this.shouldShowBuilderOption(option) && this.matchesBuilderSearch(option));
+        },
+
+        hasBuilderDescription(option) {
+            return String(option?.description ?? "").trim() !== "";
+        },
+
+        toggleBuilderDescription(name) {
+            const current = !!this.builder.expandedDescriptions[name];
+            this.builder.expandedDescriptions = Object.assign({}, this.builder.expandedDescriptions, { [name]: !current });
+        },
+
+        isBuilderDescriptionVisible(name) {
+            return !!this.builder.expandedDescriptions[name];
+        },
+
+        visibleBuilderSubgroups(group) {
+            return (group?.subgroups ?? []).filter((subgroup) => this.visibleBuilderOptionsForSubgroup(group, subgroup).length > 0);
+        },
+
+        visibleBuilderOptionsForSubgroup(group, subgroup) {
+            return this.visibleBuilderOptions(group).filter((option) => option.subgroupId === subgroup.id);
+        },
+
+        matchesBuilderSearch(option) {
+            const term = this.builder.searchTerm.trim().toLowerCase();
+            if (!term) {
+                return true;
+            }
+            return [option.name, option.label, option.description]
+                .some((value) => String(value ?? "").toLowerCase().includes(term));
+        },
+
+        shouldShowBuilderOption(option) {
+            if (option.name === "XCC-CONNECTION-URI") {
+                return this.builder.connectionMode === "uri";
+            }
+            if (CONNECTION_COMPONENT_OPTIONS.has(option.name)) {
+                return this.builder.connectionMode === "fields";
+            }
+            return true;
+        },
+
+        builderGroupOptionCount(group) {
+            return this.visibleBuilderOptions(group).length;
+        },
+
+        builderTotalOptionCount() {
+            return this.builder.groups.reduce((total, group) => total + ((group?.options ?? []).length), 0);
+        },
+
+        builderVisibleOptionCount() {
+            return this.builder.groups.reduce((total, group) => total + this.visibleBuilderOptions(group).length, 0);
+        },
+
+        serializeBuilderPayload(includeDownloadFileName = true) {
+            const params = new URLSearchParams();
+            this.builder.groups.forEach((group) => {
+                (group.options ?? []).forEach((option) => {
+                    if (!this.shouldShowBuilderOption(option)) {
+                        return;
+                    }
+                    const value = this.builder.values[option.name];
+                    if (value === null || typeof value === "undefined") {
+                        return;
+                    }
+                    const normalized = String(value).trim();
+                    if (normalized === "") {
+                        return;
+                    }
+                    params.set(option.name, normalized);
+                });
+            });
+            if (this.builder.additionalProperties.trim() !== "") {
+                params.set("builder.additionalProperties", this.builder.additionalProperties);
+            }
+            if (includeDownloadFileName && this.builder.downloadFileName.trim() !== "") {
+                params.set("builder.downloadFileName", this.builder.downloadFileName.trim());
+            }
+            return params;
+        },
+
+        builderPropertiesPreview() {
+            const lines = [];
+            for (const [name, value] of this.serializeBuilderPayload(false).entries()) {
+                if (name.startsWith("builder.")) {
+                    continue;
+                }
+                lines.push(`${name}=${escapePropertiesValue(value)}`);
+            }
+            if (this.builder.additionalProperties.trim() !== "") {
+                if (lines.length) {
+                    lines.push("");
+                }
+                lines.push(this.builder.additionalProperties.trim());
+            }
+            return lines.join("\n");
+        },
+
+        async downloadBuilderProperties() {
+            this.builder.downloading = true;
+            const { signal, done } = withTimeout(15000);
+            try {
+                const response = await postForm(builderUrl("/builder/properties"), this.serializeBuilderPayload(true), { signal });
+                const blob = await response.blob();
+                const contentDisposition = response.headers.get("Content-Disposition");
+                const filename = parseContentDispositionFilename(contentDisposition) || this.builder.downloadFileName || "corb-job.properties";
+                const blobUrl = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = blobUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(blobUrl);
+                this.pushToast(`Downloaded ${filename}`, "success");
+            } catch (e) {
+                console.warn(e);
+                this.builder.error = e.message;
+                this.pushToast(`Download failed: ${e.message}`);
+            } finally {
+                this.builder.downloading = false;
+                done();
+            }
+        },
+
+        async runBuilderJob() {
+            this.builder.running = true;
+            const { signal, done } = withTimeout(15000);
+            try {
+                const response = await postForm(builderUrl("/builder/jobs"), this.serializeBuilderPayload(false), { signal });
+                const data = await response.json();
+                await this.metricsRefresh(metricsUrl(location.hostname, location.port, { concise: true }));
+                this.pushToast(`Started job ${data.jobId}`, "success");
+                if (data.jobPath) {
+                    window.open(new URL(data.jobPath, location.origin).toString(), "_blank");
+                }
+            } catch (e) {
+                console.warn(e);
+                this.builder.error = e.message;
+                this.pushToast(`Run failed: ${e.message}`);
+            } finally {
+                this.builder.running = false;
+                done();
+            }
+        },
     };
 }
