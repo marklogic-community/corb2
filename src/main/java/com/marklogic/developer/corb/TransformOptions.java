@@ -172,6 +172,12 @@ public class TransformOptions {
     /** Temporary directory for disk queue storage. */
     private File diskQueueTempDir;
 
+    /** Whether restart state should be persisted for best-effort resume. */
+    private boolean restartable;
+
+    /** Directory used to store restart state files. */
+    private File restartStateDir;
+
     /** Whether to install modules to the modules database. */
     private boolean doInstall;
 
@@ -755,6 +761,46 @@ public class TransformOptions {
      */
     public File getDiskQueueTempDir() {
         return this.diskQueueTempDir;
+    }
+
+    /**
+     * Sets whether CoRB should persist restart state for best-effort resume.
+     *
+     * @param restartable true to enable restartability, false otherwise
+     * @see Options#RESTARTABLE
+     */
+    public void setRestartable(boolean restartable) {
+        this.restartable = restartable;
+    }
+
+    /**
+     * Checks whether restartability is enabled.
+     *
+     * @return true if restartability is enabled, false otherwise
+     * @see Options#RESTARTABLE
+     */
+    public boolean isRestartable() {
+        return this.restartable;
+    }
+
+    /**
+     * Sets the directory used for restart state files.
+     *
+     * @param restartStateDir the restart state directory
+     * @see Options#RESTART_STATE_DIR
+     */
+    public void setRestartStateDir(File restartStateDir) {
+        this.restartStateDir = restartStateDir;
+    }
+
+    /**
+     * Gets the directory used for restart state files.
+     *
+     * @return the restart state directory
+     * @see Options#RESTART_STATE_DIR
+     */
+    public File getRestartStateDir() {
+        return this.restartStateDir;
     }
 
     /**

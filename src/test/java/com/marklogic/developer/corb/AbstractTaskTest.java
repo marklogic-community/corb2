@@ -652,6 +652,102 @@ class AbstractTaskTest {
     }
 
     @Test
+    void testHandleProcessExceptionDoNotFailOnErrorWritesRestartState() throws IOException {
+        String[] uris = new String[]{"foo", "bar"};
+        Exception ex = mock(Exception.class);
+        AbstractTask task = new AbstractTaskImpl();
+        File restartStateDir = createTempDirectory();
+        task.failOnError = false;
+        task.inputUris = uris;
+        task.properties = new Properties();
+        task.properties.setProperty(RESTARTABLE, Boolean.TRUE.toString());
+        task.properties.setProperty(RESTART_STATE_DIR, restartStateDir.getAbsolutePath());
+
+        try {
+            String[] result = task.handleProcessException(ex);
+            assertArrayEquals(uris, result);
+            File completedUrisFile = new File(restartStateDir, RestartableJobState.COMPLETED_URIS_FILENAME);
+            String completedUris = TestUtils.readFile(completedUrisFile);
+            assertTrue(completedUris.contains("foo"));
+            assertTrue(completedUris.contains("bar"));
+        } catch (CorbException exc) {
+            fail();
+        }
+    }
+
+    @Test
+    void testHandleProcessExceptionFailOnErrorWritesRestartState() throws IOException {
+        String[] uris = new String[]{"foo", "bar"};
+        Exception ex = mock(Exception.class);
+        AbstractTask task = new AbstractTaskImpl();
+        File restartStateDir = createTempDirectory();
+        task.failOnError = true;
+        task.inputUris = uris;
+        task.properties = new Properties();
+        task.properties.setProperty(RESTARTABLE, Boolean.TRUE.toString());
+        task.properties.setProperty(RESTART_STATE_DIR, restartStateDir.getAbsolutePath());
+
+        assertThrows(CorbException.class, () -> task.handleProcessException(ex));
+        File completedUrisFile = new File(restartStateDir, RestartableJobState.COMPLETED_URIS_FILENAME);
+        String completedUris = TestUtils.readFile(completedUrisFile);
+        assertTrue(completedUris.contains("foo"));
+        assertTrue(completedUris.contains("bar"));
+    }
+
+    @Test
+    void testHandleProcessExceptionUsesTempDirWhenRestartStateDirMissing() throws IOException {
+        String[] uris = new String[]{"foo", "bar"};
+        Exception ex = mock(Exception.class);
+        AbstractTask task = new AbstractTaskImpl();
+        File tempDir = createTempDirectory();
+        task.failOnError = false;
+        task.inputUris = uris;
+        task.properties = new Properties();
+        task.properties.setProperty(RESTARTABLE, Boolean.TRUE.toString());
+        task.properties.setProperty(TEMP_DIR, tempDir.getAbsolutePath());
+
+        try {
+            task.handleProcessException(ex);
+            File completedUrisFile = new File(tempDir, RestartableJobState.COMPLETED_URIS_FILENAME);
+            String completedUris = TestUtils.readFile(completedUrisFile);
+            assertTrue(completedUris.contains("foo"));
+            assertTrue(completedUris.contains("bar"));
+        } catch (CorbException exc) {
+            fail();
+        }
+    }
+
+    @Test
+    void testHandleProcessExceptionUsesJavaTmpDirWhenRestartStateDirMissing() throws IOException {
+        String[] uris = new String[]{"foo", "bar"};
+        Exception ex = mock(Exception.class);
+        AbstractTask task = new AbstractTaskImpl();
+        File javaTmpDir = createTempDirectory();
+        String originalJavaTmpDir = System.getProperty("java.io.tmpdir");
+        task.failOnError = false;
+        task.inputUris = uris;
+        task.properties = new Properties();
+        task.properties.setProperty(RESTARTABLE, Boolean.TRUE.toString());
+        System.setProperty("java.io.tmpdir", javaTmpDir.getAbsolutePath());
+
+        try {
+            task.handleProcessException(ex);
+            File completedUrisFile = new File(javaTmpDir, RestartableJobState.COMPLETED_URIS_FILENAME);
+            String completedUris = TestUtils.readFile(completedUrisFile);
+            assertTrue(completedUris.contains("foo"));
+            assertTrue(completedUris.contains("bar"));
+        } catch (CorbException exc) {
+            fail();
+        } finally {
+            if (originalJavaTmpDir != null) {
+                System.setProperty("java.io.tmpdir", originalJavaTmpDir);
+            } else {
+                System.clearProperty("java.io.tmpdir");
+            }
+        }
+    }
+
+    @Test
     void testShouldRetryNotRetryableQueryExceptionCSVwithSpaces() {
         Request req = mock(Request.class);
         AbstractTask task = new AbstractTaskImpl();
