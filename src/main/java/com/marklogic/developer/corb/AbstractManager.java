@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.Options.*;
+import static com.marklogic.developer.corb.util.IOUtils.closeQuietly;
 import static com.marklogic.developer.corb.util.IOUtils.isDirectory;
 
 import com.marklogic.developer.corb.util.NumberUtils;
@@ -255,9 +256,9 @@ public abstract class AbstractManager {
      * @throws IllegalStateException if the module cannot be found or is a directory
      */
     public static String getAdhocQuery(String module) {
-
+        InputStream is = null;
         try {
-            InputStream is = TaskFactory.class.getResourceAsStream('/' + module);
+            is = TaskFactory.class.getResourceAsStream('/' + module);
             if (is == null) {
                 File f = new File(module);
                 if (f.exists() && !f.isDirectory()) {
@@ -281,6 +282,8 @@ public abstract class AbstractManager {
             }
         } catch (IOException exc) {
             throw new IllegalStateException("Problem reading adhoc query module " + module, exc);
+        } finally {
+            closeQuietly(is);
         }
     }
 
@@ -667,7 +670,7 @@ public abstract class AbstractManager {
                     if (query != null) {
                         String[] pairs = query.split("&");
                         for (String pair : pairs) {
-                            int i = pair.indexOf("=");
+                            int i = pair.indexOf('=');
                             if (i > 0) {
                                 try {
                                     String paramName = URLDecoder.decode(pair.substring(0, i), "UTF-8").toLowerCase();
