@@ -571,8 +571,10 @@ public abstract class AbstractManager {
             for (String connectionUri : commaSeparatedValuesToList(uriAsStrings)) {
                 if (decrypter != null) {
                     connectionUri = decrypter.decrypt(XCC_CONNECTION_URI, connectionUri);
-                    //see if individual parts of the connection string are encrypted separately
-                    connectionUri = tryToDecryptUriInParts(connectionUri, urlEncode);
+                    if (connectionUri != null) {
+                        //see if individual parts of the connection string are encrypted separately
+                        connectionUri = tryToDecryptUriInParts(connectionUri, urlEncode);
+                    }
                 }
                 if (connectionUri != null) {
                     connectionUriList.add(connectionUri);
@@ -806,11 +808,13 @@ public abstract class AbstractManager {
             while (null != resultSequence && resultSequence.hasNext()) {
                 ResultItem rsItem = resultSequence.next();
                 XdmItem item = rsItem.getItem();
-                if (rsItem.getIndex() == 0 && "0".equals(item.asString())) {
-                    options.setModulesDatabase("");
-                }
-                if (rsItem.getIndex() == 1) {
-                    options.setXDBC_ROOT(item.asString());
+                if (item != null) {
+                    if (rsItem.getIndex() == 0 && "0".equals(item.asString())) {
+                        options.setModulesDatabase("");
+                    }
+                    if (rsItem.getIndex() == 1) {
+                        options.setXDBC_ROOT(item.asString());
+                    }
                 }
             }
         } catch (RequestException e) {

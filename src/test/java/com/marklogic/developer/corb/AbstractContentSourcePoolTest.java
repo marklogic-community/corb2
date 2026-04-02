@@ -36,9 +36,9 @@ import java.util.Properties;
 
 class AbstractContentSourcePoolTest {
 
-    private final String foo = "foo";
-    private final String bar = "bar";
-    private final String localhostXccUri = "xcc://user:pass@localhost:8000";
+    private static final String foo = "foo";
+    private static final String bar = "bar";
+    private static final String localhostXccUri = "xcc://user:pass@localhost:8000";
 
 	@BeforeEach
 	void setUp() {
@@ -143,7 +143,8 @@ class AbstractContentSourcePoolTest {
     void testGetIntPropertyFromSystemProperty() {
 		System.setProperty("foo", "123");
         try (AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl()) {
-            assertEquals(123, csp.getIntProperty(foo));
+            int value = csp.getIntProperty(foo);
+            assertEquals(123, value);
         }
     }
 

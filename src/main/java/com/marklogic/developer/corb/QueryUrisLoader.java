@@ -239,7 +239,13 @@ public class QueryUrisLoader extends AbstractUrisLoader {
      * @throws CorbException if the total count cannot be read or is invalid
      */
     protected void preProcess(ResultSequence resultSequence) throws CorbException {
+        if (resultSequence == null) {
+            throw new CorbException("ResultSequence is null");
+        }
         ResultItem nextResultItem = collectCustomInputs(resultSequence);
+        if (nextResultItem == null) {
+            throw new CorbException("No result item available to read total count");
+        }
         readTotalCount(nextResultItem);
     }
 
@@ -395,10 +401,15 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         String uri;
         String uriToLog;
         while (resultSequence != null && resultSequence.hasNext()) {
-            uri = resultSequence.next().asString();
-            if (isBlank(uri)) {
+            ResultItem resultItem = resultSequence.next();
+            if (resultItem == null) {
                 continue;
             }
+            String item = resultItem.asString();
+            if (isBlank(item)) {
+                continue;
+            }
+            uri = item;
             uriToLog = redactUris ? "" : ": " + uri;
             if (queue.isEmpty()) {
                 LOG.log(INFO, MessageFormat.format("Received first URI{0}", uriToLog));

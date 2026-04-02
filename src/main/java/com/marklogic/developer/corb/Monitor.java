@@ -171,7 +171,9 @@ public class Monitor extends BaseMonitor implements Runnable {
             if (null != future) {
                 // record result, or throw exception
                 String[] lastUris = future.get();
-                completed += lastUris.length;
+                synchronized (this) {
+                    completed += lastUris.length;
+                }
             }
 
             showProgress();
@@ -292,7 +294,9 @@ public class Monitor extends BaseMonitor implements Runnable {
      * </p>
      */
     public void shutdownNow() {
-        shutdownNow = true;
+        synchronized(this) {
+            shutdownNow = true;
+        }
     }
 
 }

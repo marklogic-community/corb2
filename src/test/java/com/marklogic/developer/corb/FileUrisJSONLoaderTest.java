@@ -18,6 +18,7 @@
  */
 package com.marklogic.developer.corb;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -78,6 +79,7 @@ class FileUrisJSONLoaderTest {
         try (FileUrisJSONLoader loader = newLoader("/items/*", "/metadata", true)) {
             loader.open();
             String value = loader.next();
+            Assertions.assertNotNull(value);
             assertTrue(value.contains(AbstractFileUrisLoader.LOADER_DOC));
             assertTrue(value.contains(AbstractFileUrisLoader.BASE64_ENCODED + "=\"false\""));
             assertTrue(value.contains("application/json"));

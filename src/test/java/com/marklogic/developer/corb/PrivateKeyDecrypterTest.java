@@ -28,6 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
@@ -304,7 +305,7 @@ class PrivateKeyDecrypterTest {
         try {
             String[] args = {ACTION_GEN_KEYS};
             PrivateKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(GEN_KEYS_USAGE + NEWLINE, errContent.toString());
+            assertEqualsNormalizeNewline(GEN_KEYS_USAGE + NEWLINE, errContent.toString(StandardCharsets.UTF_8.toString()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -388,7 +389,7 @@ class PrivateKeyDecrypterTest {
         try {
             String[] args = {ACTION_ENCRYPT};
             PrivateKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString());
+            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -401,7 +402,7 @@ class PrivateKeyDecrypterTest {
             String[] args = {ACTION_ENCRYPT, PUBLIC_KEY_PATH, SECRET, ALGORITHM};
             setSystemProperties();
             PrivateKeyDecrypter.main(args);
-            assertTrue(outContent.toString().startsWith("Input: " + SECRET + "\nOutput: "));
+            assertTrue(outContent.toString(StandardCharsets.UTF_8.name()).startsWith("Input: " + SECRET + "\nOutput: "));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -428,7 +429,7 @@ class PrivateKeyDecrypterTest {
             String[] args = {ACTION_ENCRYPT, PRIVATE_KEY_PATH, "", ALGORITHM};
             setSystemProperties();
             PrivateKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString());
+            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -441,7 +442,7 @@ class PrivateKeyDecrypterTest {
             String[] args = {ACTION_ENCRYPT, "", SECRET, ALGORITHM};
             setSystemProperties();
             PrivateKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString());
+            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -453,7 +454,7 @@ class PrivateKeyDecrypterTest {
         try {
             String[] args = {"invalidUsage"};
             PrivateKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(USAGE, outContent.toString());
+            assertEqualsNormalizeNewline(USAGE, outContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -465,7 +466,7 @@ class PrivateKeyDecrypterTest {
         try {
             String[] args = null;
             PrivateKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(USAGE, outContent.toString());
+            assertEqualsNormalizeNewline(USAGE, outContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -477,7 +478,7 @@ class PrivateKeyDecrypterTest {
         try {
             String[] args = {};
             PrivateKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(USAGE, outContent.toString());
+            assertEqualsNormalizeNewline(USAGE, outContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -489,7 +490,7 @@ class PrivateKeyDecrypterTest {
         try {
             String[] args = {ACTION_ENCRYPT, "", "", ""};
             PrivateKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString());
+            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

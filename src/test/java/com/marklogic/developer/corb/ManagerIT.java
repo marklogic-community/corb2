@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -93,7 +94,7 @@ class ManagerIT {
             manager.run();
 
             byte[] out = getBytes(report);
-            String corbOutput = new String(out).trim();
+            String corbOutput = new String(out, StandardCharsets.UTF_8).trim();
             passed = EXPECTED_OUTPUT.equals(corbOutput);
 
         } catch (Exception ex) {

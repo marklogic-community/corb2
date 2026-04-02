@@ -287,7 +287,9 @@ public class RestartableJobState implements Closeable {
                 FileUtils.deleteFile(stateDir);
             }
         }
-        previouslyCompletedUriCount = 0;
+        synchronized (this) {
+            previouslyCompletedUriCount = 0;
+        }
     }
 
     @Override

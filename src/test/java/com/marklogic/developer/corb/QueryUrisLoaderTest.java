@@ -56,10 +56,10 @@ import static org.mockito.Mockito.when;
  */
 class QueryUrisLoaderTest {
 
-    private final String foo = "foo";
-    private final String bar = "bar";
-    private final String none = "none";
-    private final String root = "/root";
+    private static final String foo = "foo";
+    private static final String bar = "bar";
+    private static final String none = "none";
+    private static final String root = "/root";
     private static final String ADHOC_SUFFIX = "|ADHOC";
     private static final Logger LOG = Logger.getLogger(QueryUrisLoader.class.getName());
     private static final Logger QUERY_URIS_LOG = Logger.getLogger(QueryUrisLoader.class.getName());

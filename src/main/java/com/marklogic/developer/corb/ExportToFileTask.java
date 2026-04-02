@@ -259,7 +259,10 @@ public class ExportToFileTask extends AbstractTask {
      */
     protected File getExportFile(String fileName) {
         File exportFile = new File(exportDir, fileName);
-        exportFile.getAbsoluteFile().getParentFile().mkdirs();
+        File parentFile = exportFile.getAbsoluteFile().getParentFile();
+        if (parentFile != null) {
+            parentFile.mkdirs();
+        }
         return exportFile;
     }
 

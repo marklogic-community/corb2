@@ -222,7 +222,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
         threadName.set(Thread.currentThread().getName());
         pauseLock.lock();
         try {
-            while (isPaused) {
+            while (isPaused && !t.isInterrupted()) {
                 unpaused.await();
             }
         } catch (InterruptedException ie) {

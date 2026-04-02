@@ -38,6 +38,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import com.marklogic.developer.corb.util.XmlUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -145,7 +146,7 @@ public abstract class AbstractFileUrisLoader extends AbstractUrisLoader {
      * loader documents.
      * </p>
      */
-    protected final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    protected final DocumentBuilderFactory docFactory = XmlUtils.newSecureDocumentBuilderFactoryInstance();
 
     /**
      * Constructor that initializes the document builder factory with namespace awareness enabled.

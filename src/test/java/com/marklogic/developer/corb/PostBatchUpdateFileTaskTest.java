@@ -18,6 +18,8 @@
  */
 package com.marklogic.developer.corb;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Properties;
 
@@ -33,10 +35,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.exceptions.RequestPermissionException;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Serializable;
+
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -290,7 +289,7 @@ class PostBatchUpdateFileTaskTest {
         try {
             File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
             file.deleteOnExit();
-            try (FileWriter writer = new FileWriter(file, true)) {
+            try (Writer writer = new OutputStreamWriter(new FileOutputStream(file, true), StandardCharsets.UTF_8)) {
                 writer.append(header);
                 writer.append(Z);
                 writer.append(D);
@@ -766,7 +765,7 @@ class PostBatchUpdateFileTaskTest {
             assertFalse(file3.exists());
             assertEqualsNormalizeNewline("line1\nline2\nline3\n", readFile(file1));
             assertEqualsNormalizeNewline("line4\nline5\n", readFile(file2));
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
             fail("Exception occurred: " + ex.getMessage());
         } finally {
@@ -946,7 +945,7 @@ class PostBatchUpdateFileTaskTest {
                 assertNotNull(zipFile.getEntry("001_test-invalid-line-size-zip.txt"));
                 assertNotNull(zipFile.getEntry("002_test-invalid-line-size-zip.txt"));
             }
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
             fail("Exception occurred: " + ex.getMessage());
         } finally {

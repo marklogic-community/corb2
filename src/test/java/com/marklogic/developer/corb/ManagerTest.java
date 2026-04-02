@@ -973,9 +973,6 @@ class ManagerTest {
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.run();
             assertEquals(1, manager.options.getThreadCount());
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
         }
     }
 
@@ -1036,9 +1033,6 @@ class ManagerTest {
             File file = new File("does-not-exist");
             Manager.CommandFileWatcher fileWatcher = new Manager.CommandFileWatcher(file, manager);
             fileWatcher.onChange(file);
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
         }
         List<LogRecord> records = testLogger.getLogRecords();
         assertEquals(Level.WARNING, records.get(0).getLevel());
@@ -1201,11 +1195,7 @@ class ManagerTest {
     void testRunMissingURISMODULEFILEANDLOADER() {
         try (Manager instance = new Manager()) {
             assertThrows(IllegalArgumentException.class, instance::run);
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
         }
-
     }
 
     @Test
@@ -1213,9 +1203,6 @@ class ManagerTest {
         try (Manager instance = new Manager()) {
             instance.options.setUrisModule("someFile1.xqy");
             assertThrows(NullPointerException.class, instance::run);
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
         }
     }
 
@@ -1226,7 +1213,7 @@ class ManagerTest {
             instance.initContentSourcePool(XCC_CONNECTION_URI);
 
             assertThrows(IllegalArgumentException.class, instance::run);
-        } catch (Exception ex) {
+        } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
@@ -1547,7 +1534,7 @@ class ManagerTest {
             List<LogRecord> records = testLogger.getLogRecords();
             assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "received 50,000/50,000: uri")));
 
-        } catch (Exception ex) {
+        } catch (CorbException|RequestException ex) {
             fail();
         }
     }

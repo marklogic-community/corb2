@@ -240,6 +240,8 @@ public class JobBuilderService {
         return optionGroups;
     }
 
+    protected final void finalize() {}
+
     private Set<String> buildSupportedOptionNames(List<OptionGroup> groups) {
         Set<String> optionNames = new LinkedHashSet<>();
         for (OptionGroup group : groups) {

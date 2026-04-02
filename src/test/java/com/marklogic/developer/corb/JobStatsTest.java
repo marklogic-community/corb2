@@ -32,6 +32,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import com.marklogic.developer.corb.util.XmlUtils;
 import com.marklogic.xcc.*;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.impl.SessionImpl;
@@ -159,7 +160,7 @@ class JobStatsTest {
         JobStats jobStats = new JobStats(manager);
 
 		assertXMLJSONNotNull(jobStats);
-		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory dbFactory = XmlUtils.newSecureDocumentBuilderFactoryInstance();
 		dbFactory.setNamespaceAware(true);
 		DocumentBuilder dBuilder;
 		dBuilder = dbFactory.newDocumentBuilder();
@@ -192,7 +193,7 @@ class JobStatsTest {
 
 	@Test
     void testToXMLWithEmptyJobStats() {
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilderFactory documentBuilderFactory = XmlUtils.newSecureDocumentBuilderFactoryInstance();
         List<JobStats> jobStatsList = new ArrayList<>();
         Document doc = JobStats.toXML(documentBuilderFactory, jobStatsList, true);
         assertNotNull(doc);
@@ -201,7 +202,7 @@ class JobStatsTest {
 
     @Test
     void testToXMLRedactUris() {
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilderFactory documentBuilderFactory = XmlUtils.newSecureDocumentBuilderFactoryInstance();
         List<JobStats> jobStatsList = new ArrayList<>();
         Manager manager = mock(Manager.class);
         TransformOptions transformOptions = new TransformOptions();
@@ -228,7 +229,7 @@ class JobStatsTest {
 
     @Test
     void testToXMLDoNotRedactUris() {
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilderFactory documentBuilderFactory = XmlUtils.newSecureDocumentBuilderFactoryInstance();
         List<JobStats> jobStatsList = new ArrayList<>();
         Manager manager = mock(Manager.class);
         TransformOptions transformOptions = new TransformOptions();
@@ -247,9 +248,11 @@ class JobStatsTest {
         jobStat.refreshThreadPoolExecutorStats(threadPool);
         jobStatsList.add(jobStat);
         Document doc = JobStats.toXML(documentBuilderFactory, jobStatsList, false);
-
-        assertEquals(1, doc.getDocumentElement().getElementsByTagNameNS(JobStats.CORB_NAMESPACE, "failedTransactions").getLength());
-        assertEquals(1, doc.getDocumentElement().getElementsByTagNameNS(JobStats.CORB_NAMESPACE, "slowTransactions").getLength());
+        assertNotNull(doc);
+        Element documentElement = doc.getDocumentElement();
+        assertNotNull(documentElement);
+        assertEquals(1, documentElement.getElementsByTagNameNS(JobStats.CORB_NAMESPACE, "failedTransactions").getLength());
+        assertEquals(1, documentElement.getElementsByTagNameNS(JobStats.CORB_NAMESPACE, "slowTransactions").getLength());
     }
 
     @Test
@@ -267,7 +270,7 @@ class JobStatsTest {
 
     @Test
     void testToXML() {
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilderFactory documentBuilderFactory = XmlUtils.newSecureDocumentBuilderFactoryInstance();
         List<JobStats> jobStatsList = new ArrayList<>();
 
         Manager manager = mock(Manager.class);
@@ -276,6 +279,7 @@ class JobStatsTest {
         jobStatsList.add(new JobStats(manager));
 
         Document doc = JobStats.toXML(documentBuilderFactory, jobStatsList, true);
+        assertNotNull(doc);
         assertEquals(2, doc.getDocumentElement().getChildNodes().getLength());
     }
 
@@ -500,7 +504,7 @@ class JobStatsTest {
         JobStats jobStats = new JobStats(manager);
         jobStats.refreshThreadPoolExecutorStats(threadPoolExecutor);
         try {
-            Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+            Document document = XmlUtils.newSecureDocumentBuilderFactoryInstance().newDocumentBuilder().newDocument();
             Element element = document.createElement("foo");
             document.appendChild(element);
             jobStats.addFailedUris(element);

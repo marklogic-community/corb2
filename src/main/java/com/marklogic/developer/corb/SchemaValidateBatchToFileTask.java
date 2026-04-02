@@ -40,6 +40,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.logging.Logger;
 
+import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.XmlUtils.schemaValidate;
 import static java.util.logging.Level.INFO;
 
@@ -303,6 +304,9 @@ public class SchemaValidateBatchToFileTask extends ExportBatchToFileTask {
      */
     protected File getSchemaFile() {
         String schemaFilename = getProperty(Options.XML_SCHEMA);
+        if (isBlank(schemaFilename)) {
+            throw new IllegalArgumentException("XML Schema file path must be provided via " + Options.XML_SCHEMA);
+        }
         return FileUtils.getFile(schemaFilename);
     }
 

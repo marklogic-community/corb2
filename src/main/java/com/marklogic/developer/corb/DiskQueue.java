@@ -72,8 +72,8 @@ import org.jetbrains.annotations.NotNull;
  * </p>
  *
  * @param <E> the type of elements held in this queue, must be Serializable
- * @author MarkLogic Corporation
- * @since 1.0
+ * @author Mads Hansen, MarkLogic Corporation
+ * @since 2.3.1
  */
 public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
 

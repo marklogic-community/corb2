@@ -1490,6 +1490,8 @@ public final class Options {
 
 
     /**
+     * Temporary directory used by com.marklogic.developer.corb.FileUrisStreamingXMLLoader to store files extracted from the XML-FILE.
+     * If not specified, TEMP-DIR value will be used. If not specified, then the default Java java.tmp.dir will be used.
      *
      * @since 2.4.0
      */

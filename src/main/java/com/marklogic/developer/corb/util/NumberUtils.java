@@ -103,6 +103,9 @@ public final class NumberUtils {
      *         numeric value, or uses an unsupported unit
      */
     public static long parseSize(String size) throws NumberFormatException {
+        if (size == null) {
+            return 0L;
+        }
         // Use a regex to capture the number part and the unit part (case-insensitive)
         Pattern pattern = Pattern.compile("([\\d.]+)\\s*([a-zA-Z]+)", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(size.trim());

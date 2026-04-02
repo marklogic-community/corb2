@@ -266,9 +266,13 @@ public final class FileUtils {
     public static File getFile(final String filename) {
         File file;
         ClassLoader classLoader = FileUtils.class.getClassLoader();
-        URL resource = classLoader.getResource(filename);
-        if (resource != null) {
-            file = new File(resource.getFile());
+        if (classLoader != null) {
+            URL resource = classLoader.getResource(filename);
+            if (resource != null) {
+                file = new File(resource.getFile());
+            } else {
+                file = new File(filename);
+            }
         } else {
             file = new File(filename);
         }

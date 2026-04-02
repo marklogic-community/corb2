@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -227,7 +228,7 @@ class FileUrisStreamingXMLLoaderIT {
         properties.setProperty(Options.THREAD_COUNT, Integer.toString(10));
         properties.setProperty(Options.LOADER_SET_URIS_BATCH_REF, Boolean.toString(true));
 
-        String batchId = System.currentTimeMillis()+String.format("%06d", (int)(Math.random()*1000000));
+        String batchId = System.currentTimeMillis()+String.format("%06d", new Random().nextInt());
         properties.setProperty(Options.PRE_BATCH_MODULE+".BATCH_ID", batchId);
         properties.setProperty(Options.PROCESS_MODULE+".BATCH_ID", batchId);
         properties.setProperty(Options.POST_BATCH_MODULE+".BATCH_ID", batchId);

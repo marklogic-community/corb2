@@ -122,7 +122,7 @@ class SchemaValidateBatchToFileTaskTest {
     @Test
     void getSchemaFileMissing() {
         SchemaValidateBatchToFileTask validate = new SchemaValidateBatchToFileTask();
-        assertThrows(NullPointerException.class, validate::getSchemaFile);
+        assertThrows(IllegalArgumentException.class, validate::getSchemaFile);
     }
 
     @Test

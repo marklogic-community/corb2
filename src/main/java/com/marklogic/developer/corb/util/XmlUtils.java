@@ -30,24 +30,23 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.Source;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stax.StAXSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.File;
-import java.io.Reader;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -134,7 +133,9 @@ public final class XmlUtils {
      */
     public static List<SAXParseException> schemaValidate(File xmlFile, File schemaFile, Properties options) throws CorbException {
         XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
-        try (Reader fileReader = new FileReader(xmlFile)) {
+        xmlInputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+        xmlInputFactory.setProperty("javax.xml.stream.isSupportingExternalEntities", false);
+        try (Reader fileReader = new InputStreamReader(Files.newInputStream(xmlFile.toPath()), StandardCharsets.UTF_8)) {
             Source source = new StAXSource(xmlInputFactory.createXMLStreamReader(fileReader));
             return schemaValidate(source, schemaFile, options);
         } catch (IOException | SAXException | XMLStreamException ex) {
@@ -157,6 +158,8 @@ public final class XmlUtils {
      */
     public static List<SAXParseException> schemaValidate(Source source, File schemaFile, Properties options) throws SAXException, IOException {
         SchemaFactory schemaFactory = SchemaFactory.newInstance(W3C_XML_SCHEMA_NS_URI);
+        schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
         boolean honourAllSchemaLocations = StringUtils.stringToBoolean(Options.findOption(options, Options.XML_SCHEMA_HONOUR_ALL_SCHEMALOCATIONS), true);
         if (honourAllSchemaLocations){
             schemaFactory.setFeature("http://apache.org/xml/features/honour-all-schemaLocations", true);
@@ -193,6 +196,55 @@ public final class XmlUtils {
      * @return an InputStream containing the serialized node data
      */
     public static InputStream toInputStream(Node node) {
-        return new ByteArrayInputStream(nodeToString(node.getOwnerDocument(), node).getBytes());
+        return new ByteArrayInputStream(nodeToString(node.getOwnerDocument(), node).getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Creates a new instance of DocumentBuilderFactory with secure features enabled.
+     * The factory is configured to prevent XML External Entity (XXE) attacks by disabling
+     * DTD processing and external entity resolution.
+     *
+     * @return a securely configured DocumentBuilderFactory instance
+     */
+    public static DocumentBuilderFactory newSecureDocumentBuilderFactoryInstance() {
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        documentBuilderFactory.setNamespaceAware(true);
+        documentBuilderFactory.setXIncludeAware(false);
+        documentBuilderFactory.setExpandEntityReferences(false);
+        try {
+            documentBuilderFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        } catch (ParserConfigurationException e) {
+            LOG.log(Level.WARNING, "Unable to set secure XML parser features", e);
+        }
+        try {
+            documentBuilderFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Unable to set secure XML parser features", e);
+        }
+        try {
+            documentBuilderFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Unable to set secure XML parser features", e);
+        }
+        try {
+            documentBuilderFactory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Unable to set secure XML parser features", e);
+        }
+        documentBuilderFactory.setXIncludeAware(false);
+        documentBuilderFactory.setExpandEntityReferences(false);
+        return documentBuilderFactory;
+    }
+
+    public static TransformerFactory newSecureTransformerFactoryInstance() {
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        try {
+            transformerFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            transformerFactory.setAttribute(javax.xml.XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            transformerFactory.setAttribute(javax.xml.XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "file,jar:zip");
+        } catch (IllegalArgumentException | TransformerConfigurationException e) {
+            LOG.log(Level.WARNING, "Unable to set secure XML transformer features", e);
+        }
+        return transformerFactory;
     }
 }

@@ -34,6 +34,8 @@ import static com.marklogic.developer.corb.util.StringUtils.commaSeparatedValues
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
+
+import com.marklogic.developer.corb.util.XmlUtils;
 import com.marklogic.xcc.Request;
 import com.marklogic.xcc.RequestOptions;
 import com.marklogic.xcc.ResultSequence;
@@ -65,7 +67,6 @@ import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -388,12 +389,15 @@ public abstract class AbstractTask implements Task {
             Thread.currentThread().setName(urisAsString(inputUris));
 
             Thread.yield();// try to avoid thread starvation
-            seq = session.submitRequest(request);
+            synchronized (session) {
+                seq = session.submitRequest(request);
+            }
             retryCount = 0;
 
             Thread.yield();// try to avoid thread starvation
             processResult(seq);
             seq.close();
+
             Thread.yield();// try to avoid thread starvation
             writeCompletedUrisToRestartState(inputUris);
 
@@ -405,7 +409,6 @@ public abstract class AbstractTask implements Task {
         } finally {
             if (null != seq && !seq.isClosed()) {
                 seq.close();
-                seq = null;
             }
             Thread.yield();// try to avoid thread starvation
         }
@@ -516,7 +519,7 @@ public abstract class AbstractTask implements Task {
     protected XdmItem[] toXdmItems(String... inputUris) throws CorbException {
         List<XdmItem> docs = new ArrayList<>(inputUris.length);
         try {
-            DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            DocumentBuilder builder = XmlUtils.newSecureDocumentBuilderFactoryInstance().newDocumentBuilder();
             for (String input : inputUris) {
                 XdmItem doc = toXdmItem(builder, input);
                 docs.add(doc);

@@ -407,12 +407,12 @@ public class JobStats extends BaseMonitor {
     /**
      * Factory for creating XML document builders.
      */
-    protected final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+    protected final DocumentBuilderFactory documentBuilderFactory = XmlUtils.newSecureDocumentBuilderFactoryInstance();
 
     /**
      * Factory for creating XSLT transformers.
      */
-    private final TransformerFactory transformerFactory  = TransformerFactory.newInstance();
+    private final TransformerFactory transformerFactory = XmlUtils.newSecureTransformerFactoryInstance();
 
     /**
      * Compiled XSLT templates for transforming job statistics XML to JSON.
@@ -716,14 +716,13 @@ public class JobStats extends BaseMonitor {
             request.setOptions(requestOptions);
 
             seq = session.submitRequest(request);
-            String uri = seq.hasNext() ? seq.next().asString() : null;
+            String uri = seq != null && seq.hasNext() ? seq.next().asString() : null;
             if (uri != null) {
                 this.uri = uri;
             }
         } finally {
             if (null != seq && !seq.isClosed()) {
                 seq.close();
-                seq = null;
             }
         }
     }

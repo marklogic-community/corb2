@@ -552,6 +552,11 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
         //Creating a transformerFactory is expensive, only do it once
         if (transformerFactory == null) {
             transformerFactory = TransformerFactory.newInstance();
+            try {
+                transformerFactory.setFeature(javax.xml.XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            } catch (TransformerConfigurationException ex) {
+                LOG.log(Level.WARNING, "Failed to set secure processing feature on TransformerFactory", ex);
+            }
         }
         return transformerFactory;
     }

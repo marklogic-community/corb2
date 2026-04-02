@@ -30,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -297,7 +298,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
                     privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(keyAsBytes));
                 } catch (Exception exc) {
                     LOG.log(INFO, "Attempting to decode private key with base64. Ignore this message if keys are generated with openssl", exc);
-                    String keyAsString = new String(keyAsBytes);
+                    String keyAsString = new String(keyAsBytes, StandardCharsets.UTF_8);
                     // remove the begin and end key lines if present.
                     keyAsString = keyAsString.replaceAll("[-]+(BEGIN|END)[A-Z ]*KEY[-]+", "");
 

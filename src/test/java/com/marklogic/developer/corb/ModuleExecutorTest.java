@@ -270,9 +270,12 @@ class ModuleExecutorTest {
             String[] args = {props.getProperty(Options.XCC_CONNECTION_URI)};
             ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
             executor.init(args);
-            byte[] report;
+            byte[] report = null;
             try (ResultSequence resSeq = run(executor)) {
-                report = AbstractTask.getValueAsBytes(resSeq.next().getItem());
+                ResultItem resultItem = resSeq.next();
+                if (resultItem != null) {
+                    report = AbstractTask.getValueAsBytes(resSeq.next().getItem());
+                }
             }
 
             assertNotNull(report);

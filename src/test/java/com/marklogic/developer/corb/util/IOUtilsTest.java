@@ -21,15 +21,8 @@ package com.marklogic.developer.corb.util;
 import static com.marklogic.developer.corb.util.IOUtils.BUFFER_SIZE;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,7 +40,7 @@ class IOUtilsTest {
     private static final String NULL_OUTPUTSTREAM_MSG = "null OutputStream";
 
     public IOUtilsTest() throws IOException {
-        try (FileReader fileReader = new FileReader(exampleContentFile)) {
+        try (Reader fileReader = new InputStreamReader(Files.newInputStream(exampleContentFile.toPath()), StandardCharsets.UTF_8)) {
             exampleContent = cat(fileReader);
         }
     }
@@ -171,7 +164,7 @@ class IOUtilsTest {
     void testGetBytes() {
         try {
             byte[] result = FileUtilsTest.getBytes(exampleContentFile);
-            assertArrayEquals(exampleContent.getBytes(), result);
+            assertArrayEquals(exampleContent.getBytes(StandardCharsets.UTF_8), result);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

@@ -852,7 +852,6 @@ class AbstractManagerTest {
         ContentSource contentSource = manager.getContentSourcePool().get();
         assertNotNull(contentSource);
         String contentSourceStr = contentSource.toString();
-        ConnectionProvider provider = contentSource.getConnectionProvider();
         assertTrue(contentSourceStr.contains("user={none}"));
         assertEquals("Bearer foobar", contentSource.getUserCredentials().toOAuth());
     }

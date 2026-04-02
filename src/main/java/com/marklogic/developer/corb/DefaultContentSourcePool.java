@@ -26,6 +26,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -261,12 +262,13 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         if (connectionStrings == null || connectionStrings.length == 0) {
             throw new NullPointerException("XCC connection strings cannot be null or empty");
         }
-        shouldRenewContentSource = shouldRenewContentSource();
-        renewContentSourceInterval = getRenewContentSourceInterval();
-        retryInterval = getConnectRetryInterval();
-        retryLimit = getConnectRetryLimit();
-        hostRetryLimit = getConnectHostRetryLimit();
-
+        synchronized (this) {
+            shouldRenewContentSource = shouldRenewContentSource();
+            renewContentSourceInterval = getRenewContentSourceInterval();
+            retryInterval = getConnectRetryInterval();
+            retryLimit = getConnectRetryLimit();
+            hostRetryLimit = getConnectHostRetryLimit();
+        }
         String policy = getProperty(CONNECTION_POLICY);
         if (CONNECTION_POLICY_RANDOM.equals(policy) || CONNECTION_POLICY_LOAD.equals(policy)) {
             this.connectionPolicy = policy;
@@ -623,7 +625,10 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         ConnectionProvider connectionProvider = contentSource.getConnectionProvider();
         if (connectionProvider instanceof SingleHostAddress) {
             SingleHostAddress currentProvider = (SingleHostAddress) connectionProvider;
-            ip = currentProvider.getAddress().getAddress().getHostAddress();
+            InetSocketAddress address = currentProvider.getAddress();
+            if (address != null && address.getAddress() != null) {
+                ip = address.getAddress().getHostAddress();
+            }
         }
         return ip;
     }
@@ -679,8 +684,9 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
      * @return a proxied ContentSource instance
      */
     protected ContentSource createContentSourceProxy(ContentSource contentSource) {
+        ClassLoader classLoader = DefaultContentSourcePool.class.getClassLoader() == null ? ClassLoader.getSystemClassLoader() : DefaultContentSourcePool.class.getClassLoader();
         return (ContentSource) Proxy.newProxyInstance(
-            DefaultContentSourcePool.class.getClassLoader(),
+            classLoader,
             new Class[] { ContentSource.class },
             new ContentSourceInvocationHandler(this, contentSource));
     }
@@ -798,8 +804,9 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
          * @return a proxied Session instance
          */
         protected Session createSessionProxy(Session session) {
+            ClassLoader classLoader = DefaultContentSourcePool.class.getClassLoader() == null ? ClassLoader.getSystemClassLoader() : DefaultContentSourcePool.class.getClassLoader();
             return (Session)Proxy.newProxyInstance(
-                DefaultContentSourcePool.class.getClassLoader(),
+                classLoader,
                 new Class[] { Session.class },
                 new SessionInvocationHandler(contentSourcePool, target, session, allocTime));
         }
@@ -995,13 +1002,14 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
          * @throws Throwable if retry limit is exceeded or exception is not retryable
          */
         protected Object handleInvokeException(Exception exc, Method method, Object[] args) throws Throwable {
-            if (contentSourcePool.isLoadPolicy() && (isSubmitRequest(method) || isInsertContent(method))) {
+            if (contentSourcePool != null && contentSourcePool.isLoadPolicy() && (isSubmitRequest(method) || isInsertContent(method))) {
                 contentSourcePool.release(contentSource); //we should do this before the recursion. not finally.
             }
             if (exc instanceof InvocationTargetException) {
                 if (exc.getCause() instanceof ServerConnectionException) {
-                    contentSourcePool.error(contentSource, allocTime); //we should do this before the recursion. not finally.
-
+                    if (contentSourcePool != null) {
+                        contentSourcePool.error(contentSource, allocTime); //we should do this before the recursion. not finally.
+                    }
                     String name = exc.getCause().getClass().getSimpleName();
                     if (isSubmitRequest(method) && attempts <= contentSourcePool.retryLimit) {
                         LOG.log(WARNING, "Submit request failed {0} times with {1}. Max Limit is {2}. Retrying..", new Object[]{attempts, name, contentSourcePool.retryLimit});

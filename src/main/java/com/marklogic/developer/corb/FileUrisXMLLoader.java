@@ -30,12 +30,10 @@ import static com.marklogic.developer.corb.util.StringUtils.*;
 
 import com.marklogic.developer.corb.util.FileUtils;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathFactory;
+import javax.xml.xpath.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -51,7 +49,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPathExpressionException;
 
 import com.marklogic.developer.corb.util.XmlUtils;
 import org.w3c.dom.Document;
@@ -263,7 +260,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
     private Iterator<Node> readNodes(Path input) throws CorbException {
         String xpathRootNode = getProperty(XML_NODE);
         String xpathMetadataNode = getProperty(XML_METADATA);
-        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilderFactory dbFactory = XmlUtils.newSecureDocumentBuilderFactoryInstance();
         dbFactory.setNamespaceAware(true);
         try {
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
@@ -277,6 +274,11 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
                 nodeList = doc.getChildNodes().item(0).getChildNodes();
             } else {
                 XPathFactory factory = XPathFactory.newInstance();
+                try {
+                    factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+                } catch (XPathFactoryConfigurationException e) {
+                    LOG.warning("Failed to set secure processing feature on XPathFactory: " + e.getMessage());
+                }
                 //using this factory to create an XPath object:
                 XPath xpath = factory.newXPath();
 

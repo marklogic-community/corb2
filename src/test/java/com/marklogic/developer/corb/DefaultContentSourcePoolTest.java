@@ -64,8 +64,10 @@ class DefaultContentSourcePoolTest {
 	}
 
 	private void assertHostAndPort(ContentSource contentSource, String hostname, int port) {
-        assertEquals(hostname, normalizeHostName(contentSource.getConnectionProvider().getHostName()));
-		assertEquals(port, contentSource.getConnectionProvider().getPort());
+        ConnectionProvider connectionProvider = contentSource != null ? contentSource.getConnectionProvider() : null;
+        assertNotNull(connectionProvider, "ConnectionProvider should not be null");
+        assertEquals(hostname, normalizeHostName(connectionProvider.getHostName()));
+		assertEquals(port, connectionProvider.getPort());
 	}
 
     //CircleCI has Amazon EC2 internal IP hostnames, so normalize
@@ -110,7 +112,9 @@ class DefaultContentSourcePoolTest {
             contentSourcePool.init(properties, null, localhostXccUri);
 
             ContentSource contentSource = contentSourcePool.nextContentSource();
-            contentSourcePool.error(contentSource);
+            if (contentSource != null) {
+                contentSourcePool.error(contentSource);
+            }
             long before = System.currentTimeMillis();
             contentSourcePool.get();
             long after = System.currentTimeMillis();
@@ -271,6 +275,7 @@ class DefaultContentSourcePoolTest {
         try (DefaultContentSourcePool contentSourcePool = initRoundRobinPool()) {
             ContentSource contentSource = contentSourcePool.nextContentSource();
             assertEquals(3, contentSourcePool.getAvailableContentSources().size());
+            assertNotNull(contentSource);
             contentSourcePool.error(contentSource);
             assertEquals(2, contentSourcePool.getAvailableContentSources().size());
         }
@@ -283,6 +288,7 @@ class DefaultContentSourcePoolTest {
             assertEquals(1, contentSourcePool.getAvailableContentSources().size());
             ContentSource contentSource = contentSourcePool.nextContentSource();
             contentSourcePool.renewContentSource(contentSource);
+            assertNotNull(contentSource);
             //IP hasn't changed for localhost, so no new ContentSource
             assertEquals(1, contentSourcePool.getAvailableContentSources().size());
             //No new IP added to list of IP for hostAndPort

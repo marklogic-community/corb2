@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.LogRecord;
@@ -62,10 +63,11 @@ class JobServerTest {
                 content = IOUtils.toByteArray(inputStream);
                 assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
                 assertNotNull(content);
-                assertTrue(new String(content).contains("Options Builder"));
-                assertTrue(new String(content).contains("options-builder-content"));
-                assertTrue(new String(content).contains("toggleBuilderDescription(option.name)"));
-                assertTrue(new String(content).contains(":title=\"option.description || ''\""));
+                String contentString = new String(content, StandardCharsets.UTF_8);
+                assertTrue(contentString.contains("Options Builder"));
+                assertTrue(contentString.contains("options-builder-content"));
+                assertTrue(contentString.contains("toggleBuilderDescription(option.name)"));
+                assertTrue(contentString.contains(":title=\"option.description || ''\""));
             }
 
             url = new URL(localhostUrl + "/");
@@ -161,12 +163,14 @@ class JobServerTest {
             try (OutputStream out = conn.getOutputStream()) {
                 out.write((Options.PROCESS_MODULE + "=%2Fext%2Fprocess.xqy&" + JobBuilderService.PARAM_ADDITIONAL_PROPERTIES + "=CUSTOM-OPTION%3Dtrue").getBytes());
             }
-            String properties = new String(IOUtils.toByteArray(conn.getInputStream()));
-            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-            assertEquals("text/plain; charset=utf-8", conn.getHeaderField(JobServer.HEADER_CONTENT_TYPE));
-            assertTrue(conn.getHeaderField("Content-Disposition").contains("corb-job.properties"));
-            assertTrue(properties.contains("PROCESS-MODULE=/ext/process.xqy"));
-            assertTrue(properties.contains("CUSTOM-OPTION=true"));
+            try (InputStream inputStream = conn.getInputStream()) {
+                String properties = new String(IOUtils.toByteArray(inputStream));
+                assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+                assertEquals("text/plain; charset=utf-8", conn.getHeaderField(JobServer.HEADER_CONTENT_TYPE));
+                assertTrue(conn.getHeaderField("Content-Disposition").contains("corb-job.properties"));
+                assertTrue(properties.contains("PROCESS-MODULE=/ext/process.xqy"));
+                assertTrue(properties.contains("CUSTOM-OPTION=true"));
+            }
         } finally {
             server.stop(0);
         }

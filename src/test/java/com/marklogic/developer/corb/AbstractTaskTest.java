@@ -1154,7 +1154,10 @@ class AbstractTaskTest {
         AbstractTask task = new AbstractTaskImpl();
         Exception ex = new IllegalAccessException();
         CorbException corbException = task.wrapProcessException(ex, null);
-        assertEquals(IllegalAccessException.class, corbException.getCause().getClass());
+        assertNotNull(corbException.getCause());
+        Throwable cause = corbException.getCause();
+        assertNotNull(cause);
+        assertEquals(IllegalAccessException.class, cause.getClass());
         assertNotNull(corbException.getMessage());
     }
 
@@ -1317,7 +1320,7 @@ class AbstractTaskTest {
 
         @Override
         public String getQuery() {
-            return query;
+            return query == null ? "" : query;
         }
 
         @Override

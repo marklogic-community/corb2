@@ -35,6 +35,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.ProviderNotFoundException;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -298,7 +299,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                         }
                         String sn = sb.toString();
                         if (!sn.isEmpty()) {
-                            return sn.getBytes();
+                            return sn.getBytes(StandardCharsets.UTF_8);
                         } else {
                             throw new IllegalStateException(MessageFormat.format(EXCEPTION_MGS_SERIAL_NOT_FOUND, this.toString()));
                         }
@@ -476,12 +477,14 @@ public class HostKeyDecrypter extends AbstractDecrypter {
      * @throws RuntimeException if key generation fails due to NoSuchAlgorithmException
      */
     @Override
-    protected synchronized void init_decrypter() throws IOException, ClassNotFoundException {
-        try {
-            privateKey = getPrivateKey();
-            LOG.log(INFO, "Initialized HostKeyDecrypter");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error constructing private key", e);
+    protected void init_decrypter() throws IOException, ClassNotFoundException {
+        synchronized (HostKeyDecrypter.class) {
+            try {
+                privateKey = getPrivateKey();
+                LOG.log(INFO, "Initialized HostKeyDecrypter");
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException("Error constructing private key", e);
+            }
         }
     }
 
@@ -709,8 +712,9 @@ public class HostKeyDecrypter extends AbstractDecrypter {
             decryptedTextBytes = cipher.doFinal(encryptedTextBytes);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "decryption failed", e);
+            return null;
         }
-        return new String(decryptedTextBytes);
+        return new String(decryptedTextBytes, StandardCharsets.UTF_8);
     }
 
     /**

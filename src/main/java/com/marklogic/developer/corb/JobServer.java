@@ -196,7 +196,7 @@ public class JobServer {
      * particularly for job statistics and metrics responses.
      * </p>
      */
-    private final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+    private final DocumentBuilderFactory documentBuilderFactory = XmlUtils.newSecureDocumentBuilderFactoryInstance();
 
     /**
      * Factory for creating XSLT transformers.
