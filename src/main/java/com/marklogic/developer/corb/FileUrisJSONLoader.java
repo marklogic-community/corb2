@@ -39,6 +39,11 @@ public class FileUrisJSONLoader extends AbstractJsonFileUrisLoader {
     protected final List<String> extractedValues = new ArrayList<>();
     protected int index;
 
+    /**
+     * Opens the JSON file, extracts values based on the provided JSON node selector, and stores them in memory.
+     *
+     * @throws CorbException if there is an issue reading the JSON file or extracting values
+     */
     @Override
     public void open() throws CorbException {
         String fileName = getLoaderPath(JSON_FILE);
@@ -71,11 +76,19 @@ public class FileUrisJSONLoader extends AbstractJsonFileUrisLoader {
         }
     }
 
+    /** Checks if there are more extracted values to iterate over.
+     *
+     * @return true if there are more values, false otherwise
+     */
     @Override
     public boolean hasNext() {
         return index < extractedValues.size();
     }
-
+    /** Returns the next extracted value as a loader payload.
+     *
+     * @return the next loader payload, or null if there are no more values
+     * @throws CorbException if there is an issue converting the extracted value to a loader payload
+     */
     @Override
     public String next() throws CorbException {
         if (!hasNext()) {
@@ -84,6 +97,9 @@ public class FileUrisJSONLoader extends AbstractJsonFileUrisLoader {
         return toLoaderPayload(extractedValues.get(index++), jsonFile);
     }
 
+    /**
+     * Closes the loader and clears any stored extracted values and metadata.
+     */
     @Override
     public void close() {
         super.close();

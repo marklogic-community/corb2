@@ -948,6 +948,12 @@ public abstract class AbstractTask implements Task {
         }
     }
 
+    /**
+     * Resolves the directory to use for restart state persistence.
+     * Checks RESTART_STATE_DIR property first, then TEMP_DIR, and finally falls back to system temp directory.
+     *
+     * @return the resolved directory path for restart state
+     */
     protected String getResolvedRestartStateDir() {
         String restartStateDir = getProperty(Options.RESTART_STATE_DIR);
         if (isNotEmpty(restartStateDir)) {

@@ -43,21 +43,42 @@ public class StreamingJsonPath implements JsonSelector {
     private final String expression;
     private final List<String> tokens;
 
+    /**
+     * Constructs a StreamingJsonPath with the default selector expression of {@code /*}, which matches all immediate child nodes of the root.
+     *
+     * @throws CorbException if there is an issue with the default expression (should not occur)
+     */
     public StreamingJsonPath() throws CorbException {
         this("/*");
     }
 
+    /**
+     * Constructs a StreamingJsonPath with the provided selector expression.
+     *
+     * @param expression the JSON path selector expression, which can include absolute paths (e.g. "/items/&#42;"), relative paths (e.g. "uri"), descendant matching (e.g. "//name"), and wildcards (e.g. "/items/&#42;/name")
+     * @throws CorbException if the expression contains unsupported syntax or is otherwise invalid
+     */
     public StreamingJsonPath(String expression) throws CorbException {
         this.expression = normalize(expression);
         this.tokens = Collections.unmodifiableList(parseTokens(this.expression));
     }
-
+    /**
+     * Matches the provided JSON path against the selector expression.
+     *
+     * @param currentPath the JSON path to match, represented as a slash-delimited string (e.g. "/items/0/name")
+     * @return true if the currentPath matches the selector expression, false otherwise
+     */
     @Override
     public boolean matches(String currentPath) {
         List<String> pathTokens = parsePathTokens(currentPath);
         return matches(0, 0, pathTokens);
     }
 
+    /**
+     * Returns the original selector expression.
+     *
+     * @return the original selector expression
+     */
     @Override
     public String getExpression() {
         return expression;

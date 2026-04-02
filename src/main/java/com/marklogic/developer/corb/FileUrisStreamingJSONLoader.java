@@ -49,6 +49,11 @@ public class FileUrisStreamingJSONLoader extends AbstractJsonFileUrisLoader {
     private final List<Path> extractedFiles = new ArrayList<>();
     private final FileAttribute<?>[] fileAttributes = new FileAttribute<?>[0];
 
+    /**
+     * Opens the JSON file, extracts values based on the provided JSON node selector, and stores them in temporary files for iteration.
+     *
+     * @throws CorbException if there is an issue reading the JSON file or extracting values
+     */
     @Override
     public void open() throws CorbException {
         String jsonFilename = getLoaderPath(JSON_FILE);
@@ -85,11 +90,21 @@ public class FileUrisStreamingJSONLoader extends AbstractJsonFileUrisLoader {
         }
     }
 
+    /**
+     * Checks if there are more JSON values to process based on the presence of temporary files.
+     *
+     * @return true if there are more JSON values to process, false otherwise
+     */
     @Override
     public boolean hasNext() {
         return files != null && files.hasNext();
     }
 
+    /** Returns the next JSON value as a loader payload, reading it from the corresponding temporary file.
+     *
+     * @return the next loader payload, or null if there are no more values
+     * @throws CorbException if there is an issue reading the JSON value from the temporary file
+     */
     @Override
     public String next() throws CorbException {
         Path path = files.next();
@@ -117,6 +132,11 @@ public class FileUrisStreamingJSONLoader extends AbstractJsonFileUrisLoader {
         }
     }
 
+    /** Retrieves the temporary directory for storing extracted JSON values, either from the specified options or by creating a new temporary directory.
+     *
+     * @return the Path to the temporary directory
+     * @throws IOException if there is an issue creating or accessing the temporary directory
+     */
     protected Path getTempDir() throws IOException {
         String tempDirOption = getProperty(JSON_TEMP_DIR);
         if (StringUtils.isBlank(tempDirOption)) {
@@ -125,6 +145,9 @@ public class FileUrisStreamingJSONLoader extends AbstractJsonFileUrisLoader {
         return getTempDir(jsonFile, tempDirOption, fileAttributes);
     }
 
+    /** Closes the loader and cleans up any temporary files and resources used during the loading process.
+     * This includes deleting temporary files, clearing references to extracted files, and resetting relevant fields.
+     */
     @Override
     public void close() {
         super.close();

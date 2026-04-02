@@ -435,6 +435,12 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Initializes the Manager options from command-line arguments.
+     *
+     * @param args command-line arguments
+     * @throws CorbException if there is an error processing the options
+     */
     @Override
     protected void initOptions(String... args) throws CorbException {
         super.initOptions(args);
@@ -1061,6 +1067,9 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Normalizes the legacy EXPORT-FILE-AS-ZIP-LEGACY property to EXPORT-FILE-AS-ZIP for backward compatibility.
+     */
     protected void normalizeLegacyExportFileAsZipOption() {
         if (System.getProperty(EXPORT_FILE_AS_ZIP) != null || properties.containsKey(EXPORT_FILE_AS_ZIP)) {
             return;
@@ -1116,6 +1125,9 @@ public class Manager extends AbstractManager implements Closeable {
         }
     }
 
+    /**
+     * Log the options that are configured for this run at INFO level.
+     */
     @Override
     protected void logOptions() {
         LOG.log(INFO, () -> MessageFormat.format("Configured modules db: {0}", options.getModulesDatabase()));
@@ -1431,6 +1443,12 @@ public class Manager extends AbstractManager implements Closeable {
         return sanitized.isEmpty() ? "job" : sanitized;
     }
 
+    /**
+     * Records completed URIs to the restart state for potential future runs.
+     *
+     * @param uris the URIs to record as completed
+     * @throws CorbException if the URIs cannot be recorded
+     */
     protected void recordCompletedUris(String[] uris) throws CorbException {
         if (restartableJobState == null || uris == null || uris.length == 0) {
             return;

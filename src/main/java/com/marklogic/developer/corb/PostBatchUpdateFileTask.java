@@ -310,6 +310,19 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
         }
     }
 
+    /**
+     * Writes the bottom content to the export file(s), handling file splitting if enabled.
+     * <p>
+     * If file splitting is enabled, this method delegates to
+     * {@link #writeBottomContentWithSplitting(File, String, long, long)} to append content
+     * to each split file while respecting line count and file size thresholds.
+     * If file splitting is not enabled, this method directly appends the content to the
+     * single export file.
+     * </p>
+     *
+     * @param bottomContent the content to append to the bottom of the export file(s)
+     * @throws IOException if an I/O error occurs while writing to the export file(s)
+     */
     protected void writeBottomContentWithSplitting(String bottomContent) throws IOException {
         File exportFile = getExportFile();
         writeBottomContentWithSplitting(exportFile, bottomContent, getMaxLines(), getMaxSize());
