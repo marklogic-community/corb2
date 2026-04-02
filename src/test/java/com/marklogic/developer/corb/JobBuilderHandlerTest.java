@@ -26,7 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.net.URI;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -36,8 +36,6 @@ import static org.mockito.Mockito.when;
 
 class JobBuilderHandlerTest {
 
-    private static final Charset UTF_8 = Charset.forName("UTF-8");
-
     @Test
     void handlePropertiesRequestDecodesFormValues() throws Exception {
         Headers headers = new Headers();
@@ -45,7 +43,7 @@ class JobBuilderHandlerTest {
         when(exchange.getRequestURI()).thenReturn(URI.create(JobBuilderHandler.BUILDER_PROPERTIES_PATH));
         when(exchange.getRequestMethod()).thenReturn("POST");
         when(exchange.getResponseHeaders()).thenReturn(headers);
-        when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream((Options.PROCESS_MODULE + "=%2Fext%2Fprocess.xqy&" + JobBuilderService.PARAM_DOWNLOAD_FILE_NAME + "=nightly%20run").getBytes(UTF_8)));
+        when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream((Options.PROCESS_MODULE + "=%2Fext%2Fprocess.xqy&" + JobBuilderService.PARAM_DOWNLOAD_FILE_NAME + "=nightly%20run").getBytes(StandardCharsets.UTF_8)));
         OutputStream out = new ByteArrayOutputStream();
         when(exchange.getResponseBody()).thenReturn(out);
 
@@ -68,7 +66,7 @@ class JobBuilderHandlerTest {
         when(exchange.getRequestURI()).thenReturn(URI.create(JobBuilderHandler.BUILDER_JOBS_PATH));
         when(exchange.getRequestMethod()).thenReturn("POST");
         when(exchange.getResponseHeaders()).thenReturn(headers);
-        when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream((Options.JOB_NAME + "=builder-demo").getBytes(UTF_8)));
+        when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream((Options.JOB_NAME + "=builder-demo").getBytes(StandardCharsets.UTF_8)));
         OutputStream out = new ByteArrayOutputStream();
         when(exchange.getResponseBody()).thenReturn(out);
 
