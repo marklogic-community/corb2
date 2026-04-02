@@ -44,7 +44,7 @@ import static com.marklogic.developer.corb.util.StringUtils.trim;
 /**
  * Provides metadata and serialization helpers for the Job Server options builder UI.
  */
-public final class JobBuilderService {
+public class JobBuilderService {
 
     static final String PARAM_ADDITIONAL_PROPERTIES = "builder.additionalProperties";
     static final String PARAM_DOWNLOAD_FILE_NAME = "builder.downloadFileName";
