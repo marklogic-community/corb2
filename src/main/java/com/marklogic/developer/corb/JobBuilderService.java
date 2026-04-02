@@ -43,6 +43,7 @@ import static com.marklogic.developer.corb.util.StringUtils.trim;
 
 /**
  * Provides metadata and serialization helpers for the Job Server options builder UI.
+ * @since 2.6.0
  */
 public class JobBuilderService {
 

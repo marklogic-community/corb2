@@ -47,6 +47,7 @@ import java.util.logging.Logger;
  * </ul>
  *
  * @see AbstractDecrypter
+  * @since 2.1.0
  */
 public class JasyptDecrypter extends AbstractDecrypter {
 

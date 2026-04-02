@@ -61,6 +61,7 @@ import java.util.logging.Logger;
  * </ul>
  *
  * @author rkennedy
+  * @since 2.1.3
  */
 public abstract class AbstractSSLConfig implements SSLConfig {
 	/**

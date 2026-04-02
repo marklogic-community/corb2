@@ -40,6 +40,7 @@ import java.util.List;
  *
  * <p>The ETC calculation uses a rolling average of recent TPS values to provide
  * a more stable estimate that adapts to changing throughput.</p>
+  * @since 2.4.0
  */
 public class BaseMonitor {
 

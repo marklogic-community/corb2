@@ -77,6 +77,7 @@ import java.time.format.DateTimeFormatter;
  * @see BaseMonitor
  * @see Manager
  * @see JobServer
+  * @since 2.4.0
  */
 public class JobStats extends BaseMonitor {
 

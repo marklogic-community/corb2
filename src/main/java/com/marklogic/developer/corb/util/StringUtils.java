@@ -37,6 +37,7 @@ import static com.marklogic.developer.corb.Options.*;
  * @author mike.blakeley@marklogic.com
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  * @author Mads Hansen, MarkLogic Corporation
+  * @since 2.0.0
  */
 public final class StringUtils {
 

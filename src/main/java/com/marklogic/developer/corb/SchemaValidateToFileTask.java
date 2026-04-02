@@ -94,6 +94,7 @@ import java.util.List;
  * @see ExportToFileTask
  * @see Options#XML_SCHEMA
  * @see Options#EXPORT_FILE_DIR
+  * @since 2.4.1
  */
 public class SchemaValidateToFileTask extends SchemaValidateBatchToFileTask {
 

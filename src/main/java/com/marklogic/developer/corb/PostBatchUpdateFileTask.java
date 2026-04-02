@@ -96,6 +96,7 @@ import java.util.zip.ZipOutputStream;
  * @see ExportBatchToFileTask
  * @see PreBatchUpdateFileTask
  * @see com.google.code.externalsorting.ExternalSort
+  * @since 2.0.0
  */
 public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
 

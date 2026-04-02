@@ -59,6 +59,7 @@ import java.util.logging.Logger;
  * @see JobServer
  * @see Manager
  * @see JobStats
+  * @since 2.4.0
  */
 public class JobServicesHandler implements HttpHandler {
 

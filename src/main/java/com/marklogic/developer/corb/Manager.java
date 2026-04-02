@@ -77,6 +77,7 @@ import java.util.logging.Logger;
  * @see Task
  * @see UrisLoader
  * @see JobServer
+  * @since 1.0.0
  */
 public class Manager extends AbstractManager implements Closeable {
 

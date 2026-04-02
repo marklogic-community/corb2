@@ -36,6 +36,7 @@ package com.marklogic.developer.corb;
  *   <li>URI loader initialization or processing failures</li>
  *   <li>Decryption failures for encrypted configuration values</li>
  * </ul>
+  * @since 2.0.0
  */
 public class CorbException extends Exception {
 

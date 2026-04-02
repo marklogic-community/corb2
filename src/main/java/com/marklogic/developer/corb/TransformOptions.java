@@ -64,6 +64,7 @@ import java.util.Set;
  * @see Manager
  * @see TaskFactory
  * @see Options
+  * @since 1.0.0
  */
 public class TransformOptions {
 

@@ -75,7 +75,7 @@ import java.nio.file.Files;
  * </p>
  *
  * @author Bhagat Bandlamudi, MarkLogic Corporation
- * @since 1.0
+ * @since 2.0.0
  * @see ExportBatchToFileTask
  * @see AbstractTask
  */

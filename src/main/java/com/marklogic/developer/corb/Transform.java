@@ -101,6 +101,7 @@ import com.marklogic.xcc.ResultSequence;
  * @see ExportBatchToFileTask
  * @see Options#PROCESS_TASK
  * @see Options#PROCESS_MODULE
+  * @since 1.0.0
  */
 public class Transform extends AbstractTask {
 

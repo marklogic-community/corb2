@@ -77,7 +77,7 @@ import java.util.logging.Logger;
  * </p>
  *
  * @author MarkLogic Corporation
- * @since 1.0
+ * @since 2.0.4
  * @see AbstractUrisLoader
  * @see FileUrisXMLLoader
  * @see FileUrisDirectoryLoader

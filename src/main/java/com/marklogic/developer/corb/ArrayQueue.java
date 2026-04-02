@@ -46,6 +46,7 @@ import java.util.NoSuchElementException;
  *
  * @author Mads Hansen, MarkLogic Corporation
  * @param <E> the type parameter (note: implementation is specialized for String)
+  * @since 2.3.1
  */
 public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable {
 

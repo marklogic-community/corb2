@@ -72,6 +72,7 @@ import java.io.*;
  * @see PostBatchUpdateFileTask
  * @see Options#EXPORT_FILE_TOP_CONTENT
  * @see Manager#URIS_BATCH_REF
+  * @since 2.0.0
  */
 public class PreBatchUpdateFileTask extends ExportBatchToFileTask {
 

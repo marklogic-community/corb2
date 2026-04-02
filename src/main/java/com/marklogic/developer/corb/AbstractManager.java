@@ -54,6 +54,7 @@ import java.util.regex.Pattern;
  * Provides common functionality for managing CoRB jobs including property loading,
  * connection management, SSL configuration, decryption, and XCC content source pool initialization.
  * Subclasses must implement specific job execution strategies.
+  * @since 2.1.3
  */
 public abstract class AbstractManager {
 

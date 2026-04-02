@@ -172,7 +172,7 @@ import javax.crypto.NoSuchPaddingException;
  * </p>
  *
  * @author MarkLogic Corporation
- * @since 2.0.0
+ * @since 2.1.0
  * @see AbstractDecrypter
  * @see Options#DECRYPTER
  * @see Options#PRIVATE_KEY_FILE

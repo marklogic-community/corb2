@@ -61,7 +61,7 @@ import java.io.Closeable;
  * </pre>
  *
  * @author MarkLogic Corporation
- * @since 1.0
+ * @since 2.0.4
  */
 public interface UrisLoader extends Closeable {
 

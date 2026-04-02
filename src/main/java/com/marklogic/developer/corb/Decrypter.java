@@ -48,6 +48,7 @@ import java.util.Properties;
  * @see AbstractDecrypter
  * @see PrivateKeyDecrypter
  * @see JasyptDecrypter
+  * @since 2.1.3
  */
 public interface Decrypter {
 	/**

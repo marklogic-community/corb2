@@ -41,6 +41,7 @@ import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 /**
  * Memory-efficient JSON URI loader that extracts matching JSON values to temp files.
+  * @since 2.6.0
  */
 public class FileUrisStreamingJSONLoader extends AbstractJsonFileUrisLoader {
 

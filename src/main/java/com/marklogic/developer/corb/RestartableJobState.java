@@ -53,6 +53,7 @@ import java.util.HashSet;
  * rebuilds or reuses the bucket index and answers membership checks without loading
  * the entire journal into memory.
  * </p>
+  * @since 2.6.0
  */
 public class RestartableJobState implements Closeable {
 

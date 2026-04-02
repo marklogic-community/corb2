@@ -119,6 +119,7 @@ import java.util.regex.Pattern;
  * @see ArrayQueue
  * @see DiskQueue
  * @see Options#URIS_MODULE
+  * @since 2.0.4
  */
 public class QueryUrisLoader extends AbstractUrisLoader {
 

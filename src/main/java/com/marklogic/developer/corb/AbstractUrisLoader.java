@@ -45,6 +45,7 @@ import java.util.Properties;
  * </ul>
  *
  * @author Mads Hansen, MarkLogic Corporation
+  * @since 2.3.0
  */
 public abstract class AbstractUrisLoader implements UrisLoader {
 

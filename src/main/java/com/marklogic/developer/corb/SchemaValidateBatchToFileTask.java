@@ -106,6 +106,7 @@ import static java.util.logging.Level.INFO;
  * @see ExportBatchToFileTask
  * @see com.marklogic.developer.corb.util.XmlUtils#schemaValidate(Source, File, java.util.Properties)
  * @see Options#XML_SCHEMA
+  * @since 2.4.1
  */
 public class SchemaValidateBatchToFileTask extends ExportBatchToFileTask {
 

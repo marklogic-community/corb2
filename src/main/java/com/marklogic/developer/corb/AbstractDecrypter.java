@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
  * including pattern matching for encrypted value detection and property retrieval.
  * Encrypted values are expected to be in the format "ENC(encrypted_value)".
  * Subclasses must implement the specific decryption algorithm.
+  * @since 2.1.0
  */
 public abstract class AbstractDecrypter implements Decrypter {
 

@@ -87,6 +87,7 @@ import java.util.TimeZone;
  * @see TaskFactory
  * @see Manager
  * @see Callable
+  * @since 1.0.0
  */
 public interface Task extends Callable<String[]> {
 

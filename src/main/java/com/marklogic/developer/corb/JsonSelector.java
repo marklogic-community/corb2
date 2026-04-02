@@ -20,6 +20,7 @@ package com.marklogic.developer.corb;
 
 /**
  * Strategy interface for matching logical JSON paths during loader parsing.
+  * @since 2.6.0
  */
 public interface JsonSelector {
 

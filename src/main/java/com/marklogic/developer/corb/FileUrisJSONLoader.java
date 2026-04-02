@@ -33,6 +33,7 @@ import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 /**
  * JSON URI loader that keeps extracted values in memory for iteration.
+  * @since 2.6.0
  */
 public class FileUrisJSONLoader extends AbstractJsonFileUrisLoader {
 

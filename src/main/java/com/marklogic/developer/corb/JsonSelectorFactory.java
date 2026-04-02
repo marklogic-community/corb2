@@ -20,6 +20,7 @@ package com.marklogic.developer.corb;
 
 /**
  * Creates {@link JsonSelector} instances for JSON loader path matching.
+  * @since 2.6.0
  */
 public final class JsonSelectorFactory {
 

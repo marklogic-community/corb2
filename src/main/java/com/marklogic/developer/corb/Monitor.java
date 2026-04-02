@@ -61,6 +61,7 @@ import java.util.logging.Logger;
  * @see BaseMonitor
  * @see Manager
  * @see PausableThreadPoolExecutor
+  * @since 1.0.0
  */
 public class Monitor extends BaseMonitor implements Runnable {
 

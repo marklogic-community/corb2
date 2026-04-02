@@ -58,6 +58,7 @@ import java.util.logging.Logger;
  * @author matthew.heckel MarkLogic Corporation
  * @see AbstractManager
  * @see Manager
+  * @since 2.1.3
  */
 public class ModuleExecutor extends AbstractManager {
 

@@ -92,6 +92,7 @@ import org.xml.sax.SAXException;
  * the results returned from MarkLogic.</p>
  *
  * @author Bhagat Bandlamudi, MarkLogic Corporation
+  * @since 2.0.0
  */
 public abstract class AbstractTask implements Task {
 

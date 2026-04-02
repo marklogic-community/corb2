@@ -33,6 +33,7 @@ import static com.marklogic.developer.corb.util.XmlUtils.documentToString;
 
 /**
  * Shared behavior for JSON file-based URI loaders.
+  * @since 2.6.0
  */
 abstract class AbstractJsonFileUrisLoader extends AbstractFileUrisLoader {
 

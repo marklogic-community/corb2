@@ -53,6 +53,7 @@ import java.util.logging.Logger;
  * </p>
  *
  * @author Mads Hansen, MarkLogic Corporation
+  * @since 2.2.1
  */
 public final class FileUtils {
     private static final Logger LOG = Logger.getLogger(FileUtils.class.getName());

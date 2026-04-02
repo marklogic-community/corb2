@@ -37,6 +37,7 @@ import java.util.logging.Logger;
 
 /**
  * Handles Job Server requests for the browser-based options builder.
+ * @since 2.6.0
  */
 public class JobBuilderHandler implements HttpHandler {
 

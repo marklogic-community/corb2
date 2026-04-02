@@ -35,6 +35,7 @@ import static com.marklogic.developer.corb.util.StringUtils.isBlank;
  *   <li>Descendant matching via {@code //}</li>
  *   <li>Wildcards via {@code *}</li>
  * </ul>
+  * @since 2.6.0
  */
 public class StreamingJsonPath implements JsonSelector {
 

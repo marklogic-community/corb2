@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
+  * @since 2.2.1
  */
 public final class IOUtils {
 

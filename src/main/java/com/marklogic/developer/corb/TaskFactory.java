@@ -101,6 +101,7 @@ import java.util.TimeZone;
  * @see Task
  * @see Transform
  * @see Manager
+  * @since 1.0.0
  */
 public class TaskFactory {
 

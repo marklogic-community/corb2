@@ -26,6 +26,7 @@ import java.util.Deque;
 /**
  * Streaming JSON extractor that walks a JSON document and emits values whose
  * logical paths match configured selectors.
+  * @since 2.6.0
  */
 class JsonExtractor {
 

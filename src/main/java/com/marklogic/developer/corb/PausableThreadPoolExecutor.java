@@ -70,6 +70,7 @@ import java.util.logging.Logger;
  * @see ThreadPoolExecutor
  * @see Manager
  * @see Monitor
+  * @since 2.3.0
  */
 public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
 

@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
  * Provides safe conversion methods that handle null values and parsing failures gracefully.
  *
  * @author Mads Hansen, MarkLogic Corporation
+  * @since 2.3.0
  */
 public final class NumberUtils {
 

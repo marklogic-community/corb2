@@ -70,6 +70,7 @@ import static java.util.logging.Level.INFO;
  * @see Manager
  * @see JobServicesHandler
  * @see JobStats
+  * @since 2.4.0
  */
 public class JobServer {
 
