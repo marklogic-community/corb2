@@ -29,7 +29,6 @@ import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
@@ -63,6 +62,12 @@ public class JobBuilderHandler implements HttpHandler {
         return path != null && path.startsWith(BUILDER_ROOT_PATH);
     }
 
+    /**
+     * Handles incoming HTTP requests for the options builder, routing them to the appropriate service methods based on the request path and method.
+     *
+     * @param httpExchange the HTTP exchange containing the request and response objects
+     * @throws IOException if an I/O error occurs while handling the request
+     */
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         JobServer.alowXSS(httpExchange);
