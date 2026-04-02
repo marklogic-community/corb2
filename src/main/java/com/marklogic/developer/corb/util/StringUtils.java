@@ -247,7 +247,7 @@ public final class StringUtils {
      * @return the encoded string with HTML entities, or null if the input is null
      */
     public static String encodeForHtml(String input) {
-        if (input == null) return null;
+        if (input == null) { return null; }
 
         StringBuilder sb = new StringBuilder(input.length());
         for (int i = 0; i < input.length(); i++) {
