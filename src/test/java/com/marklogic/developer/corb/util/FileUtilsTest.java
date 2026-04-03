@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -45,7 +46,7 @@ public class FileUtilsTest {
     @Test
     public void testGetBytes() throws IOException {
         byte[] result = getBytes(new File("src/test/resources/uriInputFile.txt"));
-        assertArrayEquals("Hello from the URIS-FILE!".getBytes(), result);
+        assertArrayEquals("Hello from the URIS-FILE!".getBytes(StandardCharsets.UTF_8), result);
     }
 
     @Test

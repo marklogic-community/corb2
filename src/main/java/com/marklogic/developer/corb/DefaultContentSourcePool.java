@@ -685,6 +685,9 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
      */
     protected ContentSource createContentSourceProxy(ContentSource contentSource) {
         ClassLoader classLoader = DefaultContentSourcePool.class.getClassLoader() == null ? ClassLoader.getSystemClassLoader() : DefaultContentSourcePool.class.getClassLoader();
+        if (classLoader == null) {
+            return null;
+        }
         return (ContentSource) Proxy.newProxyInstance(
             classLoader,
             new Class[] { ContentSource.class },

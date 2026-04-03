@@ -29,10 +29,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 class XmlUtilsTest {
-    private final String dir = "src/test/resources/streamingXMLUrisLoader/";
-    private final File xmlDoc = new File(dir , "EDI.ICF15T.D150217.T113100716.T");
-    private final File schema = new File(dir + "BenefitEnrollment.xsd");
-    private final Properties options = new Properties();
+    private static final String dir = "src/test/resources/streamingXMLUrisLoader/";
+    private static final File xmlDoc = new File(dir , "EDI.ICF15T.D150217.T113100716.T");
+    private static final File schema = new File(dir + "BenefitEnrollment.xsd");
+    private static final Properties options = new Properties();
 
     @Test
     void schemaValidate() {

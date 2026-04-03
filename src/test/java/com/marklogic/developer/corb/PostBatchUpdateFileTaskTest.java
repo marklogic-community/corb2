@@ -346,7 +346,7 @@ class PostBatchUpdateFileTaskTest {
 
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
-        try (FileWriter writer = new FileWriter(file, true)) {
+        try (Writer writer = new OutputStreamWriter(Files.newOutputStream(file.toPath()), StandardCharsets.UTF_8)) {
             writer.append("z...\n");
             String dDots = "d....\n";
             writer.append(dDots);
@@ -449,7 +449,7 @@ class PostBatchUpdateFileTaskTest {
 
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
-        try (FileWriter writer = new FileWriter(file, true)) {
+        try (Writer writer = new OutputStreamWriter(Files.newOutputStream(file.toPath()), StandardCharsets.UTF_8)) {
             writer.append(Z);
             writer.append(D);
             writer.append(D);
@@ -640,7 +640,7 @@ class PostBatchUpdateFileTaskTest {
             assertFalse(file2.exists());
             assertFalse(file3.exists());
 
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
             fail("Exception occurred: " + ex.getMessage());
         } finally {
@@ -683,7 +683,7 @@ class PostBatchUpdateFileTaskTest {
             assertEqualsNormalizeNewline("line1\nline2\nFOOTER\n", readFile(file1));
             assertEqualsNormalizeNewline("line3\nline4\nFOOTER\n", readFile(file2));
             assertEqualsNormalizeNewline("line5\nFOOTER\n", readFile(file3));
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
             fail("Exception occurred: " + ex.getMessage());
         } finally {
@@ -706,7 +706,7 @@ class PostBatchUpdateFileTaskTest {
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.setProperties(props);
 
-            try (FileWriter writer = new FileWriter(batchFile)) {
+            try (Writer writer = new OutputStreamWriter(Files.newOutputStream(batchFile.toPath()), StandardCharsets.UTF_8)) {
                 writer.write("HEADER\n");
                 writer.write("A\n");
                 writer.write("B\n");
@@ -720,7 +720,7 @@ class PostBatchUpdateFileTaskTest {
             assertTrue(file1.exists());
             assertFalse(file2.exists());
             assertEqualsNormalizeNewline("HEADER\nA\nB\n", readFile(file1));
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
             fail("Exception occurred: " + ex.getMessage());
         } finally {
@@ -810,7 +810,7 @@ class PostBatchUpdateFileTaskTest {
             assertFalse(file3.exists());
             assertEqualsNormalizeNewline("line1\nline2\n", readFile(file1));
             assertEqualsNormalizeNewline("line3\n", readFile(file2));
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
             fail("Exception occurred: " + ex.getMessage());
         } finally {
@@ -853,7 +853,7 @@ class PostBatchUpdateFileTaskTest {
             assertTrue(finalFile.exists());
             assertFalse(splitFile.exists());
             assertEqualsNormalizeNewline("line1\nline2\nFOOTER\n", readFile(finalFile));
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
             fail("Exception occurred: " + ex.getMessage());
         } finally {
@@ -1000,7 +1000,7 @@ class PostBatchUpdateFileTaskTest {
                 assertEquals(1, zipFile.size());
             }
 
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
             fail("Exception occurred: " + ex.getMessage());
         } finally {
@@ -1017,7 +1017,7 @@ class PostBatchUpdateFileTaskTest {
     private File createSampleFile(String extension) throws IOException {
         File file = File.createTempFile(TEMP_FILE_PREFIX, extension);
         file.deleteOnExit();
-        try (FileWriter writer = new FileWriter(file, true)) {
+        try (Writer writer = new OutputStreamWriter(Files.newOutputStream(file.toPath()), StandardCharsets.UTF_8)) {
             writer.append(EXAMPLE_CONTENT);
         }
         return file;

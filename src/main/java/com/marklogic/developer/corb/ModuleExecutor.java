@@ -43,6 +43,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -81,7 +82,7 @@ public class ModuleExecutor extends AbstractManager {
      * Used when writing result sequences to export files.
      */
     private static final byte[] NEWLINE
-            = System.getProperty(PROPERTY_LINE_SEPARATOR) != null ? System.getProperty(PROPERTY_LINE_SEPARATOR).getBytes() : "\n".getBytes();
+            = System.getProperty(PROPERTY_LINE_SEPARATOR) != null ? System.getProperty(PROPERTY_LINE_SEPARATOR).getBytes(StandardCharsets.UTF_8) : "\n".getBytes(StandardCharsets.UTF_8);
 
     /**
      * Logger instance for the ModuleExecutor class.

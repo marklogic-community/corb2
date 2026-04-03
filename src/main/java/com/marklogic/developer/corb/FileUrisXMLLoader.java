@@ -39,6 +39,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.HashMap;
@@ -601,7 +602,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
             Document document;
             if (shouldBase64Encode()) {
                 content = XmlUtils.nodeToString(metadataNode);
-                document = toLoaderDoc(metadataMap, new ByteArrayInputStream(content.getBytes()));
+                document = toLoaderDoc(metadataMap, new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)));
             } else {
                 document = toLoaderDoc(metadataMap, metadataNode, false);
             }

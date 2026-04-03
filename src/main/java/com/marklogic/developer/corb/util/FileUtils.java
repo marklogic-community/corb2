@@ -20,11 +20,9 @@ package com.marklogic.developer.corb.util;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.LineNumberReader;
+import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -235,7 +233,8 @@ public final class FileUtils {
      */
     public static int getLineCount(final File file) throws IOException {
         if (file != null && file.exists()) {
-            try (LineNumberReader lnr = new LineNumberReader(new FileReader(file))) {
+            try (LineNumberReader lnr = new LineNumberReader(new BufferedReader(
+                new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8)))) {
                 lnr.skip(Long.MAX_VALUE);
                 return lnr.getLineNumber();
             }

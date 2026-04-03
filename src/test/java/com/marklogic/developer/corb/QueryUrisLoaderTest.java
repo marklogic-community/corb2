@@ -31,9 +31,9 @@ import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.types.ItemType;
 import com.marklogic.xcc.types.XdmItem;
 import com.marklogic.xcc.types.XdmVariable;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
@@ -289,7 +289,7 @@ class QueryUrisLoaderTest {
             TransformOptions transformOptions = new TransformOptions();
             File file = File.createTempFile("adhocJS", ".js");
             file.deleteOnExit();
-            try (FileWriter writer = new FileWriter(file, true)) {
+            try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true), StandardCharsets.UTF_8))) {
                 writer.append("var foo;");
             }
             transformOptions.setUrisModule(file.getAbsolutePath() + ADHOC_SUFFIX);

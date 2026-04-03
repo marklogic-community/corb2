@@ -26,6 +26,7 @@ import com.marklogic.developer.corb.util.StringUtils;
 import com.marklogic.xcc.ResultSequence;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 /**
@@ -195,7 +196,7 @@ public class ExportToFileTask extends AbstractTask {
         if (isNotEmpty(trimmedContent)) {
             File exportFile = getExportFile();
             try (BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(exportFile, true))) {
-                writer.write(trimmedContent.getBytes());
+                writer.write(trimmedContent.getBytes(StandardCharsets.UTF_8));
                 writer.write(NEWLINE);
             }
         }

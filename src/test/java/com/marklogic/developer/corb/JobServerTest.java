@@ -150,11 +150,13 @@ class JobServerTest {
             URL url = new URL(localhostUrl + JobBuilderHandler.BUILDER_METADATA_PATH);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            String metadata = new String(IOUtils.toByteArray(conn.getInputStream()));
-            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-            assertTrue(metadata.contains("\"groups\""));
-            assertTrue(metadata.contains("XCC-CONNECTION-URI"));
+            try (InputStream inputStream = conn.getInputStream()) {
+                String metadata = new String(IOUtils.toByteArray(inputStream), StandardCharsets.UTF_8);
 
+                assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+                assertTrue(metadata.contains("\"groups\""));
+                assertTrue(metadata.contains("XCC-CONNECTION-URI"));
+            }
             url = new URL(localhostUrl + JobBuilderHandler.BUILDER_PROPERTIES_PATH);
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");

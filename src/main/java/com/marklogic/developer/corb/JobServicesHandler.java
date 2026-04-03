@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -174,7 +175,7 @@ public class JobServicesHandler implements HttpHandler {
         httpExchange.getResponseHeaders().add(JobServer.HEADER_CONTENT_TYPE, contentType);
         httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length());
         try (OutputStream out = httpExchange.getResponseBody()) {
-            out.write(response.getBytes(Charset.forName("UTF-8")));
+            out.write(response.getBytes(StandardCharsets.UTF_8));
             out.flush();
         }
     }

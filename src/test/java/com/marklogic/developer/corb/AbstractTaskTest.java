@@ -48,6 +48,7 @@ import com.marklogic.xcc.types.XdmValue;
 import com.marklogic.xcc.types.XdmVariable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -1066,7 +1067,7 @@ class AbstractTaskTest {
         String value = FOO;
         when(item.asString()).thenReturn(value);
         byte[] result = AbstractTaskImpl.getValueAsBytes(item);
-        assertArrayEquals(value.getBytes(), result);
+        assertArrayEquals(value.getBytes(StandardCharsets.UTF_8), result);
     }
 
     public File createTempDirectory() throws IOException {

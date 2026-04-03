@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.logging.Level;
@@ -144,10 +145,12 @@ class HostKeyDecrypterTest {
         String[] args = null;
         try {
             HostKeyDecrypter.main(args);
+            String output = outContent.toString(StandardCharsets.UTF_8.name());
+            assertEqualsNormalizeNewline(USAGE, output);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
-        assertEqualsNormalizeNewline(USAGE, outContent.toString());
     }
 
     @Test
@@ -155,10 +158,11 @@ class HostKeyDecrypterTest {
         String[] args = {"encrypt"};
         try {
             HostKeyDecrypter.main(args);
+            assertEqualsNormalizeNewline(USAGE, outContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
-        assertEqualsNormalizeNewline(USAGE, outContent.toString());
     }
 
     @Test
@@ -166,10 +170,12 @@ class HostKeyDecrypterTest {
         String[] args = {"foo"};
         try {
             HostKeyDecrypter.main(args);
+            assertEqualsNormalizeNewline(USAGE, outContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
-        assertEqualsNormalizeNewline(USAGE, outContent.toString());
+
     }
 
     @Test
@@ -177,10 +183,11 @@ class HostKeyDecrypterTest {
         String[] args = null;
         try {
             HostKeyDecrypter.main(args);
+            assertEqualsNormalizeNewline(USAGE, outContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
-        assertEqualsNormalizeNewline(USAGE, outContent.toString());
     }
 
     @Test

@@ -402,7 +402,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
                 Optional<String> hasMatch = br.lines().filter(s -> s.contains(marker)).findFirst();
                 if (hasMatch.isPresent()) {
                     String sn = hasMatch.get().split(marker)[1].trim();
-                    return sn.getBytes();
+                    return sn.getBytes(StandardCharsets.UTF_8);
                 }
             } catch (RuntimeException | IOException ex) {
                 throw new ProviderNotFoundException("Required to have " + command + " command installed on machine");
@@ -455,7 +455,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
             closeOrThrowRuntime(os);
 
             InputStream is = process.getInputStream();
-            return new BufferedReader(new InputStreamReader(is));
+            return new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
         }
     }
 
@@ -593,7 +593,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         InetAddress ip = InetAddress.getLocalHost();
         NetworkInterface network = NetworkInterface.getByInetAddress(ip);
         byte[] mac = network.getHardwareAddress();
-        byte[] hostname = ip.getHostName().getBytes();
+        byte[] hostname = ip.getHostName().getBytes(StandardCharsets.UTF_8);
         byte[] biosSN = getSerialNumber();
         // doing an xor on mac address and hostname
         byte[] xorResult = xor(HARD_CODED_BYTES, xor(biosSN, xor(mac, hostname)));
@@ -676,7 +676,7 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         Cipher cipher = Cipher.getInstance(AES);
         // encrypting with private key and random for initialization vector
         cipher.init(Cipher.ENCRYPT_MODE, key, new SecureRandom());
-        byte[] encryptedVal = cipher.doFinal(plaintext.getBytes());
+        byte[] encryptedVal = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
         return byteArrayToHexString(encryptedVal);
     }
 

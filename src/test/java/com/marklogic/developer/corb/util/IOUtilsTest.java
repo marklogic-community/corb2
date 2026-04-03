@@ -39,9 +39,12 @@ class IOUtilsTest {
     private final String exampleContent;
     private static final String NULL_OUTPUTSTREAM_MSG = "null OutputStream";
 
-    public IOUtilsTest() throws IOException {
+    public IOUtilsTest() {
         try (Reader fileReader = new InputStreamReader(Files.newInputStream(exampleContentFile.toPath()), StandardCharsets.UTF_8)) {
             exampleContent = cat(fileReader);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            throw new RuntimeException(ex);
         }
     }
 
@@ -86,7 +89,7 @@ class IOUtilsTest {
 
     @Test
     void testCopyReaderOutputStream() {
-        try (Reader in = new FileReader(exampleContentFile)){
+        try (Reader in = new InputStreamReader(Files.newInputStream(exampleContentFile.toPath()), StandardCharsets.UTF_8)){
             OutputStream out = new ByteArrayOutputStream();
             long result = copy(in, out);
             assertEquals(exampleContent.length(), result);
@@ -109,7 +112,7 @@ class IOUtilsTest {
 
     @Test
     void testCopyReaderOutputStreamIsNull() throws IOException {
-        try (Reader in = new FileReader(exampleContentFile)) {
+        try (Reader in = new InputStreamReader(Files.newInputStream(exampleContentFile.toPath()), StandardCharsets.UTF_8)) {
             OutputStream out = null;
             assertThrows(IOException.class, () -> copy(in, out));
         }
@@ -117,7 +120,7 @@ class IOUtilsTest {
 
     @Test
     void testCatReader() {
-        try (Reader reader = new FileReader(exampleContentFile)) {
+        try (Reader reader = new InputStreamReader(Files.newInputStream(exampleContentFile.toPath()), StandardCharsets.UTF_8)) {
             String result = cat(reader);
             assertEquals(exampleContent, result);
         } catch (IOException ex) {
@@ -130,7 +133,7 @@ class IOUtilsTest {
     void testCatInputStream() {
         try (InputStream is = Files.newInputStream(exampleContentFile.toPath())) {
             byte[] result = cat(is);
-            assertArrayEquals(exampleContent.getBytes(), result);
+            assertArrayEquals(exampleContent.getBytes(StandardCharsets.UTF_8), result);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -151,7 +154,8 @@ class IOUtilsTest {
 
     @Test
     void testGetSizeReader() {
-        try (Reader reader = new FileReader(exampleContentFile)) {
+        try (Reader reader = new BufferedReader(
+            new InputStreamReader(Files.newInputStream(exampleContentFile.toPath()), StandardCharsets.UTF_8))) {
             long result = getSize(reader);
             assertEquals(exampleContent.length(), result);
         } catch (IOException ex) {

@@ -500,7 +500,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
                 String metaAsStr = writer.toString();
 
                 DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-                Document originalDocument = docBuilder.parse(new ByteArrayInputStream(metaAsStr.getBytes()));
+                Document originalDocument = docBuilder.parse(new ByteArrayInputStream(metaAsStr.getBytes(StandardCharsets.UTF_8)));
                 customMetadata = originalDocument.getDocumentElement();
 
                 extractionCode = 2;

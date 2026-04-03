@@ -39,6 +39,7 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.text.MessageFormat;
@@ -296,7 +297,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
                 KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
                 try {
                     privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(keyAsBytes));
-                } catch (Exception exc) {
+                } catch (InvalidKeySpecException exc) {
                     LOG.log(INFO, "Attempting to decode private key with base64. Ignore this message if keys are generated with openssl", exc);
                     String keyAsString = new String(keyAsBytes, StandardCharsets.UTF_8);
                     // remove the begin and end key lines if present.
@@ -305,7 +306,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
                     privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(Base64.getDecoder().decode(keyAsString)));
                 }
                 LOG.log(INFO, "Initialized PrivateKeyDecrypter");
-            } catch (Exception exc) {
+            } catch (IllegalStateException | InvalidKeySpecException | NoSuchAlgorithmException exc) {
                 LOG.log(SEVERE, "Problem initializing PrivateKeyDecrypter");
             } finally {
                 closeQuietly(is);
@@ -377,7 +378,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
             try {
                 final Cipher cipher = Cipher.getInstance(algorithm);
                 cipher.init(Cipher.DECRYPT_MODE, privateKey);
-                dValue = new String(cipher.doFinal(Base64.getDecoder().decode(value)));
+                dValue = new String(cipher.doFinal(Base64.getDecoder().decode(value)), StandardCharsets.UTF_8);
             } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalArgumentException | IllegalBlockSizeException | BadPaddingException exc) {
                 LOG.log(INFO, MessageFormat.format("Cannot decrypt {0}. Ignore if clear text.", property), exc);
             }

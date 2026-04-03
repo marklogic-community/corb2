@@ -29,10 +29,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.marklogic.developer.corb.util.FileUtils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Properties;
 import java.util.Random;
 import java.util.logging.Level;
@@ -139,8 +138,9 @@ class FileUrisStreamingXMLLoaderIT {
             lineCount = FileUtils.getLineCount(report);
 
             if (properties.containsKey("LAST_LINE")) {
-                BufferedReader input = new BufferedReader(new FileReader(report));
-                String last=null, line = null;
+                BufferedReader input = new BufferedReader(new InputStreamReader(Files.newInputStream(report.toPath()), StandardCharsets.UTF_8));
+                String last = null;
+                String line;
                 while ((line = input.readLine()) != null) {
                     last = line;
                 }

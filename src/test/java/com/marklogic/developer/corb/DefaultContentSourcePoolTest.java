@@ -52,11 +52,11 @@ import com.marklogic.xcc.impl.SocketPoolProvider;
 
 class DefaultContentSourcePoolTest {
 
-    private final String localhost = "localhost";
-    private final String localIP1 = "192.168.0.1";
-    private final String localIP2 = "192.168.0.2";
-    private final String localIP3 = "192.168.0.3";
-    private final String localhostXccUri = "xcc://foo:bar@localhost:8000";
+    private static final String localhost = "localhost";
+    private static final String localIP1 = "192.168.0.1";
+    private static final String localIP2 = "192.168.0.2";
+    private static final String localIP3 = "192.168.0.3";
+    private static final String localhostXccUri = "xcc://foo:bar@localhost:8000";
 
 	@BeforeEach
 	void setUp() {
@@ -275,8 +275,9 @@ class DefaultContentSourcePoolTest {
         try (DefaultContentSourcePool contentSourcePool = initRoundRobinPool()) {
             ContentSource contentSource = contentSourcePool.nextContentSource();
             assertEquals(3, contentSourcePool.getAvailableContentSources().size());
-            assertNotNull(contentSource);
-            contentSourcePool.error(contentSource);
+            if (contentSource != null) {
+                contentSourcePool.error(contentSource);
+            }
             assertEquals(2, contentSourcePool.getAvailableContentSources().size());
         }
     }
@@ -287,6 +288,7 @@ class DefaultContentSourcePoolTest {
             contentSourcePool.init(null, null, localhostXccUri);
             assertEquals(1, contentSourcePool.getAvailableContentSources().size());
             ContentSource contentSource = contentSourcePool.nextContentSource();
+            assertNotNull(contentSource);
             contentSourcePool.renewContentSource(contentSource);
             assertNotNull(contentSource);
             //IP hasn't changed for localhost, so no new ContentSource

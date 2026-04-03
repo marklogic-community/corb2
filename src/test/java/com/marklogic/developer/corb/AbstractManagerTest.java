@@ -836,7 +836,6 @@ class AbstractManagerTest {
         ContentSource contentSource = manager.getContentSourcePool().get();
         assertNotNull(contentSource);
         String contentSourceStr = contentSource.toString();
-        ConnectionProvider provider = contentSource.getConnectionProvider();
         assertTrue(contentSourceStr.contains("user={none}"));
         assertEquals("Bearer oauth", contentSource.getUserCredentials().toOAuth());
     }
@@ -867,7 +866,7 @@ class AbstractManagerTest {
         ContentSource contentSource = manager.getContentSourcePool().get();
         assertNotNull(contentSource);
         String contentSourceStr = contentSource.toString();
-        ConnectionProvider provider = contentSource.getConnectionProvider();
+
         assertTrue(contentSourceStr.contains("user={none}"));
         assertEquals("foobar", new String(contentSource.getUserCredentials().getPDCloudAuthConfig().getApiKey()));
         assertEquals("endpoint", contentSource.getUserCredentials().getPDCloudAuthConfig().getTokenEndpoint());

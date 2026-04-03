@@ -1494,7 +1494,7 @@ class ManagerTest {
             List<LogRecord> records = testLogger.getLogRecords();
             assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "received 50,000/50,000")));
 
-        } catch (Exception ex) {
+        } catch (CorbException | RequestException ex) {
             fail();
         }
     }

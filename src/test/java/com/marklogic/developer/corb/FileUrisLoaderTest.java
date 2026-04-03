@@ -18,11 +18,9 @@
  */
 package com.marklogic.developer.corb;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -249,7 +247,7 @@ class FileUrisLoaderTest {
             try {
                 File file = File.createTempFile("temp", ".txt");
                 file.deleteOnExit();
-                try (Writer writer = new FileWriter(file)) {
+                try (Writer writer = new OutputStreamWriter(Files.newOutputStream(file.toPath()), StandardCharsets.UTF_8)) {
                     writer.append("foo\n\nbar");
                 }
                 options.setUrisFile(file.getAbsolutePath());

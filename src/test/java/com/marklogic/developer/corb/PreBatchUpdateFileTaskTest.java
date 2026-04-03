@@ -22,6 +22,7 @@ import com.marklogic.xcc.Request;
 import com.marklogic.xcc.exceptions.RequestPermissionException;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -91,7 +92,7 @@ class PreBatchUpdateFileTaskTest {
                 instance.exportDir = tempDir.toString();
                 instance.writeTopContent();
                 File partFile = new File(tempDir, instance.getPartFileName());
-                assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(partFile));
+                assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE, StandardCharsets.UTF_8)), TestUtils.readFile(partFile));
             } else {
                 fail();
             }
@@ -130,7 +131,7 @@ class PreBatchUpdateFileTaskTest {
                 File partFile = new File(tempDir, instance.getPartFileName());
                 instance.call();
 
-                assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(partFile));
+                assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE, StandardCharsets.UTF_8)), TestUtils.readFile(partFile));
             } else {
                 fail();
             }
@@ -160,7 +161,7 @@ class PreBatchUpdateFileTaskTest {
                 instance.call();
 
                 assertEquals("2", props.getProperty(EXPORT_FILE_HEADER_LINE_COUNT));
-                assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(partFile));
+                assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE, StandardCharsets.UTF_8)), TestUtils.readFile(partFile));
             } else {
                 fail();
             }

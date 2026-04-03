@@ -918,10 +918,10 @@ public abstract class AbstractTask implements Task {
         synchronized (ERROR_SYNC_OBJ) {
             try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, errorFileName), true))) {
                 for (String uri : uris) {
-                    writer.write(uri.getBytes());
+                    writer.write(uri.getBytes(StandardCharsets.UTF_8));
                     if (isNotEmpty(message)) {
-                        writer.write(delim.getBytes());
-                        writer.write(message.getBytes());
+                        writer.write(delim.getBytes(StandardCharsets.UTF_8));
+                        writer.write(message.getBytes(StandardCharsets.UTF_8));
                     }
                     writer.write(NEWLINE);
                 }

@@ -35,6 +35,7 @@ import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.util.*;
@@ -271,8 +272,8 @@ public abstract class AbstractManager {
                 throw new IllegalStateException("Adhoc query module cannot be a directory");
             }
 
-            try (InputStreamReader reader = new InputStreamReader(is);
-                    StringWriter writer = new StringWriter()) {
+            try (InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8);
+                 StringWriter writer = new StringWriter()) {
 
                 char[] buffer = new char[512];
                 int n = 0;

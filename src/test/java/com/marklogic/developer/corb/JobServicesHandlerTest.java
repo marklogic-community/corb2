@@ -26,6 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -44,7 +45,7 @@ class JobServicesHandlerTest {
         when(exchange.getRequestURI()).thenReturn(URI.create(JobServer.METRICS_PATH));
         when(exchange.getRequestMethod()).thenReturn("GET");
         when(exchange.getResponseHeaders()).thenReturn(headers);
-        OutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         when(exchange.getResponseBody()).thenReturn(out);
         JobStats jobStats = mock(JobStats.class);
         when(jobStats.toJSON(false)).thenReturn("{}");
@@ -53,7 +54,7 @@ class JobServicesHandlerTest {
         when(manager.getJobStats()).thenReturn(jobStats);
         JobServicesHandler handler = new JobServicesHandler(manager);
         handler.handle(exchange);
-        assertTrue(out.toString().startsWith("{"));
+        assertTrue(out.toString(StandardCharsets.UTF_8.name()).startsWith("{"));
     }
 
     @Test
@@ -63,7 +64,7 @@ class JobServicesHandlerTest {
         when(exchange.getRequestURI()).thenReturn(URI.create(JobServer.METRICS_PATH));
         when(exchange.getRequestMethod()).thenReturn("POST");
         when(exchange.getResponseHeaders()).thenReturn(headers);
-        OutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         when(exchange.getResponseBody()).thenReturn(out);
         JobStats jobStats = mock(JobStats.class);
         when(jobStats.toJSON(false)).thenReturn("{}");
@@ -73,7 +74,7 @@ class JobServicesHandlerTest {
 
         JobServicesHandler handler = new JobServicesHandler(manager);
         handler.handle(exchange);
-        assertTrue(out.toString().startsWith("{"));
+        assertTrue(out.toString(StandardCharsets.UTF_8.name()).startsWith("{"));
     }
 
     @Test
