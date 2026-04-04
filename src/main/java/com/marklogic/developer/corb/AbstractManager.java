@@ -800,6 +800,9 @@ public abstract class AbstractManager {
      */
     protected void registerStatusInfo() throws CorbException {
         ContentSource contentSource = csp.get();
+        if (contentSource == null) {
+            throw new CorbException("Unable to get ContentSource from pool to register status info");
+        }
         ResultSequence resultSequence = null;
         try (Session session = contentSource.newSession()) {
 
