@@ -165,7 +165,7 @@ class JobStatsTest {
 		DocumentBuilder dBuilder;
 		dBuilder = dbFactory.newDocumentBuilder();
 		Document doc = dBuilder.parse(new InputSource(new StringReader(jobStats.toXmlString())));
-        XPathFactory factory = XPathFactory.newInstance();
+        XPathFactory factory = XmlUtils.newSecureXPathFactoryInstance();
         NamespaceContext nsContext = new NamespaceContext() {
             public String getNamespaceURI(String prefix) {
                 return "c".equals(prefix) ? JobStats.CORB_NAMESPACE : null;

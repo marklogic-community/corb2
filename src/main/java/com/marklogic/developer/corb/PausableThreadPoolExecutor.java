@@ -454,14 +454,15 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
          */
         void add(String uri, Long timeTaken) {
             UriObject newObj = new UriObject(uri, timeTaken);
-            if (list.size() < this.size || (!list.isEmpty() && list.last().compareTo(newObj) < 1)) {
-                synchronized (lock) {
+            synchronized (lock) {
+                if (list.size() < this.size || (!list.isEmpty() && list.last().compareTo(newObj) < 1)) {
                     if (list.size() >= this.size) {
                         for (int i = 0; i <= list.size() - this.size; i++) {
                             if (!list.isEmpty()) {
                                 list.remove(list.first());
                             }
                         }
+
                     }
                     list.add(newObj);
                 }
@@ -482,7 +483,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
          *
          * @param size the maximum number of URIs to track
          */
-        protected void setSize(int size) {
+        protected synchronized void setSize(int size) {
             this.size = size;
         }
 

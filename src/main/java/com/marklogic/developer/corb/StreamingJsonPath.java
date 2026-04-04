@@ -106,6 +106,11 @@ public class StreamingJsonPath implements JsonSelector {
         }
     }
 
+    @Override
+    protected final void finalize() throws Throwable {
+        super.finalize();
+    }
+
     private List<String> parseTokens(String value) {
         List<String> parsed = new ArrayList<>();
         int i = 0;

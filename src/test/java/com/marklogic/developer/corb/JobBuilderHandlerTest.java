@@ -44,7 +44,7 @@ class JobBuilderHandlerTest {
         when(exchange.getRequestMethod()).thenReturn("POST");
         when(exchange.getResponseHeaders()).thenReturn(headers);
         when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream((Options.PROCESS_MODULE + "=%2Fext%2Fprocess.xqy&" + JobBuilderService.PARAM_DOWNLOAD_FILE_NAME + "=nightly%20run").getBytes(StandardCharsets.UTF_8)));
-        OutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         when(exchange.getResponseBody()).thenReturn(out);
 
         JobBuilderService service = mock(JobBuilderService.class);
@@ -56,7 +56,7 @@ class JobBuilderHandlerTest {
 
         verify(service).buildPropertiesFile(org.mockito.ArgumentMatchers.argThat(params -> "/ext/process.xqy".equals(params.get(Options.PROCESS_MODULE))));
         assertTrue(headers.getFirst("Content-Disposition").contains("nightly-run.properties"));
-        assertTrue(out.toString().contains(Options.PROCESS_MODULE + "=/ext/process.xqy"));
+        assertTrue(out.toString(StandardCharsets.UTF_8.name()).contains(Options.PROCESS_MODULE + "=/ext/process.xqy"));
     }
 
     @Test
@@ -67,7 +67,7 @@ class JobBuilderHandlerTest {
         when(exchange.getRequestMethod()).thenReturn("POST");
         when(exchange.getResponseHeaders()).thenReturn(headers);
         when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream((Options.JOB_NAME + "=builder-demo").getBytes(StandardCharsets.UTF_8)));
-        OutputStream out = new ByteArrayOutputStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         when(exchange.getResponseBody()).thenReturn(out);
 
         JobBuilderService service = mock(JobBuilderService.class);
@@ -77,7 +77,7 @@ class JobBuilderHandlerTest {
         handler.handle(exchange);
 
         verify(service).launchJob(org.mockito.ArgumentMatchers.argThat(params -> "builder-demo".equals(params.get(Options.JOB_NAME))));
-        assertTrue(out.toString().contains("\"jobId\":\"job-123\""));
-        assertTrue(out.toString().contains("\"jobPath\":\"/job-123\""));
+        assertTrue(out.toString(StandardCharsets.UTF_8.name()).contains("\"jobId\":\"job-123\""));
+        assertTrue(out.toString(StandardCharsets.UTF_8.name()).contains("\"jobPath\":\"/job-123\""));
     }
 }

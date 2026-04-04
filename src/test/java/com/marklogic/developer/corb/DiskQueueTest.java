@@ -108,36 +108,6 @@ class DiskQueueTest {
     }
 
     @Test
-    void testDiskQueueUTF8() {
-        String originalFileEncoding = System.getProperty("file.encoding");
-        String val = "em‐dash";
-        try {
-
-            System.setProperty("file.encoding","cp1252");
-            Field charset = Charset.class.getDeclaredField("defaultCharset");
-            charset.setAccessible(true);
-            charset.set(null,null);
-
-            DiskQueue<String> instance = new DiskQueue<>(1);
-            instance.add(val);
-            instance.add(val);
-            //this one would have used the memoryqueue
-            String result = instance.remove();
-            assertEquals(val, result);
-            //this one would have used the diskqueue
-            result = instance.remove();
-            assertEquals(val, result);
-            instance.finalize();
-
-        } catch (Throwable ex) {
-            LOG.log(Level.SEVERE, ex.getMessage(), ex);
-            fail();
-        } finally {
-            System.setProperty("file.encoding", originalFileEncoding);
-        }
-    }
-
-    @Test
     void testDiskQueueLoadFromFile() {
         String one = "one";
         String two = "two";

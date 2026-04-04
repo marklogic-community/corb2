@@ -210,7 +210,7 @@ public class PostBatchUpdateFileTask extends ExportBatchToFileTask {
             ExternalSort.mergeSortedFiles(fragments, sortedFile, comparator, charset, distinct, append, useGzip);
 
             FileUtils.moveFile(sortedFile, origFile);
-        } catch (Exception exc) {
+        } catch (ClassNotFoundException|InstantiationException|IllegalArgumentException|IllegalAccessException|IOException exc) {
             LOG.log(WARNING, "Unexpected error while sorting the report file " + origFile.getPath() + ". The file can still be sorted locally after the job is finished.", exc);
         }
     }

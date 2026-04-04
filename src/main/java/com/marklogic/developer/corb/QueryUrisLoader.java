@@ -32,11 +32,8 @@ import static com.marklogic.developer.corb.util.StringUtils.isInlineModule;
 import static com.marklogic.developer.corb.util.StringUtils.isInlineOrAdhoc;
 import static com.marklogic.developer.corb.util.StringUtils.isJavaScriptModule;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
-import com.marklogic.xcc.Request;
-import com.marklogic.xcc.RequestOptions;
-import com.marklogic.xcc.ResultItem;
-import com.marklogic.xcc.ResultSequence;
-import com.marklogic.xcc.Session;
+
+import com.marklogic.xcc.*;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.types.ItemType;
 import com.marklogic.xcc.types.XdmItem;
@@ -173,8 +170,11 @@ public class QueryUrisLoader extends AbstractUrisLoader {
             opts.setResultBufferSize(0);
             LOG.log(INFO, () -> MessageFormat.format("buffer size = {0}, caching = {1}",
                     opts.getResultBufferSize(), opts.getCacheResult()));
-
-            session = csp.get().newSession();
+            ContentSource contentSource = csp.get();
+            if (contentSource == null) {
+                throw new CorbException("Unable to get ContentSource from the ContentSourcePool");
+            }
+            session = contentSource.newSession();
             Request request;
             String urisModule = options.getUrisModule();
             if (isInlineOrAdhoc(urisModule)) {
@@ -262,13 +262,16 @@ public class QueryUrisLoader extends AbstractUrisLoader {
      * @throws CorbException if the count is missing, null, or not a valid number
      */
     protected void readTotalCount(ResultItem resultItem) throws CorbException {
+        XdmItem item = resultItem.getItem();
+        if (item == null) {
+            throw new CorbException(URIS_MODULE + " " + options.getUrisModule() + " does not return total URI count");
+        }
+        if (ItemType.ARRAY_NODE.equals(item.getItemType())) {
+            LOG.severe("First item is an Array. Use Sequence.from() to turn the Array into a Sequence.");
+        }
         try {
-            XdmItem item = resultItem.getItem();
-            if (ItemType.ARRAY_NODE.equals(item.getItemType())) {
-                LOG.severe("First item is an Array. Use Sequence.from() to turn the Array into a Sequence.");
-            }
             setTotalCount(Long.parseLong(item.asString()));
-        } catch (NullPointerException | NumberFormatException exc) {
+        } catch (NumberFormatException exc) {
             throw new CorbException(URIS_MODULE + " " + options.getUrisModule() + " does not return total URI count");
         }
     }

@@ -206,7 +206,7 @@ public class JobServer {
      * particularly for transforming job statistics XML to JSON format.
      * </p>
      */
-    private TransformerFactory transformerFactory  = TransformerFactory.newInstance();
+    private TransformerFactory transformerFactory  = XmlUtils.newSecureTransformerFactoryInstance();
 
     /**
      * Cached XSLT templates for transforming job statistics XML to JSON.
@@ -522,6 +522,11 @@ public class JobServer {
      * @return the created HttpContext
      */
     public HttpContext createContext(String path, HttpHandler handler) {
+        //Java 19+ HttpServer does not allow multiple contexts with the same path, so remove any existing context before creating a new one
+        if (contexts.containsKey(path)) {
+            LOG.info("Context already exists for path: " + path + ", removing existing context before adding new one.");
+            server.removeContext(path);
+        }
         HttpContext context = server.createContext(path, handler);
         contexts.put(path, context);
         return context;

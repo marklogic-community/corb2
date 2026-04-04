@@ -812,13 +812,15 @@ public abstract class AbstractManager {
 
             while (null != resultSequence && resultSequence.hasNext()) {
                 ResultItem rsItem = resultSequence.next();
-                XdmItem item = rsItem.getItem();
-                if (item != null) {
-                    if (rsItem.getIndex() == 0 && "0".equals(item.asString())) {
-                        options.setModulesDatabase("");
-                    }
-                    if (rsItem.getIndex() == 1) {
-                        options.setXDBC_ROOT(item.asString());
+                if (rsItem != null) {
+                    XdmItem item = rsItem.getItem();
+                    if (item != null) {
+                        if (rsItem.getIndex() == 0 && "0".equals(item.asString())) {
+                            options.setModulesDatabase("");
+                        }
+                        if (rsItem.getIndex() == 1) {
+                            options.setXDBC_ROOT(item.asString());
+                        }
                     }
                 }
             }

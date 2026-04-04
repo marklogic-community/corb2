@@ -19,7 +19,8 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
-import java.io.File;
+
+import java.io.*;
 
 import static com.marklogic.developer.corb.AbstractManager.EXIT_CODE_PROCESSING_ERROR;
 import static com.marklogic.developer.corb.AbstractManager.EXIT_CODE_SUCCESS;
@@ -40,9 +41,7 @@ import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.Session;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.types.XdmItem;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
+
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -172,11 +171,11 @@ class ManagerTest {
     }
 
     @Test
-    void testHelp() {
+    void testHelp() throws UnsupportedEncodingException {
         clearSystemProperties();
         String[] args =  new String[]{"--help"};
         ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        System.setErr(new PrintStream(outContent));
+        System.setErr(new PrintStream(outContent, true, StandardCharsets.UTF_8.name()));
         Manager.run(args);
         assertTrue(outContent.toString().contains("CoRB version"));
     }

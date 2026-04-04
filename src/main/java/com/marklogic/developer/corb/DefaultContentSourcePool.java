@@ -280,8 +280,10 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
         }
 
         //for better performance avoid too many string equals later for every get and submit
-        isRandomPolicy = CONNECTION_POLICY_RANDOM.equals(connectionPolicy);
-        isLoadPolicy = CONNECTION_POLICY_LOAD.equals(connectionPolicy);
+        synchronized (this) {
+            isRandomPolicy = CONNECTION_POLICY_RANDOM.equals(connectionPolicy);
+            isLoadPolicy = CONNECTION_POLICY_LOAD.equals(connectionPolicy);
+        }
     }
 
     /**
@@ -1024,7 +1026,12 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
                         throw exc.getCause();
                     }
                 } else {
-                    throw exc.getCause();
+                    Throwable cause = exc.getCause();
+                    if (cause != null) {
+                        throw exc.getCause();
+                    } else {
+                        throw exc;
+                    }
                 }
             } else {
                 throw exc;
@@ -1057,7 +1064,11 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 		protected Object submitAsNewRequest(Object... args) throws RequestException {
 			Request request = (Request)args[0];
 			try {
-				retryProxy = contentSourcePool.get().newSession();
+                ContentSource contentSource = contentSourcePool.get();
+                if (contentSource == null) {
+                    throw new RequestException("No ContentSource available for retrying the request.", request);
+                }
+				retryProxy = contentSource.newSession();
 				setAttemptsToNewSession(retryProxy);
 				Request newRequest;
 				if (request instanceof AdhocQuery) {
@@ -1085,7 +1096,11 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 		 */
 		protected Object insertAsNewRequest(Object... args) throws RequestException {
 			try {
-				retryProxy = contentSourcePool.get().newSession();
+                ContentSource contentSource = contentSourcePool.get();
+                if (contentSource == null) {
+                    throw new RequestException("No ContentSource available for retrying the insertContent operation.", target.newAdhocQuery(EMPTY_SEQ));
+                }
+				retryProxy = contentSource.newSession();
 				setAttemptsToNewSession(retryProxy);
 				if (args[0] instanceof Content) {
 					retryProxy.insertContent((Content)args[0]);

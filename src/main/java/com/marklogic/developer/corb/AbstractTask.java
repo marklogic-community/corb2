@@ -36,11 +36,7 @@ import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 
 import com.marklogic.developer.corb.util.XmlUtils;
-import com.marklogic.xcc.Request;
-import com.marklogic.xcc.RequestOptions;
-import com.marklogic.xcc.ResultSequence;
-import com.marklogic.xcc.Session;
-import com.marklogic.xcc.ValueFactory;
+import com.marklogic.xcc.*;
 import com.marklogic.xcc.exceptions.QueryException;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.RequestPermissionException;
@@ -136,8 +132,8 @@ public abstract class AbstractTask implements Task {
      * Obtained from system property "line.separator" or defaults to "\n".
      * Used for writing line breaks to error files.
      */
-    protected static final byte[] NEWLINE
-            = System.getProperty("line.separator") != null ? System.getProperty("line.separator").getBytes() : "\n".getBytes();
+    protected static final byte[] NEWLINE = System.getProperty("line.separator") != null ?
+        System.getProperty("line.separator").getBytes(StandardCharsets.UTF_8) : "\n".getBytes(StandardCharsets.UTF_8);
 
     /**
      * Empty byte array constant to avoid repeated allocation.
@@ -348,7 +344,11 @@ public abstract class AbstractTask implements Task {
      * @throws CorbException if a session cannot be created
      */
     public Session newSession() throws CorbException{
-        return csp.get().newSession();
+        ContentSource contentSource = csp.get();
+        if (contentSource == null) {
+            throw new CorbException("Unable to obtain ContentSource from pool");
+        }
+        return contentSource.newSession();
     }
 
     /**
@@ -392,8 +392,8 @@ public abstract class AbstractTask implements Task {
             Thread.yield();// try to avoid thread starvation
             synchronized (session) {
                 seq = session.submitRequest(request);
+                retryCount = 0;
             }
-            retryCount = 0;
 
             Thread.yield();// try to avoid thread starvation
             processResult(seq);

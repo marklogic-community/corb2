@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
@@ -56,11 +57,11 @@ class HostKeyDecrypterTest {
     private static final String METHOD_GET_SN = "getSN";
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws UnsupportedEncodingException {
         clearSystemProperties();
         HOST_KEY_DECRYPTER_LOG.addHandler(testLogger);
-        System.setOut(new PrintStream(outContent));
-        System.setErr(new PrintStream(errContent));
+        System.setOut(new PrintStream(outContent, true, StandardCharsets.UTF_8.name()));
+        System.setErr(new PrintStream(errContent, true, StandardCharsets.UTF_8.name()));
     }
 
     @AfterEach

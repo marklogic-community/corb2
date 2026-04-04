@@ -376,7 +376,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
     private Iterator<Path> readToTempDir(Path xmlFile) throws CorbException {
         long extractedDocumentCount = 0;
 
-        XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+        XMLInputFactory xmlInputFactory = XmlUtils.newSecureXMLInputFactoryInstance();
         try (Reader fileReader = Files.newBufferedReader(xmlFile)) {
             XMLStreamReader reader = xmlInputFactory.createXMLStreamReader(fileReader);
 
@@ -551,12 +551,7 @@ public class FileUrisStreamingXMLLoader extends FileUrisXMLLoader {
     protected TransformerFactory getTransformerFactory() {
         //Creating a transformerFactory is expensive, only do it once
         if (transformerFactory == null) {
-            transformerFactory = TransformerFactory.newInstance();
-            try {
-                transformerFactory.setFeature(javax.xml.XMLConstants.FEATURE_SECURE_PROCESSING, true);
-            } catch (TransformerConfigurationException ex) {
-                LOG.log(Level.WARNING, "Failed to set secure processing feature on TransformerFactory", ex);
-            }
+            transformerFactory = XmlUtils.newSecureTransformerFactoryInstance();
         }
         return transformerFactory;
     }

@@ -21,6 +21,8 @@ package com.marklogic.developer.corb;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
+
 /**
  * Compiles XPath expressions into regex patterns for use with streaming XML parsers.
  * <p>
@@ -289,7 +291,7 @@ public class StreamingXPath {
                     if (STAR.equals(step)) {
                         step = "[^/]+";
                     }
-                    if (step.isEmpty()) {
+                    if (isEmpty(step)) {
                         //when "//" descendant XPath is used, everything is optional for this step
                         regex
                             .append("[^/]*/?");
@@ -305,6 +307,11 @@ public class StreamingXPath {
 
         regex.setLength(Math.max(regex.length() - 1, 0));//remove the trailing slash
         return regex.toString();
+    }
+
+    @Override
+    protected final void finalize() throws Throwable {
+        super.finalize();
     }
 
     /**

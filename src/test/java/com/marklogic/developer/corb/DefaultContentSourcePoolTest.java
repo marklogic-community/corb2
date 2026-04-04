@@ -72,7 +72,7 @@ class DefaultContentSourcePoolTest {
 
     //CircleCI has Amazon EC2 internal IP hostnames, so normalize
 	private String normalizeHostName(String hostName) {
-	    if (hostName.contains("ec2.internal")) {
+	    if (hostName != null && hostName.contains("ec2.internal")) {
 	        return hostName.substring(3, hostName.indexOf(".ec2.internal")).replaceAll("-", ".");
         } else {
 	        return hostName;

@@ -301,6 +301,9 @@ public class ModuleExecutor extends AbstractManager {
         String processModule = options.getProcessModule();
 
         ContentSource contentSource = csp.get();
+        if (contentSource == null) {
+            throw new CorbException("ContentSource is not available");
+        }
         try (Session session = contentSource.newSession()) {
             request = getRequestForModule(processModule, session);
             if (isJavaScriptModule(processModule)) {

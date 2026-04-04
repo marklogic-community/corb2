@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.corb.util.FileUtils;
+import com.marklogic.developer.corb.util.XmlUtils;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.types.XdmItem;
 import org.xml.sax.SAXException;
@@ -230,7 +231,7 @@ public class SchemaValidateBatchToFileTask extends ExportBatchToFileTask {
             return;
         }
 
-        XMLOutputFactory output = XMLOutputFactory.newInstance();
+        XMLOutputFactory output = XmlUtils.newSecureXMLOutputFactoruInstance();
         synchronized (SYNC_OBJ) {
             XMLStreamWriter xmlWriter = output.createXMLStreamWriter(writer);
             xmlWriter.writeStartElement("document");

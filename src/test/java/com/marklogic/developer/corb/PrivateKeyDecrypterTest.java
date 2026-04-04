@@ -24,10 +24,8 @@ import static com.marklogic.developer.corb.PrivateKeyDecrypter.ENCRYPT_USAGE;
 import static com.marklogic.developer.corb.PrivateKeyDecrypter.GEN_KEYS_USAGE;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.assertEqualsNormalizeNewline;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
+
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -66,11 +64,11 @@ class PrivateKeyDecrypterTest {
     private static final PrintStream systemErr = System.err;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws UnsupportedEncodingException {
         clearSystemProperties();
         LOG.addHandler(testLogger);
-        System.setOut(new PrintStream(outContent));
-        System.setErr(new PrintStream(errContent));
+        System.setOut(new PrintStream(outContent, true, StandardCharsets.UTF_8.name()));
+        System.setErr(new PrintStream(errContent, true, StandardCharsets.UTF_8.name()));
     }
 
     @AfterEach

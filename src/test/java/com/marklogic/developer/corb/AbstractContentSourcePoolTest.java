@@ -154,8 +154,12 @@ class AbstractContentSourcePoolTest {
         try (AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl()) {
             cs = csp.createContentSource(localhostXccUri);
         }
-        assertEquals("localhost", cs.getConnectionProvider().getHostName());
-        assertEquals(8000, cs.getConnectionProvider().getPort());
+        if (cs == null || cs.getConnectionProvider() == null) {
+            fail("ContentSource should not be null");
+        } else {
+            assertEquals("localhost", cs.getConnectionProvider().getHostName());
+            assertEquals(8000, cs.getConnectionProvider().getPort());
+        }
     }
 
     @Test
@@ -164,8 +168,12 @@ class AbstractContentSourcePoolTest {
         try (AbstractContentSourcePoolImpl csp = new AbstractContentSourcePoolImpl()) {
             cs = csp.createContentSource(localhostXccUri);
         }
-        assertEquals("localhost", cs.getConnectionProvider().getHostName());
-        assertEquals(8000, cs.getConnectionProvider().getPort());
+        if (cs == null || cs.getConnectionProvider() == null) {
+            fail("ContentSource should not be null");
+        } else {
+            assertEquals("localhost", cs.getConnectionProvider().getHostName());
+            assertEquals(8000, cs.getConnectionProvider().getPort());
+        }
     }
 
     @Test

@@ -48,6 +48,10 @@ class IOUtilsTest {
         }
     }
 
+    @Override
+    protected final void finalize() {
+    }
+
     @Test
     void testCloseQuietly() {
         Closeable obj = new StringReader("foo");
@@ -229,7 +233,7 @@ class IOUtilsTest {
         char[] buf = new char[BUFFER_SIZE];
         byte[] bite;
         while ((len = source.read(buf)) > -1) {
-            bite = new String(buf).getBytes();
+            bite = new String(buf).getBytes(StandardCharsets.UTF_8);
             // len? different for char vs byte?
             // code is broken if I use bite.length, though
             destination.write(bite, 0, len);

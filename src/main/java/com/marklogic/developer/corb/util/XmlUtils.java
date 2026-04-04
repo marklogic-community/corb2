@@ -26,14 +26,13 @@ import org.w3c.dom.Node;
 import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSOutput;
 import org.w3c.dom.ls.LSSerializer;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
+import org.xml.sax.*;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerConfigurationException;
@@ -42,6 +41,8 @@ import javax.xml.transform.stax.StAXSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
+import javax.xml.xpath.XPathFactory;
+import javax.xml.xpath.XPathFactoryConfigurationException;
 
 import java.io.*;
 
@@ -158,14 +159,24 @@ public final class XmlUtils {
      */
     public static List<SAXParseException> schemaValidate(Source source, File schemaFile, Properties options) throws SAXException, IOException {
         SchemaFactory schemaFactory = SchemaFactory.newInstance(W3C_XML_SCHEMA_NS_URI);
-        schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-        schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+        try {
+            schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            schemaFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+        } catch (SAXNotRecognizedException | SAXNotSupportedException e) {
+            LOG.log(Level.WARNING, "Unable to set secure XML schema factory features", e);
+        }
         boolean honourAllSchemaLocations = StringUtils.stringToBoolean(Options.findOption(options, Options.XML_SCHEMA_HONOUR_ALL_SCHEMALOCATIONS), true);
         if (honourAllSchemaLocations){
             schemaFactory.setFeature("http://apache.org/xml/features/honour-all-schemaLocations", true);
         }
         Schema schema = schemaFactory.newSchema(schemaFile);
         Validator validator = schema.newValidator();
+        try {
+            validator.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            validator.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+        } catch (SAXNotRecognizedException | SAXNotSupportedException e) {
+            LOG.log(Level.WARNING, "Unable to set secure XML validator features", e);
+        }
         final List<SAXParseException> exceptions = new LinkedList<>();
         //collect all validation errors with a custom handler
         validator.setErrorHandler(new ErrorHandler() {
@@ -236,6 +247,13 @@ public final class XmlUtils {
         return documentBuilderFactory;
     }
 
+    /**
+     * Creates a new instance of TransformerFactory with secure features enabled.
+     * The factory is configured to prevent XML External Entity (XXE) attacks by enabling
+     * secure processing and restricting access to external DTDs and stylesheets.
+     *
+     * @return a securely configured TransformerFactory instance
+     */
     public static TransformerFactory newSecureTransformerFactoryInstance() {
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         try {
@@ -246,5 +264,58 @@ public final class XmlUtils {
             LOG.log(Level.WARNING, "Unable to set secure XML transformer features", e);
         }
         return transformerFactory;
+    }
+
+    /**
+     * Creates a new instance of XMLInputFactory with secure features enabled.
+     * The factory is configured to prevent XML External Entity (XXE) attacks by disabling
+     * DTD support and external entity resolution.
+     *
+     * @return a securely configured XMLInputFactory instance
+     */
+    public static XMLInputFactory newSecureXMLInputFactoryInstance() {
+        XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+        try {
+            xmlInputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+            xmlInputFactory.setProperty("javax.xml.stream.isSupportingExternalEntities", false);
+        } catch (IllegalArgumentException e) {
+            // Ignore if the underlying XMLInputFactory does not support these properties
+        }
+        return xmlInputFactory;
+    }
+
+    /**
+     * Creates a new instance of XMLOutputFactory with secure features enabled.
+     * The factory is configured to prevent XML External Entity (XXE) attacks by disabling
+     * access to external DTDs and stylesheets.
+     *
+     * @return a securely configured XMLOutputFactory instance
+     */
+    public static XMLOutputFactory newSecureXMLOutputFactoruInstance() {
+        XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
+        try {
+            xmlOutputFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            xmlOutputFactory.setProperty(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "file,jar:zip");
+        } catch (IllegalArgumentException e) {
+            LOG.log(Level.WARNING, "Unable to set secure XML output factory features", e);
+        }
+        return xmlOutputFactory;
+    }
+
+    /**
+     * Creates a new instance of XPathFactory with secure features enabled.
+     * The factory is configured to prevent XML External Entity (XXE) attacks by enabling
+     * secure processing.
+     *
+     * @return a securely configured XPathFactory instance
+     */
+    public static XPathFactory newSecureXPathFactoryInstance() {
+        XPathFactory factory = XPathFactory.newInstance();
+        try {
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        } catch (XPathFactoryConfigurationException e) {
+            LOG.warning("Failed to set secure processing feature on XPathFactory: " + e.getMessage());
+        }
+        return factory;
     }
 }

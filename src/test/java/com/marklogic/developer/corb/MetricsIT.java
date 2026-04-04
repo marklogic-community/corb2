@@ -22,6 +22,7 @@ import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static java.util.logging.Level.SEVERE;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.marklogic.xcc.ContentSource;
 import org.junit.jupiter.api.*;
 
 import java.util.ArrayList;
@@ -114,7 +115,11 @@ class MetricsIT {
     }
 
     static void cleanupDocs(ContentSourcePool contentSourcePool, String collection, String dbName) throws CorbException{
-        try (Session session = contentSourcePool.get().newSession()) {
+        ContentSource contentSource = contentSourcePool.get();
+        if (contentSource == null) {
+            throw new CorbException("Unable to get ContentSource from pool");
+        }
+        try (Session session = contentSource.newSession()) {
             AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML
                     + "xdmp:invoke-function(function(){xdmp:collection-delete('" + collection
                     + "')}, <options  xmlns='xdmp:eval'><database>{xdmp:database('" + dbName
@@ -127,7 +132,11 @@ class MetricsIT {
 
     static List<String> collectionCount(ContentSourcePool contentSourcePool, String collection, String dbName) throws CorbException{
         List<String> result = new ArrayList<>();
-        try (Session session = contentSourcePool.get().newSession()) {
+        ContentSource contentSource = contentSourcePool.get();
+        if (contentSource == null) {
+            throw new CorbException("Unable to get ContentSource from pool");
+        }
+        try (Session session = contentSource.newSession()) {
             AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML
                     + "xdmp:invoke-function(function(){cts:uris((),(),cts:collection-query('" + collection
                     + "'))}, <options  xmlns='xdmp:eval'><database>{xdmp:database('" + dbName
@@ -142,7 +151,11 @@ class MetricsIT {
 
     static List<String> docsWithEndTime(ContentSourcePool contentSourcePool, String collection, String dbName, boolean isXML) throws CorbException{
         List<String> result = new ArrayList<>();
-        try (Session session = contentSourcePool.get().newSession()) {
+        ContentSource contentSource = contentSourcePool.get();
+        if (contentSource == null) {
+            throw new CorbException("Unable to get ContentSource from pool");
+        }
+        try (Session session = contentSource.newSession()) {
             AdhocQuery q = session.newAdhocQuery(XQUERY_VERSION_ML + "declare namespace corb='" + JobStats.CORB_NAMESPACE + "';"
                     + "xdmp:invoke-function(function(){cts:uris((),(),cts:and-query(("
                     + "		cts:element-query(xs:QName('"

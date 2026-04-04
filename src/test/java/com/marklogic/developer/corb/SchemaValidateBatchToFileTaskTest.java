@@ -19,6 +19,7 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.corb.util.FileUtils;
+import com.marklogic.developer.corb.util.XmlUtils;
 import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.types.XdmItem;
@@ -142,7 +143,7 @@ class SchemaValidateBatchToFileTaskTest {
     @Test
     void writeParseException() {
         Writer stringWriter = new StringWriter();
-        XMLOutputFactory output = XMLOutputFactory.newInstance();
+        XMLOutputFactory output = XmlUtils.newSecureXMLOutputFactoruInstance();
         SchemaValidateBatchToFileTask validate = new SchemaValidateBatchToFileTask();
         try {
             XMLStreamWriter xmlWriter = output.createXMLStreamWriter(stringWriter);

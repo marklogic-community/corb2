@@ -1170,6 +1170,8 @@ class AbstractTaskTest {
         task.setProperties(properties);
         Exception ex = new IllegalAccessException();
         CorbException corbException = task.wrapProcessException(ex, "uri1", "uri2");
+        assertNotNull(corbException);
+        assertNotNull(corbException.getCause());
         assertEquals(IllegalAccessException.class, corbException.getCause().getClass());
         assertFalse(corbException.getMessage().contains("uri1"));
     }
@@ -1312,7 +1314,7 @@ class AbstractTaskTest {
 
     private static class AdhocQueryImpl extends RequestImpl implements AdhocQuery {
 
-        private String query;
+        private String query = "";
 
         @Override
         public void setQuery(String string) {
@@ -1321,7 +1323,7 @@ class AbstractTaskTest {
 
         @Override
         public String getQuery() {
-            return query == null ? "" : query;
+            return query;
         }
 
         @Override

@@ -21,10 +21,12 @@ package com.marklogic.developer.corb;
 import com.marklogic.developer.corb.util.IOUtils;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.trim;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.LineNumberReader;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.logging.Logger;
 
 /**
@@ -91,7 +93,7 @@ public class FileUrisLoader extends AbstractUrisLoader {
      * It provides character-based file I/O for reading the URIs file.
      * </p>
      */
-    protected FileReader fileReader;
+    protected Reader fileReader;
 
     /**
      * Buffered reader wrapping the file reader for efficient line-by-line reading.
@@ -161,11 +163,13 @@ public class FileUrisLoader extends AbstractUrisLoader {
         if (shouldSetBatchRef()) {
             batchRef = fileName;
         }
-        try (LineNumberReader lnr = new LineNumberReader(new FileReader(fileName))) {
+        Path path = Paths.get(fileName);
+        try (LineNumberReader lnr = new LineNumberReader(new BufferedReader(
+            new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8)))) {
             lnr.skip(Long.MAX_VALUE);
             setTotalCount(lnr.getLineNumber() + 1L);
             //these are closed in the close() method
-            fileReader = new FileReader(fileName);
+            fileReader = new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8);
             bufferedReader = new BufferedReader(fileReader);
         } catch (Exception exc) {
             throw new CorbException("Problem loading data from uris file " + getOptions().getUrisFile(), exc);

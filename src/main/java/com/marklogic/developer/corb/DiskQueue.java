@@ -181,7 +181,7 @@ public class DiskQueue<E extends Serializable> extends AbstractQueue<String> {
      *             Users should explicitly call {@link #clear()} to ensure timely cleanup.
      */
     @Override
-    protected void finalize() throws Throwable {
+    protected final void finalize() throws Throwable {
         if (closeFile()) {
             LOG.log(Level.WARNING, () -> MessageFormat.format("{0} still had open file in finalize", DiskQueue.class.getSimpleName()));
         }

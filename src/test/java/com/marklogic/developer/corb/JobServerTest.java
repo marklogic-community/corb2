@@ -24,9 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -163,7 +161,7 @@ class JobServerTest {
             conn.setDoOutput(true);
             conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
             try (OutputStream out = conn.getOutputStream()) {
-                out.write((Options.PROCESS_MODULE + "=%2Fext%2Fprocess.xqy&" + JobBuilderService.PARAM_ADDITIONAL_PROPERTIES + "=CUSTOM-OPTION%3Dtrue").getBytes());
+                out.write((Options.PROCESS_MODULE + "=%2Fext%2Fprocess.xqy&" + JobBuilderService.PARAM_ADDITIONAL_PROPERTIES + "=CUSTOM-OPTION%3Dtrue").getBytes(StandardCharsets.UTF_8));
             }
             try (InputStream inputStream = conn.getInputStream()) {
                 String properties = new String(IOUtils.toByteArray(inputStream));

@@ -41,16 +41,12 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 import com.marklogic.developer.corb.util.XmlUtils;
+import com.marklogic.xcc.*;
 import com.marklogic.xcc.exceptions.RequestException;
 import org.w3c.dom.*;
 
 import com.marklogic.developer.corb.util.StringUtils;
-import com.marklogic.xcc.AdhocQuery;
-import com.marklogic.xcc.ContentSource;
-import com.marklogic.xcc.Request;
-import com.marklogic.xcc.RequestOptions;
-import com.marklogic.xcc.ResultSequence;
-import com.marklogic.xcc.Session;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -717,9 +713,9 @@ public class JobStats extends BaseMonitor {
             request.setOptions(requestOptions);
 
             seq = session.submitRequest(request);
-            String uri = seq != null && seq.hasNext() ? seq.next().asString() : null;
+            ResultItem uri = seq != null && seq.hasNext() ? seq.next() : null;
             if (uri != null) {
-                this.uri = uri;
+                this.uri = uri.asString();
             }
         } finally {
             if (null != seq && !seq.isClosed()) {
@@ -1025,6 +1021,9 @@ public class JobStats extends BaseMonitor {
      */
     protected static Templates newTemplates(TransformerFactory transformerFactory, String stylesheetFilename) throws TransformerConfigurationException {
         URL url = Manager.class.getResource( "/" + stylesheetFilename);
+        if (url == null) {
+            throw new TransformerConfigurationException("Could not find the template file " + stylesheetFilename + " in the classpath");
+        }
         try {
             StreamSource source = new StreamSource(url.openStream());
             source.setSystemId(url.toURI().toString()); //required in order for XSLT to resolve relative paths and itself with document('')

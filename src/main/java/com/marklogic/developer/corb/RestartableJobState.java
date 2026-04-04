@@ -298,6 +298,11 @@ public class RestartableJobState implements Closeable {
         // No-op. Restart artifacts are cleaned up explicitly by the caller when appropriate.
     }
 
+    @Override
+    protected final void finalize() throws Throwable {
+        super.finalize();
+    }
+
     private void flushBucketEntries(String bucketId, List<String> bucketEntries) throws IOException {
         if (bucketEntries == null || bucketEntries.isEmpty()) {
             return;

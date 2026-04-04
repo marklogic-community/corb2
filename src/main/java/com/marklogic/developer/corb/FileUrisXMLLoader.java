@@ -274,12 +274,7 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
                 //default processing will select child elements
                 nodeList = doc.getChildNodes().item(0).getChildNodes();
             } else {
-                XPathFactory factory = XPathFactory.newInstance();
-                try {
-                    factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-                } catch (XPathFactoryConfigurationException e) {
-                    LOG.warning("Failed to set secure processing feature on XPathFactory: " + e.getMessage());
-                }
+                XPathFactory factory = XmlUtils.newSecureXPathFactoryInstance();
                 //using this factory to create an XPath object:
                 XPath xpath = factory.newXPath();
 

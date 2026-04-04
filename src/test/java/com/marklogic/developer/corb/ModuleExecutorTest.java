@@ -483,16 +483,19 @@ class ModuleExecutorTest {
 
     private ResultSequence run(ModuleExecutor executor) throws CorbException {
         ResultSequence res;
+        RequestOptions opts = new RequestOptions();
+        opts.setCacheResult(false);
+        ContentSource contentSource = executor.csp.get();
+        if (contentSource == null) {
+            throw new CorbException("Unable to obtain ContentSource from pool");
+        }
         try {
-            RequestOptions opts = new RequestOptions();
-            opts.setCacheResult(false);
-            Session session = executor.csp.get().newSession();
+            Session session = contentSource.newSession();
             Request req;
             TransformOptions options = executor.getOptions();
             Properties properties = executor.getProperties();
 
-            List<String> propertyNames = new ArrayList<>(
-                    properties.stringPropertyNames());
+            List<String> propertyNames = new ArrayList<>(properties.stringPropertyNames());
             propertyNames.addAll(System.getProperties().stringPropertyNames());
 
             String queryPath = options.getProcessModule().substring(0, options.getProcessModule().indexOf('|'));
