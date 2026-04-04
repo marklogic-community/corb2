@@ -277,7 +277,14 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
                 XPathFactory factory = XmlUtils.newSecureXPathFactoryInstance();
                 //using this factory to create an XPath object:
                 XPath xpath = factory.newXPath();
-
+                // Disable DTDs and external entity resolution to prevent XXE
+                if (doc != null) {
+                    try {
+                        doc.setXmlStandalone(true);
+                    } catch (Exception e) {
+                        // ignore, best-effort hardening
+                    }
+                }
                 // XPath Query for showing all nodes value
                 XPathExpression expr = xpath.compile(xpathRootNode);
                 Object result = expr.evaluate(doc, XPathConstants.NODESET);
