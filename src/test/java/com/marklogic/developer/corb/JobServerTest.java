@@ -164,7 +164,7 @@ class JobServerTest {
                 out.write((Options.PROCESS_MODULE + "=%2Fext%2Fprocess.xqy&" + JobBuilderService.PARAM_ADDITIONAL_PROPERTIES + "=CUSTOM-OPTION%3Dtrue").getBytes(StandardCharsets.UTF_8));
             }
             try (InputStream inputStream = conn.getInputStream()) {
-                String properties = new String(IOUtils.toByteArray(inputStream));
+                String properties = new String(IOUtils.toByteArray(inputStream), StandardCharsets.UTF_8);
                 assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
                 assertEquals("text/plain; charset=utf-8", conn.getHeaderField(JobServer.HEADER_CONTENT_TYPE));
                 assertTrue(conn.getHeaderField("Content-Disposition").contains("corb-job.properties"));
