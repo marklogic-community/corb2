@@ -242,7 +242,7 @@ public class JobBuilderService {
     }
 
     @Override
-    protected void finalize(){}
+    protected final void finalize(){}
 
     private Set<String> buildSupportedOptionNames(List<OptionGroup> groups) {
         Set<String> optionNames = new LinkedHashSet<>();

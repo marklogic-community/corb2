@@ -133,6 +133,11 @@ public class ArrayQueue<E> extends AbstractQueue<String> implements Serializable
         }
     }
 
+    @Override
+    protected final void finalize() throws Throwable {
+        super.finalize();
+    }
+
     /**
      * Inserts an element at the current put position.
      * Converts the String to a char array for memory efficiency.

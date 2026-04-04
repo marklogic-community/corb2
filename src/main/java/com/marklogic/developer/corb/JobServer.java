@@ -375,6 +375,11 @@ public class JobServer {
         }
     }
 
+    @Override
+    protected final void finalize() throws Throwable {
+        super.finalize();
+    }
+
     /**
      * Transforms an XML document to JSON format using XSLT.
      *
