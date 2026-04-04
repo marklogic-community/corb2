@@ -474,7 +474,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
          *
          * @return the maximum number of URIs tracked
          */
-        protected int getSize() {
+        protected synchronized int getSize() {
             return size;
         }
 
