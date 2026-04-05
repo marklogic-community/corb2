@@ -138,16 +138,20 @@ public class JobServicesHandler implements HttpHandler {
                 if (relativePath.isEmpty() || "/".equals(relativePath)) {
                     relativePath = "/index.html";
                 }
-                // Normalize and validate path to prevent directory traversal
-                Path normalizedPath = Paths.get(relativePath).normalize();
-                if (normalizedPath.isAbsolute() || normalizedPath.startsWith("..")) {
+
+                String candidate = relativePath.startsWith("/") ? relativePath.substring(1) : relativePath;
+                candidate = candidate.replace('\\', '/');
+
+                Path staticRoot = Paths.get("web").normalize();
+                Path resolvedPath = staticRoot.resolve(candidate).normalize();
+
+                if (!resolvedPath.startsWith(staticRoot)) {
                     LOG.log(Level.WARNING, "Rejected potential directory traversal path: {0}", relativePath);
                     httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
                     return;
                 }
-                JobServer.handleStaticRequest(normalizedPath.toString(), httpExchange);
+                JobServer.handleStaticRequest(resolvedPath.toString(), httpExchange);
             }
-
         } else {
             LOG.log(Level.WARNING, "Unsupported method {0}", method);
             httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0L);
