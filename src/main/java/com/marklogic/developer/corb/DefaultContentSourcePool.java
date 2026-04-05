@@ -1028,7 +1028,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
                     } else {
                         Throwable cause = exc.getCause();
                         if (cause != null) {
-                            throw exc.getCause();
+                            throw cause;
                         } else {
                             throw exc;
                         }
@@ -1036,7 +1036,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
                 } else {
                     Throwable cause = exc.getCause();
                     if (cause != null) {
-                        throw exc.getCause();
+                        throw cause;
                     } else {
                         throw exc;
                     }

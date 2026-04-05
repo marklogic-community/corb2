@@ -112,7 +112,7 @@ public final class NumberUtils {
         Matcher matcher = pattern.matcher(size.trim());
 
         if (matcher.find()) {
-            String numberPart = matcher.group(1);
+            String numberPart = matcher.group(1) == null ? "0" : matcher.group(1);
             String unitPart = matcher.group(2) == null ? "" : matcher.group(2).toUpperCase();
 
             BigDecimal bytes = new BigDecimal(numberPart);

@@ -899,7 +899,7 @@ class PostBatchUpdateFileTaskTest {
                 assertNotNull(zipFile.getEntry("001_test-both-split-zip.txt"));
                 assertNotNull(zipFile.getEntry("002_test-both-split-zip.txt"));
             }
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, "Test failed", ex);
             fail("Exception occurred: " + ex.getMessage());
         } finally {
