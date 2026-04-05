@@ -235,7 +235,11 @@ class DefaultContentSourcePoolTest {
     void getSessionFromProxy(){
         try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, localhostXccUri);
-            Session session = contentSourcePool.get().newSession();
+            ContentSource contentSource = contentSourcePool.get();
+            if (contentSource == null) {
+                fail("ContentSource should not be null");
+            }
+            Session session = contentSource.newSession();
             assertTrue(Proxy.isProxyClass(session.getClass()));
             assertEquals(session, DefaultContentSourcePool.getSessionFromProxy(session));
         } catch ( CorbException ex) {
@@ -250,11 +254,14 @@ class DefaultContentSourcePoolTest {
             assertEquals(3, contentSourcePool.getAllContentSources().length);
             IntStream.rangeClosed(1, 3).forEach(x -> {
                 ContentSource contentSource = contentSourcePool.nextContentSource();
+                assertNotNull(contentSource);
                 //initially there are no errors
                 assertEquals(0, contentSourcePool.errorCount(contentSource));
                 contentSourcePool.error(contentSource);
             } );
-            IntStream.rangeClosed(1, 6).forEach(x -> contentSourcePool.error(contentSourcePool.nextContentSource()));
+            ContentSource nextContentSource = contentSourcePool.nextContentSource();
+            assertNotNull(nextContentSource);
+            IntStream.rangeClosed(1, 6).forEach(x -> contentSourcePool.error(nextContentSource));
             ContentSource contentSource = contentSourcePool.nextContentSource();
             contentSourcePool.error(contentSource);
             //after the third error ContentSource is removed
@@ -640,9 +647,12 @@ class DefaultContentSourcePoolTest {
             contentSourcePool.init(null, null, "");
             contentSourcePool.contentSources.add(contentSource1);
             contentSourcePool.contentSources.add(contentSource2);
-
-            contentSourcePool.get().newSession().insertContent(content);
-            assertEquals(1L, (long)contentSourcePool.errorCountForContentSource.get(contentSource1));
+            ContentSource contentSource = contentSourcePool.get();
+            assertNotNull(contentSource);
+            try (Session session = contentSource.newSession()) {
+                session.insertContent(content);
+                assertEquals(1L, (long) contentSourcePool.errorCountForContentSource.get(contentSource1));
+            }
         }
 	}
 
@@ -693,8 +703,11 @@ class DefaultContentSourcePoolTest {
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.contentSources.add(contentSource1);
             contentSourcePool.contentSources.add(contentSource2);
-
-            assertThrows(ServerConnectionException.class, () -> contentSourcePool.get().newSession().submitRequest(request));
+            ContentSource nextContentSource = contentSourcePool.get();
+            assertNotNull(nextContentSource);
+            assertThrows(ServerConnectionException.class, () -> nextContentSource.newSession().submitRequest(request));
+        } catch (CorbException ex) {
+            fail();
         }
 	}
 
@@ -703,6 +716,9 @@ class DefaultContentSourcePoolTest {
         try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, "xcc://foo:bar@localhost:8000");
             ContentSource contentSource = contentSourcePool.get();
+            if (contentSource == null) {
+                fail("ContentSource should not be null");
+            }
             String ip = contentSourcePool.getIPAddress(contentSource);
             assertEquals("127.0.0.1", ip);
         } catch (CorbException ex) {
@@ -715,6 +731,9 @@ class DefaultContentSourcePoolTest {
         try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, "xcc://foo:bar@127.0.0.1:8000");
             ContentSource contentSource = contentSourcePool.get();
+            if (contentSource == null) {
+                fail("ContentSource should not be null");
+            }
             String ip = contentSourcePool.getIPAddress(contentSource);
             assertEquals("127.0.0.1", ip);
         } catch (CorbException ex) {

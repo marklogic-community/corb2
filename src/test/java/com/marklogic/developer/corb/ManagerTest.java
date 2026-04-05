@@ -177,7 +177,7 @@ class ManagerTest {
         ByteArrayOutputStream outContent = new ByteArrayOutputStream();
         System.setErr(new PrintStream(outContent, true, StandardCharsets.UTF_8.name()));
         Manager.run(args);
-        assertTrue(outContent.toString().contains("CoRB version"));
+        assertTrue(outContent.toString(StandardCharsets.UTF_8.name()).contains("CoRB version"));
     }
 
     @Test

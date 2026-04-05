@@ -113,7 +113,7 @@ public final class NumberUtils {
 
         if (matcher.find()) {
             String numberPart = matcher.group(1);
-            String unitPart = matcher.group(2).toUpperCase();
+            String unitPart = matcher.group(2) == null ? "" : matcher.group(2).toUpperCase();
 
             BigDecimal bytes = new BigDecimal(numberPart);
             long multiplier;

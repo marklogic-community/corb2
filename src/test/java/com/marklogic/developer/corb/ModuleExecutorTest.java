@@ -274,7 +274,10 @@ class ModuleExecutorTest {
             try (ResultSequence resSeq = run(executor)) {
                 ResultItem resultItem = resSeq.next();
                 if (resultItem != null) {
-                    report = AbstractTask.getValueAsBytes(resSeq.next().getItem());
+                    XdmItem item = resultItem.getItem();
+                    if (item != null) {
+                        report = AbstractTask.getValueAsBytes(item);
+                    }
                 }
             }
 

@@ -1061,6 +1061,9 @@ public class Manager extends AbstractManager implements Closeable {
         LOG.log(INFO, () -> MessageFormat.format("checking modules, database: {0}", modulesDatabase));
 
         ContentSource contentSource = csp.get();
+        if (contentSource == null) {
+            throw new CorbException("ContentSource is not available");
+        }
         try (Session session = contentSource.newSession(modulesDatabase)) {
             for (String resourceModule : resourceModules) {
                 insertModule(session, resourceModule);

@@ -810,6 +810,9 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
          */
         protected Session createSessionProxy(Session session) {
             ClassLoader classLoader = DefaultContentSourcePool.class.getClassLoader() == null ? ClassLoader.getSystemClassLoader() : DefaultContentSourcePool.class.getClassLoader();
+            if (classLoader == null) {
+                return null;
+            }
             return (Session)Proxy.newProxyInstance(
                 classLoader,
                 new Class[] { Session.class },
@@ -1023,7 +1026,12 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
                         LOG.log(WARNING, "Insert content failed {0} times {1}. Max Limit is {2}. Retrying..", new Object[]{attempts, name, contentSourcePool.retryLimit});
                         return insertAsNewRequest(args);
                     } else {
-                        throw exc.getCause();
+                        Throwable cause = exc.getCause();
+                        if (cause != null) {
+                            throw exc.getCause();
+                        } else {
+                            throw exc;
+                        }
                     }
                 } else {
                     Throwable cause = exc.getCause();
