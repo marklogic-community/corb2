@@ -388,7 +388,11 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
      * thread-safe updates to the list.
      * </p>
      */
-    protected class TopUriList {
+    protected static class TopUriList {
+        /**
+         * Lock object used for synchronizing access to shared statistics (counters and failed URIs list).
+         */
+        private final Object lock = new Object();
 
         /**
          * TreeSet maintaining URIs sorted by execution time (ascending).
@@ -462,7 +466,6 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
                                 list.remove(list.first());
                             }
                         }
-
                     }
                     list.add(newObj);
                 }
