@@ -259,9 +259,12 @@ class DefaultContentSourcePoolTest {
                 assertEquals(0, contentSourcePool.errorCount(contentSource));
                 contentSourcePool.error(contentSource);
             } );
-            ContentSource nextContentSource = contentSourcePool.nextContentSource();
-            assertNotNull(nextContentSource);
-            IntStream.rangeClosed(1, 6).forEach(x -> contentSourcePool.error(nextContentSource));
+
+            IntStream.rangeClosed(1, 6).forEach(x -> {
+                ContentSource nextContentSource = contentSourcePool.nextContentSource();
+                assertNotNull(nextContentSource);
+                contentSourcePool.error(nextContentSource);
+            });
             ContentSource contentSource = contentSourcePool.nextContentSource();
             contentSourcePool.error(contentSource);
             //after the third error ContentSource is removed
