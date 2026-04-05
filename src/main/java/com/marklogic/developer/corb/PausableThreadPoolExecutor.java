@@ -497,7 +497,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
          * the TreeSet to maintain URIs sorted by duration.
          * </p>
          */
-        private class UriObject implements Comparable<UriObject> {
+        private static class UriObject implements Comparable<UriObject> {
 
             /**
              * The URI that was executed.
