@@ -71,7 +71,7 @@ public class JobBuilderHandler implements HttpHandler {
      */
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        JobServer.alowXSS(httpExchange);
+        JobServer.allowXSS(httpExchange);
         String method = httpExchange.getRequestMethod();
         String path = httpExchange.getRequestURI().getPath();
 

@@ -329,7 +329,7 @@ public class JobServer {
                 LOG.log(Level.WARNING, "Unable to handle options builder request", ex);
             }
         } else if (METRICS_PATH.equals(path) || hasParameter(params, JobServicesHandler.PARAM_FORMAT)) {
-            alowXSS(httpExchange);
+            allowXSS(httpExchange);
 
             String contentType = determineContentType(params);
             httpExchange.getResponseHeaders().add(HEADER_CONTENT_TYPE, contentType);
@@ -691,7 +691,7 @@ public class JobServer {
      *
      * @param httpExchange the HTTP exchange to modify
      */
-    protected static void alowXSS(HttpExchange httpExchange) {
+    protected static void allowXSS(HttpExchange httpExchange) {
         Headers headers = httpExchange.getResponseHeaders();
         headers.add("Access-Control-Allow-Origin", "*");
         headers.add("Access-Control-Allow-Methods", "GET,POST");

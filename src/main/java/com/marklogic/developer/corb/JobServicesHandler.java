@@ -130,7 +130,7 @@ public class JobServicesHandler implements HttpHandler {
             updateThreads(params);
             String path = httpExchange.getRequestURI().getPath();
             if (path.contains(JobServer.METRICS_PATH) || JobServer.hasParameter(params, JobServicesHandler.PARAM_FORMAT)) {
-                JobServer.alowXSS(httpExchange);
+                JobServer.allowXSS(httpExchange);
                 writeMetricsOut(httpExchange, params, manager);
             } else {
                 String jobId = manager.getJobId();
@@ -145,7 +145,7 @@ public class JobServicesHandler implements HttpHandler {
                     httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
                     return;
                 }
-                JobServer.handleStaticRequest(relativePath, httpExchange);
+                JobServer.handleStaticRequest(normalizedPath.toString(), httpExchange);
             }
 
         } else {
