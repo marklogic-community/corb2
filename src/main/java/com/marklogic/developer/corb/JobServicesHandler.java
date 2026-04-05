@@ -24,8 +24,9 @@ import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -136,6 +137,13 @@ public class JobServicesHandler implements HttpHandler {
                 String relativePath = path.substring(path.indexOf(jobId) + jobId.length());
                 if (relativePath.isEmpty() || "/".equals(relativePath)) {
                     relativePath = "/index.html";
+                }
+                // Normalize and validate path to prevent directory traversal
+                Path normalizedPath = Paths.get(relativePath).normalize();
+                if (normalizedPath.isAbsolute() || normalizedPath.startsWith("..")) {
+                    LOG.log(Level.WARNING, "Rejected potential directory traversal path: {0}", relativePath);
+                    httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
+                    return;
                 }
                 JobServer.handleStaticRequest(relativePath, httpExchange);
             }

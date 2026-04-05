@@ -21,8 +21,6 @@ package com.marklogic.developer.corb;
 import com.marklogic.developer.TestHandler;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.nio.charset.Charset;
 import java.security.InvalidParameterException;
 import java.text.MessageFormat;
 import java.util.List;
@@ -88,6 +86,7 @@ class DiskQueueTest {
         }
     }
 
+    @SuppressWarnings("FinalizeCalledExplicitly")
     @Test
     void testDiskQueueFinalizeWhileOpen() {
         try {
@@ -126,6 +125,7 @@ class DiskQueueTest {
         assertEquals(0, instance.size());
     }
 
+    @SuppressWarnings("FinalizeCalledExplicitly")
     @Test
     void testFinalize() {
         DiskQueue<String> instance = new DiskQueue<>(1);

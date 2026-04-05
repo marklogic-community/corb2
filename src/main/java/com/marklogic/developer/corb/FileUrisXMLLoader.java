@@ -30,7 +30,6 @@ import static com.marklogic.developer.corb.util.StringUtils.*;
 
 import com.marklogic.developer.corb.util.FileUtils;
 
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.*;
