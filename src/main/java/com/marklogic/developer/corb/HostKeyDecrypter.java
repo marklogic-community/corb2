@@ -181,13 +181,19 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     private static final byte[] HARD_CODED_BYTES = {120, 26, 58, 29, 43, 77, 95, 103, 29, 86, 97, 105, 52, 16, 42, 63, 37, 100, 45, 109, 108, 79, 75, 71, 11, 46, 36, 62, 124, 12, 7, 127};
 
     /**
-     * Encryption algorithm identifier for AES (Advanced Encryption Standard).
+     * Default cipher transformation used when {@link Options#HOST_KEY_DECRYPTER_CIPHER} is not set.
+     */
+    static final String DEFAULT_CIPHER_ALGORITHM = "AES";
+
+    /**
+     * The cipher transformation string used for encryption and decryption.
      * <p>
-     * Used when creating {@link SecretKeySpec} instances and initializing {@link Cipher} objects.
-     * The actual key size (256 bits) is determined by the length of {@link #privateKey}.
+     * Initialized during {@link #init_decrypter()} from the
+     * {@link Options#HOST_KEY_DECRYPTER_CIPHER} property, or from the corresponding system
+     * property for the standalone CLI {@code encrypt} mode. Defaults to {@value #DEFAULT_CIPHER_ALGORITHM}.
      * </p>
      */
-    private static final String AES = "AES";
+    static String cipherAlgorithm = DEFAULT_CIPHER_ALGORITHM;
 
     /**
      * Format string template for command-line usage messages.
@@ -481,6 +487,8 @@ public class HostKeyDecrypter extends AbstractDecrypter {
         synchronized (HostKeyDecrypter.class) {
             try {
                 privateKey = getPrivateKey();
+                String configured = getProperty(Options.HOST_KEY_DECRYPTER_CIPHER);
+                cipherAlgorithm = StringUtils.isBlank(configured) ? DEFAULT_CIPHER_ALGORITHM : configured;
                 LOG.log(INFO, "Initialized HostKeyDecrypter");
             } catch (NoSuchAlgorithmException e) {
                 throw new RuntimeException("Error constructing private key", e);
@@ -641,25 +649,30 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     }
 
     /**
-     * Encrypts plaintext using the host-specific private key and AES-256 algorithm.
+     * Encrypts plaintext using the host-specific private key and the configured cipher.
      * <p>
      * This method:
      * </p>
      * <ol>
      *   <li>Derives the private key from host identifiers</li>
-     *   <li>Creates an AES {@link SecretKeySpec} from the key</li>
+     *   <li>Creates a {@link SecretKeySpec} from the key using the base algorithm</li>
      *   <li>Initializes a {@link Cipher} in ENCRYPT mode with {@link SecureRandom}</li>
      *   <li>Encrypts the plaintext bytes</li>
      *   <li>Returns the encrypted bytes as a hexadecimal string</li>
      * </ol>
      * <p>
+     * The cipher transformation is determined by {@link Options#HOST_KEY_DECRYPTER_CIPHER}
+     * (defaulting to {@value #DEFAULT_CIPHER_ALGORITHM}). For the standalone CLI {@code encrypt}
+     * mode, the system property {@value Options#HOST_KEY_DECRYPTER_CIPHER} is checked.
+     * </p>
+     * <p>
      * <b>Important:</b> The resulting encrypted string can only be decrypted on the same host
-     * where it was encrypted.
+     * where it was encrypted, using the same cipher transformation.
      * </p>
      *
      * @param plaintext the plaintext string to encrypt
      * @return the encrypted value as a hexadecimal string
-     * @throws NoSuchAlgorithmException if AES or SHA-256 algorithm is not available
+     * @throws NoSuchAlgorithmException if the algorithm is not available
      * @throws NoSuchPaddingException if the padding scheme is not available
      * @throws InvalidKeyException if the generated key is invalid
      * @throws IllegalBlockSizeException if the plaintext length is invalid
@@ -670,10 +683,12 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     public static String encrypt(String plaintext)
             throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
             IllegalBlockSizeException, BadPaddingException, UnknownHostException, SocketException {
+        String transformation = getCipherAlgorithmForStatic();
+        String baseAlgorithm = getBaseAlgorithm(transformation);
         // secret key based off of internal private key
         byte[] encryptionPrivateKey = getPrivateKey();
-        Key key = new SecretKeySpec(encryptionPrivateKey, AES);
-        Cipher cipher = Cipher.getInstance(AES);
+        Key key = new SecretKeySpec(encryptionPrivateKey, baseAlgorithm);
+        Cipher cipher = Cipher.getInstance(transformation);
         // encrypting with private key and random for initialization vector
         cipher.init(Cipher.ENCRYPT_MODE, key, new SecureRandom());
         byte[] encryptedVal = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
@@ -681,31 +696,33 @@ public class HostKeyDecrypter extends AbstractDecrypter {
     }
 
     /**
-     * Decrypts an encrypted value using the host-specific private key and AES-256 algorithm.
+     * Decrypts an encrypted value using the host-specific private key and the configured cipher.
      * <p>
      * This method:
      * </p>
      * <ol>
      *   <li>Converts the hexadecimal encrypted string to bytes</li>
-     *   <li>Creates an AES {@link SecretKeySpec} from the private key</li>
+     *   <li>Creates a {@link SecretKeySpec} from the private key using the base algorithm</li>
      *   <li>Initializes a {@link Cipher} in DECRYPT mode</li>
      *   <li>Decrypts the bytes to plaintext</li>
      * </ol>
      * <p>
      * <b>Important:</b> Decryption will fail if the value was encrypted on a different host,
-     * or if the host's hardware identifiers have changed since encryption.
+     * if the host's hardware identifiers have changed since encryption, or if a different
+     * cipher transformation was used during encryption.
      * </p>
      *
      * @param encryptedText the encrypted hexadecimal string to decrypt
      * @return the decrypted plaintext string
-     * @throws NoSuchAlgorithmException if the AES algorithm is not available
+     * @throws NoSuchAlgorithmException if the algorithm is not available
      * @throws NoSuchPaddingException if the padding scheme is not available
      * @throws InvalidKeyException if the private key is invalid
      */
     protected static String decrypt(String encryptedText) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
+        String baseAlgorithm = getBaseAlgorithm(cipherAlgorithm);
         byte[] encryptedTextBytes = hexStringToByteArray(encryptedText);
-        SecretKeySpec secretSpec = new SecretKeySpec(privateKey, AES);
-        Cipher cipher = Cipher.getInstance(AES);
+        SecretKeySpec secretSpec = new SecretKeySpec(privateKey, baseAlgorithm);
+        Cipher cipher = Cipher.getInstance(cipherAlgorithm);
         cipher.init(Cipher.DECRYPT_MODE, secretSpec, new SecureRandom());
         byte[] decryptedTextBytes = null;
         try {
@@ -715,6 +732,27 @@ public class HostKeyDecrypter extends AbstractDecrypter {
             return null;
         }
         return new String(decryptedTextBytes, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Returns the cipher transformation to use in the standalone static {@code encrypt} method.
+     * Checks the system property first, falling back to the instance-level {@link #cipherAlgorithm}.
+     */
+    private static String getCipherAlgorithmForStatic() {
+        String sysProp = System.getProperty(Options.HOST_KEY_DECRYPTER_CIPHER);
+        return StringUtils.isBlank(sysProp) ? cipherAlgorithm : sysProp;
+    }
+
+    /**
+     * Extracts the base algorithm name from a cipher transformation string.
+     * For example, {@code AES/GCM/NoPadding} returns {@code AES}, and {@code AES} returns {@code AES}.
+     *
+     * @param transformation the cipher transformation (e.g., {@code AES} or {@code AES/GCM/NoPadding})
+     * @return the base algorithm name (the part before the first {@code /})
+     */
+    static String getBaseAlgorithm(String transformation) {
+        int slashIndex = transformation.indexOf('/');
+        return slashIndex > 0 ? transformation.substring(0, slashIndex) : transformation;
     }
 
     /**

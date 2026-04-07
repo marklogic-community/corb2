@@ -134,6 +134,7 @@ public class JobBuilderService {
         PLACEHOLDERS.put(Options.EXPORT_FILE_DIR, "/tmp/exports");
         PLACEHOLDERS.put(Options.EXPORT_FILE_NAME, "export.txt");
         PLACEHOLDERS.put(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "10MB");
+        PLACEHOLDERS.put(Options.HOST_KEY_DECRYPTER_CIPHER, "AES/CBC/PKCS5Padding");
         PLACEHOLDERS.put(Options.JOB_NAME, "nightly-job");
         PLACEHOLDERS.put(Options.JOB_SERVER_PORT, "8005-8010");
         PLACEHOLDERS.put(Options.LOADER_PATH, "/envelope/instance");
@@ -366,9 +367,10 @@ public class JobBuilderService {
         builders.put(GROUP_SECURITY, new OptionGroupBuilder(
             GROUP_SECURITY,
             "Security & SSL",
-            "Manage decryption and SSL/truststore configuration for secure connections.",
+            "Manage encryption/decryption and SSL/truststore configuration for secure connections.",
             Arrays.asList(
                 Options.DECRYPTER,
+                Options.HOST_KEY_DECRYPTER_CIPHER,
                 Options.JASYPT_PROPERTIES_FILE,
                 Options.PRIVATE_KEY_FILE,
                 Options.PRIVATE_KEY_ALGORITHM,
@@ -524,7 +526,7 @@ public class JobBuilderService {
             builder.registerSubgroup(option);
         }
 
-        List<OptionGroup> groups = new ArrayList<OptionGroup>();
+        List<OptionGroup> groups = new ArrayList<>();
         for (OptionGroupBuilder builder : builders.values()) {
             if (builder.options.isEmpty()) {
                 continue;
@@ -568,7 +570,7 @@ public class JobBuilderService {
         if (fieldName.startsWith("XCC_") || fieldName.startsWith("CONTENT_SOURCE_") || "CONNECTION_POLICY".equals(fieldName)) {
             return GROUP_CONNECTION;
         }
-        if (fieldName.startsWith("SSL_") || fieldName.startsWith("PRIVATE_KEY_") || "DECRYPTER".equals(fieldName) || "JASYPT_PROPERTIES_FILE".equals(fieldName)) {
+        if (fieldName.startsWith("SSL_") || fieldName.startsWith("HOST_KEY")  || fieldName.startsWith("PRIVATE_KEY_") || "DECRYPTER".equals(fieldName) || "JASYPT_PROPERTIES_FILE".equals(fieldName)) {
             return GROUP_SECURITY;
         }
         if (fieldName.startsWith("METRICS_")
@@ -626,6 +628,9 @@ public class JobBuilderService {
         }
         if (optionName.startsWith("QUERY-RETRY-")) {
             return "QUERY-RETRY";
+        }
+        if (optionName.contains("DECRYPTER") || optionName.startsWith("HOST-KEY") || optionName.startsWith("JASYPT") || optionName.startsWith("PRIVATE-KEY") ) {
+            return "ENCRYPTION";
         }
         if (optionName.startsWith("COMMAND")) {
             return "COMMAND";

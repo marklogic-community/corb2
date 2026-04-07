@@ -232,6 +232,7 @@ Option | Description
 **<a name="DECRYPTER"></a>DECRYPTER** | Must implement `com.marklogic.developer.corb.Decrypter`. Encryptable options include **XCC-CONNECTION-URI**, **XCC-USERNAME**, **XCC-PASSWORD**, **XCC-HOSTNAME**, **XCC-PORT**, and **XCC-DBNAME** <ul><li>`com.marklogic.developer.corb.PrivateKeyDecrypter` (Included) Requires private key file</li><li>`com.marklogic.developer.corb.JasyptDecrypter` (Included) Requires jasypt-*.jar in classpath</li><li>`com.marklogic.developer.corb.HostKeyDecrypter` (Included) Requires Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files</li></ul>
 **<a name="PRIVATE-KEY-FILE"></a>PRIVATE-KEY-FILE**  | Required property for PrivateKeyDecrypter. This file should be accessible in the classpath or on the file system
 **<a name="PRIVATE-KEY-ALGORITHM"></a>PRIVATE-KEY-ALGORITHM** | (optional) <ul><li>Default algorithm for PrivateKeyDecrypter is RSA.</li><li>Default algorithm for JasyptDecrypter is PBEWithMD5AndTripleDES</li><ul>
+**<a name="HOST-KEY-DECRYPTER-CIPHER"></a>HOST-KEY-DECRYPTER-CIPHER** | (optional) The cipher transformation used by HostKeyDecrypter for encryption and decryption. Accepts a simple algorithm name (e.g., `AES`) or a full transformation string (e.g., `AES/GCM/NoPadding`). Default is `AES`. **Note:** Changing this value after values have been encrypted will prevent those values from being decrypted — re-encrypt all values before switching ciphers.
 **<a name="JASYPT-PROPERTIES-FILE"></a>JASYPT-PROPERTIES-FILE** | (optional) Property file for the JasyptDecrypter. If not specified, it uses default `jasypt.proeprties` file, which should be accessible in the classpath or file system.
 
 #### com.marklogic.developer.corb.PrivateKeyDecrypter
@@ -273,7 +274,7 @@ jasypt.password=passphrase
 ```
 
 #### com.marklogic.developer.corb.HostKeyDecrypter
-HostKeyDecrypter uses internal server identifiers to generate a private key unique to the host server. It then uses that private key as input to AES-258 encryption algorithm. Due to the use of AES-258, it requires JCE Unlimited Strength Jurisdiction Policy Files.
+HostKeyDecrypter uses internal server identifiers to generate a private key unique to the host server. It then uses that private key with the configured cipher (see **HOST-KEY-DECRYPTER-CIPHER**; default `AES`) for encryption and decryption. Due to the use of AES-256, it requires JCE Unlimited Strength Jurisdiction Policy Files.
 > Note: certain server identifiers used may change in cases of driver installation or if underlying hardware changes. In such cases, passwords will need to be regenerated. Encrypted passwords will be always be unique to the server they are generated on.
 
 Encrypt the password as follows:  

@@ -232,6 +232,34 @@ public final class Options {
     public static final String DECRYPTER = "DECRYPTER";
 
     /**
+     * The cipher transformation string used by
+     * {@link com.marklogic.developer.corb.HostKeyDecrypter} for encryption and
+     * decryption. The value is passed directly to
+     * {@link javax.crypto.Cipher#getInstance(String)} and may be a simple
+     * algorithm name (e.g., {@code AES}) or a full transformation string in the
+     * form {@code algorithm/mode/padding} (e.g., {@code AES/GCM/NoPadding}).
+     * <p>
+     * The base algorithm (the first segment before any {@code /}) is also used
+     * to construct the {@link javax.crypto.spec.SecretKeySpec}.
+     * </p>
+     * <p>
+     * <b>Important:</b> Changing this value after values have already been
+     * encrypted will prevent those values from being decrypted. Re-encrypt all
+     * values before switching ciphers.
+     * </p>
+     * Default is {@code AES}.
+     *
+     * @since 2.6.0
+     * @see com.marklogic.developer.corb.HostKeyDecrypter
+     * @see #DECRYPTER
+     */
+    @Usage(description = "The cipher transformation used by HostKeyDecrypter for encryption and decryption. "
+            + "Accepts a simple algorithm name (e.g., AES) or a full transformation string "
+            + "(e.g., AES/GCM/NoPadding). Default is AES. "
+            + "Changing this value after values have been encrypted will prevent those values from being decrypted.")
+    public static final String HOST_KEY_DECRYPTER_CIPHER = "HOST-KEY-DECRYPTER-CIPHER";
+
+    /**
      * Boolean value indicating whether the CoRB job should spill to disk when a
      * maximum number of URIs have been loaded in memory, in order to control
      * memory consumption and avoid Out of Memory exceptions for extremely large

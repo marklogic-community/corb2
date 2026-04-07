@@ -69,6 +69,7 @@ class HostKeyDecrypterTest {
         clearSystemProperties();
         System.setOut(systemOut);
         System.setErr(systemErr);
+        HostKeyDecrypter.cipherAlgorithm = HostKeyDecrypter.DEFAULT_CIPHER_ALGORITHM;
     }
 
     @Test
@@ -197,6 +198,78 @@ class HostKeyDecrypterTest {
         String value = "bar";
         String result = decrypter.decrypt("foo", value);
         assertEquals(value, result);
+    }
+
+    @Test
+    void testDefaultCipherAlgorithm() {
+        assertEquals("AES", HostKeyDecrypter.DEFAULT_CIPHER_ALGORITHM);
+        assertEquals(HostKeyDecrypter.DEFAULT_CIPHER_ALGORITHM, HostKeyDecrypter.cipherAlgorithm);
+    }
+
+    @Test
+    void testGetBaseAlgorithm_simpleAlgorithm() {
+        assertEquals("AES", HostKeyDecrypter.getBaseAlgorithm("AES"));
+    }
+
+    @Test
+    void testGetBaseAlgorithm_fullTransformation() {
+        assertEquals("AES", HostKeyDecrypter.getBaseAlgorithm("AES/GCM/NoPadding"));
+        assertEquals("AES", HostKeyDecrypter.getBaseAlgorithm("AES/CBC/PKCS5Padding"));
+        assertEquals("AES", HostKeyDecrypter.getBaseAlgorithm("AES/ECB/PKCS5Padding"));
+    }
+
+    @Test
+    void testInitDecrypterWithCustomCipher() {
+        HostKeyDecrypter instance = new HostKeyDecrypter();
+        try {
+            java.util.Properties props = new java.util.Properties();
+            props.setProperty(Options.HOST_KEY_DECRYPTER_CIPHER, "AES/ECB/PKCS5Padding");
+            instance.init(props);
+            assertEquals("AES/ECB/PKCS5Padding", HostKeyDecrypter.cipherAlgorithm);
+        } catch (RuntimeException ex) {
+            //CircleCI throws and can't execute
+            LOG.log(Level.SEVERE, null, ex);
+        } catch (IOException | ClassNotFoundException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    void testInitDecrypterDefaultCipherWhenOptionNotSet() {
+        HostKeyDecrypter instance = new HostKeyDecrypter();
+        try {
+            instance.init(new java.util.Properties());
+            assertEquals(HostKeyDecrypter.DEFAULT_CIPHER_ALGORITHM, HostKeyDecrypter.cipherAlgorithm);
+        } catch (RuntimeException ex) {
+            //CircleCI throws and can't execute
+            LOG.log(Level.SEVERE, null, ex);
+        } catch (IOException | ClassNotFoundException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    void testRoundTripEncryptDecryptWithCustomCipher() {
+        HostKeyDecrypter instance = new HostKeyDecrypter();
+        try {
+            java.util.Properties props = new java.util.Properties();
+            props.setProperty(Options.HOST_KEY_DECRYPTER_CIPHER, "AES/ECB/PKCS5Padding");
+            instance.init(props);
+            String plaintext = "mySecret";
+            String encrypted = HostKeyDecrypter.encrypt(plaintext);
+            assertNotNull(encrypted);
+            assertNotEquals(plaintext, encrypted);
+            String decrypted = instance.decrypt("testProp", encrypted);
+            assertEquals(plaintext, decrypted);
+        } catch (RuntimeException ex) {
+            //CircleCI throws and can't execute
+            LOG.log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
     }
 
     /* Illegal key size thrown if JCE is not loaded
