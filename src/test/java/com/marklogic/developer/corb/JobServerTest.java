@@ -77,7 +77,7 @@ class JobServerTest {
                 assertNotNull(content);
             }
 
-            // ensure that base path (without extenstion) gets a response
+            // ensure that base path (without extension) gets a response
             url = new URL(localhostUrl +  JobServer.METRICS_PATH);
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod(GET);
@@ -86,8 +86,14 @@ class JobServerTest {
                 assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
                 assertNotNull(content);
             }
-            //verify that invalid paths result in 404
+            //verify that invalid paths result in 403
             url = new URL(localhostUrl + "/DoesNotExist");
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod(GET);
+            assertEquals(HttpURLConnection.HTTP_FORBIDDEN, conn.getResponseCode());
+
+            //verify that invalid paths result in 404
+            url = new URL(localhostUrl + "/DoesNotExist.html");
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod(GET);
             assertEquals(HttpURLConnection.HTTP_NOT_FOUND, conn.getResponseCode());

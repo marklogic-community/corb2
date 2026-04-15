@@ -25,8 +25,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -61,7 +59,7 @@ import java.util.logging.Logger;
  * @see JobServer
  * @see Manager
  * @see JobStats
-  * @since 2.4.0
+ * @since 2.4.0
  */
 public class JobServicesHandler implements HttpHandler {
 
@@ -138,19 +136,7 @@ public class JobServicesHandler implements HttpHandler {
                 if (relativePath.isEmpty() || "/".equals(relativePath)) {
                     relativePath = "/index.html";
                 }
-
-                String candidate = relativePath.startsWith("/") ? relativePath.substring(1) : relativePath;
-                candidate = candidate.replace('\\', '/');
-
-                Path staticRoot = Paths.get("web").normalize();
-                Path resolvedPath = staticRoot.resolve(candidate).normalize();
-
-                if (!resolvedPath.startsWith(staticRoot)) {
-                    LOG.log(Level.WARNING, "Rejected potential directory traversal path: {0}", relativePath);
-                    httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
-                    return;
-                }
-                JobServer.handleStaticRequest(resolvedPath.toString(), httpExchange);
+                JobServer.handleStaticRequest(relativePath, httpExchange);
             }
         } else {
             LOG.log(Level.WARNING, "Unsupported method {0}", method);

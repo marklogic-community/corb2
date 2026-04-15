@@ -70,7 +70,7 @@ import static java.util.logging.Level.INFO;
  * @see Manager
  * @see JobServicesHandler
  * @see JobStats
-  * @since 2.4.0
+ * @since 2.4.0
  */
 public class JobServer {
 
@@ -316,7 +316,7 @@ public class JobServer {
      *
      * @param httpExchange the HTTP exchange containing request and response information
      */
-    public void handleRequest(HttpExchange httpExchange) {
+    public void handleRequest(HttpExchange httpExchange) throws IOException {
         hasReceivedRequests = true;
         String path = httpExchange.getRequestURI().getPath();
         String querystring = httpExchange.getRequestURI().getQuery();
@@ -406,10 +406,13 @@ public class JobServer {
      * (for WebJar dependencies). Returns 404 if the resource is not found.
      * </p>
      *
-     * @param path the resource path to retrieve
+     * @param requestedPath the resource path to retrieve
      * @param httpExchange the HTTP exchange for sending the response
      */
-    public static void handleStaticRequest(String path, HttpExchange httpExchange) {
+    public static void handleStaticRequest(String requestedPath, HttpExchange httpExchange) throws IOException {
+        String path = (requestedPath.isEmpty() || "/".equals(requestedPath)) ? "/index.html" : requestedPath;
+
+        if (isForbidden(path, httpExchange)) { return; }
 
         try (InputStream webInputStream = Manager.class.getResourceAsStream(WEB_FOLDER + path);
              InputStream webJarInputStream = Manager.class.getResourceAsStream(WEBJARS_FOLDER + path);
@@ -435,6 +438,46 @@ public class JobServer {
         } catch (IOException ex) {
             LOG.log(Level.WARNING, "Unable to open file", ex);
         }
+    }
+
+   /**
+     * Checks if a requested path should be forbidden for security reasons.
+     * <p>
+     * This method performs security validation on requested paths to prevent:
+     * <ul>
+     *   <li>Directory traversal attacks (paths containing "../" or encoded variants)</li>
+     *   <li>Requests with disallowed characters (only alphanumeric, dash, dot, underscore allowed)</li>
+     *   <li>Access to non-web file types (only allows .html, .js, .css, .png, .jpg, .gif)</li>
+     * </ul>
+     * If the path is deemed unsafe, a 403 Forbidden response is sent.
+     * </p>
+     *
+     * @param requestedPath the path requested by the client
+     * @param httpExchange the HTTP exchange for sending the response
+     * @return true if the path is forbidden and a response has been sent, false otherwise
+     * @throws IOException if an error occurs while sending the response
+     */
+    private static boolean isForbidden(String requestedPath, HttpExchange httpExchange) throws IOException {
+        if (requestedPath.contains("../") || requestedPath.contains("..\\") ||
+            requestedPath.contains("%2e") || requestedPath.contains("%2E")) {
+            LOG.log(Level.WARNING, "Rejected suspicious path with traversal sequences: {0}", requestedPath);
+            httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
+            return true;
+        }
+        if (!requestedPath.matches("^[/\\w\\-\\.]+$")) {
+            LOG.log(Level.WARNING, "Rejected path with disallowed characters: {0}", requestedPath);
+            httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
+            return true;
+        }
+        String lowerPath = requestedPath.toLowerCase();
+        if (!(lowerPath.endsWith(".html") || lowerPath.endsWith(".js") ||
+            lowerPath.endsWith(".css") || lowerPath.endsWith(".png") ||
+            lowerPath.endsWith(".jpg") || lowerPath.endsWith(".gif"))) {
+            LOG.log(Level.WARNING, "Rejected request for disallowed file type: {0}", requestedPath);
+            httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
+            return true;
+        }
+        return false;
     }
 
     /**
