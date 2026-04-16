@@ -531,7 +531,7 @@ public class JobBuilderService {
             if (builder.options.isEmpty()) {
                 continue;
             }
-            Collections.sort(builder.options, builder.newComparator());
+            builder.options.sort(builder.newComparator());
             groups.add(builder.toOptionGroup());
         }
         return groups;
@@ -781,7 +781,7 @@ public class JobBuilderService {
             json.append('{');
             json.append("\"jobId\":\"").append(escapeJson(jobId)).append("\",");
             json.append("\"jobName\":\"").append(escapeJson(jobName == null ? "" : jobName)).append("\",");
-            json.append("\"jobPath\":\"").append(escapeJson(jobPath)).append("\"");
+            json.append("\"jobPath\":\"").append(escapeJson(jobPath)).append('"');
             json.append('}');
             return json.toString();
         }
@@ -859,7 +859,7 @@ public class JobBuilderService {
             json.append("\"inputType\":\"").append(escapeJson(inputType)).append("\",");
             json.append("\"subgroupId\":\"").append(escapeJson(subgroupId)).append("\",");
             json.append("\"subgroupTitle\":\"").append(escapeJson(subgroupTitle)).append("\",");
-            json.append("\"placeholder\":\"").append(escapeJson(placeholder)).append("\"");
+            json.append("\"placeholder\":\"").append(escapeJson(placeholder)).append('"');
             json.append('}');
             return json.toString();
         }
@@ -878,7 +878,7 @@ public class JobBuilderService {
             StringBuilder json = new StringBuilder();
             json.append('{');
             json.append("\"id\":\"").append(escapeJson(id)).append("\",");
-            json.append("\"title\":\"").append(escapeJson(title)).append("\"");
+            json.append("\"title\":\"").append(escapeJson(title)).append('"');
             json.append('}');
             return json.toString();
         }
@@ -890,14 +890,14 @@ public class JobBuilderService {
         private final String description;
         private final Map<String, Integer> preferredOrder = new HashMap<>();
         private final List<OptionDefinition> options = new ArrayList<>();
-        private final LinkedHashMap<String, OptionSubgroup> subgroups = new LinkedHashMap<String, OptionSubgroup>();
+        private final Map<String, OptionSubgroup> subgroups = new LinkedHashMap<>();
 
         OptionGroupBuilder(String id, String title, String description, List<String> orderedOptionNames) {
             this.id = id;
             this.title = title;
             this.description = description;
             for (int i = 0; i < orderedOptionNames.size(); i++) {
-                preferredOrder.put(orderedOptionNames.get(i), Integer.valueOf(i));
+                preferredOrder.put(orderedOptionNames.get(i), i);
             }
         }
 

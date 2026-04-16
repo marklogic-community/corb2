@@ -203,7 +203,7 @@ class JsonExtractorTest {
     @Test
     void extractRejectsUnexpectedEndInsideEscapeSequence() {
         JsonExtractor extractor = new JsonExtractor(selector("/"), null, new RecordingHandler());
-        CorbException ex = assertThrows(CorbException.class, () -> extractor.extract(new StringReader("\"" + "\\")));
+        CorbException ex = assertThrows(CorbException.class, () -> extractor.extract(new StringReader("\"" + '\\')));
         assertTrue(ex.getMessage().contains("Unexpected end of JSON input inside escape sequence"));
     }
 
@@ -247,8 +247,8 @@ class JsonExtractorTest {
     }
 
     private static class RecordingHandler implements JsonExtractor.ExtractionHandler {
-        private final List<String> nodes = new ArrayList<String>();
-        private final List<String> metadata = new ArrayList<String>();
+        private final List<String> nodes = new ArrayList<>();
+        private final List<String> metadata = new ArrayList<>();
 
         @Override
         public void onNode(String currentPath, String rawJson) {

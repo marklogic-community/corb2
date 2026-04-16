@@ -141,7 +141,7 @@ class ModuleExecutorTest {
         }
     }
 
-    protected String getOption(String argVal, String propName, Properties properties) {
+    protected static String getOption(String argVal, String propName, Properties properties) {
         if (StringUtils.isNotBlank(argVal)) {
             return argVal.trim();
         } else if (StringUtils.isNotBlank(System.getProperty(propName))) {
@@ -381,7 +381,7 @@ class ModuleExecutorTest {
         testRun(args);
     }
 
-    public void testRun(String[] args) {
+    public static void testRun(String[] args) {
         try {
             ModuleExecutor executor = getMockModuleExecutorWithEmptyResults();
             executor.init(args);
@@ -484,7 +484,7 @@ class ModuleExecutorTest {
         return executor;
     }
 
-    private ResultSequence run(ModuleExecutor executor) throws CorbException {
+    private static ResultSequence run(ModuleExecutor executor) throws CorbException {
         ResultSequence res;
         RequestOptions opts = new RequestOptions();
         opts.setCacheResult(false);

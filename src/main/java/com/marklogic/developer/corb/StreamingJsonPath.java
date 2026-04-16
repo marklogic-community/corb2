@@ -111,7 +111,7 @@ public class StreamingJsonPath implements JsonSelector {
         super.finalize();
     }
 
-    private List<String> parseTokens(String value) {
+    private static List<String> parseTokens(String value) {
         List<String> parsed = new ArrayList<>();
         int i = 0;
         while (i < value.length()) {
@@ -133,7 +133,7 @@ public class StreamingJsonPath implements JsonSelector {
         return parsed;
     }
 
-    private List<String> parsePathTokens(String value) {
+    private static List<String> parsePathTokens(String value) {
         if (isBlank(value) || "/".equals(value)) {
             return Collections.emptyList();
         }

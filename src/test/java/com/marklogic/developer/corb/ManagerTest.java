@@ -1118,10 +1118,11 @@ class ManagerTest {
         assertEquals(initialSize, threadPool.getCorePoolSize());
     }
 
-    ThreadPoolExecutor testSetPoolSize(int initialSize, int size) {
+    static ThreadPoolExecutor testSetPoolSize(int initialSize, int size) {
         ThreadPoolExecutor threadPool = new ThreadPoolExecutor(initialSize, initialSize, 100, TimeUnit.MILLISECONDS, mock(BlockingQueue.class));
-        Manager instance = new Manager();
-        instance.setPoolSize(threadPool, size);
+        try (Manager instance = new Manager()) {
+            instance.setPoolSize(threadPool, size);
+        }
         return threadPool;
     }
 
@@ -1593,13 +1594,13 @@ class ManagerTest {
             Files.createDirectories(restartStateDir.toPath());
             Files.write(
                 new File(restartStateDir, RestartableJobState.COMPLETED_URIS_FILENAME).toPath(),
-                Arrays.asList("uri-1"),
+                Collections.singletonList("uri-1"),
                 StandardCharsets.UTF_8
             );
             Files.createDirectories(new File(restartStateDir, RestartableJobState.COMPLETED_URIS_INDEX_DIRNAME).toPath());
             Files.write(
                 new File(restartStateDir, RestartableJobState.COMPLETED_URIS_INDEX_METADATA_FILENAME).toPath(),
-                Arrays.asList("indexed.uniqueCount=1"),
+                Collections.singletonList("indexed.uniqueCount=1"),
                 StandardCharsets.UTF_8
             );
 
@@ -1664,7 +1665,7 @@ class ManagerTest {
         return createTempFile(lines);
     }
 
-    public File createTempFile(List<String> lines) throws IOException {
+    public static File createTempFile(List<String> lines) throws IOException {
         Path path = Files.createTempFile("tmp", "txt");
         File file = path.toFile();
         file.deleteOnExit();

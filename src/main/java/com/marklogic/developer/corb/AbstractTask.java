@@ -555,19 +555,6 @@ public abstract class AbstractTask implements Task {
                 //guess not, lets just use it as-is
                 doc = ValueFactory.newDocumentNode(input);
             }
-            /**
-             * TODO if we support JSON values, then we may need Jackson
-             * Databinding added as a dependency
-             *
-             * } else if (normalizedInput.startsWith("{") &&
-             * normalizedInput.endsWith("}")) { //smells like a JSON object
-             * XdmItem item = ValueFactory.newJSObject(normalizedInput); doc =
-             * ValueFactory.newDocumentNode(item); } else if
-             * (normalizedInput.startsWith("[") &&
-             * normalizedInput.endsWith("]")) { //smells like a JSON array
-             * XdmItem item = ValueFactory.newJSArray(normalizedInput); doc =
-             * ValueFactory.newDocumentNode(item);
-             */
         } else {
             //assume that it is just plain text, use the original value
             doc = ValueFactory.newDocumentNode(input);

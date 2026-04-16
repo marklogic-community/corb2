@@ -40,7 +40,7 @@ class StreamingXPathTest {
         xpathInstance = new StreamingXPath();
     }
 
-    private void testNormalizeAxes(String xpath, String expectedResult) {
+    private static void testNormalizeAxes(String xpath, String expectedResult) {
         String pattern = xpathInstance.normalizeAxes(xpath);
         assertEquals(expectedResult, pattern);
     }
@@ -192,7 +192,7 @@ class StreamingXPathTest {
         testParseXPathToRegex("/foo:bar[@baz='1' and @bar='2']/baz", "^/bar/baz");
     }
 
-    private void testParseXPathToRegex(String xpath, String expectedResult) {
+    private static void testParseXPathToRegex(String xpath, String expectedResult) {
         try {
             String pattern = xpathInstance.parseXPathToRegex(xpath);
             assertEquals(expectedResult, pattern);

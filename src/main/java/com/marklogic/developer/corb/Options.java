@@ -771,6 +771,8 @@ public final class Options {
     /**
      * Maximum number of Slow transaction to be logged in the metrics.
      * Default is `0`.
+     *
+     * @since 2.4.0
      */
     @Usage(description = "Maximum number of slow transaction to be logged in the metrics. Default is 0.")
     public static final String METRICS_NUM_SLOW_TRANSACTIONS = "METRICS-NUM-SLOW-TRANSACTIONS";
@@ -789,8 +791,9 @@ public final class Options {
      * Frequency (in seconds) at which the Metrics document needs to be updated in the database.
      * By Default the metrics document is not periodically updated and is written once at the end of the job.
      * If {@value #METRICS_DATABASE} is not specified then {@value #METRICS_SYNC_FREQUENCY} is ignored.
+     *
+     * @since 2.4.0
      */
-
     @Usage(description = "Frequency ( in seconds) at which the Metrics document needs to be updated in the Database. This value is ignored if METRICS-DB-NAME is not specified")
     public static final String METRICS_SYNC_FREQUENCY = "METRICS-SYNC-FREQUENCY";
 
@@ -817,6 +820,8 @@ public final class Options {
     /**
      * Default is 10. Max number of recent tps (transaction per second) values
      * used to calculate ETC (estimated time to completion)
+     *
+     * @since 2.3.2
      */
     @Usage(description = "Default is 10. Max number of recent tps values used to calculate ETC")
     public static final String NUM_TPS_FOR_ETC = "NUM-TPS-FOR-ETC";
@@ -1335,45 +1340,45 @@ public final class Options {
     public static final String XCC_CONNECTION_URI = "XCC-CONNECTION-URI";
 
     /**
-     * The unique key assigned to a MarkLogic Cloud user.
-     * @since=2.6.0
+     * The unique key assigned to a Progress Data Cloud user.
+     * @since 2.5.7
      */
-    @Usage(description = "The unique key assigned to a MarkLogic Cloud user.")
+    @Usage(description = "The unique key assigned to a Progress Data Cloud user.")
     public static final String XCC_API_KEY = "XCC-API-KEY";
 
     /**
-     * The base path configured on MarkLogic Cloud which maps to a service hosted by MarkLogic Cloud through which operations run.
-     * @since=2.6.0
+     * The base path configured on Progress Data Cloud which maps to a service hosted by Progress Data Cloud through which operations run.
+     * @since 2.5.7
      */
-    @Usage(description = "The base path configured on MarkLogic Cloud which maps to a service hosted by MarkLogic Cloud through which operations run.")
+    @Usage(description = "The base path configured on Progress Data Cloud which maps to a service hosted by Progress Data Cloud through which operations run.")
     public static final String XCC_BASE_PATH = "XCC-BASE-PATH";
 
     /**
-     * MarkLogic Cloud grant type.
-     * @since=2.6.0
+     * Progress Data Cloud grant type.
+     * @since 2.5.7
      */
-    @Usage(description = "MarkLogic Cloud grant type.")
+    @Usage(description = "Progress Data Cloud grant type.")
     public static final String XCC_GRANT_TYPE = "XCC-GRANT-TYPE";
 
     /**
      * OAuth JWT access token.
-     * @since=2.6.0
+     * @since 2.5.7
      */
     @Usage(description = "OAuth JWT access token.")
     public static final String XCC_OAUTH_TOKEN = "XCC-OAUTH-TOKEN";
 
     /**
-     * MarkLogic Cloud token duration.
-     * @since=2.6.0
+     * Progress Data Cloud token duration.
+     * @since 2.5.7
      */
-    @Usage(description = "MarkLogic Cloud token duration.")
+    @Usage(description = "Progress Data Cloud token duration.")
     public static final String XCC_TOKEN_DURATION = "XCC-TOKEN-DURATION";
 
     /**
-     * MarkLogic Cloud token endpoint.
-     * @since=2.6.0
+     * Progress Data Cloud token endpoint.
+     * @since 2.5.7
      */
-    @Usage(description = "MarkLogic Cloud token endpoint.")
+    @Usage(description = "Progress Data Cloud token endpoint.")
     public static final String XCC_TOKEN_ENDPOINT = "XCC-TOKEN-ENDPOINT";
 
     /**

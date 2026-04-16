@@ -59,7 +59,7 @@ class AbstractManagerTest {
     private static final String XCC_URI_HOST = "localhost";
     private static final String XCC_URI_PORT = "8008";
     private static final String XCC_URI_DB = "baz";
-    private static final String XCC_CONNECTION_URI = "xcc://"+XCC_URI_USER+":"+XCC_URI_PASS+"@"+XCC_URI_HOST+":"+XCC_URI_PORT+"/"+XCC_URI_DB;
+    private static final String XCC_CONNECTION_URI = "xcc://"+XCC_URI_USER+ ':' +XCC_URI_PASS+ '@' +XCC_URI_HOST+ ':' +XCC_URI_PORT+ '/' +XCC_URI_DB;
 
     private static final String PROPERTY_XCC_HTTPCOMPLIANT = "xcc.httpcompliant";
     private static final String PROPERTIES_FILE_NAME = "helloWorld.properties";
@@ -812,7 +812,7 @@ class AbstractManagerTest {
         assertEquals(HOST, provider.getHostName());
         assertEquals(Integer.parseInt(PORT), provider.getPort());
         assertTrue(contentSourceStr.contains("cb=" + XCC_URI_DB));
-        // when presenting username/password, MarkLogic Cloud, and OAuth credentials - no username/password, MarkLogic Cloud auth takes precendence
+        // when presenting username/password, Progress Data Cloud, and OAuth credentials - no username/password, Progress Data Cloud auth takes precendence
         assertTrue(contentSourceStr.contains("user={none}"));
         Credentials.PDCloudAuthConfig cloudAuth = contentSource.getUserCredentials().getPDCloudAuthConfig();
         assertEquals("myCustomKey", new String(cloudAuth.getApiKey()));

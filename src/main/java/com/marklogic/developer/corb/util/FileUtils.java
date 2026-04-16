@@ -110,7 +110,7 @@ public final class FileUtils {
             try {
                 FileUtils.delete(directory);
             } catch (IOException ex) {
-                LOG.log(Level.WARNING, "Unable to delete dir: " + directory.toString(), ex);
+                LOG.log(Level.WARNING, "Unable to delete dir: " + directory, ex);
             }
         }
     }

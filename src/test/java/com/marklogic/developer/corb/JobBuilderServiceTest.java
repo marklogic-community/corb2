@@ -119,7 +119,7 @@ class JobBuilderServiceTest {
     }
 
     private String metadataForOption(String json, String optionName) {
-        String marker = "\"name\":\"" + optionName + "\"";
+        String marker = "\"name\":\"" + optionName + '"';
         int start = json.indexOf(marker);
         assertTrue(start >= 0, "Expected option metadata for " + optionName);
         int end = json.indexOf('}', start);

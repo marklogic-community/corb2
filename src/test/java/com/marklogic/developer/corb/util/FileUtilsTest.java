@@ -190,7 +190,7 @@ public class FileUtilsTest {
      *
      * @param sourceFilePath Path to the existing file.
      * @param destinationFilePath Path where the file should be copied to.
-     * @throws IOException
+     * @throws IOException if an I/O error occurs during copying.
      */
     public static void copy(final String sourceFilePath, final String destinationFilePath) throws IOException {
         try (InputStream inputStream = Files.newInputStream(Paths.get(sourceFilePath));
@@ -202,9 +202,9 @@ public class FileUtilsTest {
     /**
      * Read the {@code byte[]} of a file.
      *
-     * @param contentFile
-     * @return
-     * @throws IOException
+     * @param contentFile The file to read.
+     * @return A byte array containing the contents of the file.
+     * @throws IOException if an I/O error occurs while reading the file.
      */
     public static byte[] getBytes(File contentFile) throws IOException {
 

@@ -264,7 +264,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
     protected void readTotalCount(ResultItem resultItem) throws CorbException {
         XdmItem item = resultItem.getItem();
         if (item == null) {
-            throw new CorbException(URIS_MODULE + " " + options.getUrisModule() + " does not return total URI count");
+            throw new CorbException(URIS_MODULE + ' ' + options.getUrisModule() + " does not return total URI count");
         }
         if (ItemType.ARRAY_NODE.equals(item.getItemType())) {
             LOG.severe("First item is an Array. Use Sequence.from() to turn the Array into a Sequence.");
@@ -272,7 +272,7 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         try {
             setTotalCount(Long.parseLong(item.asString()));
         } catch (NumberFormatException exc) {
-            throw new CorbException(URIS_MODULE + " " + options.getUrisModule() + " does not return total URI count");
+            throw new CorbException(URIS_MODULE + ' ' + options.getUrisModule() + " does not return total URI count");
         }
     }
 

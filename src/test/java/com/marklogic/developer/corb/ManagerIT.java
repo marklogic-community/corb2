@@ -86,7 +86,7 @@ class ManagerIT {
         clearSystemProperties();
     }
 
-    boolean testManager(String[] args, File report) {
+    static boolean testManager(String[] args, File report) {
         boolean passed = false;
         try (Manager manager = new Manager()) {
             //First, verify the output using run()

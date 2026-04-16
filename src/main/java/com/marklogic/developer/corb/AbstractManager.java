@@ -500,7 +500,7 @@ public abstract class AbstractManager {
      * <ul>
      *   <li>XCC connection URI (single or comma-separated list)</li>
      *   <li>Individual components (protocol, host, port, database, credentials)</li>
-     *   <li>MarkLogic Cloud (API key, base path, grant type, token)</li>
+     *   <li>Progress Data Cloud (API key, base path, grant type, token)</li>
      *   <li>OAuth (OAuth token)</li>
      * </ul>
      * Decrypts sensitive values if a decrypter is configured.
@@ -517,7 +517,7 @@ public abstract class AbstractManager {
         //DIGEST or BASIC
         String username = getOption(XCC_USERNAME);
         String password = getOption(XCC_PASSWORD);
-        //MarkLogic Cloud
+        //Progress Data Cloud
         String apiKey = getOption(XCC_API_KEY);
         String basePath = getOption(XCC_BASE_PATH);
         String grantType = getOption(XCC_GRANT_TYPE);

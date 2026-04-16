@@ -33,7 +33,7 @@ class ModuleExecutorIT {
 
     private static final Logger LOG = Logger.getLogger(ModuleExecutorIT.class.getName());
 
-    private void clearSystemProperties() {
+    private static void clearSystemProperties() {
 		TestUtils.clearSystemProperties();
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");

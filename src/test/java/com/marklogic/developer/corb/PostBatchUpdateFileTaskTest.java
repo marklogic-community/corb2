@@ -342,7 +342,7 @@ class PostBatchUpdateFileTaskTest {
         testCustomComparator(sortProperty, expected, "com.marklogic.developer.corb.PostBatchUpdateFileTaskTest$StringLengthComparator");
     }
 
-    void testCustomComparator(String sortProperty, String expected, String comparator) throws Exception {
+    static void testCustomComparator(String sortProperty, String expected, String comparator) throws Exception {
 
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
@@ -395,7 +395,7 @@ class PostBatchUpdateFileTaskTest {
         }
     }
 
-    private String splitAndAppendNewline(String values) {
+    private static String splitAndAppendNewline(String values) {
         StringBuilder sb = new StringBuilder();
 
         for (String value : values.split(",")) {
@@ -445,7 +445,7 @@ class PostBatchUpdateFileTaskTest {
         }
     }
 
-    private String testRemoveDuplicatesAndSort(Properties props) throws Exception {
+    private static String testRemoveDuplicatesAndSort(Properties props) throws Exception {
 
         File file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
         file.deleteOnExit();
@@ -459,7 +459,7 @@ class PostBatchUpdateFileTaskTest {
         return testRemoveDuplicatesAndSort(file, props);
     }
 
-    private String testRemoveDuplicatesAndSort(File fileToSort, Properties props)
+    private static String testRemoveDuplicatesAndSort(File fileToSort, Properties props)
             throws Exception {
 
         props.setProperty(EXPORT_FILE_AS_ZIP, Boolean.FALSE.toString());

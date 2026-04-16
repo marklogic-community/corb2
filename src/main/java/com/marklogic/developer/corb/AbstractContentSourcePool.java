@@ -265,11 +265,11 @@ public abstract class AbstractContentSourcePool implements ContentSourcePool {
             contentSource = ssl ? ContentSourceFactory.newContentSource(connectionUri, getSecurityOptions())
                 : ContentSourceFactory.newContentSource(connectionUri);
         } catch (XccConfigException ex) {
-            LOG.log(SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly for host " + hostname + ":" + port + path, ex);
+            LOG.log(SEVERE, "Problem creating content source. Check if URI is valid. If encrypted, check if options are configured correctly for host " + hostname + ':' + port + path, ex);
         } catch (KeyManagementException | NoSuchAlgorithmException ex) {
-            LOG.log(SEVERE, "Problem creating content source with ssl for host " + hostname + ":" + port + path, ex);
+            LOG.log(SEVERE, "Problem creating content source with ssl for host " + hostname + ':' + port + path, ex);
         } catch (IllegalArgumentException | IllegalStateException ex) {
-            LOG.log(SEVERE, "XCC URI is invalid for host " + hostname + ":" + port + path, ex);
+            LOG.log(SEVERE, "XCC URI is invalid for host " + hostname + ':' + port + path, ex);
         }
         return contentSource;
     }

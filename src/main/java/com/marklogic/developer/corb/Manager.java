@@ -1388,11 +1388,7 @@ public class Manager extends AbstractManager implements Closeable {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(fingerprintSource.toString().getBytes(StandardCharsets.UTF_8));
-            StringBuilder hex = new StringBuilder(hash.length * 2);
-            for (byte currentByte : hash) {
-                hex.append(String.format("%02x", currentByte));
-            }
-            return hex.toString();
+            return byteArrayToHexString(hash);
         } catch (NoSuchAlgorithmException ex) {
             throw new CorbException("Unable to build restart state fingerprint", ex);
         }

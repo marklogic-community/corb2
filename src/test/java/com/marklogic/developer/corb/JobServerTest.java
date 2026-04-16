@@ -68,7 +68,7 @@ class JobServerTest {
                 assertTrue(contentString.contains(":title=\"option.description || ''\""));
             }
 
-            url = new URL(localhostUrl + "/");
+            url = new URL(localhostUrl + '/');
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod(GET);
             try (InputStream inputStream = conn.getInputStream()) {

@@ -225,7 +225,7 @@ class TwoWaySSLConfigTest {
         testGetSSLContext(null);
     }
 
-    void testGetSSLContext(String valueToReturn) {
+    static void testGetSSLContext(String valueToReturn) {
         Decrypter mockDecrypter = mock(Decrypter.class);
         when(mockDecrypter.decrypt(anyString(), anyString())).thenReturn(valueToReturn);
 

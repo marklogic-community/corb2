@@ -23,6 +23,8 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.Collections;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -69,7 +71,7 @@ class RestartableJobStateTest {
             Files.write(completedUrisFile.toPath(), Arrays.asList("uri-1", "uri-2"), StandardCharsets.UTF_8);
             try (RestartableJobState state = new RestartableJobState(stateDir)) {
                 File bucketFile = new File(state.getCompletedUrisIndexDir(), "abc.log");
-                Files.write(bucketFile.toPath(), Arrays.asList("uri-1"), StandardCharsets.UTF_8);
+                Files.write(bucketFile.toPath(), Collections.singletonList("uri-1"), StandardCharsets.UTF_8);
                 File metadataFile = new File(stateDir, RestartableJobState.COMPLETED_URIS_INDEX_METADATA_FILENAME);
                 assertTrue(completedUrisFile.exists());
                 assertTrue(state.getCompletedUrisIndexDir().exists());
@@ -92,7 +94,7 @@ class RestartableJobStateTest {
             File completedUrisFile = new File(stateDir, RestartableJobState.COMPLETED_URIS_FILENAME);
             Files.write(completedUrisFile.toPath(), Arrays.asList("uri-1", "uri-2"), StandardCharsets.UTF_8);
             File unrelatedFile = new File(stateDir, "keep-me.txt");
-            Files.write(unrelatedFile.toPath(), Arrays.asList("leave this alone"), StandardCharsets.UTF_8);
+            Files.write(unrelatedFile.toPath(), Collections.singletonList("leave this alone"), StandardCharsets.UTF_8);
             try (RestartableJobState state = new RestartableJobState(stateDir)) {
                 File metadataFile = new File(stateDir, RestartableJobState.COMPLETED_URIS_INDEX_METADATA_FILENAME);
                 assertTrue(completedUrisFile.exists());

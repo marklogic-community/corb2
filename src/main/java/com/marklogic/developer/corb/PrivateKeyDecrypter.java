@@ -504,7 +504,7 @@ public class PrivateKeyDecrypter extends AbstractDecrypter {
             X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(toByteArray(fis));
             Cipher cipher = Cipher.getInstance(algorithm);
             cipher.init(Cipher.ENCRYPT_MODE, KeyFactory.getInstance(algorithm).generatePublic(x509EncodedKeySpec));
-            String encryptedText = Base64.getEncoder().encodeToString(cipher.doFinal(clearText.getBytes("UTF-8")));
+            String encryptedText = Base64.getEncoder().encodeToString(cipher.doFinal(clearText.getBytes(StandardCharsets.UTF_8)));
             System.out.println("Input: " + clearText + "\nOutput: " + encryptedText); // NOPMD
         }
     }

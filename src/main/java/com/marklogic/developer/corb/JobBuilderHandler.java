@@ -92,7 +92,7 @@ public class JobBuilderHandler implements HttpHandler {
                     HttpURLConnection.HTTP_OK,
                     "text/plain; charset=utf-8",
                     service.buildPropertiesFile(submittedValues),
-                    "attachment; filename=\"" + service.resolveDownloadFilename(submittedValues) + "\"");
+                    "attachment; filename=\"" + service.resolveDownloadFilename(submittedValues) + '"');
             } else if (BUILDER_JOBS_PATH.equals(path)) {
                 requireMethod(method, "POST");
                 Map<String, String> submittedValues = readFormValues(httpExchange);
@@ -172,16 +172,13 @@ public class JobBuilderHandler implements HttpHandler {
             manager.jobId = UUID.randomUUID().toString();
             jobServer.addManager(manager);
 
-            Thread jobThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        manager.run();
-                    } catch (Exception ex) {
-                        LAUNCHER_LOG.log(Level.SEVERE, "Options builder job failed", ex);
-                    } finally {
-                        manager.close();
-                    }
+            Thread jobThread = new Thread(() -> {
+                try {
+                    manager.run();
+                } catch (Exception ex) {
+                    LAUNCHER_LOG.log(Level.SEVERE, "Options builder job failed", ex);
+                } finally {
+                    manager.close();
                 }
             }, "corb-builder-" + manager.getJobId());
             jobThread.start();

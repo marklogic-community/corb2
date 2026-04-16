@@ -1020,7 +1020,7 @@ public class JobStats extends BaseMonitor {
      * @throws TransformerConfigurationException if the stylesheet cannot be loaded or compiled
      */
     protected static Templates newTemplates(TransformerFactory transformerFactory, String stylesheetFilename) throws TransformerConfigurationException {
-        URL url = Manager.class.getResource( "/" + stylesheetFilename);
+        URL url = Manager.class.getResource('/' + stylesheetFilename);
         if (url == null) {
             throw new TransformerConfigurationException("Could not find the template file " + stylesheetFilename + " in the classpath");
         }

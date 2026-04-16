@@ -530,7 +530,7 @@ public final class StringUtils {
         if (isNotBlank(username) && isNotBlank(password)) {
             auth = username + ':' + password + '@';
         }
-        return protocol + "://" + auth + host + ':' + port + (isBlank(dbname) ? EMPTY : SLASH + dbname) + (isBlank(query) ? EMPTY : "?" + query);
+        return protocol + "://" + auth + host + ':' + port + (isBlank(dbname) ? EMPTY : SLASH + dbname) + (isBlank(query) ? EMPTY : '?' + query);
     }
 
     /**
@@ -545,7 +545,7 @@ public final class StringUtils {
     private static String appendParameter(String query, String parameterName, String value) {
         if (isNotBlank(value)) {
             query += isBlank(query) ? EMPTY : '&';
-            query += parameterName + "=" + value;
+            query += parameterName + '=' + value;
         }
         return query;
     }

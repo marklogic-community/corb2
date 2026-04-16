@@ -390,7 +390,7 @@ public class RestartableJobState implements Closeable {
         }
     }
 
-    private void deleteIfExists(File file) throws IOException {
+    private static void deleteIfExists(File file) throws IOException {
         if (file != null && file.exists()) {
             FileUtils.deleteFile(file);
         }

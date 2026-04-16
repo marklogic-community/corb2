@@ -527,7 +527,7 @@ public class PausableThreadPoolExecutor extends ThreadPoolExecutor {
              */
             @Override
             public String toString() {
-                return "UriObject [uri=" + uri + ", timeTaken=" + timeTaken + "]";
+                return "UriObject [uri=" + uri + ", timeTaken=" + timeTaken + ']';
             }
 
             /**

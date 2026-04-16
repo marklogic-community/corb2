@@ -78,7 +78,7 @@ class PrivateKeyDecrypterTest {
         System.setErr(systemErr);
     }
 
-    private void setSystemProperties() {
+    private static void setSystemProperties() {
         System.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_PATH);
     }
 
@@ -310,7 +310,7 @@ class PrivateKeyDecrypterTest {
         }
     }
 
-    private File createTempFile() throws IOException {
+    private static File createTempFile() throws IOException {
         File temp = File.createTempFile("pub", "pem");
         temp.deleteOnExit();
         return temp;
