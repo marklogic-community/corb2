@@ -23,15 +23,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.concurrent.CompletionService;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import static com.marklogic.developer.corb.Monitor.getProgressMessage;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
-import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
+import static com.marklogic.developer.corb.TestUtils.assertNotContainsLogRecord;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -58,9 +56,8 @@ class MonitorTest {
         when(pool.isPaused()).thenReturn(true);
         Monitor instance = new Monitor(pool, mock(CompletionService.class), mock(Manager.class));
         instance.run();
-        List<LogRecord> records = testLogger.getLogRecords();
-        assertFalse(containsLogRecord(records,
-                new LogRecord(Level.INFO, "CoRB2 has been paused. Resume execution by changing the state in the command file null to RESUME")));
+        assertNotContainsLogRecord(testLogger, Level.INFO,
+                "CoRB2 has been paused. Resume execution by changing the state in the command file null to RESUME");
     }
 
     @Test

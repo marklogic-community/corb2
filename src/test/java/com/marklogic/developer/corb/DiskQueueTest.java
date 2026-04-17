@@ -23,14 +23,13 @@ import java.io.File;
 import java.io.IOException;
 import java.security.InvalidParameterException;
 import java.text.MessageFormat;
-import java.util.List;
 import java.util.Queue;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static com.marklogic.developer.corb.TestUtils.assertContainsLogRecord;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -96,10 +95,8 @@ class DiskQueueTest {
             instance.add("third");
             assertEquals(3, instance.size());
             instance.finalize();
-            List<LogRecord> records = testLogger.getLogRecords();
-            assertTrue(TestUtils.containsLogRecord(records,
-                    new LogRecord(Level.WARNING,
-                            MessageFormat.format("{0} still had open file in finalize", DiskQueue.class.getSimpleName()))));
+            assertContainsLogRecord(testLogger, Level.WARNING,
+                    MessageFormat.format("{0} still had open file in finalize", DiskQueue.class.getSimpleName()));
         } catch (Throwable ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

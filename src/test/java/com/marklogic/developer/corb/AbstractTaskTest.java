@@ -200,11 +200,8 @@ class AbstractTaskTest {
     @Test
     void testNewSession() throws CorbException{
         AbstractTask task = new AbstractTaskImpl();
-        ContentSourcePool csp = mock(ContentSourcePool.class);
-        ContentSource cs = mock(ContentSource.class);
-        Session session = mock(Session.class);
-        when(csp.get()).thenReturn(cs);
-        when(cs.newSession()).thenReturn(session);
+        ContentSourcePool csp = TestUtils.mockContentSourcePool();
+        Session session = TestUtils.getSessionFromPool(csp);
         task.csp = csp;
         Session result = task.newSession();
         assertEquals(session, result);

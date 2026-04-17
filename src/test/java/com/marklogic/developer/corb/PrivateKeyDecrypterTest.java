@@ -22,8 +22,9 @@ import com.marklogic.developer.TestHandler;
 import static com.marklogic.developer.corb.Options.PRIVATE_KEY_FILE;
 import static com.marklogic.developer.corb.PrivateKeyDecrypter.ENCRYPT_USAGE;
 import static com.marklogic.developer.corb.PrivateKeyDecrypter.GEN_KEYS_USAGE;
-import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.assertEqualsNormalizeNewline;
+import static com.marklogic.developer.corb.TestUtils.assertFirstLogRecord;
+import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -87,9 +88,7 @@ class PrivateKeyDecrypterTest {
         try {
             PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
             instance.init_decrypter();
-            List<LogRecord> records = testLogger.getLogRecords();
-            assertEquals(Level.SEVERE, records.get(0).getLevel());
-            assertEquals(PRIVATE_KEY_FILE + " property must be defined", records.get(0).getMessage());
+            assertFirstLogRecord(testLogger, Level.SEVERE, PRIVATE_KEY_FILE + " property must be defined");
         } catch (IOException | ClassNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -106,9 +105,7 @@ class PrivateKeyDecrypterTest {
             testLogger.clear();
 
             instance.init_decrypter();
-            List<LogRecord> records = testLogger.getLogRecords();
-            assertEquals(Level.SEVERE, records.get(0).getLevel());
-            assertEquals(LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY, records.get(0).getMessage());
+            assertFirstLogRecord(testLogger, Level.SEVERE, LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY);
         } catch (IOException | ClassNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -127,9 +124,7 @@ class PrivateKeyDecrypterTest {
 
             instance.init_decrypter();
 
-            List<LogRecord> records = testLogger.getLogRecords();
-            assertEquals(Level.SEVERE, records.get(0).getLevel());
-            assertEquals(LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY, records.get(0).getMessage());
+            assertFirstLogRecord(testLogger, Level.SEVERE, LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY);
         } catch (IOException | ClassNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -148,9 +143,7 @@ class PrivateKeyDecrypterTest {
 
             instance.init_decrypter();
 
-            List<LogRecord> records = testLogger.getLogRecords();
-            assertEquals(Level.SEVERE, records.get(0).getLevel());
-            assertEquals(LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY, records.get(0).getMessage());
+            assertFirstLogRecord(testLogger, Level.SEVERE, LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY);
         } catch (IOException | ClassNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -169,9 +162,7 @@ class PrivateKeyDecrypterTest {
 
             instance.init_decrypter();
 
-            List<LogRecord> records = testLogger.getLogRecords();
-            assertEquals(Level.SEVERE, records.get(0).getLevel());
-            assertEquals("Problem initializing PrivateKeyDecrypter", records.get(0).getMessage());
+            assertFirstLogRecord(testLogger, Level.SEVERE, "Problem initializing PrivateKeyDecrypter");
         } catch (IOException | ClassNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -190,9 +181,7 @@ class PrivateKeyDecrypterTest {
 
             instance.init_decrypter();
 
-            List<LogRecord> records = testLogger.getLogRecords();
-            assertEquals(Level.SEVERE, records.get(0).getLevel());
-            assertEquals("Problem initializing PrivateKeyDecrypter", records.get(0).getMessage());
+            assertFirstLogRecord(testLogger, Level.SEVERE, "Problem initializing PrivateKeyDecrypter");
         } catch (IOException | ClassNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

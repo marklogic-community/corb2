@@ -34,17 +34,15 @@ import com.marklogic.xcc.types.XdmVariable;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static com.marklogic.developer.corb.TestUtils.containsLogRecord;
+import static com.marklogic.developer.corb.TestUtils.assertContainsLogRecord;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
@@ -694,8 +692,7 @@ class QueryUrisLoaderTest {
             queue = instance.createAndPopulateQueue(resultSequence);
         }
         assertFalse(queue.isEmpty());
-        List<LogRecord> records = testLogger.getLogRecords();
-        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "Received first URI")));
+        assertContainsLogRecord(testLogger, Level.INFO, "Received first URI");
     }
 
     @Test
@@ -703,8 +700,7 @@ class QueryUrisLoaderTest {
         try (QueryUrisLoader loader = new QueryUrisLoader()) {
             loader.logQueueStatus(2, "uri", 10, 4001);
         }
-        List<LogRecord> records = testLogger.getLogRecords();
-        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "queued 2/10 uri")));
+        assertContainsLogRecord(testLogger, Level.INFO, "queued 2/10 uri");
     }
 
     @Test
@@ -715,8 +711,7 @@ class QueryUrisLoaderTest {
             loader.setOptions(transformOptions);
             loader.logQueueStatus(2, "uri", 10, 4001);
         }
-        List<LogRecord> records = testLogger.getLogRecords();
-        assertTrue(containsLogRecord(records, new LogRecord(Level.INFO, "queued 2/10 ")));
+        assertContainsLogRecord(testLogger, Level.INFO, "queued 2/10 ");
     }
 
     @Test
