@@ -20,7 +20,10 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
 import com.marklogic.developer.corb.util.IOUtils;
+import com.sun.net.httpserver.HttpExchange;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import static com.marklogic.developer.corb.TestUtils.assertContainsLogRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -30,6 +33,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
@@ -180,5 +184,99 @@ class JobServerTest {
         } finally {
             server.stop(0);
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // isForbidden tests via handleStaticRequest
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testHandleStaticRequestForbiddenDirectoryTraversalSlash() throws IOException {
+        testLogger.clear();
+        HttpExchange exchange = mock(HttpExchange.class);
+        JobServer.handleStaticRequest("/../etc/passwd", exchange);
+        verify(exchange).sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
+        assertContainsLogRecord(testLogger, Level.WARNING, "Rejected suspicious path with traversal sequences: {0}");
+    }
+
+    @Test
+    void testHandleStaticRequestForbiddenDirectoryTraversalBackslash() throws IOException {
+        testLogger.clear();
+        HttpExchange exchange = mock(HttpExchange.class);
+        // Contains "..\\" but not "../" so the second OR operand triggers
+        JobServer.handleStaticRequest("/..\\etc\\passwd", exchange);
+        verify(exchange).sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
+        assertContainsLogRecord(testLogger, Level.WARNING, "Rejected suspicious path with traversal sequences: {0}");
+    }
+
+    @Test
+    void testHandleStaticRequestForbiddenEncodedTraversalLowercase() throws IOException {
+        testLogger.clear();
+        HttpExchange exchange = mock(HttpExchange.class);
+        // Contains "%2e" but not "../" or "..\\" so the third OR operand triggers
+        JobServer.handleStaticRequest("/%2e%2e/passwd", exchange);
+        verify(exchange).sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
+        assertContainsLogRecord(testLogger, Level.WARNING, "Rejected suspicious path with traversal sequences: {0}");
+    }
+
+    @Test
+    void testHandleStaticRequestForbiddenEncodedTraversalUppercase() throws IOException {
+        testLogger.clear();
+        HttpExchange exchange = mock(HttpExchange.class);
+        // Contains "%2E" but not "../", "..\\" or "%2e" so the fourth OR operand triggers
+        JobServer.handleStaticRequest("/%2E%2E/passwd", exchange);
+        verify(exchange).sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
+        assertContainsLogRecord(testLogger, Level.WARNING, "Rejected suspicious path with traversal sequences: {0}");
+    }
+
+    @Test
+    void testHandleStaticRequestForbiddenDisallowedCharacters() throws IOException {
+        testLogger.clear();
+        HttpExchange exchange = mock(HttpExchange.class);
+        // "<" is not in [/\w\-\.] so the regex check triggers
+        JobServer.handleStaticRequest("/<script>.html", exchange);
+        verify(exchange).sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
+        assertContainsLogRecord(testLogger, Level.WARNING, "Rejected path with disallowed characters: {0}");
+    }
+
+    @Test
+    void testHandleStaticRequestNotForbiddenJsExtension() throws IOException {
+        HttpExchange exchange = mock(HttpExchange.class);
+        when(exchange.getResponseBody()).thenReturn(new ByteArrayOutputStream());
+        JobServer.handleStaticRequest("/nonexistent.js", exchange);
+        // .js is allowed — should NOT send 403
+        verify(exchange, never()).sendResponseHeaders(eq(HttpURLConnection.HTTP_FORBIDDEN), anyLong());
+    }
+
+    @Test
+    void testHandleStaticRequestNotForbiddenCssExtension() throws IOException {
+        HttpExchange exchange = mock(HttpExchange.class);
+        when(exchange.getResponseBody()).thenReturn(new ByteArrayOutputStream());
+        JobServer.handleStaticRequest("/nonexistent.css", exchange);
+        verify(exchange, never()).sendResponseHeaders(eq(HttpURLConnection.HTTP_FORBIDDEN), anyLong());
+    }
+
+    @Test
+    void testHandleStaticRequestNotForbiddenPngExtension() throws IOException {
+        HttpExchange exchange = mock(HttpExchange.class);
+        when(exchange.getResponseBody()).thenReturn(new ByteArrayOutputStream());
+        JobServer.handleStaticRequest("/nonexistent.png", exchange);
+        verify(exchange, never()).sendResponseHeaders(eq(HttpURLConnection.HTTP_FORBIDDEN), anyLong());
+    }
+
+    @Test
+    void testHandleStaticRequestNotForbiddenJpgExtension() throws IOException {
+        HttpExchange exchange = mock(HttpExchange.class);
+        when(exchange.getResponseBody()).thenReturn(new ByteArrayOutputStream());
+        JobServer.handleStaticRequest("/nonexistent.jpg", exchange);
+        verify(exchange, never()).sendResponseHeaders(eq(HttpURLConnection.HTTP_FORBIDDEN), anyLong());
+    }
+
+    @Test
+    void testHandleStaticRequestNotForbiddenGifExtension() throws IOException {
+        HttpExchange exchange = mock(HttpExchange.class);
+        when(exchange.getResponseBody()).thenReturn(new ByteArrayOutputStream());
+        JobServer.handleStaticRequest("/nonexistent.gif", exchange);
+        verify(exchange, never()).sendResponseHeaders(eq(HttpURLConnection.HTTP_FORBIDDEN), anyLong());
     }
 }

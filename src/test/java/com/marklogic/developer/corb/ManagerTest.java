@@ -2043,6 +2043,481 @@ class ManagerTest {
         }
     }
 
+    // -------------------------------------------------------------------------
+    // initOptions coverage tests
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testInitOptionsInvalidUrisLoaderClass() {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.URIS_LOADER, "com.marklogic.developer.corb.DoesNotExist");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            assertThrows(CorbException.class, () -> instance.init(null, props));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsNumTpsForEtc() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.NUM_TPS_FOR_ETC, "5");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals(5, instance.options.getNumTpsForETC());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsPostBatchMinimumCount() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.POST_BATCH_MINIMUM_COUNT, "10");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals(10, instance.options.getPostBatchMinimumCount());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsPreBatchMinimumCount() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.PRE_BATCH_MINIMUM_COUNT, "7");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals(7, instance.options.getPreBatchMinimumCount());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsExportFileDirNotOverriddenWhenAlreadyInProperties() throws Exception {
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[13] = System.getProperty("java.io.tmpdir"); // exportFileDir via arg
+        Properties props = new Properties();
+        props.setProperty(Options.EXPORT_FILE_DIR, System.getProperty("java.io.tmpdir")); // already present
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(args, props);
+            assertEquals(System.getProperty("java.io.tmpdir"), instance.properties.getProperty(Options.EXPORT_FILE_DIR));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsExportFileNameNotOverriddenWhenAlreadyInProperties() throws Exception {
+        clearSystemProperties();
+        String[] args = getDefaultArgs();
+        args[14] = "fromArg.out";
+        Properties props = new Properties();
+        props.setProperty(Options.EXPORT_FILE_NAME, "fromProps.out"); // already present
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(args, props);
+            assertEquals("fromProps.out", instance.properties.getProperty(Options.EXPORT_FILE_NAME));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsAutoConfiguresExportBatchToFileTask() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        // Remove PROCESS_TASK so it gets auto-configured from EXPORT_FILE_NAME
+        props.remove(Options.PROCESS_TASK);
+        props.setProperty(Options.EXPORT_FILE_NAME, "auto-output.txt");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals(ExportBatchToFileTask.class, instance.options.getProcessTaskClass());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsAutoConfiguresPreBatchUpdateFileTask() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.remove(Options.PROCESS_TASK);
+        props.remove(Options.PRE_BATCH_TASK);
+        props.setProperty(Options.EXPORT_FILE_NAME, "auto-output.txt");
+        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "# Header");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals(ExportBatchToFileTask.class, instance.options.getProcessTaskClass());
+            assertEquals(PreBatchUpdateFileTask.class, instance.options.getPreBatchTaskClass());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsAutoConfiguresPostBatchUpdateFileTaskForBottomContent() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.remove(Options.PROCESS_TASK);
+        props.remove(Options.POST_BATCH_TASK);
+        props.setProperty(Options.EXPORT_FILE_NAME, "auto-output.txt");
+        props.setProperty(Options.EXPORT_FILE_BOTTOM_CONTENT, "# Footer");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals(PostBatchUpdateFileTask.class, instance.options.getPostBatchTaskClass());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsAutoConfiguresPostBatchUpdateFileTaskForSort() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.remove(Options.PROCESS_TASK);
+        props.remove(Options.POST_BATCH_TASK);
+        props.setProperty(Options.EXPORT_FILE_NAME, "auto-output.txt");
+        props.setProperty(Options.EXPORT_FILE_SORT, "ascending");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals(PostBatchUpdateFileTask.class, instance.options.getPostBatchTaskClass());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsAutoConfiguresPostBatchUpdateFileTaskForSplitMaxLines() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.remove(Options.PROCESS_TASK);
+        props.remove(Options.POST_BATCH_TASK);
+        props.setProperty(Options.EXPORT_FILE_NAME, "auto-output.txt");
+        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_LINES, "100");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals(PostBatchUpdateFileTask.class, instance.options.getPostBatchTaskClass());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsAutoConfiguresPostBatchUpdateFileTaskForSplitMaxSize() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.remove(Options.PROCESS_TASK);
+        props.remove(Options.POST_BATCH_TASK);
+        props.setProperty(Options.EXPORT_FILE_NAME, "auto-output.txt");
+        props.setProperty(Options.EXPORT_FILE_SPLIT_MAX_SIZE, "1024");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals(PostBatchUpdateFileTask.class, instance.options.getPostBatchTaskClass());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsAutoConfiguresPostBatchUpdateFileTaskForAsZip() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.remove(Options.PROCESS_TASK);
+        props.remove(Options.POST_BATCH_TASK);
+        props.setProperty(Options.EXPORT_FILE_NAME, "auto-output.txt");
+        props.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals(PostBatchUpdateFileTask.class, instance.options.getPostBatchTaskClass());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsInvalidProcessTaskClass() {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.PROCESS_TASK, "com.marklogic.developer.corb.DoesNotExist");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            assertThrows(CorbException.class, () -> instance.init(null, props));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsDiskQueueTempDirDoesNotExist() {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.DISK_QUEUE_TEMP_DIR, "/does/not/exist");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            assertThrows(IllegalArgumentException.class, () -> instance.init(null, props));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsDiskQueueTempDirValidPath() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.DISK_QUEUE_TEMP_DIR, System.getProperty("java.io.tmpdir"));
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertNotNull(instance.options.getDiskQueueTempDir());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsTempDirFallsBackToDiskQueueTempDir() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        // DISK_QUEUE_TEMP_DIR not set; TEMP_DIR should be used as fallback
+        props.setProperty(Options.TEMP_DIR, System.getProperty("java.io.tmpdir"));
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertNotNull(instance.options.getDiskQueueTempDir());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsInvalidMetricsLogLevel() {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.METRICS_LOG_LEVEL, "INVALID_LEVEL");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            assertThrows(IllegalArgumentException.class, () -> instance.init(null, props));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsMetricsCollections() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.METRICS_COLLECTIONS, "col1,col2");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals("col1,col2", instance.options.getMetricsCollections());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsMetricsDatabase() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.METRICS_DATABASE, "metrics-db");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals("metrics-db", instance.options.getMetricsDatabase());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsMetricsModule() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.METRICS_MODULE, "saveMetrics.xqy");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals("saveMetrics.xqy", instance.options.getMetricsModule());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsMetricsRoot() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.METRICS_ROOT, "/metrics/");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals("/metrics/", instance.options.getMetricsRoot());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsMetricsNumSlowTransactionsValid() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.METRICS_NUM_SLOW_TRANSACTIONS, "10");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals(10, (int) instance.options.getNumberOfLongRunningUris());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsMetricsNumSlowTransactionsCappedAtMax() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        int overMax = TransformOptions.MAX_NUM_SLOW_TRANSACTIONS + 50;
+        props.setProperty(Options.METRICS_NUM_SLOW_TRANSACTIONS, Integer.toString(overMax));
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals(TransformOptions.MAX_NUM_SLOW_TRANSACTIONS, (int) instance.options.getNumberOfLongRunningUris());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsMetricsNumSlowTransactionsInvalidFormat() {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.METRICS_NUM_SLOW_TRANSACTIONS, "notANumber");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            assertThrows(IllegalArgumentException.class, () -> instance.init(null, props));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsMetricsNumFailedTransactionsValid() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.METRICS_NUM_FAILED_TRANSACTIONS, "20");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals(20, (int) instance.options.getNumberOfFailedUris());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsMetricsNumFailedTransactionsCappedAtMax() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        int overMax = TransformOptions.MAX_NUM_FAILED_TRANSACTIONS + 50;
+        props.setProperty(Options.METRICS_NUM_FAILED_TRANSACTIONS, Integer.toString(overMax));
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals(TransformOptions.MAX_NUM_FAILED_TRANSACTIONS, (int) instance.options.getNumberOfFailedUris());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsMetricsSyncFrequencyWithDatabase() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.METRICS_DATABASE, "metrics-db");
+        props.setProperty(Options.METRICS_SYNC_FREQUENCY, "5");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals(Integer.valueOf(5000), instance.options.getMetricsSyncFrequencyInMillis());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsMetricsSyncFrequencyNotSetWithoutDatabase() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        // Explicitly disable metrics logging; no METRICS_DATABASE — sync frequency should not be applied
+        props.setProperty(Options.METRICS_LOG_LEVEL, "none");
+        props.setProperty(Options.METRICS_SYNC_FREQUENCY, "5");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals(-1, (int) instance.options.getMetricsSyncFrequencyInMillis());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsMetricsSyncFrequencyInvalidFormat() {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.METRICS_DATABASE, "metrics-db");
+        props.setProperty(Options.METRICS_SYNC_FREQUENCY, "notANumber");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            assertThrows(IllegalArgumentException.class, () -> instance.init(null, props));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testInitOptionsJobServerPortInvalidFormat() {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.JOB_SERVER_PORT, "notAPort");
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            assertThrows(IllegalArgumentException.class, () -> instance.init(null, props));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testNormalizeLegacyExportFileAsZipOptionSkipsWhenSystemPropertySet() throws Exception {
+        clearSystemProperties();
+        System.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
+        Properties props = getDefaultProperties();
+        props.setProperty("EXPORT_FILE_AS_ZIP", "false"); // legacy underscore form — must NOT overwrite
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals("true", System.getProperty(Options.EXPORT_FILE_AS_ZIP));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        } finally {
+            System.clearProperty(Options.EXPORT_FILE_AS_ZIP);
+        }
+    }
+
+    @Test
+    void testNormalizeLegacyExportFileAsZipOptionSkipsWhenPropertySet() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty(Options.EXPORT_FILE_AS_ZIP, "true");
+        props.setProperty("EXPORT_FILE_AS_ZIP", "false"); // legacy — should be ignored
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals("true", instance.properties.getProperty(Options.EXPORT_FILE_AS_ZIP));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testNormalizeLegacyExportFileAsZipOptionAppliesLegacyValue() throws Exception {
+        clearSystemProperties();
+        Properties props = getDefaultProperties();
+        props.setProperty("EXPORT_FILE_AS_ZIP", "true"); // legacy underscore form only
+        try (Manager instance = getMockManagerWithEmptyResults()) {
+            instance.init(null, props);
+            assertEquals("true", instance.properties.getProperty(Options.EXPORT_FILE_AS_ZIP));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
     public static class MockEmptyFileUrisLoader extends FileUrisLoader {
 
         @Override
