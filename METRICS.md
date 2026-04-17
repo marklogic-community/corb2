@@ -47,7 +47,7 @@
     * JOB-NAME defaults to the job run location
      
 * **I want to have complete control over how the metrics document is saved. Is that possible?**
-    * You can use the above mentioned sample modules (*[saveMetrics.sjs](src/main/resources/saveMetrics.sjs) and [save-metric-to-db.xqy](src/main/resources/save-metric-to-db.xqy)*) as an example and implement your own customizations.
+    * You can use the above mentioned sample modules (*[saveMetrics.sjs](src/main/resources/saveMetrics.sjs) and [save-metric-to-db.xqy](src/main/resources/save-metrics.xqy)*) as an example and implement your own customizations.
     + Eg:METRICS-MODULE=/export/home/dev/saveMetricsCustom.sjs|ADHOC
 * **How do I keep logging metrics document at regular intervals?**
     * You can use METRICS-SYNC-FREQUENCY option to specify the frequency at which the document should be saved to the database.
