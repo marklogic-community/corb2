@@ -33,7 +33,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.logging.Level;
