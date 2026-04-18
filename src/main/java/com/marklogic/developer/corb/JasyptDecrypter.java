@@ -20,9 +20,12 @@ package com.marklogic.developer.corb;
 
 import static com.marklogic.developer.corb.AbstractManager.loadPropertiesFile;
 import static com.marklogic.developer.corb.Options.JASYPT_PROPERTIES_FILE;
+import static com.marklogic.developer.corb.Options.JASYPT_STRING_ENCRYPTER;
+import static com.marklogic.developer.corb.Options.JASYPT_IV_GENERATOR;
 import static com.marklogic.developer.corb.util.StringUtils.isBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
@@ -103,6 +106,16 @@ public class JasyptDecrypter extends AbstractDecrypter {
     protected static final Logger LOG = Logger.getLogger(JasyptDecrypter.class.getName());
 
     /**
+     *  Default algorithm to use if not explicitly specified.
+     */
+    protected static final String DEFAULT_ALGORITHM = "PBEWithMD5AndTripleDES";
+
+    /**
+     * Default encrypter/decrypter class to use if not explicitly specified.
+     */
+    protected static final String DEFAULT_ENCRYPTER = "org.jasypt.encryption.pbe.StandardPBEStringEncryptor";
+
+    /**
      * Initializes the Jasypt decrypter by loading configuration properties and
      * setting up the StandardPBEStringEncryptor instance via reflection.
      * <p>
@@ -127,15 +140,56 @@ public class JasyptDecrypter extends AbstractDecrypter {
         }
         jaspytProperties = loadPropertiesFile(decryptPropsFile, false);
 
+        do_init_decrypter();
+    }
+
+    /**
+     * Split the init_decrypter into two methods to facilitate unit testing.
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    protected void do_init_decrypter() throws IOException, ClassNotFoundException {
         String algorithm = jaspytProperties.getProperty("jasypt.algorithm");
         if (isBlank(algorithm)) {
-            algorithm = "PBEWithMD5AndTripleDES"; // select a secure algorithm as default
+            algorithm = DEFAULT_ALGORITHM; // select a secure algorithm as default
         }
         String passphrase = jaspytProperties.getProperty("jasypt.password");
         if (isNotBlank(passphrase)) {
             try {
-                decrypterCls = Class.forName("org.jasypt.encryption.pbe.StandardPBEStringEncryptor");
+                String decrypterClassName = getProperty(JASYPT_STRING_ENCRYPTER);
+                if(isBlank(decrypterClassName)) {
+                    decrypterClassName = DEFAULT_ENCRYPTER;
+                }
+
+                decrypterCls = Class.forName(decrypterClassName);
                 decrypter = decrypterCls.newInstance();
+
+                String ivGeneratorClsName = getProperty(JASYPT_IV_GENERATOR);
+                if(isNotBlank(ivGeneratorClsName)) {
+                    String[] tokens = ivGeneratorClsName.split(",");
+                    ivGeneratorClsName = tokens[0];
+
+                    String arg = null;
+                    if(tokens.length > 1 && isNotBlank(tokens[1])) {
+                        arg = tokens[1];
+                    }
+
+                    Class<?> ivGeneratorCls = Class.forName(ivGeneratorClsName);
+                    Object ivGenerator = null;
+                    if(arg == null) {
+                        ivGenerator = ivGeneratorCls.newInstance();
+                    }else{
+                        Constructor<?> constructor = ivGeneratorCls.getConstructor(String.class);
+                        ivGenerator = constructor.newInstance(arg);
+                    }
+
+                    Class<?> ivGeneratorInterface = Class.forName("org.jasypt.iv.IvGenerator");
+                    Method setIvGenerator = decrypterCls.getMethod("setIvGenerator", ivGeneratorInterface);
+                    setIvGenerator.invoke(decrypter, ivGenerator);
+                }else{
+                    LOG.info(JASYPT_IV_GENERATOR+" is blank or not specified.");
+                }
+
                 Method setAlgorithm = decrypterCls.getMethod("setAlgorithm", String.class);
                 setAlgorithm.invoke(decrypter, algorithm);
 
@@ -145,13 +199,12 @@ public class JasyptDecrypter extends AbstractDecrypter {
             } catch (ClassNotFoundException exc) {
                 throw exc;
             } catch (Exception exc) {
-                throw new IllegalStateException("Unable to initialize org.jasypt.encryption.pbe.StandardPBEStringEncryptor - check if jasypt libraries are in classpath", exc);
+                throw new IllegalStateException("Unable to initialize string decrypter or IvGenerator - check if jasypt libraries are in classpath", exc);
             }
         } else {
             LOG.severe("Unable to initialize jasypt decrypter. Couldn't find jasypt.password");
         }
     }
-
     /**
      * Decrypts the given encrypted value using the configured Jasypt decrypter.
      * <p>
