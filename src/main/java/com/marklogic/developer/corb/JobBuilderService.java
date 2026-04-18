@@ -372,6 +372,8 @@ public class JobBuilderService {
                 Options.DECRYPTER,
                 Options.HOST_KEY_DECRYPTER_CIPHER,
                 Options.JASYPT_PROPERTIES_FILE,
+                Options.JASYPT_STRING_ENCRYPTER,
+                Options.JASYPT_IV_GENERATOR,
                 Options.PRIVATE_KEY_FILE,
                 Options.PRIVATE_KEY_ALGORITHM,
                 Options.SSL_CONFIG_CLASS,
@@ -570,7 +572,7 @@ public class JobBuilderService {
         if (fieldName.startsWith("XCC_") || fieldName.startsWith("CONTENT_SOURCE_") || "CONNECTION_POLICY".equals(fieldName)) {
             return GROUP_CONNECTION;
         }
-        if (fieldName.startsWith("SSL_") || fieldName.startsWith("HOST_KEY")  || fieldName.startsWith("PRIVATE_KEY_") || "DECRYPTER".equals(fieldName) || "JASYPT_PROPERTIES_FILE".equals(fieldName)) {
+        if (fieldName.startsWith("SSL_") || fieldName.startsWith("HOST_KEY")  || fieldName.startsWith("PRIVATE_KEY_") || "DECRYPTER".equals(fieldName) || fieldName.startsWith("JASYPT") ) {
             return GROUP_SECURITY;
         }
         if (fieldName.startsWith("METRICS_")
