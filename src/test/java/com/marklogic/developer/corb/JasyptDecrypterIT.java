@@ -133,8 +133,8 @@ class JasyptDecrypterIT {
             instance.properties = props;
             instance.init_decrypter();
 
-            assertEquals(alg, instance.jaspytProperties.getProperty(JASYPT_ALGORITHM));
-            assertEquals(password, instance.jaspytProperties.getProperty(JASYPT_PASSWORD));
+            assertEquals(alg, instance.jasyptProperties.getProperty(JASYPT_ALGORITHM));
+            assertEquals(password, instance.jasyptProperties.getProperty(JASYPT_PASSWORD));
             assertNotNull(instance.decrypter);
         } catch (ClassNotFoundException | IOException ex) {
             LOG.log(Level.SEVERE, null, ex);

@@ -68,7 +68,7 @@ public class JasyptDecrypter extends AbstractDecrypter {
      * {@link Options#JASYPT_PROPERTIES_FILE}, defaulting to "jasypt.properties" if not specified.
      * </p>
      */
-    protected Properties jaspytProperties;
+    protected Properties jasyptProperties;
 
     /**
      * The Class object representing the Jasypt StandardPBEStringEncryptor class.
@@ -89,8 +89,8 @@ public class JasyptDecrypter extends AbstractDecrypter {
      * This object is created via reflection in {@link #init_decrypter()} and configured with:
      * </p>
      * <ul>
-     *   <li>The encryption algorithm from {@link #jaspytProperties}</li>
-     *   <li>The password/passphrase from {@link #jaspytProperties}</li>
+     *   <li>The encryption algorithm from {@link #jasyptProperties}</li>
+     *   <li>The password/passphrase from {@link #jasyptProperties}</li>
      * </ul>
      * <p>
      * The decrypter instance is used in {@link #doDecrypt(String, String)} to perform actual
@@ -138,47 +138,47 @@ public class JasyptDecrypter extends AbstractDecrypter {
         if (decryptPropsFile == null || isBlank(decryptPropsFile)) {
             decryptPropsFile = "jasypt.properties";
         }
-        jaspytProperties = loadPropertiesFile(decryptPropsFile, false);
+        jasyptProperties = loadPropertiesFile(decryptPropsFile, false);
 
         do_init_decrypter();
     }
 
     /**
-     * Split the init_decrypter into two methods to facilitate unit testing.
-     * @throws IOException
-     * @throws ClassNotFoundException
+     * Performs the actual initialization of the Jasypt decrypter instance using the loaded properties.
+     * @throws IOException if there is an error during initialization (e.g., loading properties)
+     * @throws ClassNotFoundException if the Jasypt StandardPBEStringEncryptor class or IvGenerator class is not found in the classpath
      */
     protected void do_init_decrypter() throws IOException, ClassNotFoundException {
-        String algorithm = jaspytProperties.getProperty("jasypt.algorithm");
+        String algorithm = jasyptProperties.getProperty("jasypt.algorithm");
         if (isBlank(algorithm)) {
             algorithm = DEFAULT_ALGORITHM; // select a secure algorithm as default
         }
-        String passphrase = jaspytProperties.getProperty("jasypt.password");
+        String passphrase = jasyptProperties.getProperty("jasypt.password");
         if (isNotBlank(passphrase)) {
             try {
                 String decrypterClassName = getProperty(JASYPT_STRING_ENCRYPTER);
-                if(isBlank(decrypterClassName)) {
+                if (isBlank(decrypterClassName)) {
                     decrypterClassName = DEFAULT_ENCRYPTER;
                 }
 
                 decrypterCls = Class.forName(decrypterClassName);
-                decrypter = decrypterCls.newInstance();
+                decrypter = decrypterCls.getDeclaredConstructor().newInstance();
 
                 String ivGeneratorClsName = getProperty(JASYPT_IV_GENERATOR);
-                if(isNotBlank(ivGeneratorClsName)) {
+                if (isNotBlank(ivGeneratorClsName)) {
                     String[] tokens = ivGeneratorClsName.split(",");
                     ivGeneratorClsName = tokens[0];
 
                     String arg = null;
-                    if(tokens.length > 1 && isNotBlank(tokens[1])) {
+                    if (tokens.length > 1 && isNotBlank(tokens[1])) {
                         arg = tokens[1];
                     }
 
                     Class<?> ivGeneratorCls = Class.forName(ivGeneratorClsName);
                     Object ivGenerator = null;
-                    if(arg == null) {
-                        ivGenerator = ivGeneratorCls.newInstance();
-                    }else{
+                    if (arg == null) {
+                        ivGenerator = ivGeneratorCls.getDeclaredConstructor().newInstance();
+                    } else {
                         Constructor<?> constructor = ivGeneratorCls.getConstructor(String.class);
                         ivGenerator = constructor.newInstance(arg);
                     }
@@ -186,8 +186,8 @@ public class JasyptDecrypter extends AbstractDecrypter {
                     Class<?> ivGeneratorInterface = Class.forName("org.jasypt.iv.IvGenerator");
                     Method setIvGenerator = decrypterCls.getMethod("setIvGenerator", ivGeneratorInterface);
                     setIvGenerator.invoke(decrypter, ivGenerator);
-                }else{
-                    LOG.info(JASYPT_IV_GENERATOR+" is blank or not specified.");
+                } else {
+                    LOG.info(JASYPT_IV_GENERATOR + " is blank or not specified.");
                 }
 
                 Method setAlgorithm = decrypterCls.getMethod("setAlgorithm", String.class);
@@ -205,6 +205,7 @@ public class JasyptDecrypter extends AbstractDecrypter {
             LOG.severe("Unable to initialize jasypt decrypter. Couldn't find jasypt.password");
         }
     }
+
     /**
      * Decrypts the given encrypted value using the configured Jasypt decrypter.
      * <p>
@@ -219,17 +220,17 @@ public class JasyptDecrypter extends AbstractDecrypter {
      */
     @Override
     protected String doDecrypt(String property, String value) {
-        String dValue = null;
+        String decryptedValue = null;
         if (decrypter != null) {
             try {
                 Method decrypt = decrypterCls.getMethod("decrypt", String.class);
-                dValue = (String) decrypt.invoke(decrypter, value);
+                decryptedValue = (String) decrypt.invoke(decrypter, value);
             } catch (Exception exc) {
                 Throwable th = exc instanceof InvocationTargetException ? exc.getCause() : exc;
                 LOG.log(INFO, MessageFormat.format("Cannot decrypt {0}. Ignore if clear text. Error: {1}", property, th.getClass().getName()));
             }
         }
-        return dValue == null ? value : dValue.trim();
+        return decryptedValue == null ? value : decryptedValue.trim();
     }
 
 }

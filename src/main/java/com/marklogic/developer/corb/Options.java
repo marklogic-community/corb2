@@ -673,11 +673,12 @@ public final class Options {
      * (optional) Property file for the
      * {@link com.marklogic.developer.corb.JasyptDecrypter}.
      * <p>
-     * If not specified, it uses default jasypt.proeprties file, which should be
+     * If not specified, it uses default jasypt.properties file, which should be
      * accessible in the classpath or file system.
+     * @since 2.1.0
      */
     @Usage(description = "(optional) Property file for the JasyptDecrypter. "
-            + "If not specified, it uses default jasypt.proeprties file, "
+            + "If not specified, it uses default jasypt.properties file, "
             + "which should be accessible in the classpath or file system.")
     public static final String JASYPT_PROPERTIES_FILE = "JASYPT-PROPERTIES-FILE";
 
@@ -686,6 +687,8 @@ public final class Options {
      * encrypted using the jasypt api.
      * Refer to {@link com.marklogic.developer.corb.JasyptDecrypter}.
      * If not specified, it uses default org.jasypt.encryption.pbe.StandardPBEStringEncryptor
+     *
+     * @since 2.6.0
      */
     @Usage(description = "(Optional) Default is org.jasypt.encryption.pbe.StandardPBEStringEncryptor." +
         "Jasypt encrypter class used to decrypt credentials as strings.")
@@ -695,7 +698,9 @@ public final class Options {
      * (Optional) Initialization vector generator class name for jasypt v1.9.3 or above for
      * {@link com.marklogic.developer.corb.JasyptDecrypter} that implements org.jasypt.iv.IvGenerator interface.
      * e.g. org.jasypt.iv.RandomIvGenerator, "org.jasypt.iv.StringFixedIvGenerator,charset" etc.
-     * Refer to jasypt documentation for details.
+     * Refer to <a href="http://www.jasypt.org/">jasypt documentation</a> for details.
+     *
+     * @since 2.6.0
      */
     @Usage(description = "(Optional) Supported since Jasypt v1.9.3. Initialization " +
         "vector generator for encryption operations.")
