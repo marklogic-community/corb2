@@ -682,6 +682,26 @@ public final class Options {
     public static final String JASYPT_PROPERTIES_FILE = "JASYPT-PROPERTIES-FILE";
 
     /**
+     * (Optional) Encrypter class to decrypt encrypted credentials or connection strings that were
+     * encrypted using the jasypt api.
+     * Refer to {@link com.marklogic.developer.corb.JasyptDecrypter}.
+     * If not specified, it uses default org.jasypt.encryption.pbe.StandardPBEStringEncryptor
+     */
+    @Usage(description = "(Optional) Default is org.jasypt.encryption.pbe.StandardPBEStringEncryptor." +
+        "Jasypt encrypter class used to decrypt credentials as strings.")
+    public static final String JASYPT_STRING_ENCRYPTER = "JASYPT-STRING-ENCRYPTER";
+
+    /**
+     * (Optional) Initialization vector generator class name for jasypt v1.9.3 or above for
+     * {@link com.marklogic.developer.corb.JasyptDecrypter} that implements org.jasypt.iv.IvGenerator interface.
+     * e.g. org.jasypt.iv.RandomIvGenerator, "org.jasypt.iv.StringFixedIvGenerator,charset" etc.
+     * Refer to jasypt documentation for details.
+     */
+    @Usage(description = "(Optional) Supported since Jasypt v1.9.3. Initialization " +
+        "vector generator for encryption operations.")
+    public static final String JASYPT_IV_GENERATOR = "JASYPT-IV-GENERATOR";
+
+    /**
      * Default is 10. Max number of custom inputs from the {@value #URIS_MODULE}
      * to other modules.
      * @since 2.4.5
