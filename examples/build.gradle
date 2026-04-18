@@ -34,7 +34,7 @@ dependencies {
     // required to run CoRB
     corb("com.marklogic:marklogic-corb:${corbVersion}")
     // optional
-    corb 'org.jasypt:jasypt:1.9.2' // necessary to leverage JasyptDecrypter
+    corb 'org.jasypt:jasypt:1.9.3' // necessary to leverage JasyptDecrypter
 }
 
 ext {
