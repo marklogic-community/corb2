@@ -1099,9 +1099,8 @@ class AbstractManagerTest {
     @Test
     void testGetOptionMixedSnakeAndKebabProperty() {
         String key = "MAX-OPTS_FROM-MODULE";
-        String val = VALUE;
         AbstractManager manager = new AbstractManagerImpl();
-        manager.properties.setProperty(key, val);
+        manager.properties.setProperty(key, VALUE);
         assertNull(manager.getOption(Options.MAX_OPTS_FROM_MODULE));
     }
 

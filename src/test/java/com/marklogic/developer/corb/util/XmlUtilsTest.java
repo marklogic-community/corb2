@@ -153,10 +153,12 @@ class XmlUtilsTest {
     @Test
     void testToInputStream() throws Exception {
         Document doc = parseDocument(xmlDoc);
-        InputStream is = XmlUtils.toInputStream(doc.getDocumentElement());
-        byte[] bytes = new byte[is.available()];
-        //noinspection ResultOfMethodCallIgnored
-        is.read(bytes);
+        byte[] bytes;
+        try (InputStream is = XmlUtils.toInputStream(doc.getDocumentElement())) {
+            bytes = new byte[is.available()];
+            //noinspection ResultOfMethodCallIgnored
+            is.read(bytes);
+        }
         String content = new String(bytes, StandardCharsets.UTF_8);
         assertTrue(content.contains("BenefitEnrollmentRequest"));
     }
