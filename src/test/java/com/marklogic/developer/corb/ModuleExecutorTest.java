@@ -492,8 +492,7 @@ class ModuleExecutorTest {
         if (contentSource == null) {
             throw new CorbException("Unable to obtain ContentSource from pool");
         }
-        try {
-            Session session = contentSource.newSession();
+        try (Session session = contentSource.newSession()) {
             Request req;
             TransformOptions options = executor.getOptions();
             Properties properties = executor.getProperties();

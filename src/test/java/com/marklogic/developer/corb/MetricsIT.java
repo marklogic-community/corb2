@@ -53,7 +53,7 @@ class MetricsIT {
     private static final String XQUERY_MODULE = "save-metrics.xqy|ADHOC";
 
     public static final String SLASH = "/";
-    private TestHandler testLogger = new TestHandler();
+    private final TestHandler testLogger = new TestHandler();
     private static final Logger MANAGER_LOG = Logger.getLogger(Manager.class.getName());
     private static final Logger LOG = Logger.getLogger(Manager.class.getName());
     private static final String LARGE_URIS_MODULE = "src/test/resources/selectorLargeList.xqy|ADHOC";
@@ -80,9 +80,8 @@ class MetricsIT {
         int uriCount = 10;
         String collectionName = "testManagerMetricsPeriodicSyncUsingSysPropsLargeUrisListJS";
         String exportFilename = "testManagerMetricsUsingSysProps1.txt";
-        String extension = JSON_EXT;
         String syncFrequency = "2";
-        testManager(uriCount, collectionName, exportFilename, JS_MODULE, syncFrequency, extension);
+        testManager(uriCount, collectionName, exportFilename, JS_MODULE, syncFrequency, JSON_EXT);
     }
 
     @Test
@@ -91,9 +90,8 @@ class MetricsIT {
         int uriCount = 10;
         String collectionName = "testManagerMetricsPeriodicSyncUsingSysPropsLargeUrisListXQUERY";
         String exportFilename = "testManagerMetricsUsingSysProps1.txt";
-        String extension = XML_EXT;
         String syncFrequency = "2";
-        testManager(uriCount, collectionName, exportFilename, XQUERY_MODULE, syncFrequency, extension);
+        testManager(uriCount, collectionName, exportFilename, XQUERY_MODULE, syncFrequency, XML_EXT);
     }
 
     @Test
