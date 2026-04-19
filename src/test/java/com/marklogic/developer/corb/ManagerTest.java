@@ -2525,4 +2525,364 @@ class ManagerTest {
             this.setTotalCount(0);
         }
     }
+
+    // -------------------------------------------------------------------------
+    // shouldRunPreBatch / shouldRunPostBatch coverage
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testShouldRunPreBatchReturnsFalseWhenCountBelowMinimum() throws Exception {
+        try (Manager manager = getMockManagerWithEmptyResults()) {
+            manager.init(null, getDefaultProperties());
+            manager.options.setPrePostBatchAlwaysExecute(false);
+            manager.options.setPreBatchMinimumCount(10);
+            assertFalse(manager.shouldRunPreBatch(5));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testShouldRunPreBatchReturnsTrueWhenAlwaysExecute() throws Exception {
+        try (Manager manager = getMockManagerWithEmptyResults()) {
+            manager.init(null, getDefaultProperties());
+            manager.options.setPrePostBatchAlwaysExecute(true);
+            manager.options.setPreBatchMinimumCount(100);
+            assertTrue(manager.shouldRunPreBatch(0));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testShouldRunPostBatchReturnsFalseWhenExecError() throws Exception {
+        try (Manager manager = getMockManagerWithEmptyResults()) {
+            manager.init(null, getDefaultProperties());
+            manager.execError = true;
+            assertFalse(manager.shouldRunPostBatch(100));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testShouldRunPostBatchReturnsTrueWhenAlwaysExecute() throws Exception {
+        try (Manager manager = getMockManagerWithEmptyResults()) {
+            manager.init(null, getDefaultProperties());
+            manager.options.setPrePostBatchAlwaysExecute(true);
+            manager.options.setPostBatchMinimumCount(100);
+            assertFalse(manager.execError);
+            assertTrue(manager.shouldRunPostBatch(0));
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // scheduleJobMetrics isPaused branch
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testScheduleJobMetricsSkipsLogWhenPaused() throws Exception {
+        try (Manager manager = getMockManagerWithEmptyResults()) {
+            manager.init(null, getDefaultProperties());
+            JobStats jobStats = mock(JobStats.class);
+            manager.jobStats = jobStats;
+            PausableThreadPoolExecutor mockPool = mock(PausableThreadPoolExecutor.class);
+            when(mockPool.isPaused()).thenReturn(true);
+            manager.pool = mockPool;
+            manager.options.setMetricsSyncFrequencyInMillis(50);
+            manager.scheduleJobMetrics();
+            Thread.sleep(200);
+            verify(jobStats, never()).logMetrics(anyString(), anyBoolean(), anyBoolean());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // runInitTask / runPreBatchTask / runPostBatchTask non-null task branches
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testRunInitTaskWithNonNullTask() throws Exception {
+        Task initTask = mock(Task.class);
+        when(initTask.call()).thenReturn(null);
+        TaskFactory taskFactory = mock(TaskFactory.class);
+        when(taskFactory.newInitTask()).thenReturn(initTask);
+        try (Manager manager = new Manager()) {
+            manager.jobStats = mock(JobStats.class);
+            java.lang.reflect.Method method = Manager.class.getDeclaredMethod("runInitTask", TaskFactory.class);
+            method.setAccessible(true);
+            method.invoke(manager, taskFactory);
+            verify(initTask).call();
+            verify(manager.jobStats).setInitTaskRunTime(anyLong());
+        }
+    }
+
+    @Test
+    void testRunPreBatchTaskWithNonNullTask() throws Exception {
+        Task preTask = mock(Task.class);
+        when(preTask.call()).thenReturn(null);
+        TaskFactory taskFactory = mock(TaskFactory.class);
+        when(taskFactory.newPreBatchTask()).thenReturn(preTask);
+        try (Manager manager = new Manager()) {
+            manager.jobStats = mock(JobStats.class);
+            java.lang.reflect.Method method = Manager.class.getDeclaredMethod("runPreBatchTask", TaskFactory.class);
+            method.setAccessible(true);
+            method.invoke(manager, taskFactory);
+            verify(preTask).call();
+            verify(manager.jobStats).setPreBatchRunTime(anyLong());
+        }
+    }
+
+    @Test
+    void testRunPostBatchTaskWithNonNullTask() throws Exception {
+        Task postTask = mock(Task.class);
+        when(postTask.call()).thenReturn(null);
+        TaskFactory taskFactory = mock(TaskFactory.class);
+        when(taskFactory.newPostBatchTask()).thenReturn(postTask);
+        try (Manager manager = new Manager()) {
+            manager.jobStats = mock(JobStats.class);
+            java.lang.reflect.Method method = Manager.class.getDeclaredMethod("runPostBatchTask", TaskFactory.class);
+            method.setAccessible(true);
+            method.invoke(manager, taskFactory);
+            verify(postTask).call();
+            verify(manager.jobStats).setPostBatchRunTime(anyLong());
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // getUriLoader branches
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testGetUriLoaderWithUrisModule() throws Exception {
+        try (Manager manager = getMockManagerWithEmptyResults()) {
+            manager.init(null, getDefaultProperties());
+            manager.options.setUrisModule("someModule.xqy");
+            java.lang.reflect.Method method = Manager.class.getDeclaredMethod("getUriLoader");
+            method.setAccessible(true);
+            try (UrisLoader loader = (UrisLoader) method.invoke(manager)) {
+                assertInstanceOf(QueryUrisLoader.class, loader);
+            }
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testGetUriLoaderWithUrisFile() throws Exception {
+        try (Manager manager = getMockManagerWithEmptyResults()) {
+            manager.init(null, getDefaultProperties());
+            manager.options.setUrisModule(null);
+            manager.options.setUrisFile("somefile.txt");
+            java.lang.reflect.Method method = Manager.class.getDeclaredMethod("getUriLoader");
+            method.setAccessible(true);
+            try (UrisLoader loader = (UrisLoader) method.invoke(manager)) {
+                assertInstanceOf(FileUrisLoader.class, loader);
+            }
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testGetUriLoaderWithUrisLoaderClass() throws Exception {
+        try (Manager manager = getMockManagerWithEmptyResults()) {
+            manager.init(null, getDefaultProperties());
+            manager.options.setUrisModule(null);
+            manager.options.setUrisFile(null);
+            manager.options.setUrisLoaderClass(MockEmptyFileUrisLoader.class);
+            java.lang.reflect.Method method = Manager.class.getDeclaredMethod("getUriLoader");
+            method.setAccessible(true);
+            try (UrisLoader loader = (UrisLoader) method.invoke(manager)) {
+                assertInstanceOf(MockEmptyFileUrisLoader.class, loader);
+            }
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testGetUriLoaderThrowsWhenNoSourceConfigured() throws Exception {
+        try (Manager manager = getMockManagerWithEmptyResults()) {
+            manager.init(null, getDefaultProperties());
+            manager.options.setUrisModule(null);
+            manager.options.setUrisFile(null);
+            manager.options.setUrisLoaderClass(null);
+            java.lang.reflect.Method method = Manager.class.getDeclaredMethod("getUriLoader");
+            method.setAccessible(true);
+            try {
+                method.invoke(manager);
+                fail("Expected IllegalArgumentException");
+            } catch (java.lang.reflect.InvocationTargetException e) {
+                assertInstanceOf(IllegalArgumentException.class, e.getCause());
+            }
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // shouldIncludeInRestartStateFingerprint branches
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testShouldIncludeInRestartStateFingerprintExcludesFilteredProperties() throws Exception {
+        java.lang.reflect.Method method = Manager.class.getDeclaredMethod("shouldIncludeInRestartStateFingerprint", String.class);
+        method.setAccessible(true);
+        try (Manager manager = new Manager()) {
+            // null and empty → false
+            assertFalse((Boolean) method.invoke(manager, (String) null));
+            assertFalse((Boolean) method.invoke(manager, ""));
+            // XCC- prefix → false
+            assertFalse((Boolean) method.invoke(manager, "XCC-CONNECTION-URI"));
+            // contains PASSWORD → false
+            assertFalse((Boolean) method.invoke(manager, "MY-PASSWORD-KEY"));
+            // contains SSL → false
+            assertFalse((Boolean) method.invoke(manager, "MY-SSL-CERT"));
+            // contains OAUTH → false
+            assertFalse((Boolean) method.invoke(manager, "OAUTH-TOKEN"));
+            // contains API-KEY → false
+            assertFalse((Boolean) method.invoke(manager, "MY-API-KEY"));
+            // RESTART- prefix → false
+            assertFalse((Boolean) method.invoke(manager, "RESTART-STATE-DIR"));
+            // METRICS- prefix → false
+            assertFalse((Boolean) method.invoke(manager, "METRICS-LOG-LEVEL"));
+            // EXPORT-FILE- prefix → false
+            assertFalse((Boolean) method.invoke(manager, "EXPORT-FILE-NAME"));
+            // COMMAND prefix → false
+            assertFalse((Boolean) method.invoke(manager, "COMMAND"));
+            // each named constant → false
+            assertFalse((Boolean) method.invoke(manager, Options.JOB_NAME));
+            assertFalse((Boolean) method.invoke(manager, Options.THREAD_COUNT));
+            assertFalse((Boolean) method.invoke(manager, Options.BATCH_SIZE));
+            assertFalse((Boolean) method.invoke(manager, Options.BATCH_URI_DELIM));
+            assertFalse((Boolean) method.invoke(manager, Options.FAIL_ON_ERROR));
+            assertFalse((Boolean) method.invoke(manager, Options.ERROR_FILE_NAME));
+            assertFalse((Boolean) method.invoke(manager, Options.DISK_QUEUE));
+            assertFalse((Boolean) method.invoke(manager, Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE));
+            assertFalse((Boolean) method.invoke(manager, Options.DISK_QUEUE_TEMP_DIR));
+            assertFalse((Boolean) method.invoke(manager, Options.TEMP_DIR));
+            assertFalse((Boolean) method.invoke(manager, Options.JOB_SERVER_PORT));
+            assertFalse((Boolean) method.invoke(manager, Options.NUM_TPS_FOR_ETC));
+            assertFalse((Boolean) method.invoke(manager, Options.PRE_BATCH_MINIMUM_COUNT));
+            assertFalse((Boolean) method.invoke(manager, Options.POST_BATCH_MINIMUM_COUNT));
+            assertFalse((Boolean) method.invoke(manager, Options.PRE_POST_BATCH_ALWAYS_EXECUTE));
+            assertFalse((Boolean) method.invoke(manager, Options.EXIT_CODE_IGNORED_ERRORS));
+            assertFalse((Boolean) method.invoke(manager, Options.EXIT_CODE_NO_URIS));
+            // unrecognised option → true (should be included)
+            assertTrue((Boolean) method.invoke(manager, "PROCESS-MODULE"));
+            assertTrue((Boolean) method.invoke(manager, "CUSTOM-OPTION"));
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // sanitizeRestartStateLabel and buildRestartStateId branches
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testSanitizeRestartStateLabelWithAllSpecialCharsReturnsJob() throws Exception {
+        java.lang.reflect.Method method = Manager.class.getDeclaredMethod("sanitizeRestartStateLabel", String.class);
+        method.setAccessible(true);
+        try (Manager manager = new Manager()) {
+            assertEquals("job", method.invoke(manager, "!!!"));
+            assertEquals("my-job-name", method.invoke(manager, "My Job Name"));
+            assertEquals("test-123", method.invoke(manager, "Test 123!"));
+        }
+    }
+
+    @Test
+    void testBuildRestartStateIdWithBlankJobName() throws Exception {
+        java.lang.reflect.Method method = Manager.class.getDeclaredMethod("buildRestartStateId", String.class);
+        method.setAccessible(true);
+        try (Manager manager = new Manager()) {
+            manager.properties = new Properties();
+            String result = (String) method.invoke(manager, "");
+            assertTrue(result.startsWith("job-"), "Expected label to start with 'job-' but was: " + result);
+        }
+    }
+
+    @Test
+    void testBuildRestartStateIdWithNonBlankJobName() throws Exception {
+        java.lang.reflect.Method method = Manager.class.getDeclaredMethod("buildRestartStateId", String.class);
+        method.setAccessible(true);
+        try (Manager manager = new Manager()) {
+            manager.properties = new Properties();
+            String result = (String) method.invoke(manager, "MyJob");
+            assertTrue(result.startsWith("myjob-"), "Expected label to start with 'myjob-' but was: " + result);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // submitUriTasks: pool=null early exit and blank URI skip
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testSubmitUriTasksWithNullPoolExitsEarly() throws Exception {
+        UrisLoader urisLoader = mock(UrisLoader.class);
+        when(urisLoader.hasNext()).thenReturn(true);
+        try (Manager manager = getMockManagerWithEmptyResults()) {
+            manager.init(null, getDefaultProperties());
+            manager.pool = null;
+            long count = manager.submitUriTasks(urisLoader, mock(TaskFactory.class), 10);
+            assertEquals(0, count);
+            assertContainsLogRecord(testLogger, Level.WARNING, "Thread pool is set to null. Exiting out of the task submission loop prematurely.");
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    @Test
+    void testSubmitUriTasksSkipsBlankUris() throws Exception {
+        UrisLoader urisLoader = mock(UrisLoader.class);
+        when(urisLoader.hasNext()).thenReturn(true, true, false);
+        when(urisLoader.next()).thenReturn("", "validUri");
+        try (Manager manager = getMockManagerWithEmptyResults()) {
+            manager.init(null, getDefaultProperties());
+            CompletionService<String[]> completionService = mock(CompletionService.class);
+            manager.completionService = completionService;
+            manager.pool = mock(PausableThreadPoolExecutor.class);
+            long count = manager.submitUriTasks(urisLoader, mock(TaskFactory.class), 10);
+            assertEquals(1, count);
+            verify(completionService, times(1)).submit(any());
+        } catch (CorbException | RequestException ex) {
+            fail();
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // recordCompletedUris success path
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testRecordCompletedUrisSuccess() throws Exception {
+        RestartableJobState jobState = mock(RestartableJobState.class);
+        try (Manager manager = new Manager()) {
+            manager.restartableJobState = jobState;
+            manager.recordCompletedUris(new String[]{"uri1", "uri2"});
+            verify(jobState).appendCompletedUris(new String[]{"uri1", "uri2"});
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // normalizeLegacyProperties: modern key already present prevents override
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testNormalizeLegacyPropertiesDoesNotOverrideModernKeyWhenBothPresent() throws Exception {
+        Properties props = new Properties();
+        String modernValue = "modern-module.xqy";
+        String legacyValue = "legacy-module.xqy";
+        props.setProperty(Options.PROCESS_MODULE, modernValue);
+        props.setProperty(Options.XQUERY_MODULE, legacyValue);
+        try (Manager manager = getMockManagerWithEmptyResults()) {
+            manager.properties = props;
+            manager.normalizeLegacyProperties();
+            assertEquals(modernValue, manager.properties.getProperty(Options.PROCESS_MODULE));
+        } catch (RequestException | CorbException ex) {
+            fail();
+        }
+    }
 }

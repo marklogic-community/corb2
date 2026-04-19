@@ -27,6 +27,8 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -38,6 +40,7 @@ import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.impl.SessionImpl;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -539,5 +542,322 @@ class JobStatsTest {
         when(manager.getContentSourcePool()).thenReturn(contentSourcePool);
         JobStats jobStats = new JobStats(manager);
         assertDoesNotThrow( () -> jobStats.logMetrics("test", true, true));
+    }
+
+    // -------------------------------------------------------------------------
+    // refreshOptions / refreshMonitorStats branch coverage
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testRefreshOptionsWithNull() {
+        Manager manager = mock(Manager.class);
+        when(manager.getOptions()).thenReturn(new TransformOptions());
+        JobStats jobStats = new JobStats(manager);
+        jobStats.refreshOptions(null); // options == null → skip body
+    }
+
+    @Test
+    void testRefreshMonitorStatsWithZeroTaskCount() {
+        Manager manager = mock(Manager.class);
+        when(manager.getOptions()).thenReturn(new TransformOptions());
+        Monitor monitor = mock(Monitor.class);
+        when(monitor.getTaskCount()).thenReturn(0L);
+        JobStats jobStats = new JobStats(manager);
+        jobStats.refreshMonitorStats(monitor); // taskCount == 0 → skip inner block
+        assertEquals(0L, jobStats.taskCount);
+    }
+
+    // -------------------------------------------------------------------------
+    // setInitTaskRunTime (completely uncovered setter)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testSetInitTaskRunTime() {
+        Manager manager = mock(Manager.class);
+        when(manager.getOptions()).thenReturn(new TransformOptions());
+        JobStats jobStats = new JobStats(manager);
+        jobStats.setInitTaskRunTime(1234L);
+        String xml = jobStats.toXmlString();
+        assertNotNull(xml);
+        assertTrue(xml.contains("initTaskTime"));
+    }
+
+    // -------------------------------------------------------------------------
+    // createAndAppendElement Integer overload (completely uncovered)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testCreateAndAppendElementWithInteger() throws ParserConfigurationException {
+        Document doc = XmlUtils.newSecureDocumentBuilderFactoryInstance().newDocumentBuilder().newDocument();
+        Element parent = doc.createElement("parent");
+        doc.appendChild(parent);
+        Manager manager = mock(Manager.class);
+        when(manager.getOptions()).thenReturn(new TransformOptions());
+        JobStats jobStats = new JobStats(manager);
+
+        // null → skip
+        jobStats.createAndAppendElement(parent, "a", (Integer) null);
+        assertEquals(0, parent.getChildNodes().getLength());
+
+        // negative → skip
+        jobStats.createAndAppendElement(parent, "b", -1);
+        assertEquals(0, parent.getChildNodes().getLength());
+
+        // zero → append
+        jobStats.createAndAppendElement(parent, "c", 0);
+        assertEquals(1, parent.getChildNodes().getLength());
+
+        // positive → append
+        jobStats.createAndAppendElement(parent, "d", 5);
+        assertEquals(2, parent.getChildNodes().getLength());
+    }
+
+    // -------------------------------------------------------------------------
+    // createAndAppendElement Long/Double null branches
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testCreateAndAppendElementWithNullLong() throws ParserConfigurationException {
+        Document doc = XmlUtils.newSecureDocumentBuilderFactoryInstance().newDocumentBuilder().newDocument();
+        Element parent = doc.createElement("parent");
+        doc.appendChild(parent);
+        Manager manager = mock(Manager.class);
+        when(manager.getOptions()).thenReturn(new TransformOptions());
+        JobStats jobStats = new JobStats(manager);
+        jobStats.createAndAppendElement(parent, "a", (Long) null); // null → skip
+        assertEquals(0, parent.getChildNodes().getLength());
+    }
+
+    @Test
+    void testCreateAndAppendElementWithNullAndNegativeDouble() throws ParserConfigurationException {
+        Document doc = XmlUtils.newSecureDocumentBuilderFactoryInstance().newDocumentBuilder().newDocument();
+        Element parent = doc.createElement("parent");
+        doc.appendChild(parent);
+        Manager manager = mock(Manager.class);
+        when(manager.getOptions()).thenReturn(new TransformOptions());
+        JobStats jobStats = new JobStats(manager);
+        jobStats.createAndAppendElement(parent, "a", (Double) null); // null → skip
+        assertEquals(0, parent.getChildNodes().getLength());
+        jobStats.createAndAppendElement(parent, "b", -1.0); // negative → skip
+        assertEquals(0, parent.getChildNodes().getLength());
+    }
+
+    // -------------------------------------------------------------------------
+    // createAndAppendElement Map overload (body mostly uncovered)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testCreateAndAppendElementWithMap() throws ParserConfigurationException {
+        Document doc = XmlUtils.newSecureDocumentBuilderFactoryInstance().newDocumentBuilder().newDocument();
+        Element parent = doc.createElement("parent");
+        doc.appendChild(parent);
+        Manager manager = mock(Manager.class);
+        when(manager.getOptions()).thenReturn(new TransformOptions());
+        JobStats jobStats = new JobStats(manager);
+
+        // null map → skip
+        jobStats.createAndAppendElement(parent, "a", (Map<String, String>) null);
+        assertEquals(0, parent.getChildNodes().getLength());
+
+        // empty map → skip
+        jobStats.createAndAppendElement(parent, "b", new HashMap<>());
+        assertEquals(0, parent.getChildNodes().getLength());
+
+        // non-null, non-empty map → body executes, child element created
+        Map<String, String> opts = new HashMap<>();
+        opts.put("PROCESS-MODULE", "test.xqy");
+        opts.put("THREAD-COUNT", "4");
+        jobStats.createAndAppendElement(parent, "options", opts);
+        assertEquals(1, parent.getChildNodes().getLength());
+        Node optionsEl = parent.getFirstChild();
+        assertEquals(2, optionsEl.getChildNodes().getLength());
+    }
+
+    // -------------------------------------------------------------------------
+    // createJobElement exitCode branch
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testCreateJobElementWithExitCode() {
+        Manager manager = new Manager();
+        manager.options = new TransformOptions();
+        manager.exitCode = 0; // non-null Integer
+        JobStats jobStats = new JobStats(manager);
+        String xml = jobStats.toXmlString();
+        assertNotNull(xml);
+        assertTrue(xml.contains("exitCode"));
+    }
+
+    // -------------------------------------------------------------------------
+    // logToServer(String, String) — null contentSourcePool branch
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testLogToServerStringStringWithNullContentSourcePool() {
+        Manager manager = mock(Manager.class);
+        when(manager.getOptions()).thenReturn(new TransformOptions());
+        when(manager.getContentSourcePool()).thenReturn(null); // contentSourcePool = null
+        JobStats jobStats = new JobStats(manager);
+        jobStats.logToServer(FOO, BAR); // contentSourcePool == null → return immediately
+    }
+
+    // -------------------------------------------------------------------------
+    // logToServer(String, String) — non-null contentSource (calls 3-arg version)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testLogToServerStringStringWithNonNullContentSource() throws CorbException, RequestException {
+        ContentSourcePool csp = mock(ContentSourcePool.class);
+        ContentSource contentSource = mock(ContentSource.class);
+        Manager manager = mock(Manager.class);
+        TransformOptions options = new TransformOptions();
+        options.setLogMetricsToServerLog("info");
+        when(manager.getOptions()).thenReturn(options);
+        when(manager.getContentSourcePool()).thenReturn(csp);
+        when(csp.get()).thenReturn(contentSource); // non-null → calls 3-arg logToServer
+        Session session = mock(Session.class);
+        when(contentSource.newSession()).thenReturn(session);
+        when(session.newAdhocQuery(anyString())).thenReturn(mock(AdhocQuery.class));
+        JobStats jobStats = new JobStats(manager);
+        jobStats.logToServer(FOO, BAR);
+        verify(contentSource, times(1)).newSession();
+    }
+
+    // -------------------------------------------------------------------------
+    // logMetrics — logToConsole=false and JS module branches
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testLogMetricsWithLogToConsoleFalse() {
+        TransformOptions options = new TransformOptions();
+        options.setLogMetricsToServerLog("INFO");
+        Manager manager = mock(Manager.class);
+        when(manager.getOptions()).thenReturn(options);
+        when(manager.getContentSourcePool()).thenReturn(null);
+        JobStats jobStats = new JobStats(manager);
+        assertDoesNotThrow(() -> jobStats.logMetrics("msg", false, false)); // logToConsole=false
+    }
+
+    @Test
+    void testLogMetricsWithJavaScriptModule() {
+        TransformOptions options = new TransformOptions();
+        options.setLogMetricsToServerLog("INFO");
+        options.setMetricsModule("metrics.sjs|ADHOC"); // JS module
+        Manager manager = mock(Manager.class);
+        when(manager.getOptions()).thenReturn(options);
+        when(manager.getContentSourcePool()).thenReturn(null);
+        JobStats jobStats = new JobStats(manager);
+        assertDoesNotThrow(() -> jobStats.logMetrics("msg", false, false)); // isJavaScriptModule = true
+    }
+
+    // -------------------------------------------------------------------------
+    // executeModule(ContentSource, String, String) — JS module and null seq branches
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testExecuteModuleWithNullResultSequence() throws CorbException, RequestException {
+        ContentSourcePool csp = mock(ContentSourcePool.class);
+        ContentSource contentSource = mock(ContentSource.class);
+        Manager manager = mock(Manager.class);
+        when(manager.getContentSourcePool()).thenReturn(csp);
+        TransformOptions options = new TransformOptions();
+        options.setMetricsDatabase(METRICS_DB);
+        when(manager.getOptions()).thenReturn(options);
+        when(manager.getRequestForModule(any(), any())).thenReturn(mock(Request.class));
+        Session session = mock(Session.class);
+        when(csp.get()).thenReturn(contentSource);
+        when(contentSource.newSession()).thenReturn(session);
+        when(session.submitRequest(any())).thenReturn(null); // seq = null
+        JobStats jobStats = new JobStats(manager);
+        jobStats.executeModule(FOO);
+        // seq is null → finally block skips close (null != seq = false)
+        verify(contentSource, times(1)).newSession();
+    }
+
+    @Test
+    void testExecuteModuleWithResultHavingUri() throws CorbException, RequestException {
+        ContentSourcePool csp = mock(ContentSourcePool.class);
+        ContentSource contentSource = mock(ContentSource.class);
+        Manager manager = mock(Manager.class);
+        when(manager.getContentSourcePool()).thenReturn(csp);
+        TransformOptions options = new TransformOptions();
+        options.setMetricsDatabase(METRICS_DB);
+        when(manager.getOptions()).thenReturn(options);
+        when(manager.getRequestForModule(any(), any())).thenReturn(mock(Request.class));
+        Session session = mock(Session.class);
+        when(csp.get()).thenReturn(contentSource);
+        when(contentSource.newSession()).thenReturn(session);
+        ResultItem resultItem = mock(ResultItem.class);
+        when(resultItem.asString()).thenReturn("/metrics/job-001.json");
+        ResultSequence seq = mock(ResultSequence.class);
+        when(seq.hasNext()).thenReturn(true);
+        when(seq.next()).thenReturn(resultItem);
+        when(seq.isClosed()).thenReturn(false);
+        when(session.submitRequest(any())).thenReturn(seq);
+        JobStats jobStats = new JobStats(manager);
+        jobStats.executeModule(FOO);
+        // uri != null → this.uri was set; seq not closed → seq.close() called
+        verify(seq, times(1)).close();
+    }
+
+    @Test
+    void testExecuteModuleWithJavaScriptModuleAndNullMetrics() throws CorbException, RequestException {
+        ContentSourcePool csp = mock(ContentSourcePool.class);
+        ContentSource contentSource = mock(ContentSource.class);
+        Manager manager = mock(Manager.class);
+        when(manager.getContentSourcePool()).thenReturn(csp);
+        TransformOptions options = new TransformOptions();
+        options.setMetricsDatabase(METRICS_DB);
+        options.setMetricsModule("metrics.sjs|ADHOC"); // JS module → isJavaScriptModule = true
+        when(manager.getOptions()).thenReturn(options);
+        Request request = mock(Request.class);
+        when(manager.getRequestForModule(any(), any())).thenReturn(request);
+        Session session = mock(Session.class);
+        when(csp.get()).thenReturn(contentSource);
+        when(contentSource.newSession()).thenReturn(session);
+        ResultSequence seq = mock(ResultSequence.class);
+        when(seq.hasNext()).thenReturn(false);
+        when(seq.isClosed()).thenReturn(true);
+        when(session.submitRequest(any())).thenReturn(seq);
+        JobStats jobStats = new JobStats(manager);
+        jobStats.executeModule(null); // metrics=null → toJSON() called for JS module
+        verify(contentSource, times(1)).newSession();
+    }
+
+    // -------------------------------------------------------------------------
+    // newTemplates — null URL branch (file not found)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testNewTemplatesWithNonExistentFile() {
+        TransformerFactory tf = XmlUtils.newSecureTransformerFactoryInstance();
+        assertThrows(TransformerConfigurationException.class,
+            () -> JobStats.newTemplates(tf, "nonexistent.xsl"));
+    }
+
+    // -------------------------------------------------------------------------
+    // addLongRunningUris — duplicate rank branch (urisWithSameRank != null)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testAddLongRunningUrisWithDuplicateRanks() throws ParserConfigurationException {
+        Manager manager = new Manager();
+        manager.options = new TransformOptions();
+        PausableThreadPoolExecutor threadPool = mock(PausableThreadPoolExecutor.class);
+        // Two URIs with the same execution time → same rank → urisWithSameRank != null on second
+        Map<String, Long> topUris = new LinkedHashMap<>();
+        topUris.put("uri-a", 5000L);
+        topUris.put("uri-b", 5000L); // same time → same rank
+        when(threadPool.getTopUris()).thenReturn(topUris);
+        when(threadPool.getFailedUris()).thenReturn(Collections.emptyList());
+        JobStats jobStats = new JobStats(manager);
+        jobStats.refreshThreadPoolExecutorStats(threadPool);
+
+        Document doc = XmlUtils.newSecureDocumentBuilderFactoryInstance().newDocumentBuilder().newDocument();
+        Element parent = doc.createElement("job");
+        doc.appendChild(parent);
+        jobStats.addLongRunningUris(parent);
+        // rankingElement should have been appended (both URIs grouped under same rank)
+        assertTrue(parent.hasChildNodes());
     }
 }

@@ -24,6 +24,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,8 +34,10 @@ import static com.marklogic.developer.corb.Monitor.getProgressMessage;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.assertNotContainsLogRecord;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
+
 
 /**
  *
@@ -141,5 +146,192 @@ class MonitorTest {
         assertEquals("1,000", Monitor.formatTransactionsPerSecond(1000));
         assertEquals(Integer.toString(100), Monitor.formatTransactionsPerSecond(100.1234));
         assertEquals(Integer.toString(100), Monitor.formatTransactionsPerSecond(100.999));
+    }
+
+    // -------------------------------------------------------------------------
+    // Getters
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testGetTaskCount() {
+        Monitor monitor = new Monitor(mock(PausableThreadPoolExecutor.class), mock(CompletionService.class), mock(Manager.class));
+        monitor.setTaskCount(42);
+        assertEquals(42, monitor.getTaskCount());
+    }
+
+    @Test
+    void testGetCompletedCount() {
+        Monitor monitor = new Monitor(mock(PausableThreadPoolExecutor.class), mock(CompletionService.class), mock(Manager.class));
+        assertEquals(0, monitor.getCompletedCount());
+    }
+
+    @Test
+    void testGetThreadPoolExecutor() {
+        PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
+        Monitor monitor = new Monitor(pool, mock(CompletionService.class), mock(Manager.class));
+        assertSame(pool, monitor.getThreadPoolExecutor());
+    }
+
+    // -------------------------------------------------------------------------
+    // run() and monitorResults()
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testShutdownNowExitsLoop() {
+        // Setting shutdownNow before run() means the while-loop condition is false
+        // immediately and the monitor exits without processing any tasks.
+        Monitor monitor = new Monitor(mock(PausableThreadPoolExecutor.class), mock(CompletionService.class), mock(Manager.class));
+        monitor.shutdownNow();
+        assertDoesNotThrow(monitor::run);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testRunCompletesAllTasks() throws Exception {
+        Future<String[]> future = mock(Future.class);
+        when(future.get()).thenReturn(new String[]{"uri1"});
+
+        CompletionService<String[]> cs = mock(CompletionService.class);
+        when(cs.poll(anyLong(), any(TimeUnit.class))).thenReturn(future);
+
+        PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
+        when(pool.getActiveCount()).thenReturn(0);
+        when(pool.getTaskCount()).thenReturn(1L);
+        when(pool.getCompletedTaskCount()).thenReturn(1L);
+
+        Monitor monitor = new Monitor(pool, cs, mock(Manager.class));
+        monitor.setTaskCount(1);
+        monitor.run();
+
+        assertEquals(1L, monitor.getCompletedCount());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testRunPropagatesExecutionExceptionToManager() throws Exception {
+        Future<String[]> future = mock(Future.class);
+        when(future.get()).thenThrow(new ExecutionException("task failed", new RuntimeException()));
+
+        CompletionService<String[]> cs = mock(CompletionService.class);
+        when(cs.poll(anyLong(), any(TimeUnit.class))).thenReturn(future);
+
+        Manager manager = mock(Manager.class);
+        Monitor monitor = new Monitor(mock(PausableThreadPoolExecutor.class), cs, manager);
+        monitor.setTaskCount(5);
+        monitor.run();
+
+        verify(manager).stop(any(ExecutionException.class));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testRunHandlesInterruptedException() throws Exception {
+        CompletionService<String[]> cs = mock(CompletionService.class);
+        when(cs.poll(anyLong(), any(TimeUnit.class))).thenThrow(new InterruptedException("test interrupt"));
+
+        Monitor monitor = new Monitor(mock(PausableThreadPoolExecutor.class), cs, mock(Manager.class));
+        monitor.setTaskCount(5);
+        // InterruptedException is caught inside run() — must not propagate
+        assertDoesNotThrow(monitor::run);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testRunLogsWarningWhenFutureNullAndNoActiveTasks() throws Exception {
+        // future == null AND activeCount == 0 with incomplete task count triggers
+        // the "No active tasks" warning branch in monitorResults().
+        PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
+        when(pool.getActiveCount()).thenReturn(0);
+
+        CompletionService<String[]> cs = mock(CompletionService.class);
+        Manager manager = mock(Manager.class);
+        Monitor monitor = new Monitor(pool, cs, manager);
+        monitor.setTaskCount(5);
+
+        // Poll returns null (triggering the else-if warning); the doAnswer also
+        // calls shutdownNow() so the loop exits cleanly on the next iteration check.
+        doAnswer(inv -> {
+            monitor.shutdownNow();
+            return null;
+        }).when(cs).poll(anyLong(), any(TimeUnit.class));
+
+        assertDoesNotThrow(monitor::run);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testRunContinuesWhenPoolStillActiveAfterCompletion() throws Exception {
+        // Covers the "pool still active" warning: completed >= taskCount but
+        // getActiveCount() > 0 on the first check, so the loop iterates again.
+        Future<String[]> completedFuture = mock(Future.class);
+        when(completedFuture.get()).thenReturn(new String[]{"uri1"});
+
+        PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
+        // showProgress (iter 1) → getActiveCount → 1; line-189 check (iter 1) → 1 (warning);
+        // line-189 check (iter 2) → 0 (break). showProgress is skipped in iter 2 because
+        // lastProgress was just updated, so only 3 calls are needed.
+        when(pool.getActiveCount()).thenReturn(1, 1, 0);
+        when(pool.getTaskCount()).thenReturn(1L);
+        when(pool.getCompletedTaskCount()).thenReturn(1L);
+
+        CompletionService<String[]> cs = mock(CompletionService.class);
+        when(cs.poll(anyLong(), any(TimeUnit.class))).thenReturn(completedFuture).thenReturn(null);
+
+        Monitor monitor = new Monitor(pool, cs, mock(Manager.class));
+        monitor.setTaskCount(1);
+        monitor.run();
+
+        assertEquals(1L, monitor.getCompletedCount());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testRunContinuesWhenPoolHasPendingTasks() throws Exception {
+        // Covers the branch where getActiveCount()==0 but taskDiff>0 (the second operand
+        // of the || in monitorResults), causing the "pool still active" warning.
+        Future<String[]> completedFuture = mock(Future.class);
+        when(completedFuture.get()).thenReturn(new String[]{"uri1"});
+
+        PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
+        when(pool.getActiveCount()).thenReturn(0); // always 0
+        when(pool.getTaskCount()).thenReturn(1L);
+        // First completion-service check: completedTaskCount=0 → taskDiff=1>0 → warning
+        // Second check (iter 2, showProgress skipped): completedTaskCount=1 → taskDiff=0 → break
+        when(pool.getCompletedTaskCount()).thenReturn(0L, 1L);
+
+        CompletionService<String[]> cs = mock(CompletionService.class);
+        when(cs.poll(anyLong(), any(TimeUnit.class))).thenReturn(completedFuture).thenReturn(null);
+
+        Monitor monitor = new Monitor(pool, cs, mock(Manager.class));
+        monitor.setTaskCount(1);
+        monitor.run();
+
+        assertEquals(1L, monitor.getCompletedCount());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testShowProgressSkippedWhenIntervalNotElapsed() throws Exception {
+        // Covers the false branch of "current - lastProgress > PROGRESS_INTERVAL_MS"
+        // by pre-setting lastProgress to "now" before the run.
+        Future<String[]> future = mock(Future.class);
+        when(future.get()).thenReturn(new String[]{"uri1"});
+
+        PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
+        when(pool.getActiveCount()).thenReturn(0);
+        when(pool.getTaskCount()).thenReturn(1L);
+        when(pool.getCompletedTaskCount()).thenReturn(1L);
+
+        CompletionService<String[]> cs = mock(CompletionService.class);
+        when(cs.poll(anyLong(), any(TimeUnit.class))).thenReturn(future);
+
+        Monitor monitor = new Monitor(pool, cs, mock(Manager.class));
+        monitor.setTaskCount(1);
+        // Setting lastProgress to "now" ensures the progress interval has not elapsed,
+        // so showProgress() returns immediately without logging or calling getActiveCount.
+        monitor.lastProgress = System.currentTimeMillis();
+        monitor.run();
+
+        assertEquals(1L, monitor.getCompletedCount());
     }
 }

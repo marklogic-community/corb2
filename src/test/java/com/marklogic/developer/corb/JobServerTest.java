@@ -20,6 +20,7 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
 import com.marklogic.developer.corb.util.IOUtils;
+import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -32,7 +33,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -278,5 +281,132 @@ class JobServerTest {
         when(exchange.getResponseBody()).thenReturn(new ByteArrayOutputStream());
         JobServer.handleStaticRequest("/nonexistent.gif", exchange);
         verify(exchange, never()).sendResponseHeaders(eq(HttpURLConnection.HTTP_FORBIDDEN), anyLong());
+    }
+
+    // -------------------------------------------------------------------------
+    // hasParamFormatXml / determineContentType static method tests
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testHasParamFormatXmlFalseWhenFormatIsJson() {
+        Map<String, String> params = new HashMap<>();
+        params.put(JobServicesHandler.PARAM_FORMAT, "json");
+        assertFalse(JobServer.hasParamFormatXml(params));
+    }
+
+    @Test
+    void testDetermineContentTypeReturnsMimeXml() {
+        Map<String, String> params = new HashMap<>();
+        params.put(JobServicesHandler.PARAM_FORMAT, "xml");
+        assertEquals(JobServer.MIME_XML, JobServer.determineContentType(params));
+    }
+
+    // -------------------------------------------------------------------------
+    // getExecutor / removeContext / createContext tests
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testGetExecutor() throws Exception {
+        JobServer server = JobServer.create(9984);
+        // getExecutor() delegates to underlying HttpServer — result may be null (default executor)
+        server.getExecutor();
+        server.stop(0);
+    }
+
+    @Test
+    void testRemoveContextByPathAndByContext() throws Exception {
+        JobServer server = JobServer.create(9983);
+        HttpContext ctx1 = server.createContext("/removeme1", exchange -> {});
+        server.removeContext("/removeme1");
+
+        HttpContext ctx2 = server.createContext("/removeme2", exchange -> {});
+        server.removeContext(ctx2);
+        server.stop(0);
+    }
+
+    @Test
+    void testCreateContextReplacesDuplicate() throws Exception {
+        JobServer server = JobServer.create(9982);
+        server.createContext("/duplicate", exchange -> {});
+        // Creating the same path again should log a warning and replace the existing context
+        server.createContext("/duplicate", exchange -> {});
+        assertContainsLogRecord(testLogger, Level.INFO, "Context already exists for path: /duplicate, removing existing context before adding new one.");
+        server.stop(0);
+    }
+
+    // -------------------------------------------------------------------------
+    // handleRequest stream lambda tests (filter + map branches, MIME_XML)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testHandleRequestMetricsStreamWithManagerHavingJobId() throws Exception {
+        int port = 9981;
+        Manager manager = new Manager();
+        manager.jobId = "testjob";
+        manager.jobStats = new JobStats(manager);
+        // addManager creates context for "/testjob" since jobId is already set
+        JobServer server = JobServer.create(Collections.singleton(port), manager);
+        server.start();
+        try {
+            // GET /metrics?FORMAT=xml covers: filter true branch, map false branch (context exists), MIME_XML
+            URL url = new URL("http://localhost:" + port + JobServer.METRICS_PATH + "?FORMAT=xml");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+            String contentType = conn.getHeaderField(JobServer.HEADER_CONTENT_TYPE);
+            assertNotNull(contentType);
+            assertTrue(contentType.contains("xml"));
+            try (InputStream is = conn.getInputStream()) {
+                String body = new String(IOUtils.toByteArray(is), StandardCharsets.UTF_8);
+                assertTrue(body.contains("<jobs"));
+            }
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
+    void testHandleRequestMetricsFiltersManagerWithNullJobId() throws Exception {
+        int port = 9980;
+        Manager manager = new Manager(); // jobId remains null
+        manager.jobStats = new JobStats(manager);
+        JobServer server = JobServer.create(Collections.singleton(port), manager);
+        server.start();
+        try {
+            // filter lambda false branch: manager.getJobId() == null → filtered out
+            URL url = new URL("http://localhost:" + port + JobServer.METRICS_PATH);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+            try (InputStream is = conn.getInputStream()) {
+                String body = new String(IOUtils.toByteArray(is), StandardCharsets.UTF_8);
+                assertNotNull(body);
+            }
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
+    void testHandleRequestMetricsAddsContextForManagerWithLateJobId() throws Exception {
+        int port = 9979;
+        Manager manager = new Manager(); // null jobId → no context created during addManager
+        manager.jobStats = new JobStats(manager);
+        JobServer server = JobServer.create(Collections.singleton(port), manager);
+        manager.jobId = "latejob"; // set jobId after addManager
+        server.start();
+        try {
+            // map lambda true branch: contexts.containsKey("/latejob") = false → addManagerContext called
+            URL url = new URL("http://localhost:" + port + JobServer.METRICS_PATH);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+            try (InputStream is = conn.getInputStream()) {
+                String body = new String(IOUtils.toByteArray(is), StandardCharsets.UTF_8);
+                assertNotNull(body);
+            }
+        } finally {
+            server.stop(0);
+        }
     }
 }

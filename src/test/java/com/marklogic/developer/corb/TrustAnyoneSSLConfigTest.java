@@ -23,10 +23,13 @@ import org.junit.jupiter.api.Test;
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import static com.marklogic.developer.corb.Options.SSL_ENABLED_PROTOCOLS;
 
@@ -83,6 +86,35 @@ class TrustAnyoneSSLConfigTest {
         String[] result = instance.getEnabledProtocols();
         System.setProperty("jdk.tls.client.protocols", "");
         assertEquals("foo", result[0]);
+    }
+
+    // -------------------------------------------------------------------------
+    // TrustAnyoneSSLConfig$TrustAnyoneManager (private inner class)
+    // Accessed via getTrustManagers() cast to X509TrustManager
+    // -------------------------------------------------------------------------
+
+    private X509TrustManager getTrustAnyoneManager() {
+        TrustManager[] managers = new TrustAnyoneSSLConfig().getTrustManagers();
+        assertEquals(1, managers.length);
+        assertInstanceOf(X509TrustManager.class, managers[0]);
+        return (X509TrustManager) managers[0];
+    }
+
+    @Test
+    void testTrustAnyoneManagerGetAcceptedIssuers() {
+        X509Certificate[] issuers = getTrustAnyoneManager().getAcceptedIssuers();
+        assertNotNull(issuers);
+        assertEquals(0, issuers.length);
+    }
+
+    @Test
+    void testTrustAnyoneManagerCheckClientTrusted() {
+        assertDoesNotThrow(() -> getTrustAnyoneManager().checkClientTrusted(null, "RSA"));
+    }
+
+    @Test
+    void testTrustAnyoneManagerCheckServerTrusted() {
+        assertDoesNotThrow(() -> getTrustAnyoneManager().checkServerTrusted(null, "RSA"));
     }
 
 }
