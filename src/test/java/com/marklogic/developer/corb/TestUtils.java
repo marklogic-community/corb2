@@ -194,6 +194,9 @@ public final class TestUtils {
     public static Session getSessionFromPool(ContentSourcePool csp) {
         try {
             ContentSource cs = csp.get();
+            if (cs == null) {
+                throw new RuntimeException("ContentSourcePool mock returned null ContentSource");
+            }
             return cs.newSession();
         } catch (Exception e) {
             throw new RuntimeException("Could not retrieve session from pool mock", e);

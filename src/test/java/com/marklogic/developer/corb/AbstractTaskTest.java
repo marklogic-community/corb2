@@ -201,10 +201,11 @@ class AbstractTaskTest {
     void testNewSession() throws CorbException{
         AbstractTask task = new AbstractTaskImpl();
         ContentSourcePool csp = TestUtils.mockContentSourcePool();
-        Session session = TestUtils.getSessionFromPool(csp);
-        task.csp = csp;
-        Session result = task.newSession();
-        assertEquals(session, result);
+        try (Session session = TestUtils.getSessionFromPool(csp)) {
+            task.csp = csp;
+            Session result = task.newSession();
+            assertEquals(session, result);
+        }
     }
 
     @Test
@@ -215,8 +216,7 @@ class AbstractTaskTest {
         task.adhocQuery = ADHOC_MODULE;
         task.inputUris = inputUris;
 
-        try {
-            ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
+        try (ContentSourcePool contentSourcePool = mock(ContentSourcePool.class)) {
             ContentSource cs = mock(ContentSource.class);
             Session session = mock(Session.class);
             ModuleInvoke request = mock(ModuleInvoke.class);
@@ -240,7 +240,7 @@ class AbstractTaskTest {
             task.inputUris = new String[]{URI, "uri2"};
             String[] result = task.invokeModule();
             assertArrayEquals(task.inputUris, result);
-        } catch (RequestException | CorbException ex) {
+        } catch (RequestException | IOException | CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
