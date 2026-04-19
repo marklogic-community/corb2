@@ -21,16 +21,18 @@ package com.marklogic.developer.corb;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.io.StringReader;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;;
 
 class JobBuilderServiceTest {
 
@@ -125,5 +127,159 @@ class JobBuilderServiceTest {
         int end = json.indexOf('}', start);
         assertTrue(end > start, "Expected JSON object to close for " + optionName);
         return json.substring(start, end);
+    }
+
+    // -------------------------------------------------------------------------
+    // resolveDownloadFilename additional branches
+    // -------------------------------------------------------------------------
+
+    @Test
+    void resolveDownloadFilenameWithBlankNameReturnsDefault() {
+        JobBuilderService service = new JobBuilderService(null);
+        assertEquals(JobBuilderService.DEFAULT_PROPERTIES_FILE_NAME,
+            service.resolveDownloadFilename(Collections.emptyMap()));
+    }
+
+    @Test
+    void resolveDownloadFilenameWithPropertiesExtensionNotDuplicated() {
+        JobBuilderService service = new JobBuilderService(null);
+        Map<String, String> values = new HashMap<>();
+        values.put(JobBuilderService.PARAM_DOWNLOAD_FILE_NAME, "my-job.properties");
+        assertEquals("my-job.properties", service.resolveDownloadFilename(values));
+    }
+
+    // -------------------------------------------------------------------------
+    // launchJob branches
+    // -------------------------------------------------------------------------
+
+    @Test
+    void launchJobWithNullLauncherThrowsIllegalState() {
+        JobBuilderService service = new JobBuilderService(null);
+        assertThrows(IllegalStateException.class, () -> service.launchJob(Collections.emptyMap()));
+    }
+
+    @Test
+    void launchJobDelegatesToLauncher() throws Exception {
+        JobBuilderService.JobLauncher launcher = mock(JobBuilderService.JobLauncher.class);
+        when(launcher.launch(any())).thenReturn(new JobBuilderService.JobLaunchResult("j1", "test-job", "/j1"));
+        JobBuilderService service = new JobBuilderService(launcher);
+        JobBuilderService.JobLaunchResult result = service.launchJob(Collections.emptyMap());
+        assertEquals("j1", result.toJson().contains("\"jobId\":\"j1\"") ? "j1" : "");
+        verify(launcher).launch(any());
+    }
+
+    // -------------------------------------------------------------------------
+    // escapeJson special characters
+    // -------------------------------------------------------------------------
+
+    @Test
+    void escapeJsonWithNullReturnsEmpty() {
+        assertEquals("", JobBuilderService.escapeJson(null));
+    }
+
+    @Test
+    void escapeJsonWithSpecialChars() {
+        assertEquals("\\\"", JobBuilderService.escapeJson("\""));
+        assertEquals("\\\\", JobBuilderService.escapeJson("\\"));
+        assertEquals("\\b", JobBuilderService.escapeJson("\b"));
+        assertEquals("\\f", JobBuilderService.escapeJson("\f"));
+        assertEquals("\\n", JobBuilderService.escapeJson("\n"));
+        assertEquals("\\r", JobBuilderService.escapeJson("\r"));
+        assertEquals("\\t", JobBuilderService.escapeJson("\t"));
+        // control character <= 0x1F
+        assertEquals("\\u0001", JobBuilderService.escapeJson("\u0001"));
+        // regular text unchanged
+        assertEquals("hello", JobBuilderService.escapeJson("hello"));
+    }
+
+    // -------------------------------------------------------------------------
+    // escapePropertiesValue (private — tested via reflection)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void escapePropertiesValueWithNullReturnsEmpty() throws Exception {
+        Method method = JobBuilderService.class.getDeclaredMethod("escapePropertiesValue", String.class);
+        method.setAccessible(true);
+        JobBuilderService service = new JobBuilderService(null);
+        assertEquals("", method.invoke(service, (String) null));
+    }
+
+    @Test
+    void escapePropertiesValueWithSpecialChars() throws Exception {
+        Method method = JobBuilderService.class.getDeclaredMethod("escapePropertiesValue", String.class);
+        method.setAccessible(true);
+        JobBuilderService service = new JobBuilderService(null);
+        assertEquals("\\\\", method.invoke(service, "\\"));
+        assertEquals("\\n", method.invoke(service, "\n"));
+        assertEquals("\\r", method.invoke(service, "\r"));
+        assertEquals("\\t", method.invoke(service, "\t"));
+        assertEquals("\\ hello", method.invoke(service, " hello"));  // leading space
+        assertEquals("world", method.invoke(service, "world"));      // no escaping needed
+    }
+
+    // -------------------------------------------------------------------------
+    // JobLaunchResult.toJson with null jobName
+    // -------------------------------------------------------------------------
+
+    @Test
+    void jobLaunchResultToJsonWithNullJobNameRendersEmpty() {
+        JobBuilderService.JobLaunchResult result = new JobBuilderService.JobLaunchResult("id-1", null, "/id-1");
+        String json = result.toJson();
+        assertTrue(json.contains("\"jobName\":\"\""), "Expected empty jobName in: " + json);
+        assertTrue(json.contains("\"jobId\":\"id-1\""));
+        assertTrue(json.contains("\"jobPath\":\"/id-1\""));
+    }
+
+    // -------------------------------------------------------------------------
+    // OptionDefinition with null description and placeholder
+    // -------------------------------------------------------------------------
+
+    @Test
+    void optionDefinitionWithNullDescriptionAndPlaceholderDefaultsToEmpty() {
+        JobBuilderService.OptionDefinition def =
+            new JobBuilderService.OptionDefinition("MY-OPT", null, "text", null, "general", "General");
+        String json = def.toJson();
+        assertTrue(json.contains("\"description\":\"\""), "Expected empty description in: " + json);
+        assertTrue(json.contains("\"placeholder\":\"\""), "Expected empty placeholder in: " + json);
+    }
+
+    // -------------------------------------------------------------------------
+    // getSubmittedValue fallback to getParameter (via buildPropertiesFile)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void buildPropertiesFileFallsBackToUnderscoreLowercaseParameterName() throws Exception {
+        JobBuilderService service = new JobBuilderService(null);
+        Map<String, String> values = new HashMap<>();
+        // Use the lowercase hyphenated form; JobServer.getParameter does toLowerCase() lookup
+        values.put("process-module", "/ext/fallback.xqy");
+        values.put("thread-count", "4");
+
+        String text = service.buildPropertiesFile(values);
+        Properties properties = new Properties();
+        properties.load(new StringReader(text));
+
+        assertEquals("/ext/fallback.xqy", properties.getProperty(Options.PROCESS_MODULE));
+        assertEquals("4", properties.getProperty(Options.THREAD_COUNT));
+    }
+
+    // -------------------------------------------------------------------------
+    // buildPropertiesFile serialization ordering and additional properties
+    // -------------------------------------------------------------------------
+
+    @Test
+    void buildPropertiesFileSerializesAdditionalPropertiesAfterKnownOptions() throws Exception {
+        JobBuilderService service = new JobBuilderService(null);
+        Map<String, String> values = new HashMap<>();
+        values.put(JobBuilderService.PARAM_ADDITIONAL_PROPERTIES, "ZZZZZ-CUSTOM=last\nAAAA-CUSTOM=first\n");
+
+        String text = service.buildPropertiesFile(values);
+        // Additional properties should appear (sorted) and not override absent known options
+        assertTrue(text.contains("AAAA-CUSTOM=first"));
+        assertTrue(text.contains("ZZZZZ-CUSTOM=last"));
+        // Known options from additional props that the UI didn't set should come first in their group order
+        int aaIdx = text.indexOf("AAAA-CUSTOM");
+        int zzIdx = text.indexOf("ZZZZZ-CUSTOM");
+        assertTrue(aaIdx < zzIdx, "Extra properties should be sorted alphabetically");
     }
 }
