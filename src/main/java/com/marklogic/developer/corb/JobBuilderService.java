@@ -341,181 +341,39 @@ public class JobBuilderService {
         builders.put(GROUP_CONNECTION, new OptionGroupBuilder(
             GROUP_CONNECTION,
             "Connection",
-            "Configure XCC connection details, pooling behavior, and connection-specific settings.",
-            Arrays.asList(
-                Options.XCC_CONNECTION_URI,
-                Options.XCC_PROTOCOL,
-                Options.XCC_HOSTNAME,
-                Options.XCC_PORT,
-                Options.XCC_DBNAME,
-                Options.XCC_USERNAME,
-                Options.XCC_PASSWORD,
-                Options.XCC_API_KEY,
-                Options.XCC_OAUTH_TOKEN,
-                Options.XCC_BASE_PATH,
-                Options.XCC_GRANT_TYPE,
-                Options.XCC_TOKEN_DURATION,
-                Options.XCC_TOKEN_ENDPOINT,
-                Options.XCC_HTTPCOMPLIANT,
-                Options.XCC_URL_ENCODE_COMPONENTS,
-                Options.XCC_TIME_ZONE,
-                Options.CONNECTION_POLICY,
-                Options.CONTENT_SOURCE_POOL,
-                Options.CONTENT_SOURCE_RENEW,
-                Options.CONTENT_SOURCE_RENEW_INTERVAL
-            )));
+            "Configure XCC connection details, pooling behavior, and connection-specific settings."));
         builders.put(GROUP_SECURITY, new OptionGroupBuilder(
             GROUP_SECURITY,
             "Security & SSL",
-            "Manage encryption/decryption and SSL/truststore configuration for secure connections.",
-            Arrays.asList(
-                Options.DECRYPTER,
-                Options.HOST_KEY_DECRYPTER_CIPHER,
-                Options.JASYPT_PROPERTIES_FILE,
-                Options.JASYPT_STRING_ENCRYPTER,
-                Options.JASYPT_IV_GENERATOR,
-                Options.PRIVATE_KEY_FILE,
-                Options.PRIVATE_KEY_ALGORITHM,
-                Options.SSL_CONFIG_CLASS,
-                Options.SSL_PROPERTIES_FILE,
-                Options.SSL_CIPHER_SUITES,
-                Options.SSL_ENABLED_PROTOCOLS,
-                Options.SSL_KEYSTORE,
-                Options.SSL_KEYSTORE_TYPE,
-                Options.SSL_KEYSTORE_PASSWORD,
-                Options.SSL_KEY_PASSWORD,
-                Options.SSL_TRUSTSTORE,
-                Options.SSL_TRUSTSTORE_TYPE,
-                Options.SSL_TRUSTSTORE_PASSWORD
-            )));
+            "Manage encryption/decryption and SSL/truststore configuration for secure connections."));
         builders.put(GROUP_INPUT, new OptionGroupBuilder(
             GROUP_INPUT,
             "Input & Loaders",
-            "Choose where URIs come from and how loader-driven by text file, XML, JSON, Directory, or ZIP inputs are interpreted.",
-            Arrays.asList(
-                Options.COLLECTION_NAME,
-                Options.URIS_MODULE,
-                Options.URIS_FILE,
-                Options.URIS_LOADER,
-                Options.URIS_REDACTED,
-                Options.URIS_REPLACE_PATTERN,
-                Options.LOADER_PATH,
-                Options.LOADER_VARIABLE,
-                Options.LOADER_USE_ENVELOPE,
-                Options.LOADER_BASE64_ENCODE,
-                Options.LOADER_SET_URIS_BATCH_REF,
-                Options.JSON_FILE,
-                Options.JSON_NODE,
-                Options.JSON_METADATA,
-                Options.JSON_TEMP_DIR,
-                Options.XML_FILE,
-                Options.XML_NODE,
-                Options.XML_METADATA,
-                Options.XML_SCHEMA,
-                Options.XML_SCHEMA_HONOUR_ALL_SCHEMALOCATIONS,
-                Options.XML_TEMP_DIR,
-                Options.ZIP_FILE
-            )));
+            "Choose where URIs come from and how loader-driven by text file, XML, JSON, Directory, or ZIP inputs are interpreted."));
         builders.put(GROUP_PROCESSING, new OptionGroupBuilder(
             GROUP_PROCESSING,
             "Modules & Tasks",
-            "Configure processing modules, tasks, module resolution, and metadata hand-off between job phases.",
-            Arrays.asList(
-                Options.PROCESS_MODULE,
-                Options.PROCESS_TASK,
-                Options.INIT_MODULE,
-                Options.INIT_TASK,
-                Options.PRE_BATCH_MODULE,
-                Options.PRE_BATCH_TASK,
-                Options.POST_BATCH_MODULE,
-                Options.POST_BATCH_TASK,
-                Options.MODULE_ROOT,
-                Options.MODULES_DATABASE,
-                Options.INSTALL,
-                Options.MAX_OPTS_FROM_MODULE,
-                Options.METADATA,
-                Options.METADATA_TO_PROCESS_MODULE
-            )));
+            "Configure processing modules, tasks, module resolution, and metadata hand-off between job phases."));
         builders.put(GROUP_EXECUTION, new OptionGroupBuilder(
             GROUP_EXECUTION,
             "Execution",
-            "Tune batching, thread usage, temp files, command-file control, and exit behavior.",
-            Arrays.asList(
-                Options.THREAD_COUNT,
-                Options.BATCH_SIZE,
-                Options.BATCH_URI_DELIM,
-                Options.FAIL_ON_ERROR,
-                Options.DISK_QUEUE,
-                Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE,
-                Options.DISK_QUEUE_TEMP_DIR,
-                Options.TEMP_DIR,
-                Options.PRE_BATCH_MINIMUM_COUNT,
-                Options.POST_BATCH_MINIMUM_COUNT,
-                Options.COMMAND,
-                Options.COMMAND_FILE,
-                Options.COMMAND_FILE_POLL_INTERVAL,
-                Options.PRE_POST_BATCH_ALWAYS_EXECUTE,
-                Options.OPTIONS_FILE,
-                Options.OPTIONS_FILE_ENCODING,
-                Options.EXIT_CODE_NO_URIS,
-                Options.EXIT_CODE_IGNORED_ERRORS
-            )));
+            "Tune batching, thread usage, temp files, command-file control, and exit behavior."));
         builders.put(GROUP_EXPORT, new OptionGroupBuilder(
             GROUP_EXPORT,
             "Export & Output",
-            "Configure file exports, post-processing, filenames, sorting, zipping, and error output.",
-            Arrays.asList(
-                Options.EXPORT_FILE_DIR,
-                Options.EXPORT_FILE_NAME,
-                Options.EXPORT_FILE_PART_EXT,
-                Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE,
-                Options.EXPORT_FILE_URI_TO_PATH,
-                Options.EXPORT_FILE_TOP_CONTENT,
-                Options.EXPORT_FILE_BOTTOM_CONTENT,
-                Options.EXPORT_FILE_SORT,
-                Options.EXPORT_FILE_SORT_COMPARATOR,
-                Options.EXPORT_FILE_AS_ZIP,
-                Options.EXPORT_FILE_SPLIT_MAX_LINES,
-                Options.EXPORT_FILE_SPLIT_MAX_SIZE,
-                Options.ERROR_FILE_NAME
-            )));
+            "Configure file exports, post-processing, filenames, sorting, zipping, and error output."));
         builders.put(GROUP_MONITORING, new OptionGroupBuilder(
             GROUP_MONITORING,
             "Monitoring & Metrics",
-            "Configure the embedded Job Server, job naming, metrics persistence, and throughput reporting.",
-            Arrays.asList(
-                Options.JOB_NAME,
-                Options.JOB_SERVER_PORT,
-                Options.NUM_TPS_FOR_ETC,
-                Options.METRICS_DATABASE,
-                Options.METRICS_COLLECTIONS,
-                Options.METRICS_MODULE,
-                Options.METRICS_ROOT,
-                Options.METRICS_LOG_LEVEL,
-                Options.METRICS_NUM_FAILED_TRANSACTIONS,
-                Options.METRICS_NUM_SLOW_TRANSACTIONS,
-                Options.METRICS_SYNC_FREQUENCY
-            )));
+            "Configure the embedded Job Server, job naming, metrics persistence, and throughput reporting."));
         builders.put(GROUP_RETRY, new OptionGroupBuilder(
             GROUP_RETRY,
             "Retry & Resilience",
-            "Control retry behavior for query and XCC connection failures.",
-            Arrays.asList(
-                Options.QUERY_RETRY_ERROR_CODES,
-                Options.QUERY_RETRY_ERROR_MESSAGE,
-                Options.QUERY_RETRY_INTERVAL,
-                Options.QUERY_RETRY_LIMIT,
-                Options.RESTARTABLE,
-                Options.RESTART_STATE_DIR,
-                Options.XCC_CONNECTION_RETRY_LIMIT,
-                Options.XCC_CONNECTION_RETRY_INTERVAL,
-                Options.XCC_CONNECTION_HOST_RETRY_LIMIT
-            )));
+            "Control retry behavior for query and XCC connection failures."));
         builders.put(GROUP_ADVANCED, new OptionGroupBuilder(
             GROUP_ADVANCED,
             "Advanced",
-            "Less common options are still surfaced here, and raw additional properties remain available for anything custom.",
-            Collections.emptyList()));
+            "Less common options are still surfaced here, and raw additional properties remain available for anything custom."));
 
         for (Field field : Options.class.getDeclaredFields()) {
             OptionDefinition option = buildOptionDefinition(field);
@@ -890,28 +748,17 @@ public class JobBuilderService {
         private final String id;
         private final String title;
         private final String description;
-        private final Map<String, Integer> preferredOrder = new HashMap<>();
         private final List<OptionDefinition> options = new ArrayList<>();
         private final Map<String, OptionSubgroup> subgroups = new LinkedHashMap<>();
 
-        OptionGroupBuilder(String id, String title, String description, List<String> orderedOptionNames) {
+        OptionGroupBuilder(String id, String title, String description) {
             this.id = id;
             this.title = title;
             this.description = description;
-            for (int i = 0; i < orderedOptionNames.size(); i++) {
-                preferredOrder.put(orderedOptionNames.get(i), i);
-            }
         }
 
         java.util.Comparator<OptionDefinition> newComparator() {
-            return (left, right) -> {
-                int leftOrder = preferredOrder.containsKey(left.name) ? preferredOrder.get(left.name).intValue() : Integer.MAX_VALUE;
-                int rightOrder = preferredOrder.containsKey(right.name) ? preferredOrder.get(right.name).intValue() : Integer.MAX_VALUE;
-                if (leftOrder != rightOrder) {
-                    return leftOrder < rightOrder ? -1 : 1;
-                }
-                return left.name.compareTo(right.name);
-            };
+            return (left, right) -> left.name.compareTo(right.name);
         }
 
         OptionGroup toOptionGroup() {
