@@ -34,8 +34,6 @@ import static com.marklogic.developer.corb.Monitor.getProgressMessage;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.assertNotContainsLogRecord;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 
