@@ -1888,7 +1888,7 @@ class ManagerTest {
 
     @Test
     void testScheduleJobMetricsWhenIntervalNotConfigured() throws Exception {
-        try (Manager manager = new Manager()) {
+        try (Manager manager = getMockManagerWithEmptyResults()) {
             manager.init(null, getDefaultProperties());
             JobStats jobStats = mock(JobStats.class);
             manager.jobStats = jobStats;
@@ -1896,7 +1896,7 @@ class ManagerTest {
             manager.scheduleJobMetrics();
             Thread.sleep(100);
             verify(jobStats, never()).logMetrics(anyString(), anyBoolean(), anyBoolean());
-        } catch (CorbException ex) {
+        } catch (RequestException | CorbException ex) {
             fail();
         }
     }
@@ -1904,7 +1904,7 @@ class ManagerTest {
     @Test
     void testScheduleCommandFileWatcherWithCommandFile() throws Exception {
         File commandFile = ManagerTest.createTempFile(Collections.singletonList(""));
-        try (Manager manager = new Manager()) {
+        try (Manager manager = getMockManagerWithEmptyResults()) {
             Properties props = getDefaultProperties();
             props.setProperty(Options.COMMAND_FILE, commandFile.getAbsolutePath());
             manager.init(null, props);
@@ -1913,7 +1913,7 @@ class ManagerTest {
             Thread.sleep(200);
             // Verify the scheduled executor has tasks (no exception = schedule succeeded)
             assertFalse(manager.scheduledExecutor.isShutdown());
-        } catch (CorbException ex) {
+        } catch (RequestException | CorbException ex) {
             fail();
         } finally {
             commandFile.delete();
@@ -1973,22 +1973,20 @@ class ManagerTest {
 
     @Test
     void testRunInitTaskWhenInitTaskIsNull() throws Exception {
-        TaskFactory taskFactory = mock(TaskFactory.class);
-        when(taskFactory.newInitTask()).thenReturn(null);
         JobStats jobStats = mock(JobStats.class);
-        try (Manager manager = new Manager()) {
-            manager.jobStats = jobStats;
+        try (Manager manager = getMockManagerWithEmptyResults()) {
             manager.init(null, getDefaultProperties());
-            // No exception expected; init task run time should not be set
+            manager.jobStats = jobStats;
+            // init() does not invoke runInitTask — only populateQueue() does
             verify(jobStats, never()).setInitTaskRunTime(anyLong());
-        } catch (CorbException ex) {
+        } catch (RequestException | CorbException ex) {
             fail();
         }
     }
 
     @Test
     void testStartAndStopJobServer() throws Exception {
-        try (Manager manager = new Manager()) {
+        try (Manager manager = getMockManagerWithEmptyResults()) {
             Properties props = getDefaultProperties();
             props.setProperty(Options.JOB_SERVER_PORT, "0"); // port 0 = OS picks a free port
             manager.init(null, props);
@@ -2003,14 +2001,14 @@ class ManagerTest {
             stopMethod.setAccessible(true);
             stopMethod.invoke(manager);
             assertNull(manager.getJobServer());
-        } catch (CorbException ex) {
+        } catch (RequestException | CorbException ex) {
             fail();
         }
     }
 
     @Test
     void testStartJobServerIdempotent() throws Exception {
-        try (Manager manager = new Manager()) {
+        try (Manager manager = getMockManagerWithEmptyResults()) {
             Properties props = getDefaultProperties();
             props.setProperty(Options.JOB_SERVER_PORT, "0");
             manager.init(null, props);
@@ -2027,7 +2025,7 @@ class ManagerTest {
             java.lang.reflect.Method stopMethod = Manager.class.getDeclaredMethod("stopJobServer");
             stopMethod.setAccessible(true);
             stopMethod.invoke(manager);
-        } catch (CorbException ex) {
+        } catch (RequestException | CorbException ex) {
             fail();
         }
     }
