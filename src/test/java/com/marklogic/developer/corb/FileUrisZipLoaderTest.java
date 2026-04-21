@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2023 MarkLogic Corporation
+  * * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -33,25 +33,25 @@ import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
-import org.junit.After;
-import org.junit.Test;
 
-import static org.junit.Assert.*;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class FileUrisZipLoaderTest {
+class FileUrisZipLoaderTest {
 
     private static final Logger LOG = Logger.getLogger(FileUrisZipLoaderTest.class.getName());
     public static final String TEST_ZIP_FILE = "src/test/resources/loader.zip";
     public static final Path TEST_ZIP_FILE_PATH = Paths.get(TEST_ZIP_FILE);
     public static final String PDF_COMMENT = "Portable Document Format Entry";
 
-    @Before
-    public void setUp() {
+    @BeforeAll
+    static void setUp() {
         try {
             Files.deleteIfExists(TEST_ZIP_FILE_PATH);
             pack(FileUrisDirectoryLoaderTest.TEST_DIR, TEST_ZIP_FILE);
@@ -61,13 +61,13 @@ public class FileUrisZipLoaderTest {
         }
     }
 
-    @After
-    public void tearDown() throws IOException {
+    @AfterAll
+    static void tearDown() throws IOException {
         Files.deleteIfExists(TEST_ZIP_FILE_PATH);
     }
 
     @Test
-    public void testOpen() {
+    void testOpen() {
         List<String> nodes;
         try (FileUrisZipLoader instance = getDefaultFileUrisZipLoader()) {
             instance.open();
@@ -88,31 +88,33 @@ public class FileUrisZipLoaderTest {
         }
     }
 
-    @Test(expected = CorbException.class)
-    public void testOpenNotZip() throws CorbException {
+    @Test
+    void testOpenNotZip() {
         try (FileUrisZipLoader instance = getDefaultFileUrisZipLoader()) {
             instance.properties.setProperty(Options.ZIP_FILE, TEST_ZIP_FILE + ".notZip");
-            instance.open();
+            assertThrows(CorbException.class, instance::open);
         }
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void testGetMetadataWithFile() {
-        FileUrisZipLoader loader = new FileUrisZipLoader();
-        loader.getMetadata(new File(TEST_ZIP_FILE));
+    @Test
+    void testGetMetadataWithFile() {
+        try (FileUrisZipLoader loader = new FileUrisZipLoader()) {
+            assertThrows(UnsupportedOperationException.class, () -> loader.getMetadata(new File(TEST_ZIP_FILE)));
+        }
     }
 
     @Test
-    public void testGetMetadataForPDF() {
+    void testGetMetadataForPDF() {
         String pdfFilename = "docs/simple document.pdf";
-        FileUrisZipLoader loader = new FileUrisZipLoader();
-        try (ZipFile zipFile = new ZipFile(TEST_ZIP_FILE)) {
-            Map<String, String> metadata = loader.getMetadata(zipFile.getEntry(pdfFilename.replace("/", File.separator)));
-            assertTrue(PDF_COMMENT.equals(metadata.get(FileUrisZipLoader.META_COMMENT)));
-            assertEquals(pdfFilename.replace("/", File.separator), metadata.get(FileUrisZipLoader.META_FILENAME));
-        } catch (IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
+        try (FileUrisZipLoader loader = new FileUrisZipLoader()) {
+            try (ZipFile zipFile = new ZipFile(TEST_ZIP_FILE)) {
+                Map<String, String> metadata = loader.getMetadata(zipFile.getEntry(pdfFilename.replace("/", File.separator)));
+                assertEquals(PDF_COMMENT, metadata.get(FileUrisZipLoader.META_COMMENT));
+                assertEquals(pdfFilename.replace("/", File.separator), metadata.get(FileUrisZipLoader.META_FILENAME));
+            } catch (IOException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                fail();
+            }
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2023 MarkLogic Corporation
+ * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,28 +22,28 @@ import com.marklogic.developer.TestHandler;
 import static com.marklogic.developer.corb.Options.PRIVATE_KEY_FILE;
 import static com.marklogic.developer.corb.PrivateKeyDecrypter.ENCRYPT_USAGE;
 import static com.marklogic.developer.corb.PrivateKeyDecrypter.GEN_KEYS_USAGE;
-import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import static com.marklogic.developer.corb.TestUtils.assertEqualsNormalizeNewline;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
+import static com.marklogic.developer.corb.TestUtils.assertFirstLogRecord;
+import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
+
+import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class PrivateKeyDecrypterTest {
+class PrivateKeyDecrypterTest {
 
     private final TestHandler testLogger = new TestHandler();
     private static final Logger LOG = Logger.getLogger(PrivateKeyDecrypter.class.getName());
@@ -61,36 +61,34 @@ public class PrivateKeyDecrypterTest {
     private static final String USAGE = GEN_KEYS_USAGE + NEWLINE + ENCRYPT_USAGE + NEWLINE;
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
     private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
-    private PrintStream systemOut = System.out;
-    private PrintStream systemErr = System.err;
+    private static final PrintStream systemOut = System.out;
+    private static final PrintStream systemErr = System.err;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() throws UnsupportedEncodingException {
         clearSystemProperties();
         LOG.addHandler(testLogger);
-        System.setOut(new PrintStream(outContent));
-        System.setErr(new PrintStream(errContent));
+        System.setOut(new PrintStream(outContent, true, StandardCharsets.UTF_8.name()));
+        System.setErr(new PrintStream(errContent, true, StandardCharsets.UTF_8.name()));
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         clearSystemProperties();
         System.setOut(systemOut);
         System.setErr(systemErr);
     }
 
-    private void setSystemProperties() {
+    private static void setSystemProperties() {
         System.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_PATH);
     }
 
     @Test
-    public void testInitDecrypterInitNotInvoked() {
+    void testInitDecrypterInitNotInvoked() {
         try {
             PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
             instance.init_decrypter();
-            List<LogRecord> records = testLogger.getLogRecords();
-            assertEquals(Level.SEVERE, records.get(0).getLevel());
-            assertEquals(PRIVATE_KEY_FILE + " property must be defined", records.get(0).getMessage());
+            assertFirstLogRecord(testLogger, Level.SEVERE, PRIVATE_KEY_FILE + " property must be defined");
         } catch (IOException | ClassNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -98,7 +96,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testInitDecrypterMissingPrivateKeyFile() {
+    void testInitDecrypterMissingPrivateKeyFile() {
         try {
             clearSystemProperties();
             PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
@@ -107,9 +105,7 @@ public class PrivateKeyDecrypterTest {
             testLogger.clear();
 
             instance.init_decrypter();
-            List<LogRecord> records = testLogger.getLogRecords();
-            assertEquals(Level.SEVERE, records.get(0).getLevel());
-            assertEquals(LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY, records.get(0).getMessage());
+            assertFirstLogRecord(testLogger, Level.SEVERE, LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY);
         } catch (IOException | ClassNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -117,7 +113,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testInitDecrypterWithAlgorithm() {
+    void testInitDecrypterWithAlgorithm() {
         try {
             clearSystemProperties();
             PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
@@ -128,9 +124,7 @@ public class PrivateKeyDecrypterTest {
 
             instance.init_decrypter();
 
-            List<LogRecord> records = testLogger.getLogRecords();
-            assertEquals(Level.SEVERE, records.get(0).getLevel());
-            assertEquals(LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY, records.get(0).getMessage());
+            assertFirstLogRecord(testLogger, Level.SEVERE, LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY);
         } catch (IOException | ClassNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -138,7 +132,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testInitDecrypterWithEmptyPrivateKeyPath() {
+    void testInitDecrypterWithEmptyPrivateKeyPath() {
         try {
             clearSystemProperties();
             PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
@@ -149,9 +143,7 @@ public class PrivateKeyDecrypterTest {
 
             instance.init_decrypter();
 
-            List<LogRecord> records = testLogger.getLogRecords();
-            assertEquals(Level.SEVERE, records.get(0).getLevel());
-            assertEquals(LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY, records.get(0).getMessage());
+            assertFirstLogRecord(testLogger, Level.SEVERE, LOG_MSG_INVALID_PRIVATE_KEY_FILE_PROPERTY);
         } catch (IOException | ClassNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -159,7 +151,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testInitDecrypterWithDirectoryAsPrivateKeyPath() {
+    void testInitDecrypterWithDirectoryAsPrivateKeyPath() {
         try {
             clearSystemProperties();
             PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
@@ -170,9 +162,7 @@ public class PrivateKeyDecrypterTest {
 
             instance.init_decrypter();
 
-            List<LogRecord> records = testLogger.getLogRecords();
-            assertEquals(Level.SEVERE, records.get(0).getLevel());
-            assertEquals("Problem initializing PrivateKeyDecrypter", records.get(0).getMessage());
+            assertFirstLogRecord(testLogger, Level.SEVERE, "Problem initializing PrivateKeyDecrypter");
         } catch (IOException | ClassNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -180,7 +170,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testInitDecrypterWithInvalidPrivateKeyPath() {
+    void testInitDecrypterWithInvalidPrivateKeyPath() {
         try {
             clearSystemProperties();
             PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
@@ -191,9 +181,7 @@ public class PrivateKeyDecrypterTest {
 
             instance.init_decrypter();
 
-            List<LogRecord> records = testLogger.getLogRecords();
-            assertEquals(Level.SEVERE, records.get(0).getLevel());
-            assertEquals("Problem initializing PrivateKeyDecrypter", records.get(0).getMessage());
+            assertFirstLogRecord(testLogger, Level.SEVERE, "Problem initializing PrivateKeyDecrypter");
         } catch (IOException | ClassNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -201,7 +189,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testInitDecrypterLoadPrivateKeyFromClasspath() {
+    void testInitDecrypterLoadPrivateKeyFromClasspath() {
         try {
             clearSystemProperties();
             PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
@@ -226,7 +214,7 @@ public class PrivateKeyDecrypterTest {
      * Test of doDecrypt method, of class PrivateKeyDecrypter.
      */
     @Test
-    public void testDoDecryptWithoutPrivateKey() {
+    void testDoDecryptWithoutPrivateKey() {
         String property = "key";
         String value = "value";
         PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
@@ -235,7 +223,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testDoDecryptWithPrivateKey() {
+    void testDoDecryptWithPrivateKey() {
         try {
             PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
             instance.init(null);
@@ -250,7 +238,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testDoDecryptValueWithDashes() {
+    void testDoDecryptValueWithDashes() {
         try {
             String value = "unencrypted-value-with-dashes";
             PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
@@ -266,7 +254,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testDoDecryptValueForLocalhost() {
+    void testDoDecryptValueForLocalhost() {
         try {
             String value = "localhost";
             PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
@@ -281,7 +269,7 @@ public class PrivateKeyDecrypterTest {
         }
     }
     @Test
-    public void testDoDecryptUnencryptedValue() {
+    void testDoDecryptUnencryptedValue() {
         try {
             String value = SECRET;
             PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
@@ -300,25 +288,25 @@ public class PrivateKeyDecrypterTest {
      * Test of main method, of class PrivateKeyDecrypter.
      */
     @Test
-    public void testMainGenKeysNoOptions() {
+    void testMainGenKeysNoOptions() {
         try {
             String[] args = {ACTION_GEN_KEYS};
             PrivateKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(GEN_KEYS_USAGE + NEWLINE, errContent.toString());
+            assertEqualsNormalizeNewline(GEN_KEYS_USAGE + NEWLINE, errContent.toString(StandardCharsets.UTF_8.toString()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
 
-    private File createTempFile() throws IOException {
+    private static File createTempFile() throws IOException {
         File temp = File.createTempFile("pub", "pem");
         temp.deleteOnExit();
         return temp;
     }
 
     @Test
-    public void testMainGenKeys() {
+    void testMainGenKeys() {
         try {
             File tempPublic = createTempFile();
             File tempPrivate = createTempFile();
@@ -333,7 +321,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMainGenKeysEmptyPrivateKeyPath() {
+    void testMainGenKeysEmptyPrivateKeyPath() {
         try {
             File tempPublic = createTempFile();
             File tempPrivate = createTempFile();
@@ -350,7 +338,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMainGenKeysEmptyPublicKeyPath() {
+    void testMainGenKeysEmptyPublicKeyPath() {
         try {
             File tempPublic = createTempFile();
             File tempPrivate = createTempFile();
@@ -367,7 +355,7 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMainGenKeysEmptyArgValues() {
+    void testMainGenKeysEmptyArgValues() {
         try {
             File tempPublic = createTempFile();
             File tempPrivate = createTempFile();
@@ -384,11 +372,11 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMainEncrypt() {
+    void testMainEncrypt() {
         try {
             String[] args = {ACTION_ENCRYPT};
             PrivateKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString());
+            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -396,41 +384,39 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMainEncryptAllParameters() {
+    void testMainEncryptAllParameters() {
         try {
             String[] args = {ACTION_ENCRYPT, PUBLIC_KEY_PATH, SECRET, ALGORITHM};
             setSystemProperties();
             PrivateKeyDecrypter.main(args);
-            assertTrue(outContent.toString().startsWith("Input: " + SECRET + "\nOutput: "));
+            assertTrue(outContent.toString(StandardCharsets.UTF_8.name()).startsWith("Input: " + SECRET + "\nOutput: "));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
 
-    @Test(expected = NoSuchAlgorithmException.class)
-    public void testMainEncryptInvalidAlgorithm() throws Exception {
+    @Test
+    void testMainEncryptInvalidAlgorithm() {
         String[] args = {ACTION_ENCRYPT, PUBLIC_KEY_PATH, SECRET, "badAlgorithm"};
         setSystemProperties();
-        PrivateKeyDecrypter.main(args);
-        fail();
-    }
-
-    @Test(expected = InvalidKeySpecException.class)
-    public void testMainEncryptInvalidPublicKey() throws Exception {
-        String[] args = {ACTION_ENCRYPT, PRIVATE_KEY_PATH, SECRET, ALGORITHM};
-        setSystemProperties();
-        PrivateKeyDecrypter.main(args);
-        fail();
+        assertThrows(NoSuchAlgorithmException.class, () -> PrivateKeyDecrypter.main(args));
     }
 
     @Test
-    public void testMainEncryptBlankValue() {
+    void testMainEncryptInvalidPublicKey() {
+        String[] args = {ACTION_ENCRYPT, PRIVATE_KEY_PATH, SECRET, ALGORITHM};
+        setSystemProperties();
+        assertThrows(InvalidKeySpecException.class, () -> PrivateKeyDecrypter.main(args));
+    }
+
+    @Test
+    void testMainEncryptBlankValue() {
         try {
             String[] args = {ACTION_ENCRYPT, PRIVATE_KEY_PATH, "", ALGORITHM};
             setSystemProperties();
             PrivateKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString());
+            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -438,12 +424,12 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMainEncryptNullKey() {
+    void testMainEncryptNullKey() {
         try {
             String[] args = {ACTION_ENCRYPT, "", SECRET, ALGORITHM};
             setSystemProperties();
             PrivateKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString());
+            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -451,11 +437,11 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMainInvalidFirstArg() {
+    void testMainInvalidFirstArg() {
         try {
             String[] args = {"invalidUsage"};
             PrivateKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(USAGE, outContent.toString());
+            assertEqualsNormalizeNewline(USAGE, outContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -463,11 +449,11 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMainWithNullArgs() {
+    void testMainWithNullArgs() {
         try {
             String[] args = null;
             PrivateKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(USAGE, outContent.toString());
+            assertEqualsNormalizeNewline(USAGE, outContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -475,11 +461,11 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMainEmptyArgsArray() {
+    void testMainEmptyArgsArray() {
         try {
             String[] args = {};
             PrivateKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(USAGE, outContent.toString());
+            assertEqualsNormalizeNewline(USAGE, outContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -487,11 +473,11 @@ public class PrivateKeyDecrypterTest {
     }
 
     @Test
-    public void testMainBlankArgsArray() {
+    void testMainBlankArgsArray() {
         try {
             String[] args = {ACTION_ENCRYPT, "", "", ""};
             PrivateKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString());
+            assertEqualsNormalizeNewline(ENCRYPT_USAGE + NEWLINE, errContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

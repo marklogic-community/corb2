@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2023 MarkLogic Corporation
+  * * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -25,25 +25,25 @@ import static com.marklogic.developer.corb.FileUrisStreamingXMLLoaderTest.BUU_DI
 import static com.marklogic.developer.corb.FileUrisStreamingXMLLoaderTest.BUU_FILENAME;
 import static com.marklogic.developer.corb.FileUrisStreamingXMLLoaderTest.BUU_SCHEMA;
 import static com.marklogic.developer.corb.FileUrisStreamingXMLLoaderTest.NOT_BUU_SCHEMA;
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.marklogic.developer.corb.util.FileUtils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Properties;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.After;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.Before;
+
+import org.junit.jupiter.api.*;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class FileUrisStreamingXMLLoaderIT {
+class FileUrisStreamingXMLLoaderIT {
 
     private static final String STREAMING_XML_LOADER = "com.marklogic.developer.corb.FileUrisStreamingXMLLoader";
     private static final String LARGE_PREFIX = "LARGE.";
@@ -52,16 +52,16 @@ public class FileUrisStreamingXMLLoaderIT {
     private String exportFileDir;
     private static final Logger LOG = Logger.getLogger(FileUrisStreamingXMLLoaderIT.class.getName());
 
-    @Before
-    public void setUp() throws IOException {
+    @BeforeEach
+    void setUp() throws IOException {
         clearSystemProperties();
         File tempDir = TestUtils.createTempDirectory();
         exportFileDir = tempDir.toString();
         generateLargeInput(LARGE_COPIES_OF_BEM);
     }
 
-    @After
-    public void tearDown() throws IOException {
+    @AfterEach
+    void tearDown() throws IOException {
         clearSystemProperties();
         FileUtils.deleteFile(exportFileDir);
         File largeFile = new File(BUU_DIR + LARGE_BUU_FILENAME);
@@ -71,7 +71,7 @@ public class FileUrisStreamingXMLLoaderIT {
     }
 
     @Test
-    public void testInvalidLarge() {
+    void testInvalidLarge() {
         Properties properties = getBUUProperties();
         properties.setProperty(Options.XML_SCHEMA, BUU_DIR + NOT_BUU_SCHEMA);
         try {
@@ -83,7 +83,7 @@ public class FileUrisStreamingXMLLoaderIT {
     }
 
     @Test
-    public void testStreamingXMLUrisLoaderWithDefaultXPath() {
+    void testStreamingXMLUrisLoaderWithDefaultXPath() {
         try {
             int result = testStreamingXMLUrisLoader(BUU_FILENAME, getBUUProperties());
             assertEquals(6, result);
@@ -94,7 +94,7 @@ public class FileUrisStreamingXMLLoaderIT {
     }
 
     @Test
-    public void testStreamingXMLUrisLoaderWithXPath() {
+    void testStreamingXMLUrisLoaderWithXPath() {
         try {
             Properties properties = getBUUPropertiesWithXPath();
             properties.put("LAST_LINE", "NA");
@@ -111,7 +111,7 @@ public class FileUrisStreamingXMLLoaderIT {
     }
 
     @Test
-    public void testStreamingXMLUrisLoaderWithLargeInput() {
+    void testStreamingXMLUrisLoaderWithLargeInput() {
         int expected = LARGE_COPIES_OF_BEM + 1;
         Properties properties = getBUUProperties();
         properties.setProperty(Options.XML_FILE, BUU_DIR + LARGE_BUU_FILENAME);
@@ -138,8 +138,9 @@ public class FileUrisStreamingXMLLoaderIT {
             lineCount = FileUtils.getLineCount(report);
 
             if (properties.containsKey("LAST_LINE")) {
-                BufferedReader input = new BufferedReader(new FileReader(report));
-                String last=null, line = null;
+                BufferedReader input = new BufferedReader(new InputStreamReader(Files.newInputStream(report.toPath()), StandardCharsets.UTF_8));
+                String last = null;
+                String line;
                 while ((line = input.readLine()) != null) {
                     last = line;
                 }
@@ -227,7 +228,7 @@ public class FileUrisStreamingXMLLoaderIT {
         properties.setProperty(Options.THREAD_COUNT, Integer.toString(10));
         properties.setProperty(Options.LOADER_SET_URIS_BATCH_REF, Boolean.toString(true));
 
-        String batchId = System.currentTimeMillis()+String.format("%06d", (int)(Math.random()*1000000));
+        String batchId = System.currentTimeMillis()+String.format("%06d", new Random().nextInt());
         properties.setProperty(Options.PRE_BATCH_MODULE+".BATCH_ID", batchId);
         properties.setProperty(Options.PROCESS_MODULE+".BATCH_ID", batchId);
         properties.setProperty(Options.POST_BATCH_MODULE+".BATCH_ID", batchId);

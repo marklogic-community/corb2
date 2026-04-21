@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2023 MarkLogic Corporation
+ * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,36 +19,30 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.corb.util.FileUtils;
+import com.marklogic.developer.corb.util.XmlUtils;
 import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.types.XdmItem;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import org.xml.sax.SAXParseException;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class SchemaValidateBatchToFileTaskTest {
+class SchemaValidateBatchToFileTaskTest {
 
     @Test
-    public void processResultValid() {
+    void processResultValid() {
         try {
             String xmlFile = "src/test/resources/streamingXMLUrisLoader/EDI.ICF15T.D150217.T113100716.T";
             String schemaFile = "src/test/resources/streamingXMLUrisLoader/BenefitEnrollment.xsd";
@@ -66,7 +60,7 @@ public class SchemaValidateBatchToFileTaskTest {
     }
 
     @Test
-    public void processResultInvalid() {
+    void processResultInvalid() {
         try {
             String xmlFile = "src/test/resources/xml-file.xml";
             String schemaFile = "src/test/resources/streamingXMLUrisLoader/BenefitEnrollment.xsd";
@@ -83,8 +77,8 @@ public class SchemaValidateBatchToFileTaskTest {
         }
     }
 
-    @Test (expected = CorbException.class)
-    public void processResultInputNotXml() throws CorbException {
+    @Test
+    void processResultInputNotXml() {
         try {
             String xmlFile = "src/test/resources/test-file-1.txt";
             String schemaFile = "src/test/resources/streamingXMLUrisLoader/BenefitEnrollment.xsd";
@@ -92,16 +86,14 @@ public class SchemaValidateBatchToFileTaskTest {
             outputFile.deleteOnExit();
 
             SchemaValidateBatchToFileTask validateTask = createSchemaValidateTask(schemaFile, outputFile);
-            validateTask.processResult(singleFileSequence(xmlFile));
-
-            fail();
+            assertThrows(CorbException.class, () -> validateTask.processResult(singleFileSequence(xmlFile)));
         } catch (IOException ex) {
             fail();
         }
     }
 
-    @Test (expected = CorbException.class)
-    public void processResultWithException() throws CorbException {
+    @Test
+    void processResultWithException() {
 
         ResultSequence sequence = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
@@ -115,11 +107,11 @@ public class SchemaValidateBatchToFileTaskTest {
         when(outputFile.getAbsolutePath()).thenReturn("/tmp/foo.xml");
         SchemaValidateBatchToFileTask validate = createSchemaValidateTask(schemaFile, outputFile);
 
-        validate.processResult(sequence);
+        assertThrows(CorbException.class, () -> validate.processResult(sequence));
     }
 
     @Test
-    public void getSchemaFile() {
+    void getSchemaFile() {
         Properties properties = new Properties();
         properties.setProperty(Options.XML_SCHEMA, "src/test/resources/streamingXMLUrisLoader/BenefitEnrollment.xsd");
         SchemaValidateBatchToFileTask validate = new SchemaValidateBatchToFileTask();
@@ -128,14 +120,14 @@ public class SchemaValidateBatchToFileTaskTest {
         assertTrue(schema.exists());
     }
 
-    @Test(expected = NullPointerException.class)
-    public void getSchemaFileMissing() {
+    @Test
+    void getSchemaFileMissing() {
         SchemaValidateBatchToFileTask validate = new SchemaValidateBatchToFileTask();
-        validate.getSchemaFile();
+        assertThrows(IllegalArgumentException.class, validate::getSchemaFile);
     }
 
     @Test
-    public void writeSchemaValidationReportWithNoExceptions() {
+    void writeSchemaValidationReportWithNoExceptions() {
         StringWriter writer = new StringWriter();
         SchemaValidateBatchToFileTask validate = new SchemaValidateBatchToFileTask();
         validate.inputUris = new String[]{"foo"};
@@ -149,9 +141,9 @@ public class SchemaValidateBatchToFileTaskTest {
     }
 
     @Test
-    public void writeParseException() {
+    void writeParseException() {
         Writer stringWriter = new StringWriter();
-        XMLOutputFactory output = XMLOutputFactory.newInstance();
+        XMLOutputFactory output = XmlUtils.newSecureXMLOutputFactoruInstance();
         SchemaValidateBatchToFileTask validate = new SchemaValidateBatchToFileTask();
         try {
             XMLStreamWriter xmlWriter = output.createXMLStreamWriter(stringWriter);
@@ -163,12 +155,12 @@ public class SchemaValidateBatchToFileTaskTest {
         }
     }
 
-    public static ResultSequence singleFileSequence(String testFile) throws FileNotFoundException {
+    static ResultSequence singleFileSequence(String testFile) throws FileNotFoundException {
         File file = new File(testFile);
         return singleFileSequence(file);
     }
 
-    public static ResultSequence singleFileSequence(File testFile) throws FileNotFoundException {
+    static ResultSequence singleFileSequence(File testFile) throws FileNotFoundException {
         ResultSequence sequence = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         XdmItem xdmItem = mock(XdmItem.class);
@@ -182,7 +174,7 @@ public class SchemaValidateBatchToFileTaskTest {
         return sequence;
     }
 
-    public static SchemaValidateBatchToFileTask createSchemaValidateTask(String schemaFileName, File outputFile ) {
+    static SchemaValidateBatchToFileTask createSchemaValidateTask(String schemaFileName, File outputFile ) {
 
         Properties properties = new Properties();
         properties.setProperty(Options.EXPORT_FILE_NAME, outputFile.getAbsolutePath());

@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2017 MarkLogic Corporation
+  * * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -28,10 +28,52 @@ import java.util.Properties;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 
 /**
- * Options that allow users to configure CoRB and control various aspects of execution.
+ * Central repository of all configuration options for CoRB (Content Reprocessing in Bulk).
+ * <p>
+ * This class defines constants for all supported CoRB configuration options. Options can be
+ * specified in multiple ways, with the following precedence (highest to lowest):
+ * </p>
+ * <ol>
+ * <li>System properties (-DOPTION-NAME=value)</li>
+ * <li>Properties file specified via {@link #OPTIONS_FILE}</li>
+ * <li>Command-line arguments (positional)</li>
+ * <li>Default values (where applicable)</li>
+ * </ol>
+ * <p>
+ * Options are organized into several categories:
+ * </p>
+ * <ul>
+ * <li><b>Connection Options:</b> XCC connection configuration ({@link #XCC_CONNECTION_URI}, {@link #XCC_USERNAME}, etc.)</li>
+ * <li><b>Module Options:</b> XQuery/JavaScript modules to execute ({@link #URIS_MODULE}, {@link #PROCESS_MODULE}, etc.)</li>
+ * <li><b>Task Options:</b> Java classes for custom processing ({@link #PROCESS_TASK}, {@link #PRE_BATCH_TASK}, etc.)</li>
+ * <li><b>URI Loading Options:</b> How URIs are loaded ({@link #URIS_FILE}, {@link #URIS_LOADER}, etc.)</li>
+ * <li><b>Execution Options:</b> Thread count, batch size, error handling ({@link #THREAD_COUNT}, {@link #BATCH_SIZE}, {@link #FAIL_ON_ERROR})</li>
+ * <li><b>Export Options:</b> File export configuration ({@link #EXPORT_FILE_NAME}, {@link #EXPORT_FILE_DIR}, etc.)</li>
+ * <li><b>SSL Options:</b> SSL/TLS configuration ({@link #SSL_CONFIG_CLASS}, {@link #SSL_KEYSTORE}, etc.)</li>
+ * <li><b>Metrics Options:</b> Job monitoring and statistics ({@link #METRICS_DATABASE}, {@link #JOB_SERVER_PORT}, etc.)</li>
+ * <li><b>Security Options:</b> Encryption and decryption ({@link #DECRYPTER}, {@link #PRIVATE_KEY_FILE}, etc.)</li>
+ * </ul>
+ * <p>
+ * Property names support flexible formatting:
+ * </p>
+ * <ul>
+ * <li>Kebab-case: {@code PROCESS-MODULE}</li>
+ * <li>Snake_case: {@code PROCESS_MODULE}</li>
+ * <li>Mixed: {@code PROCESS_MODULE} or {@code PROCESS-MODULE}</li>
+ * </ul>
+ * <p>
+ * All formats are normalized when searching for properties via {@link #findOption(Properties, String)}.
+ * </p>
+ * <p>
+ * Each option constant is annotated with {@link Usage} to provide descriptions and examples.
+ * These annotations are used to generate documentation and usage information.
+ * </p>
  *
  * @author Mads Hansen, MarkLogic Corporation
  * @since 2.3.0
+ * @see AbstractManager
+ * @see Manager
+ * @see TransformOptions
  */
 public final class Options {
 
@@ -122,7 +164,7 @@ public final class Options {
      *
      * @since 2.4.0
      */
-    @Usage(description = "Connection policy for allocating connections to tasks while using DefaultConnectionPool. Acceptable values ROUNBD-ROBIN, RANDOM and LOAD. Default is ROUND-ROBIN")
+    @Usage(description = "Connection policy for allocating connections to tasks while using DefaultConnectionPool. Acceptable values ROUND-ROBIN, RANDOM and LOAD. Default is ROUND-ROBIN")
     public static final String CONNECTION_POLICY = "CONNECTION-POLICY";
 
     /**
@@ -190,6 +232,34 @@ public final class Options {
     public static final String DECRYPTER = "DECRYPTER";
 
     /**
+     * The cipher transformation string used by
+     * {@link com.marklogic.developer.corb.HostKeyDecrypter} for encryption and
+     * decryption. The value is passed directly to
+     * {@link javax.crypto.Cipher#getInstance(String)} and may be a simple
+     * algorithm name (e.g., {@code AES}) or a full transformation string in the
+     * form {@code algorithm/mode/padding} (e.g., {@code AES/GCM/NoPadding}).
+     * <p>
+     * The base algorithm (the first segment before any {@code /}) is also used
+     * to construct the {@link javax.crypto.spec.SecretKeySpec}.
+     * </p>
+     * <p>
+     * <b>Important:</b> Changing this value after values have already been
+     * encrypted will prevent those values from being decrypted. Re-encrypt all
+     * values before switching ciphers.
+     * </p>
+     * Default is {@code AES}.
+     *
+     * @since 2.6.0
+     * @see com.marklogic.developer.corb.HostKeyDecrypter
+     * @see #DECRYPTER
+     */
+    @Usage(description = "The cipher transformation used by HostKeyDecrypter for encryption and decryption. "
+            + "Accepts a simple algorithm name (e.g., AES) or a full transformation string "
+            + "(e.g., AES/GCM/NoPadding). Default is AES. "
+            + "Changing this value after values have been encrypted will prevent those values from being decrypted.")
+    public static final String HOST_KEY_DECRYPTER_CIPHER = "HOST-KEY-DECRYPTER-CIPHER";
+
+    /**
      * Boolean value indicating whether the CoRB job should spill to disk when a
      * maximum number of URIs have been loaded in memory, in order to control
      * memory consumption and avoid Out of Memory exceptions for extremely large
@@ -233,6 +303,24 @@ public final class Options {
     public static final String DISK_QUEUE_TEMP_DIR = "DISK-QUEUE-TEMP-DIR";
 
     /**
+     * Boolean flag indicating whether CoRB should persist completion state locally
+     * so a later run can skip already-completed URIs.
+     *
+     * @since 2.6.0
+     */
+    @Usage(description = "Boolean value indicating whether CoRB should persist completion state locally so a later run can skip already-completed URIs. Restartability provides best-effort at-least-once resume semantics.")
+    public static final String RESTARTABLE = "RESTARTABLE";
+
+    /**
+     * Directory where restart state files are stored when {@value #RESTARTABLE}
+     * is enabled.
+     *
+     * @since 2.6.0
+     */
+    @Usage(description = "Directory where restart state files are stored when RESTARTABLE is enabled. If not specified, TEMP-DIR is used, and if TEMP-DIR is also not specified then java.io.tmpdir is used. CoRB stores restart files beneath a job-scoped subdirectory derived from JOB-NAME when available, otherwise from a hash of job options. The directory will be created if it does not exist.")
+    public static final String RESTART_STATE_DIR = "RESTART-STATE-DIR";
+
+    /**
      * Used when {@value #FAIL_ON_ERROR} is {@code false}. If specified true,
      * removes duplicates from, the errored URIs along with error messages will
      * be written to this file. Uses {@value #BATCH_URI_DELIM} or default
@@ -262,7 +350,9 @@ public final class Options {
      * compresses the output file as a zip file.
      */
     @Usage(description = "If true, PostBatchUpdateFileTask compresses the output file as a zip file.")
-    public static final String EXPORT_FILE_AS_ZIP = "EXPORT_FILE_AS_ZIP";
+    public static final String EXPORT_FILE_AS_ZIP = "EXPORT-FILE-AS-ZIP";
+    /** Legacy underscore-delimited spelling retained for backwards compatibility. */
+    protected static final String EXPORT_FILE_AS_ZIP_LEGACY = "EXPORT_FILE_AS_ZIP";
 
     /**
      * Used by {@link com.marklogic.developer.corb.PostBatchUpdateFileTask} to
@@ -397,6 +487,61 @@ public final class Options {
     public static final String EXPORT_FILE_URI_TO_PATH = "EXPORT-FILE-URI-TO-PATH";
 
     /**
+     * Maximum number of lines to write to a single export file before splitting
+     * to a new file. When this threshold is exceeded, a new file will be created
+     * with a numeric suffix (e.g., myfile.txt, myfile1.txt, myfile2.txt).
+     * If not specified, no line-based splitting will occur.
+     * This option is mutually exclusive with {@value #EXPORT_FILE_SPLIT_MAX_SIZE}.
+     * If both are specified, line count takes precedence.
+     *
+     * @since 2.6.0
+     */
+    @Usage(description = "Maximum number of lines to write to a single export file before splitting " +
+            "to a new file. When this threshold is exceeded, a new file will be created " +
+            "with a numeric suffix (e.g., myfile.txt, myfile1.txt, myfile2.txt). " +
+            "If not specified, no line-based splitting will occur.")
+    public static final String EXPORT_FILE_SPLIT_MAX_LINES = "EXPORT-FILE-SPLIT-MAX-LINES";
+
+    /**
+     * Maximum file size for a single export file before splitting to a new file.
+     * When this threshold is exceeded, a new file will be created with a numeric
+     * suffix (e.g., myfile.txt, myfile1.txt, myfile2.txt).
+     * <p>
+     * The size value can be specified as:
+     * </p>
+     * <ul>
+     * <li>A plain number (interpreted as bytes): {@code 1048576}</li>
+     * <li>With size units (case-insensitive):
+     *   <ul>
+     *   <li>{@code B} - Bytes: {@code 1024B}</li>
+     *   <li>{@code K}, {@code KB}, {@code KiB} - Kilobytes: {@code 10KB}</li>
+     *   <li>{@code M}, {@code MB}, {@code MiB} - Megabytes: {@code 100MB}</li>
+     *   <li>{@code G}, {@code GB}, {@code GiB} - Gigabytes: {@code 5GB}</li>
+     *   <li>{@code T}, {@code TB}, {@code TiB} - Terabytes: {@code 1TB}</li>
+     *   </ul>
+     * </li>
+     * </ul>
+     * <p>
+     * If not specified, no size-based splitting will occur.
+     * This option is mutually exclusive with {@value #EXPORT_FILE_SPLIT_MAX_LINES}.
+     * If both are specified, line count takes precedence.
+     * </p>
+     * <p>
+     * Examples: {@code 1048576}, {@code 1MB}, {@code 100 KB}, {@code 5.5 GB}
+     * </p>
+     *
+     * @since 2.6.0
+     * @see com.marklogic.developer.corb.util.NumberUtils#parseSize(String)
+     */
+    @Usage(description = "Maximum file size for a single export file before splitting " +
+            "to a new file. When this threshold is exceeded, a new file will be created " +
+            "with a numeric suffix (e.g., myfile.txt, myfile1.txt, myfile2.txt). " +
+            "Value can be specified as a number in bytes or with size units (B, KB, MB, GB, TB). " +
+            "Examples: 1048576, 1MB, 100 KB, 5.5 GB. " +
+            "If not specified, no size-based splitting will occur.")
+    public static final String EXPORT_FILE_SPLIT_MAX_SIZE = "EXPORT-FILE-SPLIT-MAX-SIZE";
+
+    /**
      * Boolean value indicating whether the CoRB job should fail and exit if a
      * process module throws an error.
      * <p>
@@ -528,13 +673,38 @@ public final class Options {
      * (optional) Property file for the
      * {@link com.marklogic.developer.corb.JasyptDecrypter}.
      * <p>
-     * If not specified, it uses default jasypt.proeprties file, which should be
+     * If not specified, it uses default jasypt.properties file, which should be
      * accessible in the classpath or file system.
+     * @since 2.1.0
      */
     @Usage(description = "(optional) Property file for the JasyptDecrypter. "
-            + "If not specified, it uses default jasypt.proeprties file, "
+            + "If not specified, it uses default jasypt.properties file, "
             + "which should be accessible in the classpath or file system.")
     public static final String JASYPT_PROPERTIES_FILE = "JASYPT-PROPERTIES-FILE";
+
+    /**
+     * (Optional) Encrypter class to decrypt encrypted credentials or connection strings that were
+     * encrypted using the jasypt api.
+     * Refer to {@link com.marklogic.developer.corb.JasyptDecrypter}.
+     * If not specified, it uses default org.jasypt.encryption.pbe.StandardPBEStringEncryptor
+     *
+     * @since 2.6.0
+     */
+    @Usage(description = "(Optional) Default is org.jasypt.encryption.pbe.StandardPBEStringEncryptor." +
+        "Jasypt encrypter class used to decrypt credentials as strings.")
+    public static final String JASYPT_STRING_ENCRYPTER = "JASYPT-STRING-ENCRYPTER";
+
+    /**
+     * (Optional) Initialization vector generator class name for jasypt v1.9.3 or above for
+     * {@link com.marklogic.developer.corb.JasyptDecrypter} that implements org.jasypt.iv.IvGenerator interface.
+     * e.g. org.jasypt.iv.RandomIvGenerator, "org.jasypt.iv.StringFixedIvGenerator,charset" etc.
+     * Refer to <a href="http://www.jasypt.org/">jasypt documentation</a> for details.
+     *
+     * @since 2.6.0
+     */
+    @Usage(description = "(Optional) Supported since Jasypt v1.9.3. Initialization " +
+        "vector generator for encryption operations.")
+    public static final String JASYPT_IV_GENERATOR = "JASYPT-IV-GENERATOR";
 
     /**
      * Default is 10. Max number of custom inputs from the {@value #URIS_MODULE}
@@ -626,6 +796,8 @@ public final class Options {
     /**
      * Maximum number of Slow transaction to be logged in the metrics.
      * Default is `0`.
+     *
+     * @since 2.4.0
      */
     @Usage(description = "Maximum number of slow transaction to be logged in the metrics. Default is 0.")
     public static final String METRICS_NUM_SLOW_TRANSACTIONS = "METRICS-NUM-SLOW-TRANSACTIONS";
@@ -644,8 +816,9 @@ public final class Options {
      * Frequency (in seconds) at which the Metrics document needs to be updated in the database.
      * By Default the metrics document is not periodically updated and is written once at the end of the job.
      * If {@value #METRICS_DATABASE} is not specified then {@value #METRICS_SYNC_FREQUENCY} is ignored.
+     *
+     * @since 2.4.0
      */
-
     @Usage(description = "Frequency ( in seconds) at which the Metrics document needs to be updated in the Database. This value is ignored if METRICS-DB-NAME is not specified")
     public static final String METRICS_SYNC_FREQUENCY = "METRICS-SYNC-FREQUENCY";
 
@@ -672,6 +845,8 @@ public final class Options {
     /**
      * Default is 10. Max number of recent tps (transaction per second) values
      * used to calculate ETC (estimated time to completion)
+     *
+     * @since 2.3.2
      */
     @Usage(description = "Default is 10. Max number of recent tps values used to calculate ETC")
     public static final String NUM_TPS_FOR_ETC = "NUM-TPS-FOR-ETC";
@@ -1190,45 +1365,45 @@ public final class Options {
     public static final String XCC_CONNECTION_URI = "XCC-CONNECTION-URI";
 
     /**
-     * The unique key assigned to a MarkLogic Cloud user.
-     * @since=2.6.0
+     * The unique key assigned to a Progress Data Cloud user.
+     * @since 2.5.7
      */
-    @Usage(description = "The unique key assigned to a MarkLogic Cloud user.")
+    @Usage(description = "The unique key assigned to a Progress Data Cloud user.")
     public static final String XCC_API_KEY = "XCC-API-KEY";
 
     /**
-     * The base path configured on MarkLogic Cloud which maps to a service hosted by MarkLogic Cloud through which operations run.
-     * @since=2.6.0
+     * The base path configured on Progress Data Cloud which maps to a service hosted by Progress Data Cloud through which operations run.
+     * @since 2.5.7
      */
-    @Usage(description = "The base path configured on MarkLogic Cloud which maps to a service hosted by MarkLogic Cloud through which operations run.")
+    @Usage(description = "The base path configured on Progress Data Cloud which maps to a service hosted by Progress Data Cloud through which operations run.")
     public static final String XCC_BASE_PATH = "XCC-BASE-PATH";
 
     /**
-     * MarkLogic Cloud grant type.
-     * @since=2.6.0
+     * Progress Data Cloud grant type.
+     * @since 2.5.7
      */
-    @Usage(description = "MarkLogic Cloud grant type.")
+    @Usage(description = "Progress Data Cloud grant type.")
     public static final String XCC_GRANT_TYPE = "XCC-GRANT-TYPE";
 
     /**
      * OAuth JWT access token.
-     * @since=2.6.0
+     * @since 2.5.7
      */
     @Usage(description = "OAuth JWT access token.")
     public static final String XCC_OAUTH_TOKEN = "XCC-OAUTH-TOKEN";
 
     /**
-     * MarkLogic Cloud token duration.
-     * @since=2.6.0
+     * Progress Data Cloud token duration.
+     * @since 2.5.7
      */
-    @Usage(description = "MarkLogic Cloud token duration.")
+    @Usage(description = "Progress Data Cloud token duration.")
     public static final String XCC_TOKEN_DURATION = "XCC-TOKEN-DURATION";
 
     /**
-     * MarkLogic Cloud token endpoint.
-     * @since=2.6.0
+     * Progress Data Cloud token endpoint.
+     * @since 2.5.7
      */
-    @Usage(description = "MarkLogic Cloud token endpoint.")
+    @Usage(description = "Progress Data Cloud token endpoint.")
     public static final String XCC_TOKEN_ENDPOINT = "XCC-TOKEN-ENDPOINT";
 
     /**
@@ -1373,6 +1548,8 @@ public final class Options {
 
 
     /**
+     * Temporary directory used by com.marklogic.developer.corb.FileUrisStreamingXMLLoader to store files extracted from the XML-FILE.
+     * If not specified, TEMP-DIR value will be used. If not specified, then the default Java java.tmp.dir will be used.
      *
      * @since 2.4.0
      */
@@ -1382,6 +1559,94 @@ public final class Options {
         "If not specified, then the default Java java.tmp.dir will be used.")
     public static final String XML_TEMP_DIR = "XML-TEMP-DIR";
 
+    /**
+     * In order to use this option a class
+     * {@link com.marklogic.developer.corb.FileUrisJSONLoader} or
+     * {@link com.marklogic.developer.corb.FileUrisStreamingJSONLoader} has to be
+     * specified in the {@value #URIS_LOADER} option. If defined instead of
+     * {@value #URIS_MODULE}, JSON values selected from the file located on the
+     * client will be used as URIs. The file path may be relative or absolute.
+     * <p>
+     * Default processing selects the immediate children of the root JSON value
+     * (i.e. {@code /*}).
+     * </p>
+     * <p>
+     * The {@value #JSON_NODE} option can be specified with a simple streaming
+     * JSON path expression to address a different set of nodes.
+     * </p>
+     *
+     * @see #JSON_NODE
+     * @since 2.6.0
+     */
+    @Usage(description = "In order to use this option a class com.marklogic.developer.corb.FileUrisJSONLoader "
+        + "or com.marklogic.developer.corb.FileUrisStreamingJSONLoader has to be specified in the URIS-LOADER option. "
+        + "If defined instead of URIS-MODULE, JSON values selected from the file located on the client will be used as URIs. "
+        + "The file path may be relative or absolute. Default processing selects the immediate children of the root JSON value "
+        + "(i.e. /*). The JSON-NODE option can be specified with a simple JSON path expression to address a different set of nodes.")
+    public static final String JSON_FILE = "JSON-FILE";
+
+    /**
+     * A simple JSON path expression identifying the JSON value that contains
+     * metadata for all extracted JSON nodes. This must be different from the
+     * {@value #JSON_NODE}.
+     * <p>
+     * The metadata is set as an external variable with name {@value #METADATA}
+     * to {@value #PRE_BATCH_MODULE} and {@value #POST_BATCH_MODULE}, and also
+     * to {@value #PROCESS_MODULE} if enabled by
+     * {@value #METADATA_TO_PROCESS_MODULE}.
+     * </p>
+     *
+     * @see #JSON_FILE
+     * @since 2.6.0
+     */
+    @Usage(description = "A simple JSON path expression identifying the JSON value that contains metadata for all extracted JSON nodes. "
+        + "This must be different from JSON-NODE. The metadata is set as an external variable with name METADATA to PRE-BATCH-MODULE "
+        + "and POST-BATCH-MODULE and also PROCESS-MODULE if enabled by METADATA-TO-PROCESS-MODULE.")
+    public static final String JSON_METADATA = "JSON-METADATA";
+
+    /**
+     * A simple JSON path expression identifying the JSON values to be returned
+     * from a {@value #JSON_FILE} by
+     * {@link com.marklogic.developer.corb.FileUrisJSONLoader} or
+     * {@link com.marklogic.developer.corb.FileUrisStreamingJSONLoader}.
+     * <p>
+     * If not specified, the default behavior is to select the immediate
+     * children of the root JSON value (i.e. {@code /*}).
+     * </p>
+     *
+     * @see #JSON_FILE
+     * @since 2.6.0
+     */
+    @Usage(description = "An XPath expression identifying the JSON values to be returned in a JSON-FILE by "
+        + "com.marklogic.developer.corb.FileUrisJSONLoader or com.marklogic.developer.corb.FileUrisStreamingJSONLoader. "
+        + "If not specified, the default behavior is to select the immediate children of the root JSON value (i.e. /*).")
+    public static final String JSON_NODE = "JSON-NODE";
+
+    /**
+     * Temporary directory used by
+     * {@link com.marklogic.developer.corb.FileUrisStreamingJSONLoader} to store
+     * JSON values extracted from the {@value #JSON_FILE}.
+     * <p>
+     * If not specified, {@value #TEMP_DIR} will be used. If that is not
+     * specified, the default Java temp directory will be used.
+     * </p>
+     *
+     * @since 2.6.0
+     */
+    @Usage(description = "Temporary directory used by com.marklogic.developer.corb.FileUrisStreamingJSONLoader to store "
+        + "values extracted from the JSON-FILE. If not specified, TEMP-DIR value will be used. "
+        + "If not specified, then the default Java java.tmp.dir will be used.")
+    public static final String JSON_TEMP_DIR = "JSON-TEMP-DIR";
+
+    /**
+     * In order to use this option a class com.marklogic.developer.corb.FileUrisZipLoader
+     * has to be specified in the URIS-LOADER option. If defined instead of
+     * URIS-MODULE, each file will be base64 encoded and set as the
+     * content of corb-loader XML files and sent as a serialized string in the URI parameter of
+     * the process module.
+     * The zip file path may be relative or absolute. Default processing will
+     * select all of the files in the zip file.
+     */
     @Usage(description = "In order to use this option a class com.marklogic.developer.corb.FileUrisZipLoader "
             + "has to be specified in the URIS-LOADER option. If defined instead of "
             + "URIS-MODULE, each file will be base64 encoded and set as the "
@@ -1400,17 +1665,38 @@ public final class Options {
     @Usage(description = "Use PROCESS-MODULE instead")
     public static final String XQUERY_MODULE = "XQUERY-MODULE";
 
+    /**
+     * Private constructor to prevent instantiation of this constants class.
+     */
     private Options() {
     }
 
     /**
-     * Look for the property first in System properties, then in the properties object specified.
-     * Look for the propertyName as specified, then normalized to snake_case, and then kebab-case.
-     * This ensures that properties are found if specified with either case, and ensures that old jobs still work since
-     * renaming the MAX_OPTS_FROM_MODULE option to MAX-OPTS_FROM-MODULE.
-     * @param properties
-     * @param propertyName
-     * @return
+     * Finds a property value by searching in System properties first, then in the provided Properties object.
+     * <p>
+     * The method searches for property names in the following order:
+     * </p>
+     * <ol>
+     * <li>Exact match for the property name as specified</li>
+     * <li>Snake_case version (hyphens replaced with underscores)</li>
+     * <li>Kebab-case version (underscores replaced with hyphens)</li>
+     * </ol>
+     * <p>
+     * This flexible matching ensures that properties can be specified in multiple formats
+     * and maintains backward compatibility. For example, all of these would match:
+     * </p>
+     * <ul>
+     * <li>{@code MAX-OPTS-FROM-MODULE}</li>
+     * <li>{@code MAX_OPTS_FROM_MODULE}</li>
+     * <li>{@code MAX-OPTS_FROM_MODULE} (mixed)</li>
+     * </ul>
+     * <p>
+     * System properties always take precedence over properties file values.
+     * </p>
+     *
+     * @param properties the Properties object to search (after System properties)
+     * @param propertyName the property name to search for
+     * @return the property value (trimmed), or null if not found
      * @since 2.5.1
      */
     public static String findOption(final Properties properties, final String propertyName) {
@@ -1430,14 +1716,47 @@ public final class Options {
 }
 
 /**
- * Annotation used to document attributes of the CoRB Options.
+ * Annotation used to document CoRB configuration options.
+ * <p>
+ * This annotation is applied to the static fields in {@link Options} to provide
+ * human-readable descriptions and usage examples. The annotation data is used to:
+ * </p>
+ * <ul>
+ * <li>Generate user documentation</li>
+ * <li>Provide usage/help messages</li>
+ * <li>Document option purpose and accepted values</li>
+ * </ul>
+ * <p>
+ * The {@link #description()} element should provide:
+ * </p>
+ * <ul>
+ * <li>A clear explanation of what the option does</li>
+ * <li>Accepted values or format</li>
+ * <li>Default values (if applicable)</li>
+ * <li>Examples of usage (when helpful)</li>
+ * <li>Related options</li>
+ * </ul>
+ * <p>
+ * Options without a description (empty string) are typically:
+ * </p>
+ * <ul>
+ * <li>Deprecated options</li>
+ * <li>Internal options not meant for user configuration</li>
+ * <li>Self-explanatory constant values</li>
+ * </ul>
  *
  * @author Mads Hansen, MarkLogic Corporation
+ * @since 2.3.0
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @interface Usage {
 
+    /**
+     * Description of the configuration option, including purpose, format, and examples.
+     *
+     * @return the description string, or empty string for internal/deprecated options
+     */
     String description() default "";
 
 }

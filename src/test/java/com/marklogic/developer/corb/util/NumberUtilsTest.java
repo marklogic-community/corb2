@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2023 MarkLogic Corporation
+  * * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -18,36 +18,60 @@
  */
 package com.marklogic.developer.corb.util;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class NumberUtilsTest {
+class NumberUtilsTest {
 
     @Test
-    public void testToIntString() {
+    void testToIntString() {
         int result = NumberUtils.toInt("6");
         assertEquals(6, result);
     }
 
     @Test
-    public void testToIntStringInvalid() {
+    void testToIntStringInvalid() {
         int result = NumberUtils.toInt("six");
         assertEquals(0, result);
     }
 
     @Test
-    public void testToIntStringInt() {
+    void testToIntStringInt() {
         int result = NumberUtils.toInt("7", -1);
         assertEquals(7, result);
     }
 
     @Test
-    public void testToIntStringIntInvalid() {
+    void testToIntStringIntInvalid() {
         int result = NumberUtils.toInt("seven", -1);
         assertEquals(-1, result);
     }
+
+    @Test
+    public void testParseSize() {
+        assertEquals(100L, NumberUtils.parseSize("100"));
+        assertEquals(2048L, NumberUtils.parseSize("2 kb"));
+        assertEquals(2048L, NumberUtils.parseSize("2KB"));
+        assertEquals(2048L, NumberUtils.parseSize("2KiB"));
+        assertEquals(1048576L, NumberUtils.parseSize("1M"));
+        assertEquals(1048576L, NumberUtils.parseSize("1MB"));
+        assertEquals(1048576L, NumberUtils.parseSize("1MiB"));
+        assertEquals(1073741824L, NumberUtils.parseSize("1G"));
+        assertEquals(1536, NumberUtils.parseSize("1.5kb"));
+    }
+
+    @Test
+    void testParseSizeInvalidUnit() {
+        assertThrows(NumberFormatException.class, () -> NumberUtils.parseSize("5x"));
+    }
+
+    @Test
+    void testParseSizeInvalidValue() {
+        assertThrows(NumberFormatException.class, () -> NumberUtils.parseSize("M"));
+    }
+
 }

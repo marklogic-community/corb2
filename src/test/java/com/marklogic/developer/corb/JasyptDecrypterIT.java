@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2023 MarkLogic Corporation
+  * * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -32,34 +32,31 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class JasyptDecrypterIT {
+class JasyptDecrypterIT {
 
-    private static final Logger LOG = Logger.getLogger(JasyptDecrypterIT.class.getName());
+    private static final Logger LOG = Logger.getLogger(JasyptDecrypter.class.getName());
     private static final Logger JASYPT_DECRYPTER_LOG = Logger.getLogger(JasyptDecrypter.class.getName());
     private final TestHandler testLogger = new TestHandler();
     private static final String TEMP_PREFIX = "temp";
     private static final String PROPERTIES_SUFFIX = ".properties";
     private static final String TWO_SPACES = " ";
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         clearSystemProperties();
         JASYPT_DECRYPTER_LOG.addHandler(testLogger);
     }
 
     @Test
-    public void testInitDecrypter() {
+    void testInitDecrypter() {
         JasyptDecrypter instance = new JasyptDecrypter();
         try {
             instance.init_decrypter();
@@ -70,7 +67,7 @@ public class JasyptDecrypterIT {
     }
 
     @Test
-    public void testInitDecrypterBadJasyptPropertiesFilePath() {
+    void testInitDecrypterBadJasyptPropertiesFilePath() {
         clearSystemProperties();
         Properties props = new Properties();
         props.setProperty(Options.JASYPT_PROPERTIES_FILE, "does/not/exist");
@@ -91,7 +88,7 @@ public class JasyptDecrypterIT {
     }
 
     @Test
-    public void testInitDecrypterAlgorithmIsBlank() {
+    void testInitDecrypterAlgorithmIsBlank() {
         clearSystemProperties();
         Properties blankProps = new Properties();
         blankProps.setProperty(JASYPT_ALGORITHM, TWO_SPACES);
@@ -116,7 +113,7 @@ public class JasyptDecrypterIT {
     }
 
     @Test
-    public void testInitDecrypterAlgorithmIsNotBlank() {
+    void testInitDecrypterAlgorithmIsNotBlank() {
         clearSystemProperties();
         String password = "password";
         String alg = "PBEWithMD5AndTripleDES";
@@ -136,8 +133,8 @@ public class JasyptDecrypterIT {
             instance.properties = props;
             instance.init_decrypter();
 
-            assertEquals(alg, instance.jaspytProperties.getProperty(JASYPT_ALGORITHM));
-            assertEquals(password, instance.jaspytProperties.getProperty(JASYPT_PASSWORD));
+            assertEquals(alg, instance.jasyptProperties.getProperty(JASYPT_ALGORITHM));
+            assertEquals(password, instance.jasyptProperties.getProperty(JASYPT_PASSWORD));
             assertNotNull(instance.decrypter);
         } catch (ClassNotFoundException | IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -146,7 +143,7 @@ public class JasyptDecrypterIT {
     }
 
     @Test
-    public void testInitDecrypterNoJasyptProperties() {
+    void testInitDecrypterNoJasyptProperties() {
         clearSystemProperties();
         Properties emptyProps = new Properties();
         try {

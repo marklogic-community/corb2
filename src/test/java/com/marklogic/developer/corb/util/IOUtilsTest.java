@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2023 MarkLogic Corporation
+  * * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -19,45 +19,47 @@
 package com.marklogic.developer.corb.util;
 
 import static com.marklogic.developer.corb.util.IOUtils.BUFFER_SIZE;
-import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.StringReader;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class IOUtilsTest {
+class IOUtilsTest {
 
     private static final Logger LOG = Logger.getLogger(IOUtilsTest.class.getName());
-    private final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
+    private static final File exampleContentFile = new File("src/test/resources/test-file-1.csv");
     private final String exampleContent;
     private static final String NULL_OUTPUTSTREAM_MSG = "null OutputStream";
 
-    public IOUtilsTest() throws IOException {
-        exampleContent = cat(new FileReader(exampleContentFile));
+    public IOUtilsTest() {
+        try (Reader fileReader = new InputStreamReader(Files.newInputStream(exampleContentFile.toPath()), StandardCharsets.UTF_8)) {
+            exampleContent = cat(fileReader);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    protected final void finalize() {
     }
 
     @Test
-    public void testCloseQuietly() {
+    void testCloseQuietly() {
         Closeable obj = new StringReader("foo");
         IOUtils.closeQuietly(obj);
     }
 
     @Test
-    public void testCloseQuietlyThrows() {
+    void testCloseQuietlyThrows() {
         Closeable closeable = () -> {
             throw new IOException("test IO");
         };
@@ -66,29 +68,32 @@ public class IOUtilsTest {
     }
 
     @Test
-    public void testCloseQuietlyNull() {
+    void testCloseQuietlyNull() {
         Closeable closeable = null;
         IOUtils.closeQuietly(closeable);
         //did not throw IOException
     }
 
-    @Test(expected = IOException.class)
-    public void testCopyNullInputStream() throws IOException {
+    @Test
+    void testCopyNullInputStream() throws IOException {
         InputStream in = null;
         File out = File.createTempFile("copiedFile", "txt");
         out.deleteOnExit();
-        copy(in, new FileOutputStream(out));
-    }
-
-    @Test(expected = IOException.class)
-    public void testCopyInputStreamNull() throws IOException {
-        InputStream in = new FileInputStream(exampleContentFile);
-        copy(in, null);
+        try (OutputStream outputStream = Files.newOutputStream(out.toPath())) {
+            assertThrows(IOException.class, () -> copy(in, outputStream));
+        }
     }
 
     @Test
-    public void testCopyReaderOutputStream() {
-        try (Reader in = new FileReader(exampleContentFile)){
+    void testCopyInputStreamNull() throws IOException {
+        try (InputStream in = Files.newInputStream(exampleContentFile.toPath())) {
+            assertThrows(IOException.class, () -> copy(in, null));
+        }
+    }
+
+    @Test
+    void testCopyReaderOutputStream() {
+        try (Reader in = new InputStreamReader(Files.newInputStream(exampleContentFile.toPath()), StandardCharsets.UTF_8)){
             OutputStream out = new ByteArrayOutputStream();
             long result = copy(in, out);
             assertEquals(exampleContent.length(), result);
@@ -98,24 +103,28 @@ public class IOUtilsTest {
         }
     }
 
-    @Test(expected = IOException.class)
-    public void testCopyReaderIsNullOutputStream() throws IOException {
+    @Test
+    void testCopyReaderIsNullOutputStream() {
         Reader in = null;
-        OutputStream out = new ByteArrayOutputStream();
-        copy(in, out);
-    }
-
-    @Test(expected = IOException.class)
-    public void testCopyReaderOutputStreamIsNull() throws IOException {
-        try (Reader in = new FileReader(exampleContentFile)) {
-            OutputStream out = null;
-            copy(in, out);
+        try (OutputStream out = new ByteArrayOutputStream()) {
+            assertThrows(IOException.class, () -> copy(in, out));
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
         }
     }
 
     @Test
-    public void testCatReader() {
-        try (Reader reader = new FileReader(exampleContentFile)) {
+    void testCopyReaderOutputStreamIsNull() throws IOException {
+        try (Reader in = new InputStreamReader(Files.newInputStream(exampleContentFile.toPath()), StandardCharsets.UTF_8)) {
+            OutputStream out = null;
+            assertThrows(IOException.class, () -> copy(in, out));
+        }
+    }
+
+    @Test
+    void testCatReader() {
+        try (Reader reader = new InputStreamReader(Files.newInputStream(exampleContentFile.toPath()), StandardCharsets.UTF_8)) {
             String result = cat(reader);
             assertEquals(exampleContent, result);
         } catch (IOException ex) {
@@ -125,10 +134,10 @@ public class IOUtilsTest {
     }
 
     @Test
-    public void testCatInputStream() {
-        try (InputStream is = new FileInputStream(exampleContentFile)) {
+    void testCatInputStream() {
+        try (InputStream is = Files.newInputStream(exampleContentFile.toPath())) {
             byte[] result = cat(is);
-            assertArrayEquals(exampleContent.getBytes(), result);
+            assertArrayEquals(exampleContent.getBytes(StandardCharsets.UTF_8), result);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -136,9 +145,9 @@ public class IOUtilsTest {
     }
 
     @Test
-    public void testGetSizeInputStream() {
+    void testGetSizeInputStream() {
         long result = -1;
-        try (InputStream is = new FileInputStream(exampleContentFile)) {
+        try (InputStream is = Files.newInputStream(exampleContentFile.toPath())) {
             result = getSize(is);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -148,8 +157,9 @@ public class IOUtilsTest {
     }
 
     @Test
-    public void testGetSizeReader() {
-        try (Reader reader = new FileReader(exampleContentFile)) {
+    void testGetSizeReader() {
+        try (Reader reader = new BufferedReader(
+            new InputStreamReader(Files.newInputStream(exampleContentFile.toPath()), StandardCharsets.UTF_8))) {
             long result = getSize(reader);
             assertEquals(exampleContent.length(), result);
         } catch (IOException ex) {
@@ -159,10 +169,10 @@ public class IOUtilsTest {
     }
 
     @Test
-    public void testGetBytes() {
+    void testGetBytes() {
         try {
             byte[] result = FileUtilsTest.getBytes(exampleContentFile);
-            assertArrayEquals(exampleContent.getBytes(), result);
+            assertArrayEquals(exampleContent.getBytes(StandardCharsets.UTF_8), result);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -223,7 +233,7 @@ public class IOUtilsTest {
         char[] buf = new char[BUFFER_SIZE];
         byte[] bite;
         while ((len = source.read(buf)) > -1) {
-            bite = new String(buf).getBytes();
+            bite = new String(buf).getBytes(StandardCharsets.UTF_8);
             // len? different for char vs byte?
             // code is broken if I use bite.length, though
             destination.write(bite, 0, len);

@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2023 MarkLogic Corporation
+  * * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -29,29 +29,49 @@ import static com.marklogic.developer.corb.Options.*;
 
 
 /**
+ * Utility class for string manipulation operations.
+ * Provides methods for string conversion, validation, encoding, URL building,
+ * and pattern matching. This class handles common string operations safely
+ * with null-safe implementations.
+ *
  * @author mike.blakeley@marklogic.com
  * @author Bhagat Bandlamudi, MarkLogic Corporation
  * @author Mads Hansen, MarkLogic Corporation
+  * @since 2.0.0
  */
 public final class StringUtils {
 
+    /** Constant representing an empty string */
     public static final String EMPTY = "";
+    /** Constant representing a forward slash character */
     public static final String SLASH = "/";
+    /** Constant representing a comma character */
     public static final String COMMA = ",";
+    /** File extension for XQuery modules */
     public static final String XQUERY_EXTENSION = ".xqy";
+    /** Pattern to match adhoc module specifications ending with "|ADHOC" (case-insensitive) */
     private static final Pattern ADHOC_PATTERN = Pattern.compile("(?i).*\\|ADHOC");
+    /** Pattern to match JavaScript module filenames */
     private static final Pattern JAVASCRIPT_MODULE_FILENAME_PATTERN = Pattern.compile("(?i).*\\.s?js(\\|ADHOC)?$");
+    /** Pattern to match inline module declarations */
     private static final Pattern INLINE_MODULE_PATTERN = Pattern.compile("(?i)INLINE-(JAVASCRIPT|XQUERY)\\|(.*?)(\\|ADHOC)?$");
+    /** UTF-8 character encoding constant */
     private static final String UTF_8 = "UTF-8";
+    /** Error message for unsupported UTF-8 encoding */
     private static final String UTF_8_NOT_SUPPORTED = UTF_8 + " not supported";
 
+    /**
+     * Private constructor to prevent instantiation of utility class.
+     */
     private StringUtils() {
     }
 
     /**
+     * Converts a string to a boolean value, returning false if the conversion fails.
+     * This method delegates to {@link #stringToBoolean(String, boolean)} with a default value of false.
      *
-     * @param str
-     * @return
+     * @param str the string to convert, may be null
+     * @return {@code false} if the string is null or represents a false value; {@code true} otherwise
      */
     public static boolean stringToBoolean(String str) {
         // let the caller decide: should an unset string be true or false?
@@ -59,10 +79,13 @@ public final class StringUtils {
     }
 
     /**
+     * Converts a string to a boolean value with a specified default.
+     * Treats the following values as false: null, empty string, "0", "f", "false", "n", "no" (case-insensitive).
+     * All other non-null, non-empty values are treated as true.
      *
-     * @param str
-     * @param defaultValue
-     * @return
+     * @param str the string to convert, may be null
+     * @param defaultValue the value to return if the string is null
+     * @return the boolean representation of the string, or the default value if null
      */
     public static boolean stringToBoolean(String str, boolean defaultValue) {
         if (str == null) {
@@ -74,9 +97,11 @@ public final class StringUtils {
     }
 
     /**
-     * Convert a byte array into a string of the hex encoded values
-     * @param bytes
-     * @return
+     * Converts a byte array into a string of hex-encoded values.
+     * Each byte is represented as a two-character hexadecimal string.
+     *
+     * @param bytes the byte array to convert
+     * @return a string containing the hexadecimal representation of the byte array
      */
     public static String byteArrayToHexString(byte[] bytes) {
         StringBuilder hexStringBuilder = new StringBuilder(bytes.length * 2);
@@ -87,9 +112,11 @@ public final class StringUtils {
     }
 
     /**
-     * Convert the hex string into an array of bytes
-     * @param hexString
-     * @return
+     * Converts a hexadecimal string into an array of bytes.
+     * Each pair of characters in the hex string represents one byte.
+     *
+     * @param hexString the hexadecimal string to convert (must have even length)
+     * @return a byte array representing the decoded hexadecimal string
      */
     public static byte[] hexStringToByteArray(String hexString) {
         int len = hexString.length();
@@ -105,9 +132,9 @@ public final class StringUtils {
      * Joins items of the provided collection into a single String using the
      * delimiter specified.
      *
-     * @param items
-     * @param delimiter
-     * @return
+     * @param items the collection of items to join, may be null
+     * @param delimiter the delimiter to use between items
+     * @return a string containing all items joined by the delimiter, or null if the collection is null
      */
     public static String join(Collection<?> items, String delimiter) {
         if (items == null) {
@@ -126,44 +153,58 @@ public final class StringUtils {
     }
 
     /**
-     * Joins items of the provided Array of Objects into a single String using
+     * Joins items of the provided array of objects into a single String using
      * the delimiter specified.
      *
-     * @param items
-     * @param delimiter
-     * @return
+     * @param items the array of items to join
+     * @param delimiter the delimiter to use between items
+     * @return a string containing all items joined by the delimiter
      */
     public static String join(Object[] items, String delimiter) {
         return join(Arrays.asList(items), delimiter);
     }
 
     /**
-     * @param path
-     * @return
+     * Extracts the file extension from a given path.
+     *
+     * @param path the file path from which to extract the extension
+     * @return the file extension without the dot, or the original string if no extension found
      */
     public static String getPathExtension(String path) {
         return path.replaceFirst(".*\\.([^\\.]+)$", "$1");
     }
 
     /**
+     * Builds a module path from a class by converting the package structure to a path
+     * and appending the XQuery extension.
      *
-     * @param clazz
-     * @return
+     * @param clazz the class to build the module path from
+     * @return the module path with XQuery extension (e.g., "/com/example/MyClass.xqy")
      */
     public static String buildModulePath(Class<?> clazz) {
         return SLASH + clazz.getName().replace('.', '/') + XQUERY_EXTENSION;
     }
 
     /**
+     * Builds a module path from a package and module name.
+     * Appends the XQuery extension if not already present.
      *
-     * @param modulePackage
-     * @param name
-     * @return
+     * @param modulePackage the package containing the module
+     * @param name the module name
+     * @return the complete module path with XQuery extension
      */
     public static String buildModulePath(Package modulePackage, String name) {
         return SLASH + modulePackage.getName().replace('.', '/') + SLASH + name + (name.endsWith(XQUERY_EXTENSION) ? "" : XQUERY_EXTENSION);
     }
 
+    /**
+     * Builds a module path by combining a root path and module name.
+     * Handles leading/trailing slashes appropriately.
+     *
+     * @param root the root path
+     * @param module the module name or path
+     * @return the complete module path
+     */
     public static String buildModulePath(String root, String module) {
         String moduleRoot = root;
         String modulePath = module;
@@ -179,10 +220,13 @@ public final class StringUtils {
     }
 
     /**
-     * @param value
-     * @param encoding
-     * @return
-     * @throws UnsupportedEncodingException
+     * Converts a string to its hexadecimal representation using the specified encoding.
+     * Each byte is represented as a space-separated hexadecimal value.
+     *
+     * @param value the string to convert to hexadecimal
+     * @param encoding the character encoding to use (e.g., "UTF-8")
+     * @return a string containing space-separated hexadecimal values
+     * @throws UnsupportedEncodingException if the encoding is not supported
      */
     public static String dumpHex(String value, String encoding) throws UnsupportedEncodingException {
         StringBuilder sb = new StringBuilder();
@@ -198,31 +242,54 @@ public final class StringUtils {
     }
 
     /**
-     * Checks if a CharSequence is null or empty ("")
+     * Encodes special characters in a string for safe HTML display.
      *
-     * @param value
-     * @return true if the value is null or empty
+     * @param input the string to encode
+     * @return the encoded string with HTML entities, or null if the input is null
+     */
+    public static String encodeForHtml(String input) {
+        if (input == null) { return null; }
+
+        StringBuilder sb = new StringBuilder(input.length());
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            switch (c) {
+                case '<': sb.append("&lt;"); break;
+                case '>': sb.append("&gt;"); break;
+                case '&': sb.append("&amp;"); break;
+                case '"': sb.append("&quot;"); break;
+                case '\'': sb.append("&#39;"); break;
+                default: sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Checks if a CharSequence is null or empty ("").
+     *
+     * @param value the CharSequence to check, may be null
+     * @return {@code true} if the value is null or has zero length; {@code false} otherwise
      */
     public static boolean isEmpty(final CharSequence value) {
         return value == null || value.length() == 0;
     }
 
     /**
-     * Checks if a CharSequence is not null or empty ("")
+     * Checks if a CharSequence is not null and not empty ("").
      *
-     * @param value
-     * @return
+     * @param value the CharSequence to check, may be null
+     * @return {@code true} if the value is not null and has length greater than zero; {@code false} otherwise
      */
     public static boolean isNotEmpty(final CharSequence value) {
         return !isEmpty(value);
     }
 
     /**
-     * Checks if a CharSequence is null or whitespace-only characters
+     * Checks if a CharSequence is null, empty, or contains only whitespace characters.
      *
-     * @param value
-     * @return {@code true} if the value is null, empty, or whitespace-only
-     * characters; {@code false} otherwise.
+     * @param value the CharSequence to check, may be null
+     * @return {@code true} if the value is null, empty, or whitespace-only; {@code false} otherwise
      */
     public static boolean isBlank(final CharSequence value) {
         int length;
@@ -238,29 +305,31 @@ public final class StringUtils {
     }
 
     /**
-     * Checks if a CharSequence is not null and not whitespace-only characters
+     * Checks if a CharSequence is not null, not empty, and contains at least one non-whitespace character.
      *
-     * @param value
-     * @return
+     * @param value the CharSequence to check, may be null
+     * @return {@code true} if the value contains at least one non-whitespace character; {@code false} otherwise
      */
     public static boolean isNotBlank(final CharSequence value) {
         return !isBlank(value);
     }
 
     /**
-     * Splits the provided value into an Array using the specified regex.
-     * @param value
-     * @param regex
-     * @return An Array of String, an empty Array if the value is null.
+     * Splits the provided value into an array using the specified regex pattern.
+     *
+     * @param value the string to split, may be null
+     * @param regex the regular expression to use as delimiter
+     * @return an array of strings, or an empty array if the value is null
      */
     public static String[] split(final String value, String regex) {
         return value == null ? new String[0] : value.split(regex);
     }
 
     /**
-     * Split a CSV and return List of values
-     * @param value
-     * @return
+     * Splits a comma-separated string and returns a list of trimmed values.
+     *
+     * @param value the comma-separated string to split
+     * @return a list of trimmed string values
      */
     public static List<String> commaSeparatedValuesToList(String value) {
         List<String> values = new ArrayList<>();
@@ -271,47 +340,78 @@ public final class StringUtils {
     }
 
     /**
-     * Removes control characters (char &lt;= 32) from both ends of the string. If
-     * null, returns null. @param value @return @param value @return the trimmed
-     * string, or {@code null} if null String
+     * Removes control characters (char &lt;= 32) from both ends of the string.
      *
-     * @param value
-     * @return
+     * @param value the string to trim, may be null
+     * @return the trimmed string, or {@code null} if the input is null
      */
     public static String trim(final String value) {
         return value == null ? null : value.trim();
     }
 
     /**
-     * Removes control characters (char &lt;= 32) from both ends of the string. If
-     * null, returns null. @param value @return @param value @return the trimmed
-     * String or an empty String if {@code null}
+     * Removes control characters (char &lt;= 32) from both ends of the string.
+     * Returns an empty string if the input is null.
      *
-     * @param value
-     * @return
+     * @param value the string to trim, may be null
+     * @return the trimmed string, or an empty string if the input is null
      */
     public static String trimToEmpty(final String value) {
         return value == null ? EMPTY : value.trim();
     }
 
+    /**
+     * Checks if the given value represents an adhoc module.
+     * An adhoc module is identified by the "|ADHOC" suffix (case-insensitive).
+     *
+     * @param value the string to check, may be null
+     * @return {@code true} if the value is an adhoc module; {@code false} otherwise
+     */
     public static boolean isAdhoc(final String value) {
         return value != null && ADHOC_PATTERN.matcher(value).matches();
     }
 
+    /**
+     * Checks if the given value represents a JavaScript module.
+     * Identifies JavaScript modules by file extension (.js, .sjs) or inline module language.
+     *
+     * @param value the string to check, may be null
+     * @return {@code true} if the value represents a JavaScript module; {@code false} otherwise
+     */
     public static boolean isJavaScriptModule(final String value) {
         return value != null
                 && (JAVASCRIPT_MODULE_FILENAME_PATTERN.matcher(value).matches()
                     || "javascript".equalsIgnoreCase(inlineModuleLanguage(value)));
     }
 
+    /**
+     * Checks if the given value represents an inline module.
+     * Inline modules have the format "INLINE-{LANGUAGE}|{code}" (case-insensitive).
+     *
+     * @param value the string to check, may be null
+     * @return {@code true} if the value is an inline module; {@code false} otherwise
+     */
     public static boolean isInlineModule(final String value) {
         return value != null && INLINE_MODULE_PATTERN.matcher(value).matches();
     }
 
+    /**
+     * Checks if the given value represents either an inline or adhoc module.
+     *
+     * @param value the string to check, may be null
+     * @return {@code true} if the value is an inline or adhoc module; {@code false} otherwise
+     */
     public static boolean isInlineOrAdhoc(final String value) {
         return StringUtils.isInlineModule(value) || isAdhoc(value);
     }
 
+    /**
+     * Extracts the language type from an inline module declaration.
+     * Returns the language identifier (e.g., "JAVASCRIPT" or "XQUERY").
+     *
+     * @param value the inline module string
+     * @return the language identifier, or an empty string if not an inline module
+     */
     public static String inlineModuleLanguage(final String value) {
         String language = "";
         if (isInlineModule(value)) {
@@ -323,6 +423,12 @@ public final class StringUtils {
         return language;
     }
 
+    /**
+     * Extracts the code content from an inline module declaration.
+     *
+     * @param value the inline module string
+     * @return the module code, or an empty string if not an inline module
+     */
     public static String getInlineModuleCode(final String value) {
         String code = "";
         if (isInlineModule(value)) {
@@ -335,15 +441,18 @@ public final class StringUtils {
     }
 
     /**
-     * Build an XCC URI from the values provided. Values will be URLEncoded, if it does not appear that they have already been URLEncoded.
-     * @param protocol
-     * @param username
-     * @param password
-     * @param host
-     * @param port
-     * @param dbname
-     * @param urlEncode
-     * @return
+     * Builds an XCC URI from the provided connection parameters.
+     * Values will be URL-encoded if they do not appear to be already encoded.
+     *
+     * @param protocol the connection protocol (e.g., "xcc")
+     * @param username the database username
+     * @param password the database password
+     * @param host the database host
+     * @param port the database port
+     * @param dbname the database name
+     * @param urlEncode encoding strategy: "always", "never", or auto-detect
+     * @return the complete XCC URI string
+     * @deprecated Use {@link #getXccUri(Map, String)} instead
      */
     @Deprecated
     public static String getXccUri(String protocol, String username, String password, String host, String port, String dbname, String urlEncode) {
@@ -358,8 +467,18 @@ public final class StringUtils {
     }
 
     /**
-     * Build an XCC URI from the values provided. Values will be URLEncoded if it does not appear that they have already been URLEncoded. Prevent urlEncode by specifying "never" and always encode when specifying "always".
-     * @return
+     * Builds an XCC URI from a map of connection parameters.
+     * Values will be URL-encoded if they do not appear to be already encoded.
+     * Encoding can be controlled with the urlEncode parameter:
+     * <ul>
+     *   <li>"always" - always URL-encode values</li>
+     *   <li>"never" - never URL-encode values</li>
+     *   <li>any other value - auto-detect and encode if necessary</li>
+     * </ul>
+     *
+     * @param xccConnectionParameters map containing connection parameters (protocol, host, port, username, password, etc.)
+     * @param urlEncode encoding strategy: "always", "never", or auto-detect
+     * @return the complete XCC URI string
      */
     public static String getXccUri(Map<String, String> xccConnectionParameters, String urlEncode) {
         String protocol = xccConnectionParameters.getOrDefault(XCC_PROTOCOL, "xcc");
@@ -411,40 +530,53 @@ public final class StringUtils {
         if (isNotBlank(username) && isNotBlank(password)) {
             auth = username + ':' + password + '@';
         }
-        return protocol + "://" + auth + host + ':' + port + (isBlank(dbname) ? EMPTY : SLASH + dbname) + (isBlank(query) ? EMPTY : "?" + query);
+        return protocol + "://" + auth + host + ':' + port + (isBlank(dbname) ? EMPTY : SLASH + dbname) + (isBlank(query) ? EMPTY : '?' + query);
     }
 
+    /**
+     * Appends a query parameter to an existing query string.
+     * Only appends if the value is not blank.
+     *
+     * @param query the existing query string
+     * @param parameterName the parameter name to append
+     * @param value the parameter value to append
+     * @return the updated query string with the appended parameter
+     */
     private static String appendParameter(String query, String parameterName, String value) {
         if (isNotBlank(value)) {
             query += isBlank(query) ? EMPTY : '&';
-            query += parameterName + "=" + value;
+            query += parameterName + '=' + value;
         }
         return query;
     }
 
     /**
-     * Indicate whether any items in the array of String objects are null.
-     * @param args
-     * @return
+     * Checks whether any items in the array of strings are null.
+     *
+     * @param args variable number of string arguments to check
+     * @return {@code true} if any argument is null; {@code false} otherwise
      */
     public static boolean anyIsNull(String... args) {
         return Arrays.asList(args).contains(null);
     }
 
     /**
-     * If the given string is not URLEncoded, encode it. Otherwise, return the original value.
-     * @param arg
-     * @return
+     * URL-encodes the given string if it is not already encoded.
+     * Uses heuristic detection to determine if encoding is necessary.
+     *
+     * @param arg the string to potentially encode
+     * @return the URL-encoded string, or the original value if already encoded
      */
     protected static String urlEncodeIfNecessary(String arg) {
         return isUrlEncoded(arg) ? arg : urlEncode(arg);
     }
 
     /**
-     * Determines whether the value is URLEncoded by evaluating whether the
-     * length of the URLDecoded value is the same.
-     * @param arg
-     * @return
+     * Determines whether a string is URL-encoded.
+     * Uses length comparison between the original and decoded values as a heuristic.
+     *
+     * @param arg the string to check
+     * @return {@code true} if the string appears to be URL-encoded; {@code false} otherwise
      */
     public static boolean isUrlEncoded(String arg) {
         try {
@@ -455,9 +587,11 @@ public final class StringUtils {
     }
 
     /**
-     * URLEncode the given value
-     * @param arg
-     * @return
+     * URL-encodes the given value using UTF-8 encoding.
+     *
+     * @param arg the string to encode
+     * @return the URL-encoded string
+     * @throws AssertionError if UTF-8 encoding is not supported
      */
     protected static String urlEncode(String arg) {
         try {
@@ -468,9 +602,11 @@ public final class StringUtils {
     }
 
     /**
-     * URLDecode the given value
-     * @param arg
-     * @return
+     * URL-decodes the given value using UTF-8 encoding.
+     *
+     * @param arg the string to decode
+     * @return the URL-decoded string
+     * @throws AssertionError if UTF-8 encoding is not supported
      */
     protected static String urlDecode(String arg) {
         try {
@@ -480,6 +616,14 @@ public final class StringUtils {
         }
     }
 
+	/**
+	 * Parses a string containing port numbers and port ranges into a set of integers.
+	 * Supports individual ports (e.g., "8080") and ranges (e.g., "8080-8090").
+	 * Multiple values can be comma-separated. Ranges are automatically sorted.
+	 *
+	 * @param jobServerPort comma-separated string of port numbers and/or ranges (e.g., "8080,8090-8095")
+	 * @return a set of all port numbers represented by the input string
+	 */
 	public static Set<Integer> parsePortRanges(String jobServerPort) {
 		Set<Integer> jobServerPorts = new LinkedHashSet<>();
 		if (isNotBlank(jobServerPort)) {

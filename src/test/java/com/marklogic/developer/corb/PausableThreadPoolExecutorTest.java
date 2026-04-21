@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2023 MarkLogic Corporation
+  * * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -25,20 +25,21 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.TimeUnit;
 import java.util.Timer;
 import java.util.TimerTask;
-import org.junit.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 import static com.marklogic.developer.corb.TransformOptions.FAILED_URI_TOKEN;
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class PausableThreadPoolExecutorTest {
+class PausableThreadPoolExecutorTest {
 
     @Test
-    public void testPauseIsPausedResumeIsRunning() {
+    void testPauseIsPausedResumeIsRunning() {
         BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
         PausableThreadPoolExecutor instance = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
@@ -58,12 +59,12 @@ public class PausableThreadPoolExecutorTest {
     }
 
     @Test
-    public void testBeforeExecute() {
+    void testBeforeExecute() {
         BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
         PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
-        Thread thread = null;
-        Runnable runnable = null;
+        Thread thread = mock(Thread.class);
+        Runnable runnable = mock(Runnable.class);
         executor.pause();
 
         LocalDateTime startedAt = LocalDateTime.now();
@@ -81,7 +82,7 @@ public class PausableThreadPoolExecutorTest {
     }
 
     @Test
-    public void testAfterExecutePassing() {
+    void testAfterExecutePassing() {
         BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
         PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
@@ -96,7 +97,7 @@ public class PausableThreadPoolExecutorTest {
     }
 
     @Test
-    public void testAfterExecuteFailing() {
+    void testAfterExecuteFailing() {
         BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
         PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
@@ -111,7 +112,7 @@ public class PausableThreadPoolExecutorTest {
     }
 
     @Test
-    public void testAfterExecuteThrowsException() {
+    void testAfterExecuteThrowsException() {
         BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
         PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
@@ -123,7 +124,7 @@ public class PausableThreadPoolExecutorTest {
     }
 
     @Test
-    public void testTopURIs() {
+    void testTopURIs() {
         BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
         PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
@@ -137,13 +138,13 @@ public class PausableThreadPoolExecutorTest {
         executor.topUriList.add("URI6", 7L);
         executor.topUriList.add("URI7", 1L);
         executor.topUriList.add("URI8", null);
-        assertTrue(executor.topUriList.getData().size()==2);
+        assertEquals(2, executor.topUriList.getData().size());
         assertNotNull(executor.topUriList.getData().get("URI1"));
         assertNotNull(executor.topUriList.getData().get("URI6"));
     }
 
     @Test
-    public void testTopUriListSizeZero(){
+    void testTopUriListSizeZero(){
         BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
         PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
@@ -155,7 +156,7 @@ public class PausableThreadPoolExecutorTest {
     }
 
     @Test
-    public void testTopUriListSizeOne(){
+    void testTopUriListSizeOne(){
         BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
         PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
@@ -163,7 +164,7 @@ public class PausableThreadPoolExecutorTest {
         executor.topUriList.add("URI1", 6L);
         executor.topUriList.add("URI1", 6L);
         executor.topUriList.add("URI2", 5L);
-        assertTrue(executor.topUriList.getData().size()==1);
+        assertEquals(1, executor.topUriList.getData().size());
         assertNotNull(executor.topUriList.getData().get("URI1"));
     }
 

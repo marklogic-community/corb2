@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2023 MarkLogic Corporation
+ * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,31 +19,28 @@
 package com.marklogic.developer.corb;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.Rule;
-import org.junit.contrib.java.lang.system.ExpectedSystemExit;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class ModuleExecutorIT {
+class ModuleExecutorIT {
 
     private static final Logger LOG = Logger.getLogger(ModuleExecutorIT.class.getName());
-    @Rule
-    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
-    private void clearSystemProperties() {
+    private static void clearSystemProperties() {
 		TestUtils.clearSystemProperties();
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
 	}
 
     @Test
-    public void testRunMain() {
+    void testRunMain() {
         clearSystemProperties();
         String[] args = {};
         String exportFileName = "testRunMain.txt";
@@ -52,12 +49,13 @@ public class ModuleExecutorIT {
         System.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
         File report = new File(exportFileName);
         report.deleteOnExit();
-        exit.expectSystemExit();
-        ModuleExecutor.main(args);
+
+        int exitCode = ModuleExecutor.run(args);
+        assertEquals(0, exitCode);
     }
 
     @Test
-    public void testRunInline() {
+    void testRunInline() {
         clearSystemProperties();
         String[] args = {};
         String exportFileName = "testRunInline.txt";
@@ -70,12 +68,14 @@ public class ModuleExecutorIT {
             executor.run();
             String reportPath = executor.getProperty(Options.EXPORT_FILE_NAME);
             File report = new File(reportPath);
-
+            report.deleteOnExit();
             boolean fileExists = report.exists();
             assertTrue(fileExists);
-            String result = TestUtils.readFile(report);
-            assertEquals("/d/e/f\n", result);
+
+            String result = Files.readAllLines(report.toPath()).get(0);
+            assertEquals("/d/e/f", result);
             report.delete();
+
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();

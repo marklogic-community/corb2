@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2023 MarkLogic Corporation
+  * * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -32,61 +32,155 @@ import static com.marklogic.developer.corb.util.StringUtils.trim;
 import java.util.Properties;
 
 /**
+ * Abstract base class for URI loader implementations.
+ * Provides common functionality for loading URIs to be processed by CoRB tasks,
+ * including configuration management, URI replacement patterns, total count tracking,
+ * and batch reference handling.
+ *
+ * <p>Subclasses must implement specific URI loading strategies such as:</p>
+ * <ul>
+ *   <li>Loading from files</li>
+ *   <li>Querying from MarkLogic</li>
+ *   <li>Loading from external sources</li>
+ * </ul>
  *
  * @author Mads Hansen, MarkLogic Corporation
+  * @since 2.3.0
  */
 public abstract class AbstractUrisLoader implements UrisLoader {
 
+    /**
+     * Transform options containing configuration settings for the CoRB job.
+     */
     protected TransformOptions options;
+
+    /**
+     * Pool of content sources for connecting to MarkLogic database.
+     * Shared across multiple stages and should not be closed by the loader.
+     */
     protected ContentSourcePool csp;
+
+    /**
+     * Collection name to use when loading URIs.
+     * May be used by subclasses to filter or organize URI loading.
+     */
     protected String collection;
+
+    /**
+     * Configuration properties containing job settings and parameters.
+     * Used for retrieving configuration values with fallback to system properties.
+     */
     protected Properties properties;
+
+    /**
+     * Total number of URIs to be processed by the job.
+     * Updated via {@link #setTotalCount(long)} and made available to batch modules.
+     */
     private long total = 0;
+
+    /**
+     * Array of URI replacement patterns parsed from {@link Options#URIS_REPLACE_PATTERN}.
+     * Contains alternating find/replace strings (even indices are find patterns, odd indices are replacements).
+     */
     protected String[] replacements = new String[0];
+
+    /**
+     * Batch reference identifier for tracking the current batch execution.
+     * Used to correlate URIs with a specific batch run.
+     */
     protected String batchRef;
 
+    /**
+     * Constructor that initializes the TransformOptions.
+     */
     public AbstractUrisLoader() {
         options = new TransformOptions();
     }
 
+    /**
+     * Sets the transform options for the CoRB job.
+     *
+     * @param options the TransformOptions instance
+     */
     @Override
     public void setOptions(TransformOptions options) {
         this.options = options;
     }
 
+    /**
+     * Gets the transform options.
+     *
+     * @return the TransformOptions instance
+     */
     public TransformOptions getOptions() {
         return options;
     }
 
+    /**
+     * Sets the content source pool for database connections.
+     *
+     * @param csp the ContentSourcePool instance
+     */
     @Override
     public void setContentSourcePool(ContentSourcePool csp) {
         this.csp = csp;
     }
 
+    /**
+     * Sets the collection name for URI loading.
+     *
+     * @param collection the collection name
+     */
     @Override
     public void setCollection(String collection) {
         this.collection = collection;
     }
 
+    /**
+     * Sets the configuration properties.
+     *
+     * @param properties the Properties object
+     */
     @Override
     public void setProperties(Properties properties) {
         this.properties = properties;
     }
 
+    /**
+     * Gets the batch reference identifier.
+     *
+     * @return the batch reference string, or null if not set
+     */
     @Override
     public String getBatchRef() {
         return batchRef;
     }
 
+    /**
+     * Sets the batch reference identifier.
+     *
+     * @param batchRef the batch reference string
+     */
     public void setBatchRef(String batchRef) {
         this.batchRef = batchRef;
     }
 
+    /**
+     * Gets the total count of URIs to be processed.
+     *
+     * @return the total count of URIs
+     */
     @Override
     public long getTotalCount() {
         return this.total;
     }
 
+    /**
+     * Sets the total count of URIs to be processed.
+     * Also updates the properties to make the count available to PRE_BATCH_MODULE and POST_BATCH_MODULE.
+     *
+     * @param totalCount the total number of URIs
+     */
     public void setTotalCount(long totalCount) {
         this.total = totalCount;
 
@@ -96,6 +190,14 @@ public abstract class AbstractUrisLoader implements UrisLoader {
         }
     }
 
+    /**
+     * Retrieves a property value by key.
+     * First checks system properties, then falls back to instance properties.
+     * The returned value is trimmed of leading and trailing whitespace.
+     *
+     * @param key the property key name
+     * @return the trimmed property value, or null if not found
+     */
     public String getProperty(String key) {
         String val = System.getProperty(key);
         if (val == null && properties != null) {
@@ -104,12 +206,20 @@ public abstract class AbstractUrisLoader implements UrisLoader {
         return trim(val);
     }
 
+    /**
+     * Closes the URI loader and releases resources.
+     * Note: Does not close the ContentSourcePool as it will be used by downstream stages.
+     */
     @Override
     public void close() {
         //don't close the ContentSourcePool. It will be used by downstream stages.
         cleanup();
     }
 
+    /**
+     * Releases resources held by the URI loader.
+     * Sets all fields to null to aid garbage collection and resets the total count to 0.
+     */
     protected void cleanup() {
         options = null;
         csp = null;
@@ -120,6 +230,13 @@ public abstract class AbstractUrisLoader implements UrisLoader {
         total = 0;
     }
 
+    /**
+     * Parses URI replacement patterns from {@link Options#URIS_REPLACE_PATTERN}.
+     * Patterns should be comma-separated pairs of find/replace values.
+     * The replacements array will contain alternating find and replace strings.
+     *
+     * @throws IllegalArgumentException if the pattern contains an odd number of elements
+     */
     protected void parseUriReplacePatterns() {
         String urisReplacePattern = getProperty(URIS_REPLACE_PATTERN);
         if (isNotEmpty(urisReplacePattern)) {
@@ -130,11 +247,25 @@ public abstract class AbstractUrisLoader implements UrisLoader {
         }
     }
 
+    /**
+     * Determines whether the batch reference should be set.
+     * Reads the {@link Options#LOADER_SET_URIS_BATCH_REF} property.
+     *
+     * @return true if batch reference should be set, false otherwise (defaults to false)
+     */
     protected boolean shouldSetBatchRef() {
         String setBatchRef = getProperty(Options.LOADER_SET_URIS_BATCH_REF);
         return StringUtils.stringToBoolean(setBatchRef, false);
     }
 
+    /**
+     * Gets the loader path by checking multiple property names in order.
+     * Tries each provided property name until a non-blank value is found.
+     * Falls back to {@link Options#LOADER_PATH} if all provided names are blank.
+     *
+     * @param propertyName variable number of property names to check in order
+     * @return the loader path, or null if no path is configured
+     */
     protected String getLoaderPath(String... propertyName) {
         String loaderPath = null;
         for (String name : propertyName) {

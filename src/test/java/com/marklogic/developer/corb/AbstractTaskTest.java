@@ -1,5 +1,5 @@
 /*
- * * Copyright (c) 2004-2023 MarkLogic Corporation
+ * * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
-import static com.marklogic.developer.corb.Options.INIT_MODULE;
-import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_MESSAGE;
+
+import static com.marklogic.developer.corb.Options.*;
 import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 import com.marklogic.xcc.AdhocQuery;
 import com.marklogic.xcc.ContentSource;
@@ -48,6 +48,7 @@ import com.marklogic.xcc.types.XdmValue;
 import com.marklogic.xcc.types.XdmVariable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -57,10 +58,12 @@ import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
+
+import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -69,7 +72,7 @@ import static org.mockito.Mockito.when;
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class AbstractTaskTest {
+class AbstractTaskTest {
 
     private final TestHandler testLogger = new TestHandler();
     private static final Logger LOG = Logger.getLogger(AbstractTask.class.getName());
@@ -93,19 +96,19 @@ public class AbstractTaskTest {
     private static final String ADHOC_MODULE = "adhoc.xqy";
     private static final String EMPTY_DOC_ELEMENT = "<doc/>";
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         clearSystemProperties();
         LOG.addHandler(testLogger);
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         clearSystemProperties();
     }
 
     @Test
-    public void testSetContentSource() {
+    void testSetContentSource() {
         ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
         AbstractTask task = new AbstractTaskImpl();
         task.setContentSourcePool(contentSourcePool);
@@ -113,7 +116,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testSetModuleType() {
+    void testSetModuleType() {
         String moduleType = FOO;
         AbstractTask task = new AbstractTaskImpl();
         task.setModuleType(moduleType);
@@ -121,7 +124,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testSetModuleURI() {
+    void testSetModuleURI() {
         String moduleUri = "test.xqy";
         AbstractTask task = new AbstractTaskImpl();
         task.setModuleURI(moduleUri);
@@ -129,7 +132,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testSetAdhocQuery() {
+    void testSetAdhocQuery() {
         String adhocQuery = ADHOC_MODULE;
         AbstractTask task = new AbstractTaskImpl();
         task.setAdhocQuery(adhocQuery);
@@ -137,7 +140,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testSetQueryLanguage() {
+    void testSetQueryLanguage() {
         String language = "XQuery";
         AbstractTask task = new AbstractTaskImpl();
         task.setQueryLanguage(language);
@@ -145,7 +148,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testSetProperties() {
+    void testSetProperties() {
         Properties properties = new Properties();
         AbstractTask task = new AbstractTaskImpl();
         task.setProperties(properties);
@@ -153,7 +156,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testSetInputURI() {
+    void testSetInputURI() {
         String[] inputUri = {FOO, BAR, BAZ};
         AbstractTask task = new AbstractTaskImpl();
         task.setInputURI(inputUri);
@@ -161,7 +164,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testSetInputURINull() {
+    void testSetInputURINull() {
         AbstractTask task = new AbstractTaskImpl();
         assertNull(task.inputUris);
         task.setInputURI((String[]) null);
@@ -169,7 +172,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testSetFailOnError() {
+    void testSetFailOnError() {
         AbstractTask task = new AbstractTaskImpl();
         task.setFailOnError(false);
         assertFalse(task.failOnError);
@@ -178,7 +181,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testSetExportDir() {
+    void testSetExportDir() {
         String exportFileDir = TMP_DIR;
         AbstractTask task = new AbstractTaskImpl();
         task.setExportDir(exportFileDir);
@@ -186,7 +189,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGetExportDir() {
+    void testGetExportDir() {
         AbstractTask task = new AbstractTaskImpl();
         String expResult = TMP_DIR;
         task.exportDir = expResult;
@@ -195,28 +198,25 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testNewSession() throws CorbException{
+    void testNewSession() throws CorbException{
         AbstractTask task = new AbstractTaskImpl();
-        ContentSourcePool csp = mock(ContentSourcePool.class);
-        ContentSource cs = mock(ContentSource.class);
-        Session session = mock(Session.class);
-        when(csp.get()).thenReturn(cs);
-        when(cs.newSession()).thenReturn(session);
-        task.csp = csp;
-        Session result = task.newSession();
-        assertEquals(session, result);
+        ContentSourcePool csp = TestUtils.mockContentSourcePool();
+        try (Session session = TestUtils.getSessionFromPool(csp)) {
+            task.csp = csp;
+            Session result = task.newSession();
+            assertEquals(session, result);
+        }
     }
 
     @Test
-    public void testInvokeModule() {
+    void testInvokeModule() {
         String[] inputUris = new String[]{FOO, BAR, BAZ};
         AbstractTask task = new AbstractTaskImpl();
         task.moduleUri = "module.xqy";
         task.adhocQuery = ADHOC_MODULE;
         task.inputUris = inputUris;
 
-        try {
-            ContentSourcePool contentSourcePool = mock(ContentSourcePool.class);
+        try (ContentSourcePool contentSourcePool = mock(ContentSourcePool.class)) {
             ContentSource cs = mock(ContentSource.class);
             Session session = mock(Session.class);
             ModuleInvoke request = mock(ModuleInvoke.class);
@@ -234,20 +234,20 @@ public class AbstractTaskTest {
             Properties props = new Properties();
             props.setProperty(key1, BAZ);
             props.setProperty(key2, "boo");
-            props.setProperty(Options.BATCH_URI_DELIM, "");
+            props.setProperty(BATCH_URI_DELIM, "");
             task.properties = props;
 
             task.inputUris = new String[]{URI, "uri2"};
             String[] result = task.invokeModule();
             assertArrayEquals(task.inputUris, result);
-        } catch (RequestException | CorbException ex) {
+        } catch (RequestException | IOException | CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
 
     @Test
-    public void testGenerateRequestModuleInvoke() {
+    void testGenerateRequestModuleInvoke() {
         ModuleInvoke request = new ModuleInvokeImpl();
         Session session = mock(Session.class);
         when(session.newModuleInvoke(anyString())).thenReturn(request);
@@ -280,14 +280,14 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGenerateRequestDocLoader() {
+    void testGenerateRequestDocLoader() {
         ModuleInvoke request = new ModuleInvokeImpl();
         Session session = mock(Session.class);
         when(session.newModuleInvoke(anyString())).thenReturn(request);
         String[] uris = new String[]{"<doc1/>", "<doc2/>", "<doc3/>"};
         AbstractTask task = new AbstractTaskImpl();
         task.moduleUri = URI;
-        task.properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_DOC);
+        task.properties.setProperty(LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_DOC);
         task.inputUris = uris;
 
         try {
@@ -301,18 +301,18 @@ public class AbstractTaskTest {
         assertEquals(1, variableList.size());
         XdmValue value = variableList.get(0).getValue();
         assertNotNull(value);
-        assertTrue(value instanceof XdmItem);
+        assertInstanceOf(XdmItem.class, value);
     }
 
     @Test
-    public void testGenerateRequestURILoaderWithXML() {
+    void testGenerateRequestURILoaderWithXML() {
         ModuleInvoke request = new ModuleInvokeImpl();
         Session session = mock(Session.class);
         when(session.newModuleInvoke(anyString())).thenReturn(request);
 
         AbstractTask task = new AbstractTaskImpl();
         task.moduleUri = URI;
-        task.properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_URI);
+        task.properties.setProperty(LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_URI);
         task.inputUris = new String[]{EMPTY_DOC_ELEMENT};
 
         try {
@@ -328,14 +328,14 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGenerateRequestURILoaderWithMultipleXMLStringValues() {
+    void testGenerateRequestURILoaderWithMultipleXMLStringValues() {
         ModuleInvoke request = new ModuleInvokeImpl();
         Session session = mock(Session.class);
         when(session.newModuleInvoke(anyString())).thenReturn(request);
 
         AbstractTask task = new AbstractTaskImpl();
         task.moduleUri = URI;
-        task.properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_URI);
+        task.properties.setProperty(LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_URI);
         task.inputUris = new String[]{EMPTY_DOC_ELEMENT, EMPTY_DOC_ELEMENT, EMPTY_DOC_ELEMENT};
 
         try {
@@ -352,7 +352,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGenerateRequestModuleInvokeSetLanguage() {
+    void testGenerateRequestModuleInvokeSetLanguage() {
         ModuleInvoke request = new ModuleInvokeImpl();
         Session session = mock(Session.class);
         when(session.newModuleInvoke(anyString())).thenReturn(request);
@@ -371,7 +371,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGenerateRequestModuleInvokeSetTimeZone() {
+    void testGenerateRequestModuleInvokeSetTimeZone() {
         ModuleInvoke request = new ModuleInvokeImpl();
         Session session = mock(Session.class);
         when(session.newModuleInvoke(anyString())).thenReturn(request);
@@ -390,7 +390,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGenerateRequestModuleInvokeWithCustomInputs() {
+    void testGenerateRequestModuleInvokeWithCustomInputs() {
         ModuleInvoke request = new ModuleInvokeImpl();
         Session session = mock(Session.class);
         when(session.newModuleInvoke(anyString())).thenReturn(request);
@@ -399,7 +399,7 @@ public class AbstractTaskTest {
         task.moduleUri = URI;
         task.setModuleType(INIT_MODULE);
         task.properties.setProperty(INIT_MODULE + '.' + FOO, BAR);
-        task.properties.setProperty(Options.POST_BATCH_MODULE + '.' + BAZ, BAR);
+        task.properties.setProperty(POST_BATCH_MODULE + '.' + BAZ, BAR);
         try {
             task.generateRequest(session);
         } catch (CorbException ex) {
@@ -416,7 +416,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGenerateRequestModuleInvokeWithUrisBatchRef() {
+    void testGenerateRequestModuleInvokeWithUrisBatchRef() {
         ModuleInvoke request = new ModuleInvokeImpl();
         Session session = mock(Session.class);
         when(session.newModuleInvoke(anyString())).thenReturn(request);
@@ -424,7 +424,7 @@ public class AbstractTaskTest {
         AbstractTask task = new AbstractTaskImpl();
         task.moduleUri = URI;
         task.setModuleType(INIT_MODULE);
-        task.properties.setProperty(Options.URIS_BATCH_REF, BAZ);
+        task.properties.setProperty(URIS_BATCH_REF, BAZ);
         try {
             task.generateRequest(session);
         } catch (CorbException ex) {
@@ -433,20 +433,20 @@ public class AbstractTaskTest {
         }
         List<XdmVariable> variableList = Arrays.asList(request.getVariables());
 
-        XdmVariable customInputVariable = buildStringXdmVariable(Options.URIS_BATCH_REF, BAR);
+        XdmVariable customInputVariable = buildStringXdmVariable(URIS_BATCH_REF, BAR);
         assertTrue(variableList.contains(customInputVariable));
     }
 
     @Test
-    public void testGenerateRequestModuleInvokeWithoutModuleUri() {
+    void testGenerateRequestModuleInvokeWithoutModuleUri() {
         AdhocQuery request = new AdhocQueryImpl();
         Session session = mock(Session.class);
-        when(session.newAdhocQuery(anyString())).thenReturn(request);
+        when(session.newAdhocQuery(nullable(String.class))).thenReturn(request);
 
         AbstractTask task = new AbstractTaskImpl();
         try {
             Request requestResult = task.generateRequest(session);
-            assertTrue(requestResult instanceof AdhocQuery);
+            assertInstanceOf(AdhocQuery.class, requestResult);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -460,7 +460,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGetCustomInputPropertyNames() {
+    void testGetCustomInputPropertyNames() {
         String key1 = FOO + ".bar";
         String key2 = FOO + ".baz";
         AbstractTask task = new AbstractTaskImpl();
@@ -469,7 +469,7 @@ public class AbstractTaskTest {
         Properties props = new Properties();
         props.setProperty(key1, BAZ);
         props.setProperty(key2, "boo");
-        props.setProperty(Options.BATCH_URI_DELIM, "");
+        props.setProperty(BATCH_URI_DELIM, "");
         task.properties = props;
         Set<String> inputs = task.getCustomInputPropertyNames();
         assertEquals(2, inputs.size());
@@ -479,7 +479,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGetIntProperty() {
+    void testGetIntProperty() {
         Properties props = new Properties();
         props.setProperty(ONE, ONE);
         props.setProperty(TWO, "2");
@@ -493,7 +493,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testInvokeModuleRetryableXQueryException() {
+    void testInvokeModuleRetryableXQueryException() {
         Request req = mock(Request.class);
         RetryableXQueryException retryableException = new RetryableXQueryException(req, CODE, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
         try {
@@ -505,7 +505,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testInvokeModuleXQueryException() {
+    void testInvokeModuleXQueryException() {
         Request req = mock(Request.class);
         XQueryException xqueryException = new XQueryException(req, CODE, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
         try {
@@ -517,7 +517,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testInvokeModuleRetryableJavaScriptException() {
+    void testInvokeModuleRetryableJavaScriptException() {
         Request req = mock(Request.class);
         RetryableJavaScriptException retryableException = new RetryableJavaScriptException(req, CODE, W3C_CODE, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
         try {
@@ -529,7 +529,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testHandleRequestExceptionRequestServerException() {
+    void testHandleRequestExceptionRequestServerException() {
         Request req = mock(Request.class);
         RequestServerException serverException = new RequestServerException(ERROR_MSG, req);
         try {
@@ -538,22 +538,17 @@ public class AbstractTaskTest {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
-    }
-
-    @Test(expected = CorbException.class)
-    public void testHandleRequestExceptionRequestServerExceptionFail() throws CorbException {
-        Request req = mock(Request.class);
-        RequestServerException serverException = new RequestServerException(ERROR_MSG, req);
-        try {
-            testHandleRequestException(serverException, true, 0);
-        } catch (IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
-        fail();
     }
 
     @Test
-    public void testHandleRequestExceptionRequestPermissionException() {
+    void testHandleRequestExceptionRequestServerExceptionFail() {
+        Request req = mock(Request.class);
+        RequestServerException serverException = new RequestServerException(ERROR_MSG, req);
+        assertThrows(CorbException.class, () -> testHandleRequestException(serverException, true, 0));
+    }
+
+    @Test
+    void testHandleRequestExceptionRequestPermissionException() {
         Request req = mock(Request.class);
         RequestPermissionException serverException = new RequestPermissionException(ERROR_MSG, req, ADMIN);
         try {
@@ -564,32 +559,22 @@ public class AbstractTaskTest {
         }
     }
 
-    @Test(expected = CorbException.class)
-    public void testHandleRequestExceptionRequestPermissionExceptionFail() throws CorbException {
+    @Test
+    void testHandleRequestExceptionRequestPermissionExceptionFail() {
         Request req = mock(Request.class);
         RequestPermissionException serverException = new RequestPermissionException(ERROR_MSG, req, ADMIN);
-        try {
-            testHandleRequestException(serverException, true, 2);
-        } catch (IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
-        fail();
+        assertThrows(CorbException.class, () -> testHandleRequestException(serverException, true, 2));
     }
 
-    @Test(expected = CorbException.class)
-    public void testHandleRequestExceptionServerConnectionExceptionFail() throws CorbException {
+    @Test
+    void testHandleRequestExceptionServerConnectionExceptionFail() {
         Request req = mock(Request.class);
         ServerConnectionException serverException = new ServerConnectionException(ERROR_MSG, req);
-        try {
-            testHandleRequestException(serverException, true, 0);
-        } catch (IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
-        fail();
+        assertThrows(CorbException.class, () -> testHandleRequestException(serverException, true, 0));
     }
 
-    @Test(expected = CorbException.class)
-    public void testHandleRequestExceptionRequestExceptionWithServerConnectionExceptionNoFail() throws CorbException {
+    @Test
+    void testHandleRequestExceptionRequestExceptionWithServerConnectionExceptionNoFail() {
         Request req = mock(Request.class);
         SessionImpl session = mock(SessionImpl.class);
         when(req.getSession()).thenReturn(session);
@@ -602,15 +587,15 @@ public class AbstractTaskTest {
         task.failOnError = true;
         task.inputUris = uris;
         task.properties = new Properties();
-        task.properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(retry));
-        task.properties.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(retry));
-        task.properties.setProperty(Options.QUERY_RETRY_INTERVAL, Integer.toString(retry));
-        task.properties.setProperty(Options.QUERY_RETRY_LIMIT, Integer.toString(retry));
-        task.handleRequestException(exception);
+        task.properties.setProperty(XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(retry));
+        task.properties.setProperty(XCC_CONNECTION_RETRY_LIMIT, Integer.toString(retry));
+        task.properties.setProperty(QUERY_RETRY_INTERVAL, Integer.toString(retry));
+        task.properties.setProperty(QUERY_RETRY_LIMIT, Integer.toString(retry));
+        assertThrows(CorbException.class, () -> task.handleRequestException(exception));
     }
 
     @Test
-    public void testHandleRequestExceptionRequestExceptionAndRetryServerConnectionException() {
+    void testHandleRequestExceptionRequestExceptionAndRetryServerConnectionException() {
         Request req = mock(Request.class);
         SessionImpl session = mock(SessionImpl.class);
         when(req.getSession()).thenReturn(session);
@@ -624,32 +609,33 @@ public class AbstractTaskTest {
             task.failOnError = true;
             task.inputUris = uris;
             task.properties = new Properties();
-            task.properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(retry));
-            task.properties.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(retry));
-            task.properties.setProperty(Options.QUERY_RETRY_INTERVAL, Integer.toString(retry));
-            task.properties.setProperty(Options.QUERY_RETRY_LIMIT, Integer.toString(retry));
+            task.properties.setProperty(XCC_CONNECTION_RETRY_INTERVAL, Integer.toString(retry));
+            task.properties.setProperty(XCC_CONNECTION_RETRY_LIMIT, Integer.toString(retry));
+            task.properties.setProperty(QUERY_RETRY_INTERVAL, Integer.toString(retry));
+            task.properties.setProperty(QUERY_RETRY_LIMIT, Integer.toString(retry));
             task.properties.setProperty(QUERY_RETRY_ERROR_MESSAGE, "Premature EOF");
 
             task.handleRequestException(exception);
             List<LogRecord> records = testLogger.getLogRecords();
 
             assertEquals(Level.WARNING, records.get(0).getLevel());
-            assertTrue("Since we told it to retry on EOF, no exception (re)thrown", task.shouldRetry(exception));
+            //Since we told it to retry on EOF, no exception (re)thrown
+            assertTrue(task.shouldRetry(exception));
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
 
-    @Test (expected = CorbException.class)
-    public void testHandleProcessException() throws CorbException {
+    @Test
+    void testHandleProcessException() {
         Exception ex = mock(Exception.class);
         AbstractTask task = new AbstractTaskImpl();
-        task.handleProcessException(ex);
+        assertThrows(CorbException.class, () -> task.handleProcessException(ex));
     }
 
     @Test
-    public void testHandleProcessExceptionDoNotFailOnError() {
+    void testHandleProcessExceptionDoNotFailOnError() {
         String[] uris = new String[]{"foo"};
         Exception ex = mock(Exception.class);
         AbstractTask task = new AbstractTaskImpl();
@@ -664,55 +650,151 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testShouldRetryNotRetryableQueryExceptionCSVwithSpaces() {
+    void testHandleProcessExceptionDoNotFailOnErrorWritesRestartState() throws IOException {
+        String[] uris = new String[]{"foo", "bar"};
+        Exception ex = mock(Exception.class);
+        AbstractTask task = new AbstractTaskImpl();
+        File restartStateDir = createTempDirectory();
+        task.failOnError = false;
+        task.inputUris = uris;
+        task.properties = new Properties();
+        task.properties.setProperty(RESTARTABLE, Boolean.TRUE.toString());
+        task.properties.setProperty(RESTART_STATE_DIR, restartStateDir.getAbsolutePath());
+
+        try {
+            String[] result = task.handleProcessException(ex);
+            assertArrayEquals(uris, result);
+            File completedUrisFile = new File(restartStateDir, RestartableJobState.COMPLETED_URIS_FILENAME);
+            String completedUris = TestUtils.readFile(completedUrisFile);
+            assertTrue(completedUris.contains("foo"));
+            assertTrue(completedUris.contains("bar"));
+        } catch (CorbException exc) {
+            fail();
+        }
+    }
+
+    @Test
+    void testHandleProcessExceptionFailOnErrorWritesRestartState() throws IOException {
+        String[] uris = new String[]{"foo", "bar"};
+        Exception ex = mock(Exception.class);
+        AbstractTask task = new AbstractTaskImpl();
+        File restartStateDir = createTempDirectory();
+        task.failOnError = true;
+        task.inputUris = uris;
+        task.properties = new Properties();
+        task.properties.setProperty(RESTARTABLE, Boolean.TRUE.toString());
+        task.properties.setProperty(RESTART_STATE_DIR, restartStateDir.getAbsolutePath());
+
+        assertThrows(CorbException.class, () -> task.handleProcessException(ex));
+        File completedUrisFile = new File(restartStateDir, RestartableJobState.COMPLETED_URIS_FILENAME);
+        String completedUris = TestUtils.readFile(completedUrisFile);
+        assertTrue(completedUris.contains("foo"));
+        assertTrue(completedUris.contains("bar"));
+    }
+
+    @Test
+    void testHandleProcessExceptionUsesTempDirWhenRestartStateDirMissing() throws IOException {
+        String[] uris = new String[]{"foo", "bar"};
+        Exception ex = mock(Exception.class);
+        AbstractTask task = new AbstractTaskImpl();
+        File tempDir = createTempDirectory();
+        task.failOnError = false;
+        task.inputUris = uris;
+        task.properties = new Properties();
+        task.properties.setProperty(RESTARTABLE, Boolean.TRUE.toString());
+        task.properties.setProperty(TEMP_DIR, tempDir.getAbsolutePath());
+
+        try {
+            task.handleProcessException(ex);
+            File completedUrisFile = new File(tempDir, RestartableJobState.COMPLETED_URIS_FILENAME);
+            String completedUris = TestUtils.readFile(completedUrisFile);
+            assertTrue(completedUris.contains("foo"));
+            assertTrue(completedUris.contains("bar"));
+        } catch (CorbException exc) {
+            fail();
+        }
+    }
+
+    @Test
+    void testHandleProcessExceptionUsesJavaTmpDirWhenRestartStateDirMissing() throws IOException {
+        String[] uris = new String[]{"foo", "bar"};
+        Exception ex = mock(Exception.class);
+        AbstractTask task = new AbstractTaskImpl();
+        File javaTmpDir = createTempDirectory();
+        String originalJavaTmpDir = System.getProperty("java.io.tmpdir");
+        task.failOnError = false;
+        task.inputUris = uris;
+        task.properties = new Properties();
+        task.properties.setProperty(RESTARTABLE, Boolean.TRUE.toString());
+        System.setProperty("java.io.tmpdir", javaTmpDir.getAbsolutePath());
+
+        try {
+            task.handleProcessException(ex);
+            File completedUrisFile = new File(javaTmpDir, RestartableJobState.COMPLETED_URIS_FILENAME);
+            String completedUris = TestUtils.readFile(completedUrisFile);
+            assertTrue(completedUris.contains("foo"));
+            assertTrue(completedUris.contains("bar"));
+        } catch (CorbException exc) {
+            fail();
+        } finally {
+            if (originalJavaTmpDir != null) {
+                System.setProperty("java.io.tmpdir", originalJavaTmpDir);
+            } else {
+                System.clearProperty("java.io.tmpdir");
+            }
+        }
+    }
+
+    @Test
+    void testShouldRetryNotRetryableQueryExceptionCSVwithSpaces() {
         Request req = mock(Request.class);
         AbstractTask task = new AbstractTaskImpl();
         task.properties = new Properties();
-        task.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "foo, SVC-EXTIME, XDMP-EXTIME, bar");
+        task.properties.setProperty(QUERY_RETRY_ERROR_CODES, "foo, SVC-EXTIME, XDMP-EXTIME, bar");
         XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", false, new String[0], new QueryStackFrame[0]);
         assertTrue(task.shouldRetry(exception));
     }
 
     @Test
-    public void testShouldRetryNotRetryableQueryException() {
+    void testShouldRetryNotRetryableQueryException() {
         Request req = mock(Request.class);
         AbstractTask task = new AbstractTaskImpl();
         task.properties = new Properties();
-        task.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,XDMP-BAR,XDMP-BAZ");
+        task.properties.setProperty(QUERY_RETRY_ERROR_CODES, "SVC-FOO,XDMP-BAR,XDMP-BAZ");
         XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", false, new String[0], new QueryStackFrame[0]);
 
         assertFalse(task.shouldRetry(exception));
 
-        task.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, SVC_EXTIME + ",XDMP-EXTIME");
+        task.properties.setProperty(QUERY_RETRY_ERROR_CODES, SVC_EXTIME + ",XDMP-EXTIME");
         assertTrue(task.shouldRetry(exception));
 
-        task.properties.remove(Options.QUERY_RETRY_ERROR_CODES);
+        task.properties.remove(QUERY_RETRY_ERROR_CODES);
         assertFalse(task.shouldRetry(exception)); //no match on code(and no exception attempting to split null)
     }
 
     @Test
-    public void testShouldRetryRetryableQueryException() {
+    void testShouldRetryRetryableQueryException() {
         Request req = mock(Request.class);
         AbstractTask task = new AbstractTaskImpl();
         task.properties = new Properties();
-        task.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
+        task.properties.setProperty(QUERY_RETRY_ERROR_CODES, "SVC-FOO,SVC-BAR,XDMP-BAZ");
         XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", true, new String[0], new QueryStackFrame[0]);
 
         assertTrue(task.shouldRetry(exception)); //since it's retryable, doesn't matter if code matches
 
-        task.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, SVC_EXTIME + ",XDMP-EXTIME");
+        task.properties.setProperty(QUERY_RETRY_ERROR_CODES, SVC_EXTIME + ",XDMP-EXTIME");
         assertTrue(task.shouldRetry(exception)); //is retryable and the code matches
 
-        task.properties.remove(Options.QUERY_RETRY_ERROR_CODES);
+        task.properties.remove(QUERY_RETRY_ERROR_CODES);
         assertTrue(task.shouldRetry(exception));
     }
 
     @Test
-    public void testShouldRetryRequestPermissionException() {
+    void testShouldRetryRequestPermissionException() {
         Request req = mock(Request.class);
         AbstractTask task = new AbstractTaskImpl();
         task.properties = new Properties();
-        task.properties.setProperty(Options.QUERY_RETRY_ERROR_CODES, "XDMP-FOO,SVC-BAR,SVC-BAZ");
+        task.properties.setProperty(QUERY_RETRY_ERROR_CODES, "XDMP-FOO,SVC-BAR,SVC-BAZ");
         RequestPermissionException exception = new RequestPermissionException(REJECTED_MSG, req, USER_NAME, false);
         assertFalse(task.shouldRetry(exception));
 
@@ -721,11 +803,11 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testHasRetryableMessage() {
+    void testHasRetryableMessage() {
         Request req = mock(Request.class);
         AbstractTask task = new AbstractTaskImpl();
         task.properties = new Properties();
-        task.properties.setProperty(Options.QUERY_RETRY_ERROR_MESSAGE, "FOO,Authentication failure for user,BAR");
+        task.properties.setProperty(QUERY_RETRY_ERROR_MESSAGE, "FOO,Authentication failure for user,BAR");
         RequestPermissionException exception = new RequestPermissionException(REJECTED_MSG, req, USER_NAME, false);
         assertFalse(task.hasRetryableMessage(exception));
 
@@ -734,7 +816,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testHasRetryableMessageWithServerConnectionException() {
+    void testHasRetryableMessageWithServerConnectionException() {
         Request req = mock(Request.class);
         AbstractTask task = new AbstractTaskImpl();
         task.properties = new Properties();
@@ -742,12 +824,12 @@ public class AbstractTaskTest {
         ServerConnectionException exception = new ServerConnectionException("Error parsing HTTP headers: Premature EOF, partial header line read: ''", req);
         assertFalse(task.hasRetryableMessage(exception));
 
-        task.properties.setProperty(Options.QUERY_RETRY_ERROR_MESSAGE, "Premature EOF");
+        task.properties.setProperty(QUERY_RETRY_ERROR_MESSAGE, "Premature EOF");
         assertTrue(task.hasRetryableMessage(exception));
     }
 
     @Test
-    public void testToXdmItems() {
+    void testToXdmItems() {
         AbstractTask task = new AbstractTaskImpl();
         try {
             XdmItem[] result = task.toXdmItems("", FOO, EMPTY_DOC_ELEMENT);
@@ -762,7 +844,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testToXdmItemsMalformedXML() {
+    void testToXdmItemsMalformedXML() {
         AbstractTask task = new AbstractTaskImpl();
         try {
             XdmItem[] result = task.toXdmItems(EMPTY_DOC_ELEMENT);
@@ -774,7 +856,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testWriteToErrorFileNullUris() throws CorbException, IOException {
+    void testWriteToErrorFileNullUris() throws CorbException, IOException {
         String[] uris = null;
         File exportDir = createTempDirectory();
         String filename = "testWriteToErrorFileNullUris.error";
@@ -786,7 +868,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testWriteToErrorFileEmptyUris() throws CorbException, IOException {
+    void testWriteToErrorFileEmptyUris() throws CorbException, IOException {
         String[] uris = new String[]{};
         File exportDir = createTempDirectory();
         String filename = "testWriteToErrorFileEmptyUris.error";
@@ -796,22 +878,22 @@ public class AbstractTaskTest {
         assertFalse(errorFile.exists());
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testWriteToErrorFileNullErrorFilename() {
+    @Test
+    void testWriteToErrorFileNullErrorFilename() {
         String[] uris = new String[]{URI};
         String filename = null;
         String delim = null;
         try {
             File exportDir = createTempDirectory();
-            testWriteToError(uris, delim, exportDir, filename, ERROR);
-        } catch (CorbException | IOException ex) {
+            assertThrows(NullPointerException.class, () -> testWriteToError(uris, delim, exportDir, filename, ERROR));
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
     }
 
     @Test
-    public void testWriteToErrorFileEmptyErrorFilename() {
+    void testWriteToErrorFileEmptyErrorFilename() {
         String[] uris = new String[]{URI};
         String filename = "";
         String delim = null;
@@ -827,12 +909,12 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testWriteToErrorFileNullBatchUriDelim() {
+    void testWriteToErrorFileNullBatchUriDelim() {
         testWriteToErrorFileDefaultDelimiter(null);
     }
 
     @Test
-    public void testWriteToErrorFileEmptyBatchUriDelim() {
+    void testWriteToErrorFileEmptyBatchUriDelim() {
         testWriteToErrorFileDefaultDelimiter("");
     }
 
@@ -849,7 +931,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testWriteToErrorFileCustomBatchUridelim() {
+    void testWriteToErrorFileCustomBatchUridelim() {
         String[] uris = new String[]{URI};
         String filename = "testWriteToErrorFileCustomBatchUridelim.err";
         String delim = "$";
@@ -866,7 +948,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testWriteToErrorFileNullMessage() {
+    void testWriteToErrorFileNullMessage() {
         String[] uris = new String[]{URI};
         String filename = "testWriteToErrorFileNullMessage.err";
         String delim = "|";
@@ -884,7 +966,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testWriteToErrorFileEmptyMessage() {
+    void testWriteToErrorFileEmptyMessage() {
         String[] uris = new String[]{URI};
         String filename = "testWriteToErrorFileEmptyMessage.err";
         String delim = "~";
@@ -901,7 +983,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testUrisAsString() {
+    void testUrisAsString() {
         String[] uris = new String[]{FOO, BAR, BAZ};
         AbstractTask task = new AbstractTaskImpl();
         String result = task.urisAsString(uris);
@@ -909,7 +991,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testUrisAsStringEmptyArray() {
+    void testUrisAsStringEmptyArray() {
         String[] uris = new String[]{};
         AbstractTask task = new AbstractTaskImpl();
         String result = task.urisAsString(uris);
@@ -917,7 +999,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testUrisAsStringNull() {
+    void testUrisAsStringNull() {
         String[] uris = null;
         AbstractTask task = new AbstractTaskImpl();
         String result = task.urisAsString(uris);
@@ -925,7 +1007,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testCleanup() {
+    void testCleanup() {
         AbstractTask task = new AbstractTaskImpl();
         task.csp = mock(ContentSourcePool.class);
         task.moduleType = "moduleType";
@@ -943,8 +1025,8 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGetProperty() {
-        String key = Options.INIT_TASK;
+    void testGetProperty() {
+        String key = INIT_TASK;
         String val = FOO;
         Properties props = new Properties();
         props.setProperty(key, val);
@@ -955,8 +1037,8 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGetPropertySystemPropertyTakesPrecedence() {
-        String key = Options.INIT_TASK;
+    void testGetPropertySystemPropertyTakesPrecedence() {
+        String key = INIT_TASK;
         String val = FOO;
         System.setProperty(key, val);
         Properties props = new Properties();
@@ -969,7 +1051,7 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGetValueAsBytesXdmBinary() {
+    void testGetValueAsBytesXdmBinary() {
         XdmItem item = mock(XdmBinary.class);
 
         byte[] result = AbstractTaskImpl.getValueAsBytes(item);
@@ -977,12 +1059,12 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGetValueAsBytesXdmItem() {
+    void testGetValueAsBytesXdmItem() {
         XdmItem item = mock(XdmItem.class);
         String value = FOO;
         when(item.asString()).thenReturn(value);
         byte[] result = AbstractTaskImpl.getValueAsBytes(item);
-        assertArrayEquals(value.getBytes(), result);
+        assertArrayEquals(value.getBytes(StandardCharsets.UTF_8), result);
     }
 
     public File createTempDirectory() throws IOException {
@@ -1016,17 +1098,17 @@ public class AbstractTaskTest {
         task.exportDir = dir.getAbsolutePath();
         task.properties = new Properties();
         if (errorFilename != null) {
-            task.properties.setProperty(Options.ERROR_FILE_NAME, errorFilename);
+            task.properties.setProperty(ERROR_FILE_NAME, errorFilename);
         }
         if (delim != null) {
-            task.properties.setProperty(Options.BATCH_URI_DELIM, delim);
+            task.properties.setProperty(BATCH_URI_DELIM, delim);
         }
 
-        task.properties.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "1");
-        task.properties.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, Integer.toString(retryLimit));
+        task.properties.setProperty(XCC_CONNECTION_RETRY_INTERVAL, "1");
+        task.properties.setProperty(XCC_CONNECTION_RETRY_LIMIT, Integer.toString(retryLimit));
 
-        task.properties.setProperty(Options.QUERY_RETRY_INTERVAL, "2");
-        task.properties.setProperty(Options.QUERY_RETRY_LIMIT, Integer.toString(retryLimit));
+        task.properties.setProperty(QUERY_RETRY_INTERVAL, "2");
+        task.properties.setProperty(QUERY_RETRY_LIMIT, Integer.toString(retryLimit));
 
         task.handleRequestException(exception);
         List<LogRecord> records = testLogger.getLogRecords();
@@ -1047,51 +1129,59 @@ public class AbstractTaskTest {
     }
 
     @Test
-    public void testGetValueAsBytesDefault() {
+    void testGetValueAsBytesDefault() {
         XdmItem item = null;
         byte[] result = AbstractTaskImpl.getValueAsBytes(item);
         assertArrayEquals(new byte[]{}, result);
     }
 
     @Test
-    public void testWrapProcessException() {
+    void testWrapProcessException() {
         AbstractTask task = new AbstractTaskImpl();
         Exception ex = new IllegalAccessException();
         CorbException corbException = task.wrapProcessException(ex, "uri1", "uri2");
-        assertEquals(corbException.getCause().getClass(), IllegalAccessException.class);
+        assertNotNull(corbException);
+        assertNotNull(corbException.getCause());
+        assertEquals(IllegalAccessException.class, corbException.getCause().getClass());
+        assertNotNull(corbException.getMessage());
         assertTrue(corbException.getMessage().contains("uri1"));
     }
 
     @Test
-    public void testWrapProcessExceptionNullUri() {
+    void testWrapProcessExceptionNullUri() {
         AbstractTask task = new AbstractTaskImpl();
         Exception ex = new IllegalAccessException();
         CorbException corbException = task.wrapProcessException(ex, null);
-        assertEquals(corbException.getCause().getClass(), IllegalAccessException.class);
+        assertNotNull(corbException.getCause());
+        Throwable cause = corbException.getCause();
+        assertNotNull(cause);
+        assertEquals(IllegalAccessException.class, cause.getClass());
         assertNotNull(corbException.getMessage());
     }
 
     @Test
-    public void testWrapProcessExceptionRedacted() {
+    void testWrapProcessExceptionRedacted() {
         AbstractTask task = new AbstractTaskImpl();
         Properties properties = new Properties();
-        properties.setProperty(Options.URIS_REDACTED, Boolean.TRUE.toString());
+        properties.setProperty(URIS_REDACTED, Boolean.TRUE.toString());
         task.setProperties(properties);
         Exception ex = new IllegalAccessException();
         CorbException corbException = task.wrapProcessException(ex, "uri1", "uri2");
-        assertEquals(corbException.getCause().getClass(), IllegalAccessException.class);
+        assertNotNull(corbException);
+        assertNotNull(corbException.getCause());
+        assertEquals(IllegalAccessException.class, corbException.getCause().getClass());
         assertFalse(corbException.getMessage().contains("uri1"));
     }
 
     private static class AbstractTaskImpl extends AbstractTask {
 
         @Override
-        public String processResult(ResultSequence seq) throws CorbException {
+        public String processResult(ResultSequence seq) {
             return "";
         }
 
         @Override
-        public String[] call() throws Exception {
+        public String[] call() {
             throw new UnsupportedOperationException();
         }
 
@@ -1221,7 +1311,7 @@ public class AbstractTaskTest {
 
     private static class AdhocQueryImpl extends RequestImpl implements AdhocQuery {
 
-        private String query;
+        private String query = "";
 
         @Override
         public void setQuery(String string) {

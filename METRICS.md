@@ -1,10 +1,10 @@
 # CoRB Metrics FAQ
 
-* **How can I log the job metrics to the Marklogic error log?**
+* **How can I log the job metrics to the MarkLogic error log?**
     * Logging can be enabled by setting METRICS-LOG-LEVEL property in options.
         + i.e. **METRICS-LOG-LEVEL=info**
         + Startup message is logged when CoRB job starts up and detailed metrics are logged when the job has finished.
-* **How can I set the log level when logging metrics to the Marklogic error log?**
+* **How can I set the log level when logging metrics to the MarkLogic error log?**
     * METRICS-LOG-LEVEL property has the following possible values:
       +  *none,emergency,alert,critical,error,warning,notice,info,config,debug,fine,finer,finest.*
       + Default value is none ( which means the metrics will not be logged to the error log).
@@ -33,9 +33,9 @@
    * METRICS-MODULE option can be used to save metrics document in JSON format
    * When METRICS-MODULE option is set to an XQuery or JavaScript module, that module is executed after the CoRB job completes to save the metrics document.
    * CoRB2 distribution comes with two sample modules that can be found in the resources folder.
-    + [save-metrics.xqy](corb2/src/main/resources/save-metrics.xqy)
+    + [save-metrics.xqy](src/main/resources/save-metrics.xqy)
         + This is the default and saves the metrics document as XML.
-    + [saveMetrics.sjs](corb2/src/main/resources/saveMetrics.sjs)
+    + [saveMetrics.sjs](src/main/resources/saveMetrics.sjs)
         + This will save the metrics document as a **JSON**.
         + Ex:METRICS-MODULE=saveMetrics.sjs|ADHOC
 * **Can I add the metrics document to a Collection?**
@@ -47,7 +47,7 @@
     * JOB-NAME defaults to the job run location
      
 * **I want to have complete control over how the metrics document is saved. Is that possible?**
-    * You can use the above mentioned sample modules (*[saveMetrics.sjs](corb2/src/main/resources/saveMetrics.sjs) and [save-metric-to-db.xqy](corb2/src/main/resources/save-metric-to-db.xqy)*) as an example and implement your own customizations.
+    * You can use the above mentioned sample modules (*[saveMetrics.sjs](src/main/resources/saveMetrics.sjs) and [save-metric-to-db.xqy](src/main/resources/save-metrics.xqy)*) as an example and implement your own customizations.
     + Eg:METRICS-MODULE=/export/home/dev/saveMetricsCustom.sjs|ADHOC
 * **How do I keep logging metrics document at regular intervals?**
     * You can use METRICS-SYNC-FREQUENCY option to specify the frequency at which the document should be saved to the database.

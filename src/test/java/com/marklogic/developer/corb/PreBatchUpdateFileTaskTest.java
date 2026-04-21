@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2023 MarkLogic Corporation
+ * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,25 +22,30 @@ import com.marklogic.xcc.Request;
 import com.marklogic.xcc.exceptions.RequestPermissionException;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
+
+import org.junit.jupiter.api.Test;
+
+import static com.marklogic.developer.corb.Options.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 import static org.mockito.Mockito.mock;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class PreBatchUpdateFileTaskTest {
+class PreBatchUpdateFileTaskTest {
 
     private static final Logger LOG = Logger.getLogger(PreBatchUpdateFileTaskTest.class.getName());
 
     @Test
-    public void testGetTopContent() {
+    void testGetTopContent() {
         Properties props = new Properties();
-        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, "foo@" + Manager.URIS_BATCH_REF + "baz");
+        props.setProperty(EXPORT_FILE_TOP_CONTENT, "foo@" + Manager.URIS_BATCH_REF + "baz");
         props.setProperty(Manager.URIS_BATCH_REF, "bar");
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.properties = props;
@@ -49,7 +54,7 @@ public class PreBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testGetTopContentIsNull() {
+    void testGetTopContentIsNull() {
         Properties props = new Properties();
         props.setProperty(Manager.URIS_BATCH_REF, "bar");
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
@@ -59,10 +64,10 @@ public class PreBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testGetTopContentUrisBatchRefIsNull() {
+    void testGetTopContentUrisBatchRefIsNull() {
         Properties props = new Properties();
         String val = "foo@" + Manager.URIS_BATCH_REF + "baz";
-        props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, val);
+        props.setProperty(EXPORT_FILE_TOP_CONTENT, val);
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         instance.properties = props;
         String result = instance.getTopContent();
@@ -70,7 +75,7 @@ public class PreBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testWriteTopContent() {
+    void testWriteTopContent() {
         try {
             String content = "foo,bar,baz";
             File tempDir = TestUtils.createTempDirectory();
@@ -79,15 +84,15 @@ public class PreBatchUpdateFileTaskTest {
             if (tempFile.createNewFile()) {
                 tempFile.deleteOnExit();
                 Properties props = new Properties();
-                props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, content);
-                props.setProperty(Options.EXPORT_FILE_NAME, tempFile.getName());
+                props.setProperty(EXPORT_FILE_TOP_CONTENT, content);
+                props.setProperty(EXPORT_FILE_NAME, tempFile.getName());
 
                 PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
                 instance.properties = props;
                 instance.exportDir = tempDir.toString();
                 instance.writeTopContent();
                 File partFile = new File(tempDir, instance.getPartFileName());
-                assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(partFile));
+                assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE, StandardCharsets.UTF_8)), TestUtils.readFile(partFile));
             } else {
                 fail();
             }
@@ -97,22 +102,19 @@ public class PreBatchUpdateFileTaskTest {
         }
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testCallNpe() {
+    @Test
+    void testCallNpe() {
         PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
         try {
-            instance.call();
+            assertThrows(NullPointerException.class, instance::call);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
-            if (ex instanceof NullPointerException) {
-                throw (NullPointerException) ex;
-            }
+            fail();
         }
-        fail();
     }
 
     @Test
-    public void testCall() {
+    void testCall() {
         String content = "foo,bar,baz";
         try {
             File tempDir = TestUtils.createTempDirectory();
@@ -120,16 +122,16 @@ public class PreBatchUpdateFileTaskTest {
             if (tempFile.createNewFile()) {
                 tempFile.deleteOnExit();
                 Properties props = new Properties();
-                props.setProperty(Options.EXPORT_FILE_TOP_CONTENT, content);
-                props.setProperty(Options.EXPORT_FILE_NAME, tempFile.getName());
-                props.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
+                props.setProperty(EXPORT_FILE_TOP_CONTENT, content);
+                props.setProperty(EXPORT_FILE_NAME, tempFile.getName());
+                props.setProperty(EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
                 PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
                 instance.properties = props;
                 instance.exportDir = tempDir.toString();
                 File partFile = new File(tempDir, instance.getPartFileName());
                 instance.call();
 
-                assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE)), TestUtils.readFile(partFile));
+                assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE, StandardCharsets.UTF_8)), TestUtils.readFile(partFile));
             } else {
                 fail();
             }
@@ -140,11 +142,41 @@ public class PreBatchUpdateFileTaskTest {
     }
 
     @Test
-    public void testHasRetryableMessage() {
+    void testCallAddsHeaderLineCountForMultilineTopContent() {
+        String content = "header-one\nheader-two";
+        try {
+            File tempDir = TestUtils.createTempDirectory();
+            File tempFile = new File(tempDir, "topContentWithHeaderCount");
+            if (tempFile.createNewFile()) {
+                tempFile.deleteOnExit();
+                Properties props = new Properties();
+                props.setProperty(EXPORT_FILE_TOP_CONTENT, content);
+                props.setProperty(EXPORT_FILE_NAME, tempFile.getName());
+                props.setProperty(EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
+                PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
+                instance.properties = props;
+                instance.exportDir = tempDir.toString();
+                File partFile = new File(tempDir, instance.getPartFileName());
+
+                instance.call();
+
+                assertEquals("2", props.getProperty(EXPORT_FILE_HEADER_LINE_COUNT));
+                assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE, StandardCharsets.UTF_8)), TestUtils.readFile(partFile));
+            } else {
+                fail();
+            }
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    void testHasRetryableMessage() {
         Request req = mock(Request.class);
         AbstractTask instance = new PreBatchUpdateFileTask();
         instance.properties = new Properties();
-        instance.properties.setProperty(Options.QUERY_RETRY_ERROR_MESSAGE, "FOO,Authentication failure for user,BAR");
+        instance.properties.setProperty(QUERY_RETRY_ERROR_MESSAGE, "FOO,Authentication failure for user,BAR");
         RequestPermissionException exception = new RequestPermissionException(AbstractTaskTest.REJECTED_MSG, req, AbstractTaskTest.USER_NAME, false);
         assertFalse(instance.hasRetryableMessage(exception));
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2023 MarkLogic Corporation
+ * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,25 +18,23 @@
  */
 package com.marklogic.developer.corb;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXParseException;
 
-import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class SchemaValidateToFileTaskTest {
+class SchemaValidateToFileTaskTest {
 
     @Test
-    public void testGetFileName() {
+    void testGetFileName() {
 
         SchemaValidateToFileTask validate = new SchemaValidateToFileTask();
         validate.inputUris = new String[]{"/tmp/foo.xml"};
@@ -45,7 +43,7 @@ public class SchemaValidateToFileTaskTest {
     }
 
     @Test
-    public void testGetFileNameWithoutUriToPath() {
+    void testGetFileNameWithoutUriToPath() {
 
         Properties properties = new Properties();
         properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, "false");
@@ -58,7 +56,7 @@ public class SchemaValidateToFileTaskTest {
     }
 
     @Test
-    public void testGetExportFileDoesNotUseExportFilePartExtension() {
+    void testGetExportFileDoesNotUseExportFilePartExtension() {
         String exportFilePartExtension = ".zzz";
         Properties properties = new Properties();
         properties.setProperty(Options.EXPORT_FILE_NAME, "/tmp/bar.xml");
@@ -73,13 +71,13 @@ public class SchemaValidateToFileTaskTest {
         assertEquals("foo.xml", exportFile.getName());
     }
 
-    @Test (expected = IOException.class)
-    public void testWriteSchemaValidationReportException() throws IOException, XMLStreamException {
+    @Test
+    void testWriteSchemaValidationReportException() {
         List<SAXParseException> exceptions = new ArrayList<>();
         File outputFile = mock(File.class);
-        when(outputFile.toPath()).thenThrow(IOException.class);
+        when(outputFile.toPath()).thenThrow(new RuntimeException("Wrapped exception", new IOException("File not found")));
         SchemaValidateToFileTask validate = new SchemaValidateToFileTask();
-        validate.writeSchemaValidationReport(exceptions, outputFile);
+        assertThrows(RuntimeException.class, () -> validate.writeSchemaValidationReport(exceptions, outputFile));
     }
 
 }

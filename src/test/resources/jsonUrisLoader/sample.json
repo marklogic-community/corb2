@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "source": "sample",
+    "batch": 42
+  },
+  "items": [
+    {
+      "uri": "/items/1.json",
+      "type": "alpha"
+    },
+    {
+      "uri": "/items/2.json",
+      "type": "beta"
+    },
+    {
+      "uri": "/items/3.json",
+      "type": "gamma"
+    }
+  ],
+  "groups": {
+    "nested": [
+      {
+        "uri": "/groups/1.json"
+      }
+    ]
+  }
+}

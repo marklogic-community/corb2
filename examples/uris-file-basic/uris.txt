@@ -1,0 +1,5 @@
+/example/customer/1001.json
+/example/customer/1002.json
+/example/customer/1003.json
+/example/customer/1004.json
+/example/customer/1005.json

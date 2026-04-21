@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2023 MarkLogic Corporation
+ * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,47 @@
  */
 package com.marklogic.developer.corb;
 
+/**
+ * Exception class for CoRB (Content Reprocessing in Bulk) operations.
+ * This is the primary exception type thrown by CoRB components when errors occur
+ * during job initialization, URI loading, task processing, or connection management.
+ *
+ * <p>CorbException is a checked exception that extends {@link Exception}, requiring
+ * explicit handling or declaration in method signatures. It can wrap underlying causes
+ * to preserve the full exception chain for debugging.</p>
+ *
+ * <p>Common scenarios where CorbException is thrown:</p>
+ * <ul>
+ *   <li>Connection failures to MarkLogic server</li>
+ *   <li>Configuration errors (invalid options, missing properties)</li>
+ *   <li>Module loading failures (adhoc query or installed module not found)</li>
+ *   <li>Task execution errors (when failOnError is true)</li>
+ *   <li>URI loader initialization or processing failures</li>
+ *   <li>Decryption failures for encrypted configuration values</li>
+ * </ul>
+  * @since 2.0.0
+ */
 public class CorbException extends Exception {
 
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * Constructs a new CorbException with the specified detail message.
+	 *
+	 * @param msg the detail message describing the error condition
+	 */
 	public CorbException(String msg) {
 		super(msg);
 	}
 
+	/**
+	 * Constructs a new CorbException with the specified detail message and cause.
+	 * This constructor is useful for wrapping lower-level exceptions while adding
+	 * context-specific information.
+	 *
+	 * @param msg the detail message describing the error condition
+	 * @param th the underlying cause of this exception (may be null)
+	 */
 	public CorbException(String msg, Throwable th) {
 		super(msg, th);
 	}

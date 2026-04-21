@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2023 MarkLogic Corporation
+ * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,14 +25,15 @@ import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.types.XdmItem;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+
+import org.junit.jupiter.api.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.io.TempDir;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -40,26 +41,26 @@ import static org.mockito.Mockito.when;
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class ExportToFileTaskTest {
+class ExportToFileTaskTest {
 
     private static final Logger LOG = Logger.getLogger(ExportToFileTaskTest.class.getName());
     public static final String FOO = "foo";
     public static final String SLASH = "/";
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    @TempDir
+    public Path tempFolder;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         clearSystemProperties();
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         clearSystemProperties();
     }
 
     @Test
-    public void testGetFileName() {
+    void testGetFileName() {
         ExportToFileTask instance = new ExportToFileTask();
         String expected = "https://github.com/marklogic-community/corb2";
         String[] uri = {expected};
@@ -69,7 +70,7 @@ public class ExportToFileTaskTest {
     }
 
     @Test
-    public void testGetFileNameWithLeadingSlash() {
+    void testGetFileNameWithLeadingSlash() {
         ExportToFileTask instance = new ExportToFileTask();
         String expected = SLASH + FOO;
         String[] uri = {expected};
@@ -79,7 +80,7 @@ public class ExportToFileTaskTest {
     }
 
     @Test
-    public void testGetFileNameWithoutSlashAndExportFileUriToPathFalse() {
+    void testGetFileNameWithoutSlashAndExportFileUriToPathFalse() {
         ExportToFileTask instance = new ExportToFileTask();
         instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(false));
         String expected = FOO;
@@ -90,7 +91,7 @@ public class ExportToFileTaskTest {
     }
 
     @Test
-    public void testGetFileNameSlashAndExportFileUriToPathFalse() {
+    void testGetFileNameSlashAndExportFileUriToPathFalse() {
         ExportToFileTask instance = new ExportToFileTask();
         instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(false));
         String[] uri = {SLASH};
@@ -100,7 +101,7 @@ public class ExportToFileTaskTest {
     }
 
     @Test
-    public void testGetFileNameExportFileUriToPathFalse() {
+    void testGetFileNameExportFileUriToPathFalse() {
         ExportToFileTask instance = new ExportToFileTask();
         instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(false));
         String expected = SLASH + FOO + SLASH + FOO;
@@ -111,7 +112,7 @@ public class ExportToFileTaskTest {
     }
 
     @Test
-    public void testGetFileNameSlashBookendExportFileUriToPathFalse() {
+    void testGetFileNameSlashBookendExportFileUriToPathFalse() {
         ExportToFileTask instance = new ExportToFileTask();
         instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(false));
         String expected = SLASH + FOO + SLASH;
@@ -122,7 +123,7 @@ public class ExportToFileTaskTest {
     }
 
     @Test
-    public void testGetFileNameSlashBookendExportFileUriToPathTrue() {
+    void testGetFileNameSlashBookendExportFileUriToPathTrue() {
         ExportToFileTask instance = new ExportToFileTask();
         instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(true));
         String expected = SLASH + FOO + SLASH;
@@ -133,7 +134,7 @@ public class ExportToFileTaskTest {
     }
 
     @Test
-    public void testGetFileNameTrailingSlashEmptyExportFileUriToPathTrue() {
+    void testGetFileNameTrailingSlashEmptyExportFileUriToPathTrue() {
         ExportToFileTask instance = new ExportToFileTask();
         instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(true));
         String expected = FOO + SLASH;
@@ -143,22 +144,21 @@ public class ExportToFileTaskTest {
         assertEquals(FOO + SLASH, filename);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testGetFileNameNullInputURI() {
+    @Test
+    void testGetFileNameNullInputURI() {
         ExportToFileTask instance = new ExportToFileTask();
-        instance.getFileName();
-        fail();
+        assertThrows(NullPointerException.class, instance::getFileName);
     }
 
     @Test
-    public void testWriteToFileNullSequence() {
+    void testWriteToFileNullSequence() {
         ResultSequence seq = null;
         File file = testWriteEmptyResults(seq);
         assertFalse(file.exists());
     }
 
     @Test
-    public void testWriteToFileNoResults() {
+    void testWriteToFileNoResults() {
         ResultSequence seq = mock(ResultSequence.class);
         when(seq.hasNext()).thenReturn(Boolean.FALSE);
         File file = testWriteEmptyResults(seq);
@@ -166,7 +166,7 @@ public class ExportToFileTaskTest {
     }
 
     @Test
-    public void testWriteToFile() {
+    void testWriteToFile() {
         ResultSequence seq = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         XdmItem xdmItem = mock(XdmItem.class);
@@ -183,7 +183,7 @@ public class ExportToFileTaskTest {
         ExportToFileTask instance = new ExportToFileTask();
         String[] uri = {"/testFile"};
         try {
-            instance.exportDir = tempFolder.newFolder().toString();
+            instance.exportDir = tempFolder.toString();
             instance.setInputURI(uri);
             instance.writeToFile(resultSequence);
             file = new File(instance.exportDir, instance.getFileName());
@@ -195,7 +195,7 @@ public class ExportToFileTaskTest {
     }
 
     @Test
-    public void testProcessResultNoResults() {
+    void testProcessResultNoResults() {
         ResultSequence seq = null;
         ExportToFileTask instance = new ExportToFileTask();
         String result;
@@ -208,30 +208,26 @@ public class ExportToFileTaskTest {
         }
     }
 
-    @Test (expected = CorbException.class)
-    public void testProcessResultIOException() throws CorbException {
+    @Test
+    void testProcessResultIOException() {
         ResultSequence seq = mock(ResultSequence.class);
-        when(seq.hasNext()).thenThrow(IOException.class);
+        when(seq.hasNext()).thenThrow(new RuntimeException("boom!", new IOException()));
         ExportToFileTask instance = new ExportToFileTask();
-        instance.processResult(seq);
+        assertThrows(RuntimeException.class, () -> instance.processResult(seq));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testProcessResultNullInputUris() {
+    @Test
+    void testProcessResultNullInputUris() {
         ResultSequence seq = mock(ResultSequence.class);
         when(seq.hasNext()).thenReturn(true).thenReturn(false);
 
         ExportToFileTask instance = new ExportToFileTask();
-        try {
-            instance.processResult(seq);
-        } catch (CorbException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
-        fail();
+        assertThrows(NullPointerException.class, () -> instance.processResult(seq),
+            "Expected NullPointerException when inputUris is null because it can't generate export file name");
     }
 
     @Test
-    public void testProcessResult() {
+    void testProcessResult() {
         ResultSequence seq = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         XdmItem item = mock(XdmItem.class);
@@ -252,50 +248,45 @@ public class ExportToFileTaskTest {
     }
 
     @Test
-    public void testCleanup() {
+    void testCleanup() {
         ExportToFileTask instance = new ExportToFileTask();
         instance.exportDir = "test";
         instance.cleanup();
         assertNull(instance.exportDir);
     }
 
-    @Test (expected=CorbException.class)
-    public void testCall()throws CorbException {
+    @Test
+    void testCall() {
         ExportToFileTask instance = new ExportToFileTask();
         try {
-            instance.call();
-        } catch (CorbException ex) {
-            throw ex;
+            assertThrows(CorbException.class, instance::call);
         } catch (Exception ex) {
             fail();
         }
-        fail();
-    }
-
-    @Test (expected=CorbException.class)
-    public void testInvokeModule() throws CorbException {
-        ExportToFileTask exportToFileTask = new ExportToFileTask();
-        exportToFileTask.invokeModule();
-        fail();
     }
 
     @Test
-    public void testInvokeModuleNoModuleNotRequired()  {
+    void testInvokeModule() {
+        ExportToFileTask exportToFileTask = new ExportToFileTask();
+        assertThrows(CorbException.class, exportToFileTask::invokeModule);
+    }
+
+    @Test
+    void testInvokeModuleNoModuleNotRequired()  {
         ExportToFileTask exportToFileTask = new ExportToFileTask();
         exportToFileTask.properties.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
         try {
             String[] result = exportToFileTask.invokeModule();
-            assertEquals(result.length, 0);
+            assertEquals(0, result.length);
         } catch (CorbException ex) {
             fail();
         }
     }
 
-    @Test (expected = CorbException.class)
-    public void testInvokeModuleNoModuleRequired() throws CorbException {
+    @Test
+    void testInvokeModuleNoModuleRequired() {
         ExportToFileTask exportToFileTask = new ExportToFileTask();
         exportToFileTask.properties.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "true");
-        exportToFileTask.invokeModule();
-        fail();
+        assertThrows(CorbException.class, exportToFileTask::invokeModule);
     }
 }

@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2023 MarkLogic Corporation
+  * * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@
  */
 package com.marklogic.developer.corb;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -25,14 +27,14 @@ import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class FileUrisDirectoryLoaderTest {
+class FileUrisDirectoryLoaderTest {
 
     private static final Logger LOG = Logger.getLogger(FileUrisDirectoryLoaderTest.class.getName());
     public static final String TEST_DIR = "src/test/resources/loader";
@@ -42,14 +44,15 @@ public class FileUrisDirectoryLoaderTest {
     }
 
     @Test
-    public void testCountFiles() throws Exception {
+    void testCountFiles() throws Exception {
         Path dir = Paths.get(TEST_DIR);
-        FileUrisDirectoryLoader loader = new FileUrisDirectoryLoader();
-        assertEquals(TEST_ZIP_FILE_COUNT, loader.fileCount(dir));
+        try (FileUrisDirectoryLoader loader = new FileUrisDirectoryLoader()) {
+            assertEquals(TEST_ZIP_FILE_COUNT, loader.fileCount(dir));
+        }
     }
 
     @Test
-    public void testOpen() {
+    void testOpen() {
         Properties properties = new Properties();
         properties.setProperty(Options.LOADER_PATH, TEST_DIR);
         try (FileUrisDirectoryLoader loader = new FileUrisDirectoryLoader()) {
@@ -66,7 +69,7 @@ public class FileUrisDirectoryLoaderTest {
     }
 
     @Test
-    public void testHasNextWhenIteratorIsNull() {
+    void testHasNextWhenIteratorIsNull() {
         try (FileUrisDirectoryLoader loader = new FileUrisDirectoryLoader()) {
             assertFalse(loader.hasNext());
         } catch (CorbException ex) {
@@ -76,14 +79,14 @@ public class FileUrisDirectoryLoaderTest {
     }
 
     @Test
-    public void testCloseWhenNotOpen() {
+    void testCloseWhenNotOpen() {
         try (FileUrisDirectoryLoader loader = new FileUrisDirectoryLoader()) {
             loader.close();
         }
     }
 
     @Test
-    public void testGetMetaFilename() {
+    void testGetMetaFilename() {
         Properties properties = new Properties();
         File loaderDir = new File("/var/tmp");
         try (FileUrisDirectoryLoader loader = new FileUrisDirectoryLoader()) {
@@ -99,7 +102,7 @@ public class FileUrisDirectoryLoaderTest {
     }
 
     @Test
-    public void testGetMetaFilenameWithoutLoaderPath() {
+    void testGetMetaFilenameWithoutLoaderPath() {
         File file = new File("/var/tmp/foo/bar.txt");
         try (FileUrisDirectoryLoader loader = new FileUrisDirectoryLoader()) {
             String path = loader.getMetaPath(file);

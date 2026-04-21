@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2023 MarkLogic Corporation
+ * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,28 +39,143 @@ import java.util.Properties;
 import java.util.TimeZone;
 
 /**
+ * Factory for creating and configuring Task instances for CoRB job execution.
+ * <p>
+ * TaskFactory is responsible for instantiating and setting up all types of tasks used
+ * during a CoRB job:
+ * </p>
+ * <ul>
+ * <li><b>Init Tasks</b> - Execute once before URI processing ({@link #newInitTask()})</li>
+ * <li><b>Pre-Batch Tasks</b> - Execute once before batch processing ({@link #newPreBatchTask()})</li>
+ * <li><b>Process Tasks</b> - Execute for each URI or batch ({@link #newProcessTask(String...)})</li>
+ * <li><b>Post-Batch Tasks</b> - Execute once after batch processing ({@link #newPostBatchTask()})</li>
+ * </ul>
+ * <p>
+ * The factory handles:
+ * </p>
+ * <ul>
+ * <li>Task instantiation from configured classes or default Transform</li>
+ * <li>Module resolution (file paths, inline code, adhoc queries)</li>
+ * <li>Configuration injection (properties, content sources, URIs)</li>
+ * <li>Query language detection (XQuery vs. JavaScript)</li>
+ * <li>Module caching for performance</li>
+ * </ul>
+ * <p>
+ * <b>Module Resolution:</b>
+ * The factory resolves modules in the following order:
+ * </p>
+ * <ol>
+ * <li>Inline modules: {@code INLINE-XQUERY|xquery code} or {@code INLINE-JAVASCRIPT|js code}</li>
+ * <li>Adhoc queries: {@code /path/to/query.xqy|ADHOC} (loaded from classpath or filesystem)</li>
+ * <li>Module URIs: {@code /corb/transform.xqy} (resolved with MODULE-ROOT prefix)</li>
+ * </ol>
+ * <p>
+ * <b>Task Configuration:</b>
+ * Each task created by the factory is automatically configured with:
+ * </p>
+ * <ul>
+ * <li>Content source pool for database connections</li>
+ * <li>Module type (INIT-MODULE, PRE-BATCH-MODULE, PROCESS-MODULE, POST-BATCH-MODULE)</li>
+ * <li>Module URI or adhoc query</li>
+ * <li>Query language (auto-detected from module extension)</li>
+ * <li>Properties (job configuration and custom inputs)</li>
+ * <li>Time zone (if configured via XCC-TIME-ZONE)</li>
+ * <li>Input URIs (for process tasks)</li>
+ * <li>Fail-on-error flag</li>
+ * <li>Export directory (for export tasks)</li>
+ * </ul>
+ * <p>
+ * <b>Caching:</b>
+ * The factory caches:
+ * </p>
+ * <ul>
+ * <li>Adhoc query content (loaded from files)</li>
+ * <li>Resolved module paths (with MODULE-ROOT prefix)</li>
+ * </ul>
+ * <p>
+ * This improves performance by avoiding repeated file I/O and string operations.
+ * </p>
+ *
  * @author Michael Blakeley, michael.blakeley@marklogic.com
  * @author Bhagat Bandlamudi, MarkLogic Corporation
- *
+ * @see Task
+ * @see Transform
+ * @see Manager
+  * @since 1.0.0
  */
 public class TaskFactory {
 
+    /** The Manager coordinating the CoRB job, providing access to configuration, content sources, and properties */
     protected Manager manager;
+    /** Cache mapping adhoc module specifications to their loaded query content to avoid repeated file I/O */
     private final Map<String, String> moduleToAdhocQueryMap = new HashMap<>();
+    /** Cache mapping module paths to their resolved paths (with MODULE-ROOT prefix) to avoid repeated string operations */
     private final Map<String, String> moduleToPathMap = new HashMap<>();
+    /** Error message prefix for adhoc query read failures */
     private static final String EXCEPTION_MSG_UNABLE_READ_ADHOC = "Unable to read adhoc query ";
+    /** Error message for null content source */
     private static final String EXCEPTION_MSG_NULL_CONTENT = "null content source";
+
     /**
-     * @param manager
+     * Constructs a TaskFactory for the specified Manager.
+     * <p>
+     * The factory uses the Manager to access:
+     * </p>
+     * <ul>
+     * <li>TransformOptions (task classes, module paths)</li>
+     * <li>ContentSourcePool (database connections)</li>
+     * <li>Properties (job configuration)</li>
+     * </ul>
+     *
+     * @param manager the Manager coordinating the CoRB job
      */
     public TaskFactory(Manager manager) {
         this.manager = manager;
     }
 
+    /**
+     * Creates a new process task for the specified URIs with default error handling.
+     * <p>
+     * This is a convenience method equivalent to {@code newProcessTask(uris, true)}.
+     * </p>
+     *
+     * @param uris the URIs for the task to process
+     * @return a configured process task
+     * @throws NullPointerException if process task/module is not configured or required dependencies are null
+     * @throws IllegalArgumentException if task instantiation fails
+     * @see #newProcessTask(String[], boolean)
+     */
     public Task newProcessTask(String... uris) {
         return newProcessTask(uris, true);
     }
 
+    /**
+     * Creates a new process task for the specified URIs.
+     * <p>
+     * Process tasks are the main workhorses of CoRB jobs, executing for each URI
+     * or batch of URIs. The task can be:
+     * </p>
+     * <ul>
+     * <li>A custom class (specified via {@link Options#PROCESS_TASK})</li>
+     * <li>The default {@link Transform} class (if only {@link Options#PROCESS_MODULE} is set)</li>
+     * </ul>
+     * <p>
+     * Requirements:
+     * </p>
+     * <ul>
+     * <li>Either PROCESS-TASK or PROCESS-MODULE must be configured</li>
+     * <li>If PROCESS-MODULE is set, URIs and ContentSourcePool must be available</li>
+     * </ul>
+     *
+     * @param uris the URIs for the task to process (single URI or batch)
+     * @param failOnError whether the task should throw exceptions on errors
+     * @return a configured process task ready for execution
+     * @throws NullPointerException if process task/module is not configured or required dependencies are null
+     * @throws IllegalArgumentException if task instantiation or configuration fails
+     * @see Options#PROCESS_TASK
+     * @see Options#PROCESS_MODULE
+     * @see Transform
+     */
     public Task newProcessTask(String[] uris, boolean failOnError) {
         TransformOptions options = manager.getOptions();
         if (null == options.getProcessTaskClass() && null == options.getProcessModule()) {
@@ -79,6 +194,32 @@ public class TaskFactory {
         }
     }
 
+    /**
+     * Creates a new pre-batch task.
+     * <p>
+     * Pre-batch tasks execute once before batch processing begins. Common uses:
+     * </p>
+     * <ul>
+     * <li>Initializing export files with headers ({@link PreBatchUpdateFileTask})</li>
+     * <li>Performing setup operations</li>
+     * <li>Validating preconditions</li>
+     * </ul>
+     * <p>
+     * The task can be:
+     * </p>
+     * <ul>
+     * <li>A custom class (specified via {@link Options#PRE_BATCH_TASK})</li>
+     * <li>The default {@link Transform} class (if only {@link Options#PRE_BATCH_MODULE} is set)</li>
+     * <li>null (if neither PRE-BATCH-TASK nor PRE-BATCH-MODULE is configured)</li>
+     * </ul>
+     *
+     * @return a configured pre-batch task, or null if not configured
+     * @throws NullPointerException if PRE-BATCH-MODULE is set but ContentSourcePool is null
+     * @throws IllegalArgumentException if task instantiation or configuration fails
+     * @see Options#PRE_BATCH_TASK
+     * @see Options#PRE_BATCH_MODULE
+     * @see PreBatchUpdateFileTask
+     */
     public Task newPreBatchTask() {
         TransformOptions options = manager.getOptions();
         if (null == options.getPreBatchTaskClass() && null == options.getPreBatchModule()) {
@@ -96,6 +237,33 @@ public class TaskFactory {
         }
     }
 
+    /**
+     * Creates a new post-batch task.
+     * <p>
+     * Post-batch tasks execute once after batch processing completes. Common uses:
+     * </p>
+     * <ul>
+     * <li>Finalizing export files ({@link PostBatchUpdateFileTask})</li>
+     * <li>Sorting and deduplicating results</li>
+     * <li>Compressing output files</li>
+     * <li>Sending notifications</li>
+     * </ul>
+     * <p>
+     * The task can be:
+     * </p>
+     * <ul>
+     * <li>A custom class (specified via {@link Options#POST_BATCH_TASK})</li>
+     * <li>The default {@link Transform} class (if only {@link Options#POST_BATCH_MODULE} is set)</li>
+     * <li>null (if neither POST-BATCH-TASK nor POST-BATCH-MODULE is configured)</li>
+     * </ul>
+     *
+     * @return a configured post-batch task, or null if not configured
+     * @throws NullPointerException if POST-BATCH-MODULE is set but ContentSourcePool is null
+     * @throws IllegalArgumentException if task instantiation or configuration fails
+     * @see Options#POST_BATCH_TASK
+     * @see Options#POST_BATCH_MODULE
+     * @see PostBatchUpdateFileTask
+     */
     public Task newPostBatchTask() {
         TransformOptions options = manager.getOptions();
         if (null == options.getPostBatchTaskClass() && null == options.getPostBatchModule()) {
@@ -113,6 +281,33 @@ public class TaskFactory {
         }
     }
 
+    /**
+     * Creates a new initialization task.
+     * <p>
+     * Initialization tasks execute once before URI loading and processing begins.
+     * Common uses:
+     * </p>
+     * <ul>
+     * <li>Creating database structures</li>
+     * <li>Loading configuration data</li>
+     * <li>Validating environment</li>
+     * <li>Performing setup operations</li>
+     * </ul>
+     * <p>
+     * The task can be:
+     * </p>
+     * <ul>
+     * <li>A custom class (specified via {@link Options#INIT_TASK})</li>
+     * <li>The default {@link Transform} class (if only {@link Options#INIT_MODULE} is set)</li>
+     * <li>null (if neither INIT-TASK nor INIT-MODULE is configured)</li>
+     * </ul>
+     *
+     * @return a configured initialization task, or null if not configured
+     * @throws NullPointerException if INIT-MODULE is set but ContentSourcePool is null
+     * @throws IllegalArgumentException if task instantiation or configuration fails
+     * @see Options#INIT_TASK
+     * @see Options#INIT_MODULE
+     */
     public Task newInitTask() {
         TransformOptions options = manager.getOptions();
         if (null == manager.getOptions().getInitTaskClass() && null == options.getInitModule()) {
@@ -130,10 +325,58 @@ public class TaskFactory {
         }
     }
 
+    /**
+     * Sets up a task with default error handling.
+     * <p>
+     * This is a convenience method equivalent to {@code setupTask(task, moduleType, module, uris, true)}.
+     * </p>
+     *
+     * @param task the task to configure
+     * @param moduleType the type of module (INIT-MODULE, PRE-BATCH-MODULE, etc.)
+     * @param module the module path, inline code, or adhoc query
+     * @param uris the URIs for the task to process
+     */
     private void setupTask(Task task, String moduleType, String module, String... uris) {
         setupTask(task, moduleType, module, uris, true);
     }
 
+    /**
+     * Configures a task with all necessary dependencies and settings.
+     * <p>
+     * Configuration steps:
+     * </p>
+     * <ol>
+     * <li>Resolve module (inline, adhoc, or URI) and set on task</li>
+     * <li>Detect and set query language (XQuery or JavaScript)</li>
+     * <li>Set module type for custom input resolution</li>
+     * <li>Set content source pool for database connections</li>
+     * <li>Set properties (job configuration and custom inputs)</li>
+     * <li>Set time zone (if configured)</li>
+     * <li>Set input URIs</li>
+     * <li>Set fail-on-error flag</li>
+     * <li>Set export directory</li>
+     * <li>Validate export task configuration</li>
+     * </ol>
+     * <p>
+     * <b>Module Resolution:</b>
+     * </p>
+     * <ul>
+     * <li>Inline modules: Extract code from {@code INLINE-XQUERY|code} or {@code INLINE-JAVASCRIPT|code}</li>
+     * <li>Adhoc queries: Load from file path before the pipe: {@code /path/to/query.xqy|ADHOC}</li>
+     * <li>Module URIs: Resolve with MODULE-ROOT prefix: {@code /corb/transform.xqy}</li>
+     * </ul>
+     * <p>
+     * Adhoc queries and module paths are cached to avoid repeated I/O and string operations.
+     * </p>
+     *
+     * @param task the task to configure
+     * @param moduleType the type of module (INIT-MODULE, PRE-BATCH-MODULE, PROCESS-MODULE, POST-BATCH-MODULE)
+     * @param module the module path, inline code, or adhoc query (may be null for Java-only tasks)
+     * @param uris the URIs for the task to process (may be empty for non-process tasks)
+     * @param failOnError whether the task should throw exceptions on errors
+     * @throws IllegalStateException if an adhoc query cannot be read
+     * @throws IllegalArgumentException if an ExportBatchToFileTask has no filename configured
+     */
     private void setupTask(Task task, String moduleType, String module, String[] uris, boolean failOnError) {
         if (module != null) {
             if (isInlineOrAdhoc(module)) {

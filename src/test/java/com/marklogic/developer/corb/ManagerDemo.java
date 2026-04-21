@@ -1,5 +1,5 @@
 /*
- * * Copyright (c) 2004-2023 MarkLogic Corporation
+ * * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
  */
 package com.marklogic.developer.corb;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 
 import com.marklogic.developer.corb.util.FileUtils;
 
-public class ManagerDemo {
+class ManagerDemo {
 
     private static final Logger LOG = Logger.getLogger(ManagerDemo.class.getName());
     private static final String TRANSFORM_SLOW_MODULE = "src/test/resources/transformSlow.xqy|ADHOC";

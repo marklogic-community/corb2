@@ -34,7 +34,7 @@ dependencies {
     // required to run CoRB
     corb("com.marklogic:marklogic-corb:${corbVersion}")
     // optional
-    corb 'org.jasypt:jasypt:1.9.2' // necessary to leverage JasyptDecrypter
+    corb 'org.jasypt:jasypt:1.9.3' // necessary to leverage JasyptDecrypter
 }
 
 ext {
@@ -66,7 +66,7 @@ ext {
  * 3.) Set CoRB2 options as System properties on the commandline
  *     gradle corb -DURIS-MODULE="src/main/ml-modules/ext/corb2-project/uris.xqy|ADHOC" -DPROCESS-MODULE="src/main/ml-modules/ext/corb2-project/corb/transform.xqy|ADHOC"
  */
-task corb(type: com.marklogic.gradle.task.CorbTask) {
+tasks.register('corb', com.marklogic.gradle.task.CorbTask) {
     /* Either uncomment and set the xccConnectionUri below and set an appropriate connection string,
      * or specify on the commandline as a project property: -PcorbXccConnectionUri=xcc://user:pass@host:port/content-database
      * or specify as a System property: -DXCC-CONNECTION-URI=xcc://user:pass@host:port/content-database
@@ -76,12 +76,12 @@ task corb(type: com.marklogic.gradle.task.CorbTask) {
     xccConnectionUri = contentXccUrl
 }
 
-task copyLibs(type: Copy) {
+tasks.register('copyLibs', Copy) {
     into 'build/lib'
     from configurations.corb
 }
 
-task createCorbShell() {
+tasks.register('createCorbShell') {
     dependsOn copyLibs
     doLast {
         File shell = new File('corb.sh')
@@ -93,7 +93,7 @@ task createCorbShell() {
     }
 }
 
-task createCorbBatch() {
+tasks.register('createCorbBatch') {
     dependsOn copyLibs
     doLast {
         new File('corb.bat').withWriter('UTF-8') {
@@ -103,13 +103,13 @@ task createCorbBatch() {
     }
 }
 
-task setup() {
+tasks.register('setup') {
     dependsOn 'mlDeploy'
     dependsOn 'createCorbShell'
     dependsOn 'createCorbBatch'
 }
 
-task clean() {
+tasks.register('clean') {
     doLast() {
         delete 'build'
         delete 'corb.bat'
@@ -117,7 +117,7 @@ task clean() {
     }
 }
 
-task teardown() {
+tasks.register('teardown') {
     dependsOn 'clean'
     dependsOn 'mlUndeploy'
 }

@@ -1,4 +1,4 @@
-[![Maven Central - download the latest version](https://maven-badges.herokuapp.com/maven-central/com.marklogic/marklogic-corb/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.marklogic/marklogic-corb)
+![Maven Central Version](https://img.shields.io/maven-central/v/com.marklogic/marklogic-corb)
 [![Codecov code coverage](https://codecov.io/gh/marklogic-community/corb2/branch/development/graph/badge.svg)](https://codecov.io/gh/marklogic-community/corb2/branch/development)
 [![Snyk Known Vulnerabilities Badge](https://snyk.io/test/github/marklogic-community/corb2/badge.svg)](https://snyk.io/test/github/marklogic-community/corb2)
 
@@ -16,15 +16,15 @@ For additional information, refer to the [CoRB Wiki](https://github.com/marklogi
 ### Downloads
 Download the latest release directly from https://github.com/marklogic-community/corb2/releases or resolve dependencies through [Maven Central](http://mvnrepository.com/artifact/com.marklogic/marklogic-corb).
 
-### Compatability 
+### Compatibility 
 -  [CoRB v2.4.0](https://github.com/marklogic-community/corb2/releases/tag/2.4.0) (or later) requires Java 8 (or later) to run.
--  [CoRB v2.3.2](https://github.com/marklogic-community/corb2/releases/tag/2.3.2) is the last release compatable with Java 7 and 6.
+-  [CoRB v2.3.2](https://github.com/marklogic-community/corb2/releases/tag/2.3.2) is the last release compatible with Java 7 and 6.
 -  [CoRB v2.2.0](https://github.com/marklogic-community/corb2/releases/tag/2.2.0) (or later) requires [marklogic-xcc 8.0.* (or later)](https://developer.marklogic.com/products/xcc) to run.
   > Note: marklogic-xcc 8 is backwards compatible to MarkLogic 5 and runs on Java 1.6 or later.
 
 ### Getting Help
 To get help with CoRB
-- [Post a question to Stack Overflow](http://stackoverflow.com/questions/ask?tags=marklogic+corb) with the [<code>markogic</code>](https://stackoverflow.com/questions/tagged/marklogic) and [<code>corb</code>](https://stackoverflow.com/questions/tagged/corb) tags.  
+- [Post a question to Stack Overflow](http://stackoverflow.com/questions/ask?tags=marklogic+corb) with the [<code>marklogic</code>](https://stackoverflow.com/questions/tagged/marklogic) and [<code>corb</code>](https://stackoverflow.com/questions/tagged/corb) tags.  
 - Submit issues or feature requests at https://github.com/marklogic-community/corb2/issues
 
 ### [Running CoRB](https://github.com/marklogic-community/corb2/wiki/Running-CoRB)
@@ -42,7 +42,10 @@ If specified in more than one place, a command line parameter takes precedence o
 
 > Note: Any or all of the properties can be specified as Java system properties or key value pairs in properties file.
 
-> Note: CoRB exit codes `0` - successful, `0` - nothing to process (ref: EXIT-CODE-NO-URIS), `1` - initialization or connection error and `2` - execution error
+> Note: CoRB exit codes:
+> - `0` - successful, nothing to process (ref: EXIT-CODE-NO-URIS) 
+> - `1` - initialization or connection error 
+> - `2` - execution error
 
 > Note: CoRB now supports [Logging Job Metrics](METRICS.md) back to the MarkLogic database log and/or as document in the database.
 
@@ -67,7 +70,7 @@ Option | Description
 ### Additional options
 Option | Description
 ---|---
-**<a name="BATCH-SIZE"></a>BATCH-SIZE** | The number of URIs to be executed in single transform. Default is `1`. If more than 1, **PROCESS-MODULE** will receive a delimited string as the `$URI` variable, which needs to be tokenized to get individual URIs. The default delimiter is `;`, which can be overridden with the option **BATCH-URI-DELIM** described below. <br/>**Sample code for transform:**<br/>`declare variable URI as xs:string external;`<br/>`let $all-uris := fn:tokenize($URI,";")`  
+**<a name="BATCH-SIZE"></a>BATCH-SIZE** | The number of URIs to be executed in single transform. Default is `1`. If more than 1, **PROCESS-MODULE** will receive a delimited string as the `$URI` variable, which needs to be tokenized to get individual URIs. The default delimiter is `;`, which can be overridden with the option **BATCH-URI-DELIM** described below. <br/>**Sample code for transform:**<br/>`declare variable $URI as xs:string external;`<br/>`let $all-uris := fn:tokenize($URI,";")`  
 **<a name="BATCH-URI-DELIM"></a>BATCH-URI-DELIM** | Use if the default delimiter `';'` cannot be used to join multiple URIS when **BATCH-SIZE** is greater than 1. Default is `;`.
 **<a name="DECRYPTER"></a>DECRYPTER** | The class name of the options value dycrypter, which must implement `com.marklogic.developer.corb.Decrypter`. Encryptable options include **XCC-CONNECTION-URI**, **XCC-USERNAME**, **XCC-PASSWORD**, **XCC-HOSTNAME**, **XCC-PORT**, and **XCC-DBNAME**.
 **<a name="COLLECTION-NAME"></a>COLLECTION-NAME** | Value of this parameter will be passed into the URIS-MODULE via external or global variable with the name URIS.
@@ -84,7 +87,7 @@ Option | Description
 **<a name="ERROR-FILE-NAME"></a>ERROR-FILE-NAME** | Used when FAIL-ON-ERROR is false. If specified true, removes duplicates from the errored URIs along with error messages will be written to this file. Uses BATCH-URI-DELIM or default `';'` to separate URI and error message.
 **<a name="EXIT-CODE-IGNORED-ERRORS"></a>EXIT-CODE-IGNORED-ERRORS** | Returns this exit code when there were errors and **FAIL-ON-ERROR**=`false`. Default is `0`.
 **<a name="EXIT-CODE-NO-URIS"></a>EXIT-CODE-NO-URIS** | Returns this exit code when there is nothing to process. Default is `0`. 
-**<a name="XPORT_FILE_AS_ZIP"></a>EXPORT_FILE_AS_ZIP** | If true, PostBatchUpdateFileTask compresses the output file as a zip file.
+**<a name="EXPORT-FILE-AS-ZIP"></a>EXPORT-FILE-AS-ZIP** | If true, PostBatchUpdateFileTask compresses the output file as a zip file.
 **<a name="EXPORT-FILE-BOTTOM-CONTENT"></a>EXPORT-FILE-BOTTOM-CONTENT** | Used by `com.marklogic.developer.corb.PostBatchUpdateFileTask` to append content to **EXPORT-FILE-NAME** after batch process is complete.
 **<a name="EXPORT-FILE-DIR"></a>EXPORT-FILE-DIR** | Export directory parameter is used by `com.marklogic.developer.corb.ExportBatchToFileTask` or similar custom task implementations. <br/>Optional: Alternatively, **EXPORT-FILE-NAME** can be specified with a full path.
 **<a name="EXPORT-FILE-NAME"></a>EXPORT-FILE-NAME** | Shared file to write output of `com.marklogic.developer.corb.ExportBatchToFileTask` - should be a file name with our without full path. <ul><li>**EXPORT-FILE-DIR** Is not required if a full path is used.</li><li>If **EXPORT-FILE-NAME** is not specified, CoRB attempts to use **URIS\_BATCH\_REF** as the file name and this is especially useful in case of automated jobs where file name can only be determined by the **URIS-MODULE** - refer to **URIS\_BATCH\_REF** section below.</li></ul>
@@ -92,19 +95,21 @@ Option | Description
 **<a name="EXPORT-FILE-REQUIRE-PROCESS-MODULE"></a>EXPORT-FILE-REQUIRE-PROCESS-MODULE** | Boolean value indicating whether or not to require a **PROCESS-MODULE** when an Export*ToFile PROCESS-TASK is specified. This can help avoid confusion when the **PROCESS-MODULE** was accidentally not configured and no files are generated. Default is `true`
 **<a name="EXPORT-FILE-SORT"></a>EXPORT-FILE-SORT** | If `ascending` or `descending`, lines will be sorted. If <code>&#124;distinct</code> is specified after the sort direction, duplicate lines from **EXPORT-FILE-NAME** will be removed. i.e. <code>ascending&#124;distinct</code> or <code>descending&#124;distinct</code>
 **<a name="EXPORT-FILE-SORT-COMPARATOR"></a>EXPORT-FILE-SORT-COMPARATOR** | A java class that must implement `java.util.Comparator`. If specified, CoRB will use this class for sorting in place of ascending or descending string comparator even if a value was specified for **EXPORT-FILE-SORT**.
+**<a name="EXPORT-FILE-SPLIT-MAX-LINES"></a>EXPORT-FILE-SPLIT-MAX-LINES** | Maximum number of lines to write to a single export file before splitting to a new file. When this threshold is exceeded, a new file will be created with a numeric suffix (e.g., myfile.txt, myfile1.txt, myfile2.txt). If not specified, no line-based splitting will occur. This option is mutually exclusive with **EXPORT-FILE-SPLIT-MAX-SIZE**. If both are specified, line count takes precedence.
+**<a name="EXPORT-FILE-SPLIT-MAX-SIZE"></a>EXPORT-FILE-SPLIT-MAX-SIZE** | Maximum file size for a single export file before splitting to a new file. When this threshold is exceeded, a new file will be created with a numeric suffix (e.g., myfile.txt, myfile1.txt, myfile2.txt). Value can be specified as a number in bytes or with size units (B, KB, MB, GB, TB). Examples: `1048576`, `1MB`, `100 KB`, `5.5 GB`. If not specified, no size-based splitting will occur. This option is mutually exclusive with **EXPORT-FILE-SPLIT-MAX-LINES**. If both are specified, line count takes precedence.
 **<a name="EXPORT-FILE-TOP-CONTENT"></a>EXPORT-FILE-TOP-CONTENT** | Used by `com.marklogic.developer.corb.PreBatchUpdateFileTask` to insert content at the top of **EXPORT-FILE-NAME** before batch process starts. If it includes the string `@URIS_BATCH_REF`, it is replaced by the batch reference returned by **URIS-MODULE**.
 **<a name="EXPORT-FILE-URI-TO-PATH"></a>EXPORT-FILE-URI-TO-PATH** | Boolean value indicating whether to convert doc URI to a filepath. Default is `true`
 **<a name="FAIL-ON-ERROR"></a>FAIL-ON-ERROR** | Boolean value indicating whether the CoRB job should fail and exit if a process module throws an error. Default is `true`. This option will not handle repeated connection failures.
 **<a name="INSTALL"></a>INSTALL** | Whether to install the Modules in the Modules database. Specify `true` or `1` for installation. Default is `false`.
-**<a name="LOADER-BASE64-ENCODE"></a>LOADER-BASE64-ENCODE** | Boolean option specifying whether the content loaded by FileUrisStreamingXMLLoader or FileUrisXMLLoader (with the option `LOADER-USE-ENVELOPE=true`) should be base64 encoded, or appended as the child of the `/corb-loader/content` element. Default is `false`.
-**<a name="LOADER-PATH"></a>LOADER-PATH** | The path to the resource (file or folder) that will be the input source for a loader class that extends AbstractFileUrisLoader, such as FileUrisDirectoryLoader, FileUrisLoader, FileUrisStreamingXmlLoader, FileUrisXmlLoader, and FileUrisZipLoader
+**<a name="LOADER-BASE64-ENCODE"></a>LOADER-BASE64-ENCODE** | Boolean option specifying whether the content loaded by file-based URI loaders such as `FileUrisStreamingXMLLoader`, `FileUrisXMLLoader`, `FileUrisStreamingJSONLoader`, or `FileUrisJSONLoader` (with `LOADER-USE-ENVELOPE=true`) should be base64 encoded, or appended as the child of the `/corb-loader/content` element. Default is `false`.
+**<a name="LOADER-PATH"></a>LOADER-PATH** | The path to the resource (file or folder) that will be the input source for a loader class that extends AbstractFileUrisLoader, such as FileUrisDirectoryLoader, FileUrisLoader, FileUrisStreamingXmlLoader, FileUrisXmlLoader, FileUrisStreamingJSONLoader, FileUrisJSONLoader, and FileUrisZipLoader
 **<a name="LOADER-SET-URIS-BATCH-REF"></a>LOADER-SET-URIS-BATCH-REF** | Boolean option indicating whether a file loader should set the [URIS_BATCH_REF](https://github.com/marklogic-community/corb2#uris_batch_ref). Default is `false`.
 **<a name="LOADER-USE-ENVELOPE"></a>LOADER-USE-ENVELOPE** | Boolean value indicating whether FileUris loaders should use an XML envelope, in order to send file metadata in addition to the file content.
 **<a name="JOB-NAME"></a>JOB-NAME** | Name of the current Job.
 **<a name="JOB-SERVER-PORT"></a>JOB-SERVER-PORT** | Optional port number to start a lightweight HTTP server which can be used to monitor, change the number of threads, and pause/resume the CoRB job. Port number must be a valid port(s) or a valid range of ports.  <ul><li>Ex: 9080</li><li> Ex: 9080,9083,9087</li><li> Ex: 9080-9090</li><li> Ex: 9080-9083,9085-9090</li></ul>  The job server will bind to a port from the configured port number(s). By default, if the **JOB-SERVER-PORT** option is not specified, a job server is not started. <p> When a port is specified and available, the job server URL will be logged to the console with both the UI `http://<host>:<port>` and metrics URL `http://<host>:<port>/metrics`. (grep for string _com.marklogic.developer.corb.JobServer logUsage_)  <p>The metrics URL supports the following parameters:<ul><li>**COMMAND**=pause (or resume). </li><li>**CONCISE**=true limits the amound of data returned</li><li>**FORMAT**=json (or xml) returns job stats in the requested format</li><li>**THREAD-COUNT**=<#> will adjust the number of threads for the executing job</li></ul>  
 **<a name="MAX-OPTS-FROM-MODULE"></a>MAX-OPTS-FROM-MODULE** | Maximum number of custom inputs from the **URIS-MODULE** to other modules. Default is `10`.
 **<a name="METADATA"></a>METADATA** | The variable name that needs to be defined in the server side query to use the metadata set by the **URIS-LOADER**.
-**<a name="METADATA-TO-PROCESS-MODULE"></a>METADATA-TO-PROCESS-MODULE** | If this option is set to true, **XML-METADATA** is set as an external variable with name **METADATA** to **PROCESS-MODULE** as well. Default is `false`.
+**<a name="METADATA-TO-PROCESS-MODULE"></a>METADATA-TO-PROCESS-MODULE** | If this option is set to true, **XML-METADATA** or **JSON-METADATA** is set as an external variable with name **METADATA** to **PROCESS-MODULE** as well. Default is `false`.
 **<a name="METRICS-COLLECTIONS"></a>METRICS-COLLECTIONS** | Adds the metrics document to the specified collection.|
 **<a name="METRICS-DATABASE"></a>METRICS-DATABASE** | Uses the value provided to save the metrics document to the specified Database. The XCC connection specified should have the following privilege `http://marklogic.com/xdmp/privileges/xdmp-invoke`|
 **<a name="METRICS-LOG-LEVEL"></a>METRICS-LOG-LEVEL**|String value indicating the log level that the CoRB job should use to log metrics to ML Server Error log. Possible values are _none, emergency, alert, critical, error, warning, notice, info, config, debug, fine, finer, finest_. Default is `none`, which means metrics are not logged.|
@@ -123,17 +128,23 @@ Option | Description
 **<a name="QUERY-RETRY-INTERVAL"></a>QUERY-RETRY-INTERVAL** | Time interval, in seconds, between re-query attempts. Default is `20`.
 **<a name="QUERY-RETRY-ERROR-CODES"></a>QUERY-RETRY-ERROR-CODES** | A comma separated list of MarkLogic error codes for which a QueryException should be retried.
 **<a name="QUERY-RETRY-ERROR-MESSAGE"></a>QUERY-RETRY-ERROR-MESSAGE** | A comma separated list of values that if contained in an exception message a QueryException should be retried.
+**<a name="RESTARTABLE"></a>RESTARTABLE** | Boolean value indicating whether CoRB should persist local completion state so a later run can skip already-processed URIs. Phase 1 provides best-effort at-least-once restart semantics: URIs from interrupted in-flight work may run again, but URIs already recorded in restart state are skipped on restart.
+**<a name="RESTART-STATE-DIR"></a>RESTART-STATE-DIR** | Directory where restart state files are stored when **RESTARTABLE** is enabled. If not specified, CoRB uses **TEMP-DIR**; if **TEMP-DIR** is also not specified, CoRB uses `java.io.tmpdir`. CoRB creates the directory if needed and stores restart files beneath a job-scoped subdirectory derived from **JOB-NAME** when available, otherwise from a hash of job options. Those restart files are deleted automatically after a successful run, so they are only retained when the job stops before completion. A URI that failed processing is still considered processed for restart purposes and is skipped on later runs.
 **<a name="SSL-CONFIG-CLASS"></a>SSL-CONFIG-CLASS** | A java class that must implement `com.marklogic.developer.corb.SSLConfig`. If not specified, CoRB defaults to `com.marklogic.developer.corb.TrustAnyoneSSLConfig` for `xccs` connections.
-**<a name="URIS-LOADER"></a>URIS-LOADER** | Java class that implements `com.marklogic.developer.corb.UrisLoader`. A custom class to load URIs instead of built-in loaders for **URIS-MODULE** or **URIS-FILE** options. Example: com.marklogic.developer.corb.FileUrisXMLLoader
+**<a name="URIS-LOADER"></a>URIS-LOADER** | Java class that implements `com.marklogic.developer.corb.UrisLoader`. A custom class to load URIs instead of built-in loaders for **URIS-MODULE** or **URIS-FILE** options. Examples: `com.marklogic.developer.corb.FileUrisXMLLoader`, `com.marklogic.developer.corb.FileUrisJSONLoader`
+**<a name="JSON-FILE"></a>JSON-FILE** | In order to use this option a class `com.marklogic.developer.corb.FileUrisJSONLoader` or `com.marklogic.developer.corb.FileUrisStreamingJSONLoader` has to be specified in the **URIS-LOADER** option. If defined instead of **URIS-MODULE**, JSON values will be used as URIs from the file located on the client. The file path may be relative or absolute. Default processing selects the immediate children of the root JSON value (i.e. `/*`). The **JSON-NODE** option can be specified with a simple slash-delimited JSON path expression to address a different set of values.
+**<a name="JSON-METADATA"></a>JSON-METADATA** | A simple slash-delimited JSON path expression identifying the JSON value that contains metadata for all extracted JSON nodes. This must be different from **JSON-NODE**. The metadata is set as an external variable with name **METADATA** to **PRE-BATCH-MODULE** and **POST-BATCH-MODULE** and also **PROCESS-MODULE** if enabled by **METADATA-TO-PROCESS-MODULE**.
+**<a name="JSON-NODE"></a>JSON-NODE** | An XPath expression identifying the JSON values to be returned in a **JSON-FILE** by `com.marklogic.developer.corb.FileUrisJSONLoader` or `com.marklogic.developer.corb.FileUrisStreamingJSONLoader`. If not specified, the default behavior is to select the immediate children of the root JSON value (i.e. `/*`).
+**<a name="JSON-TEMP-DIR"></a>JSON-TEMP-DIR** | Temporary directory used by `com.marklogic.developer.corb.FileUrisStreamingJSONLoader` to store values extracted from the **JSON-FILE**. If not specified, **TEMP-DIR** will be used. If neither are specified, then the default Java temp directory will be used.
 **<a name="URIS-REDACTED"></a>URIS-REDACTED** | Optional boolean flag indicating whether URIs should be excluded from logging, console, and JobStats metrics. Default is `false`.
 **<a name="URIS-REPLACE-PATTERN"></a>URIS-REPLACE-PATTERN** | One or more replace patterns for URIs - Used by java to truncate the length of URIs on the client side, typically to reduce java heap size in very large batch jobs, as the CoRB java client holds all the URIS in memory while processing is in progress. If truncated, PROCESS-MODULE needs to reconstruct the URI before trying to do `fn:doc()` to fetch the document. <br/>Usage: `URIS-REPLACE-PATTERN=pattern1,replace1,pattern2,replace2,...)`<br/>**Example:**<br/>`URIS-REPLACE-PATTERN=/com/marklogic/sample/,,.xml,` - Replace /com/marklogic/sample/ and .xml with empty strings. So, CoRB client only needs to cache the id '1234' instead of the entire URI /com/marklogic/sample/1234.xml. In the transform **PROCESS-MODULE**, we need to do `let $URI := fn:concat("/com/marklogic/sample/",$URI,".xml")`
-**<a name="XCC-API-KEY"></a>XCC-API-KEY** | The unique key assigned to a MarkLogic Cloud user.
-**<a name="XCC-BASE-PATH"></a>XCC-BASE-PATH** | The base path configured on MarkLogic Cloud which maps to a service hosted by MarkLogic Cloud through which operations run.
+**<a name="XCC-API-KEY"></a>XCC-API-KEY** | The unique key assigned to a Progress Data Cloud user.
+**<a name="XCC-BASE-PATH"></a>XCC-BASE-PATH** | The base path configured on Progress Data Cloud which maps to a service hosted by Progress Data Cloud through which operations run.
 **<a name="XCC-CONNECTION-RETRY-LIMIT"></a>XCC-CONNECTION-RETRY-LIMIT** | Number attempts to connect to ML before giving up. Default is `3`.
 **<a name="XCC-CONNECTION-RETRY-INTERVAL"></a>XCC-CONNECTION-RETRY-INTERVAL** | Time interval, in seconds, between retry attempts. Default is `60`.
 **<a name="XCC-CONNECTION-HOST-RETRY-LIMIT"></a>XCC-CONNECTION-HOST-RETRY-LIMIT** | Number of attempts to connect to ML before giving up on a host. If not specified, it defaults to **XCC-CONNECTION-RETRY-LIMIT**
 **<a name="XCC-DBNAME"></a>XCC-DBNAME** | (Optional) Name of the content database to execute against
-**<a name="XCC-GRANT-TYPE"></a>XCC-GRANT-TYPE** | MarkLogic Cloud grant type. 
+**<a name="XCC-GRANT-TYPE"></a>XCC-GRANT-TYPE** | Progress Data Cloud grant type. 
 **<a name="XCC-HOSTNAME"></a>XCC-HOSTNAME** | Required if **XCC-CONNECTION-URI** is not specified. Multiple host can be specified with comma as a separator. 
 **<a name="XCC-HTTPCOMPLIANT"></a>XCC-HTTPCOMPLIANT** | Optional boolean flag to indicate whether to enable HTTP 1.1 compliance in XCC. If this option is set, the [`xcc.httpcompliant`](https://docs.marklogic.com/guide/xcc/concepts#id_28335) System property will be set. Default is `true`.
 **<a name="XCC-OAUTH-TOKEN"></a>XCC-OAUTH-TOKEN** | OAuth JWT access token.
@@ -141,8 +152,8 @@ Option | Description
 **<a name="XCC-PORT"></a>XCC-PORT** | Required if **XCC-CONNECTION-URI** is not specified.
 **<a name="XCC-PROTOCOL"></a>XCC-PROTOCOL** | (optional) Used if XCC-CONNECTION-URI is not specified. The XCC scheme to use; either `xcc` or `xccs`. Default is `xcc`.
 **<a name="XCC-TIME-ZONE"></a>XCC-TIME-ZONE** | The ID for the TimeZone that should be set on XCC RequestOption. When a value is specified, it is parsed using [`TimeZone.getTimeZone()`](https://docs.oracle.com/javase/8/docs/api/java/util/TimeZone.html#getTimeZone-java.lang.String-) and set on XCC RequestOption for each Task. Invalid ID values will produce the GMT TimeZone. If not specified, XCC uses the JVM default TimeZone.
-**<a name="XCC-TOKEN-DURATION"></a>XCC-TOKEN-DURATION** | MarkLogic Cloud token duration.
-**<a name="XCC-TOKEN-ENDPOINT"></a>XCC-TOKEN-ENDPOINT** | MarkLogic Cloud token endpoint.
+**<a name="XCC-TOKEN-DURATION"></a>XCC-TOKEN-DURATION** | Progress Data Cloud token duration.
+**<a name="XCC-TOKEN-ENDPOINT"></a>XCC-TOKEN-ENDPOINT** | Progress Data Cloud token endpoint.
 **<a name="XCC-URL-ENCODE-COMPONENTS"></a>XCC-URL-ENCODE-COMPONENTS** | Indicate whether or not the XCC connection string components should be URL encoded. Possible values are `always`, `never`, and `auto`. Default is `auto`.
 **<a name="XCC-USERNAME"></a>XCC-USERNAME** | Required if **XCC-CONNECTION-URI** is not specified.
 **<a name="XML-FILE"></a>XML-FILE** | In order to use this option a class `com.marklogic.developer.corb.FileUrisXMLLoader` has to be specified in the **URIS-LOADER** option. If defined instead of **URIS-MODULE**, XML nodes will be used as URIs from the file located on the client. The file path may be relative or absolute. Default processing will select all of the child elements of the document element (i.e. `/*/*`). The **XML-NODE** option can be specified with an XPath to address a different set of nodes.
@@ -221,7 +232,10 @@ Option | Description
 **<a name="DECRYPTER"></a>DECRYPTER** | Must implement `com.marklogic.developer.corb.Decrypter`. Encryptable options include **XCC-CONNECTION-URI**, **XCC-USERNAME**, **XCC-PASSWORD**, **XCC-HOSTNAME**, **XCC-PORT**, and **XCC-DBNAME** <ul><li>`com.marklogic.developer.corb.PrivateKeyDecrypter` (Included) Requires private key file</li><li>`com.marklogic.developer.corb.JasyptDecrypter` (Included) Requires jasypt-*.jar in classpath</li><li>`com.marklogic.developer.corb.HostKeyDecrypter` (Included) Requires Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files</li></ul>
 **<a name="PRIVATE-KEY-FILE"></a>PRIVATE-KEY-FILE**  | Required property for PrivateKeyDecrypter. This file should be accessible in the classpath or on the file system
 **<a name="PRIVATE-KEY-ALGORITHM"></a>PRIVATE-KEY-ALGORITHM** | (optional) <ul><li>Default algorithm for PrivateKeyDecrypter is RSA.</li><li>Default algorithm for JasyptDecrypter is PBEWithMD5AndTripleDES</li><ul>
-**<a name="JASYPT-PROPERTIES-FILE"></a>JASYPT-PROPERTIES-FILE** | (optional) Property file for the JasyptDecrypter. If not specified, it uses default `jasypt.proeprties` file, which should be accessible in the classpath or file system.
+**<a name="HOST-KEY-DECRYPTER-CIPHER"></a>HOST-KEY-DECRYPTER-CIPHER** | (optional) The cipher transformation used by HostKeyDecrypter for encryption and decryption. Accepts a simple algorithm name (e.g., `AES`) or a full transformation string (e.g., `AES/GCM/NoPadding`). Default is `AES`. **Note:** Changing this value after values have been encrypted will prevent those values from being decrypted — re-encrypt all values before switching ciphers.
+**<a name="JASYPT-PROPERTIES-FILE"></a>JASYPT-PROPERTIES-FILE** | (optional) Property file for the JasyptDecrypter. If not specified, it uses default `jasypt.properties` file, which should be accessible in the classpath or file system.
+**<a name="JASYPT-STRING-ENCRYPTER"></a>JASYPT-STRING-ENCRYPTER** | (optional) Encrypter class used by JasyptDecrypter to decrypt credentials or connection strings. Default is `org.jasypt.encryption.pbe.StandardPBEStringEncryptor`. The class must be available in the classpath and implement the jasypt encrypter interface.
+**<a name="JASYPT-IV-GENERATOR"></a>JASYPT-IV-GENERATOR** | (optional) Initialization vector (IV) generator class for JasyptDecrypter. Supported since Jasypt v1.9.3. The class must implement `org.jasypt.iv.IvGenerator`. Examples: `org.jasypt.iv.RandomIvGenerator`, `org.jasypt.iv.StringFixedIvGenerator`. See [jasypt documentation](http://www.jasypt.org/) for details.
 
 #### com.marklogic.developer.corb.PrivateKeyDecrypter
 PrivateKeyDecrypter automatically detects if the text is encrypted. Unencrypted text or clear text is returned as-is. Although not required, encrypted text can be optionally enclosed with "ENC" ex: ENC(xxxxxx) to clearly indicate that it is encrypted.  
@@ -262,7 +276,7 @@ jasypt.password=passphrase
 ```
 
 #### com.marklogic.developer.corb.HostKeyDecrypter
-HostKeyDecrypter uses internal server identifiers to generate a private key unique to the host server. It then uses that private key as input to AES-258 encryption algorithm. Due to the use of AES-258, it requires JCE Unlimited Strength Jurisdiction Policy Files.
+HostKeyDecrypter uses internal server identifiers to generate a private key unique to the host server. It then uses that private key with the configured cipher (see **HOST-KEY-DECRYPTER-CIPHER**; default `AES`) for encryption and decryption. Due to the use of AES-256, it requires JCE Unlimited Strength Jurisdiction Policy Files.
 > Note: certain server identifiers used may change in cases of driver installation or if underlying hardware changes. In such cases, passwords will need to be regenerated. Encrypted passwords will be always be unique to the server they are generated on.
 
 Encrypt the password as follows:  

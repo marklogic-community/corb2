@@ -1,5 +1,5 @@
 /*
-  * * Copyright (c) 2004-2023 MarkLogic Corporation
+  * * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
   * *
   * * Licensed under the Apache License, Version 2.0 (the "License");
   * * you may not use this file except in compliance with the License.
@@ -30,10 +30,11 @@ import java.util.logging.Logger;
 
 import static com.marklogic.developer.corb.Options.EXPORT_FILE_NAME;
 import static com.marklogic.developer.corb.TestUtils.assertEqualsNormalizeNewline;
-import static org.junit.Assert.*;
-
 import com.marklogic.xcc.types.XdmItem;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -41,14 +42,14 @@ import static org.mockito.Mockito.when;
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class ExportBatchToFileTaskTest {
+class ExportBatchToFileTaskTest {
 
     private static final String EMPTY = "";
     private static final String TXT_EXT = ".txt";
     private static final Logger LOG = Logger.getLogger(ExportBatchToFileTaskTest.class.getName());
 
     @Test
-    public void testGetFileNameFromURISBatchRef() {
+    void testGetFileNameFromURISBatchRef() {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, "foo/bar/baz");
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
@@ -58,7 +59,7 @@ public class ExportBatchToFileTaskTest {
     }
 
     @Test
-    public void testGetFileNameFromEXPORTFILENAME() {
+    void testGetFileNameFromEXPORTFILENAME() {
         String filename = "foo/bar";
         Properties props = new Properties();
         props.setProperty(EXPORT_FILE_NAME, filename);
@@ -68,40 +69,36 @@ public class ExportBatchToFileTaskTest {
         assertEquals(filename, result);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testGetFileNameWithEmptyExportFileName() {
+    @Test
+    void testGetFileNameWithEmptyExportFileName() {
         Properties props = new Properties();
         props.setProperty(EXPORT_FILE_NAME, EMPTY);
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
-        instance.getFileName();
-        fail();
+        assertThrows(NullPointerException.class, instance::getFileName);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testGetFileNameWithEmptyUrisBatchRef() {
+    @Test
+    void testGetFileNameWithEmptyUrisBatchRef() {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, EMPTY);
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
-        instance.getFileName();
-        fail();
+        assertThrows(NullPointerException.class, instance::getFileName);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testGetPartFileNameEmptyName() {
+    @Test
+    void testGetPartFileNameEmptyName() {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, EMPTY);
         props.setProperty(Options.EXPORT_FILE_PART_EXT, TXT_EXT);
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.properties = props;
-        String result = instance.getPartFileName();
-        assertEquals("", result);
-        fail();
+        assertThrows(NullPointerException.class, instance::getPartFileName);
     }
 
     @Test
-    public void testGetPartFileNameWithExtension() {
+    void testGetPartFileNameWithExtension() {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, "foo");
         props.setProperty(Options.EXPORT_FILE_PART_EXT, TXT_EXT);
@@ -112,14 +109,14 @@ public class ExportBatchToFileTaskTest {
     }
 
     @Test
-    public void testWriteToFileNullSeq() {
+    void testWriteToFileNullSeq() {
         ResultSequence seq = null;
         File file = testWriteToFile(seq);
         assertFalse(file.exists());
     }
 
     @Test
-    public void testWriteToFileNotSeqHasNext()  {
+    void testWriteToFileNotSeqHasNext()  {
         ResultSequence seq = mock(ResultSequence.class);
         when(seq.hasNext()).thenReturn(false);
         File file = testWriteToFile(seq);
@@ -127,7 +124,7 @@ public class ExportBatchToFileTaskTest {
     }
 
     @Test
-    public void testWriteToFileWithMultipleItems()  {
+    void testWriteToFileWithMultipleItems()  {
         ResultSequence seq = mock(ResultSequence.class);
         ResultItem item = mock(ResultItem.class);
         XdmItem xdmItem = mock(XdmItem.class);
@@ -136,14 +133,16 @@ public class ExportBatchToFileTaskTest {
         when(seq.next()).thenReturn(item);
         when(item.getItem()).thenReturn(xdmItem);
         when(xdmItem.asString()).thenReturn("foo").thenReturn("bar").thenReturn("baz");
-        File file = testWriteToFile(seq);
+
         try {
+            File file = testWriteToFile(seq);
             assertEquals(3, FileUtils.getLineCount(file));
             assertEqualsNormalizeNewline("foo\nbar\nbaz\n", TestUtils.readFile(file));
         } catch (IOException ex) {
             fail();
         }
     }
+
     @Test
     public void testWriteToFileWithFilenameAndNoExportFileDir() {
         testWriteToFileWithNullExportFileDir("myFile.txt");
@@ -164,7 +163,6 @@ public class ExportBatchToFileTaskTest {
             assertTrue(exportFile.exists());
             assertEqualsNormalizeNewline("test\n", TestUtils.readFile(exportFile));
         } catch (IOException ex) {
-            System.out.println(ex.getMessage());
             fail();
         } finally {
             exportFile.delete();
@@ -174,8 +172,8 @@ public class ExportBatchToFileTaskTest {
     public File testWriteToFile(ResultSequence resultSequence) {
         Properties props = new Properties();
         try {
-            File batchFile = File.createTempFile("test", "txt");
-            props.setProperty(EXPORT_FILE_NAME, batchFile.getAbsolutePath());
+            File batchFile = File.createTempFile("test", ".txt");
+            props.setProperty(EXPORT_FILE_NAME, batchFile.getCanonicalPath());
             batchFile.delete();
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, "Unable to create temp file", ex);
@@ -184,9 +182,9 @@ public class ExportBatchToFileTaskTest {
         ExportBatchToFileTask instance = new ExportBatchToFileTask();
         instance.setProperties(props);
         try {
-            instance.writeToFile(resultSequence);
+            instance.writeToFile(resultSequence, instance.getExportFile());
         } catch (IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, ex.getMessage(), ex);
             fail();
         }
         File exportFile = instance.getExportFile();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2023 MarkLogic Corporation
+ * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,11 +34,9 @@ import static com.marklogic.developer.corb.util.StringUtils.commaSeparatedValues
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
 import static com.marklogic.developer.corb.util.StringUtils.isNotBlank;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
-import com.marklogic.xcc.Request;
-import com.marklogic.xcc.RequestOptions;
-import com.marklogic.xcc.ResultSequence;
-import com.marklogic.xcc.Session;
-import com.marklogic.xcc.ValueFactory;
+
+import com.marklogic.developer.corb.util.XmlUtils;
+import com.marklogic.xcc.*;
 import com.marklogic.xcc.exceptions.QueryException;
 import com.marklogic.xcc.exceptions.RequestException;
 import com.marklogic.xcc.exceptions.RequestPermissionException;
@@ -65,107 +63,301 @@ import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
+ * Abstract base class for CoRB task implementations.
+ * Provides common functionality for processing URIs including request generation,
+ * error handling, retry logic, and result processing. Tasks are executed concurrently
+ * to process batches of URIs against MarkLogic modules.
+ *
+ * <p>Key features:</p>
+ * <ul>
+ *   <li>Automatic retry logic for transient failures</li>
+ *   <li>Configurable error handling (fail-fast or continue)</li>
+ *   <li>Support for both installed modules and adhoc queries</li>
+ *   <li>Request variable configuration (URI or DOC mode)</li>
+ *   <li>Error logging to file</li>
+ *   <li>Thread name management for monitoring</li>
+ * </ul>
+ *
+ * <p>Subclasses must implement {@link #processResult(ResultSequence)} to handle
+ * the results returned from MarkLogic.</p>
  *
  * @author Bhagat Bandlamudi, MarkLogic Corporation
- *
+  * @since 2.0.0
  */
 public abstract class AbstractTask implements Task {
 
+    /**
+     * Synchronization object for thread-safe error file writing operations.
+     * Ensures that multiple concurrent tasks do not interfere when writing to the error file.
+     */
     private static final Object ERROR_SYNC_OBJ = new Object();
 
+    /**
+     * Synchronization object for thread-safe restart journal writes.
+     */
+    private static final Object RESTART_STATE_SYNC_OBJ = new Object();
+
+    /**
+     * String constant for boolean true value.
+     * Used for property and configuration comparisons.
+     */
     protected static final String TRUE = "true";
+
+    /**
+     * String constant for boolean false value.
+     * Used for property and configuration comparisons.
+     */
     protected static final String FALSE = "false";
+
+    /**
+     * Request variable name for DOC mode.
+     * When LOADER_VARIABLE is set to "DOC", input URIs are parsed and passed as document nodes.
+     */
     protected static final String REQUEST_VARIABLE_DOC = "DOC";
+
+    /**
+     * Request variable name for URI mode.
+     * Default mode where input URIs are passed as delimited strings.
+     */
     protected static final String REQUEST_VARIABLE_URI = "URI";
-    protected static final byte[] NEWLINE
-            = System.getProperty("line.separator") != null ? System.getProperty("line.separator").getBytes() : "\n".getBytes();
+
+    /**
+     * Platform-specific newline byte sequence.
+     * Obtained from system property "line.separator" or defaults to "\n".
+     * Used for writing line breaks to error files.
+     */
+    protected static final byte[] NEWLINE = System.getProperty("line.separator") != null ?
+        System.getProperty("line.separator").getBytes(StandardCharsets.UTF_8) : "\n".getBytes(StandardCharsets.UTF_8);
+
+    /**
+     * Empty byte array constant to avoid repeated allocation.
+     * Returned when converting null XdmItems to byte arrays.
+     */
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
+    /**
+     * Content source pool for obtaining XCC sessions to MarkLogic.
+     * Shared across all tasks and managed by the CoRB manager.
+     */
     protected ContentSourcePool csp;
+
+    /**
+     * Module type identifier (e.g., "PROCESS-MODULE", "PRE-BATCH-MODULE").
+     * Used to identify custom module-specific properties.
+     */
     protected String moduleType;
+
+    /**
+     * URI path of the installed module in MarkLogic modules database.
+     * Null if using adhoc query mode.
+     */
     protected String moduleUri;
+
+    /**
+     * Configuration properties for the task including custom module variables,
+     * retry limits, error handling settings, and other job parameters.
+     */
     protected Properties properties = new Properties();
+
+    /**
+     * Array of input URIs to be processed by this task.
+     * May contain single or multiple URIs depending on batch size configuration.
+     */
     protected String[] inputUris;
 
+    /**
+     * Adhoc query code to execute instead of an installed module.
+     * Null if using installed module mode.
+     */
     protected String adhocQuery;
+
+    /**
+     * Query language for the module (e.g., "xquery" or "javascript").
+     * Used to set the RequestOptions language.
+     */
     protected String language;
+
+    /**
+     * Timezone for query execution.
+     * Applied to XCC RequestOptions if configured.
+     */
     protected TimeZone timeZone;
+
+    /**
+     * Export directory path for writing output files.
+     * Used by tasks that export results to the filesystem.
+     */
     protected String exportDir;
 
+    /**
+     * Default interval in seconds to wait between query retry attempts.
+     * Used when {@link Options#QUERY_RETRY_INTERVAL} is not specified.
+     */
     protected static final int DEFAULT_QUERY_RETRY_INTERVAL = 20;
+
+    /**
+     * Default maximum number of query retry attempts.
+     * Used when {@link Options#QUERY_RETRY_LIMIT} is not specified.
+     */
     protected static final int DEFAULT_QUERY_RETRY_LIMIT = 2;
 
+    /**
+     * Current number of retry attempts for the current invocation.
+     * Reset to 0 after successful execution or when retry limit is exceeded.
+     */
     protected int retryCount = 0;
+
+    /** Whether to fail fast on errors or continue processing */
     protected boolean failOnError = true;
 
+    /**
+     * Logger instance for logging task execution, errors, retries, and diagnostic information.
+     */
     private static final Logger LOG = Logger.getLogger(AbstractTask.class.getName());
+
+    /**
+     * String constant for error messages indicating URI context.
+     * Used to append URI information to exception messages.
+     */
     private static final String AT_URI = " at URI: ";
 
+    /**
+     * Sets the content source pool for database connections.
+     *
+     * @param csp the ContentSourcePool instance
+     */
     @Override
     public void setContentSourcePool(ContentSourcePool csp) {
         this.csp = csp;
     }
 
+    /**
+     * Sets the module type (e.g., "PROCESS-MODULE").
+     *
+     * @param moduleType the module type identifier
+     */
     @Override
     public void setModuleType(String moduleType) {
         this.moduleType = moduleType;
     }
 
+    /**
+     * Sets the URI of the installed module in MarkLogic.
+     *
+     * @param moduleUri the module URI path
+     */
     @Override
     public void setModuleURI(String moduleUri) {
         this.moduleUri = moduleUri;
     }
 
+    /**
+     * Sets the adhoc query code to execute.
+     *
+     * @param adhocQuery the query code as a string
+     */
     @Override
     public void setAdhocQuery(String adhocQuery) {
         this.adhocQuery = adhocQuery;
     }
 
+    /**
+     * Sets the query language (XQuery or JavaScript).
+     *
+     * @param language the query language
+     */
     @Override
     public void setQueryLanguage(String language) {
         this.language = language;
     }
 
+    /**
+     * Sets the timezone for query execution.
+     *
+     * @param timeZone the TimeZone to use
+     */
     @Override
     public void setTimeZone(TimeZone timeZone) {
         this.timeZone = timeZone;
     }
 
+    /**
+     * Sets the configuration properties.
+     *
+     * @param properties the Properties object
+     */
     @Override
     public void setProperties(Properties properties) {
         this.properties = properties;
     }
 
+    /**
+     * Sets the input URIs to process.
+     * The array is cloned to prevent external modification.
+     *
+     * @param inputUri variable number of URI strings
+     */
     @Override
     public void setInputURI(String... inputUri) {
         this.inputUris = inputUri != null ? inputUri.clone() : new String[]{};
     }
 
+    /**
+     * Sets whether to fail fast on errors or continue processing.
+     *
+     * @param failOnError true to throw exceptions, false to log and continue
+     */
     @Override
-    public void setFailOnError(boolean failOnError) {
+    public synchronized void setFailOnError(boolean failOnError) {
         this.failOnError = failOnError;
     }
 
+    /**
+     * Sets the export directory for output files.
+     *
+     * @param exportFileDir the directory path
+     */
     @Override
     public void setExportDir(String exportFileDir) {
         this.exportDir = exportFileDir;
     }
 
+    /**
+     * Gets the export directory.
+     *
+     * @return the export directory path
+     */
     public String getExportDir() {
         return this.exportDir;
     }
 
+    /**
+     * Creates a new XCC session from the content source pool.
+     *
+     * @return a new Session instance
+     * @throws CorbException if a session cannot be created
+     */
     public Session newSession() throws CorbException{
-        return csp.get().newSession();
+        ContentSource contentSource = csp.get();
+        if (contentSource == null) {
+            throw new CorbException("Unable to obtain ContentSource from pool");
+        }
+        return contentSource.newSession();
     }
 
+    /**
+     * Main entry point for task execution (Callable interface).
+     * Invokes the module and ensures cleanup is performed.
+     *
+     * @return array of processed input URIs
+     * @throws Exception if an error occurs during execution
+     */
     @Override
     public String[] call() throws Exception {
         try {
@@ -175,6 +367,15 @@ public abstract class AbstractTask implements Task {
         }
     }
 
+    /**
+     * Invokes the configured module (adhoc or installed) with the input URIs.
+     * Handles session creation, request generation, execution, and error handling.
+     * Implements retry logic for transient failures.
+     * Thread yields are used throughout to avoid thread starvation.
+     *
+     * @return array of processed input URIs
+     * @throws CorbException if an unrecoverable error occurs
+     */
     protected String[] invokeModule() throws CorbException {
         if (moduleUri == null && adhocQuery == null) {
             return new String[0];
@@ -189,13 +390,17 @@ public abstract class AbstractTask implements Task {
             Thread.currentThread().setName(urisAsString(inputUris));
 
             Thread.yield();// try to avoid thread starvation
-            seq = session.submitRequest(request);
-            retryCount = 0;
+            synchronized (session) {
+                seq = session.submitRequest(request);
+                retryCount = 0;
+            }
 
             Thread.yield();// try to avoid thread starvation
             processResult(seq);
             seq.close();
+
             Thread.yield();// try to avoid thread starvation
+            writeCompletedUrisToRestartState(inputUris);
 
             return inputUris;
         } catch (RequestException exc) {
@@ -205,12 +410,24 @@ public abstract class AbstractTask implements Task {
         } finally {
             if (null != seq && !seq.isClosed()) {
                 seq.close();
-                seq = null;
             }
             Thread.yield();// try to avoid thread starvation
         }
     }
 
+    /**
+     * Generates an XCC Request object for the module.
+     * Configures request options (language, timezone) and sets request variables:
+     * <ul>
+     *   <li>URI or DOC variable based on LOADER_VARIABLE setting</li>
+     *   <li>URIS_BATCH_REF if configured</li>
+     *   <li>Custom module-specific variables</li>
+     * </ul>
+     *
+     * @param session the XCC session
+     * @return configured Request object
+     * @throws CorbException if request generation fails
+     */
     protected Request generateRequest(Session session) throws CorbException {
         Request request;
         //determine whether this is an eval or execution of installed module
@@ -240,7 +457,17 @@ public abstract class AbstractTask implements Task {
             request.setNewStringVariable(URIS_BATCH_REF, getProperty(URIS_BATCH_REF));
         }
 
-        //set custom inputs
+        setCustomInputs(request);
+        return request;
+    }
+
+    /**
+     * Sets custom input variables on the request based on properties that start with the module type prefix.
+     * For each property named "&lt;moduleType&gt;.&lt;varName&gt;", a request variable named "&lt;varName&gt;" is set with the property value.
+     *
+     * @param request the XCC Request to set variables on
+     */
+    private void setCustomInputs(Request request) {
         for (String customInputPropertyName : getCustomInputPropertyNames()) {
             String varName = customInputPropertyName.substring(moduleType.length() + 1);
             String value = getProperty(customInputPropertyName);
@@ -248,15 +475,28 @@ public abstract class AbstractTask implements Task {
                 request.setNewStringVariable(varName, value);
             }
         }
-        return request;
     }
 
+    /**
+     * Sets the URI request variable with batch URIs joined by delimiter.
+     *
+     * @param request the XCC request
+     * @param inputUris the URIs to set as a string variable
+     */
     protected void setUriRequestVariable(Request request, String... inputUris) {
         String delim = getBatchUriDelimiter();
         String uriValue = StringUtils.join(inputUris, delim);
         request.setNewStringVariable(REQUEST_VARIABLE_URI, uriValue);
     }
 
+    /**
+     * Sets the DOC request variable with parsed document content.
+     * Only supports batch size of 1 due to XCC limitations.
+     *
+     * @param request the XCC request
+     * @param inputUris the URIs to set as document variable
+     * @throws CorbException if batch size is greater than 1 or parsing fails
+     */
     protected void setDocRequestVariable(Request request, String... inputUris) throws CorbException {
         String batchSize = properties.getProperty(BATCH_SIZE);
         //XCC does not allow sequences for request parameters
@@ -269,10 +509,18 @@ public abstract class AbstractTask implements Task {
         request.setVariable(ValueFactory.newVariable(name, xdmItems[0]));
     }
 
+    /**
+     * Converts input URI strings to XdmItem array.
+     * Attempts to parse as XML documents; falls back to text nodes if parsing fails.
+     *
+     * @param inputUris the input URI strings
+     * @return array of XdmItem representing the inputs
+     * @throws CorbException if document creation fails
+     */
     protected XdmItem[] toXdmItems(String... inputUris) throws CorbException {
         List<XdmItem> docs = new ArrayList<>(inputUris.length);
         try {
-            DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            DocumentBuilder builder = XmlUtils.newSecureDocumentBuilderFactoryInstance().newDocumentBuilder();
             for (String input : inputUris) {
                 XdmItem doc = toXdmItem(builder, input);
                 docs.add(doc);
@@ -283,6 +531,16 @@ public abstract class AbstractTask implements Task {
         return docs.toArray(new XdmItem[0]);
     }
 
+    /**
+     * Converts a single input string to an XdmItem.
+     * Tries to parse as XML if input looks like XML (starts with '&lt;' and ends with '&gt;').
+     * Falls back to creating a text document node if XML parsing fails.
+     *
+     * @param builder the DocumentBuilder for XML parsing
+     * @param input the input string
+     * @return XdmItem representation of the input
+     * @throws CorbException if document creation fails
+     */
     protected XdmItem toXdmItem(DocumentBuilder builder, String input) throws CorbException {
         String normalizedInput = StringUtils.trimToEmpty(input);
         XdmItem doc;
@@ -297,19 +555,6 @@ public abstract class AbstractTask implements Task {
                 //guess not, lets just use it as-is
                 doc = ValueFactory.newDocumentNode(input);
             }
-            /**
-             * TODO if we support JSON values, then we may need Jackson
-             * Databinding added as a dependency
-             *
-             * } else if (normalizedInput.startsWith("{") &&
-             * normalizedInput.endsWith("}")) { //smells like a JSON object
-             * XdmItem item = ValueFactory.newJSObject(normalizedInput); doc =
-             * ValueFactory.newDocumentNode(item); } else if
-             * (normalizedInput.startsWith("[") &&
-             * normalizedInput.endsWith("]")) { //smells like a JSON array
-             * XdmItem item = ValueFactory.newJSArray(normalizedInput); doc =
-             * ValueFactory.newDocumentNode(item);
-             */
         } else {
             //assume that it is just plain text, use the original value
             doc = ValueFactory.newDocumentNode(input);
@@ -317,6 +562,13 @@ public abstract class AbstractTask implements Task {
         return doc;
     }
 
+    /**
+     * Gets custom input property names for this module type.
+     * Returns property names that start with "&lt;moduleType&gt;."
+     * Searches both instance properties and system properties.
+     *
+     * @return set of custom property names
+     */
     protected Set<String> getCustomInputPropertyNames() {
         Set<String> moduleCustomInputPropertyNames = new HashSet<>();
         if (moduleType == null) {
@@ -337,6 +589,19 @@ public abstract class AbstractTask implements Task {
         return moduleCustomInputPropertyNames;
     }
 
+    /**
+     * Determines if a RequestException should be retried.
+     * Retryable conditions include:
+     * <ul>
+     *   <li>RetryableQueryException</li>
+     *   <li>RequestPermissionException with retry advised</li>
+     *   <li>QueryException with retryable error code</li>
+     *   <li>Exception message matching QUERY_RETRY_ERROR_MESSAGE patterns</li>
+     * </ul>
+     *
+     * @param requestException the exception to evaluate
+     * @return true if the exception should be retried
+     */
     protected boolean shouldRetry(RequestException requestException) {
         return requestException instanceof RetryableQueryException
                 || requestException instanceof RequestPermissionException && shouldRetry((RequestPermissionException) requestException)
@@ -344,6 +609,12 @@ public abstract class AbstractTask implements Task {
                 || hasRetryableMessage(requestException);
     }
 
+    /**
+     * Checks if the exception message matches configured retryable message patterns.
+     *
+     * @param requestException the exception to check
+     * @return true if the message contains a retryable pattern
+     */
     protected boolean hasRetryableMessage(RequestException requestException) {
         String message = requestException.getMessage();
         List<String> retryableMessages = commaSeparatedValuesToList(getProperty(QUERY_RETRY_ERROR_MESSAGE));
@@ -355,16 +626,42 @@ public abstract class AbstractTask implements Task {
         return false;
     }
 
+    /**
+     * Determines if a QueryException should be retried.
+     * Checks if the exception is marked retryable or if the error code
+     * matches QUERY_RETRY_ERROR_CODES configuration.
+     *
+     * @param queryException the exception to evaluate
+     * @return true if the exception should be retried
+     */
     protected boolean shouldRetry(QueryException queryException) {
         String errorCode = queryException.getCode();
         List<String> retryableErrorCodes = commaSeparatedValuesToList(getProperty(QUERY_RETRY_ERROR_CODES));
         return queryException.isRetryable() || retryableErrorCodes.contains(errorCode);
     }
 
+    /**
+     * Determines if a RequestPermissionException should be retried.
+     *
+     * @param requestPermissionException the exception to evaluate
+     * @return true if retry is advised
+     */
     protected boolean shouldRetry(RequestPermissionException requestPermissionException) {
         return requestPermissionException.isRetryAdvised();
     }
 
+    /**
+     * Handles a RequestException based on retry eligibility and failOnError setting.
+     * <ul>
+     *   <li>Retries if shouldRetry returns true and retry limit not exceeded</li>
+     *   <li>Throws exception if ServerConnectionException or failOnError is true</li>
+     *   <li>Logs warning and writes to error file if failOnError is false</li>
+     * </ul>
+     *
+     * @param requestException the exception to handle
+     * @return array of input URIs
+     * @throws CorbException if exception cannot be handled
+     */
     protected String[] handleRequestException(RequestException requestException) throws CorbException {
         if (shouldRetry(requestException)) {
             return handleRetry(requestException);
@@ -388,6 +685,15 @@ public abstract class AbstractTask implements Task {
         }
     }
 
+    /**
+     * Handles retry logic for a RequestException.
+     * Waits for the configured retry interval before retrying.
+     * If retry limit is exceeded, delegates to handleProcessException.
+     *
+     * @param requestException the exception that triggered the retry
+     * @return array of input URIs if retry succeeds
+     * @throws CorbException if retry limit exceeded or retry fails
+     */
     protected String[] handleRetry(RequestException requestException) throws CorbException {
         String exceptionName = requestException.getClass().getSimpleName();
         int retryInterval = this.getQueryRetryInterval();
@@ -410,8 +716,17 @@ public abstract class AbstractTask implements Task {
         }
     }
 
+    /**
+     * Handles a general processing exception based on failOnError setting.
+     * Throws CorbException if failOnError is true, otherwise logs and writes to error file.
+     *
+     * @param ex the exception to handle
+     * @return array of input URIs
+     * @throws CorbException if failOnError is true
+     */
     protected String[] handleProcessException(Exception ex) throws CorbException {
         String exceptionName = ex.getClass().getSimpleName();
+        writeCompletedUrisToRestartState(inputUris);
         if (failOnError) {
             Thread.currentThread().setName(FAILED_URI_TOKEN + Thread.currentThread().getName());
             throw wrapProcessException(ex, inputUris);
@@ -422,26 +737,54 @@ public abstract class AbstractTask implements Task {
         }
     }
 
+    /**
+     * Wraps an exception with URI information into a CorbException.
+     *
+     * @param ex the original exception
+     * @param inputUris the URIs being processed when the exception occurred
+     * @return CorbException with URI information appended to message
+     */
     protected CorbException wrapProcessException(Exception ex, String... inputUris) {
         return new CorbException(ex.getMessage() + AT_URI + urisAsString(inputUris), ex);
     }
 
+    /**
+     * Formats a warning message when failOnError is false.
+     *
+     * @param name the exception class simple name
+     * @param inputUris the URIs being processed
+     * @return formatted message string
+     */
     private String failOnErrorIsFalseMessage(final String name, final String... inputUris) {
         return "failOnError is false. Encountered " + name + AT_URI + urisAsString(inputUris);
     }
 
     /**
-     * Produce a comma separated value from the URIs provided, or will return an empty string if either
-     * {@value com.marklogic.developer.corb.Options#URIS_REDACTED} is true or the URIs is null
-     * @param uris
-     * @return
+     * Converts URIs array to a comma-separated string.
+     * Returns empty string if URIs is null or URIS_REDACTED option is true.
+     *
+     * @param uris the URIs to join
+     * @return comma-separated URI string, or empty string if redacted or null
      */
     protected String urisAsString(String... uris) {
         return (uris == null || StringUtils.stringToBoolean(getProperty(Options.URIS_REDACTED)) ) ? "" : StringUtils.join(uris, ",");
     }
 
+    /**
+     * Processes the result sequence from module execution.
+     * Subclasses must implement this to handle specific result processing logic.
+     *
+     * @param seq the ResultSequence returned from MarkLogic
+     * @return processing result as string
+     * @throws CorbException if result processing fails
+     */
     protected abstract String processResult(ResultSequence seq) throws CorbException;
 
+    /**
+     * Releases task resources.
+     * Called in finally block after task execution completes.
+     * Sets all fields to null to aid garbage collection.
+     */
     protected void cleanup() {
         // release resources
         csp = null;
@@ -455,10 +798,24 @@ public abstract class AbstractTask implements Task {
         exportDir = null;
     }
 
+    /**
+     * Retrieves a property value by key.
+     * Delegates to Options.findOption for precedence handling.
+     *
+     * @param key the property key
+     * @return the property value, or null if not found
+     */
     public String getProperty(String key) {
         return Options.findOption(properties, key);
     }
 
+    /**
+     * Converts an XdmItem to a byte array.
+     * Returns binary data for XdmBinary items, UTF-8 encoded string for others.
+     *
+     * @param item the XdmItem to convert
+     * @return byte array representation, or empty array if item is null
+     */
     protected static byte[] getValueAsBytes(XdmItem item) {
         if (item instanceof XdmBinary) {
             return ((XdmBinary) item).asBinaryData();
@@ -469,16 +826,31 @@ public abstract class AbstractTask implements Task {
         }
     }
 
+    /**
+     * Gets the query retry limit from configuration.
+     *
+     * @return retry limit, or DEFAULT_QUERY_RETRY_LIMIT if not configured or negative
+     */
     private int getQueryRetryLimit() {
         int queryRetryLimit = getIntProperty(QUERY_RETRY_LIMIT);
         return queryRetryLimit < 0 ? DEFAULT_QUERY_RETRY_LIMIT : queryRetryLimit;
     }
 
+    /**
+     * Gets the query retry interval in seconds from configuration.
+     *
+     * @return retry interval in seconds, or DEFAULT_QUERY_RETRY_INTERVAL if not configured or negative
+     */
     private int getQueryRetryInterval() {
         int queryRetryInterval = getIntProperty(QUERY_RETRY_INTERVAL);
         return queryRetryInterval < 0 ? DEFAULT_QUERY_RETRY_INTERVAL : queryRetryInterval;
     }
 
+    /**
+     * Gets the batch URI delimiter from configuration.
+     *
+     * @return delimiter string, or DEFAULT_BATCH_URI_DELIM if not configured
+     */
     private String getBatchUriDelimiter() {
         String delim = getProperty(BATCH_URI_DELIM);
         if (isEmpty(delim)) {
@@ -488,11 +860,11 @@ public abstract class AbstractTask implements Task {
     }
 
     /**
-     * Retrieves an int value.
+     * Retrieves an integer property value.
+     * Returns -1 if the property is not found or cannot be parsed as an integer.
      *
-     * @param key The key name.
-     * @return The requested value ({@code -1} if not found or could not parse
-     * value as int).
+     * @param key the property key name
+     * @return the integer value, or -1 if not found or invalid
      */
     protected int getIntProperty(String key) {
         int intVal = -1;
@@ -507,6 +879,14 @@ public abstract class AbstractTask implements Task {
         return intVal;
     }
 
+    /**
+     * Writes failed URIs and error messages to the error file.
+     * Thread-safe operation using synchronization.
+     * Format: URI[delimiter]message[newline]
+     *
+     * @param uris the URIs that failed processing
+     * @param message the error message to write
+     */
     private void writeToErrorFile(String[] uris, String message) {
         if (uris == null || uris.length == 0) {
             return;
@@ -525,10 +905,10 @@ public abstract class AbstractTask implements Task {
         synchronized (ERROR_SYNC_OBJ) {
             try (OutputStream writer = new BufferedOutputStream(new FileOutputStream(new File(exportDir, errorFileName), true))) {
                 for (String uri : uris) {
-                    writer.write(uri.getBytes());
+                    writer.write(uri.getBytes(StandardCharsets.UTF_8));
                     if (isNotEmpty(message)) {
-                        writer.write(delim.getBytes());
-                        writer.write(message.getBytes());
+                        writer.write(delim.getBytes(StandardCharsets.UTF_8));
+                        writer.write(message.getBytes(StandardCharsets.UTF_8));
                     }
                     writer.write(NEWLINE);
                 }
@@ -537,6 +917,41 @@ public abstract class AbstractTask implements Task {
                 LOG.log(SEVERE, "Problem writing uris to " + ERROR_FILE_NAME, exc);
             }
         }
+    }
+
+    private void writeCompletedUrisToRestartState(String[] uris) throws CorbException {
+        if (uris == null || uris.length == 0 || !StringUtils.stringToBoolean(getProperty(Options.RESTARTABLE))) {
+            return;
+        }
+        String restartStateDir = getResolvedRestartStateDir();
+        if (isEmpty(restartStateDir)) {
+            throw new CorbException("Unable to resolve restart state directory");
+        }
+        synchronized (RESTART_STATE_SYNC_OBJ) {
+            try {
+                RestartableJobState.appendCompletedUris(new File(restartStateDir), uris);
+            } catch (IOException ex) {
+                throw new CorbException("Unable to persist restart state", ex);
+            }
+        }
+    }
+
+    /**
+     * Resolves the directory to use for restart state persistence.
+     * Checks RESTART_STATE_DIR property first, then TEMP_DIR, and finally falls back to system temp directory.
+     *
+     * @return the resolved directory path for restart state
+     */
+    protected String getResolvedRestartStateDir() {
+        String restartStateDir = getProperty(Options.RESTART_STATE_DIR);
+        if (isNotEmpty(restartStateDir)) {
+            return restartStateDir;
+        }
+        String tempDir = getProperty(Options.TEMP_DIR);
+        if (isNotEmpty(tempDir)) {
+            return tempDir;
+        }
+        return System.getProperty("java.io.tmpdir");
     }
 
 }

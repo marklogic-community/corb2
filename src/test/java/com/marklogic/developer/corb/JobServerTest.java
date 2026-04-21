@@ -1,5 +1,5 @@
 /*
- * * Copyright (c) 2004-2023 MarkLogic Corporation
+ * * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  * *
  * * Licensed under the Apache License, Version 2.0 (the "License");
  * * you may not use this file except in compliance with the License.
@@ -20,30 +20,37 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
 import com.marklogic.developer.corb.util.IOUtils;
-import org.junit.Before;
-import org.junit.Test;
+import com.sun.net.httpserver.HttpContext;
+import com.sun.net.httpserver.HttpExchange;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import static com.marklogic.developer.corb.TestUtils.assertContainsLogRecord;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import static org.junit.Assert.*;
-
-public class JobServerTest {
+class JobServerTest {
     private final TestHandler testLogger = new TestHandler();
     private static final Logger JOBSERVER_LOGGER = Logger.getLogger(JobServer.class.getName());
 
-    @Before
-    public void setUp() throws IOException {
+    @BeforeEach
+    void setUp() {
         JOBSERVER_LOGGER.addHandler(testLogger);
     }
 
     @Test
-    public void testCreateAndGet() {
+    void testCreateAndGet() {
         int port = 9995;
         String localhostUrl = "http://localhost:" + port;
         String GET = "GET";
@@ -56,27 +63,44 @@ public class JobServerTest {
             URL url = new URL(localhostUrl );
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod(GET);
-            byte[] content = IOUtils.toByteArray(conn.getInputStream());
-            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-            assertNotNull(content);
+            byte[] content = null;
+            try (InputStream inputStream = conn.getInputStream()) {
+                content = IOUtils.toByteArray(inputStream);
+                assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+                assertNotNull(content);
+                String contentString = new String(content, StandardCharsets.UTF_8);
+                assertTrue(contentString.contains("Options Builder"));
+                assertTrue(contentString.contains("options-builder-content"));
+                assertTrue(contentString.contains("toggleBuilderDescription(option.name)"));
+                assertTrue(contentString.contains(":title=\"option.description || ''\""));
+            }
 
-            url = new URL(localhostUrl + "/");
+            url = new URL(localhostUrl + '/');
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod(GET);
-            content = IOUtils.toByteArray(conn.getInputStream());
-            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-            assertNotNull(content);
+            try (InputStream inputStream = conn.getInputStream()) {
+                content = IOUtils.toByteArray(inputStream);
+                assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+                assertNotNull(content);
+            }
 
-            // ensure that base path (without extenstion) gets a response
+            // ensure that base path (without extension) gets a response
             url = new URL(localhostUrl +  JobServer.METRICS_PATH);
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod(GET);
-            content = IOUtils.toByteArray(conn.getInputStream());
-            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-            assertNotNull(content);
+            try (InputStream inputStream = conn.getInputStream()) {
+                content = IOUtils.toByteArray(inputStream);
+                assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+                assertNotNull(content);
+            }
+            //verify that invalid paths result in 403
+            url = new URL(localhostUrl + "/DoesNotExist");
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod(GET);
+            assertEquals(HttpURLConnection.HTTP_FORBIDDEN, conn.getResponseCode());
 
             //verify that invalid paths result in 404
-            url = new URL(localhostUrl + "/DoesNotExist");
+            url = new URL(localhostUrl + "/DoesNotExist.html");
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod(GET);
             assertEquals(HttpURLConnection.HTTP_NOT_FOUND, conn.getResponseCode());
@@ -88,7 +112,7 @@ public class JobServerTest {
     }
 
     @Test
-    public void testGetContentType() throws Exception {
+    void testGetContentType() {
         String HTML = "text/html; charset=utf-8";
         assertEquals(HTML, JobServer.getContentType("doc.html"));
         assertEquals("application/javascript", JobServer.getContentType("doc.js"));
@@ -98,7 +122,7 @@ public class JobServerTest {
     }
 
     @Test
-    public void testLogUsageWithoutManager() throws Exception {
+    void testLogUsageWithoutManager() throws Exception {
         JobServer server = JobServer.create(9999);
         server.logUsage();
         server.stop(0);
@@ -107,7 +131,7 @@ public class JobServerTest {
     }
 
     @Test
-    public void testLogUsageWithManager() throws Exception {
+    void testLogUsageWithManager() throws Exception {
         Manager manager = new Manager();
         JobServer server = JobServer.create(Collections.singleton(9998), manager);
         server.logUsage();
@@ -117,12 +141,272 @@ public class JobServerTest {
     }
 
     @Test
-    public void testAddManagerWithJobIDWillAddContext() throws Exception {
+    void testAddManagerWithJobIDWillAddContext() throws Exception {
         Manager manager = new Manager();
         manager.jobId = "foo";
         JobServer server = JobServer.create(Collections.singleton(9996), manager);
         server.addManager(manager);
         assertNotNull(manager.jobServer);
         assertEquals(server, manager.jobServer);
+    }
+
+    @Test
+    void testOptionsBuilderMetadataAndPropertiesEndpoints() throws Exception {
+        int port = 9994;
+        String localhostUrl = "http://localhost:" + port;
+        JobServer server = JobServer.create(port);
+        server.start();
+
+        try {
+            URL url = new URL(localhostUrl + JobBuilderHandler.BUILDER_METADATA_PATH);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            try (InputStream inputStream = conn.getInputStream()) {
+                String metadata = new String(IOUtils.toByteArray(inputStream), StandardCharsets.UTF_8);
+
+                assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+                assertTrue(metadata.contains("\"groups\""));
+                assertTrue(metadata.contains("XCC-CONNECTION-URI"));
+            }
+            url = new URL(localhostUrl + JobBuilderHandler.BUILDER_PROPERTIES_PATH);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+            try (OutputStream out = conn.getOutputStream()) {
+                out.write((Options.PROCESS_MODULE + "=%2Fext%2Fprocess.xqy&" + JobBuilderService.PARAM_ADDITIONAL_PROPERTIES + "=CUSTOM-OPTION%3Dtrue").getBytes(StandardCharsets.UTF_8));
+            }
+            try (InputStream inputStream = conn.getInputStream()) {
+                String properties = new String(IOUtils.toByteArray(inputStream), StandardCharsets.UTF_8);
+                assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+                assertEquals("text/plain; charset=utf-8", conn.getHeaderField(JobServer.HEADER_CONTENT_TYPE));
+                assertTrue(conn.getHeaderField("Content-Disposition").contains("corb-job.properties"));
+                assertTrue(properties.contains("PROCESS-MODULE=/ext/process.xqy"));
+                assertTrue(properties.contains("CUSTOM-OPTION=true"));
+            }
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // isForbidden tests via handleStaticRequest
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testHandleStaticRequestForbiddenDirectoryTraversalSlash() throws IOException {
+        testLogger.clear();
+        HttpExchange exchange = mock(HttpExchange.class);
+        JobServer.handleStaticRequest("/../etc/passwd", exchange);
+        verify(exchange).sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
+        assertContainsLogRecord(testLogger, Level.WARNING, "Rejected suspicious path with traversal sequences: {0}");
+    }
+
+    @Test
+    void testHandleStaticRequestForbiddenDirectoryTraversalBackslash() throws IOException {
+        testLogger.clear();
+        HttpExchange exchange = mock(HttpExchange.class);
+        // Contains "..\\" but not "../" so the second OR operand triggers
+        JobServer.handleStaticRequest("/..\\etc\\passwd", exchange);
+        verify(exchange).sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
+        assertContainsLogRecord(testLogger, Level.WARNING, "Rejected suspicious path with traversal sequences: {0}");
+    }
+
+    @Test
+    void testHandleStaticRequestForbiddenEncodedTraversalLowercase() throws IOException {
+        testLogger.clear();
+        HttpExchange exchange = mock(HttpExchange.class);
+        // Contains "%2e" but not "../" or "..\\" so the third OR operand triggers
+        JobServer.handleStaticRequest("/%2e%2e/passwd", exchange);
+        verify(exchange).sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
+        assertContainsLogRecord(testLogger, Level.WARNING, "Rejected suspicious path with traversal sequences: {0}");
+    }
+
+    @Test
+    void testHandleStaticRequestForbiddenEncodedTraversalUppercase() throws IOException {
+        testLogger.clear();
+        HttpExchange exchange = mock(HttpExchange.class);
+        // Contains "%2E" but not "../", "..\\" or "%2e" so the fourth OR operand triggers
+        JobServer.handleStaticRequest("/%2E%2E/passwd", exchange);
+        verify(exchange).sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
+        assertContainsLogRecord(testLogger, Level.WARNING, "Rejected suspicious path with traversal sequences: {0}");
+    }
+
+    @Test
+    void testHandleStaticRequestForbiddenDisallowedCharacters() throws IOException {
+        testLogger.clear();
+        HttpExchange exchange = mock(HttpExchange.class);
+        // "<" is not in [/\w\-\.] so the regex check triggers
+        JobServer.handleStaticRequest("/<script>.html", exchange);
+        verify(exchange).sendResponseHeaders(HttpURLConnection.HTTP_FORBIDDEN, -1L);
+        assertContainsLogRecord(testLogger, Level.WARNING, "Rejected path with disallowed characters: {0}");
+    }
+
+    @Test
+    void testHandleStaticRequestNotForbiddenJsExtension() throws IOException {
+        HttpExchange exchange = mock(HttpExchange.class);
+        when(exchange.getResponseBody()).thenReturn(new ByteArrayOutputStream());
+        JobServer.handleStaticRequest("/nonexistent.js", exchange);
+        // .js is allowed — should NOT send 403
+        verify(exchange, never()).sendResponseHeaders(eq(HttpURLConnection.HTTP_FORBIDDEN), anyLong());
+    }
+
+    @Test
+    void testHandleStaticRequestNotForbiddenCssExtension() throws IOException {
+        HttpExchange exchange = mock(HttpExchange.class);
+        when(exchange.getResponseBody()).thenReturn(new ByteArrayOutputStream());
+        JobServer.handleStaticRequest("/nonexistent.css", exchange);
+        verify(exchange, never()).sendResponseHeaders(eq(HttpURLConnection.HTTP_FORBIDDEN), anyLong());
+    }
+
+    @Test
+    void testHandleStaticRequestNotForbiddenPngExtension() throws IOException {
+        HttpExchange exchange = mock(HttpExchange.class);
+        when(exchange.getResponseBody()).thenReturn(new ByteArrayOutputStream());
+        JobServer.handleStaticRequest("/nonexistent.png", exchange);
+        verify(exchange, never()).sendResponseHeaders(eq(HttpURLConnection.HTTP_FORBIDDEN), anyLong());
+    }
+
+    @Test
+    void testHandleStaticRequestNotForbiddenJpgExtension() throws IOException {
+        HttpExchange exchange = mock(HttpExchange.class);
+        when(exchange.getResponseBody()).thenReturn(new ByteArrayOutputStream());
+        JobServer.handleStaticRequest("/nonexistent.jpg", exchange);
+        verify(exchange, never()).sendResponseHeaders(eq(HttpURLConnection.HTTP_FORBIDDEN), anyLong());
+    }
+
+    @Test
+    void testHandleStaticRequestNotForbiddenGifExtension() throws IOException {
+        HttpExchange exchange = mock(HttpExchange.class);
+        when(exchange.getResponseBody()).thenReturn(new ByteArrayOutputStream());
+        JobServer.handleStaticRequest("/nonexistent.gif", exchange);
+        verify(exchange, never()).sendResponseHeaders(eq(HttpURLConnection.HTTP_FORBIDDEN), anyLong());
+    }
+
+    // -------------------------------------------------------------------------
+    // hasParamFormatXml / determineContentType static method tests
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testHasParamFormatXmlFalseWhenFormatIsJson() {
+        Map<String, String> params = new HashMap<>();
+        params.put(JobServicesHandler.PARAM_FORMAT, "json");
+        assertFalse(JobServer.hasParamFormatXml(params));
+    }
+
+    @Test
+    void testDetermineContentTypeReturnsMimeXml() {
+        Map<String, String> params = new HashMap<>();
+        params.put(JobServicesHandler.PARAM_FORMAT, "xml");
+        assertEquals(JobServer.MIME_XML, JobServer.determineContentType(params));
+    }
+
+    // -------------------------------------------------------------------------
+    // getExecutor / removeContext / createContext tests
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testGetExecutor() throws Exception {
+        JobServer server = JobServer.create(9984);
+        // getExecutor() delegates to underlying HttpServer — result may be null (default executor)
+        server.getExecutor();
+        server.stop(0);
+    }
+
+    @Test
+    void testRemoveContextByPathAndByContext() throws Exception {
+        JobServer server = JobServer.create(9983);
+        HttpContext ctx1 = server.createContext("/removeme1", exchange -> {});
+        server.removeContext("/removeme1");
+
+        HttpContext ctx2 = server.createContext("/removeme2", exchange -> {});
+        server.removeContext(ctx2);
+        server.stop(0);
+    }
+
+    @Test
+    void testCreateContextReplacesDuplicate() throws Exception {
+        JobServer server = JobServer.create(9982);
+        server.createContext("/duplicate", exchange -> {});
+        // Creating the same path again should log a warning and replace the existing context
+        server.createContext("/duplicate", exchange -> {});
+        assertContainsLogRecord(testLogger, Level.INFO, "Context already exists for path: /duplicate, removing existing context before adding new one.");
+        server.stop(0);
+    }
+
+    // -------------------------------------------------------------------------
+    // handleRequest stream lambda tests (filter + map branches, MIME_XML)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void testHandleRequestMetricsStreamWithManagerHavingJobId() throws Exception {
+        int port = 9981;
+        Manager manager = new Manager();
+        manager.jobId = "testjob";
+        manager.jobStats = new JobStats(manager);
+        // addManager creates context for "/testjob" since jobId is already set
+        JobServer server = JobServer.create(Collections.singleton(port), manager);
+        server.start();
+        try {
+            // GET /metrics?FORMAT=xml covers: filter true branch, map false branch (context exists), MIME_XML
+            URL url = new URL("http://localhost:" + port + JobServer.METRICS_PATH + "?FORMAT=xml");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+            String contentType = conn.getHeaderField(JobServer.HEADER_CONTENT_TYPE);
+            assertNotNull(contentType);
+            assertTrue(contentType.contains("xml"));
+            try (InputStream is = conn.getInputStream()) {
+                String body = new String(IOUtils.toByteArray(is), StandardCharsets.UTF_8);
+                assertTrue(body.contains("<jobs"));
+            }
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
+    void testHandleRequestMetricsFiltersManagerWithNullJobId() throws Exception {
+        int port = 9980;
+        Manager manager = new Manager(); // jobId remains null
+        manager.jobStats = new JobStats(manager);
+        JobServer server = JobServer.create(Collections.singleton(port), manager);
+        server.start();
+        try {
+            // filter lambda false branch: manager.getJobId() == null → filtered out
+            URL url = new URL("http://localhost:" + port + JobServer.METRICS_PATH);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+            try (InputStream is = conn.getInputStream()) {
+                String body = new String(IOUtils.toByteArray(is), StandardCharsets.UTF_8);
+                assertNotNull(body);
+            }
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
+    void testHandleRequestMetricsAddsContextForManagerWithLateJobId() throws Exception {
+        int port = 9979;
+        Manager manager = new Manager(); // null jobId → no context created during addManager
+        manager.jobStats = new JobStats(manager);
+        JobServer server = JobServer.create(Collections.singleton(port), manager);
+        manager.jobId = "latejob"; // set jobId after addManager
+        server.start();
+        try {
+            // map lambda true branch: contexts.containsKey("/latejob") = false → addManagerContext called
+            URL url = new URL("http://localhost:" + port + JobServer.METRICS_PATH);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+            try (InputStream is = conn.getInputStream()) {
+                String body = new String(IOUtils.toByteArray(is), StandardCharsets.UTF_8);
+                assertNotNull(body);
+            }
+        } finally {
+            server.stop(0);
+        }
     }
 }

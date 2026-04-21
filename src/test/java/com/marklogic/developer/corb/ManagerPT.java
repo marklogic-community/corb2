@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2023 MarkLogic Corporation
+ * Copyright (c) 2004-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,46 +24,43 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.Rule;
-import org.junit.contrib.java.lang.system.ExpectedSystemExit;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
-public class ManagerPT {
+class ManagerPT {
 
-    @Rule
-    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
     public static final String SLASH = "/";
-    private static final Logger LOG = Logger.getLogger(ManagerPT.class.getName());
+    private static final Logger LOG = Logger.getLogger(Manager.class.getName());
 
-    private void clearSystemProperties() {
+    private static void clearSystemProperties() {
 		TestUtils.clearSystemProperties();
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_LIMIT, "0");
 	    System.setProperty(Options.XCC_CONNECTION_RETRY_INTERVAL, "0");
 	}
 
-    @Before
-    public void setUp() throws IOException {
+    @BeforeAll
+    static void setUp() throws IOException {
         clearSystemProperties();
 
         File tempDir = TestUtils.createTempDirectory();
         ManagerTest.EXPORT_FILE_DIR = tempDir.toString();
     }
 
-    @After
-    public void tearDown() throws IOException {
+    @AfterAll
+    static void tearDown() throws IOException {
         FileUtils.deleteFile(ManagerTest.EXPORT_FILE_DIR);
         clearSystemProperties();
     }
 
     @Test
-    public void testExtremelyLargeUrisList() {
+    void testExtremelyLargeUrisList() {
 
         int uriCount = 9999999;
         String exportFilename = "testManagerUsingExtremelyLargeUris.txt";
@@ -81,9 +78,7 @@ public class ManagerPT {
         properties.setProperty(Options.METRICS_DATABASE, "marklogic-corb-content");
         properties.setProperty(Options.METRICS_COLLECTIONS, "corb-metrics");
 
-        Manager manager = new Manager();
-        try {
-
+        try (Manager manager = new Manager()) {
             manager.init(properties);
             manager.run();
 
