@@ -3,7 +3,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
     id 'com.github.kt3k.coveralls' version '2.12.2'
     id 'com.marklogic.ml-gradle' version '5.0.0'
     id 'org.sonarqube' version '4.0.0.2929'
