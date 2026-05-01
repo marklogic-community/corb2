@@ -6,7 +6,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'com.github.kt3k.coveralls' version '2.12.2'
     id 'com.marklogic.ml-gradle' version '5.0.0'
-    id 'org.sonarqube' version '4.0.0.2929'
+    id 'org.sonarqube' version '7.3.0.8198'
     id 'eclipse'
     id 'idea'
     id 'jacoco'
