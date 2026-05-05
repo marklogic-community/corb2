@@ -327,7 +327,8 @@ publishing {
         }
     }
 }
-
+/* Signing artifacts is required for publishing to Maven Central, but will be doing that in an external process, so disabling for now to avoid build failures for developers who don't have signing configured.
 signing {
     sign publishing.publications.mavenJava
 }
+*/
