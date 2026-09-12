@@ -23,6 +23,8 @@ import com.marklogic.xcc.ResultItem;
 import com.marklogic.xcc.ResultSequence;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -48,13 +50,19 @@ class ExportBatchToFileTaskTest {
     private static final String TXT_EXT = ".txt";
     private static final Logger LOG = Logger.getLogger(ExportBatchToFileTaskTest.class.getName());
 
+    private static ExportBatchToFileTask newTask(Properties props) {
+        ExportBatchToFileTask task = new ExportBatchToFileTask();
+        if (props != null) {
+            task.properties = props;
+        }
+        return task;
+    }
+
     @Test
     void testGetFileNameFromURISBatchRef() {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, "foo/bar/baz");
-        ExportBatchToFileTask instance = new ExportBatchToFileTask();
-        instance.properties = props;
-        String result = instance.getFileName();
+        String result = newTask(props).getFileName();
         assertEquals("baz", result);
     }
 
@@ -63,9 +71,7 @@ class ExportBatchToFileTaskTest {
         String filename = "foo/bar";
         Properties props = new Properties();
         props.setProperty(EXPORT_FILE_NAME, filename);
-        ExportBatchToFileTask instance = new ExportBatchToFileTask();
-        instance.properties = props;
-        String result = instance.getFileName();
+        String result = newTask(props).getFileName();
         assertEquals(filename, result);
     }
 
@@ -73,18 +79,14 @@ class ExportBatchToFileTaskTest {
     void testGetFileNameWithEmptyExportFileName() {
         Properties props = new Properties();
         props.setProperty(EXPORT_FILE_NAME, EMPTY);
-        ExportBatchToFileTask instance = new ExportBatchToFileTask();
-        instance.properties = props;
-        assertThrows(NullPointerException.class, instance::getFileName);
+        assertThrows(NullPointerException.class, () -> newTask(props).getFileName());
     }
 
     @Test
     void testGetFileNameWithEmptyUrisBatchRef() {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, EMPTY);
-        ExportBatchToFileTask instance = new ExportBatchToFileTask();
-        instance.properties = props;
-        assertThrows(NullPointerException.class, instance::getFileName);
+        assertThrows(NullPointerException.class, () -> newTask(props).getFileName());
     }
 
     @Test
@@ -92,9 +94,7 @@ class ExportBatchToFileTaskTest {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, EMPTY);
         props.setProperty(Options.EXPORT_FILE_PART_EXT, TXT_EXT);
-        ExportBatchToFileTask instance = new ExportBatchToFileTask();
-        instance.properties = props;
-        assertThrows(NullPointerException.class, instance::getPartFileName);
+        assertThrows(NullPointerException.class, () -> newTask(props).getPartFileName());
     }
 
     @Test
@@ -102,21 +102,45 @@ class ExportBatchToFileTaskTest {
         Properties props = new Properties();
         props.setProperty(Options.URIS_BATCH_REF, "foo");
         props.setProperty(Options.EXPORT_FILE_PART_EXT, TXT_EXT);
-        ExportBatchToFileTask instance = new ExportBatchToFileTask();
-        instance.properties = props;
-        String result = instance.getPartFileName();
-        assertEquals("foo.txt", result);
+        assertEquals("foo.txt", newTask(props).getPartFileName());
+    }
+
+    @Test
+    void testGetPartFileNameAddsDotWhenMissing() {
+        Properties props = new Properties();
+        props.setProperty(Options.URIS_BATCH_REF, "foo");
+        props.setProperty(Options.EXPORT_FILE_PART_EXT, "txt");
+        assertEquals("foo.txt", newTask(props).getPartFileName());
+    }
+
+    @Test
+    void testGetPartFileNameWithoutPartExtension() {
+        Properties props = new Properties();
+        props.setProperty(Options.URIS_BATCH_REF, "foo");
+        assertEquals("foo", newTask(props).getPartFileName());
+    }
+
+    @Test
+    void testGetPartExtDefaultsToDotPart() {
+        Properties props = new Properties();
+        assertEquals(".part", newTask(props).getPartExt());
+    }
+
+    @Test
+    void testGetPartExtNormalizesExtension() {
+        Properties props = new Properties();
+        props.setProperty(Options.EXPORT_FILE_PART_EXT, "tmp");
+        assertEquals(".tmp", newTask(props).getPartExt());
     }
 
     @Test
     void testWriteToFileNullSeq() {
-        ResultSequence seq = null;
-        File file = testWriteToFile(seq);
+        File file = testWriteToFile(null);
         assertFalse(file.exists());
     }
 
     @Test
-    void testWriteToFileNotSeqHasNext()  {
+    void testWriteToFileNotSeqHasNext() {
         ResultSequence seq = mock(ResultSequence.class);
         when(seq.hasNext()).thenReturn(false);
         File file = testWriteToFile(seq);
@@ -124,15 +148,15 @@ class ExportBatchToFileTaskTest {
     }
 
     @Test
-    void testWriteToFileWithMultipleItems()  {
+    void testWriteToFileWithMultipleItems() {
         ResultSequence seq = mock(ResultSequence.class);
         ResultItem item = mock(ResultItem.class);
         XdmItem xdmItem = mock(XdmItem.class);
 
-        when(seq.hasNext()).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(seq.hasNext()).thenReturn(true, true, true, true, false);
         when(seq.next()).thenReturn(item);
         when(item.getItem()).thenReturn(xdmItem);
-        when(xdmItem.asString()).thenReturn("foo").thenReturn("bar").thenReturn("baz");
+        when(xdmItem.asString()).thenReturn("foo", "bar", "baz");
 
         try {
             File file = testWriteToFile(seq);
@@ -141,6 +165,29 @@ class ExportBatchToFileTaskTest {
         } catch (IOException ex) {
             fail();
         }
+    }
+
+    @Test
+    void testWriteToFileAppendsToExistingContent() throws IOException {
+        File file = File.createTempFile("batch", ".txt");
+        Files.write(file.toPath(), "start\n".getBytes(StandardCharsets.UTF_8));
+
+        Properties props = new Properties();
+        props.setProperty(EXPORT_FILE_NAME, file.getCanonicalPath());
+
+        ResultSequence seq = mock(ResultSequence.class);
+        ResultItem item = mock(ResultItem.class);
+        XdmItem xdmItem = mock(XdmItem.class);
+        when(seq.hasNext()).thenReturn(true, true, true, false);
+        when(seq.next()).thenReturn(item);
+        when(item.getItem()).thenReturn(xdmItem);
+        when(xdmItem.asString()).thenReturn("foo", "bar");
+
+        ExportBatchToFileTask instance = newTask(props);
+        instance.writeToFile(seq, file);
+
+        assertEqualsNormalizeNewline("start\nfoo\nbar\n", TestUtils.readFile(file));
+        file.delete();
     }
 
     @Test

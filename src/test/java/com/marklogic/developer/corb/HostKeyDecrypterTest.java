@@ -142,60 +142,57 @@ class HostKeyDecrypterTest {
         }
     }
 
-    @Test
-    void testMainUsageNullArgs() {
-        String[] args = null;
+    private void assertUsageOutputFor(String... args) {
         try {
             HostKeyDecrypter.main(args);
-            String output = outContent.toString(StandardCharsets.UTF_8.name());
-            assertEqualsNormalizeNewline(USAGE, output);
+            assertEqualsNormalizeNewline(USAGE, outContent.toString(StandardCharsets.UTF_8.name()));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
+    }
+
+    @Test
+    void testMainUsageNullArgs() {
+        assertUsageOutputFor((String[]) null);
     }
 
     @Test
     void testMainUsageEncryptWithoutValue() {
-        String[] args = {"encrypt"};
-        try {
-            HostKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(USAGE, outContent.toString(StandardCharsets.UTF_8.name()));
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        assertUsageOutputFor("encrypt");
     }
 
     @Test
     void testMainUsageUnrecognizedMethod() {
-        String[] args = {"foo"};
-        try {
-            HostKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(USAGE, outContent.toString(StandardCharsets.UTF_8.name()));
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
-
+        assertUsageOutputFor("foo");
     }
 
     @Test
     void testMainNullArgs() {
-        String[] args = null;
-        try {
-            HostKeyDecrypter.main(args);
-            assertEqualsNormalizeNewline(USAGE, outContent.toString(StandardCharsets.UTF_8.name()));
-        } catch (Exception ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
+        assertUsageOutputFor((String[]) null);
     }
 
     @Test
     void testDoDecrypt() {
         HostKeyDecrypter decrypter = new HostKeyDecrypter();
         String value = "bar";
+        String result = decrypter.decrypt("foo", value);
+        assertEquals(value, result);
+    }
+
+    @Test
+    void testDecryptHandlesEncWrapper() throws Exception {
+        HostKeyDecrypter decrypter = new HostKeyDecrypter();
+        decrypter.init(new java.util.Properties());
+        String plaintext = "wrapped-secret";
+        String encrypted = HostKeyDecrypter.encrypt(plaintext);
+        assertEquals(plaintext, decrypter.decrypt("testProp", "ENC(" + encrypted + ")"));
+    }
+
+    @Test
+    void testDoDecryptReturnsOriginalValueWhenDecryptionFails() {
+        HostKeyDecrypter decrypter = new HostKeyDecrypter();
+        String value = "not-valid-ciphertext";
         String result = decrypter.decrypt("foo", value);
         assertEquals(value, result);
     }

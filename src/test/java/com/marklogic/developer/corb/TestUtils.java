@@ -33,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.logging.Level;
@@ -103,6 +104,32 @@ public final class TestUtils {
 
     public static File createTempDirectory() throws IOException {
         return Files.createTempDirectory("temp").toFile();
+    }
+
+    public static File createTempFile(String prefix, String suffix) throws IOException {
+        File file = File.createTempFile(prefix, suffix);
+        file.deleteOnExit();
+        return file;
+    }
+
+    public static File createTempFileWithContents(String prefix, String suffix, String contents) throws IOException {
+        File file = createTempFile(prefix, suffix);
+        Files.write(file.toPath(), contents.getBytes(StandardCharsets.UTF_8));
+        return file;
+    }
+
+    public static Properties newProperties(Object... keyValues) {
+        Properties properties = new Properties();
+        if (keyValues == null) {
+            return properties;
+        }
+        if (keyValues.length % 2 != 0) {
+            throw new IllegalArgumentException("Properties require an even number of key/value arguments");
+        }
+        for (int i = 0; i < keyValues.length; i += 2) {
+            properties.setProperty(String.valueOf(keyValues[i]), String.valueOf(keyValues[i + 1]));
+        }
+        return properties;
     }
 
     public static boolean containsLogRecord(List<LogRecord> logRecords, LogRecord logRecord) {
@@ -273,5 +300,28 @@ public final class TestUtils {
             originalErr = null;
             capturedErr = null;
         }
+    }
+
+    public static void withSystemProperty(String key, String value, ThrowingRunnable action) throws Exception {
+        String previous = System.getProperty(key);
+        if (value == null) {
+            System.clearProperty(key);
+        } else {
+            System.setProperty(key, value);
+        }
+        try {
+            action.run();
+        } finally {
+            if (previous == null) {
+                System.clearProperty(key);
+            } else {
+                System.setProperty(key, previous);
+            }
+        }
+    }
+
+    @FunctionalInterface
+    public interface ThrowingRunnable {
+        void run() throws Exception;
     }
 }

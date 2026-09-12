@@ -37,6 +37,16 @@ class FileUrisLoaderTest {
     private static final Logger LOG = Logger.getLogger(FileUrisLoaderTest.class.getName());
     private static final String URIS_FILE = "src/test/resources/uris-file.txt";
 
+    private FileUrisLoader newLoader(String filePath) {
+        FileUrisLoader instance = new FileUrisLoader();
+        TransformOptions options = new TransformOptions();
+        if (filePath != null) {
+            options.setUrisFile(filePath);
+        }
+        instance.options = options;
+        return instance;
+    }
+
     @Test
     void testSetOptionsNull() {
         TransformOptions options = null;
@@ -102,13 +112,10 @@ class FileUrisLoaderTest {
 
     @Test
     void testOpen() {
-        try (FileUrisLoader instance = new FileUrisLoader()) {
-            TransformOptions options = new TransformOptions();
-            options.setUrisFile(URIS_FILE);
+        try (FileUrisLoader instance = newLoader(URIS_FILE)) {
             Properties props = new Properties();
             props.setProperty(Options.URIS_REPLACE_PATTERN, "object-id-2,test");
             instance.properties = props;
-            instance.options = options;
             try {
                 instance.open();
                 assertNotNull(instance.bufferedReader);
@@ -118,7 +125,23 @@ class FileUrisLoaderTest {
                 LOG.log(Level.SEVERE, null, ex);
                 fail();
             }
+        }
+    }
 
+    @Test
+    void testOpenUsesLoaderPathWhenUrisFileIsBlank() throws Exception {
+        File tempFile = File.createTempFile("file-uris-loader", ".txt");
+        tempFile.deleteOnExit();
+        try (Writer writer = new OutputStreamWriter(Files.newOutputStream(tempFile.toPath()), StandardCharsets.UTF_8)) {
+            writer.append("alpha\n");
+        }
+
+        try (FileUrisLoader instance = new FileUrisLoader()) {
+            instance.options = new TransformOptions();
+            instance.properties = new Properties();
+            instance.properties.setProperty(Options.LOADER_PATH, tempFile.getAbsolutePath());
+            instance.open();
+            assertEquals("alpha", instance.next());
         }
     }
 
@@ -242,7 +265,7 @@ class FileUrisLoaderTest {
 
     @Test
     void testNextWithEmptyLine() {
-        try (FileUrisLoader instance = new FileUrisLoader()) {
+        try (FileUrisLoader instance = newLoader(null)) {
             TransformOptions options = new TransformOptions();
             try {
                 File file = File.createTempFile("temp", ".txt");
@@ -262,6 +285,26 @@ class FileUrisLoaderTest {
                 LOG.log(Level.SEVERE, null, ex);
                 fail();
             }
+        }
+    }
+
+    @Test
+    void testNextAppliesReplacementsSequentially() throws Exception {
+        File file = File.createTempFile("temp-replace", ".txt");
+        file.deleteOnExit();
+        try (Writer writer = new OutputStreamWriter(Files.newOutputStream(file.toPath()), StandardCharsets.UTF_8)) {
+            writer.append("/a/1\n");
+        }
+
+        try (FileUrisLoader instance = new FileUrisLoader()) {
+            TransformOptions options = new TransformOptions();
+            options.setUrisFile(file.getAbsolutePath());
+            instance.options = options;
+            instance.properties = new Properties();
+            instance.properties.setProperty(Options.URIS_REPLACE_PATTERN, "a,root");
+            instance.open();
+
+            assertEquals("/root/1", instance.next());
         }
     }
 

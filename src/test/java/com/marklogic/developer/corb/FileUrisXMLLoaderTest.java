@@ -244,16 +244,44 @@ class FileUrisXMLLoaderTest {
             instance.properties.remove(Options.XML_NODE);
             instance.open();
             assertNotNull(instance.nodeIterator);
-            nodes = new ArrayList<>(5);
-            while (instance.hasNext()) {
-                nodes.add(instance.next());
-            }
+            nodes = readAllNodes(instance);
             assertEquals(5, nodes.size());
             assertTrue(nodes.contains(ANCHOR0)); //header or metadata
             assertTrue(nodes.contains(ANCHOR1));
             assertTrue(nodes.contains(ANCHOR2));
             assertTrue(nodes.contains(ANCHOR3));
             assertTrue(nodes.contains(ANCHOR4));
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    void testOpenWithBlankXmlNodeUsesDefaultXPath() {
+        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
+            instance.properties.setProperty(Options.XML_NODE, "   ");
+            instance.open();
+            List<String> nodes = readAllNodes(instance);
+            assertEquals(5, nodes.size());
+            assertTrue(nodes.contains(ANCHOR0));
+            assertTrue(nodes.contains(ANCHOR1));
+            assertTrue(nodes.contains(ANCHOR2));
+            assertTrue(nodes.contains(ANCHOR3));
+            assertTrue(nodes.contains(ANCHOR4));
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    void testOpenIgnoresBlankMetadataXPath() {
+        try (FileUrisXMLLoader instance = getDefaultFileUrisXMLLoader()) {
+            instance.properties.setProperty(Options.XML_METADATA, "   ");
+            instance.open();
+            assertNull(instance.customMetadata);
+            assertEquals(4, instance.getTotalCount());
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -447,13 +475,18 @@ class FileUrisXMLLoaderTest {
             instance.properties.setProperty(Options.LOADER_USE_ENVELOPE, Boolean.toString(useEnvelope));
             instance.open();
             assertNotNull(instance.nodeIterator);
-            nodes = new ArrayList<>(1);
-            while (instance.hasNext()) {
-                nodes.add(instance.next());
-            }
+            nodes = readAllNodes(instance);
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
+        }
+        return nodes;
+    }
+
+    private List<String> readAllNodes(FileUrisXMLLoader instance) throws CorbException {
+        List<String> nodes = new ArrayList<>();
+        while (instance.hasNext()) {
+            nodes.add(instance.next());
         }
         return nodes;
     }

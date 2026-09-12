@@ -1670,6 +1670,43 @@ class ManagerTest {
         return file;
     }
 
+    private static Object invokePrivate(Object target, String methodName, Object... args) throws Exception {
+        Class<?>[] parameterTypes = new Class<?>[args.length];
+        for (int i = 0; i < args.length; i++) {
+            parameterTypes[i] = args[i] == null ? String.class : args[i].getClass();
+        }
+        java.lang.reflect.Method method = null;
+        try {
+            method = target.getClass().getDeclaredMethod(methodName, parameterTypes);
+        } catch (NoSuchMethodException ex) {
+            for (java.lang.reflect.Method candidate : target.getClass().getDeclaredMethods()) {
+                if (candidate.getName().equals(methodName) && candidate.getParameterCount() == args.length) {
+                    boolean matches = true;
+                    for (int i = 0; i < args.length; i++) {
+                        Class<?> paramType = candidate.getParameterTypes()[i];
+                        if (args[i] != null && !paramType.isAssignableFrom(args[i].getClass())) {
+                            matches = false;
+                            break;
+                        }
+                        if (args[i] == null && (!paramType.equals(Object.class) && !paramType.equals(String.class))) {
+                            matches = false;
+                            break;
+                        }
+                    }
+                    if (matches) {
+                        method = candidate;
+                        break;
+                    }
+                }
+            }
+        }
+        if (method == null) {
+            throw new NoSuchMethodException(methodName);
+        }
+        method.setAccessible(true);
+        return method.invoke(target, args);
+    }
+
     public static Manager getMockManagerWithEmptyResults() throws RequestException, CorbException{
         Manager manager = spy(new Manager());
         ContentSourcePool contentSourcePool = getMockContentSourceManagerWithEmptyResults();
@@ -2728,51 +2765,49 @@ class ManagerTest {
 
     @Test
     void testShouldIncludeInRestartStateFingerprintExcludesFilteredProperties() throws Exception {
-        java.lang.reflect.Method method = Manager.class.getDeclaredMethod("shouldIncludeInRestartStateFingerprint", String.class);
-        method.setAccessible(true);
         try (Manager manager = new Manager()) {
             // null and empty → false
-            assertFalse((Boolean) method.invoke(manager, (String) null));
-            assertFalse((Boolean) method.invoke(manager, ""));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", (String) null));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", ""));
             // XCC- prefix → false
-            assertFalse((Boolean) method.invoke(manager, "XCC-CONNECTION-URI"));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", "XCC-CONNECTION-URI"));
             // contains PASSWORD → false
-            assertFalse((Boolean) method.invoke(manager, "MY-PASSWORD-KEY"));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", "MY-PASSWORD-KEY"));
             // contains SSL → false
-            assertFalse((Boolean) method.invoke(manager, "MY-SSL-CERT"));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", "MY-SSL-CERT"));
             // contains OAUTH → false
-            assertFalse((Boolean) method.invoke(manager, "OAUTH-TOKEN"));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", "OAUTH-TOKEN"));
             // contains API-KEY → false
-            assertFalse((Boolean) method.invoke(manager, "MY-API-KEY"));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", "MY-API-KEY"));
             // RESTART- prefix → false
-            assertFalse((Boolean) method.invoke(manager, "RESTART-STATE-DIR"));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", "RESTART-STATE-DIR"));
             // METRICS- prefix → false
-            assertFalse((Boolean) method.invoke(manager, "METRICS-LOG-LEVEL"));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", "METRICS-LOG-LEVEL"));
             // EXPORT-FILE- prefix → false
-            assertFalse((Boolean) method.invoke(manager, "EXPORT-FILE-NAME"));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", "EXPORT-FILE-NAME"));
             // COMMAND prefix → false
-            assertFalse((Boolean) method.invoke(manager, "COMMAND"));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", "COMMAND"));
             // each named constant → false
-            assertFalse((Boolean) method.invoke(manager, Options.JOB_NAME));
-            assertFalse((Boolean) method.invoke(manager, Options.THREAD_COUNT));
-            assertFalse((Boolean) method.invoke(manager, Options.BATCH_SIZE));
-            assertFalse((Boolean) method.invoke(manager, Options.BATCH_URI_DELIM));
-            assertFalse((Boolean) method.invoke(manager, Options.FAIL_ON_ERROR));
-            assertFalse((Boolean) method.invoke(manager, Options.ERROR_FILE_NAME));
-            assertFalse((Boolean) method.invoke(manager, Options.DISK_QUEUE));
-            assertFalse((Boolean) method.invoke(manager, Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE));
-            assertFalse((Boolean) method.invoke(manager, Options.DISK_QUEUE_TEMP_DIR));
-            assertFalse((Boolean) method.invoke(manager, Options.TEMP_DIR));
-            assertFalse((Boolean) method.invoke(manager, Options.JOB_SERVER_PORT));
-            assertFalse((Boolean) method.invoke(manager, Options.NUM_TPS_FOR_ETC));
-            assertFalse((Boolean) method.invoke(manager, Options.PRE_BATCH_MINIMUM_COUNT));
-            assertFalse((Boolean) method.invoke(manager, Options.POST_BATCH_MINIMUM_COUNT));
-            assertFalse((Boolean) method.invoke(manager, Options.PRE_POST_BATCH_ALWAYS_EXECUTE));
-            assertFalse((Boolean) method.invoke(manager, Options.EXIT_CODE_IGNORED_ERRORS));
-            assertFalse((Boolean) method.invoke(manager, Options.EXIT_CODE_NO_URIS));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.JOB_NAME));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.THREAD_COUNT));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.BATCH_SIZE));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.BATCH_URI_DELIM));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.FAIL_ON_ERROR));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.ERROR_FILE_NAME));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.DISK_QUEUE));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.DISK_QUEUE_TEMP_DIR));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.TEMP_DIR));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.JOB_SERVER_PORT));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.NUM_TPS_FOR_ETC));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.PRE_BATCH_MINIMUM_COUNT));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.POST_BATCH_MINIMUM_COUNT));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.PRE_POST_BATCH_ALWAYS_EXECUTE));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.EXIT_CODE_IGNORED_ERRORS));
+            assertFalse((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", Options.EXIT_CODE_NO_URIS));
             // unrecognised option → true (should be included)
-            assertTrue((Boolean) method.invoke(manager, "PROCESS-MODULE"));
-            assertTrue((Boolean) method.invoke(manager, "CUSTOM-OPTION"));
+            assertTrue((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", "PROCESS-MODULE"));
+            assertTrue((Boolean) invokePrivate(manager, "shouldIncludeInRestartStateFingerprint", "CUSTOM-OPTION"));
         }
     }
 
@@ -2782,34 +2817,43 @@ class ManagerTest {
 
     @Test
     void testSanitizeRestartStateLabelWithAllSpecialCharsReturnsJob() throws Exception {
-        java.lang.reflect.Method method = Manager.class.getDeclaredMethod("sanitizeRestartStateLabel", String.class);
-        method.setAccessible(true);
         try (Manager manager = new Manager()) {
-            assertEquals("job", method.invoke(manager, "!!!"));
-            assertEquals("my-job-name", method.invoke(manager, "My Job Name"));
-            assertEquals("test-123", method.invoke(manager, "Test 123!"));
+            assertEquals("job", invokePrivate(manager, "sanitizeRestartStateLabel", "!!!"));
+            assertEquals("my-job-name", invokePrivate(manager, "sanitizeRestartStateLabel", "My Job Name"));
+            assertEquals("test-123", invokePrivate(manager, "sanitizeRestartStateLabel", "Test 123!"));
         }
     }
 
     @Test
     void testBuildRestartStateIdWithBlankJobName() throws Exception {
-        java.lang.reflect.Method method = Manager.class.getDeclaredMethod("buildRestartStateId", String.class);
-        method.setAccessible(true);
         try (Manager manager = new Manager()) {
             manager.properties = new Properties();
-            String result = (String) method.invoke(manager, "");
+            String result = (String) invokePrivate(manager, "buildRestartStateId", "");
             assertTrue(result.startsWith("job-"), "Expected label to start with 'job-' but was: " + result);
         }
     }
 
     @Test
     void testBuildRestartStateIdWithNonBlankJobName() throws Exception {
-        java.lang.reflect.Method method = Manager.class.getDeclaredMethod("buildRestartStateId", String.class);
-        method.setAccessible(true);
         try (Manager manager = new Manager()) {
             manager.properties = new Properties();
-            String result = (String) method.invoke(manager, "MyJob");
+            String result = (String) invokePrivate(manager, "buildRestartStateId", "MyJob");
             assertTrue(result.startsWith("myjob-"), "Expected label to start with 'myjob-' but was: " + result);
+        }
+    }
+
+    @Test
+    void testBuildRestartStateIdUsesFingerprintFromProcessModule() throws Exception {
+        try (Manager manager = new Manager()) {
+            manager.properties = new Properties();
+            manager.properties.setProperty(Options.PROCESS_MODULE, "transform.xqy|ADHOC");
+            manager.properties.setProperty(Options.XCC_CONNECTION_URI, "xcc://user:pass@localhost:8000/test");
+            manager.properties.setProperty(Options.JOB_NAME, "MyJob");
+            manager.properties.setProperty(Options.THREAD_COUNT, "7");
+
+            String result = (String) invokePrivate(manager, "buildRestartStateId", "MyJob");
+            assertTrue(result.startsWith("myjob-"));
+            assertTrue(result.matches("myjob-[0-9a-f]{12}"), "Unexpected restart-state id: " + result);
         }
     }
 

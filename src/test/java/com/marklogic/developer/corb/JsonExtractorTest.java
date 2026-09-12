@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -56,6 +57,29 @@ class JsonExtractorTest {
         assertEquals(2, handler.nodes.size());
         assertEquals(1, handler.metadata.size());
         assertEquals("\"first\"", handler.metadata.get(0));
+    }
+
+    @Test
+    void extractCapturesMetadataOnlyWithMetadataSelector() throws Exception {
+        RecordingHandler handler = new RecordingHandler();
+        JsonExtractor extractor = new JsonExtractor(null, selector("/value"), handler);
+
+        long count = extractor.extract(new StringReader("{\"value\": 7, \"other\": 9}"));
+
+        assertEquals(0L, count);
+        assertEquals(1, handler.metadata.size());
+        assertEquals("7", handler.metadata.get(0));
+    }
+
+    @Test
+    void extractMatchesArrayWildcardPaths() throws Exception {
+        RecordingHandler handler = new RecordingHandler();
+        JsonExtractor extractor = new JsonExtractor(selector("/items/*/value"), null, handler);
+
+        long count = extractor.extract(new StringReader("{\"items\":[{\"value\":1},{\"value\":2},{\"other\":3}]}"));
+
+        assertEquals(2L, count);
+        assertEquals(Arrays.asList("1", "2"), handler.nodes);
     }
 
     @Test
@@ -221,6 +245,13 @@ class JsonExtractorTest {
         assertTrue(ex.getMessage().contains("Invalid JSON unicode escape"));
     }
 
+    @Test
+    void extractRejectsUnsupportedEscapeSequence() {
+        JsonExtractor extractor = new JsonExtractor(selector("/"), null, new RecordingHandler());
+        CorbException ex = assertThrows(CorbException.class, () -> extractor.extract(new StringReader("\"\\v\"")));
+        assertTrue(ex.getMessage().contains("Unsupported JSON escape sequence"));
+    }
+
     private void assertExtracted(String path, String input, String expectedRaw) throws Exception {
         RecordingHandler handler = new RecordingHandler();
         JsonExtractor extractor = new JsonExtractor(selector(path), null, handler);
@@ -244,6 +275,10 @@ class JsonExtractorTest {
                 return expectedPath;
             }
         };
+    }
+
+    private JsonExtractor extractor(String nodePath, String metadataPath, JsonExtractor.ExtractionHandler handler) {
+        return new JsonExtractor(nodePath == null ? null : selector(nodePath), metadataPath == null ? null : selector(metadataPath), handler);
     }
 
     private static class RecordingHandler implements JsonExtractor.ExtractionHandler {

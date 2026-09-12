@@ -22,9 +22,6 @@ import com.marklogic.xcc.ResultSequence;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
@@ -32,29 +29,21 @@ import java.util.logging.Logger;
 class TransformTest {
 
     @Test
-    void testProcessResult()  {
-        try {
-            ResultSequence seq = null;
-            Transform instance = new Transform();
-            String result = instance.processResult(seq);
-            assertEquals(Transform.TRUE, result);
-        } catch (CorbException ex) {
-            Logger.getLogger(TransformTest.class.getName()).log(Level.SEVERE, null, ex);
-            fail();
-        }
+    void testProcessResult() throws CorbException {
+        assertEquals(Transform.TRUE, new Transform().processResult(null));
     }
 
     @Test
-    void testCall()  {
-        try {
-            Transform instance = new Transform();
-            String[] result = instance.call();
-            assertNotNull(result);
-            assertEquals(0, result.length);
-        } catch (Exception ex) {
-            Logger.getLogger(TransformTest.class.getName()).log(Level.SEVERE, null, ex);
-            fail();
-        }
+    void testCall() throws Exception {
+        String[] result = new Transform().call();
+        assertNotNull(result);
+        assertEquals(0, result.length);
+    }
+
+    @Test
+    void testProcessResultIgnoresSequenceContent() throws CorbException {
+        ResultSequence seq = null;
+        assertEquals(Transform.TRUE, new Transform().processResult(seq));
     }
 
 }

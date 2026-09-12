@@ -37,43 +37,54 @@ import static org.mockito.Mockito.*;
 
 class JobServicesHandlerTest {
 
-    @Test
-    void handle() throws Exception {
+    private HttpExchange exchangeFor(String uri, String method) throws Exception {
         Headers headers = new Headers();
         HttpExchange exchange = mock(HttpExchange.class);
-        when(exchange.getRequestURI()).thenReturn(URI.create(JobServer.METRICS_PATH));
-        when(exchange.getRequestMethod()).thenReturn("GET");
+        when(exchange.getRequestURI()).thenReturn(URI.create(uri));
+        when(exchange.getRequestMethod()).thenReturn(method);
         when(exchange.getResponseHeaders()).thenReturn(headers);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        when(exchange.getResponseBody()).thenReturn(out);
+        when(exchange.getResponseBody()).thenReturn(new ByteArrayOutputStream());
+        return exchange;
+    }
+
+    private Manager mockManagerWithStats() {
         JobStats jobStats = mock(JobStats.class);
         when(jobStats.toJSON(false)).thenReturn("{}");
+        when(jobStats.toXmlString(false)).thenReturn("<jobs />");
         Manager manager = mock(Manager.class);
         when(manager.getOptions()).thenReturn(new TransformOptions());
         when(manager.getJobStats()).thenReturn(jobStats);
-        JobServicesHandler handler = new JobServicesHandler(manager);
+        return manager;
+    }
+
+    @Test
+    void handle() throws Exception {
+        HttpExchange exchange = exchangeFor(JobServer.METRICS_PATH, "GET");
+        ByteArrayOutputStream out = (ByteArrayOutputStream) exchange.getResponseBody();
+        JobServicesHandler handler = new JobServicesHandler(mockManagerWithStats());
         handler.handle(exchange);
         assertTrue(out.toString(StandardCharsets.UTF_8.name()).startsWith("{"));
     }
 
     @Test
     void handlePost() throws Exception {
-        Headers headers = new Headers();
-        HttpExchange exchange = mock(HttpExchange.class);
-        when(exchange.getRequestURI()).thenReturn(URI.create(JobServer.METRICS_PATH));
-        when(exchange.getRequestMethod()).thenReturn("POST");
-        when(exchange.getResponseHeaders()).thenReturn(headers);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        when(exchange.getResponseBody()).thenReturn(out);
-        JobStats jobStats = mock(JobStats.class);
-        when(jobStats.toJSON(false)).thenReturn("{}");
-        Manager manager = mock(Manager.class);
-        when(manager.getOptions()).thenReturn(new TransformOptions());
-        when(manager.getJobStats()).thenReturn(jobStats);
-
-        JobServicesHandler handler = new JobServicesHandler(manager);
+        HttpExchange exchange = exchangeFor(JobServer.METRICS_PATH, "POST");
+        ByteArrayOutputStream out = (ByteArrayOutputStream) exchange.getResponseBody();
+        JobServicesHandler handler = new JobServicesHandler(mockManagerWithStats());
         handler.handle(exchange);
         assertTrue(out.toString(StandardCharsets.UTF_8.name()).startsWith("{"));
+    }
+
+    @Test
+    void handleWithFormatXmlWritesXmlResponse() throws Exception {
+        HttpExchange exchange = exchangeFor(JobServer.METRICS_PATH + "?FORMAT=xml", "GET");
+        ByteArrayOutputStream out = (ByteArrayOutputStream) exchange.getResponseBody();
+        JobServicesHandler handler = new JobServicesHandler(mockManagerWithStats());
+
+        handler.handle(exchange);
+
+        assertTrue(exchange.getResponseHeaders().getFirst(JobServer.HEADER_CONTENT_TYPE).contains("application/xml"));
+        assertTrue(out.toString(StandardCharsets.UTF_8.name()).startsWith("<jobs"));
     }
 
     @Test
@@ -129,6 +140,15 @@ class JobServicesHandlerTest {
     }
 
     @Test
+    void querystringToMapWithNullAndNoValueEntries() {
+        assertTrue(JobServicesHandler.querystringToMap(null).isEmpty());
+        Map<String, String> params = JobServicesHandler.querystringToMap("flag&value=1&key=");
+        assertEquals("", params.get("flag"));
+        assertEquals("1", params.get("value"));
+        assertEquals("", params.get("key"));
+    }
+
+    @Test
     void pauseResumeJobPause() {
         Manager manager = new Manager();
         PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
@@ -157,6 +177,20 @@ class JobServicesHandlerTest {
     }
 
     @Test
+    void pauseResumeJobIgnoresUnknownCommand() {
+        Manager manager = new Manager();
+        PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
+        manager.pool = pool;
+
+        JobServicesHandler handler = new JobServicesHandler(manager);
+        Map<String, String> params = new HashMap<>();
+        params.put(Options.COMMAND, "restart");
+
+        assertDoesNotThrow(() -> handler.pauseResumeJob(params));
+        verifyNoInteractions(pool);
+    }
+
+    @Test
     void updateThreads() {
         Map<String, String> parameters = new HashMap<>(2);
         parameters.put(Options.THREAD_COUNT, Integer.toString(80));
@@ -166,6 +200,19 @@ class JobServicesHandlerTest {
         JobServicesHandler handler = new JobServicesHandler(manager);
         handler.updateThreads(parameters);
         assertEquals(80, manager.options.getThreadCount());
+    }
+
+    @Test
+    void updateThreadsIgnoresNonNumericValues() {
+        Manager manager = new Manager();
+        manager.options = new TransformOptions();
+        int original = manager.options.getThreadCount();
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put(Options.THREAD_COUNT, "not-a-number");
+
+        new JobServicesHandler(manager).updateThreads(parameters);
+
+        assertEquals(original, manager.options.getThreadCount());
     }
 
     @Test
@@ -206,19 +253,9 @@ class JobServicesHandlerTest {
 
     @Test
     void handleOptions() throws Exception {
-        Headers headers = new Headers();
-        HttpExchange exchange = mock(HttpExchange.class);
-        when(exchange.getRequestURI()).thenReturn(URI.create(JobServer.METRICS_PATH));
-        when(exchange.getRequestMethod()).thenReturn("OPTIONS");
-        when(exchange.getResponseHeaders()).thenReturn(headers);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        when(exchange.getResponseBody()).thenReturn(out);
-        JobStats jobStats = mock(JobStats.class);
-        when(jobStats.toJSON(false)).thenReturn("{}");
-        Manager manager = mock(Manager.class);
-        when(manager.getOptions()).thenReturn(new TransformOptions());
-        when(manager.getJobStats()).thenReturn(jobStats);
-        JobServicesHandler handler = new JobServicesHandler(manager);
+        HttpExchange exchange = exchangeFor(JobServer.METRICS_PATH, "OPTIONS");
+        ByteArrayOutputStream out = (ByteArrayOutputStream) exchange.getResponseBody();
+        JobServicesHandler handler = new JobServicesHandler(mockManagerWithStats());
         handler.handle(exchange);
         assertTrue(out.toString(StandardCharsets.UTF_8.name()).startsWith("{"));
     }
@@ -226,17 +263,11 @@ class JobServicesHandlerTest {
     @Test
     void handleGetToJobStaticResourceEmptyRelativePath() throws Exception {
         String jobId = "testjob";
-        Headers headers = new Headers();
-        HttpExchange exchange = mock(HttpExchange.class);
-        when(exchange.getRequestURI()).thenReturn(URI.create("http://localhost:8000/" + jobId));
-        when(exchange.getRequestMethod()).thenReturn("GET");
-        when(exchange.getResponseHeaders()).thenReturn(headers);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        when(exchange.getResponseBody()).thenReturn(out);
+        HttpExchange exchange = exchangeFor("http://localhost:8000/" + jobId, "GET");
+        ByteArrayOutputStream out = (ByteArrayOutputStream) exchange.getResponseBody();
         Manager manager = mock(Manager.class);
         when(manager.getJobId()).thenReturn(jobId);
         new JobServicesHandler(manager).handle(exchange);
-        // relativePath="" → "/index.html" (index.html exists) → HTTP_OK
         verify(exchange).sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
         assertTrue(out.size() > 0);
     }
@@ -244,34 +275,20 @@ class JobServicesHandlerTest {
     @Test
     void handleGetToJobStaticResourceSlashRelativePath() throws Exception {
         String jobId = "testjob";
-        Headers headers = new Headers();
-        HttpExchange exchange = mock(HttpExchange.class);
-        when(exchange.getRequestURI()).thenReturn(URI.create("http://localhost:8000/" + jobId + "/"));
-        when(exchange.getRequestMethod()).thenReturn("GET");
-        when(exchange.getResponseHeaders()).thenReturn(headers);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        when(exchange.getResponseBody()).thenReturn(out);
+        HttpExchange exchange = exchangeFor("http://localhost:8000/" + jobId + "/", "GET");
         Manager manager = mock(Manager.class);
         when(manager.getJobId()).thenReturn(jobId);
         new JobServicesHandler(manager).handle(exchange);
-        // relativePath="/" → "/index.html" → HTTP_OK
         verify(exchange).sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
     }
 
     @Test
     void handleGetToJobStaticResourceWithSubPath() throws Exception {
         String jobId = "testjob";
-        Headers headers = new Headers();
-        HttpExchange exchange = mock(HttpExchange.class);
-        when(exchange.getRequestURI()).thenReturn(URI.create("http://localhost:8000/" + jobId + "/dashboard.html"));
-        when(exchange.getRequestMethod()).thenReturn("GET");
-        when(exchange.getResponseHeaders()).thenReturn(headers);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        when(exchange.getResponseBody()).thenReturn(out);
+        HttpExchange exchange = exchangeFor("http://localhost:8000/" + jobId + "/dashboard.html", "GET");
         Manager manager = mock(Manager.class);
         when(manager.getJobId()).thenReturn(jobId);
         new JobServicesHandler(manager).handle(exchange);
-        // relativePath="/dashboard.html" (non-empty, non-slash) → handleStaticRequest called directly
         verify(exchange).sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
     }
 }

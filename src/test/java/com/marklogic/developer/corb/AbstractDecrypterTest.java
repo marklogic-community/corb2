@@ -18,37 +18,36 @@
  */
 package com.marklogic.developer.corb;
 
+import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.io.IOException;
 import java.util.Locale;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/**
- *
- * @author Mads Hansen, MarkLogic Corporation
- */
 class AbstractDecrypterTest {
 
     private static final String FOUR_SPACES = "    ";
     private static final String VALUE = "val";
-    private static final String LOCALHOST = "localhost";
-    private static final String USER = "user";
-    private static final String PASS = "pass";
-    private static final String PORT = "8003";
-    private static final Logger LOG = Logger.getLogger(AbstractDecrypterTest.class.getName());
+
+    @BeforeEach
+    void setUp() {
+        clearSystemProperties();
+    }
+
+    private AbstractDecrypterImpl newDecrypter() {
+        return new AbstractDecrypterImpl();
+    }
 
     @Test
-    void testInitNullProperties()  {
-        AbstractDecrypter instance = new AbstractDecrypterImpl();
+    void testInitNullProperties() {
+        AbstractDecrypter instance = newDecrypter();
         try {
             instance.init(null);
         } catch (IOException | ClassNotFoundException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
+            fail(ex);
         }
         assertNotNull(instance.properties);
     }
@@ -56,86 +55,108 @@ class AbstractDecrypterTest {
     @Test
     void testInit() {
         Properties props = new Properties();
-        AbstractDecrypter instance = new AbstractDecrypterImpl();
+        AbstractDecrypter instance = newDecrypter();
         try {
             instance.init(props);
         } catch (IOException | ClassNotFoundException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
+            fail(ex);
         }
-        assertEquals(props, instance.properties);
+        assertSame(props, instance.properties);
     }
 
     @Test
     void testDecryptNotEncrypted() {
         String property = "unencryptedProp";
-        AbstractDecrypter instance = new AbstractDecrypterImpl();
+        AbstractDecrypter instance = newDecrypter();
         String result = instance.decrypt(property, VALUE);
-        assertEquals(VALUE.toUpperCase(), result);
+        assertEquals(VALUE.toUpperCase(Locale.ENGLISH), result);
     }
 
     @Test
     void testDecryptEncrypted() {
         String property = "encryptedProp";
-        String value = "ENC("+ VALUE + ')';
-        AbstractDecrypter instance = new AbstractDecrypterImpl();
+        String value = "ENC(" + VALUE + ')';
+        AbstractDecrypter instance = newDecrypter();
         String result = instance.decrypt(property, value);
-        assertEquals(VALUE.toUpperCase(), result);
+        assertEquals(VALUE.toUpperCase(Locale.ENGLISH), result);
+    }
+
+    @Test
+    void testDecryptEncryptedStripsWrapperWithoutTrimmingInnerContent() {
+        String property = "encryptedProp";
+        String value = "ENC(  " + VALUE + "  )";
+        AbstractDecrypter instance = newDecrypter();
+        String result = instance.decrypt(property, value);
+        assertEquals(("  " + VALUE + "  ").toUpperCase(Locale.ENGLISH), result);
+    }
+
+    @Test
+    void testDecryptNullValue() {
+        AbstractDecrypter instance = newDecrypter();
+        assertThrows(NullPointerException.class, () -> instance.decrypt("key", null));
     }
 
     @Test
     void testDoDecrypt() {
         String property = "key";
-        AbstractDecrypter instance = new AbstractDecrypterImpl();
+        AbstractDecrypter instance = newDecrypter();
         String result = instance.doDecrypt(property, VALUE);
-        assertEquals(VALUE.toUpperCase(), result);
+        assertEquals(VALUE.toUpperCase(Locale.ENGLISH), result);
     }
 
     @Test
     void testGetPropertyNullProperties() {
         String key = "testProperty";
-        AbstractDecrypter instance = new AbstractDecrypterImpl();
-        String result = instance.getProperty(key);
-        assertNull(result);
+        AbstractDecrypter instance = newDecrypter();
+        assertNull(instance.getProperty(key));
     }
 
     @Test
-    void testGetProperty() {
-        String key = "testGetProperty";
-        AbstractDecrypter instance = new AbstractDecrypterImpl();
-        instance.properties = new Properties();
-        String result = instance.getProperty(key);
-        assertNull(result);
-    }
-
-    @Test
-    void testGetPropertyBlankSystemProperty() {
+    void testGetPropertyUsesSystemPropertyWhenPresent() {
         String key = "testGetSystemProperty";
-        System.setProperty(key, FOUR_SPACES);
-        AbstractDecrypter instance = new AbstractDecrypterImpl();
+        System.setProperty(key, "  system-value  ");
+        AbstractDecrypter instance = newDecrypter();
         instance.properties = new Properties();
-        String result = instance.getProperty(key);
-        System.clearProperty(key);
-        assertNull(result);
+        instance.properties.setProperty(key, "property-value");
+
+        assertEquals("system-value", instance.getProperty(key));
     }
 
     @Test
-    void testGetPropertyBlankPropertiesProperty() {
+    void testGetPropertyFallsBackToPropertiesWhenSystemValueBlank() {
         String key = "testGetBlankProperty";
         System.setProperty(key, FOUR_SPACES);
-        AbstractDecrypter instance = new AbstractDecrypterImpl();
+        AbstractDecrypter instance = newDecrypter();
+        instance.properties = new Properties();
+        instance.properties.setProperty(key, "  property-value  ");
+
+        assertEquals("property-value", instance.getProperty(key));
+    }
+
+    @Test
+    void testGetPropertyReturnsEmptyStringForBlankPropertyValue() {
+        String key = "testGetBlankPropertyValue";
+        AbstractDecrypter instance = newDecrypter();
         instance.properties = new Properties();
         instance.properties.setProperty(key, "      ");
-        String result = instance.getProperty(key);
-        System.clearProperty(key);
-        assertEquals("", result);
+
+        assertEquals("", instance.getProperty(key));
+    }
+
+    @Test
+    void testGetPropertyNoMatchingValues() {
+        String key = "testMissingProperty";
+        AbstractDecrypter instance = newDecrypter();
+        instance.properties = new Properties();
+
+        assertNull(instance.getProperty(key));
     }
 
     private static class AbstractDecrypterImpl extends AbstractDecrypter {
 
         @Override
         public void init_decrypter() {
-            //required to satisfy the interface
+            // required to satisfy the interface
         }
 
         @Override
@@ -143,5 +164,4 @@ class AbstractDecrypterTest {
             return value.toUpperCase(Locale.ENGLISH);
         }
     }
-
 }

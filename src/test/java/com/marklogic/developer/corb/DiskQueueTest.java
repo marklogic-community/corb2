@@ -46,6 +46,21 @@ class DiskQueueTest {
         LOG.addHandler(testLogger);
     }
 
+    private static DiskQueue<String> newQueueWith(String... values) {
+        DiskQueue<String> instance = new DiskQueue<>(1);
+        for (String value : values) {
+            instance.add(value);
+        }
+        return instance;
+    }
+
+    private static void assertQueueSequence(Queue<String> queue, String... values) {
+        for (String value : values) {
+            assertEquals(value, queue.remove());
+        }
+        assertEquals(0, queue.size());
+    }
+
     @Test
     void testDiskQueueSizeTooSmall() {
         assertThrows(InvalidParameterException.class, () -> new DiskQueue<>(0));
@@ -89,10 +104,7 @@ class DiskQueueTest {
     @Test
     void testDiskQueueFinalizeWhileOpen() {
         try {
-            DiskQueue<String> instance = new DiskQueue<>(1);
-            instance.add("first");
-            instance.add("second");
-            instance.add("third");
+            DiskQueue<String> instance = newQueueWith("first", "second", "third");
             assertEquals(3, instance.size());
             instance.finalize();
             assertContainsLogRecord(testLogger, Level.WARNING,
@@ -105,20 +117,36 @@ class DiskQueueTest {
 
     @Test
     void testDiskQueueLoadFromFile() {
-        String one = "one";
-        String two = "two";
-        String three = "three";
-        Queue<String> instance = new DiskQueue<>(1);
-        assertEquals(0, instance.size());
-        instance.add(one);
-        assertEquals(1, instance.size());
-        instance.add(two);
-        assertEquals(2, instance.size());
-        instance.add(three);
+        DiskQueue<String> instance = newQueueWith("one", "two", "three");
         assertEquals(3, instance.size());
-        assertEquals(one, instance.remove());
-        assertEquals(two, instance.remove());
-        assertEquals(three, instance.remove());
+        assertQueueSequence(instance, "one", "two", "three");
+    }
+
+    @Test
+    void testDiskQueueSkipsEmptyLinesWhenLoadingFromDisk() {
+        DiskQueue<String> instance = newQueueWith("one", "two", "");
+        assertEquals("one", instance.poll());
+        assertEquals("two", instance.poll());
+        assertNull(instance.poll());
+        assertEquals(0, instance.size());
+    }
+
+    @Test
+    void testDiskQueueLoadsCachedElementAcrossMultiplePolls() {
+        DiskQueue<String> instance = newQueueWith("first", "second", "third");
+        assertEquals("first", instance.poll());
+        assertEquals("second", instance.poll());
+        assertEquals("third", instance.poll());
+        assertNull(instance.poll());
+    }
+
+    @Test
+    void testDiskQueueClearRemovesBackingStoreAndAllowsReuse() {
+        DiskQueue<String> instance = newQueueWith("first", "second");
+        instance.clear();
+        assertEquals(0, instance.size());
+        instance.add("third");
+        assertEquals("third", instance.poll());
         assertEquals(0, instance.size());
     }
 

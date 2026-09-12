@@ -293,6 +293,53 @@ class DefaultContentSourcePoolTest {
     }
 
     @Test
+    void testGetAvailableContentSourcesFallsBackToAllWhenAllAreRetryPaused() {
+        DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool();
+        ContentSource first = mock(ContentSource.class);
+        ContentSource second = mock(ContentSource.class);
+        when(first.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8000));
+        when(second.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8001));
+        contentSourcePool.contentSources.add(first);
+        contentSourcePool.contentSources.add(second);
+        contentSourcePool.errorTimeForContentSource.put(first, System.currentTimeMillis());
+        contentSourcePool.errorTimeForContentSource.put(second, System.currentTimeMillis());
+        assertEquals(2, contentSourcePool.getAvailableContentSources().size());
+    }
+
+    @Test
+    void testErrorIgnoresStaleAllocationTime() {
+        DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool();
+        ContentSource contentSource = mock(ContentSource.class);
+        when(contentSource.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8000));
+        contentSourcePool.contentSources.add(contentSource);
+        contentSourcePool.errorCountForContentSource.put(contentSource, 1L);
+        contentSourcePool.errorTimeForContentSource.put(contentSource, 200L);
+        contentSourcePool.error(contentSource, 150L);
+        assertEquals(1L, contentSourcePool.errorCount(contentSource));
+    }
+
+    @Test
+    void testProxyHelpersLeaveNonProxyObjectsUntouched() {
+        ContentSource contentSource = mock(ContentSource.class);
+        Session session = mock(Session.class);
+        assertSame(contentSource, DefaultContentSourcePool.getContentSourceFromProxy(contentSource));
+        assertSame(session, DefaultContentSourcePool.getSessionFromProxy(session));
+    }
+
+    @Test
+    void testHaveDifferentIPHandlesNullAndSameValues() {
+        DefaultContentSourcePool pool = new DefaultContentSourcePool();
+        ContentSource sourceA = mock(ContentSource.class);
+        ContentSource sourceB = mock(ContentSource.class);
+        when(sourceA.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8000));
+        when(sourceB.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8001));
+
+        assertFalse(pool.haveDifferentIP(sourceA, null));
+        assertFalse(pool.haveDifferentIP(sourceA, sourceA));
+        assertFalse(pool.haveDifferentIP(sourceA, sourceB));
+    }
+
+    @Test
     void testRenewContentSource() {
         try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, localhostXccUri);
@@ -331,6 +378,8 @@ class DefaultContentSourcePoolTest {
         contentSourcePool.init(properties, null, localhostXccUri, "xcc://foo:bar@localhost:8010", "xcc://foo:bar@localhost:8020");
         return contentSourcePool;
     }
+
+
 
 	@Test
 	void testRoundRobinPolicy() throws CorbException{

@@ -200,7 +200,7 @@ public abstract class AbstractUrisLoader implements UrisLoader {
      */
     public String getProperty(String key) {
         String val = System.getProperty(key);
-        if (val == null && properties != null) {
+        if (isBlank(val) && properties != null) {
             val = properties.getProperty(key);
         }
         return trim(val);

@@ -22,6 +22,8 @@ import static com.marklogic.developer.corb.ManagerIT.SLASH;
 import com.marklogic.developer.corb.util.FileUtils;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -50,10 +52,8 @@ class FileUrisDirectoryLoaderIT {
 
     @Test
     void testLoadAll() {
-        Properties properties = new Properties();
-        properties.setProperty(Options.EXPORT_FILE_NAME, "testLoadAll.txt");
         try {
-            testFileUrisDirectoryLoader(properties);
+            testFileUrisDirectoryLoader(newProperties("testLoadAll.txt"));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, ex.getMessage(), ex);
             fail();
@@ -62,8 +62,7 @@ class FileUrisDirectoryLoaderIT {
 
     @Test
     void testLoadAllAsDocs() {
-        Properties properties = new Properties();
-        properties.setProperty(Options.EXPORT_FILE_NAME, "testLoadAllAsDocs.txt");
+        Properties properties = newProperties("testLoadAllAsDocs.txt");
         properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_DOC);
         properties.setProperty(Options.PROCESS_MODULE, DOC_LOADER_PROCESS_MODULE);
         try {
@@ -76,8 +75,7 @@ class FileUrisDirectoryLoaderIT {
 
     @Test
     void testLoadAllAsDocsWithBatch() {
-        Properties properties = new Properties();
-        properties.setProperty(Options.EXPORT_FILE_NAME, "testLoadAllAsDocsWithBatch.txt");
+        Properties properties = newProperties("testLoadAllAsDocsWithBatch.txt");
         properties.setProperty(Options.LOADER_VARIABLE, AbstractTask.REQUEST_VARIABLE_DOC);
         properties.setProperty(Options.BATCH_SIZE, Integer.toString(10));
         properties.setProperty(Options.PROCESS_MODULE, DOC_LOADER_PROCESS_MODULE);
@@ -87,8 +85,7 @@ class FileUrisDirectoryLoaderIT {
 
     @Test
     void testLoadAllWithDiskQueue() {
-        Properties properties = new Properties();
-        properties.setProperty(Options.EXPORT_FILE_NAME, "testLoadAllWithDiskQueue.txt");
+        Properties properties = newProperties("testLoadAllWithDiskQueue.txt");
         properties.setProperty(Options.DISK_QUEUE, Boolean.toString(true));
         properties.setProperty(Options.DISK_QUEUE_MAX_IN_MEMORY_SIZE, Integer.toString(2));
         try {
@@ -97,6 +94,42 @@ class FileUrisDirectoryLoaderIT {
             LOG.log(Level.SEVERE, ex.getMessage(), ex);
             fail();
         }
+    }
+
+    @Test
+    void testOpenRejectsMissingDirectory() {
+        Properties properties = new Properties();
+        properties.setProperty(Options.LOADER_PATH, tempDir.resolve("missing-dir").toString());
+        try (FileUrisDirectoryLoader loader = new FileUrisDirectoryLoader()) {
+            loader.properties = properties;
+            assertThrows(CorbException.class, loader::open);
+        }
+    }
+
+    @Test
+    void testHiddenFilesAreIgnored() throws IOException, CorbException {
+        Path loaderDir = Files.createTempDirectory(tempDir, "loader-hidden");
+        Path visibleFile = loaderDir.resolve("visible.txt");
+        Path hiddenFile = loaderDir.resolve(".hidden.txt");
+        Files.write(visibleFile, "visible".getBytes(StandardCharsets.UTF_8));
+        Files.write(hiddenFile, "hidden".getBytes(StandardCharsets.UTF_8));
+
+        Properties properties = new Properties();
+        properties.setProperty(Options.LOADER_PATH, loaderDir.toString());
+        try (FileUrisDirectoryLoader loader = new FileUrisDirectoryLoader()) {
+            loader.properties = properties;
+            loader.open();
+            assertEquals(1, loader.getTotalCount());
+            assertTrue(loader.hasNext());
+            assertNotNull(loader.next());
+            assertFalse(loader.hasNext());
+        }
+    }
+
+    private Properties newProperties(String exportFileName) {
+        Properties properties = new Properties();
+        properties.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
+        return properties;
     }
 
     private void testFileUrisDirectoryLoader(Properties additionalProperties) throws Exception {

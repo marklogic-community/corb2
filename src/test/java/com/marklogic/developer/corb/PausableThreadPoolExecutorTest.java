@@ -38,11 +38,29 @@ import static org.mockito.Mockito.mock;
  */
 class PausableThreadPoolExecutorTest {
 
-    @Test
-    void testPauseIsPausedResumeIsRunning() {
+    private PausableThreadPoolExecutor newExecutor() {
+        return newExecutor(0);
+    }
+
+    private PausableThreadPoolExecutor newExecutor(int failedUrisToCapture) {
         BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
         RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
-        PausableThreadPoolExecutor instance = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+        TransformOptions options = new TransformOptions();
+        options.setNumberOfFailedUris(failedUrisToCapture);
+        return new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler, options);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> void setThreadLocalValue(PausableThreadPoolExecutor executor, String fieldName, T value) throws Exception {
+        java.lang.reflect.Field field = PausableThreadPoolExecutor.class.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        ThreadLocal<T> threadLocal = (ThreadLocal<T>) field.get(executor);
+        threadLocal.set(value);
+    }
+
+    @Test
+    void testPauseIsPausedResumeIsRunning() {
+        PausableThreadPoolExecutor instance = newExecutor();
 
         assertFalse(instance.isPaused());
         assertTrue(instance.isRunning());
@@ -60,9 +78,7 @@ class PausableThreadPoolExecutorTest {
 
     @Test
     void testBeforeExecute() {
-        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
-        RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
-        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+        PausableThreadPoolExecutor executor = newExecutor();
         Thread thread = mock(Thread.class);
         Runnable runnable = mock(Runnable.class);
         executor.pause();
@@ -82,40 +98,73 @@ class PausableThreadPoolExecutorTest {
     }
 
     @Test
-    void testAfterExecutePassing() {
-        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
-        RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
-        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+    void testAfterExecutePassing() throws Exception {
+        PausableThreadPoolExecutor executor = newExecutor();
         Runnable runnable = mock(Runnable.class);
         Throwable throwable = mock(Throwable.class);
-        Thread thread = mock(Thread.class);
-        Thread.currentThread().setName("passing");
-        executor.beforeExecute(thread, runnable);
-        executor.afterExecute(runnable, throwable);
-        assertEquals(1, executor.getNumSucceededUris());
-        assertEquals(0, executor.getNumFailedUris());
+        Thread currentThread = Thread.currentThread();
+        String originalName = currentThread.getName();
+        try {
+            currentThread.setName("passing");
+            setThreadLocalValue(executor, "threadName", "previous-name");
+            setThreadLocalValue(executor, "startTime", System.nanoTime() - 1_000_000L);
+            executor.afterExecute(runnable, throwable);
+            assertEquals(1, executor.getNumSucceededUris());
+            assertEquals(0, executor.getNumFailedUris());
+        } finally {
+            currentThread.setName(originalName);
+        }
     }
 
     @Test
-    void testAfterExecuteFailing() {
-        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
-        RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
-        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+    void testAfterExecuteFailing() throws Exception {
+        PausableThreadPoolExecutor executor = newExecutor(10);
+        Runnable runnable = mock(Runnable.class);
+        Throwable throwable = mock(Throwable.class);
+        Thread currentThread = Thread.currentThread();
+        String originalName = currentThread.getName();
+        try {
+            currentThread.setName(FAILED_URI_TOKEN + "foo");
+            setThreadLocalValue(executor, "threadName", "previous-name");
+            setThreadLocalValue(executor, "startTime", System.nanoTime() - 1_000_000L);
+            executor.afterExecute(runnable, throwable);
+            assertEquals(0, executor.getNumSucceededUris());
+            assertEquals(1, executor.getNumFailedUris());
+            assertEquals(1, executor.getFailedUris().size());
+            assertEquals("foo", executor.getFailedUris().get(0));
+        } finally {
+            currentThread.setName(originalName);
+        }
+    }
+
+    @Test
+    void testAfterExecuteFailsCapturesOnlyConfiguredLimit() {
+        PausableThreadPoolExecutor executor = newExecutor(1);
         Runnable runnable = mock(Runnable.class);
         Throwable throwable = mock(Throwable.class);
         Thread thread = mock(Thread.class);
-        Thread.currentThread().setName(FAILED_URI_TOKEN + "foo");
-        executor.beforeExecute(thread, runnable);
-        executor.afterExecute(runnable, throwable);
-        assertEquals(0, executor.getNumSucceededUris());
-        assertEquals(1, executor.getNumFailedUris());
+        Thread currentThread = Thread.currentThread();
+        String originalName = currentThread.getName();
+        try {
+            currentThread.setName(FAILED_URI_TOKEN + "first");
+            executor.beforeExecute(thread, runnable);
+            executor.afterExecute(runnable, throwable);
+
+            currentThread.setName(FAILED_URI_TOKEN + "second");
+            executor.beforeExecute(thread, runnable);
+            executor.afterExecute(runnable, throwable);
+
+            assertEquals(2, executor.getNumFailedUris());
+            assertEquals(1, executor.getFailedUris().size());
+            assertEquals("first", executor.getFailedUris().get(0));
+        } finally {
+            currentThread.setName(originalName);
+        }
     }
 
     @Test
     void testAfterExecuteThrowsException() {
-        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
-        RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
-        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+        PausableThreadPoolExecutor executor = newExecutor();
         Runnable runnable = mock(Runnable.class);
         Throwable throwable = mock(Throwable.class);
         executor.afterExecute(runnable, throwable);
@@ -125,9 +174,7 @@ class PausableThreadPoolExecutorTest {
 
     @Test
     void testTopURIs() {
-        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
-        RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
-        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+        PausableThreadPoolExecutor executor = newExecutor();
         executor.topUriList.setSize(2);
         executor.topUriList.add("URI1", 6L);
         executor.topUriList.add("URI1", 6L);
@@ -145,9 +192,7 @@ class PausableThreadPoolExecutorTest {
 
     @Test
     void testTopUriListSizeZero(){
-        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
-        RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
-        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+        PausableThreadPoolExecutor executor = newExecutor();
         executor.topUriList.setSize(0);
         executor.topUriList.add("URI1", 6L);
         executor.topUriList.add("URI1", 6L);
@@ -157,9 +202,7 @@ class PausableThreadPoolExecutorTest {
 
     @Test
     void testTopUriListSizeOne(){
-        BlockingQueue<Runnable> queue = mock(BlockingQueue.class);
-        RejectedExecutionHandler handler = mock(RejectedExecutionHandler.class);
-        PausableThreadPoolExecutor executor = new PausableThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, queue, handler);
+        PausableThreadPoolExecutor executor = newExecutor();
         executor.topUriList.setSize(1);
         executor.topUriList.add("URI1", 6L);
         executor.topUriList.add("URI1", 6L);

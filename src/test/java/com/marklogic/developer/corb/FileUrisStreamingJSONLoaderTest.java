@@ -27,12 +27,28 @@ import java.util.Properties;
 import static com.marklogic.developer.corb.Options.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FileUrisStreamingJSONLoaderTest {
 
     private static final String SAMPLE_JSON = "src/test/resources/jsonUrisLoader/sample.json";
     private static final String ARRAY_ROOT_JSON = "src/test/resources/jsonUrisLoader/array-root.json";
+
+    private static FileUrisStreamingJSONLoader newLoader(String jsonFile, String nodeExpression, String metadataExpression, boolean useEnvelope) {
+        FileUrisStreamingJSONLoader loader = new FileUrisStreamingJSONLoader();
+        Properties properties = new Properties();
+        properties.setProperty(JSON_FILE, jsonFile);
+        properties.setProperty(LOADER_USE_ENVELOPE, Boolean.toString(useEnvelope));
+        if (nodeExpression != null) {
+            properties.setProperty(JSON_NODE, nodeExpression);
+        }
+        if (metadataExpression != null) {
+            properties.setProperty(JSON_METADATA, metadataExpression);
+        }
+        loader.setProperties(properties);
+        return loader;
+    }
 
     @Test
     void openExtractsConfiguredJsonValues() throws Exception {
@@ -110,23 +126,24 @@ class FileUrisStreamingJSONLoaderTest {
         }
     }
 
-    private FileUrisStreamingJSONLoader newLoader(String nodeExpression, String metadataExpression, boolean useEnvelope) {
-        return newLoader(SAMPLE_JSON, nodeExpression, metadataExpression, useEnvelope);
+    @Test
+    void openRejectsMissingJsonFile() {
+        try (FileUrisStreamingJSONLoader loader = newLoader("src/test/resources/does-not-exist.json", null, null, false)) {
+            assertThrows(CorbException.class, loader::open);
+        }
     }
 
-    private FileUrisStreamingJSONLoader newLoader(String jsonFile, String nodeExpression, String metadataExpression, boolean useEnvelope) {
-        FileUrisStreamingJSONLoader loader = new FileUrisStreamingJSONLoader();
-        Properties properties = new Properties();
-        properties.setProperty(JSON_FILE, jsonFile);
-        properties.setProperty(LOADER_USE_ENVELOPE, Boolean.toString(useEnvelope));
-        if (nodeExpression != null) {
-            properties.setProperty(JSON_NODE, nodeExpression);
-        }
-        if (metadataExpression != null) {
-            properties.setProperty(JSON_METADATA, metadataExpression);
-        }
-        loader.setProperties(properties);
-        return loader;
+    @Test
+    void closeCleansUpTemporaryFiles() throws Exception {
+        FileUrisStreamingJSONLoader loader = newLoader("/items/*", null, false);
+        loader.open();
+        assertEquals(3, loader.getTotalCount());
+        loader.close();
+        assertFalse(loader.hasNext());
+    }
+
+    private FileUrisStreamingJSONLoader newLoader(String nodeExpression, String metadataExpression, boolean useEnvelope) {
+        return newLoader(SAMPLE_JSON, nodeExpression, metadataExpression, useEnvelope);
     }
 
     private List<String> readAll(FileUrisStreamingJSONLoader loader) throws CorbException {

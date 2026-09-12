@@ -20,15 +20,14 @@ package com.marklogic.developer.corb;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class StreamingJsonPathTest {
 
     @Test
     void matchesDefaultImmediateChildPath() throws Exception {
         StreamingJsonPath path = new StreamingJsonPath();
+        assertEquals("/*", path.getExpression());
         assertTrue(path.matches("/items"));
         assertTrue(path.matches("/*"));
         assertFalse(path.matches("/"));
@@ -53,7 +52,34 @@ class StreamingJsonPathTest {
     @Test
     void relativeExpressionBehavesAsDescendant() throws Exception {
         StreamingJsonPath path = new StreamingJsonPath("uri");
+        assertEquals("//uri", path.getExpression());
         assertTrue(path.matches("/items/*/uri"));
+    }
+
+    @Test
+    void trimsExpressionAndTreatsBlankAsDefault() throws Exception {
+        StreamingJsonPath blank = new StreamingJsonPath("   ");
+        StreamingJsonPath trimmed = new StreamingJsonPath("  /items/*  ");
+
+        assertEquals("/*", blank.getExpression());
+        assertEquals("/items/*", trimmed.getExpression());
+        assertTrue(trimmed.matches("/items/foo"));
+    }
+
+    @Test
+    void supportsDescendantAtRootAndEmptyPaths() throws Exception {
+        StreamingJsonPath path = new StreamingJsonPath("//uri");
+
+        assertTrue(path.matches("uri"));
+        assertFalse(path.matches("/"));
+        assertFalse(path.matches("/items/type"));
+    }
+
+    @Test
+    void rejectsJsonPathPrefixAndUnsupportedTokens() {
+        assertThrows(CorbException.class, () -> new StreamingJsonPath(" $.items "));
+        assertThrows(CorbException.class, () -> new StreamingJsonPath("/items[0]"));
+        assertThrows(CorbException.class, () -> new StreamingJsonPath("/items?.name"));
     }
 
     @Test

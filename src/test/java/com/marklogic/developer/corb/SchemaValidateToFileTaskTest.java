@@ -33,10 +33,16 @@ import static org.mockito.Mockito.when;
 
 class SchemaValidateToFileTaskTest {
 
+    private SchemaValidateToFileTask newTask(Properties properties) {
+        SchemaValidateToFileTask validate = new SchemaValidateToFileTask();
+        validate.setProperties(properties);
+        return validate;
+    }
+
     @Test
     void testGetFileName() {
 
-        SchemaValidateToFileTask validate = new SchemaValidateToFileTask();
+        SchemaValidateToFileTask validate = newTask(new Properties());
         validate.inputUris = new String[]{"/tmp/foo.xml"};
         String fileName = validate.getFileName();
         assertEquals("tmp/foo.xml", fileName);
@@ -48,11 +54,17 @@ class SchemaValidateToFileTaskTest {
         Properties properties = new Properties();
         properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, "false");
 
-        SchemaValidateToFileTask validate = new SchemaValidateToFileTask();
-        validate.setProperties(properties);
+        SchemaValidateToFileTask validate = newTask(properties);
         validate.inputUris = new String[]{"/tmp/foo.xml"};
         String fileName = validate.getFileName();
         assertEquals("foo.xml", fileName);
+    }
+
+    @Test
+    void testGetFileNameWithoutLeadingSlash() {
+        SchemaValidateToFileTask validate = newTask(new Properties());
+        validate.inputUris = new String[]{"tmp/foo.xml"};
+        assertEquals("tmp/foo.xml", validate.getFileName());
     }
 
     @Test
@@ -62,8 +74,7 @@ class SchemaValidateToFileTaskTest {
         properties.setProperty(Options.EXPORT_FILE_NAME, "/tmp/bar.xml");
         properties.setProperty(Options.EXPORT_FILE_PART_EXT, exportFilePartExtension);
 
-        SchemaValidateToFileTask validate = new SchemaValidateToFileTask();
-        validate.setProperties(properties);
+        SchemaValidateToFileTask validate = newTask(properties);
         validate.inputUris = new String[]{"/tmp/foo.xml"};
 
         File exportFile = validate.getExportFile();
@@ -76,7 +87,7 @@ class SchemaValidateToFileTaskTest {
         List<SAXParseException> exceptions = new ArrayList<>();
         File outputFile = mock(File.class);
         when(outputFile.toPath()).thenThrow(new RuntimeException("Wrapped exception", new IOException("File not found")));
-        SchemaValidateToFileTask validate = new SchemaValidateToFileTask();
+        SchemaValidateToFileTask validate = newTask(new Properties());
         assertThrows(RuntimeException.class, () -> validate.writeSchemaValidationReport(exceptions, outputFile));
     }
 

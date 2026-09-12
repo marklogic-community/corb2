@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
@@ -40,6 +42,14 @@ class FileUrisDirectoryLoaderTest {
     public static final String TEST_DIR = "src/test/resources/loader";
     public static final int TEST_ZIP_FILE_COUNT = 11;
 
+    private FileUrisDirectoryLoader newLoader(String loaderPath) {
+        Properties properties = new Properties();
+        properties.setProperty(Options.LOADER_PATH, loaderPath);
+        FileUrisDirectoryLoader loader = new FileUrisDirectoryLoader();
+        loader.properties = properties;
+        return loader;
+    }
+
     public FileUrisDirectoryLoaderTest() {
     }
 
@@ -52,19 +62,49 @@ class FileUrisDirectoryLoaderTest {
     }
 
     @Test
-    void testOpen() {
-        Properties properties = new Properties();
-        properties.setProperty(Options.LOADER_PATH, TEST_DIR);
+    void testCountFilesIgnoresHiddenFiles() throws IOException {
+        Path dir = Files.createTempDirectory("file-uris-loader-hidden");
+        Files.write(dir.resolve("visible.txt"), "visible".getBytes(StandardCharsets.UTF_8));
+        Files.write(dir.resolve(".hidden.txt"), "hidden".getBytes(StandardCharsets.UTF_8));
+
         try (FileUrisDirectoryLoader loader = new FileUrisDirectoryLoader()) {
-            loader.properties = properties;
+            assertEquals(1, loader.fileCount(dir));
+        }
+    }
+
+    @Test
+    void testOpen() {
+        try (FileUrisDirectoryLoader loader = newLoader(TEST_DIR)) {
             loader.open();
             assertEquals(TEST_ZIP_FILE_COUNT, loader.getTotalCount());
-            while(loader.hasNext()) {
+            while (loader.hasNext()) {
                 assertNotNull(loader.next());
             }
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
+        }
+    }
+
+    @Test
+    void testOpenRejectsMissingDirectory() {
+        try (FileUrisDirectoryLoader loader = newLoader("/definitely/missing/loader/path")) {
+            assertThrows(CorbException.class, loader::open);
+        }
+    }
+
+    @Test
+    void testOpenIgnoresHiddenFiles() throws CorbException, IOException {
+        Path dir = Files.createTempDirectory("file-uris-loader-open-hidden");
+        Files.write(dir.resolve("visible.txt"), "visible".getBytes(StandardCharsets.UTF_8));
+        Files.write(dir.resolve(".hidden.txt"), "hidden".getBytes(StandardCharsets.UTF_8));
+
+        try (FileUrisDirectoryLoader loader = newLoader(dir.toString())) {
+            loader.open();
+            assertEquals(1, loader.getTotalCount());
+            assertTrue(loader.hasNext());
+            assertNotNull(loader.next());
+            assertFalse(loader.hasNext());
         }
     }
 

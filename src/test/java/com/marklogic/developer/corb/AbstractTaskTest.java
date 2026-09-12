@@ -416,6 +416,26 @@ class AbstractTaskTest {
     }
 
     @Test
+    void testGenerateRequestModuleInvokeWithReservedVariableCollision() throws CorbException {
+        ModuleInvoke request = new ModuleInvokeImpl();
+        Session session = mock(Session.class);
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+
+        AbstractTask task = new AbstractTaskImpl();
+        task.moduleUri = URI;
+        task.setModuleType(PROCESS_MODULE);
+        task.inputUris = new String[]{"/first.xml", "/second.xml"};
+        task.properties.setProperty(PROCESS_MODULE + ".URI", "custom-override");
+
+        task.generateRequest(session);
+
+        List<XdmVariable> variableList = Arrays.asList(request.getVariables());
+        assertTrue(variableList.stream().anyMatch(v -> "URI".equals(v.getName().toString())
+                && "custom-override".equals(v.getValue().asString())));
+        assertTrue(variableList.stream().filter(v -> "URI".equals(v.getName().toString())).count() >= 2);
+    }
+
+    @Test
     void testGenerateRequestModuleInvokeWithUrisBatchRef() {
         ModuleInvoke request = new ModuleInvokeImpl();
         Session session = mock(Session.class);
@@ -1026,14 +1046,17 @@ class AbstractTaskTest {
 
     @Test
     void testGetProperty() {
-        String key = INIT_TASK;
-        String val = FOO;
-        Properties props = new Properties();
-        props.setProperty(key, val);
-        AbstractTask task = new AbstractTaskImpl();
-        task.properties = props;
-        String result = task.getProperty(key);
-        assertEquals(val, result);
+        AbstractTask task = newTaskWithProperties(INIT_TASK, FOO);
+        assertEquals(FOO, task.getProperty(INIT_TASK));
+    }
+
+    @Test
+    void testGetPropertyHandlesBlankAndNullValues() {
+        AbstractTask task = newTaskWithProperties("blank-option", "   ", "empty-option", "", "set-option", "value");
+        assertNull(task.getProperty("missing-option"));
+        assertEquals("", task.getProperty("blank-option"));
+        assertEquals("", task.getProperty("empty-option"));
+        assertEquals("value", task.getProperty("set-option"));
     }
 
     @Test
@@ -1051,6 +1074,15 @@ class AbstractTaskTest {
     }
 
     @Test
+    void testShouldRetryWithBlankRetryConfigDoesNotMatch() {
+        Request req = mock(Request.class);
+        AbstractTask task = newTaskWithProperties(QUERY_RETRY_ERROR_CODES, "   ", QUERY_RETRY_ERROR_MESSAGE, " ");
+        XQueryException exception = new XQueryException(req, SVC_EXTIME, W3C_CODE, XQUERY_VERSION, ERROR_MSG, "", "", false, new String[0], new QueryStackFrame[0]);
+        assertFalse(task.shouldRetry(exception));
+        assertFalse(task.hasRetryableMessage(exception));
+    }
+
+    @Test
     void testGetValueAsBytesXdmBinary() {
         XdmItem item = mock(XdmBinary.class);
 
@@ -1065,6 +1097,14 @@ class AbstractTaskTest {
         when(item.asString()).thenReturn(value);
         byte[] result = AbstractTaskImpl.getValueAsBytes(item);
         assertArrayEquals(value.getBytes(StandardCharsets.UTF_8), result);
+    }
+
+    private AbstractTaskImpl newTaskWithProperties(String... keyValues) {
+        AbstractTaskImpl task = new AbstractTaskImpl();
+        for (int i = 0; i + 1 < keyValues.length; i += 2) {
+            task.properties.setProperty(keyValues[i], keyValues[i + 1]);
+        }
+        return task;
     }
 
     public File createTempDirectory() throws IOException {

@@ -40,29 +40,39 @@ class StreamingXPathTest {
         xpathInstance = new StreamingXPath();
     }
 
-    private static void testNormalizeAxes(String xpath, String expectedResult) {
+    private static void assertNormalizeAxes(String xpath, String expectedResult) {
         String pattern = xpathInstance.normalizeAxes(xpath);
         assertEquals(expectedResult, pattern);
     }
 
+    private static void assertParseXPathToRegex(String xpath, String expectedResult) {
+        try {
+            String pattern = xpathInstance.parseXPathToRegex(xpath);
+            assertEquals(expectedResult, pattern);
+        } catch (CorbException ex) {
+            LOG.log(SEVERE, null, ex);
+            fail();
+        }
+    }
+
     @Test
     void testNormalizeAxesChild() {
-        testNormalizeAxes("/*/child::foo", "/*/foo");
+        assertNormalizeAxes("/*/child::foo", "/*/foo");
     }
 
     @Test
     void testNormalizeAxesDescendant() {
-        testNormalizeAxes("/*/descendant::foo", "/*//foo");
+        assertNormalizeAxes("/*/descendant::foo", "/*//foo");
     }
 
     @Test
     void testNormalizeAxesSelf() {
-        testNormalizeAxes("/*/self::foo", "/*|foo");
+        assertNormalizeAxes("/*/self::foo", "/*|foo");
     }
 
     @Test
     void testNormalizeAxesElementNameMatchPattern() {
-        testNormalizeAxes("a:baz", "//a:baz");
+        assertNormalizeAxes("a:baz", "//a:baz");
     }
 
     @Test
@@ -158,47 +168,43 @@ class StreamingXPathTest {
 
     @Test
     void testParseRegex() {
-        testParseXPathToRegex("/*//foo:bar[position()=1]", "^/[^/]+/[^/]*/?bar");
+        assertParseXPathToRegex("/*//foo:bar[position()=1]", "^/[^/]+/[^/]*/?bar");
     }
 
     @Test
     void testParseRegexElementAnyLevel() {
-        testParseXPathToRegex("//foo:bar", "^/[^/]*/?bar");
+        assertParseXPathToRegex("//foo:bar", "^/[^/]*/?bar");
     }
 
     @Test
     void testParseRegexWithNamespacePrefixes() {
-        testParseXPathToRegex("/foo:bar/foo:baz", "^/bar/baz");
+        assertParseXPathToRegex("/foo:bar/foo:baz", "^/bar/baz");
     }
 
     @Test
     void testParseRegexWithoutNamespacePrefixes() {
-        testParseXPathToRegex("/foo/bar/baz", "^/foo/bar/baz");
+        assertParseXPathToRegex("/foo/bar/baz", "^/foo/bar/baz");
     }
 
     @Test
     void testParseRegexWithElementWildcard() {
-        testParseXPathToRegex("/*/bar/*", "^/[^/]+/bar/[^/]+");
+        assertParseXPathToRegex("/*/bar/*", "^/[^/]+/bar/[^/]+");
     }
 
     @Test
     void testParseRegexRelativePath() {
-        testParseXPathToRegex("foo:bar", "^/[^/]*/?bar");
+        assertParseXPathToRegex("foo:bar", "^/[^/]*/?bar");
     }
 
     @Test
     void testParseRegexWithPredicates() {
-        testParseXPathToRegex("/foo:bar[@baz='1' and @bar='2']", "^/bar");
-        testParseXPathToRegex("/foo:bar[@baz='1' and @bar='2']/baz", "^/bar/baz");
+        assertParseXPathToRegex("/foo:bar[@baz='1' and @bar='2']", "^/bar");
+        assertParseXPathToRegex("/foo:bar[@baz='1' and @bar='2']/baz", "^/bar/baz");
     }
 
-    private static void testParseXPathToRegex(String xpath, String expectedResult) {
-        try {
-            String pattern = xpathInstance.parseXPathToRegex(xpath);
-            assertEquals(expectedResult, pattern);
-        } catch (CorbException ex) {
-            LOG.log(SEVERE, null, ex);
-            fail();
-        }
+    @Test
+    void testValidateAxisNullAndSupportedPath() {
+        assertDoesNotThrow(() -> xpathInstance.validateAxis(null));
+        assertDoesNotThrow(() -> xpathInstance.validateAxis("/a/b"));
     }
 }

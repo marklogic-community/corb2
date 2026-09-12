@@ -23,6 +23,7 @@ import com.marklogic.xcc.exceptions.RequestPermissionException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,6 +42,20 @@ import static org.mockito.Mockito.mock;
 class PreBatchUpdateFileTaskTest {
 
     private static final Logger LOG = Logger.getLogger(PreBatchUpdateFileTaskTest.class.getName());
+
+    private PreBatchUpdateFileTask newTask(File tempDir, String fileName, String topContent) {
+        Properties props = new Properties();
+        props.setProperty(EXPORT_FILE_NAME, fileName);
+        props.setProperty(EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
+        if (topContent != null) {
+            props.setProperty(EXPORT_FILE_TOP_CONTENT, topContent);
+        }
+
+        PreBatchUpdateFileTask task = new PreBatchUpdateFileTask();
+        task.properties = props;
+        task.exportDir = tempDir.toString();
+        return task;
+    }
 
     @Test
     void testGetTopContent() {
@@ -83,13 +98,7 @@ class PreBatchUpdateFileTaskTest {
 
             if (tempFile.createNewFile()) {
                 tempFile.deleteOnExit();
-                Properties props = new Properties();
-                props.setProperty(EXPORT_FILE_TOP_CONTENT, content);
-                props.setProperty(EXPORT_FILE_NAME, tempFile.getName());
-
-                PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
-                instance.properties = props;
-                instance.exportDir = tempDir.toString();
+                PreBatchUpdateFileTask instance = newTask(tempDir, tempFile.getName(), content);
                 instance.writeTopContent();
                 File partFile = new File(tempDir, instance.getPartFileName());
                 assertEquals(content.concat(new String(PreBatchUpdateFileTask.NEWLINE, StandardCharsets.UTF_8)), TestUtils.readFile(partFile));
@@ -100,6 +109,16 @@ class PreBatchUpdateFileTaskTest {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
+    }
+
+    @Test
+    void testWriteTopContentSkipsBlankContent() throws IOException {
+        File tempDir = TestUtils.createTempDirectory();
+        PreBatchUpdateFileTask instance = newTask(tempDir, "blankTopContent", "   ");
+
+        instance.writeTopContent();
+
+        assertFalse(new File(tempDir, instance.getPartFileName()).exists());
     }
 
     @Test
@@ -121,13 +140,7 @@ class PreBatchUpdateFileTaskTest {
             File tempFile = new File(tempDir, "topContent");
             if (tempFile.createNewFile()) {
                 tempFile.deleteOnExit();
-                Properties props = new Properties();
-                props.setProperty(EXPORT_FILE_TOP_CONTENT, content);
-                props.setProperty(EXPORT_FILE_NAME, tempFile.getName());
-                props.setProperty(EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
-                PreBatchUpdateFileTask instance = new PreBatchUpdateFileTask();
-                instance.properties = props;
-                instance.exportDir = tempDir.toString();
+                PreBatchUpdateFileTask instance = newTask(tempDir, tempFile.getName(), content);
                 File partFile = new File(tempDir, instance.getPartFileName());
                 instance.call();
 
@@ -139,6 +152,23 @@ class PreBatchUpdateFileTaskTest {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
+    }
+
+    @Test
+    void testCallDeletesExistingFileBeforeWritingTopContent() throws Exception {
+        File tempDir = TestUtils.createTempDirectory();
+        String fileName = "staleData.txt";
+        File partFile = new File(tempDir, fileName);
+        assertTrue(partFile.createNewFile());
+        Files.write(partFile.toPath(), "old-header\nold-data\n".getBytes(StandardCharsets.UTF_8));
+
+        PreBatchUpdateFileTask instance = newTask(tempDir, fileName, "new-header");
+        Properties props = instance.properties;
+
+        instance.call();
+
+        assertEquals("new-header" + new String(PreBatchUpdateFileTask.NEWLINE, StandardCharsets.UTF_8), TestUtils.readFile(partFile));
+        assertEquals("1", props.getProperty(EXPORT_FILE_HEADER_LINE_COUNT));
     }
 
     @Test

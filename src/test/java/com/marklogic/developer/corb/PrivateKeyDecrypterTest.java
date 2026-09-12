@@ -28,12 +28,17 @@ import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Base64;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import javax.crypto.Cipher;
 
 import org.junit.jupiter.api.*;
 
@@ -81,6 +86,18 @@ class PrivateKeyDecrypterTest {
 
     private static void setSystemProperties() {
         System.setProperty(PRIVATE_KEY_FILE, PRIVATE_KEY_PATH);
+    }
+
+    private PrivateKeyDecrypter configuredDecrypter(String privateKeyFile) throws IOException, ClassNotFoundException {
+        PrivateKeyDecrypter instance = new PrivateKeyDecrypter();
+        instance.init(null);
+        instance.properties.setProperty(PRIVATE_KEY_FILE, privateKeyFile);
+        instance.init_decrypter();
+        return instance;
+    }
+
+    private static String keyPairToBase64PrivateKeyString(KeyPair keyPair) {
+        return Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded());
     }
 
     @Test
@@ -235,6 +252,30 @@ class PrivateKeyDecrypterTest {
             LOG.log(Level.SEVERE, null, ex);
             fail();
         }
+    }
+
+    @Test
+    void testDoDecryptWithBase64PemPrivateKey() throws Exception {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ALGORITHM);
+        keyPairGenerator.initialize(1024);
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        cipher.init(Cipher.ENCRYPT_MODE, keyPair.getPublic());
+        String encryptedValue = Base64.getEncoder().encodeToString(cipher.doFinal(SECRET.getBytes(StandardCharsets.UTF_8)));
+
+        File tempPrivateKey = File.createTempFile("private-key", ".pem");
+        tempPrivateKey.deleteOnExit();
+        Files.write(tempPrivateKey.toPath(), keyPairToBase64PrivateKeyString(keyPair).getBytes(StandardCharsets.UTF_8));
+
+        PrivateKeyDecrypter instance = configuredDecrypter(tempPrivateKey.getAbsolutePath());
+        assertEquals(SECRET, instance.doDecrypt("key", encryptedValue));
+    }
+
+    @Test
+    void testDoDecryptInvalidCipherTextFallsBackToOriginalValue() throws Exception {
+        PrivateKeyDecrypter instance = configuredDecrypter(PRIVATE_KEY_PATH);
+        assertEquals("not-encrypted-text", instance.doDecrypt("key", "not-encrypted-text"));
     }
 
     @Test

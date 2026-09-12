@@ -64,6 +64,19 @@ class MonitorTest {
     }
 
     @Test
+    void testCalculateTpsForEtcClearsHistoryWhenPausedAndCurrentTpsIsZero() {
+        PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
+        Monitor monitor = new Monitor(pool, mock(CompletionService.class), mock(Manager.class));
+        monitor.tpsForETCList.add(1.0);
+        monitor.tpsForETCList.add(2.0);
+
+        double result = monitor.calculateTpsForETC(0.0, true);
+
+        assertEquals(0.0, result, DOUBLE_DELTA);
+        assertTrue(monitor.tpsForETCList.isEmpty());
+    }
+
+    @Test
     void testCalculateTransactionsPerSecond3args() {
         long amountCompleted = 10L;
         long previousMillis = 1000L;
@@ -197,8 +210,7 @@ class MonitorTest {
         when(pool.getTaskCount()).thenReturn(1L);
         when(pool.getCompletedTaskCount()).thenReturn(1L);
 
-        Monitor monitor = new Monitor(pool, cs, mock(Manager.class));
-        monitor.setTaskCount(1);
+        Monitor monitor = createMonitor(pool, cs, mock(Manager.class), 1L);
         monitor.run();
 
         assertEquals(1L, monitor.getCompletedCount());
@@ -214,8 +226,7 @@ class MonitorTest {
         when(cs.poll(anyLong(), any(TimeUnit.class))).thenReturn(future);
 
         Manager manager = mock(Manager.class);
-        Monitor monitor = new Monitor(mock(PausableThreadPoolExecutor.class), cs, manager);
-        monitor.setTaskCount(5);
+        Monitor monitor = createMonitor(mock(PausableThreadPoolExecutor.class), cs, manager, 5L);
         monitor.run();
 
         verify(manager).stop(any(ExecutionException.class));
@@ -227,8 +238,7 @@ class MonitorTest {
         CompletionService<String[]> cs = mock(CompletionService.class);
         when(cs.poll(anyLong(), any(TimeUnit.class))).thenThrow(new InterruptedException("test interrupt"));
 
-        Monitor monitor = new Monitor(mock(PausableThreadPoolExecutor.class), cs, mock(Manager.class));
-        monitor.setTaskCount(5);
+        Monitor monitor = createMonitor(mock(PausableThreadPoolExecutor.class), cs, mock(Manager.class), 5L);
         // InterruptedException is caught inside run() — must not propagate
         assertDoesNotThrow(monitor::run);
     }
@@ -254,6 +264,12 @@ class MonitorTest {
         }).when(cs).poll(anyLong(), any(TimeUnit.class));
 
         assertDoesNotThrow(monitor::run);
+    }
+
+    private Monitor createMonitor(PausableThreadPoolExecutor pool, CompletionService<String[]> cs, Manager manager, long taskCount) {
+        Monitor monitor = new Monitor(pool, cs, manager);
+        monitor.setTaskCount(taskCount);
+        return monitor;
     }
 
     @Test

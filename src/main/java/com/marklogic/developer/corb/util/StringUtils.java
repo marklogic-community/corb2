@@ -334,7 +334,10 @@ public final class StringUtils {
     public static List<String> commaSeparatedValuesToList(String value) {
         List<String> values = new ArrayList<>();
         for (String item : split(value, COMMA)) {
-            values.add(item.trim());
+            String trimmed = item.trim();
+            if (!trimmed.isEmpty()) {
+                values.add(trimmed);
+            }
         }
         return values;
     }

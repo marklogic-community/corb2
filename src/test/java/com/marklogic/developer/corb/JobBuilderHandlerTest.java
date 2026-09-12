@@ -35,16 +35,30 @@ import static org.mockito.Mockito.*;
 
 class JobBuilderHandlerTest {
 
+    private HttpExchange mockExchange(String path, String method, String formBody) throws Exception {
+        Headers headers = new Headers();
+        HttpExchange exchange = mock(HttpExchange.class);
+        when(exchange.getRequestURI()).thenReturn(URI.create(path));
+        when(exchange.getRequestMethod()).thenReturn(method);
+        when(exchange.getResponseHeaders()).thenReturn(headers);
+        byte[] body = formBody == null ? new byte[0] : formBody.getBytes(StandardCharsets.UTF_8);
+        when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream(body));
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        when(exchange.getResponseBody()).thenReturn(out);
+        return exchange;
+    }
+
+    private HttpExchange exchangeFor(String path, String method, String formBody) throws Exception {
+        return mockExchange(path, method, formBody);
+    }
+
     @Test
     void handlePropertiesRequestDecodesFormValues() throws Exception {
         Headers headers = new Headers();
-        HttpExchange exchange = mock(HttpExchange.class);
-        when(exchange.getRequestURI()).thenReturn(URI.create(JobBuilderHandler.BUILDER_PROPERTIES_PATH));
-        when(exchange.getRequestMethod()).thenReturn("POST");
-        when(exchange.getResponseHeaders()).thenReturn(headers);
-        when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream((Options.PROCESS_MODULE + "=%2Fext%2Fprocess.xqy&" + JobBuilderService.PARAM_DOWNLOAD_FILE_NAME + "=nightly%20run").getBytes(StandardCharsets.UTF_8)));
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        when(exchange.getResponseBody()).thenReturn(out);
+        HttpExchange exchange = exchangeFor(JobBuilderHandler.BUILDER_PROPERTIES_PATH, "POST",
+            Options.PROCESS_MODULE + "=%2Fext%2Fprocess.xqy&" + JobBuilderService.PARAM_DOWNLOAD_FILE_NAME + "=nightly%20run");
+        headers = exchange.getResponseHeaders();
+        ByteArrayOutputStream out = (ByteArrayOutputStream) exchange.getResponseBody();
 
         JobBuilderService service = mock(JobBuilderService.class);
         when(service.buildPropertiesFile(anyMap())).thenReturn(Options.PROCESS_MODULE + "=/ext/process.xqy\n");
@@ -59,15 +73,44 @@ class JobBuilderHandlerTest {
     }
 
     @Test
+    void handlePropertiesRequestWithEmptyFormBodyUsesEmptyParams() throws Exception {
+        HttpExchange exchange = exchangeFor(JobBuilderHandler.BUILDER_PROPERTIES_PATH, "POST", "");
+        ByteArrayOutputStream out = (ByteArrayOutputStream) exchange.getResponseBody();
+
+        JobBuilderService service = mock(JobBuilderService.class);
+        when(service.buildPropertiesFile(anyMap())).thenReturn("");
+        when(service.resolveDownloadFilename(anyMap())).thenReturn("empty.properties");
+
+        JobBuilderHandler handler = new JobBuilderHandler(service);
+        handler.handle(exchange);
+
+        verify(service).buildPropertiesFile(org.mockito.ArgumentMatchers.argThat(params -> params.isEmpty()));
+        assertTrue(exchange.getResponseHeaders().getFirst("Content-Disposition").contains("empty.properties"));
+        assertEquals("", out.toString(StandardCharsets.UTF_8.name()));
+    }
+
+    @Test
+    void decodeFormValuesHandlesBlankEntriesAndLastValueWins() throws Exception {
+        HttpExchange exchange = exchangeFor(JobBuilderHandler.BUILDER_PROPERTIES_PATH, "POST", "first=alpha&blank&second=beta&blank=final");
+        JobBuilderService service = mock(JobBuilderService.class);
+        when(service.buildPropertiesFile(anyMap())).thenReturn("first=alpha\nblank=final\nsecond=beta\n");
+        when(service.resolveDownloadFilename(anyMap())).thenReturn("values.properties");
+
+        new JobBuilderHandler(service).handle(exchange);
+
+        verify(service).buildPropertiesFile(org.mockito.ArgumentMatchers.argThat(params -> {
+            assertEquals("alpha", params.get("first"));
+            assertEquals("final", params.get("blank"));
+            assertEquals("beta", params.get("second"));
+            return true;
+        }));
+    }
+
+    @Test
     void handleJobLaunchReturnsLauncherPayload() throws Exception {
         Headers headers = new Headers();
-        HttpExchange exchange = mock(HttpExchange.class);
-        when(exchange.getRequestURI()).thenReturn(URI.create(JobBuilderHandler.BUILDER_JOBS_PATH));
-        when(exchange.getRequestMethod()).thenReturn("POST");
-        when(exchange.getResponseHeaders()).thenReturn(headers);
-        when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream((Options.JOB_NAME + "=builder-demo").getBytes(StandardCharsets.UTF_8)));
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        when(exchange.getResponseBody()).thenReturn(out);
+        HttpExchange exchange = mockExchange(JobBuilderHandler.BUILDER_JOBS_PATH, "POST", Options.JOB_NAME + "=builder-demo");
+        ByteArrayOutputStream out = (ByteArrayOutputStream) exchange.getResponseBody();
 
         JobBuilderService service = mock(JobBuilderService.class);
         when(service.launchJob(anyMap())).thenReturn(new JobBuilderService.JobLaunchResult("job-123", "builder-demo", "/job-123"));
@@ -105,11 +148,7 @@ class JobBuilderHandlerTest {
 
     @Test
     void handleOptionsRequestReturnsNoContent() throws Exception {
-        HttpExchange exchange = mock(HttpExchange.class);
-        when(exchange.getRequestMethod()).thenReturn("OPTIONS");
-        when(exchange.getRequestURI()).thenReturn(URI.create(JobBuilderHandler.BUILDER_METADATA_PATH));
-        Headers headers = new Headers();
-        when(exchange.getResponseHeaders()).thenReturn(headers);
+        HttpExchange exchange = mockExchange(JobBuilderHandler.BUILDER_METADATA_PATH, "OPTIONS", null);
 
         JobBuilderHandler handler = new JobBuilderHandler(mock(JobBuilderService.class));
         handler.handle(exchange);
@@ -123,13 +162,8 @@ class JobBuilderHandlerTest {
 
     @Test
     void handleGetToMetadataReturnsJson() throws Exception {
-        Headers headers = new Headers();
-        HttpExchange exchange = mock(HttpExchange.class);
-        when(exchange.getRequestURI()).thenReturn(URI.create(JobBuilderHandler.BUILDER_METADATA_PATH));
-        when(exchange.getRequestMethod()).thenReturn("GET");
-        when(exchange.getResponseHeaders()).thenReturn(headers);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        when(exchange.getResponseBody()).thenReturn(out);
+        HttpExchange exchange = mockExchange(JobBuilderHandler.BUILDER_METADATA_PATH, "GET", null);
+        ByteArrayOutputStream out = (ByteArrayOutputStream) exchange.getResponseBody();
 
         JobBuilderService service = mock(JobBuilderService.class);
         when(service.buildMetadataJson()).thenReturn("{\"groups\":[]}");
@@ -147,13 +181,7 @@ class JobBuilderHandlerTest {
 
     @Test
     void handleUnknownPathReturns404() throws Exception {
-        Headers headers = new Headers();
-        HttpExchange exchange = mock(HttpExchange.class);
-        when(exchange.getRequestURI()).thenReturn(URI.create(JobBuilderHandler.BUILDER_ROOT_PATH + "/unknown"));
-        when(exchange.getRequestMethod()).thenReturn("GET");
-        when(exchange.getResponseHeaders()).thenReturn(headers);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        when(exchange.getResponseBody()).thenReturn(out);
+        HttpExchange exchange = mockExchange(JobBuilderHandler.BUILDER_ROOT_PATH + "/unknown", "GET", null);
 
         JobBuilderHandler handler = new JobBuilderHandler(mock(JobBuilderService.class));
         handler.handle(exchange);
@@ -167,14 +195,8 @@ class JobBuilderHandlerTest {
 
     @Test
     void handleWrongMethodForMetadataReturns400() throws Exception {
-        Headers headers = new Headers();
-        HttpExchange exchange = mock(HttpExchange.class);
-        when(exchange.getRequestURI()).thenReturn(URI.create(JobBuilderHandler.BUILDER_METADATA_PATH));
-        when(exchange.getRequestMethod()).thenReturn("POST");
-        when(exchange.getResponseHeaders()).thenReturn(headers);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        when(exchange.getResponseBody()).thenReturn(out);
-        when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream(new byte[0]));
+        HttpExchange exchange = mockExchange(JobBuilderHandler.BUILDER_METADATA_PATH, "POST", null);
+        ByteArrayOutputStream out = (ByteArrayOutputStream) exchange.getResponseBody();
 
         JobBuilderHandler handler = new JobBuilderHandler(mock(JobBuilderService.class));
         handler.handle(exchange);
@@ -189,13 +211,8 @@ class JobBuilderHandlerTest {
 
     @Test
     void handleServiceExceptionReturns500() throws Exception {
-        Headers headers = new Headers();
-        HttpExchange exchange = mock(HttpExchange.class);
-        when(exchange.getRequestURI()).thenReturn(URI.create(JobBuilderHandler.BUILDER_METADATA_PATH));
-        when(exchange.getRequestMethod()).thenReturn("GET");
-        when(exchange.getResponseHeaders()).thenReturn(headers);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        when(exchange.getResponseBody()).thenReturn(out);
+        HttpExchange exchange = mockExchange(JobBuilderHandler.BUILDER_METADATA_PATH, "GET", null);
+        ByteArrayOutputStream out = (ByteArrayOutputStream) exchange.getResponseBody();
 
         JobBuilderService service = mock(JobBuilderService.class);
         when(service.buildMetadataJson()).thenThrow(new RuntimeException("something went wrong"));

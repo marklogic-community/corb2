@@ -41,15 +41,24 @@ import static org.mockito.Mockito.when;
 
 class SchemaValidateBatchToFileTaskTest {
 
+    private SchemaValidateBatchToFileTask newTask(String schemaFileName, File outputFile) {
+        return createSchemaValidateTask(schemaFileName, outputFile);
+    }
+
+    private static File newTempFile(String prefix, String suffix) throws IOException {
+        File file = File.createTempFile(prefix, suffix);
+        file.deleteOnExit();
+        return file;
+    }
+
     @Test
     void processResultValid() {
         try {
             String xmlFile = "src/test/resources/streamingXMLUrisLoader/EDI.ICF15T.D150217.T113100716.T";
             String schemaFile = "src/test/resources/streamingXMLUrisLoader/BenefitEnrollment.xsd";
-            File outputFile = File.createTempFile("rpt", "xml");
-            outputFile.deleteOnExit();
+            File outputFile = newTempFile("rpt", "xml");
 
-            SchemaValidateBatchToFileTask validateTask = createSchemaValidateTask(schemaFile, outputFile);
+            SchemaValidateBatchToFileTask validateTask = newTask(schemaFile, outputFile);
             validateTask.processResult(singleFileSequence(xmlFile));
 
             assertEquals(0, FileUtils.getLineCount(outputFile));
@@ -64,10 +73,9 @@ class SchemaValidateBatchToFileTaskTest {
         try {
             String xmlFile = "src/test/resources/xml-file.xml";
             String schemaFile = "src/test/resources/streamingXMLUrisLoader/BenefitEnrollment.xsd";
-            File outputFile = File.createTempFile("rpt", "xml");
-            outputFile.deleteOnExit();
+            File outputFile = newTempFile("rpt", "xml");
 
-            SchemaValidateBatchToFileTask validateTask = createSchemaValidateTask(schemaFile, outputFile);
+            SchemaValidateBatchToFileTask validateTask = newTask(schemaFile, outputFile);
             validateTask.processResult(singleFileSequence(xmlFile));
 
             assertNotNull(TestUtils.readFile(outputFile));
@@ -82,10 +90,9 @@ class SchemaValidateBatchToFileTaskTest {
         try {
             String xmlFile = "src/test/resources/test-file-1.txt";
             String schemaFile = "src/test/resources/streamingXMLUrisLoader/BenefitEnrollment.xsd";
-            File outputFile = File.createTempFile("rpt", "xml");
-            outputFile.deleteOnExit();
+            File outputFile = newTempFile("rpt", "xml");
 
-            SchemaValidateBatchToFileTask validateTask = createSchemaValidateTask(schemaFile, outputFile);
+            SchemaValidateBatchToFileTask validateTask = newTask(schemaFile, outputFile);
             assertThrows(CorbException.class, () -> validateTask.processResult(singleFileSequence(xmlFile)));
         } catch (IOException ex) {
             fail();
@@ -105,7 +112,7 @@ class SchemaValidateBatchToFileTaskTest {
         String schemaFile = "src/test/resources/streamingXMLUrisLoader/NotBenefitEnrollment.xsd";
         File outputFile = mock(File.class);
         when(outputFile.getAbsolutePath()).thenReturn("/tmp/foo.xml");
-        SchemaValidateBatchToFileTask validate = createSchemaValidateTask(schemaFile, outputFile);
+        SchemaValidateBatchToFileTask validate = newTask(schemaFile, outputFile);
 
         assertThrows(CorbException.class, () -> validate.processResult(sequence));
     }
@@ -118,6 +125,15 @@ class SchemaValidateBatchToFileTaskTest {
         validate.setProperties(properties);
         File schema = validate.getSchemaFile();
         assertTrue(schema.exists());
+    }
+
+    @Test
+    void getSchemaFileBlank() {
+        SchemaValidateBatchToFileTask validate = new SchemaValidateBatchToFileTask();
+        Properties properties = new Properties();
+        properties.setProperty(Options.XML_SCHEMA, "   ");
+        validate.setProperties(properties);
+        assertThrows(IllegalArgumentException.class, validate::getSchemaFile);
     }
 
     @Test
@@ -138,6 +154,20 @@ class SchemaValidateBatchToFileTaskTest {
         } catch (XMLStreamException ex) {
             fail();
         }
+    }
+
+    @Test
+    void writeSchemaValidationReportWithExceptions() throws Exception {
+        StringWriter writer = new StringWriter();
+        SchemaValidateBatchToFileTask validate = new SchemaValidateBatchToFileTask();
+        validate.inputUris = new String[]{"foo"};
+        List<SAXParseException> exceptions = new ArrayList<>();
+        exceptions.add(new SAXParseException("Invalid content", "public-id", "system-id", 11, 4));
+
+        validate.writeSchemaValidationReport(exceptions, writer);
+
+        assertTrue(writer.toString().contains("<document uri=\"foo\">"));
+        assertTrue(writer.toString().contains("<error publicId=\"public-id\" systemId=\"system-id\" lineNumber=\"11\" columnNumber=\"4\">Invalid content</error>"));
     }
 
     @Test

@@ -269,6 +269,26 @@ class AbstractManagerTest {
     }
 
     @Test
+    void testLogPropertiesSkipsXCCProperties() {
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.XCC_HOSTNAME, HOST);
+        manager.properties.setProperty("safe.option", "safe-value");
+
+        manager.logProperties();
+
+        List<LogRecord> records = testLogger.getLogRecords();
+        assertEquals(1, records.size());
+        assertTrue(records.get(0).getMessage().contains("safe.option=safe-value"));
+    }
+
+    @Test
+    void testBuildSystemPropertyArgWithBlankValue() {
+        AbstractManager manager = new AbstractManagerImpl();
+        assertEquals("-Dmy.property", manager.buildSystemPropertyArg("my.property", ""));
+        assertEquals("-Dmy.property=value", manager.buildSystemPropertyArg("my.property", "value"));
+    }
+
+    @Test
     void testGetAdhocQueryNissingFile() {
         assertThrows(IllegalStateException.class, () -> AbstractManager.getAdhocQuery(INVALID_FILE_PATH));
     }
@@ -720,15 +740,23 @@ class AbstractManagerTest {
         assertThrows(CorbException.class, manager::initSSLConfig);
     }
 
+    private AbstractManagerImpl newManagerWithProperties(String... keyValues) {
+        AbstractManagerImpl manager = new AbstractManagerImpl();
+        for (int i = 0; i + 1 < keyValues.length; i += 2) {
+           manager.properties.setProperty(keyValues[i], keyValues[i + 1]);
+        }
+        return manager;
+    }
+
     private void checkContentSource(AbstractManager instance, String user, String host, String port, String dbname) throws CorbException {
 		ContentSource contentSource = instance.getContentSourcePool().get();
 	    assertNotNull(contentSource);
-
+ 
 	    assertEquals(host, contentSource.getConnectionProvider().getHostName());
 	    if (port != null) {
             assertEquals(Integer.parseInt(port), contentSource.getConnectionProvider().getPort());
         }
-
+ 
 	    String csToStr = contentSource.toString();
 	    if (user != null) {
             assertTrue(csToStr.contains("user=" + user));
@@ -1042,20 +1070,34 @@ class AbstractManagerTest {
 
     @Test
     void testGetOption() {
-        String key = "option";
-        String val = VALUE;
-        AbstractManager manager = new AbstractManagerImpl();
-        manager.properties.setProperty(key, val);
-        assertEquals(val, manager.getOption(key));
+        AbstractManager manager = newManagerWithProperties("option", VALUE);
+        assertEquals(VALUE, manager.getOption("option"));
+    }
+
+    @Test
+    void testGetOptionSystemPropertyPrecedenceOverProperties() {
+        String key = "option-system-precedence";
+        String propertyValue = "property-value";
+        String systemValue = "system-value";
+        System.setProperty(key, systemValue);
+        AbstractManager manager = newManagerWithProperties(key, propertyValue);
+        assertEquals(systemValue, manager.getOption(key));
+        System.clearProperty(key);
+    }
+
+    @Test
+    void testGetOptionSensitiveValueNotTrackedInUserProvidedOptions() {
+        AbstractManager manager = newManagerWithProperties(Options.XCC_USERNAME, USERNAME, "SOME-NON-SENSITIVE", VALUE);
+        assertEquals(USERNAME, manager.getOption(Options.XCC_USERNAME));
+        assertFalse(manager.getUserProvidedOptions().containsKey(Options.XCC_USERNAME));
+        assertEquals(VALUE, manager.getOption("SOME-NON-SENSITIVE"));
+        assertTrue(manager.getUserProvidedOptions().containsKey("SOME-NON-SENSITIVE"));
     }
 
     @Test
     void testGetOptionWithEmptyString() {
-        String key = "option";
-        String val = "";
-        AbstractManager manager = new AbstractManagerImpl();
-        manager.properties.setProperty(key, val);
-        assertNull(manager.getOption(key));
+        AbstractManager manager = newManagerWithProperties("option", "");
+        assertNull(manager.getOption("option"));
     }
 
     @Test

@@ -19,7 +19,8 @@
 package com.marklogic.developer.corb;
 
 import com.marklogic.developer.corb.util.FileUtils;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.net.ssl.SSLContext;
@@ -31,10 +32,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.marklogic.developer.corb.Options.*;
+import static com.marklogic.developer.corb.TestUtils.clearSystemProperties;
+import static org.junit.jupiter.api.Assertions.*;
 
 class OneWaySSLConfigTest {
 
     private static final Logger LOG = Logger.getLogger(OneWaySSLConfigTest.class.getName());
+
+    @BeforeEach
+    void setUp() {
+        clearSystemProperties();
+    }
+
+    @AfterEach
+    void tearDown() {
+        clearSystemProperties();
+        System.clearProperty("jdk.tls.client.protocols");
+    }
 
     @Test
     void getSSLContext() {
@@ -49,12 +63,22 @@ class OneWaySSLConfigTest {
     }
 
     @Test
+    void testGetTrustManagersWithoutCustomTrustStore() {
+        OneWaySSLConfig instance = new OneWaySSLConfig();
+        instance.setProperties(new Properties());
+
+        try {
+            assertNull(instance.getTrustManagers());
+        } catch (NoSuchAlgorithmException e) {
+            fail("Unexpected JDK trust manager algorithm failure");
+        }
+    }
+
+    @Test
     void testGetTrustManagers() {
         OneWaySSLConfig instance = new OneWaySSLConfig();
-        Properties properties = new Properties();
-        properties.setProperty(SSL_TRUSTSTORE, FileUtils.getFile("keystore.jks").getAbsolutePath());
+        instance.setProperties(newTrustStoreProperties());
 
-        instance.setProperties(properties);
         try {
             TrustManager[] trustManagers = instance.getTrustManagers();
             assertNotNull(trustManagers);
@@ -66,8 +90,7 @@ class OneWaySSLConfigTest {
     @Test
     void testGetTrustManagersWrongType() {
         OneWaySSLConfig instance = new OneWaySSLConfig();
-        Properties properties = new Properties();
-        properties.setProperty(SSL_TRUSTSTORE, FileUtils.getFile("keystore.jks").getAbsolutePath());
+        Properties properties = newTrustStoreProperties();
         properties.setProperty(SSL_TRUSTSTORE_TYPE, "notjks");
         instance.setProperties(properties);
         TrustManager[] trustManagers = null;
@@ -75,9 +98,46 @@ class OneWaySSLConfigTest {
             trustManagers = instance.getTrustManagers();
             fail("should have had a problem with the truststore type");
         } catch (Exception e) {
-
+            // expected
         }
         assertNull(trustManagers);
     }
 
+    @Test
+    void testGetEnabledProtocolsDefaultsWhenUnset() {
+        OneWaySSLConfig instance = new OneWaySSLConfig();
+        instance.setProperties(new Properties());
+
+        String[] protocols = instance.getEnabledProtocols();
+
+        assertNotNull(protocols);
+        assertEquals(AbstractSSLConfig.DEFAULT_PROTOCOL, protocols[0]);
+    }
+
+    @Test
+    void testGetEnabledProtocolsUsesJdkTlsClientProtocolsFallback() {
+        String existing = System.getProperty("jdk.tls.client.protocols");
+        System.setProperty("jdk.tls.client.protocols", "TLSv1.1:TLSv1.2");
+
+        try {
+            OneWaySSLConfig instance = new OneWaySSLConfig();
+            instance.setProperties(new Properties());
+
+            String[] protocols = instance.getEnabledProtocols();
+
+            assertArrayEquals(new String[]{"TLSv1.1", "TLSv1.2"}, protocols);
+        } finally {
+            if (existing == null) {
+                System.clearProperty("jdk.tls.client.protocols");
+            } else {
+                System.setProperty("jdk.tls.client.protocols", existing);
+            }
+        }
+    }
+
+    private Properties newTrustStoreProperties() {
+        Properties properties = new Properties();
+        properties.setProperty(SSL_TRUSTSTORE, FileUtils.getFile("keystore.jks").getAbsolutePath());
+        return properties;
+    }
 }

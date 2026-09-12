@@ -131,6 +131,20 @@ class JasyptDecrypterTest {
     }
 
     @Test
+    void testInitDecrypterWithBlankPasswordLeavesDecrypterUnset() {
+        JasyptDecrypter instance = preparedDecrypter(" ", ALGORITHM);
+        assertNull(instance.decrypter);
+        assertEquals(" ", instance.jasyptProperties.getProperty(JASYPT_PASSWORD));
+    }
+
+    @Test
+    void testInitDecrypterWithBlankAlgorithmUsesDefault() {
+        JasyptDecrypter instance = preparedDecrypter(PASSWORD, " ");
+        assertNotNull(instance.decrypter);
+        assertEquals("value", instance.doDecrypt("property", "RBSskx1057hdi1qWe0ugXg=="));
+    }
+
+    @Test
     void testInitWithCustomEncrypter() {
         JasyptDecrypter instance = decrypterWithFile(
             Options.JASYPT_STRING_ENCRYPTER, "org.jasypt.encryption.pbe.PooledPBEStringEncryptor");
@@ -219,25 +233,29 @@ class JasyptDecrypterTest {
         assertEquals("value", instance.doDecrypt("property", "RBSskx1057hdi1qWe0ugXg=="));
     }
 
+    private void assertDecryptReturnsOriginalValue(JasyptDecrypter instance, String value) {
+        assertEquals(value, instance.doDecrypt("property", value));
+    }
+
     @Test
     void testDoDecryptInvalidValueWithProperties() {
         JasyptDecrypter instance = preparedDecrypter(PASSWORD, ALGORITHM);
         String value = "RBSskx1057hdi1qWe0ugXg==xx";
-        assertEquals(value, instance.doDecrypt("property", value)); //should get original value if unable to decrypt
+        assertDecryptReturnsOriginalValue(instance, value);
     }
 
     @Test
     void testDoDecryptInvalidAlgorithmWithProperties() {
         JasyptDecrypter instance = preparedDecrypter(PASSWORD, ALGORITHM + "1");
         String value = "RBSskx1057hdi1qWe0ugXg==";
-        assertEquals(value, instance.doDecrypt("property", value)); //should get original value if unable to decrypt
+        assertDecryptReturnsOriginalValue(instance, value);
     }
 
     @Test
     void testDoDecryptInvalidPassphraseWithProperties() {
         JasyptDecrypter instance = preparedDecrypter(PASSWORD + "1", ALGORITHM);
         String value = "RBSskx1057hdi1qWe0ugXg==";
-        assertEquals(value, instance.doDecrypt("property", value)); //should get original value if unable to decrypt
+        assertDecryptReturnsOriginalValue(instance, value);
     }
 
     @Test

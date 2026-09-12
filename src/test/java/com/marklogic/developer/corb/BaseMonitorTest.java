@@ -18,12 +18,25 @@
  */
 package com.marklogic.developer.corb;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class BaseMonitorTest {
+
+    private BaseMonitor newMonitor() {
+        return new BaseMonitor(null);
+    }
+
+    private BaseMonitor newMonitor(int numTpsForEtc) {
+        Manager manager = mock(Manager.class);
+        TransformOptions options = new TransformOptions();
+        options.setNumTpsForETC(numTpsForEtc);
+        when(manager.getOptions()).thenReturn(options);
+        return new BaseMonitor(manager);
+    }
 
     @Test
     void formatTransactionsPerSecond() {
@@ -43,5 +56,49 @@ class BaseMonitorTest {
         assertEquals("543", BaseMonitor.formatTransactionsPerSecond(543.21, false));
         assertEquals("5432", BaseMonitor.formatTransactionsPerSecond(5432.1, false));
         assertEquals("54321", BaseMonitor.formatTransactionsPerSecond(54321, false));
+    }
+
+    @Test
+    void isZeroDetectsOnlyExactZero() {
+        assertTrue(BaseMonitor.isZero(0d));
+        assertFalse(BaseMonitor.isZero(0.0000001d));
+        assertFalse(BaseMonitor.isZero(-0.0000001d));
+    }
+
+    @Test
+    void calculateTransactionsPerSecondUsesIntervalDelta() {
+        assertEquals(3d, BaseMonitor.calculateTransactionsPerSecond(5, 2, 1000, 0), 0.0001d);
+        assertEquals(4d, BaseMonitor.calculateTransactionsPerSecond(4, 0, 1000, 0), 0.0001d);
+    }
+
+    @Test
+    void getEstimatedTimeCompletionHandlesZeroAndPausedValues() {
+        assertEquals("00:00:-1", BaseMonitor.getEstimatedTimeCompletion(100, 50, 0d, false));
+        assertEquals("00:00:-1 (paused)", BaseMonitor.getEstimatedTimeCompletion(100, 50, 0d, true));
+        assertEquals("00:00:50", BaseMonitor.getEstimatedTimeCompletion(100, 50, 1d, false));
+    }
+
+    @Test
+    void getProgressMessageIncludesFailureCount() {
+        String actual = BaseMonitor.getProgressMessage(10, 100, 4, 3, "00:00:15", 2, 2);
+        assertEquals("10/100, 2 tasks failed, 4 tps(avg), 3 tps(cur), ETC 00:00:15, 2 active threads.", actual);
+    }
+
+    @Test
+    void constructorUsesConfiguredNumberOfSamples() {
+        BaseMonitor monitor = newMonitor(3);
+        assertEquals(3, monitor.numTpsForEtc);
+        assertTrue(monitor.tpsForETCList.isEmpty());
+    }
+
+    @Test
+    void calculateTpsForEtcUsesSlidingWindowAndClearsOnPausedZero() {
+        BaseMonitor monitor = newMonitor(2);
+        assertEquals(1d, monitor.calculateTpsForETC(1d, false), 0.0001d);
+        assertEquals(1.5d, monitor.calculateTpsForETC(2d, false), 0.0001d);
+        assertEquals(2.5d, monitor.calculateTpsForETC(3d, false), 0.0001d);
+
+        monitor.calculateTpsForETC(0d, true);
+        assertTrue(monitor.tpsForETCList.isEmpty());
     }
 }

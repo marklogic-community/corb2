@@ -32,13 +32,23 @@ import java.util.Properties;
 import static com.marklogic.developer.corb.util.StringUtils.isNotEmpty;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;;
+import static org.mockito.Mockito.*;
 
 class JobBuilderServiceTest {
 
+    private JobBuilderService newService() {
+        return new JobBuilderService(null);
+    }
+
+    private Properties readProperties(String content) throws Exception {
+        Properties properties = new Properties();
+        properties.load(new StringReader(content));
+        return properties;
+    }
+
     @Test
     void buildMetadataJsonIncludesGroupedOptions() {
-        JobBuilderService service = new JobBuilderService(null);
+        JobBuilderService service = newService();
 
         String json = service.buildMetadataJson();
 
@@ -67,7 +77,7 @@ class JobBuilderServiceTest {
 
     @Test
     void reflectedBuilderCatalogIncludesAllSupportedPublicOptions() {
-        JobBuilderService service = new JobBuilderService(null);
+        JobBuilderService service = newService();
 
         int reflectedCount = 0;
         for (Field field : Options.class.getDeclaredFields()) {
@@ -92,7 +102,7 @@ class JobBuilderServiceTest {
 
     @Test
     void buildPropertiesFileMergesAdditionalPropertiesAndLetsUiValuesWin() throws Exception {
-        JobBuilderService service = new JobBuilderService(null);
+        JobBuilderService service = newService();
         Map<String, String> values = new HashMap<>();
         values.put(JobBuilderService.PARAM_ADDITIONAL_PROPERTIES, "CUSTOM-OPTION=true\nTHREAD-COUNT=2\nPROCESS-MODULE=/extra/process.xqy\n");
         values.put(Options.PROCESS_MODULE, "/main/process.xqy");
@@ -101,8 +111,7 @@ class JobBuilderServiceTest {
         values.put("UNSUPPORTED-FORM-OPTION", "ignored");
 
         String text = service.buildPropertiesFile(values);
-        Properties properties = new Properties();
-        properties.load(new StringReader(text));
+        Properties properties = readProperties(text);
 
         assertEquals("/main/process.xqy", properties.getProperty(Options.PROCESS_MODULE));
         assertEquals("8", properties.getProperty(Options.THREAD_COUNT));
@@ -112,8 +121,26 @@ class JobBuilderServiceTest {
     }
 
     @Test
+    void buildPropertiesFileIgnoresBlankSubmittedValues() throws Exception {
+        JobBuilderService service = newService();
+        Map<String, String> values = new HashMap<>();
+        values.put(Options.PROCESS_MODULE, "   ");
+        values.put(Options.THREAD_COUNT, "");
+        values.put(Options.JOB_NAME, "job-name");
+        values.put(JobBuilderService.PARAM_ADDITIONAL_PROPERTIES, "EXTRA-OPTION=present\nSECOND-OPTION=enabled");
+
+        Properties properties = readProperties(service.buildPropertiesFile(values));
+
+        assertFalse(properties.containsKey(Options.PROCESS_MODULE));
+        assertFalse(properties.containsKey(Options.THREAD_COUNT));
+        assertEquals("job-name", properties.getProperty(Options.JOB_NAME));
+        assertEquals("present", properties.getProperty("EXTRA-OPTION"));
+        assertEquals("enabled", properties.getProperty("SECOND-OPTION"));
+    }
+
+    @Test
     void resolveDownloadFilenameSanitizesPathAndAddsExtension() {
-        JobBuilderService service = new JobBuilderService(null);
+        JobBuilderService service = newService();
         Map<String, String> values = new HashMap<>();
         values.put(JobBuilderService.PARAM_DOWNLOAD_FILE_NAME, "../nightly-export");
 
@@ -135,14 +162,14 @@ class JobBuilderServiceTest {
 
     @Test
     void resolveDownloadFilenameWithBlankNameReturnsDefault() {
-        JobBuilderService service = new JobBuilderService(null);
+        JobBuilderService service = newService();
         assertEquals(JobBuilderService.DEFAULT_PROPERTIES_FILE_NAME,
             service.resolveDownloadFilename(Collections.emptyMap()));
     }
 
     @Test
     void resolveDownloadFilenameWithPropertiesExtensionNotDuplicated() {
-        JobBuilderService service = new JobBuilderService(null);
+        JobBuilderService service = newService();
         Map<String, String> values = new HashMap<>();
         values.put(JobBuilderService.PARAM_DOWNLOAD_FILE_NAME, "my-job.properties");
         assertEquals("my-job.properties", service.resolveDownloadFilename(values));
@@ -154,7 +181,7 @@ class JobBuilderServiceTest {
 
     @Test
     void launchJobWithNullLauncherThrowsIllegalState() {
-        JobBuilderService service = new JobBuilderService(null);
+        JobBuilderService service = newService();
         assertThrows(IllegalStateException.class, () -> service.launchJob(Collections.emptyMap()));
     }
 
@@ -166,6 +193,19 @@ class JobBuilderServiceTest {
         JobBuilderService.JobLaunchResult result = service.launchJob(Collections.emptyMap());
         assertEquals("j1", result.toJson().contains("\"jobId\":\"j1\"") ? "j1" : "");
         verify(launcher).launch(any());
+    }
+
+    @Test
+    void buildPropertiesFileWithNullValueSkipsProperty() throws Exception {
+        JobBuilderService service = newService();
+        Map<String, String> values = new HashMap<>();
+        values.put(Options.PROCESS_MODULE, null);
+        values.put(Options.JOB_NAME, "nullable-job");
+
+        Properties properties = readProperties(service.buildPropertiesFile(values));
+
+        assertFalse(properties.containsKey(Options.PROCESS_MODULE));
+        assertEquals("nullable-job", properties.getProperty(Options.JOB_NAME));
     }
 
     // -------------------------------------------------------------------------
@@ -200,7 +240,7 @@ class JobBuilderServiceTest {
     void escapePropertiesValueWithNullReturnsEmpty() throws Exception {
         Method method = JobBuilderService.class.getDeclaredMethod("escapePropertiesValue", String.class);
         method.setAccessible(true);
-        JobBuilderService service = new JobBuilderService(null);
+        JobBuilderService service = newService();
         assertEquals("", method.invoke(service, (String) null));
     }
 
@@ -208,7 +248,7 @@ class JobBuilderServiceTest {
     void escapePropertiesValueWithSpecialChars() throws Exception {
         Method method = JobBuilderService.class.getDeclaredMethod("escapePropertiesValue", String.class);
         method.setAccessible(true);
-        JobBuilderService service = new JobBuilderService(null);
+        JobBuilderService service = newService();
         assertEquals("\\\\", method.invoke(service, "\\"));
         assertEquals("\\n", method.invoke(service, "\n"));
         assertEquals("\\r", method.invoke(service, "\r"));
@@ -249,20 +289,17 @@ class JobBuilderServiceTest {
 
     @Test
     void buildPropertiesFileFallsBackToUnderscoreLowercaseParameterName() throws Exception {
-        JobBuilderService service = new JobBuilderService(null);
+        JobBuilderService service = newService();
         Map<String, String> values = new HashMap<>();
         // Use the lowercase hyphenated form; JobServer.getParameter does toLowerCase() lookup
         values.put("process-module", "/ext/fallback.xqy");
         values.put("thread-count", "4");
 
         String text = service.buildPropertiesFile(values);
-        Properties properties = new Properties();
-        properties.load(new StringReader(text));
-
+        Properties properties = readProperties(text);
         assertEquals("/ext/fallback.xqy", properties.getProperty(Options.PROCESS_MODULE));
         assertEquals("4", properties.getProperty(Options.THREAD_COUNT));
     }
-
     // -------------------------------------------------------------------------
     // buildPropertiesFile serialization ordering and additional properties
     // -------------------------------------------------------------------------

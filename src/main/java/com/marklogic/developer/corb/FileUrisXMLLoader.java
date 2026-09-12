@@ -259,7 +259,13 @@ public class FileUrisXMLLoader extends AbstractFileUrisLoader {
      */
     private Iterator<Node> readNodes(Path input) throws CorbException {
         String xpathRootNode = getProperty(XML_NODE);
+        if (isBlank(xpathRootNode)) {
+            xpathRootNode = null;
+        }
         String xpathMetadataNode = getProperty(XML_METADATA);
+        if (isBlank(xpathMetadataNode)) {
+            xpathMetadataNode = null;
+        }
         DocumentBuilderFactory dbFactory = XmlUtils.newSecureDocumentBuilderFactoryInstance();
         dbFactory.setNamespaceAware(true);
         try {

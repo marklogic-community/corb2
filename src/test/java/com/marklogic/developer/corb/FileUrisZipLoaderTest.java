@@ -68,20 +68,26 @@ class FileUrisZipLoaderTest {
 
     @Test
     void testOpen() {
-        List<String> nodes;
         try (FileUrisZipLoader instance = getDefaultFileUrisZipLoader()) {
             instance.open();
             assertNotNull(instance.zipFile);
-            nodes = new ArrayList<>();
-            while (instance.hasNext()) {
-                String output = instance.next();
-                if (output.contains(".pdf")) {
-                    assertTrue(output.contains("Portable Document Format Entry"));
-                }
-                nodes.add(output);
-            }
+            List<String> nodes = readAllEntries(instance);
             assertEquals(FileUrisDirectoryLoaderTest.TEST_ZIP_FILE_COUNT, nodes.size());
+            assertTrue(nodes.stream().anyMatch(output -> output.contains("Portable Document Format Entry")));
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
 
+    @Test
+    void testOpenSkipsDirectoriesAndLoadsOnlyFiles() {
+        try (FileUrisZipLoader instance = getDefaultFileUrisZipLoader()) {
+            instance.open();
+            assertTrue(instance.getTotalCount() > 0);
+            List<String> entries = readAllEntries(instance);
+            assertFalse(entries.stream().anyMatch(output -> output.contains("<directory")));
+            assertEquals(instance.getTotalCount(), entries.size());
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
@@ -108,14 +114,52 @@ class FileUrisZipLoaderTest {
         String pdfFilename = "docs/simple document.pdf";
         try (FileUrisZipLoader loader = new FileUrisZipLoader()) {
             try (ZipFile zipFile = new ZipFile(TEST_ZIP_FILE)) {
+                loader.zipFile = zipFile;
                 Map<String, String> metadata = loader.getMetadata(zipFile.getEntry(pdfFilename.replace("/", File.separator)));
                 assertEquals(PDF_COMMENT, metadata.get(FileUrisZipLoader.META_COMMENT));
                 assertEquals(pdfFilename.replace("/", File.separator), metadata.get(FileUrisZipLoader.META_FILENAME));
+                assertEquals(zipFile.getName(), metadata.get(FileUrisZipLoader.META_SOURCE));
             } catch (IOException ex) {
                 LOG.log(Level.SEVERE, null, ex);
                 fail();
             }
         }
+    }
+
+    @Test
+    void testGetMetadataWithoutCommentOmitsComment() {
+        try (FileUrisZipLoader loader = new FileUrisZipLoader()) {
+            try (ZipFile zipFile = new ZipFile(TEST_ZIP_FILE)) {
+                loader.zipFile = zipFile;
+                ZipEntry entry = zipFile.stream().filter(z -> !z.isDirectory() && !z.getName().endsWith(".pdf")).findFirst().orElse(null);
+                assertNotNull(entry);
+                Map<String, String> metadata = loader.getMetadata(entry);
+                assertFalse(metadata.containsKey(FileUrisZipLoader.META_COMMENT));
+                assertEquals(entry.getName(), metadata.get(FileUrisZipLoader.META_FILENAME));
+                assertEquals(zipFile.getName(), metadata.get(FileUrisZipLoader.META_SOURCE));
+            } catch (IOException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+                fail();
+            }
+        }
+    }
+
+    @Test
+    void testGetMetadataWithoutZipFileOmitsSource() {
+        try (FileUrisZipLoader loader = new FileUrisZipLoader()) {
+            Map<String, String> metadata = loader.getMetadata(new ZipEntry("docs/simple document.pdf"));
+            assertNull(metadata.get(FileUrisZipLoader.META_SOURCE));
+            assertEquals("docs/simple document.pdf", metadata.get(FileUrisZipLoader.META_FILENAME));
+            assertFalse(metadata.containsKey(FileUrisZipLoader.META_COMMENT));
+        }
+    }
+
+    private List<String> readAllEntries(FileUrisZipLoader instance) throws CorbException {
+        List<String> nodes = new ArrayList<>();
+        while (instance.hasNext()) {
+            nodes.add(instance.next());
+        }
+        return nodes;
     }
 
     public static FileUrisZipLoader getDefaultFileUrisZipLoader() {

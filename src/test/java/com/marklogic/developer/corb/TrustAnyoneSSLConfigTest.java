@@ -32,6 +32,8 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import static com.marklogic.developer.corb.Options.SSL_ENABLED_PROTOCOLS;
+import static com.marklogic.developer.corb.TestUtils.newProperties;
+import static com.marklogic.developer.corb.TestUtils.withSystemProperty;
 
 /**
  *
@@ -41,11 +43,18 @@ class TrustAnyoneSSLConfigTest {
 
     private static final Logger LOG = Logger.getLogger(TrustAnyoneSSLConfigTest.class.getName());
 
+    private TrustAnyoneSSLConfig newConfig() {
+        return new TrustAnyoneSSLConfig();
+    }
+
+    private static void clearJdkProtocols() {
+        System.clearProperty("jdk.tls.client.protocols");
+    }
+
     @Test
     void testGetSSLContext() {
         try {
-            TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
-            SSLContext result = instance.getSSLContext();
+            SSLContext result = newConfig().getSSLContext();
             assertNotNull(result);
         } catch (NoSuchAlgorithmException | KeyManagementException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -55,25 +64,23 @@ class TrustAnyoneSSLConfigTest {
 
     @Test
     void testGetEnabledCipherSuites() {
-        TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
-        String[] result = instance.getEnabledCipherSuites();
+        String[] result = newConfig().getEnabledCipherSuites();
         assertNotNull(result);
         assertEquals(0, result.length);
     }
 
     @Test
     void testGetEnabledProtocols() {
-        TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
-        String[] result = instance.getEnabledProtocols();
+        clearJdkProtocols();
+        String[] result = newConfig().getEnabledProtocols();
         assertNotNull(result);
         assertEquals(AbstractSSLConfig.DEFAULT_PROTOCOL, result[0]);
     }
 
     @Test
     void testGetEnabledProtocolsSSL_ENABLED_PROTOCOLS() {
-        TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
-        Properties properties = new Properties();
-        properties.setProperty(SSL_ENABLED_PROTOCOLS, "SSLv3");
+        Properties properties = newProperties(SSL_ENABLED_PROTOCOLS, "SSLv3");
+        TrustAnyoneSSLConfig instance = newConfig();
         instance.setProperties(properties);
         String[] result = instance.getEnabledProtocols();
         assertEquals("SSLv3", result[0]);
@@ -81,11 +88,21 @@ class TrustAnyoneSSLConfigTest {
 
     @Test
     void testGetEnabledProtocolsUsingJdkTlsClientProtocols() {
-        System.setProperty("jdk.tls.client.protocols", "foo");
-        TrustAnyoneSSLConfig instance = new TrustAnyoneSSLConfig();
-        String[] result = instance.getEnabledProtocols();
-        System.setProperty("jdk.tls.client.protocols", "");
-        assertEquals("foo", result[0]);
+        try {
+            withSystemProperty("jdk.tls.client.protocols", "foo", () -> {
+                String[] result = newConfig().getEnabledProtocols();
+                assertEquals("foo", result[0]);
+            });
+        } catch (Exception ex) {
+            fail(ex);
+        }
+    }
+
+    @Test
+    void testGetTrustManagers() {
+        TrustManager[] managers = newConfig().getTrustManagers();
+        assertEquals(1, managers.length);
+        assertInstanceOf(X509TrustManager.class, managers[0]);
     }
 
     // -------------------------------------------------------------------------
@@ -94,7 +111,7 @@ class TrustAnyoneSSLConfigTest {
     // -------------------------------------------------------------------------
 
     private X509TrustManager getTrustAnyoneManager() {
-        TrustManager[] managers = new TrustAnyoneSSLConfig().getTrustManagers();
+        TrustManager[] managers = newConfig().getTrustManagers();
         assertEquals(1, managers.length);
         assertInstanceOf(X509TrustManager.class, managers[0]);
         return (X509TrustManager) managers[0];

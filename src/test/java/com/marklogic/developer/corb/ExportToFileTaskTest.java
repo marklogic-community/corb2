@@ -25,6 +25,7 @@ import com.marklogic.xcc.ResultSequence;
 import com.marklogic.xcc.types.XdmItem;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,89 +60,77 @@ class ExportToFileTaskTest {
         clearSystemProperties();
     }
 
+    private ExportToFileTask newTaskWithUri(String... uris) {
+        ExportToFileTask task = new ExportToFileTask();
+        task.exportDir = tempFolder.toString();
+        task.setInputURI(uris);
+        return task;
+    }
+
+    private File writeResultFile(ResultSequence resultSequence, String... uris) {
+        ExportToFileTask task = newTaskWithUri(uris);
+        try {
+            task.writeToFile(resultSequence);
+            return new File(task.exportDir, task.getFileName());
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+            return null;
+        }
+    }
+
     @Test
     void testGetFileName() {
-        ExportToFileTask instance = new ExportToFileTask();
-        String expected = "https://github.com/marklogic-community/corb2";
-        String[] uri = {expected};
-        instance.setInputURI(uri);
-        String filename = instance.getFileName();
-        assertEquals(expected, filename);
+        ExportToFileTask instance = newTaskWithUri("https://github.com/marklogic-community/corb2");
+        assertEquals("https://github.com/marklogic-community/corb2", instance.getFileName());
     }
 
     @Test
     void testGetFileNameWithLeadingSlash() {
-        ExportToFileTask instance = new ExportToFileTask();
-        String expected = SLASH + FOO;
-        String[] uri = {expected};
-        instance.setInputURI(uri);
-        String filename = instance.getFileName();
-        assertEquals(FOO, filename);
+        ExportToFileTask instance = newTaskWithUri(SLASH + FOO);
+        assertEquals(FOO, instance.getFileName());
     }
 
     @Test
     void testGetFileNameWithoutSlashAndExportFileUriToPathFalse() {
-        ExportToFileTask instance = new ExportToFileTask();
+        ExportToFileTask instance = newTaskWithUri(FOO);
         instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(false));
-        String expected = FOO;
-        String[] uri = {expected};
-        instance.setInputURI(uri);
-        String filename = instance.getFileName();
-        assertEquals(expected, filename);
+        assertEquals(FOO, instance.getFileName());
     }
 
     @Test
     void testGetFileNameSlashAndExportFileUriToPathFalse() {
-        ExportToFileTask instance = new ExportToFileTask();
+        ExportToFileTask instance = newTaskWithUri(SLASH);
         instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(false));
-        String[] uri = {SLASH};
-        instance.setInputURI(uri);
-        String filename = instance.getFileName();
-        assertEquals("", filename);
+        assertEquals("", instance.getFileName());
     }
 
     @Test
     void testGetFileNameExportFileUriToPathFalse() {
-        ExportToFileTask instance = new ExportToFileTask();
+        ExportToFileTask instance = newTaskWithUri(SLASH + FOO + SLASH + FOO);
         instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(false));
-        String expected = SLASH + FOO + SLASH + FOO;
-        String[] uri = {expected};
-        instance.setInputURI(uri);
-        String filename = instance.getFileName();
-        assertEquals(FOO, filename);
+        assertEquals(FOO, instance.getFileName());
     }
 
     @Test
     void testGetFileNameSlashBookendExportFileUriToPathFalse() {
-        ExportToFileTask instance = new ExportToFileTask();
+        ExportToFileTask instance = newTaskWithUri(SLASH + FOO + SLASH);
         instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(false));
-        String expected = SLASH + FOO + SLASH;
-        String[] uri = {expected};
-        instance.setInputURI(uri);
-        String filename = instance.getFileName();
-        assertEquals(FOO + SLASH, filename);
+        assertEquals(FOO + SLASH, instance.getFileName());
     }
 
     @Test
     void testGetFileNameSlashBookendExportFileUriToPathTrue() {
-        ExportToFileTask instance = new ExportToFileTask();
+        ExportToFileTask instance = newTaskWithUri(SLASH + FOO + SLASH);
         instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(true));
-        String expected = SLASH + FOO + SLASH;
-        String[] uri = {expected};
-        instance.setInputURI(uri);
-        String filename = instance.getFileName();
-        assertEquals(FOO + SLASH, filename);
+        assertEquals(FOO + SLASH, instance.getFileName());
     }
 
     @Test
     void testGetFileNameTrailingSlashEmptyExportFileUriToPathTrue() {
-        ExportToFileTask instance = new ExportToFileTask();
+        ExportToFileTask instance = newTaskWithUri(FOO + SLASH);
         instance.properties.setProperty(Options.EXPORT_FILE_URI_TO_PATH, Boolean.toString(true));
-        String expected = FOO + SLASH;
-        String[] uri = {expected};
-        instance.setInputURI(uri);
-        String filename = instance.getFileName();
-        assertEquals(FOO + SLASH, filename);
+        assertEquals(FOO + SLASH, instance.getFileName());
     }
 
     @Test
@@ -151,9 +140,26 @@ class ExportToFileTaskTest {
     }
 
     @Test
+    void testGetExportFileCreatesParentDirectories() {
+        ExportToFileTask instance = new ExportToFileTask();
+        instance.exportDir = tempFolder.resolve("nested/path").toString();
+        File exportFile = instance.getExportFile("docs/example.txt");
+        assertTrue(exportFile.getParentFile().exists());
+        assertEquals(new File(instance.exportDir, "docs/example.txt"), exportFile);
+    }
+
+    @Test
+    void testWriteToExportFileIgnoresBlankContent() throws IOException {
+        ExportToFileTask instance = newTaskWithUri("/file.txt");
+        File exportFile = instance.getExportFile();
+        instance.writeToExportFile("   \n\t  ");
+        assertFalse(exportFile.exists());
+    }
+
+    @Test
     void testWriteToFileNullSequence() {
         ResultSequence seq = null;
-        File file = testWriteEmptyResults(seq);
+        File file = writeResultFile(seq, "/testFile");
         assertFalse(file.exists());
     }
 
@@ -161,7 +167,7 @@ class ExportToFileTaskTest {
     void testWriteToFileNoResults() {
         ResultSequence seq = mock(ResultSequence.class);
         when(seq.hasNext()).thenReturn(Boolean.FALSE);
-        File file = testWriteEmptyResults(seq);
+        File file = writeResultFile(seq, "/testFile");
         assertFalse(file.exists());
     }
 
@@ -170,28 +176,21 @@ class ExportToFileTaskTest {
         ResultSequence seq = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         XdmItem xdmItem = mock(XdmItem.class);
-        when(seq.hasNext()).thenReturn(Boolean.TRUE).thenReturn(Boolean.TRUE).thenReturn(Boolean.FALSE);
+        when(seq.hasNext()).thenReturn(Boolean.TRUE, Boolean.TRUE, Boolean.FALSE);
         when(seq.next()).thenReturn(resultItem);
         when(resultItem.getItem()).thenReturn(xdmItem);
         when(xdmItem.asString()).thenReturn("testWriteToFile");
-        File file = testWriteEmptyResults(seq);
+        File file = writeResultFile(seq, "/testFile");
         assertTrue(file.exists());
     }
 
-    public File testWriteEmptyResults(ResultSequence resultSequence) {
-        File file = null;
-        ExportToFileTask instance = new ExportToFileTask();
-        String[] uri = {"/testFile"};
-        try {
-            instance.exportDir = tempFolder.toString();
-            instance.setInputURI(uri);
-            instance.writeToFile(resultSequence);
-            file = new File(instance.exportDir, instance.getFileName());
-        } catch (IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            fail();
-        }
-        return file;
+    @Test
+    void testWriteToExportFileAppendsContent() throws IOException {
+        ExportToFileTask instance = newTaskWithUri("/testFile");
+        File exportFile = instance.getExportFile();
+        Files.write(exportFile.toPath(), "start\n".getBytes());
+        instance.writeToExportFile("tail");
+        assertEquals("start\ntail\n", new String(Files.readAllBytes(exportFile.toPath())));
     }
 
     @Test
@@ -231,7 +230,7 @@ class ExportToFileTaskTest {
         ResultSequence seq = mock(ResultSequence.class);
         ResultItem resultItem = mock(ResultItem.class);
         XdmItem item = mock(XdmItem.class);
-        when(seq.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(seq.hasNext()).thenReturn(true, true, false);
         when(seq.next()).thenReturn(resultItem);
         when(resultItem.getItem()).thenReturn(item);
         when(item.asString()).thenReturn("item");
@@ -272,7 +271,7 @@ class ExportToFileTaskTest {
     }
 
     @Test
-    void testInvokeModuleNoModuleNotRequired()  {
+    void testInvokeModuleNoModuleNotRequired() {
         ExportToFileTask exportToFileTask = new ExportToFileTask();
         exportToFileTask.properties.setProperty(Options.EXPORT_FILE_REQUIRE_PROCESS_MODULE, "false");
         try {

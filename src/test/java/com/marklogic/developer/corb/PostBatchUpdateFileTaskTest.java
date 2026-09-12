@@ -90,6 +90,25 @@ class PostBatchUpdateFileTaskTest {
     }
 
     @Test
+    void testGetComparatorClsRejectsNonComparatorClass() {
+        PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+        assertThrows(IllegalArgumentException.class, () -> instance.getComparatorCls(String.class.getName()));
+    }
+
+    @Test
+    void testSortAndRemoveDuplicatesDoesNothingWithoutSortConfig() throws IOException {
+        File file = createSampleFile(".txt");
+        String original = readFile(file);
+        PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
+        instance.properties = new Properties();
+        instance.properties.setProperty(EXPORT_FILE_NAME, file.getAbsolutePath());
+
+        instance.sortAndRemoveDuplicates(file);
+
+        assertEqualsNormalizeNewline(original, readFile(file));
+    }
+
+    @Test
     void testWriteBottomContent() {
         try {
             String expectedResult = BOTTOM_CONTENT.concat("\n");
@@ -968,16 +987,7 @@ class PostBatchUpdateFileTaskTest {
             PostBatchUpdateFileTask instance = new PostBatchUpdateFileTask();
             instance.setProperties(props);
 
-            // Create a mock ResultSequence with 5 items
-            ResultSequence seq = mock(ResultSequence.class);
-            ResultItem item = mock(ResultItem.class);
-            XdmItem xdmItem = mock(XdmItem.class);
-
-            //Need one extra hasNext() because it's tested first in writeToFile(seq)
-            when(seq.hasNext()).thenReturn(true, true, true, true, true, true,  false);
-            when(seq.next()).thenReturn(item);
-            when(item.getItem()).thenReturn(xdmItem);
-            when(xdmItem.asString()).thenReturn("line1", "line2", "line3", "line4", "line5");
+            ResultSequence seq = mockResultSequence("line1", "line2", "line3", "line4", "line5");
             instance.writeToFile(seq, instance.getExportFile());
 
             instance.writeBottomContent();
@@ -1008,6 +1018,21 @@ class PostBatchUpdateFileTaskTest {
                 FileUtils.deleteQuietly(tempDir.toPath());
             }
         }
+    }
+
+    private ResultSequence mockResultSequence(String... lines) {
+        ResultSequence seq = mock(ResultSequence.class);
+        ResultItem item = mock(ResultItem.class);
+        XdmItem xdmItem = mock(XdmItem.class);
+        when(seq.hasNext()).thenReturn(true, true, true, true, true, true, false);
+        when(seq.next()).thenReturn(item);
+        when(item.getItem()).thenReturn(xdmItem);
+        if (lines.length == 1) {
+            when(xdmItem.asString()).thenReturn(lines[0]);
+        } else {
+            when(xdmItem.asString()).thenReturn(lines[0], Arrays.copyOfRange(lines, 1, lines.length));
+        }
+        return seq;
     }
 
     private File createSampleFile() throws IOException {

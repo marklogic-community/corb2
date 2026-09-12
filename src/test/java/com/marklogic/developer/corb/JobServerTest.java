@@ -20,6 +20,7 @@ package com.marklogic.developer.corb;
 
 import com.marklogic.developer.TestHandler;
 import com.marklogic.developer.corb.util.IOUtils;
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,6 +45,18 @@ class JobServerTest {
     private final TestHandler testLogger = new TestHandler();
     private static final Logger JOBSERVER_LOGGER = Logger.getLogger(JobServer.class.getName());
 
+    private static HttpURLConnection openConnection(String url, String method) throws IOException {
+        HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+        conn.setRequestMethod(method);
+        return conn;
+    }
+
+    private static String readBody(HttpURLConnection conn) throws IOException {
+        try (InputStream inputStream = conn.getInputStream()) {
+            return new String(IOUtils.toByteArray(inputStream), StandardCharsets.UTF_8);
+        }
+    }
+
     @BeforeEach
     void setUp() {
         JOBSERVER_LOGGER.addHandler(testLogger);
@@ -53,56 +66,31 @@ class JobServerTest {
     void testCreateAndGet() {
         int port = 9995;
         String localhostUrl = "http://localhost:" + port;
-        String GET = "GET";
         try {
             JobServer server = JobServer.create(port);
             assertNotNull(server);
             server.start();
 
-            //request to base URL for job page
-            URL url = new URL(localhostUrl );
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod(GET);
-            byte[] content = null;
-            try (InputStream inputStream = conn.getInputStream()) {
-                content = IOUtils.toByteArray(inputStream);
-                assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-                assertNotNull(content);
-                String contentString = new String(content, StandardCharsets.UTF_8);
-                assertTrue(contentString.contains("Options Builder"));
-                assertTrue(contentString.contains("options-builder-content"));
-                assertTrue(contentString.contains("toggleBuilderDescription(option.name)"));
-                assertTrue(contentString.contains(":title=\"option.description || ''\""));
-            }
+            HttpURLConnection conn = openConnection(localhostUrl, "GET");
+            String contentString = readBody(conn);
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+            assertTrue(contentString.contains("Options Builder"));
+            assertTrue(contentString.contains("options-builder-content"));
+            assertTrue(contentString.contains("toggleBuilderDescription(option.name)"));
+            assertTrue(contentString.contains(":title=\"option.description || ''\""));
 
-            url = new URL(localhostUrl + '/');
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod(GET);
-            try (InputStream inputStream = conn.getInputStream()) {
-                content = IOUtils.toByteArray(inputStream);
-                assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-                assertNotNull(content);
-            }
+            conn = openConnection(localhostUrl + '/', "GET");
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+            assertNotNull(readBody(conn));
 
-            // ensure that base path (without extension) gets a response
-            url = new URL(localhostUrl +  JobServer.METRICS_PATH);
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod(GET);
-            try (InputStream inputStream = conn.getInputStream()) {
-                content = IOUtils.toByteArray(inputStream);
-                assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-                assertNotNull(content);
-            }
-            //verify that invalid paths result in 403
-            url = new URL(localhostUrl + "/DoesNotExist");
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod(GET);
+            conn = openConnection(localhostUrl + JobServer.METRICS_PATH, "GET");
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+            assertNotNull(readBody(conn));
+
+            conn = openConnection(localhostUrl + "/DoesNotExist", "GET");
             assertEquals(HttpURLConnection.HTTP_FORBIDDEN, conn.getResponseCode());
 
-            //verify that invalid paths result in 404
-            url = new URL(localhostUrl + "/DoesNotExist.html");
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod(GET);
+            conn = openConnection(localhostUrl + "/DoesNotExist.html", "GET");
             assertEquals(HttpURLConnection.HTTP_NOT_FOUND, conn.getResponseCode());
 
             server.stop(0);
@@ -151,6 +139,13 @@ class JobServerTest {
     }
 
     @Test
+    void testAddManagerWithNullIgnoresValue() throws Exception {
+        JobServer server = JobServer.create(9997);
+        assertDoesNotThrow(() -> server.addManager(null));
+        server.stop(0);
+    }
+
+    @Test
     void testOptionsBuilderMetadataAndPropertiesEndpoints() throws Exception {
         int port = 9994;
         String localhostUrl = "http://localhost:" + port;
@@ -158,32 +153,24 @@ class JobServerTest {
         server.start();
 
         try {
-            URL url = new URL(localhostUrl + JobBuilderHandler.BUILDER_METADATA_PATH);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            try (InputStream inputStream = conn.getInputStream()) {
-                String metadata = new String(IOUtils.toByteArray(inputStream), StandardCharsets.UTF_8);
+            HttpURLConnection conn = openConnection(localhostUrl + JobBuilderHandler.BUILDER_METADATA_PATH, "GET");
+            String metadata = readBody(conn);
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+            assertTrue(metadata.contains("\"groups\""));
+            assertTrue(metadata.contains("XCC-CONNECTION-URI"));
 
-                assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-                assertTrue(metadata.contains("\"groups\""));
-                assertTrue(metadata.contains("XCC-CONNECTION-URI"));
-            }
-            url = new URL(localhostUrl + JobBuilderHandler.BUILDER_PROPERTIES_PATH);
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
+            conn = openConnection(localhostUrl + JobBuilderHandler.BUILDER_PROPERTIES_PATH, "POST");
             conn.setDoOutput(true);
             conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
             try (OutputStream out = conn.getOutputStream()) {
                 out.write((Options.PROCESS_MODULE + "=%2Fext%2Fprocess.xqy&" + JobBuilderService.PARAM_ADDITIONAL_PROPERTIES + "=CUSTOM-OPTION%3Dtrue").getBytes(StandardCharsets.UTF_8));
             }
-            try (InputStream inputStream = conn.getInputStream()) {
-                String properties = new String(IOUtils.toByteArray(inputStream), StandardCharsets.UTF_8);
-                assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-                assertEquals("text/plain; charset=utf-8", conn.getHeaderField(JobServer.HEADER_CONTENT_TYPE));
-                assertTrue(conn.getHeaderField("Content-Disposition").contains("corb-job.properties"));
-                assertTrue(properties.contains("PROCESS-MODULE=/ext/process.xqy"));
-                assertTrue(properties.contains("CUSTOM-OPTION=true"));
-            }
+            String properties = readBody(conn);
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+            assertEquals("text/plain; charset=utf-8", conn.getHeaderField(JobServer.HEADER_CONTENT_TYPE));
+            assertTrue(conn.getHeaderField("Content-Disposition").contains("corb-job.properties"));
+            assertTrue(properties.contains("PROCESS-MODULE=/ext/process.xqy"));
+            assertTrue(properties.contains("CUSTOM-OPTION=true"));
         } finally {
             server.stop(0);
         }
@@ -295,10 +282,39 @@ class JobServerTest {
     }
 
     @Test
+    void testHasParameterAndGetParameterAreCaseInsensitive() {
+        Map<String, String> params = new HashMap<>();
+        params.put("FORMAT", "xml");
+
+        assertTrue(JobServer.hasParameter(params, "format"));
+        assertEquals("xml", JobServer.getParameter(params, "format"));
+        assertEquals("xml", JobServer.getParameter(params, "FORMAT"));
+    }
+
+    @Test
     void testDetermineContentTypeReturnsMimeXml() {
         Map<String, String> params = new HashMap<>();
         params.put(JobServicesHandler.PARAM_FORMAT, "xml");
         assertEquals(JobServer.MIME_XML, JobServer.determineContentType(params));
+    }
+
+    @Test
+    void testDetermineContentTypeDefaultsToJson() {
+        assertEquals(JobServer.MIME_JSON, JobServer.determineContentType(Collections.emptyMap()));
+    }
+
+    @Test
+    void testAllowXssAddsCorsHeaders() {
+        HttpExchange exchange = mock(HttpExchange.class);
+        Headers headers = new Headers();
+        when(exchange.getResponseHeaders()).thenReturn(headers);
+
+        JobServer.allowXSS(exchange);
+
+        assertEquals("*", headers.getFirst("Access-Control-Allow-Origin"));
+        assertEquals("GET,POST", headers.getFirst("Access-Control-Allow-Methods"));
+        assertEquals("3600", headers.getFirst("Access-Control-Max-Age"));
+        assertEquals(JobServer.HEADER_CONTENT_TYPE, headers.getFirst("Access-Control-Allow-Headers"));
     }
 
     // -------------------------------------------------------------------------

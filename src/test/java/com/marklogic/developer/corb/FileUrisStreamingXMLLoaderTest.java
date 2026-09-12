@@ -84,6 +84,37 @@ class FileUrisStreamingXMLLoaderTest {
     }
 
     @Test
+    void testOpenUsesDefaultXPathWhenNodeIsBlank() {
+        FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
+        loader.properties.setProperty(Options.XML_NODE, "   ");
+        try {
+            loader.open();
+            assertEquals(BUU_CHILD_ELEMENTS, loader.getTotalCount());
+            assertTrue(loader.hasNext());
+            for (int i = 0; i < BUU_CHILD_ELEMENTS; i++) {
+                assertNotNull(loader.next());
+            }
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
+    void testOpenIgnoresBlankMetadataXPath() {
+        FileUrisStreamingXMLLoader loader = getDefaultLargeFileUrisXMLLoader();
+        loader.properties.setProperty(Options.XML_METADATA, "   ");
+        try {
+            loader.open();
+            assertNull(loader.customMetadata);
+            assertEquals(BUU_CHILD_ELEMENTS, loader.getTotalCount());
+        } catch (CorbException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            fail();
+        }
+    }
+
+    @Test
     void testOpenUnindentedDefaultXPath() {
         testOpen(getUnindentedFileUrisXMLLoader(), "/*/*", 7);
     }
@@ -146,19 +177,23 @@ class FileUrisStreamingXMLLoaderTest {
             loader.properties.setProperty(Options.XML_NODE, XPath);
         }
         if (metaXPath != null) {
-            loader.properties.setProperty(Options.XML_METADATA, XPath);
+            loader.properties.setProperty(Options.XML_METADATA, metaXPath);
         }
         try {
             loader.open();
             assertEquals(expectedItems, loader.getTotalCount());
             assertTrue(loader.hasNext());
-            for (int i = 0; i < expectedItems; i++) {
-                assertNotNull(loader.next());
-            }
+            assertAllLoaded(loader, expectedItems);
             loader.close();
         } catch (CorbException ex) {
             LOG.log(Level.SEVERE, null, ex);
             fail();
+        }
+    }
+
+    private void assertAllLoaded(FileUrisStreamingXMLLoader loader, int expectedItems) throws CorbException {
+        for (int i = 0; i < expectedItems; i++) {
+            assertNotNull(loader.next());
         }
     }
 

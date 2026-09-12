@@ -119,6 +119,40 @@ class FileUrisJSONLoaderTest {
         }
     }
 
+    @Test
+    void openRejectsMissingJsonFile() {
+        try (FileUrisJSONLoader loader = newLoader("src/test/resources/does-not-exist.json", null, null, false)) {
+            assertThrows(CorbException.class, loader::open);
+        }
+    }
+
+    @Test
+    void nextReturnsNullAfterExhaustion() throws Exception {
+        try (FileUrisJSONLoader loader = newLoader(null, null, false)) {
+            loader.open();
+            assertEquals(3, readAll(loader).size());
+            assertEquals(null, loader.next());
+        }
+    }
+
+    @Test
+    void closeClearsExtractedValuesAndMetadata() throws Exception {
+        try (FileUrisJSONLoader loader = newLoader("/items/*", "/metadata", false)) {
+            loader.open();
+            assertTrue(loader.hasNext());
+            assertEquals(3, loader.extractedValues.size());
+            assertTrue(loader.customMetadata.contains("\"source\": \"sample\""));
+
+            loader.close();
+
+            assertFalse(loader.hasNext());
+            assertTrue(loader.extractedValues.isEmpty());
+            assertEquals(0, loader.index);
+            assertTrue(loader.customMetadata == null || loader.customMetadata.isEmpty());
+            assertTrue(loader.jsonFile == null);
+        }
+    }
+
     private FileUrisJSONLoader newLoader(String nodeExpression, String metadataExpression, boolean useEnvelope) {
         return newLoader(SAMPLE_JSON, nodeExpression, metadataExpression, useEnvelope);
     }

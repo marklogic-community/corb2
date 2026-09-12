@@ -345,6 +345,82 @@ class ModuleExecutorTest {
     }
 
     @Test
+    void testProcessResultReturnsTrueWhenResultsAreWritten() throws CorbException {
+        ModuleExecutor executor = new ModuleExecutor();
+        ResultSequence seq = mock(ResultSequence.class);
+        when(seq.hasNext()).thenReturn(false);
+
+        assertEquals("true", executor.processResult(seq));
+    }
+
+    @Test
+    void testWriteToFileSkipsWhenExportFileNameIsBlank() throws IOException {
+        File tempDir = TestUtils.createTempDirectory();
+        ModuleExecutor executor = createExecutorWithExport(tempDir.getAbsolutePath(), "");
+        ResultSequence seq = mock(ResultSequence.class);
+        when(seq.hasNext()).thenReturn(true, false);
+        ResultItem item = mock(ResultItem.class);
+        XdmItem xdmItem = mock(XdmItem.class);
+        when(seq.next()).thenReturn(item);
+        when(item.getItem()).thenReturn(xdmItem);
+        when(xdmItem.asString()).thenReturn("hello");
+
+        executor.writeToFile(seq);
+
+        File[] children = tempDir.listFiles();
+        assertNotNull(children);
+        assertEquals(0, children.length);
+    }
+
+    @Test
+    void testWriteToFileCreatesParentDirectoryAndWritesResults() throws IOException {
+        clearSystemProperties();
+        File tempDir = TestUtils.createTempDirectory();
+        ModuleExecutor executor = createExecutorWithExport(tempDir.getAbsolutePath(), "nested/deep/report.txt");
+        ResultSequence seq = mock(ResultSequence.class);
+        when(seq.hasNext()).thenReturn(true, false);
+        ResultItem item = mock(ResultItem.class);
+        XdmItem xdmItem = mock(XdmItem.class);
+        when(seq.next()).thenReturn(item);
+        when(item.getItem()).thenReturn(xdmItem);
+        when(xdmItem.asString()).thenReturn("hello");
+
+        executor.writeToFile(seq);
+
+        File output = new File(tempDir, "nested/deep/report.txt");
+        assertTrue(output.exists());
+        assertTrue(output.getParentFile().isDirectory());
+    }
+
+    @Test
+    void testGetPropertyPrefersSystemValueOverPropertiesFile() {
+        clearSystemProperties();
+        String key = "custom.property";
+        String value = "system-value";
+        System.clearProperty(key);
+        System.setProperty(key, value);
+        ModuleExecutor executor = new ModuleExecutor();
+        executor.properties = new Properties();
+        executor.properties.setProperty(key, "file-value");
+
+        assertEquals(value, executor.getProperty(key));
+        System.clearProperty(key);
+    }
+
+    @Test
+    void testGetPropertyUsesPropertiesFileWhenSystemValueBlank() {
+        clearSystemProperties();
+        String key = "custom.property";
+        System.clearProperty(key);
+        ModuleExecutor executor = new ModuleExecutor();
+        executor.properties = new Properties();
+        executor.properties.setProperty(key, "file-value");
+
+        assertEquals("file-value", executor.getProperty(key));
+        System.clearProperty(key);
+    }
+
+    @Test
     void testRun1() {
         clearSystemProperties();
         System.setProperty(Options.OPTIONS_FILE, OPTIONS_FILE);
@@ -451,6 +527,14 @@ class ModuleExecutorTest {
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
+    }
+
+    private ModuleExecutor createExecutorWithExport(String exportDir, String exportFileName) {
+        ModuleExecutor executor = new ModuleExecutor();
+        executor.properties = new Properties();
+        executor.properties.setProperty(Options.EXPORT_FILE_DIR, exportDir);
+        executor.properties.setProperty(Options.EXPORT_FILE_NAME, exportFileName);
+        return executor;
     }
 
     private Properties getProperties() {

@@ -53,6 +53,22 @@ class JobStatsTest {
     private static final String BAR = "bar";
     private static final String METRICS_DB = "metricsDB";
 
+    private Manager managerWithOptions(TransformOptions options) {
+        Manager manager = mock(Manager.class);
+        when(manager.getOptions()).thenReturn(options != null ? options : new TransformOptions());
+        return manager;
+    }
+
+    private Document newDocument() throws ParserConfigurationException {
+        return XmlUtils.newSecureDocumentBuilderFactoryInstance().newDocumentBuilder().newDocument();
+    }
+
+    private Element newParentElement(Document doc) {
+        Element parent = doc.createElement("parent");
+        doc.appendChild(parent);
+        return parent;
+    }
+
     @Test
     void testGetAverageTransactionTimeNoCompletedTasks() {
         Manager manager = mock(Manager.class);
@@ -618,28 +634,51 @@ class JobStatsTest {
 
     @Test
     void testCreateAndAppendElementWithNullLong() throws ParserConfigurationException {
-        Document doc = XmlUtils.newSecureDocumentBuilderFactoryInstance().newDocumentBuilder().newDocument();
-        Element parent = doc.createElement("parent");
-        doc.appendChild(parent);
-        Manager manager = mock(Manager.class);
-        when(manager.getOptions()).thenReturn(new TransformOptions());
-        JobStats jobStats = new JobStats(manager);
+        Document doc = newDocument();
+        Element parent = newParentElement(doc);
+        JobStats jobStats = new JobStats(managerWithOptions(new TransformOptions()));
         jobStats.createAndAppendElement(parent, "a", (Long) null); // null → skip
         assertEquals(0, parent.getChildNodes().getLength());
     }
 
     @Test
+    void testCreateAndAppendElementWithPositiveLongAndDouble() throws ParserConfigurationException {
+        Document doc = newDocument();
+        Element parent = newParentElement(doc);
+        JobStats jobStats = new JobStats(managerWithOptions(new TransformOptions()));
+
+        jobStats.createAndAppendElement(parent, "positiveLong", 5L);
+        jobStats.createAndAppendElement(parent, "positiveDouble", 2.5d);
+
+        assertEquals(2, parent.getChildNodes().getLength());
+        assertEquals("5", parent.getElementsByTagNameNS(JobStats.CORB_NAMESPACE, "positiveLong").item(0).getTextContent());
+        assertEquals("2.5", parent.getElementsByTagNameNS(JobStats.CORB_NAMESPACE, "positiveDouble").item(0).getTextContent());
+    }
+
+    @Test
     void testCreateAndAppendElementWithNullAndNegativeDouble() throws ParserConfigurationException {
-        Document doc = XmlUtils.newSecureDocumentBuilderFactoryInstance().newDocumentBuilder().newDocument();
-        Element parent = doc.createElement("parent");
-        doc.appendChild(parent);
-        Manager manager = mock(Manager.class);
-        when(manager.getOptions()).thenReturn(new TransformOptions());
-        JobStats jobStats = new JobStats(manager);
+        Document doc = newDocument();
+        Element parent = newParentElement(doc);
+        JobStats jobStats = new JobStats(managerWithOptions(new TransformOptions()));
         jobStats.createAndAppendElement(parent, "a", (Double) null); // null → skip
         assertEquals(0, parent.getChildNodes().getLength());
         jobStats.createAndAppendElement(parent, "b", -1.0); // negative → skip
         assertEquals(0, parent.getChildNodes().getLength());
+    }
+
+    @Test
+    void testCreateJobElementOmitsUserProvidedOptionsInConciseMode() {
+        Manager manager = new Manager();
+        manager.options = new TransformOptions();
+        Map<String, String> userProvidedOptions = new LinkedHashMap<>();
+        userProvidedOptions.put("PROCESS-MODULE", "transform.xqy|ADHOC");
+        manager.setUserProvidedOptions(userProvidedOptions);
+
+        JobStats jobStats = new JobStats(manager);
+        Document doc = jobStats.toXML(true);
+
+        assertNotNull(doc);
+        assertEquals(0, doc.getDocumentElement().getElementsByTagNameNS(JobStats.CORB_NAMESPACE, "userProvidedOptions").getLength());
     }
 
     // -------------------------------------------------------------------------

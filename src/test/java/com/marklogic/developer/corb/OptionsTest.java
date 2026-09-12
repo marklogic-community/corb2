@@ -18,17 +18,30 @@
  */
 package com.marklogic.developer.corb;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Modifier;
 import java.util.Properties;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
  * @author Mads Hansen, MarkLogic Corporation
  */
 class OptionsTest {
+
+    @BeforeEach
+    void setUp() {
+        clearOptionVariants("PROCESS-MODULE", "PROCESS_MODULE");
+    }
+
+    @AfterEach
+    void tearDown() {
+        clearOptionVariants("PROCESS-MODULE", "PROCESS_MODULE");
+    }
 
     /**
      * Ensure that each Option has a @Usage annotation, used to generate commandline usage message
@@ -55,31 +68,51 @@ class OptionsTest {
 
     @Test
     void testFindOption() {
-        String key = "foo";
-        String value = "value";
-        Properties properties = new Properties();
-        properties.setProperty(key, value);
-        assertEquals(value, Options.findOption(properties, "foo"));
+        assertEquals("value", Options.findOption(propertiesWith("foo", "value"), "foo"));
     }
 
     @Test
     void testFindOptionWithEmptyStringValue() {
-        String key = "foo";
-        String value = "";
-        Properties properties = new Properties();
-        properties.setProperty(key, value);
-        assertEquals(value, Options.findOption(properties, "foo"));
+        assertEquals("", Options.findOption(propertiesWith("foo", ""), "foo"));
     }
 
     @Test
     void testFindOptionMissing() {
-        Properties properties = new Properties();
-        assertNull(Options.findOption(properties, "foo"));
+        assertNull(Options.findOption(new Properties(), "foo"));
     }
 
     @Test
     void testFindOptionNullKey() {
+        assertNull(Options.findOption(new Properties(), null));
+    }
+
+    @Test
+    void testFindOptionMatchesKebabAndSnakeCaseVariants() {
+        Properties properties = propertiesWith("PROCESS_MODULE", "from-property-file");
+
+        assertEquals("from-property-file", Options.findOption(properties, "PROCESS-MODULE"));
+        assertEquals("from-property-file", Options.findOption(properties, "PROCESS_MODULE"));
+    }
+
+    @Test
+    void testFindOptionPrefersSystemPropertyOverPropertiesFile() {
+        Properties properties = propertiesWith("PROCESS_MODULE", "from-property-file");
+        System.setProperty("PROCESS-MODULE", "from-system");
+
+        assertEquals("from-system", Options.findOption(properties, "PROCESS-MODULE"));
+    }
+
+    private Properties propertiesWith(String key, String value) {
         Properties properties = new Properties();
-        assertNull(Options.findOption(properties, null));
+        properties.setProperty(key, value);
+        return properties;
+    }
+
+    private void clearOptionVariants(String... optionNames) {
+        for (String optionName : optionNames) {
+            System.clearProperty(optionName);
+            System.clearProperty(optionName.replace("-", "_"));
+            System.clearProperty(optionName.replace("_", "-"));
+        }
     }
 }
