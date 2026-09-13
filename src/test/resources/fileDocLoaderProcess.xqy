@@ -10,27 +10,24 @@ declare variable $DOC as document-node() external;
 declare function local:decode($content)
     as document-node()
 {
-    let $binary := binary { xs:hexBinary(xs:base64Binary($content)) }
-    (: use the content-type to help determine if the base64 content is binary or parsable text :)
-    let $content-type := xdmp:document-filter($binary)/*/*/*:meta[@name="content-type"]/@content
-    return
-      if (starts-with($content-type,"text/")) then
+     try {
         let $decoded := xdmp:base64-decode($content)
         return
           try {
             (: XML or JSON :)
             xdmp:unquote($decoded)
           } catch ($e2) {
-            if ($content-type eq "text/html") then
+            try {
               (: produce well-formed HTML elements :)
               xdmp:unquote($decoded, (), ("format-xml", "repair-full"))
-            else
+            } catch($e2) {
               xdmp:unquote($decoded, (), "format-text")
-          }
-      else
-        document { $binary }
+            }
+         }
+     } catch ($e1) {
+       document { binary { xs:hexBinary(xs:base64Binary($content)) } }
+     }
 };
-
 
 let $content := $DOC/*/content
 (: either decode the base64 encoded string, or select the XML content :)
