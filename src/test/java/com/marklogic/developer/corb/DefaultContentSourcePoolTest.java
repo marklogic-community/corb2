@@ -250,6 +250,7 @@ class DefaultContentSourcePoolTest {
     void testError() {
         clearSystemProperties();
         try (DefaultContentSourcePool contentSourcePool = initRoundRobinPool()) {
+            contentSourcePool.shouldRenewContentSource = false;
             //we started with 3
             assertEquals(3, contentSourcePool.getAllContentSources().length);
             IntStream.rangeClosed(1, 3).forEach(x -> {
@@ -316,6 +317,65 @@ class DefaultContentSourcePoolTest {
         contentSourcePool.errorTimeForContentSource.put(contentSource, 200L);
         contentSourcePool.error(contentSource, 150L);
         assertEquals(1L, contentSourcePool.errorCount(contentSource));
+    }
+
+    @Test
+    void testErrorReplacesContentSourceAtHostRetryLimitEvenWithSameIp() {
+        ContentSource original = mock(ContentSource.class);
+        ContentSource replacement = mock(ContentSource.class);
+        when(original.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8000));
+        when(replacement.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8000));
+        DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool() {
+            @Override
+            protected ContentSource createFreshContentSource(String connectionString) {
+                assertEquals(localhostXccUri, connectionString);
+                assertFalse(Thread.holdsLock(this));
+                return replacement;
+            }
+        };
+        contentSourcePool.shouldRenewContentSource = true;
+        contentSourcePool.hostRetryLimit = 0;
+        contentSourcePool.addContentSource(original, localhostXccUri);
+
+        contentSourcePool.error(original);
+
+        assertArrayEquals(new ContentSource[]{replacement}, contentSourcePool.getAllContentSources());
+        assertEquals(localhostXccUri, contentSourcePool.connectionStringForContentSource.get(replacement));
+        assertFalse(contentSourcePool.connectionStringForContentSource.containsKey(original));
+    }
+
+    @Test
+    void testErrorRetainsContentSourceWhenRefreshFails() {
+        ContentSource original = mock(ContentSource.class);
+        when(original.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8000));
+        DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool() {
+            @Override
+            protected ContentSource createFreshContentSource(String connectionString) {
+                return null;
+            }
+        };
+        contentSourcePool.shouldRenewContentSource = true;
+        contentSourcePool.hostRetryLimit = 0;
+        contentSourcePool.addContentSource(original, localhostXccUri);
+
+        contentSourcePool.error(original);
+
+        assertArrayEquals(new ContentSource[]{original}, contentSourcePool.getAllContentSources());
+        assertEquals(localhostXccUri, contentSourcePool.connectionStringForContentSource.get(original));
+    }
+
+    @Test
+    void testErrorRemovesContentSourceWhenRenewalIsDisabled() {
+        ContentSource original = mock(ContentSource.class);
+        when(original.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8000));
+        DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool();
+        contentSourcePool.shouldRenewContentSource = false;
+        contentSourcePool.hostRetryLimit = 0;
+        contentSourcePool.addContentSource(original, localhostXccUri);
+
+        contentSourcePool.error(original);
+
+        assertFalse(contentSourcePool.available());
     }
 
     @Test
@@ -599,6 +659,7 @@ class DefaultContentSourcePoolTest {
 		System.setProperty(CONNECTION_POLICY, CONNECTION_POLICY_LOAD);
 		try (DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool()) {
             contentSourcePool.init(null, null, "xcc://foo:bar@192.168.0.1:8001", "xcc://foo:bar@192.168.0.2:8002");
+            contentSourcePool.shouldRenewContentSource = false;
             ContentSource[] contentSourceList = contentSourcePool.getAllContentSources();
             assertEquals(2, contentSourceList.length);
             assertHostAndPort(contentSourcePool.get(), localIP1, 8001);

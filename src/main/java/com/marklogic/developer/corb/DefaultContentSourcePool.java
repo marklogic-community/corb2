@@ -308,7 +308,7 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
      * @param contentSource the ContentSource to add
      * @param connectionString the original connection string
      */
-    protected void addContentSource(ContentSource contentSource, String connectionString) {
+    protected synchronized void addContentSource(ContentSource contentSource, String connectionString) {
         LOG.log(INFO, String.format("Adding new ContentSource for %s with IP %s", asString(contentSource), getIPAddress(contentSource)));
         contentSources.add(contentSource);
         connectionStringForContentSource.put(contentSource, connectionString);
@@ -360,40 +360,45 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
      *
      * @return the selected ContentSource, or null if none available
      */
-    protected synchronized ContentSource nextContentSource() {
-        List<ContentSource> availableList = getAvailableContentSources();
-        if (availableList.isEmpty()) {
-            return null;
-        }
+    protected ContentSource nextContentSource() {
+        ContentSource contentSource;
+        boolean renewalDue;
+        synchronized (this) {
+            List<ContentSource> availableList = getAvailableContentSources();
+            if (availableList.isEmpty()) {
+                return null;
+            }
 
-        ContentSource contentSource = null;
-        if (availableList.size() == 1) {
-            contentSource = availableList.get(0);
-        } else if (isRandomPolicy) {
-            contentSource = availableList.get(this.random.nextInt(availableList.size()));
-        } else if (isLoadPolicy) {
-            for (ContentSource next: availableList) {
-                long connectionCount = connectionCountForContentSource.getOrDefault(next, 0L);
-                if (connectionCount == 0) {
-                    contentSource = next;
-                    break;
-                } else if (contentSource == null || connectionCount < connectionCountForContentSource.get(contentSource)) {
-                    contentSource = next;
+            contentSource = null;
+            if (availableList.size() == 1) {
+                contentSource = availableList.get(0);
+            } else if (isRandomPolicy) {
+                contentSource = availableList.get(this.random.nextInt(availableList.size()));
+            } else if (isLoadPolicy) {
+                for (ContentSource next: availableList) {
+                    long connectionCount = connectionCountForContentSource.getOrDefault(next, 0L);
+                    if (connectionCount == 0) {
+                        contentSource = next;
+                        break;
+                    } else if (contentSource == null || connectionCount < connectionCountForContentSource.get(contentSource)) {
+                        contentSource = next;
+                    }
                 }
+            } else {
+                roundRobinIndex++;
+                if (roundRobinIndex >= availableList.size()) {
+                    roundRobinIndex = 0;
+                }
+                contentSource = availableList.get(roundRobinIndex);
             }
-        } else {
-            roundRobinIndex++;
-            if (roundRobinIndex >= availableList.size()) {
-                roundRobinIndex = 0;
+            renewalDue = renewContentSourceInterval > 0 &&
+                (System.currentTimeMillis() - renewalTimeForContentSource.getOrDefault(contentSource, System.currentTimeMillis()))
+                    >= (renewContentSourceInterval * 1000L);
+            if (renewalDue) {
+                renewalTimeForContentSource.put(contentSource, System.currentTimeMillis());
             }
-            contentSource = availableList.get(roundRobinIndex);
         }
-        /*
-        Periodically check to see if the ContentSource will resolve different/additional IP addresses and add them to the pool.
-        This can help spread the load across a pool of multiple IP addresses returned from DNS and dynamically adjust to any changes.
-         */
-        if (renewContentSourceInterval > 0 &&
-            (System.currentTimeMillis() - renewalTimeForContentSource.getOrDefault(contentSource, System.currentTimeMillis())) >= (renewContentSourceInterval * 1000L)) {
+        if (renewalDue) {
             renewContentSource(contentSource);
         }
 
@@ -553,8 +558,12 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
      * @param contentSource the ContentSource that experienced an error
      * @param allocTime the timestamp when the ContentSource was allocated, or -1 to ignore timing
      */
-    protected synchronized void error(ContentSource contentSource, long allocTime) {
-        if (contentSources.contains(contentSource)) {
+    protected void error(ContentSource contentSource, long allocTime) {
+        boolean replaceContentSource = false;
+        synchronized (this) {
+            if (!contentSources.contains(contentSource)) {
+                return;
+            }
             Long lastErrorTime = errorTimeForContentSource.get(contentSource);
             if (lastErrorTime == null || allocTime <= 0 || allocTime > lastErrorTime) {
 		        long errorCount = errorCount(contentSource) + 1;
@@ -563,16 +572,16 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
 
                 LOG.log(WARNING, "Connection error count for ContentSource {0} is {1}. Max limit is {2}.", new Object[]{asString(contentSource), errorCount, hostRetryLimit});
                 if (errorCount > hostRetryLimit) {
-                    remove(contentSource);
+                    replaceContentSource = true;
                 }
-                //re-bind and obtain IP, adding new ones to the ContentSource pool, which can help with proxies and load balancers with dynamic IP
-                renewContentSource(contentSource);
-
             } else {
                 LOG.log(WARNING, "Connection error for ContentSource {0} is not counted towards the limit as it was allocated before last error.", new Object[]{asString(contentSource)});
+                return;
             }
         }
+        refreshContentSource(contentSource, replaceContentSource);
 	}
+
     /**
      * Attempts to renew a ContentSource to detect IP address changes.
      * Creates a new ContentSource from the same connection string and adds it to the pool
@@ -581,17 +590,55 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
      *
      * @param contentSource the ContentSource to renew
      */
-    protected synchronized void renewContentSource(ContentSource contentSource) {
-        if (shouldRenewContentSource) {
-            String xccConnectionString = connectionStringForContentSource.get(contentSource);
+    protected void renewContentSource(ContentSource contentSource) {
+        refreshContentSource(contentSource, false);
+    }
+
+    /**
+     * Refreshes a ContentSource without holding the pool monitor during DNS resolution.
+     * A source that exceeded its retry limit is replaced even when DNS resolves to the
+     * same address, which also discards stale sockets held by the old XCC source.
+     */
+    protected void refreshContentSource(ContentSource contentSource, boolean replace) {
+        String xccConnectionString;
+        synchronized (this) {
+            if (!shouldRenewContentSource || !contentSources.contains(contentSource)) {
+                if (replace) {
+                    remove(contentSource);
+                }
+                return;
+            }
+            xccConnectionString = connectionStringForContentSource.get(contentSource);
             renewalTimeForContentSource.put(contentSource, System.currentTimeMillis());
-            ContentSource freshContentSource = super.createContentSource(xccConnectionString);
-            if (freshContentSource != null && !ipAddressByHostAndPort.getOrDefault(asString(freshContentSource), Collections.emptySet())
+        }
+
+        ContentSource freshContentSource = createFreshContentSource(xccConnectionString);
+        synchronized (this) {
+            if (!contentSources.contains(contentSource)) {
+                return;
+            }
+            if (replace) {
+                if (freshContentSource == null) {
+                    LOG.log(WARNING, "Unable to refresh ContentSource {0}; retaining it for a later retry.",
+                        asString(contentSource));
+                    return;
+                }
+                remove(contentSource);
+                addContentSource(freshContentSource, xccConnectionString);
+            } else if (freshContentSource != null &&
+                !ipAddressByHostAndPort.getOrDefault(asString(freshContentSource), Collections.emptySet())
                     .contains(getIPAddress(freshContentSource)) &&
                 haveDifferentIP(contentSource, freshContentSource)) {
                 addContentSource(freshContentSource, xccConnectionString);
             }
         }
+    }
+
+    /**
+     * Creates a fresh source for renewal. Kept separate for deterministic tests.
+     */
+    protected ContentSource createFreshContentSource(String connectionString) {
+        return super.createContentSource(connectionString);
     }
 
     /**

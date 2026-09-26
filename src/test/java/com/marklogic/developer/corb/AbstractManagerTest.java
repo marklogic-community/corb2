@@ -701,6 +701,27 @@ class AbstractManagerTest {
     }
 
     @Test
+    void testInitOptionsSetsXccSocketTimeout() throws CorbException {
+        AbstractManager manager = new AbstractManagerImpl();
+        manager.properties.setProperty(Options.XCC_SOCKET_TIMEOUT, "42");
+
+        manager.initOptions();
+
+        assertEquals(42, manager.options.getXccSocketTimeout());
+        assertEquals(42000, manager.options.getXccSocketTimeoutMillis());
+    }
+
+    @Test
+    void testInitOptionsUsesDefaultXccSocketTimeout() throws CorbException {
+        AbstractManager manager = new AbstractManagerImpl();
+
+        manager.initOptions();
+
+        assertEquals(TransformOptions.DEFAULT_XCC_SOCKET_TIMEOUT, manager.options.getXccSocketTimeout());
+        assertEquals(-1, manager.options.getXccSocketTimeoutMillis());
+    }
+
+    @Test
     void testInitSSLConfig() {
         AbstractManager manager = new AbstractManagerImpl();
         try {

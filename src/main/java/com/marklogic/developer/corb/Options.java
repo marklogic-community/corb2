@@ -1359,6 +1359,15 @@ public final class Options {
     public static final String XCC_CONNECTION_HOST_RETRY_LIMIT = "XCC-CONNECTION-HOST-RETRY-LIMIT";
 
     /**
+     * Maximum time, in seconds, that an XCC request may wait for a low-level socket read.
+     * A value of -1 inherits the XCC default, and 0 disables the timeout. Default is -1.
+     * @since 2.6.1
+     */
+    @Usage(description = "Maximum time, in seconds, that an XCC request may wait for a low-level socket read. "
+            + "A value of -1 inherits the XCC default, and 0 disables the timeout. Default is -1.")
+    public static final String XCC_SOCKET_TIMEOUT = "XCC-SOCKET-TIMEOUT";
+
+    /**
      * Connection string to MarkLogic XDBC Server.
      */
     @Usage(description = "Connection string to MarkLogic XDBC Server. Supports multiple connection strings separated by comma.")
