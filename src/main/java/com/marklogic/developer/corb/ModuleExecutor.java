@@ -295,6 +295,9 @@ public class ModuleExecutor extends AbstractManager {
 
         RequestOptions requestOptions = new RequestOptions();
         requestOptions.setCacheResult(false);
+        if (options.getXccSocketTimeoutMillis() != -1) {
+            requestOptions.setTimeoutMillis(options.getXccSocketTimeoutMillis());
+        }
 
         List<String> propertyNames = new ArrayList<>(properties.stringPropertyNames());
         propertyNames.addAll(System.getProperties().stringPropertyNames());

@@ -270,6 +270,7 @@ class AbstractTaskTest {
         RequestOptions options = request.getOptions();
         assertEquals(task.language, options.getQueryLanguage());
         assertEquals(task.timeZone, options.getTimeZone());
+        assertEquals(-1, options.getTimeoutMillis());
         List<XdmVariable> variableList = Arrays.asList(request.getVariables());
 
         XdmVariable uriVariable = buildStringXdmVariable("URI", "a;b;c");
@@ -277,6 +278,80 @@ class AbstractTaskTest {
 
         XdmVariable customInputVariable = buildStringXdmVariable(FOO, BAR);
         assertTrue(variableList.contains(customInputVariable));
+    }
+
+    @Test
+    void testGenerateRequestUsesConfiguredSocketTimeout() throws CorbException {
+        ModuleInvoke request = new ModuleInvokeImpl();
+        Session session = mock(Session.class);
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+
+        AbstractTask task = new AbstractTaskImpl();
+        task.moduleUri = URI;
+        task.properties.setProperty(Options.XCC_SOCKET_TIMEOUT, "42");
+
+        task.generateRequest(session);
+
+        assertEquals(42000, request.getOptions().getTimeoutMillis());
+    }
+
+    @Test
+    void testGenerateRequestAllowsSocketTimeoutToBeDisabled() throws CorbException {
+        ModuleInvoke request = new ModuleInvokeImpl();
+        Session session = mock(Session.class);
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+
+        AbstractTask task = new AbstractTaskImpl();
+        task.moduleUri = URI;
+        task.properties.setProperty(Options.XCC_SOCKET_TIMEOUT, "0");
+
+        task.generateRequest(session);
+
+        assertEquals(0, request.getOptions().getTimeoutMillis());
+    }
+
+    @Test
+    void testGenerateRequestInheritsExistingSocketTimeoutByDefault() throws CorbException {
+        ModuleInvoke request = new ModuleInvokeImpl();
+        request.getOptions().setTimeoutMillis(30000);
+        Session session = mock(Session.class);
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+
+        AbstractTask task = new AbstractTaskImpl();
+        task.moduleUri = URI;
+
+        task.generateRequest(session);
+
+        assertEquals(30000, request.getOptions().getTimeoutMillis());
+    }
+
+    @Test
+    void testGenerateRequestInheritsExistingSocketTimeoutWhenExplicitlyMinusOne() throws CorbException {
+        ModuleInvoke request = new ModuleInvokeImpl();
+        request.getOptions().setTimeoutMillis(30000);
+        Session session = mock(Session.class);
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+
+        AbstractTask task = new AbstractTaskImpl();
+        task.moduleUri = URI;
+        task.properties.setProperty(Options.XCC_SOCKET_TIMEOUT, "-1");
+
+        task.generateRequest(session);
+
+        assertEquals(30000, request.getOptions().getTimeoutMillis());
+    }
+
+    @Test
+    void testGenerateRequestRejectsInvalidSocketTimeout() {
+        ModuleInvoke request = new ModuleInvokeImpl();
+        Session session = mock(Session.class);
+        when(session.newModuleInvoke(anyString())).thenReturn(request);
+
+        AbstractTask task = new AbstractTaskImpl();
+        task.moduleUri = URI;
+        task.properties.setProperty(Options.XCC_SOCKET_TIMEOUT, "-2");
+
+        assertThrows(CorbException.class, () -> task.generateRequest(session));
     }
 
     @Test

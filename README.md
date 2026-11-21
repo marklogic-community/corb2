@@ -143,6 +143,7 @@ Option | Description
 **<a name="XCC-CONNECTION-RETRY-LIMIT"></a>XCC-CONNECTION-RETRY-LIMIT** | Number attempts to connect to ML before giving up. Default is `3`.
 **<a name="XCC-CONNECTION-RETRY-INTERVAL"></a>XCC-CONNECTION-RETRY-INTERVAL** | Time interval, in seconds, between retry attempts. Default is `60`.
 **<a name="XCC-CONNECTION-HOST-RETRY-LIMIT"></a>XCC-CONNECTION-HOST-RETRY-LIMIT** | Number of attempts to connect to ML before giving up on a host. If not specified, it defaults to **XCC-CONNECTION-RETRY-LIMIT**
+**<a name="XCC-SOCKET-TIMEOUT"></a>XCC-SOCKET-TIMEOUT** | Maximum time, in seconds, that an XCC request may wait for a low-level socket read. This is an inactivity timeout, not a limit on total query execution time. Default is `-1`, which leaves XCC's default or session setting unchanged; set to `0` to explicitly disable or a positive value to opt in.
 **<a name="XCC-DBNAME"></a>XCC-DBNAME** | (Optional) Name of the content database to execute against
 **<a name="XCC-GRANT-TYPE"></a>XCC-GRANT-TYPE** | Progress Data Cloud grant type. 
 **<a name="XCC-HOSTNAME"></a>XCC-HOSTNAME** | Required if **XCC-CONNECTION-URI** is not specified. Multiple host can be specified with comma as a separator. 
@@ -341,7 +342,9 @@ The default implementation for `com.marklogic.developer.corb.ContentSourcePool` 
 -  **LOAD** - Host with least number of active connections is allocated to caller.    
 
 ### Query and Connection Retries
-CoRB automatically retries the requests a given URI when it encounters `com.marklogic.xcc.exceptions.ServerConnectionException` from MarkLogic. If necessary, the number of retry attempts can be configured using **XCC-CONNECTION-RETRY-LIMIT**. If multiple hosts are specified, we can optionally configure retries per each host using **XCC-CONNECTION-HOST-RETRY-LIMIT**. CoRB waits at least **XCC-CONNECTION-RETRY-INTERVAL** seconds before a connection is retried on a failed host. 
+CoRB automatically retries the requests a given URI when it encounters `com.marklogic.xcc.exceptions.ServerConnectionException` from MarkLogic. If necessary, the number of retry attempts can be configured using **XCC-CONNECTION-RETRY-LIMIT**. If multiple hosts are specified, we can optionally configure retries per each host using **XCC-CONNECTION-HOST-RETRY-LIMIT**. CoRB waits at least **XCC-CONNECTION-RETRY-INTERVAL** seconds before a connection is retried on a failed host. When **CONTENT-SOURCE-RENEW** is enabled, a source that exceeds the host retry limit is replaced from its configured connection URI instead of permanently forgetting that endpoint.
+
+When explicitly set to a positive value, **XCC-SOCKET-TIMEOUT** can prevent a worker from waiting forever when a load balancer or remote host stops delivering data without closing the connection. It controls low-level socket read inactivity and does not cap the total execution time of an active query. A timeout is reported by XCC as a connection failure and uses the same retry and ContentSource renewal path described above.
 
 CoRB also supports retries of requests failed due to query errors. This feature is only intended for sporadic query errors which are not specific to a particular URI. A good example may include occasional time out exceptions from MarkLogic when the ML is too busy and request time limit is low. We can configure which queries can be retried using **QUERY-RETRY-ERROR-CODES** or **QUERY-RETRY-ERROR-MESSAGE** (when error codes are not available). If necessary, the number of query retry attempts can be configured using **QUERY-RETRY-LIMIT**. CoRB waits at least **QUERY-RETRY-INTERVAL** seconds before retrying a query.
 

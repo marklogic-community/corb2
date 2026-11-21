@@ -118,6 +118,9 @@ public class TransformOptions {
      */
     public static final int MAX_NUM_SLOW_TRANSACTIONS = 100;
 
+    /** Default XCC low-level socket read timeout in seconds. */
+    public static final int DEFAULT_XCC_SOCKET_TIMEOUT = -1;
+
 
     /** Path to the PROCESS-MODULE for URI processing. */
     private String processModule;
@@ -160,6 +163,9 @@ public class TransformOptions {
 
     /** Number of worker threads for parallel processing. */
     private int threadCount = 1;
+
+    /** Maximum inactivity time in seconds for an XCC low-level socket read. */
+    private int xccSocketTimeout = DEFAULT_XCC_SOCKET_TIMEOUT;
 
     /** Number of URIs to process in each batch. */
     private int batchSize = 1;
@@ -335,6 +341,37 @@ public class TransformOptions {
      */
     public void setThreadCount(int count) {
         this.threadCount = count;
+    }
+
+    /**
+     * Gets the XCC low-level socket read timeout.
+     *
+     * @return timeout in seconds, where -1 inherits the XCC default and 0 disables it
+     */
+    public int getXccSocketTimeout() {
+        return xccSocketTimeout;
+    }
+
+    /**
+     * Gets the XCC low-level socket read timeout in milliseconds.
+     *
+     * @return timeout in milliseconds, where -1 inherits the XCC default and 0 disables it
+     */
+    public int getXccSocketTimeoutMillis() {
+        return xccSocketTimeout == -1 ? -1 : xccSocketTimeout * 1000;
+    }
+
+    /**
+     * Sets the XCC low-level socket read timeout.
+     *
+     * @param seconds timeout in seconds, where -1 inherits the XCC default and 0 disables it
+     */
+    public void setXccSocketTimeout(int seconds) {
+        if (seconds < -1 || seconds > Integer.MAX_VALUE / 1000) {
+            throw new IllegalArgumentException(Options.XCC_SOCKET_TIMEOUT
+                + " must be -1 or between 0 and " + Integer.MAX_VALUE / 1000 + " seconds");
+        }
+        this.xccSocketTimeout = seconds;
     }
 
     /**

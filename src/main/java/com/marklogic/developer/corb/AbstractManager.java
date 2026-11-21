@@ -789,6 +789,11 @@ public abstract class AbstractManager {
         } else { // if not explicitly set as a system property or option, enable HTTP compliance so that we play nice with load balancers out of the box
             System.setProperty(xccHttpCompliantPropertyName, Boolean.toString(true));
         }
+
+        String xccSocketTimeout = getOption(XCC_SOCKET_TIMEOUT);
+        if (xccSocketTimeout != null) {
+            options.setXccSocketTimeout(Integer.parseInt(xccSocketTimeout));
+        }
     }
 
     /**

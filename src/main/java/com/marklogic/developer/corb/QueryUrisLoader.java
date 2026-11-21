@@ -166,6 +166,9 @@ public class QueryUrisLoader extends AbstractUrisLoader {
         try {
             RequestOptions opts = new RequestOptions();
             opts.setCacheResult(false);
+            if (options.getXccSocketTimeoutMillis() != -1) {
+                opts.setTimeoutMillis(options.getXccSocketTimeoutMillis());
+            }
             // this should be a noop, but xqsync does it
             opts.setResultBufferSize(0);
             LOG.log(INFO, () -> MessageFormat.format("buffer size = {0}, caching = {1}",

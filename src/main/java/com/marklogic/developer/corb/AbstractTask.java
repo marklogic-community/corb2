@@ -28,7 +28,9 @@ import static com.marklogic.developer.corb.Options.QUERY_RETRY_LIMIT;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_INTERVAL;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_CODES;
 import static com.marklogic.developer.corb.Options.QUERY_RETRY_ERROR_MESSAGE;
+import static com.marklogic.developer.corb.Options.XCC_SOCKET_TIMEOUT;
 import static com.marklogic.developer.corb.TransformOptions.FAILED_URI_TOKEN;
+import static com.marklogic.developer.corb.TransformOptions.DEFAULT_XCC_SOCKET_TIMEOUT;
 import com.marklogic.developer.corb.util.StringUtils;
 import static com.marklogic.developer.corb.util.StringUtils.commaSeparatedValuesToList;
 import static com.marklogic.developer.corb.util.StringUtils.isEmpty;
@@ -438,6 +440,14 @@ public abstract class AbstractTask implements Task {
         }
 
         RequestOptions requestOptions = request.getOptions();
+        if (requestOptions == null) {
+            requestOptions = new RequestOptions();
+            request.setOptions(requestOptions);
+        }
+        int socketTimeoutMillis = getXccSocketTimeoutMillis();
+        if (socketTimeoutMillis != -1) {
+            requestOptions.setTimeoutMillis(socketTimeoutMillis);
+        }
         if (isNotBlank(language)) {
             requestOptions.setQueryLanguage(language);
         }
@@ -844,6 +854,29 @@ public abstract class AbstractTask implements Task {
     private int getQueryRetryInterval() {
         int queryRetryInterval = getIntProperty(QUERY_RETRY_INTERVAL);
         return queryRetryInterval < 0 ? DEFAULT_QUERY_RETRY_INTERVAL : queryRetryInterval;
+    }
+
+    /**
+     * Gets the configured low-level XCC socket read timeout in milliseconds.
+     *
+     * @return timeout in milliseconds, where -1 inherits the XCC default and 0 disables it
+     * @throws CorbException if the configured value is outside the supported range
+     */
+    protected int getXccSocketTimeoutMillis() throws CorbException {
+        String configuredValue = getProperty(XCC_SOCKET_TIMEOUT);
+        int seconds = DEFAULT_XCC_SOCKET_TIMEOUT;
+        if (isNotEmpty(configuredValue)) {
+            try {
+                seconds = Integer.parseInt(configuredValue);
+            } catch (NumberFormatException exc) {
+                throw new CorbException("Unable to parse " + XCC_SOCKET_TIMEOUT + " value `" + configuredValue + "`", exc);
+            }
+        }
+        if (seconds < -1 || seconds > Integer.MAX_VALUE / 1000) {
+            throw new CorbException(XCC_SOCKET_TIMEOUT + " must be -1 or between 0 and "
+                + Integer.MAX_VALUE / 1000 + " seconds");
+        }
+        return seconds == -1 ? -1 : seconds * 1000;
     }
 
     /**
