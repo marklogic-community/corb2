@@ -624,7 +624,10 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
                     return;
                 }
                 remove(contentSource);
-                addContentSource(freshContentSource, xccConnectionString);
+                if (!ipAddressByHostAndPort.getOrDefault(asString(freshContentSource), Collections.emptySet())
+                    .contains(getIPAddress(freshContentSource))) {
+                    addContentSource(freshContentSource, xccConnectionString);
+                }
             } else if (freshContentSource != null &&
                 !ipAddressByHostAndPort.getOrDefault(asString(freshContentSource), Collections.emptySet())
                     .contains(getIPAddress(freshContentSource)) &&
