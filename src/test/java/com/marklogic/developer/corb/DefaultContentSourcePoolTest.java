@@ -323,8 +323,10 @@ class DefaultContentSourcePoolTest {
     void testErrorReplacesContentSourceAtHostRetryLimitEvenWithSameIp() {
         ContentSource original = mock(ContentSource.class);
         ContentSource replacement = mock(ContentSource.class);
+        ContentSource healthy = mock(ContentSource.class);
         when(original.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8000));
         when(replacement.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8000));
+        when(healthy.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8001));
         DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool() {
             @Override
             protected ContentSource createFreshContentSource(String connectionString) {
@@ -335,13 +337,77 @@ class DefaultContentSourcePoolTest {
         };
         contentSourcePool.shouldRenewContentSource = true;
         contentSourcePool.hostRetryLimit = 0;
+        contentSourcePool.retryInterval = 60;
+        contentSourcePool.addContentSource(original, localhostXccUri);
+        contentSourcePool.addContentSource(healthy, "******localhost:8001");
+
+        contentSourcePool.error(original);
+
+        assertArrayEquals(new ContentSource[]{healthy, replacement}, contentSourcePool.getAllContentSources());
+        assertEquals(localhostXccUri, contentSourcePool.connectionStringForContentSource.get(replacement));
+        assertFalse(contentSourcePool.connectionStringForContentSource.containsKey(original));
+        assertEquals(1L, contentSourcePool.errorCount(replacement));
+        assertNotNull(contentSourcePool.errorTimeForContentSource.get(replacement));
+        assertEquals(Arrays.asList(healthy), contentSourcePool.getAvailableContentSources());
+    }
+
+    @Test
+    void testErrorReplacementWithNewIpDoesNotRetainFailureState() {
+        ContentSource original = mock(ContentSource.class);
+        ContentSource replacement = mock(ContentSource.class);
+        when(original.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8000));
+        when(replacement.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8000));
+        DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool() {
+            @Override
+            protected ContentSource createFreshContentSource(String connectionString) {
+                return replacement;
+            }
+
+            @Override
+            protected String getIPAddress(ContentSource contentSource) {
+                return contentSource == original ? localIP1 : localIP2;
+            }
+        };
+        contentSourcePool.shouldRenewContentSource = true;
+        contentSourcePool.hostRetryLimit = 0;
         contentSourcePool.addContentSource(original, localhostXccUri);
 
         contentSourcePool.error(original);
 
         assertArrayEquals(new ContentSource[]{replacement}, contentSourcePool.getAllContentSources());
-        assertEquals(localhostXccUri, contentSourcePool.connectionStringForContentSource.get(replacement));
-        assertFalse(contentSourcePool.connectionStringForContentSource.containsKey(original));
+        assertFalse(contentSourcePool.errorCountForContentSource.containsKey(replacement));
+        assertFalse(contentSourcePool.errorTimeForContentSource.containsKey(replacement));
+    }
+
+    @Test
+    void testErrorReplacementDoesNotAddDuplicateIp() {
+        ContentSource original = mock(ContentSource.class);
+        ContentSource existing = mock(ContentSource.class);
+        ContentSource replacement = mock(ContentSource.class);
+        when(original.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8000));
+        when(existing.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8000));
+        when(replacement.getConnectionProvider()).thenReturn(new SocketPoolProvider(localhost, 8000));
+        DefaultContentSourcePool contentSourcePool = new DefaultContentSourcePool() {
+            @Override
+            protected ContentSource createFreshContentSource(String connectionString) {
+                return replacement;
+            }
+
+            @Override
+            protected String getIPAddress(ContentSource contentSource) {
+                return contentSource == original ? localIP1 : localIP2;
+            }
+        };
+        contentSourcePool.shouldRenewContentSource = true;
+        contentSourcePool.hostRetryLimit = 0;
+        contentSourcePool.addContentSource(original, localhostXccUri);
+        contentSourcePool.addContentSource(existing, localhostXccUri);
+
+        contentSourcePool.error(original);
+
+        assertArrayEquals(new ContentSource[]{existing}, contentSourcePool.getAllContentSources());
+        assertEquals(1, contentSourcePool.ipAddressByHostAndPort.get(contentSourcePool.asString(existing)).size());
+        assertTrue(contentSourcePool.ipAddressByHostAndPort.get(contentSourcePool.asString(existing)).contains(localIP2));
     }
 
     @Test

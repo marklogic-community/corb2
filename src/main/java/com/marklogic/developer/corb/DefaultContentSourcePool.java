@@ -623,10 +623,22 @@ public class DefaultContentSourcePool extends AbstractContentSourcePool {
                         asString(contentSource));
                     return;
                 }
+                String currentIP = getIPAddress(contentSource);
+                String freshIP = getIPAddress(freshContentSource);
+                Long errorCount = errorCountForContentSource.get(contentSource);
+                Long errorTime = errorTimeForContentSource.get(contentSource);
                 remove(contentSource);
                 if (!ipAddressByHostAndPort.getOrDefault(asString(freshContentSource), Collections.emptySet())
-                    .contains(getIPAddress(freshContentSource))) {
+                    .contains(freshIP)) {
                     addContentSource(freshContentSource, xccConnectionString);
+                    if (currentIP != null && currentIP.equals(freshIP)) {
+                        if (errorCount != null) {
+                            errorCountForContentSource.put(freshContentSource, errorCount);
+                        }
+                        if (errorTime != null) {
+                            errorTimeForContentSource.put(freshContentSource, errorTime);
+                        }
+                    }
                 }
             } else if (freshContentSource != null &&
                 !ipAddressByHostAndPort.getOrDefault(asString(freshContentSource), Collections.emptySet())
