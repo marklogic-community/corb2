@@ -57,6 +57,14 @@
          + /my-dir/CoRB2/job-name/2017/9/22/16/16/1446989213638048899.xml/10656720599806190856
          + /my-dir/CoRB2/job-name/2017/9/22/16/16/1446989213638048899.xml/10846647439302775656
     
+### Task counts and throughput
+
+The total, succeeded, and failed task counts describe process batches, not individual URIs.
+While the URI queue is being populated, the total is estimated from the reported URI count
+and `BATCH-SIZE`; once submission finishes, it is the actual number of submitted batches.
+TPS, average transaction time, and estimated time remaining are likewise measured per batch.
+The console progress monitor reports URI counts and throughput instead.
+
 ### Sample Metrics Document
 ```
 { "job" : {

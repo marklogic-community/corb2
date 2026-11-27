@@ -86,6 +86,11 @@ public class Monitor extends BaseMonitor implements Runnable {
     protected long completed = 0L;
 
     /**
+     * Number of batches submitted, or null until queue population finishes.
+     */
+    private volatile Long submittedTaskCount;
+
+    /**
      * The pausable thread pool executor being monitored.
      * Provides access to thread pool statistics such as active thread count,
      * completed task count, and pause/resume state. Also tracks failed URI count.
@@ -268,6 +273,24 @@ public class Monitor extends BaseMonitor implements Runnable {
      */
     public long getTaskCount() {
         return taskCount;
+    }
+
+    /**
+     * Records the actual number of submitted batches after queue population.
+     *
+     * @param count number of submitted batches
+     */
+    public void setSubmittedTaskCount(long count) {
+        submittedTaskCount = count;
+    }
+
+    /**
+     * Gets the actual number of submitted batches, if queue population has finished.
+     *
+     * @return the batch count, or null while submission is in progress
+     */
+    public Long getSubmittedTaskCount() {
+        return submittedTaskCount;
     }
 
     /**
