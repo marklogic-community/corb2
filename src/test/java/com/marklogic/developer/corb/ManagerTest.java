@@ -1537,6 +1537,26 @@ class ManagerTest {
     }
 
     @Test
+    void testSubmitUriTasksRecordsActualBatchCount() throws Exception {
+        Manager manager = new Manager();
+        manager.options = new TransformOptions();
+        manager.options.setBatchSize(2);
+        manager.pool = mock(PausableThreadPoolExecutor.class);
+        manager.completionService = mock(CompletionService.class);
+        manager.monitor = new Monitor(manager.pool, manager.completionService, manager);
+        UrisLoader loader = mock(UrisLoader.class);
+        java.util.Iterator<String> uris = Arrays.asList("uri-1", "uri-2", "uri-3", "uri-4").iterator();
+        when(loader.hasNext()).thenAnswer(invocation -> uris.hasNext());
+        when(loader.next()).thenAnswer(invocation -> uris.next());
+        TaskFactory factory = mock(TaskFactory.class);
+        when(factory.newProcessTask(any(String[].class), anyBoolean())).thenReturn(mock(Task.class));
+
+        assertEquals(4, manager.submitUriTasks(loader, factory, 1));
+        assertEquals(3L, manager.monitor.getSubmittedTaskCount());
+        verify(manager.completionService, times(3)).submit(any(Task.class));
+    }
+
+    @Test
     void testSubmitUriTasksSkipsPreviouslyCompletedUris() throws Exception {
         UrisLoader urisLoader = mock(UrisLoader.class);
         File restartStateRootDir = TestUtils.createTempDirectory();

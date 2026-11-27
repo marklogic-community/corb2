@@ -514,6 +514,78 @@ class JobStatsTest {
     }
 
     @Test
+    void testBatchedTaskCountsAndEstimate() {
+        TransformOptions options = new TransformOptions();
+        options.setBatchSize(25);
+        Manager manager = managerWithOptions(options);
+        PausableThreadPoolExecutor pool = mock(PausableThreadPoolExecutor.class);
+        when(pool.getNumSucceededUris()).thenReturn(111_000L);
+        when(pool.getNumFailedUris()).thenReturn(1_000L);
+        Monitor monitor = new Monitor(pool, mock(CompletionService.class), manager);
+        monitor.setTaskCount(5_600_001L);
+        when(manager.getMonitor()).thenReturn(monitor);
+        JobStats jobStats = new JobStats(manager);
+        jobStats.startMillis = System.currentTimeMillis() - 1_000_000L;
+
+        String json = jobStats.toJSON();
+        assertEquals(224_001L, jobStats.taskCount);
+        assertEquals(BaseMonitor.getEstimatedTimeCompletion(224_001, 112_000,
+            jobStats.currentTps, false), jobStats.estimatedTimeOfCompletion);
+        assertTrue(json.contains("\"totalNumberOfTasks\": 224001"));
+        assertTrue(json.contains("\"numberOfSucceededTasks\": 111000"));
+        assertTrue(json.contains("\"numberOfFailedTasks\": 1000"));
+        assertTrue(json.contains("\"estimatedTimeOfCompletion\": \"" + jobStats.estimatedTimeOfCompletion + "\""));
+
+        monitor.setSubmittedTaskCount(112_001);
+        jobStats.prevMillis = 0;
+        jobStats.tpsForETCList.clear();
+        json = jobStats.toJSON();
+        assertEquals(112_001L, jobStats.taskCount);
+        assertEquals(BaseMonitor.getEstimatedTimeCompletion(112_001, 112_000,
+            jobStats.currentTps, false), jobStats.estimatedTimeOfCompletion);
+        assertTrue(json.contains("\"totalNumberOfTasks\": 112001"));
+
+        when(pool.getNumSucceededUris()).thenReturn(111_001L);
+        when(manager.getStartMillis()).thenReturn(1L);
+        when(manager.getEndMillis()).thenReturn(5L);
+        json = jobStats.toJSON();
+        assertEquals(112_001L, jobStats.taskCount);
+        assertNull(jobStats.estimatedTimeOfCompletion);
+        assertTrue(json.contains("\"totalNumberOfTasks\": 112001"));
+        assertTrue(json.contains("\"numberOfSucceededTasks\": 111001"));
+        assertTrue(json.contains("\"numberOfFailedTasks\": 1000"));
+    }
+
+    @Test
+    void testSingleUriBatchesPreserveTaskCount() {
+        Manager manager = managerWithOptions(new TransformOptions());
+        Monitor monitor = new Monitor(mock(PausableThreadPoolExecutor.class), mock(CompletionService.class), manager);
+        monitor.setTaskCount(26);
+        JobStats jobStats = new JobStats(manager);
+        jobStats.refreshMonitorStats(monitor);
+        assertEquals(26L, jobStats.taskCount);
+    }
+
+    @Test
+    void testBatchEstimateForSmallAndLargeUriCounts() {
+        TransformOptions options = new TransformOptions();
+        options.setBatchSize(25);
+        Manager manager = managerWithOptions(options);
+        Monitor monitor = new Monitor(mock(PausableThreadPoolExecutor.class), mock(CompletionService.class), manager);
+        JobStats jobStats = new JobStats(manager);
+
+        monitor.setTaskCount(1);
+        jobStats.refreshMonitorStats(monitor);
+        assertEquals(1L, jobStats.taskCount);
+        monitor.setTaskCount(Long.MAX_VALUE);
+        jobStats.refreshMonitorStats(monitor);
+        assertEquals(Long.MAX_VALUE / 25 + 1, jobStats.taskCount);
+        monitor.setSubmittedTaskCount(0);
+        jobStats.refreshMonitorStats(monitor);
+        assertEquals(0L, jobStats.taskCount);
+    }
+
+    @Test
     void testAddFailedUris() {
         Manager manager = mock(Manager.class);
         PausableThreadPoolExecutor threadPoolExecutor = mock(PausableThreadPoolExecutor.class);

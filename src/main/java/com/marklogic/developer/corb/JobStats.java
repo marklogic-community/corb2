@@ -505,8 +505,12 @@ public class JobStats extends BaseMonitor {
     protected void refreshMonitorStats(Monitor monitor){
         if (monitor != null) {
 
-            taskCount = monitor.getTaskCount();
-            if (taskCount > 0) { //job has selected URIs to process
+            long uriCount = monitor.getTaskCount();
+            Long submittedTaskCount = monitor.getSubmittedTaskCount();
+            int batchSize = options != null ? options.getBatchSize() : 1;
+            taskCount = submittedTaskCount != null ? submittedTaskCount
+                : batchSize > 1 ? uriCount / batchSize + (uriCount % batchSize == 0 ? 0 : 1) : uriCount;
+            if (uriCount > 0 || submittedTaskCount != null) {
 
                 refreshThreadPoolExecutorStats(monitor.getThreadPoolExecutor());
 

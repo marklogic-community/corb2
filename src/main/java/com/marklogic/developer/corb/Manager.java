@@ -1474,6 +1474,7 @@ public class Manager extends AbstractManager implements Closeable {
      */
     protected long submitUriTasks(UrisLoader urisLoader, TaskFactory taskFactory, long expectedTotalCount) throws CorbException {
         urisCount = 0;
+        long submittedTaskCount = 0;
         String uri;
         List<String> uriBatch = new ArrayList<>(options.getBatchSize());
         boolean redactUris = options.shouldRedactUris();
@@ -1497,6 +1498,7 @@ public class Manager extends AbstractManager implements Closeable {
                 String[] uris = uriBatch.toArray(new String[uriBatch.size()]);
                 uriBatch.clear();
                 completionService.submit(taskFactory.newProcessTask(uris, options.isFailOnError()));
+                submittedTaskCount++;
             }
 
             urisCount++;
@@ -1508,6 +1510,9 @@ public class Manager extends AbstractManager implements Closeable {
                 long totalMemory = Runtime.getRuntime().totalMemory(); //according to java doc this value may vary over time
                 logIfLowMemory(totalMemory);
             }
+        }
+        if (monitor != null) {
+            monitor.setSubmittedTaskCount(submittedTaskCount);
         }
         return urisCount;
     }
